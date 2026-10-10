@@ -13,8 +13,9 @@ import numpy as np
 from ..palette import make_emissive, make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
-from ._flora import _union
+from ._flora import _top_skin, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
+from ._surface import bands, both, cracks, noise_mask, painted, value_noise
 from .buildings import BUILDING_YAW
 
 # Palette Carrière (charte §3).
@@ -75,15 +76,85 @@ def _crystals(w: Weathering, anchors: list[np.ndarray], count: int, length: tupl
     return shards
 
 
+# Tons dérivés de la palette : fissure, strate sombre, lumière d'Essence renvoyée par la roche.
+CRACK = "#241C1C"
+STRATA = "#4A3A36"
+SPILL = "#4A7A8A"
+DUST = "#9A8A74"
+
+
+def _rock_materials() -> list:
+    """Matières de surface de la roche, à ajouter à la fin d'une liste de matériaux (voir _rock_skin)."""
+    return [make_material("crack", CRACK, contrast=0.5), make_material("strata", STRATA, contrast=0.6),
+            make_material("dust", DUST, contrast=0.6)]
+
+
+def _rock_skin(shape, seed: int, first: int, dust: float = 0.25) -> list[Part]:
+    """
+    Surface d'une roche de carrière : strates horizontales rompues, fissures d'un pixel, poussière ocre sur les faces
+    tournées vers le ciel. `first` est l'indice de la première des trois matières de _rock_materials.
+    """
+    strata = both(bands(1, 0.32 * M, 0.05 * M), noise_mask(0.4 * M, seed, 0.55))
+    return [
+        Part(painted(shape, strata), first + 1, relief=False),
+        Part(painted(shape, cracks(0.55 * M, seed + 1, 0.035 * M, reach=0.45)), first, relief=False),
+        Part(painted(shape, both(_top_skin(shape, 0.08 * M), noise_mask(0.3 * M, seed + 2, dust)), 0.015 * M), first + 2, relief=False),
+    ]
+
+
+def _prisms(shards):
+    """
+    Cristaux d'Essence : prismes hexagonaux à pointe, alignés sur leur axe (base, pointe, rayon). Champ adouci : la
+    distance au prisme est approchée.
+    """
+    frames = [(a, _align_y(b - a), float(np.linalg.norm(b - a)), r) for a, b, r in shards]
+
+    def field(p: np.ndarray) -> np.ndarray:
+        result = np.full(len(p), np.inf)
+        for base, frame, length, radius in frames:
+            local = (p - base) @ frame
+            q = np.abs(local[:, [0, 2]])
+            tip = radius * 2.2
+            taper = np.clip(local[:, 1] - (length - tip), 0.0, None) * (radius / tip)
+            hexagon = np.maximum(q[:, 0] * 0.866 + q[:, 1] * 0.5, q[:, 1]) - radius + taper
+            result = np.minimum(result, np.maximum(hexagon, np.maximum(-local[:, 1], local[:, 1] - length)) * 0.8)
+        return result
+
+    return field
+
+
+def _fan(w: Weathering, anchor: np.ndarray, count: int, length: tuple[float, float], radius: float):
+    """
+    Gerbe de prismes en éventail autour d'un ancrage : le plus grand presque droit au centre, les autres de plus en
+    plus couchés et courts vers l'extérieur, chacun dans sa direction pour qu'ils ne se fondent pas en flamme.
+    """
+    shards = []
+    for index in range(count):
+        outer = index / max(count - 1, 1)
+        angle = index * 2.39996 + w.uniform(-0.3, 0.3)
+        tilt = 0.12 + 0.75 * outer
+        direction = np.array([np.sin(tilt) * np.cos(angle), np.cos(tilt), np.sin(tilt) * np.sin(angle) * 0.7 + 0.2])
+        direction /= np.linalg.norm(direction)
+        size = 1.0 - 0.45 * outer
+        shards.append((anchor, anchor + direction * w.uniform(*length) * size * M, radius * (0.75 + 0.35 * size)))
+    return shards
+
+
+def _spill(shards, reach: float = 0.4 * M):
+    """Masque de la lumière renvoyée par la roche autour des cristaux."""
+    points = [(a + b) / 2 for a, b, _ in shards]
+    return lambda p: _union(*(np.linalg.norm(p - c, axis=1) for c in points)) - reach
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Roche et Essence
 # ---------------------------------------------------------------------------------------------------------------------
 
 def rock_outcrop(stem: str, seed: int, scale: float) -> PropModel:
     """Affleurement : pile de blocs taillés, strate de terre rouge, poussière ocre au pied."""
-    DARK, GREY, LIGHT, EARTH = range(4)
+    DARK, GREY, LIGHT, EARTH, PEBBLE = range(5)
     materials = [make_material("rock_dark", ROCK_DARK), make_material("rock_grey", ROCK_GREY), make_material("rock_light", ROCK_LIGHT),
-                 make_material("red_earth", RED_EARTH)]
+                 make_material("red_earth", RED_EARTH), make_material("pebble", ROCK_GREY)] + _rock_materials()
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -91,11 +162,15 @@ def rock_outcrop(stem: str, seed: int, scale: float) -> PropModel:
         order = sorted(range(len(blocks)), key=lambda i: blocks[i][0][1])
         low, mid, high = order[:2], order[2:5], order[5:]
         seam = [(np.array(blocks[i][0]) + np.array([0.0, 0.0, blocks[i][1][2] * 0.9]), blocks[i][1]) for i in mid[:2]]
+        pebbles = [((w.uniform(-1.1, 1.1) * M * scale, 0.05 * M, w.uniform(0.4, 0.9) * M * scale), w.uniform(0.05, 0.11) * M) for _ in range(6)]
+        rock = _block_union(blocks)
         return [
             Part(_block_union([blocks[i] for i in low]), DARK),
             Part(_block_union([blocks[i] for i in mid]), GREY),
             Part(_block_union([blocks[i] for i in high]), LIGHT),
             Part(lambda p: _union(*(ellipsoid(p, c, (h[0] * 0.8, h[1] * 0.18, 0.06 * M)) for c, h in seam)), EARTH),
+            Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.7, r), r * 0.4, rotation_y(r * 40)) for c, r in pebbles)), PEBBLE),
+            *_rock_skin(rock, seed, 5),
         ]
 
     half = 1.0 * M * scale
@@ -106,7 +181,7 @@ def rock_outcrop(stem: str, seed: int, scale: float) -> PropModel:
 def boulder(stem: str, seed: int) -> PropModel:
     """Bloc éboulé seul, fendu, avec ses éclats au pied."""
     GREY, LIGHT, DARK = range(3)
-    materials = [make_material("rock_grey", ROCK_GREY), make_material("rock_light", ROCK_LIGHT), make_material("rock_dark", ROCK_DARK)]
+    materials = [make_material("rock_grey", ROCK_GREY), make_material("rock_light", ROCK_LIGHT), make_material("rock_dark", ROCK_DARK)] + _rock_materials()
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -121,7 +196,8 @@ def boulder(stem: str, seed: int) -> PropModel:
         return [
             Part(body, GREY),
             Part(lambda p: np.maximum(body(p), 0.8 * M - p[:, 1]) - 0.005 * M, LIGHT),
-            Part(lambda p: _union(*(sphere(p, c, r) for c, r in chips)), DARK),
+            Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.7, r), r * 0.4, rotation_y(r * 40)) for c, r in chips)), DARK),
+            *_rock_skin(body, seed, 3),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 70), footprint=box_footprint(0.7 * M, 0.55 * M))
@@ -129,40 +205,53 @@ def boulder(stem: str, seed: int) -> PropModel:
 
 def gravel_pile(stem: str, seed: int, tone: str) -> PropModel:
     """Tas de déblais : cône de gravier, quelques pierres roulées au pied. Ne bloque pas."""
-    GRAVEL, STONES = range(2)
-    materials = [make_material("gravel", tone), make_material("stones", ROCK_GREY)]
+    GRAVEL, STONES, GRIT_DARK, GRIT_LIGHT = range(4)
+    materials = [make_material("gravel", tone), make_material("stones", ROCK_GREY), make_material("grit_dark", ROCK_DARK, contrast=0.6),
+                 make_material("grit_light", OCHRE_DUST, contrast=0.5)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
         stones = [((w.uniform(-0.9, 0.9) * M, 0.07 * M, w.uniform(-0.6, 0.7) * M), w.uniform(0.06, 0.12) * M) for _ in range(9)]
-        k = 2 * np.pi / (0.18 * M)
+        stones += [((w.uniform(-0.4, 0.4) * M, w.uniform(0.2, 0.4) * M, w.uniform(-0.1, 0.4) * M), w.uniform(0.05, 0.08) * M) for _ in range(4)]
 
         def cone(p: np.ndarray) -> np.ndarray:
             radial = np.sqrt(p[:, 0] ** 2 + (p[:, 2] * 1.3) ** 2)
-            grain = 0.02 * M * np.sin(p[:, 0] * k) * np.sin(p[:, 2] * k + 0.6)
-            return np.maximum((radial * 0.55 + p[:, 1] - 0.5 * M) / 1.15, -p[:, 1]) + grain
+            d = np.maximum((radial * 0.55 + p[:, 1] - 0.5 * M) / 1.15, -p[:, 1])
+            near = d < 0.1 * M
+            if near.any():
+                d[near] += (value_noise(p[near], 0.12 * M, seed) - 0.5) * 0.05 * M
+            return d
 
-        return [Part(cone, GRAVEL), Part(lambda p: _union(*(sphere(p, c, r) for c, r in stones)), STONES)]
+        # Grain du déblai : gravillons sombres et clairs d'un pixel, sans relief.
+        return [Part(cone, GRAVEL), Part(painted(cone, noise_mask(0.06 * M, seed + 1, 0.22)), GRIT_DARK, relief=False),
+                Part(painted(cone, noise_mask(0.06 * M, seed + 2, 0.16)), GRIT_LIGHT, relief=False),
+                Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.7, r), r * 0.4, rotation_y(r * 40)) for c, r in stones)), STONES)]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 50))
 
 
 def crystal_vein(stem: str, seed: int) -> PropModel:
     """Veine d'Essence : un bloc de roche sombre fendu, d'où jaillissent des prismes bleus lumineux."""
-    DARK, GREY, GLOW, CORE = range(4)
-    materials = [make_material("rock_dark", ROCK_DARK), make_material("rock_grey", ROCK_GREY), make_emissive("crystal", CRYSTAL),
-                 make_emissive("crystal_core", CRYSTAL_BRIGHT)]
+    DARK, GREY, GLOW, CORE, LIT = range(5)
+    materials = [make_material("rock_dark", ROCK_DARK), make_material("rock_grey", ROCK_GREY), make_material("crystal", CRYSTAL, contrast=0.7),
+                 make_emissive("crystal_core", CRYSTAL_BRIGHT), make_material("spill", SPILL, contrast=0.6)] + _rock_materials()
 
     def parts() -> list[Part]:
         w = Weathering(seed)
         blocks = _rocks(w, 5, (0.6, 0.4), (0.25, 0.42), 0.7)
-        anchors = [np.array([w.uniform(-0.35, 0.35) * M, w.uniform(0.5, 0.8) * M, w.uniform(0.15, 0.4) * M]) for _ in range(3)]
-        shards = _crystals(w, anchors, 11, (0.7, 1.4), 0.16 * M)
+        # Deux gerbes de prismes facettés qui sortent de la fente ; leurs pointes luisent.
+        shards = _fan(w, np.array([-0.1 * M, 0.6 * M, 0.25 * M]), 5, (1.3, 1.8), 0.2 * M)
+        shards += _fan(w, np.array([0.35 * M, 0.5 * M, 0.3 * M]), 3, (0.7, 1.0), 0.15 * M)
+        rock = _block_union(blocks)
+        crystal = _prisms(shards)
+        tips = lambda p: _union(*(np.linalg.norm(p - b, axis=1) - np.linalg.norm(b - a) * 0.35 for a, b, _ in shards))
         return [
             Part(_block_union(blocks[:3]), DARK),
             Part(_block_union(blocks[3:]), GREY),
-            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.2) for a, b, r in shards[3:])), GLOW),
-            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.2) for a, b, r in shards[:3])), CORE),
+            Part(painted(rock, _spill(shards, 0.45 * M)), LIT, relief=False),
+            *_rock_skin(rock, seed, 5),
+            Part(crystal, GLOW),
+            Part(painted(crystal, tips, 0.012 * M), CORE, relief=False),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(110, 120), footprint=box_footprint(0.7 * M, 0.5 * M))
@@ -170,17 +259,23 @@ def crystal_vein(stem: str, seed: int) -> PropModel:
 
 def crystal_cluster(stem: str, seed: int) -> PropModel:
     """Petite gerbe de cristaux à fleur de sol, dans une poche de charbon. Ne bloque pas."""
-    COAL_M, GLOW, CORE = range(3)
-    materials = [make_material("coal", COAL, contrast=0.7), make_emissive("crystal", CRYSTAL), make_emissive("crystal_core", CRYSTAL_BRIGHT)]
+    COAL_M, GLOW, CORE, LIT, CHIP = range(5)
+    materials = [make_material("coal", COAL, contrast=0.7), make_material("crystal", CRYSTAL, contrast=0.7), make_emissive("crystal_core", CRYSTAL_BRIGHT),
+                 make_material("spill", SPILL, contrast=0.6), make_material("chip", ROCK_GREY)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
-        anchors = [np.array([w.uniform(-0.2, 0.2) * M, 0.05 * M, w.uniform(-0.15, 0.15) * M]) for _ in range(2)]
-        shards = _crystals(w, anchors, 7, (0.45, 0.9), 0.12 * M)
+        shards = _fan(w, np.array([0.0, 0.03 * M, 0.05 * M]), 5, (0.8, 1.2), 0.16 * M)
+        bed = lambda p: ellipsoid(p, (0, 0.03 * M, 0), (0.5 * M, 0.09 * M, 0.38 * M))
+        crystal = _prisms(shards)
+        tips = lambda p: _union(*(np.linalg.norm(p - b, axis=1) - np.linalg.norm(b - a) * 0.35 for a, b, _ in shards))
+        chips = [((w.uniform(-0.55, 0.55) * M, 0.05 * M, w.uniform(-0.1, 0.5) * M), w.uniform(0.05, 0.09) * M) for _ in range(4)]
         return [
-            Part(lambda p: ellipsoid(p, (0, 0.03 * M, 0), (0.45 * M, 0.08 * M, 0.35 * M)), COAL_M),
-            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.2) for a, b, r in shards[2:])), GLOW),
-            Part(lambda p: _union(*(capsule(p, a, b, r, r * 0.2) for a, b, r in shards[:2])), CORE),
+            Part(bed, COAL_M),
+            Part(painted(bed, _spill(shards, 0.3 * M)), LIT, relief=False),
+            Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.7, r), r * 0.4, rotation_y(r * 40)) for c, r in chips)), CHIP),
+            Part(crystal, GLOW),
+            Part(painted(crystal, tips, 0.012 * M), CORE, relief=False),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(70, 70))
@@ -240,10 +335,14 @@ def rails(stem: str, seed: int) -> PropModel:
 
 
 def excavator_bucket(stem: str, seed: int) -> PropModel:
-    """Godet géant de pelleteuse, dents plantées dans la roche, bras encore dressé : repère vu de loin."""
-    YELLOW, RUST_M, METAL_M, ROCK = range(4)
-    materials = [make_material("machine", MACHINE_YELLOW), make_material("rust", RUST_DEEP), make_material("metal", METAL),
-                 make_material("rock", ROCK_GREY)]
+    """
+    Godet géant de pelleteuse, dents plantées dans la roche, bras encore dressé avec ses vérins : repère vu de loin.
+    Peinture jaune écaillée sur l'acier, rouille en coulures, boue séchée dans le godet.
+    """
+    YELLOW, RUST_M, METAL_M, ROCK, CHIPPED, ROD, MUD = range(7)
+    materials = [make_material("machine", MACHINE_YELLOW), make_material("rust", RUST_DEEP), make_material("metal", "#4A4C52"),
+                 make_material("rock", ROCK_GREY), make_material("chipped", "#6A6660"), make_material("rod", "#B8C0C4", contrast=0.6),
+                 make_material("mud", RED_EARTH, contrast=0.8)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -258,16 +357,26 @@ def excavator_bucket(stem: str, seed: int) -> PropModel:
 
         teeth = [np.array([x * M, 0.05 * M, 0.95 * M]) for x in np.linspace(-0.8, 0.8, 5)]
         arm = [np.array([0.0, 1.3 * M, -0.3 * M]), np.array([0.2 * M, 3.0 * M, -1.1 * M]), np.array([0.3 * M, 4.1 * M, -0.2 * M])]
-        rust = [np.array([w.uniform(-0.8, 0.8) * M, w.uniform(0.5, 1.3) * M, w.uniform(-0.4, 0.4) * M]) for _ in range(5)]
         rocks = [((w.uniform(-1.3, 1.3) * M, 0.12 * M, w.uniform(0.6, 1.3) * M), w.uniform(0.12, 0.25) * M) for _ in range(6)]
+        booms = lambda p: _union(*(rounded_box(p, (a + b) / 2, (0.22 * M, np.linalg.norm(b - a) / 2, 0.18 * M), 0.07 * M, _align_y(b - a))
+                                   for a, b in zip(arm, arm[1:])))
+        # Vérins : un fût d'acier sombre et sa tige brillante, le long de chaque flèche, côté caméra.
+        offset = np.array([0.0, 0.0, 0.32 * M])
+        jacks = [(arm[0] + offset + (arm[1] - arm[0]) * 0.1, arm[0] + offset + (arm[1] - arm[0]) * 0.55, arm[0] + offset + (arm[1] - arm[0]) * 0.9),
+                 (arm[1] + offset + (arm[2] - arm[1]) * 0.15, arm[1] + offset + (arm[2] - arm[1]) * 0.5, arm[1] + offset + (arm[2] - arm[1]) * 0.85)]
+        steel = lambda p: np.minimum(bucket(p), booms(p))
+        streaks = both(noise_mask(0.15 * M, seed + 1, 0.15, (1.0, 4.0, 1.0)), lambda p: p[:, 1] - 3.6 * M)
         return [
             Part(bucket, YELLOW),
-            Part(lambda p: np.maximum(_union(*(sphere(p, c, 0.28 * M) for c in rust)), bucket(p) - 0.03 * M), RUST_M),
+            Part(booms, YELLOW),
+            Part(painted(steel, noise_mask(0.18 * M, seed + 2, 0.1)), CHIPPED, relief=False),
+            Part(painted(steel, streaks, 0.015 * M), RUST_M, relief=False),
+            Part(painted(bucket, lambda p: local(p)[:, 1] + 0.1 * M + (value_noise(p, 0.2 * M, seed + 3) - 0.5) * 0.3 * M), MUD, relief=False),
             Part(lambda p: _union(*(capsule(p, t, t + np.array([0.0, -0.1 * M, 0.3 * M]), 0.08 * M, 0.03 * M) for t in teeth),
-                                  *(sphere(p, joint, 0.3 * M) for joint in arm)), METAL_M),
-            Part(lambda p: _union(*(rounded_box(p, (a + b) / 2, (0.24 * M, np.linalg.norm(b - a) / 2, 0.2 * M), 0.08 * M,
-                                                _align_y(b - a)) for a, b in zip(arm, arm[1:]))), YELLOW),
-            Part(lambda p: _union(*(sphere(p, c, r) for c, r in rocks)), ROCK),
+                                  *(cylinder(p, joint, 0.16 * M, 0.26 * M, 0.03 * M, rotation_z(np.pi / 2)) for joint in arm),
+                                  *(capsule(p, a, b, 0.09 * M) for a, b, _ in jacks)), METAL_M),
+            Part(lambda p: _union(*(capsule(p, b, c, 0.045 * M) for _, b, c in jacks)), ROD),
+            Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.75, r), r * 0.4, rotation_y(r * 40)) for c, r in rocks)), ROCK),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(130, 170), footprint=box_footprint(1.1 * M, 0.9 * M))
@@ -283,7 +392,8 @@ def conveyor(stem: str, seed: int) -> PropModel:
     def parts() -> list[Part]:
         w = Weathering(seed)
         local = lambda p: (p - np.array([0.0, 1.2 * M, 0.0])) @ incline
-        legs = [(np.array([x * M, 0.0, z * M]), np.array([x * M, (1.2 - z * 0.35) * M, z * M])) for x in (-0.4, 0.4) for z in (-1.3, 1.1)]
+        # Pieds : du sol jusqu'au bâti incliné, dont la hauteur au point z vaut 1,2 m + z·tan(0,35).
+        legs = [(np.array([x * M, 0.0, z * M]), np.array([x * M, (1.2 + z * np.tan(0.35)) * M - 0.08 * M, z * M])) for x in (-0.4, 0.4) for z in (-1.3, 1.1)]
         ore = [np.array([w.uniform(-0.25, 0.25) * M, 0.12 * M, w.uniform(-1.4, 0.9) * M]) for _ in range(6)]
         droop = [np.array([0.0, -0.05 * M, 1.7 * M]), np.array([0.05 * M, -0.5 * M, 2.0 * M]), np.array([0.0, -1.0 * M, 2.1 * M])]
         return [
@@ -318,18 +428,30 @@ def cable_drum(stem: str, seed: int) -> PropModel:
 
 
 def safety_lamp(stem: str, seed: int) -> PropModel:
-    """Gyrophare de chantier sur son poteau : l'orange qui clignote encore, alimenté par on ne sait quoi."""
-    POLE, BOX, GLOW = range(3)
-    materials = [make_material("pole", METAL), make_material("box", RUST_DEEP), make_emissive("safety", SAFETY_ORANGE)]
+    """
+    Gyrophare de chantier sur son poteau : l'orange qui clignote encore, alimenté par on ne sait quoi. Poteau rayé de
+    jaune et de noir au pied, lanterne grillagée, boîtier électrique rouillé.
+    """
+    POLE, BOX, GLOW, STRIPE, CAGE = range(5)
+    materials = [make_material("pole", METAL), make_material("box", RUST_DEEP), make_emissive("safety", SAFETY_ORANGE),
+                 make_material("stripe", MACHINE_YELLOW, contrast=0.8), make_material("cage", "#2E2C2C", contrast=0.5)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
         lean = rotation_z(w.uniform(-0.08, 0.08))
+        head = np.array([0.0, 2.35 * M, 0.0])
+        pole = lambda p: _union(capsule(p @ lean, (0, 0, 0), (0, 2.2 * M, 0), 0.07 * M), cylinder(p, (0, 0.05 * M, 0), 0.25 * M, 0.05 * M, 0.02 * M))
+        hazard = both(bands(1, 0.24 * M, 0.12 * M), lambda p: (p @ lean)[:, 1] - 0.95 * M)
         return [
-            Part(lambda p: _union(capsule(p @ lean, (0, 0, 0), (0, 2.2 * M, 0), 0.06 * M),
-                                  cylinder(p, (0, 0.05 * M, 0), 0.25 * M, 0.05 * M, 0.02 * M)), POLE),
-            Part(lambda p: rounded_box(p @ lean, (0.12 * M, 1.1 * M, 0.0), (0.12 * M, 0.18 * M, 0.1 * M), 0.02 * M), BOX),
-            Part(lambda p: ellipsoid(p @ lean, (0, 2.35 * M, 0), (0.14 * M, 0.17 * M, 0.14 * M)), GLOW),
+            Part(pole, POLE),
+            Part(painted(pole, both(hazard, lambda p: 0.07 * M - (p @ lean)[:, 1])), STRIPE, relief=False),
+            Part(lambda p: rounded_box(p @ lean, (0.14 * M, 1.1 * M, 0.0), (0.14 * M, 0.2 * M, 0.11 * M), 0.02 * M), BOX),
+            Part(lambda p: ellipsoid(p @ lean, head, (0.17 * M, 0.21 * M, 0.17 * M)), GLOW),
+            Part(lambda p: _union(cylinder(p @ lean, head + np.array([0.0, 0.22 * M, 0.0]), 0.19 * M, 0.03 * M, 0.01 * M),
+                                  cylinder(p @ lean, head - np.array([0.0, 0.2 * M, 0.0]), 0.2 * M, 0.04 * M, 0.01 * M),
+                                  *(capsule(p @ lean, head + np.array([np.sin(a) * 0.18 * M, -0.2 * M, np.cos(a) * 0.18 * M]),
+                                            head + np.array([np.sin(a) * 0.18 * M, 0.22 * M, np.cos(a) * 0.18 * M]), 0.018 * M)
+                                    for a in (0.4, 1.95, 3.5, 5.05))), CAGE),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(44, 90))
@@ -361,38 +483,54 @@ def mine_supports(stem: str, seed: int) -> PropModel:
 
 
 def worker_locker(stem: str, seed: int) -> PropModel:
-    """Vestiaire renversé ouvert : un casque, un thermos, une photo punaisée. Les ouvriers sont partis."""
-    STEEL, INSIDE, HELMET, THERMOS, PHOTO = range(5)
+    """
+    Vestiaire d'ouvrier resté debout, penché, porte arrachée à demi ouverte : dedans, un bleu de travail pendu à sa
+    patère et une photo punaisée ; au pied, un casque jaune et un thermos. Les ouvriers sont partis.
+    """
+    STEEL, INSIDE, HELMET, THERMOS, PHOTO, JACKET, VENT, RUST_M = range(8)
     materials = [make_material("locker", "#5A6A5A"), make_material("inside", COAL, contrast=0.6), make_material("helmet", MACHINE_YELLOW),
-                 make_material("thermos", "#8A3A2A"), make_material("photo", "#E8E0D4", contrast=0.5)]
-    tilt = rotation_z(-0.18)
+                 make_material("thermos", "#8A3A2A"), make_material("photo", "#E8E0D4", contrast=0.5),
+                 make_material("jacket", "#3E5478", contrast=0.8), make_material("vent", "#2E3430", contrast=0.5),
+                 make_material("rust", RUST_DEEP)]
+    tilt = rotation_z(-0.1)
 
     def parts() -> list[Part]:
         local = lambda p: p @ tilt
 
         def shell(p: np.ndarray) -> np.ndarray:
             q = local(p)
-            outer = rounded_box(q, (0, 0.95 * M, 0), (0.32 * M, 0.95 * M, 0.26 * M), 0.02 * M)
-            inner = rounded_box(q, (0, 0.95 * M, 0.08 * M), (0.27 * M, 0.9 * M, 0.26 * M), 0.02 * M)
+            outer = rounded_box(q, (0, 0.95 * M, 0), (0.34 * M, 0.95 * M, 0.26 * M), 0.02 * M)
+            inner = rounded_box(q, (0, 0.95 * M, 0.08 * M), (0.29 * M, 0.9 * M, 0.26 * M), 0.02 * M)
             return np.maximum(outer, -inner)
 
-        door = lambda p: rounded_box(local(p) @ rotation_y(-1.1), (0.3 * M, 0.95 * M, 0.02 * M), (0.3 * M, 0.9 * M, 0.02 * M), 0.01 * M)
+        # Porte ouverte vers la caméra, sur sa charnière gauche.
+        hinge = np.array([-0.34 * M, 0.0, 0.27 * M])
+        door = lambda p: rounded_box((local(p) - hinge) @ rotation_y(1.2), (0.33 * M, 0.95 * M, 0.0), (0.33 * M, 0.9 * M, 0.02 * M), 0.01 * M)
+        vents = lambda p: both(bands(1, 0.07 * M, 0.025 * M), lambda q: np.abs(((local(q) - hinge) @ rotation_y(1.2))[:, 1] - 1.6 * M) - 0.15 * M)(p)
         return [
-            Part(lambda p: _union(shell(p), door(p)), STEEL),
-            Part(lambda p: rounded_box(local(p), (0, 0.95 * M, -0.2 * M), (0.27 * M, 0.9 * M, 0.02 * M), 0.01 * M), INSIDE),
-            Part(lambda p: np.maximum(sphere(p, (0.55 * M, 0.1 * M, 0.45 * M), 0.2 * M), 0.08 * M - p[:, 1]), HELMET),
-            Part(lambda p: cylinder(p, (-0.45 * M, 0.1 * M, 0.5 * M), 0.08 * M, 0.2 * M, 0.03 * M, rotation_x(np.pi / 2) @ rotation_y(0.7)), THERMOS),
-            Part(lambda p: rounded_box(local(p), (0.05 * M, 1.4 * M, -0.17 * M), (0.1 * M, 0.08 * M, 0.01 * M), 0.005 * M), PHOTO),
+            Part(shell, STEEL),
+            Part(door, STEEL),
+            Part(painted(door, vents), VENT, relief=False),
+            Part(painted(lambda p: np.minimum(shell(p), door(p)), noise_mask(0.15 * M, 3, 0.2, (1.0, 3.0, 1.0))), RUST_M, relief=False),
+            Part(lambda p: rounded_box(local(p), (0, 0.95 * M, -0.2 * M), (0.29 * M, 0.9 * M, 0.02 * M), 0.01 * M), INSIDE),
+            Part(lambda p: _union(rounded_box(local(p), (0.0, 1.3 * M, -0.08 * M), (0.2 * M, 0.38 * M, 0.06 * M), 0.05 * M),
+                                  capsule(local(p), (-0.18 * M, 1.6 * M, -0.08 * M), (-0.22 * M, 1.05 * M, -0.05 * M), 0.06 * M),
+                                  capsule(local(p), (0.18 * M, 1.6 * M, -0.08 * M), (0.22 * M, 1.05 * M, -0.05 * M), 0.06 * M)), JACKET),
+            Part(lambda p: np.maximum(sphere(p, (0.6 * M, 0.12 * M, 0.5 * M), 0.2 * M), 0.08 * M - p[:, 1]), HELMET),
+            Part(lambda p: cylinder(p, (0.62 * M, 0.08 * M, 0.5 * M), 0.25 * M, 0.015 * M, 0.01 * M), HELMET),
+            Part(lambda p: cylinder(p, (-0.55 * M, 0.08 * M, 0.55 * M), 0.08 * M, 0.2 * M, 0.03 * M, rotation_x(np.pi / 2) @ rotation_y(0.7)), THERMOS),
+            Part(lambda p: rounded_box(local(p), (0.12 * M, 1.62 * M, -0.17 * M), (0.08 * M, 0.06 * M, 0.01 * M), 0.005 * M), PHOTO),
         ]
 
-    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(70, 90), footprint=box_footprint(0.35 * M, 0.3 * M))
+    return PropModel(stem, parts, materials, float(np.radians(20.0)), canvas=(70, 90), footprint=box_footprint(0.35 * M, 0.3 * M))
 
 
 def explosives_crate(stem: str, seed: int) -> PropModel:
     """Caisse d'explosifs éventrée, couvercle de travers, bâtons rouges épars."""
-    WOOD, LID, STICK, BAND = range(4)
+    WOOD, LID, STICK, BAND, JOINT, MARK, FUSE = range(7)
     materials = [make_material("crate", MINE_WOOD), make_material("lid", "#8A6A48"), make_material("dynamite", "#A83A2A"),
-                 make_material("band", OCHRE_DUST, contrast=0.6)]
+                 make_material("band", OCHRE_DUST, contrast=0.6), make_material("joint", "#3A2A1E", contrast=0.5),
+                 make_material("mark", "#7A2418", contrast=0.5), make_material("fuse", "#D8D0B8", contrast=0.5)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -409,38 +547,57 @@ def explosives_crate(stem: str, seed: int) -> PropModel:
             Part(lambda p: _union(*(cylinder(p, c, 0.05 * M, 0.2 * M, 0.02 * M, r @ rotation_x(np.pi / 2)) for c, r in sticks),
                                   *(cylinder(p, (x * M, 0.55 * M, 0.0), 0.05 * M, 0.12 * M, 0.02 * M) for x in (-0.2, -0.05, 0.1))), STICK),
             Part(lambda p: rounded_box(p, (0, 0.3 * M, 0.325 * M), (0.46 * M, 0.06 * M, 0.01 * M), 0.005 * M), BAND),
+            # Planches de la caisse, losange d'avertissement au pochoir, mèches qui dépassent des bâtons.
+            Part(painted(crate, bands(1, 0.2 * M, 0.035 * M, offset=0.1 * M)), JOINT, relief=False),
+            Part(painted(crate, lambda p: np.abs(p[:, 0] - 0.22 * M) + np.abs(p[:, 1] - 0.3 * M) - 0.1 * M), MARK, relief=False),
+            Part(lambda p: _union(*(capsule(p, (x * M, 0.67 * M, 0.0), (x * M + 0.04 * M, 0.78 * M, 0.02 * M), 0.015 * M) for x in (-0.2, -0.05, 0.1))), FUSE),
         ]
 
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(64, 56), footprint=box_footprint(0.45 * M, 0.32 * M))
 
 
 def danger_sign(stem: str, seed: int) -> PropModel:
-    """Panneau « danger » rouillé sur son piquet, losange jaune, tordu par l'éboulement."""
-    POST, PLATE, MARK, RUST_M = range(4)
-    materials = [make_material("post", METAL), make_material("plate", MACHINE_YELLOW), make_material("mark", COAL, contrast=0.6),
-                 make_material("rust", RUST_DEEP)]
+    """
+    Panneau « danger — éboulement » sur deux piquets, tordu par la chute de pierres : bandeau rouge, fond blanc
+    sali, lignes de texte illisibles et pictogramme de rochers qui tombent ; rouille aux coins et aux rivets.
+    """
+    POST, PLATE, HEADER, TEXT, RUST_M, ROCK = range(6)
+    materials = [make_material("post", METAL), make_material("plate", "#D8D2C4", contrast=0.6), make_material("header", "#A63A2E", contrast=0.8),
+                 make_material("text", COAL, contrast=0.4), make_material("rust", RUST_DEEP), make_material("rock", ROCK_GREY)]
 
     def parts() -> list[Part]:
         w = Weathering(seed)
-        bend = rotation_z(w.uniform(0.12, 0.25))
-        plate_center = np.array([0.0, 1.55 * M, 0.06 * M])
-
+        bend = rotation_z(w.uniform(0.08, 0.16)) @ rotation_x(w.uniform(-0.1, 0.05))
+        center = np.array([0.0, 1.45 * M, 0.06 * M])
+        board = lambda p: rounded_box(p @ bend, center, (0.52 * M, 0.36 * M, 0.025 * M), 0.015 * M)
+        plate_local = lambda p: (p @ bend) - center
+        header = lambda p: 0.2 * M - plate_local(p)[:, 1]
+        lines = lambda p: np.maximum(np.maximum(bands(1, 0.12 * M, 0.04 * M, offset=0.01 * M)(plate_local(p)), plate_local(p)[:, 1] - 0.12 * M),
+                                     np.maximum(np.abs(plate_local(p)[:, 0] - 0.1 * M) - 0.3 * M, -plate_local(p)[:, 1] - 0.27 * M))
+        icon = lambda p: _union(*(np.hypot(plate_local(p)[:, 0] - x * M, plate_local(p)[:, 1] - y * M) - r * M
+                                  for x, y, r in ((-0.36, 0.0, 0.06), (-0.3, -0.14, 0.05), (-0.4, -0.2, 0.05))))
+        # Rouille rongeant les bords de la plaque : près du cadre, par plaques.
+        edge = lambda p: -(np.maximum(np.abs(plate_local(p)[:, 0]) - 0.52 * M, np.abs(plate_local(p)[:, 1]) - 0.36 * M) + 0.1 * M)
+        stones = [((w.uniform(-0.6, 0.6) * M, 0.08 * M, w.uniform(0.1, 0.6) * M), w.uniform(0.08, 0.16) * M) for _ in range(4)]
         return [
-            Part(lambda p: capsule(p @ bend, (0, 0, 0), (0, 1.5 * M, 0), 0.04 * M), POST),
-            Part(lambda p: rounded_box(p @ bend, plate_center, (0.24 * M, 0.24 * M, 0.02 * M), 0.02 * M, rotation_z(np.pi / 4)), PLATE),
-            Part(lambda p: capsule(p @ bend, plate_center + np.array([0.0, 0.12 * M, 0.03 * M]), plate_center + np.array([0.0, -0.02 * M, 0.03 * M]), 0.025 * M), MARK),
-            Part(lambda p: _union(*(sphere(p @ bend, plate_center + np.array([x * M, y * M, 0.02 * M]), 0.05 * M) for x, y in ((0.12, -0.06), (-0.1, -0.08)))), RUST_M),
+            Part(lambda p: _union(*(capsule(p @ bend, (x * M, 0.0, 0.0), (x * M, 1.8 * M, 0.0), 0.045 * M) for x in (-0.4, 0.4))), POST),
+            Part(board, PLATE),
+            Part(painted(board, header, 0.012 * M), HEADER, relief=False),
+            Part(painted(board, lines), TEXT, relief=False),
+            Part(painted(board, icon), TEXT, relief=False),
+            Part(painted(board, both(noise_mask(0.1 * M, seed + 1, 0.45), edge), 0.015 * M), RUST_M, relief=False),
+            Part(lambda p: _union(*(rounded_box(p, c, (r, r * 0.7, r), r * 0.4, rotation_y(r * 40)) for c, r in stones)), ROCK),
         ]
 
     # Plaque tournée vers la caméra : de trois-quarts sur l'axe X, elle se lisait par la tranche.
-    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(44, 70))
+    return PropModel(stem, parts, materials, float(np.radians(15.0)), canvas=(60, 80))
 
 
 def pickaxe_rock(stem: str, seed: int) -> PropModel:
     """Pioche plantée dans un bloc, lanterne éteinte posée à côté : le dernier coup avant de partir."""
     ROCK, HANDLE, HEAD, LAMP = range(4)
     materials = [make_material("rock", ROCK_GREY), make_material("handle", MINE_WOOD), make_material("head", METAL),
-                 make_material("lamp", RUST_DEEP)]
+                 make_material("lamp", RUST_DEEP)] + _rock_materials()
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -448,6 +605,7 @@ def pickaxe_rock(stem: str, seed: int) -> PropModel:
         head = np.array([0.05 * M, 0.85 * M, 0.0])
         return [
             Part(_block_union(blocks), ROCK),
+            *_rock_skin(_block_union(blocks), seed, 4),
             Part(lambda p: capsule(p, head, head + np.array([0.55 * M, 0.75 * M, 0.1 * M]), 0.045 * M), HANDLE),
             Part(lambda p: capsule(p, head + np.array([-0.35 * M, -0.2 * M, 0.0]), head + np.array([0.35 * M, 0.15 * M, 0.0]), 0.05 * M, 0.02 * M), HEAD),
             Part(lambda p: _union(cylinder(p, (0.6 * M, 0.18 * M, 0.45 * M), 0.1 * M, 0.18 * M, 0.03 * M),
@@ -478,7 +636,7 @@ def gallery_entrance(stem: str, seed: int, mirrored: bool) -> PropModel:
     materials = [make_material("rock_dark", ROCK_DARK), make_material("rock_grey", ROCK_GREY), make_material("rock_light", ROCK_LIGHT),
                  make_material("void", COAL, contrast=0.4), make_material("timber", MINE_WOOD), make_material("plank", PLANK_LIGHT),
                  make_material("rail", METAL, contrast=0.7), make_material("sleeper", MINE_WOOD), make_emissive("safety", SAFETY_ORANGE),
-                 make_material("red_earth", RED_EARTH)]
+                 make_material("red_earth", RED_EARTH)] + _rock_materials()
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -508,6 +666,7 @@ def gallery_entrance(stem: str, seed: int, mirrored: bool) -> PropModel:
             Part(rock(groups[0]), DARK),
             Part(rock(groups[1]), GREY),
             Part(rock(groups[2]), LIGHT),
+            *_rock_skin(rock(range(len(blocks))), seed, 10),
             Part(lambda p: np.maximum(_union(*(ellipsoid(p, c, (h[0] * 0.85, h[1] * 0.12, 0.08 * M)) for c, h in seam)), -mouth(p)), EARTH),
             Part(lambda p: rounded_box(p, (0, 1.15 * M, -0.9 * M), (1.0 * M, 1.2 * M, 0.25 * M), 0.02 * M), VOID),
             Part(lambda p: _union(*(cylinder(p, post + np.array([0.0, 1.2 * M, 0.0]), 0.13 * M, 1.2 * M, 0.03 * M) for post in posts),
@@ -559,10 +718,10 @@ def ore_wagon(stem: str, seed: int, crystals: bool) -> PropModel:
         load = [((w.uniform(-0.6, 0.6) * M, w.uniform(1.0, 1.2) * M, w.uniform(-0.3, 0.3) * M), w.uniform(0.14, 0.24) * M) for _ in range(9)]
         anchors = [np.array([w.uniform(-0.4, 0.4) * M, 1.0 * M, w.uniform(-0.2, 0.2) * M]) for _ in range(2)]
         shards = _crystals(w, anchors, 6, (0.4, 0.75), 0.11 * M) if crystals else []
-        patches = [np.array([w.uniform(-0.7, 0.7) * M, w.uniform(0.45, 1.0) * M, 0.5 * M]) for _ in range(3)]
+        rust = both(noise_mask(0.16 * M, seed + 1, 0.28, (1.0, 3.0, 1.0)), lambda p: p[:, 1] - 1.0 * M)
         parts_list = [
             Part(tub, METAL_M),
-            Part(lambda p: np.maximum(_union(*(sphere(p, c, 0.22 * M) for c in patches)), tub(p) - 0.03 * M), RUST_M),
+            Part(painted(tub, rust, 0.015 * M), RUST_M, relief=False),
             Part(lambda p: _union(*(cylinder(p, (x * M, 0.22 * M, z * M), 0.2 * M, 0.05 * M, 0.02 * M, rotation_x(np.pi / 2))
                                     for x in (-0.48, 0.48) for z in (-0.42, 0.42)),
                                   rounded_box(p, (0, 0.28 * M, 0), (0.75 * M, 0.05 * M, 0.3 * M), 0.02 * M)), WHEEL),
@@ -577,10 +736,11 @@ def ore_wagon(stem: str, seed: int, crystals: bool) -> PropModel:
 
 def site_hut(stem: str, seed: int, mirrored: bool) -> PropModel:
     """Baraque de chantier en tôle ondulée sur parpaings : porte entrouverte, vitre sale, gyrophare sur le toit."""
-    WALL, ROOF, DARK, BLOCK, TRIM, LAMP, RUST_M = range(7)
+    WALL, ROOF, DARK, BLOCK, TRIM, LAMP, RUST_M, GRIME, RIB, GLINT = range(10)
     materials = [make_material("hut", HUT_WALL), make_material("roof", METAL), make_material("dark", COAL, contrast=0.5),
                  make_material("block", ROCK_GREY), make_material("trim", MACHINE_YELLOW), make_emissive("safety", SAFETY_ORANGE),
-                 make_material("rust", RUST_DEEP)]
+                 make_material("rust", RUST_DEEP), make_material("grime", "#4E5650", contrast=0.7), make_material("rib", "#46525E", contrast=0.6),
+                 make_material("glint", "#8A9AA0", contrast=0.5)]
     k = 2 * np.pi / (0.16 * M)
 
     def parts() -> list[Part]:
@@ -591,7 +751,10 @@ def site_hut(stem: str, seed: int, mirrored: bool) -> PropModel:
             return rounded_box(p, (0, 1.45 * M, 0), (1.8 * M, 1.2 * M, 1.15 * M), 0.03 * M) + corrugation
 
         roof = lambda p: rounded_box(p, (0, 2.72 * M, 0), (1.98 * M, 0.07 * M, 1.32 * M), 0.02 * M, rotation_x(-0.07))
-        streaks = [np.array([w.uniform(-1.6, 1.6) * M, w.uniform(0.6, 2.3) * M, 1.15 * M]) for _ in range(4)]
+        # Coulures sous le toit, pied sali par la boue, ondes du toit, reflet en biais sur la vitre.
+        streaks = both(noise_mask(0.14 * M, seed + 1, 0.3, (1.0, 5.0, 1.0)), lambda p: 2.6 * M - p[:, 1] - (value_noise(p, 0.4 * M, seed + 2)) * 1.4 * M)
+        grime = lambda p: p[:, 1] - 0.55 * M - (value_noise(p, 0.3 * M, seed + 3) - 0.5) * 0.4 * M
+        window = lambda p: rounded_box(p, (0.75 * M, 1.6 * M, 1.14 * M), (0.5 * M, 0.32 * M, 0.04 * M), 0.01 * M)
         return [
             Part(walls, WALL),
             Part(roof, ROOF),
@@ -602,8 +765,10 @@ def site_hut(stem: str, seed: int, mirrored: bool) -> PropModel:
             Part(lambda p: _union(rounded_box(p, (0, 2.5 * M, 1.17 * M), (1.8 * M, 0.06 * M, 0.02 * M), 0.01 * M),
                                   rounded_box(p, (0.75 * M, 1.6 * M, 1.18 * M), (0.03 * M, 0.32 * M, 0.02 * M), 0.005 * M)), TRIM),
             Part(lambda p: ellipsoid(p, (1.6 * M, 2.95 * M, 0.9 * M), (0.12 * M, 0.15 * M, 0.12 * M)), LAMP),
-            Part(lambda p: np.maximum(_union(*(capsule(p, c, c - np.array([0.0, 0.6 * M, 0.0]), 0.1 * M) for c in streaks)),
-                                      walls(p) - 0.02 * M), RUST_M),
+            Part(painted(walls, streaks, 0.02 * M), RUST_M, relief=False),
+            Part(painted(walls, grime, 0.015 * M), GRIME, relief=False),
+            Part(painted(roof, bands(0, 0.3 * M, 0.08 * M)), RIB, relief=False),
+            Part(painted(window, lambda p: np.abs(p[:, 0] - 0.75 * M + (p[:, 1] - 1.6 * M) * 0.8) - 0.05 * M, 0.012 * M), GLINT, relief=False),
         ]
 
     return _site_model(stem, parts, materials, 1.8 * M, 1.15 * M, 2.4 * M, 1.8 * M, 3.3 * M, mirrored)

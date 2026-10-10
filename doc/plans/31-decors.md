@@ -34,7 +34,7 @@ Notes : marais 4/10, immeubles 5/10, forêt et petits décors urbains 6/10, cham
 | **U4** | Orphelins urbains : les trois murs supprimés avec leurs `.import`, accord de Raphaël | Livré |
 | **F1** | Forêt : les 18 modèles repris (23 PNG), arbres partagés avec les champs et la ferme ; galerie en jeu | Livré, voir §6 |
 | **C1** | Champs et ferme : maisons de ferme (façades du kit urbain), grange endommagée vraiment différente, haies, verger, petits décors des champs | Livré, voir §7 |
-| Q1 | Carrière : panneau de danger, cristaux, petits décors lisibles | À faire |
+| **Q1** | Carrière : roches, cristaux, panneau de danger, vestiaire, machines, petits décors lisibles | Livré, voir §8 |
 
 Forêt, champs et carrière ont été demandés après les lots urbains ([DECISIONS §84](DECISIONS.md)) : « je crois que sur les autres il y a moins de choses à revoir », d'où une reprise plus légère, un lot par biome.
 
@@ -168,3 +168,29 @@ Forêt, champs et carrière ont été demandés après les lots urbains ([DECISI
 **Vérifications C1.** Aperçus ×2 sur trois sols des champs (herbe, blé, chaume) et ×5 isolés, plusieurs passes par famille ; planches de génération regardées ; galerie en jeu (`--capture-prop-gallery wild_fields`, seed 1002, 63 sprites cadrés, dont les fermes entières) : granges, maisons et hangars se lisent comme une ferme, la grange endommagée se distingue au premier coup d'œil, haies et petits décors se détachent de l'herbe. Décors inchangés (flaques, remorque, portails, poteau, linge, épouvantail aux corbeaux, arbres de verger en feuilles) : rendus identiques. Forêt : seuls le mur en ruine et la voiture changent (`_top_skin`), les arbres restent identiques. Régénération des champs et de la ferme comparée octet par octet : identique.
 
 **Question à Raphaël.** `assets/props/wild_fields/_wild_fields_hero_props.png` est la planche d'un ancien générateur (`scripts/generate_wild_fields_props.py`), importée par Godot mais chargée nulle part. La supprimer avec son `.import` ? Rien n'est supprimé sans son accord.
+
+## 8. Compte rendu Q1 — carrière
+
+**Roche.** Une même peau pour toutes les roches de la carrière (`_rock_skin`) : strates horizontales rompues, fissures d'un pixel, poussière sur les faces tournées vers le ciel ; affleurements, bloc éboulé, veine, pioche et front des galeries la reçoivent. Les blocs restent anguleux : ce sont des pierres taillées par la mine. Éclats et cailloux au pied deviennent des blocs à facettes au lieu de boules.
+
+**Cristaux d'Essence.** Ils se lisaient comme une flamme bleue : des fuseaux émissifs, sans ombre, fondus ensemble. Ce sont maintenant des prismes hexagonaux à pointe, en éventail (le plus grand presque droit au centre), ombrés par leurs facettes ; seules les pointes luisent, et la roche autour prend un reflet bleu-vert.
+
+**Décor par décor :**
+
+| Décor | Avant | Après |
+|---|---|---|
+| Affleurements (×2), bloc éboulé | boîtes lisses | strates, fissures, poussière, cailloux à facettes |
+| Tas de déblais et de minerai | cône à ondulations régulières | grain bosselé, gravillons sombres et clairs, pierres roulées |
+| Veine et grappe de cristaux | flamme bleue | prismes facettés en éventail, pointes lumineuses, reflet sur la roche |
+| Godet de pelleteuse | jouet jaune à rotules bleues | axes d'acier sombre, deux vérins à tige brillante, peinture écaillée, coulures de rouille, boue séchée dans le godet |
+| Convoyeur | deux pieds flottaient sous le tapis | pieds rattachés au bâti incliné |
+| Gyrophare | boule orange sur un fil | poteau rayé jaune et noir au pied, lanterne grillagée, boîtier rouillé |
+| Vestiaire | boîte verte illisible | armoire debout, porte ouverte à aérations, bleu de travail pendu, photo, casque et thermos au pied |
+| Caisse d'explosifs | caisse lisse | planches jointes, losange d'avertissement au pochoir, mèches qui dépassent |
+| Panneau de danger | losange jaune de 8 px | panneau « danger » sur deux piquets : bandeau rouge, texte illisible, pictogramme d'éboulement, rouille aux bords, pierres au pied |
+| Wagonnets | rouille en boules | rouille en coulures |
+| Baraques | toit uni, rouille en bâtons | coulures sous le toit, pied sali, ondes du toit, reflet sur la vitre |
+
+**Vérifications Q1.** Aperçus ×2 sur trois sols de la carrière (sol, roche, industriel) et ×5 isolés, trois passes ; planche de génération ; galerie en jeu (`--capture-prop-gallery collapsed_quarry`, seed 1002, 41 sprites cadrés) regardée : roches texturées sans virer au camouflage, cristaux lisibles et lumineux sur le sol sombre, panneau et vestiaire identifiables. Voies et rails, chariot renversé, touret et étais inchangés. Régénération comparée octet par octet : identique.
+
+**Bilan du plan 31.** Les cinq biomes sont repris : marais (M0–M2), urbain (U1–U4), forêt (F1), champs et ferme (C1), carrière (Q1). Restent hors plan : coffres et lieux (notés 7/10 à l'audit, non demandés).
