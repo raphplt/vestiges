@@ -1956,6 +1956,11 @@ public partial class Player : CharacterBody2D
             Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset,
                 launchDelay);
 
+            // Rebonds : stat entière fractionnaire, tirée pour chaque lettre (plan 23 R4).
+            if (proj != null && pattern == AttackPatternKind.Bounce)
+                proj.SetBounce(FractionalCount.Roll(GetWeaponStat("chain_targets"), RunRandom.Combat.Randf()),
+                    GetWeaponStat("chain_range"), GetWeaponStat("chain_damage_falloff"));
+
             // Ground fire : configurer le projectile pour spawner une zone au sol à l'impact
             WeaponSpecialEffect se = _equippedWeapon?.SpecialEffect;
             if (proj != null && se?.Kind == SpecialEffectKind.GroundFire)

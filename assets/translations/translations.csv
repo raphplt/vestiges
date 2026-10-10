@@ -337,6 +337,7 @@ WEAPON_PATTERN_CHAIN,Chaîne,Chain
 WEAPON_PATTERN_CIRCULAR,Cercle,Circle
 WEAPON_PATTERN_HOMING,Tête chercheuse,Homing
 WEAPON_PATTERN_ORBITAL,Orbital,Orbital
+WEAPON_PATTERN_BOUNCE,Rebond,Bounce
 LEVELUP_REROLL,Relancer ({0}),Reroll ({0})
 LEVELUP_BANISH,Bannir ({0}),Banish ({0})
 LEVELUP_BANISH_CANCEL,Annuler,Cancel

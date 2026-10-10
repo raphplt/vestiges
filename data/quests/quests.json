@@ -94,6 +94,10 @@
                 {
                     "type": "character",
                     "id": "facteur"
+                },
+                {
+                    "type": "weapon",
+                    "id": "letter_satchel"
                 }
             ]
         },

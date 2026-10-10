@@ -212,6 +212,27 @@ def _axe() -> ProjectileModel:
     return ProjectileModel(materials, parts, (24, 24), 16, 4, 16)
 
 
+def _envelope() -> ProjectileModel:
+    """Lettre de la Sacoche : enveloppe redressée vers l'écran pour se lire, qui bat comme un papier lancé ;
+    rabat plié, cachet de cire et timbre bleu postal. Sans direction : une lettre se lit de face."""
+    materials = (make_material("paper", "#E8E0D4", contrast=0.8), make_material("fold", "#A68B6B"),
+                 make_material("wax", "#B03A2E", contrast=1.1), make_material("stamp", "#5A7FA8"))
+    flutter = (0.0, 0.3, 0.0, -0.3)
+
+    def parts(frame: int) -> Sequence[Part]:
+        # Redressée de 60° puis tournée contre le lacet du rendu sans direction : la face regarde l'écran.
+        turn = rotation_y(-0.6) @ rotation_x(1.05) @ rotation_y(flutter[frame])
+        return (
+            Part(_rotated(lambda p: rounded_box(p, (0, 0, 0), (7.0, 0.6, 4.6), 0.4), turn), 0),
+            Part(_rotated(lambda p: capsule(p, (-6.4, 0.7, -4.0), (0, 0.7, 0.6), 0.5), turn), 1),
+            Part(_rotated(lambda p: capsule(p, (6.4, 0.7, -4.0), (0, 0.7, 0.6), 0.5), turn), 1),
+            Part(_rotated(lambda p: ellipsoid(p, (0, 0.8, 0.6), (1.6, 0.6, 1.6)), turn), 2),
+            Part(_rotated(lambda p: rounded_box(p, (4.8, 0.7, 2.9), (1.3, 0.25, 1.1), 0.1), turn), 3),
+        )
+
+    return ProjectileModel(materials, parts, (24, 24), 1, len(flutter), 10)
+
+
 def _note() -> ProjectileModel:
     materials = (make_material("brass", "#D4A843", contrast=1.1),)
 
@@ -331,6 +352,7 @@ MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "needle": _needle,
     "shard": _shard,
     "axe": _axe,
+    "envelope": _envelope,
     "stone": _stone,
     "orb_essence": _comet,
     "orb_fire": _flame,

@@ -345,3 +345,9 @@ Aucune arme existante ne porte le geste du Facteur (la seule chaîne, le Trousse
 | **P2d — Glissade sur patins** | Profils de mobilité en données (`dash` commun, `glide` du Facteur), même bouton : 0,4 s, virage limité, glisse le long des murs au lieu de s'arrêter, sortie contrôlable, compte comme mouvement pour l'élan. | Suite de mouvement (durée à 30/60/120 Hz, virage borné, mur, sortie), capture |
 
 **Stats de départ proposées** (valeurs d'essai) : vitesse 215, dégâts 8 (dégâts unitaires faibles, contrepartie de la fiche), cadence 1,1, portée 320, PV 85, régénération 0,8, multiplicateur de score 1,05.
+
+### P2a et P2b livrés — 10 octobre 2026
+
+- **P2a :** le Facteur est au catalogue (4 personnages), verrouillé par La tournée ; portrait de Raphaël ; passif déclaré. Le test de quêtes « personnage inconnu sans nom » vise désormais la Scaphandrière.
+- **P2b :** **Sacoche de lettres** (`letter_satchel`, tier 1, distance, motif `bounce` « Rebond »), arme de départ du Facteur, débloquée avec lui par La tournée. Dégâts 7, cadence 1,1, portée 220, 2 rebonds (soit trois ennemis), portée de rebond 150 au sol, −15 % par rebond. Le rebond est un état du projectile du joueur (`Projectile.SetBounce`) : vers la créature **la plus éloignée** à portée, jamais une déjà touchée ; en route, la lettre ne touche que sa destination ; une destination perdue en route en cherche une autre. Ascensions : *Lettre recommandée* (une lettre, ×1,6, plus de baisse) et *Publipostage* (rebonds ×2, portée ×1,5). Enveloppe de face qui bat (`proj_envelope`), icône de sacoche, son provisoire tiré des sources CC0 créditées (recette `letter_satchel` de `tools/prepare_weapon_audio.py`, **à auditionner**).
+- **Vérifié :** suite d'armes (cible la plus éloignée, trois touches 40 → 20 → 10, hors portée intacte, pool remis à zéro, deux voies, nombre dans la croissance), quêtes, catalogues, audio ; capture en vraie run (seed 221092026) : l'enveloppe se lit en vol.

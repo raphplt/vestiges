@@ -38,6 +38,7 @@ public partial class WeaponRegression : Node2D
             CheckOrbitalOnEquip();
             await CheckOrbitalHits();
             await CheckTargetLockOneLife();
+            await CheckBounceSeeksFarthest();
             await CheckHitEffectsFollowSource();
             CheckSingleLevel();
             CheckBanishUpgrade();
@@ -198,6 +199,63 @@ public partial class WeaponRegression : Node2D
         locked.QueueFree();
         other.QueueFree();
     }
+
+    /// <summary>
+    /// Sacoche de lettres (plan 06 P2b) : après chaque touche, la lettre repart vers la créature la plus éloignée à
+    /// portée au sol, jamais une déjà touchée, sans toucher celles qu'elle survole ; chaque rebond affaiblit le coup ;
+    /// hors de portée, rien. Rendue au pool, elle ne garde ni rebonds ni destination.
+    /// </summary>
+    private async Task CheckBounceSeeksFarthest()
+    {
+        PackedScene projectileScene = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn");
+        WeaponData satchel = WeaponDataLoader.Get("letter_satchel");
+        Enemy first = SpawnStill(new Vector2(100f, 0f));
+        Enemy near = SpawnStill(new Vector2(140f, 0f));
+        Enemy far = SpawnStill(new Vector2(100f, 60f));
+        Enemy outOfRange = SpawnStill(new Vector2(300f, 0f));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+        Projectile letter = projectileScene.Instantiate<Projectile>();
+        AddChild(letter);
+        bool released = false;
+        letter.SetRelease(_ => released = true);
+        letter.Launch(_player.GlobalPosition, Vector2.Right, 40f, 300f, 2f, 0, false, _player, satchel, null);
+        letter.StopTicking();
+        letter.SetBounce(2, 150f, 0.5f);
+        Node2D firstDestination = null;
+        for (int frame = 0; frame < 30 && firstDestination == null; frame++)
+        {
+            letter.PhysicsTick(1f / 60f);
+            firstDestination = LockedTarget(letter, "_bounceTarget");
+        }
+        Check(firstDestination == far,
+            $"Sacoche : après la première touche, la lettre vise la plus éloignée à portée au sol ({firstDestination?.Name})");
+        for (int frame = 0; frame < 120 && !released; frame++)
+        {
+            letter.PhysicsTick(1f / 60f);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+        float lostFirst = Lost(first), lostFar = Lost(far), lostNear = Lost(near);
+        Check(released && lostFirst > 0f && lostFar > 0f && lostNear > 0f && outOfRange.HpRatio >= 1f,
+            $"Sacoche : trois touches puis fin de course, la créature hors de portée intacte (PV perdus {lostFirst:0.#} {lostFar:0.#} {lostNear:0.#}, hors portée {Lost(outOfRange):0.#})");
+        Check(lostFar < lostFirst && lostNear < lostFar,
+            $"Sacoche : chaque rebond frappe moins fort ({lostFirst:0.#} > {lostFar:0.#} > {lostNear:0.#})");
+
+        letter.Launch(_player.GlobalPosition, Vector2.Right, 1f, 300f, 2f, 0, false, _player, satchel, null);
+        letter.StopTicking();
+        int bounces = (int)typeof(Projectile).GetField("_bouncesRemaining", Private).GetValue(letter);
+        Check(bounces == 0 && LockedTarget(letter, "_bounceTarget") == null,
+            "Sacoche : un tir neuf du pool ne garde ni rebonds ni destination");
+
+        letter.QueueFree();
+        first.QueueFree();
+        near.QueueFree();
+        far.QueueFree();
+        outOfRange.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    private static float Lost(Enemy enemy) => (1f - enemy.HpRatio) * enemy.MaxHp;
 
     private Enemy SpawnStill(Vector2 offset)
     {
@@ -483,7 +541,8 @@ public partial class WeaponRegression : Node2D
                 AttackPatternKind pattern = path.AttackPattern ?? data.AttackPattern;
                 bool known = data.Category == WeaponCategory.Melee
                     ? pattern is AttackPatternKind.Arc or AttackPatternKind.Linear or AttackPatternKind.Circular or AttackPatternKind.Chain
-                    : pattern is AttackPatternKind.Linear or AttackPatternKind.Burst or AttackPatternKind.Homing or AttackPatternKind.Orbital;
+                    : pattern is AttackPatternKind.Linear or AttackPatternKind.Burst or AttackPatternKind.Homing or AttackPatternKind.Orbital
+                        or AttackPatternKind.Bounce;
                 if (!known)
                     badPatterns.Add($"{data.Id}:{path.Id}:{pattern}");
             }
@@ -716,7 +775,7 @@ public partial class WeaponRegression : Node2D
                     && requests[0] == data.ImpactAudio;
                 families.Add(data.ImpactAudio);
             }
-            Check(followedSource && families.Count == 6, "Impacts : les 24 armes suivent leur provenance dans six familles de matière");
+            Check(followedSource && families.Count == 6, "Impacts : toutes les armes suivent leur provenance dans six familles de matière");
             WeaponInstance blade = new(WeaponDataLoader.Get("chipped_blade"));
             AttackContext bladeSource = new(_player.GetInstanceId(), blade, 2, DamageKind.DirectWeapon);
             requests.Clear();
@@ -928,7 +987,7 @@ public partial class WeaponRegression : Node2D
             string count = data.AttackPattern switch
             {
                 AttackPatternKind.Orbital => "orbital_count",
-                AttackPatternKind.Chain => "chain_targets",
+                AttackPatternKind.Chain or AttackPatternKind.Bounce => "chain_targets",
                 _ => "projectile_count",
             };
             float total = 0f;
