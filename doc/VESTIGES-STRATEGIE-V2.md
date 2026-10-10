@@ -742,6 +742,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [ ] Recette du lot D : comparer les variantes clavier/manette en combat, retenir timings et protection, vérifier le coût en combat dense et recalibrer le début de run (plan 03).
 - [x] Validation par Raphaël du dash commun livré (22 septembre 2026).
 - [ ] Refonte et validation d’au moins cinq à six personnages et de tous leurs sprites avant les mobilités spécifiques (06/08).
+- [x] Plan 32 : sprites des sept héros à venir (Éveillée, Facteur, Scaphandrière, Sonneur, Écolière, Photographe, Veilleuse, et l'Enfant du Bas-Port en variante) au gabarit des trois joués, écrits dans `assets/characters/` ; planches et animations regardées (10 octobre 2026). Leur validation par Raphaël reste la case ci-dessus.
 - [ ] Mobilités de personnages : prototypes et profils après casting et nouveaux sprites validés (plan 01 E).
 - [x] Micro-événements v1 (plan 12) : directeur calé autour des Résurgences, cinq événements (Souverain, Harde, Vestige tombé, Veille, Averse d'éclats), repères au sol, bandeau et flèche de bord, données JSON ; captures en vraie run (24 septembre 2026).
 - [x] Variantes renforcées data-driven (plan 12) : élites naturelles à affixe, Souverains, Aberrations et affixes de phase dans `_variants.json`.

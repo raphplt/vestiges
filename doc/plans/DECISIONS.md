@@ -956,3 +956,9 @@ Raphaël valide explicitement « cloche b et boite a musique c » dans la série
 - Question U4 (10 octobre) : « oui supprime les. Et passe au champ stp » : `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` supprimés avec leurs `.import` ; lot C1 (champs et ferme) livré dans la foulée : maisons de ferme régénérées avec les façades urbaines, grange endommagée vraiment abîmée, haies, verger, petits décors des champs. Suivant : Q1 (carrière).
 - « go carrière » (10 octobre) : lot Q1 livré ; les cinq biomes du plan 31 sont repris.
 - Planche orpheline des champs (10 octobre) : « Oui supprime la planche orpheline stp » : `_wild_fields_hero_props.png` supprimée avec son `.import`. L'ancien générateur qui la produisait (`scripts/generate_wild_fields_props.py`) réécrirait sept décors repris en C1 : question posée au tableau de bord.
+
+## 85. Sprites des héros à venir — 10 octobre 2026
+
+- Demande : « j'aimerai bien que tu prépares les sprites des prochaines héros. Base toi sur le lore et les éléments écrits ». Lu comme : les héros du lore (§5) qui n'ont pas de sprites au niveau des trois joués, sept plus une variante : l'Éveillée, le Facteur et la Scaphandrière (casting validé, prototypes anciens), le Sonneur, l'Écolière et la Photographe (ajouts du 4 octobre), la Veilleuse (cachée) et l'Enfant du Bas-Port (variante du Vagabond).
+- Plan [32](32-heros.md), lots H1 (Éveillée, Facteur, Scaphandrière), H2 (Sonneur, Écolière, Photographe), H3 (Veilleuse, Enfant) livrés : huit modèles procéduraux au gabarit des joués, signature tirée du lore pour chacun, sprites écrits dans `assets/characters/<id>/`. Rien n'est branché (aucun n'est dans `characters.json`) ; planches à valider par Raphaël.
+
