@@ -15,7 +15,7 @@ public partial class HubScreen : Control
 {
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Chroniques, Collection }
+	private enum HubState { MainMenu, Characters, Quests, Collection, Chroniques }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color NameColor = new(0.91f, 0.88f, 0.83f);
@@ -30,17 +30,16 @@ public partial class HubScreen : Control
 	private HubBackdrop _backdrop;
 	private HubCamp _camp;
 	private Control _mainMenuLayer;
-	private Control _chroniquesLayer;
-	private HubChroniquesPanel _chroniquesPanel;
 	private HubMenuButton _enterVoidButton;
-	private HubMenuButton _chroniquesButton;
-	private HubMenuButton _chroniquesBackButton;
-	private Control _collectionLayer;
+	private HubChroniquesPanel _chroniquesPanel;
 	private HubCollectionPanel _collectionPanel;
+	private HubQuestsPanel _questsPanel;
+	private HubCharactersPanel _charactersPanel;
 	private string _collectionFocus;
-	private HubMenuButton _collectionButton;
-	private HubMenuButton _collectionBackButton;
+	/// <summary>Pages ouvertes depuis le menu : calque, bouton de retour et bouton du menu qui retrouve le focus.</summary>
+	private readonly Dictionary<HubState, (Control Layer, HubMenuButton Back, HubMenuButton Opener)> _pages = new();
 	private readonly List<HubMenuButton> _menuButtons = new();
+	private readonly Dictionary<HubState, HubMenuButton> _openers = new();
 	private Label _nameLabel;
 	private Label _taglineLabel;
 	private Control _nameplate;
@@ -153,8 +152,7 @@ public partial class HubScreen : Control
 		List<CharacterData> characters = CharacterDataLoader.GetAll();
 		_camp.Populate(characters, MetaSaveManager.IsCharacterUnlocked, _selectedCharacterId);
 
-		BuildChroniques();
-		BuildCollection();
+		BuildPages();
 
 		_settingsScreen = new SettingsScreen();
 		AddChild(_settingsScreen);
@@ -223,8 +221,10 @@ public partial class HubScreen : Control
 
 		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, OnEnterVoidPressed);
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
-		_collectionButton = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, OpenCollection);
-		_chroniquesButton = AddMenuButton(menu, "Chroniques", TextRole.Title, _bodyFont, OpenChroniques);
+		_openers[HubState.Characters] = AddMenuButton(menu, "Personnages", TextRole.Title, _bodyFont, () => OpenPage(HubState.Characters));
+		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, _bodyFont, () => OpenPage(HubState.Quests));
+		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, () => OpenPage(HubState.Collection));
+		_openers[HubState.Chroniques] = AddMenuButton(menu, "Chroniques", TextRole.Title, _bodyFont, () => OpenPage(HubState.Chroniques));
 		AddMenuButton(menu, "Paramètres", TextRole.Title, _bodyFont, () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
@@ -387,79 +387,60 @@ public partial class HubScreen : Control
 		seedRow.AddChild(_seedInput);
 	}
 
-	private void BuildChroniques()
+	/// <summary>
+	/// Pages du menu (plan 06 §9.10 pour Personnages et Quêtes) : même voile, même en-tête, même retour ; chacune garde
+	/// les marges de son contenu.
+	/// </summary>
+	private void BuildPages()
 	{
-		_chroniquesLayer = new Control { Visible = false };
-		_chroniquesLayer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		AddChild(_chroniquesLayer);
-
-		ColorRect veil = new() { Color = new Color(Night, 0.82f) };
-		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_chroniquesLayer.AddChild(veil);
-
-		Label header = CreateLabel("Chroniques", TextRole.Display, UITheme.GoldColor, true);
-		header.Position = new Vector2(MenuLeft, 72f);
-		_chroniquesLayer.AddChild(header);
-
-		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
-		_chroniquesLayer.AddChild(back);
-		_chroniquesBackButton = new HubMenuButton();
-		_chroniquesBackButton.Setup("Retour", TextRole.Title, _bodyFont);
-		_chroniquesBackButton.Pressed += () =>
-		{
-			AudioManager.PlayUI("sfx_menu_confirmer");
-			SetState(HubState.MainMenu);
-		};
-		back.AddChild(_chroniquesBackButton);
-
-		_chroniquesPanel = new HubChroniquesPanel();
-		_chroniquesPanel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_chroniquesPanel.OffsetLeft = 320f;
-		_chroniquesPanel.OffsetRight = -320f;
-		_chroniquesPanel.OffsetTop = 160f;
-		_chroniquesPanel.OffsetBottom = -120f;
-		_chroniquesLayer.AddChild(_chroniquesPanel);
-	}
-
-	/// <summary>Collection (plan 04 C2) : même voile, même en-tête et même retour que les Chroniques.</summary>
-	private void BuildCollection()
-	{
-		_collectionLayer = new Control { Visible = false };
-		_collectionLayer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		AddChild(_collectionLayer);
-
-		ColorRect veil = new() { Color = new Color(Night, 0.82f) };
-		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_collectionLayer.AddChild(veil);
-
-		Label header = CreateLabel("Collection", TextRole.Display, UITheme.GoldColor, true);
-		header.Position = new Vector2(MenuLeft, 72f);
-		_collectionLayer.AddChild(header);
-
-		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
-		_collectionLayer.AddChild(back);
-		_collectionBackButton = new HubMenuButton();
-		_collectionBackButton.Setup("Retour", TextRole.Title, _bodyFont);
-		_collectionBackButton.Pressed += () =>
-		{
-			AudioManager.PlayUI("sfx_menu_confirmer");
-			SetState(HubState.MainMenu);
-		};
-		back.AddChild(_collectionBackButton);
-
+		_charactersPanel = new HubCharactersPanel();
+		AddPage(HubState.Characters, "Personnages", _charactersPanel, 240f, -200f, -140f);
+		_questsPanel = new HubQuestsPanel();
+		AddPage(HubState.Quests, "Quêtes", _questsPanel, 240f, -200f, -140f);
 		_collectionPanel = new HubCollectionPanel();
-		_collectionPanel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		_collectionPanel.OffsetLeft = 320f;
-		_collectionPanel.OffsetRight = -240f;
-		_collectionPanel.OffsetTop = 160f;
-		_collectionPanel.OffsetBottom = -140f;
-		_collectionLayer.AddChild(_collectionPanel);
+		AddPage(HubState.Collection, "Collection", _collectionPanel, 320f, -240f, -140f);
+		_chroniquesPanel = new HubChroniquesPanel();
+		AddPage(HubState.Chroniques, "Chroniques", _chroniquesPanel, 320f, -320f, -120f);
 	}
 
-	private void OpenCollection()
+	private void AddPage(HubState state, string title, Control panel, float left, float right, float bottom)
+	{
+		Control layer = new() { Visible = false };
+		layer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		AddChild(layer);
+
+		ColorRect veil = new() { Color = new Color(Night, 0.82f) };
+		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		layer.AddChild(veil);
+
+		Label header = CreateLabel(title, TextRole.Display, UITheme.GoldColor, true);
+		header.Position = new Vector2(MenuLeft, 72f);
+		layer.AddChild(header);
+
+		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
+		layer.AddChild(back);
+		HubMenuButton backButton = new();
+		backButton.Setup("Retour", TextRole.Title, _bodyFont);
+		backButton.Pressed += () =>
+		{
+			AudioManager.PlayUI("sfx_menu_confirmer");
+			SetState(HubState.MainMenu);
+		};
+		back.AddChild(backButton);
+
+		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+		panel.OffsetLeft = left;
+		panel.OffsetRight = right;
+		panel.OffsetTop = 160f;
+		panel.OffsetBottom = bottom;
+		layer.AddChild(panel);
+		_pages[state] = (layer, backButton, _openers.GetValueOrDefault(state));
+	}
+
+	private void OpenPage(HubState state)
 	{
 		AudioManager.PlayUI("sfx_menu_confirmer");
-		SetState(HubState.Collection);
+		SetState(state);
 	}
 
 	private Label CreateLabel(string text, TextRole role, Color color, bool bold)
@@ -479,36 +460,35 @@ public partial class HubScreen : Control
 
 	private void SetState(HubState state)
 	{
-		bool fromChroniques = _currentState == HubState.Chroniques;
-		bool fromCollection = _currentState == HubState.Collection;
+		HubState from = _currentState;
 		_currentState = state;
 		_mainMenuLayer.Visible = state == HubState.MainMenu;
-		_chroniquesLayer.Visible = state == HubState.Chroniques;
-		_collectionLayer.Visible = state == HubState.Collection;
+		foreach ((HubState page, (Control Layer, HubMenuButton Back, HubMenuButton Opener) parts) in _pages)
+			parts.Layer.Visible = page == state;
 
-		if (state == HubState.Collection)
+		if (state != HubState.MainMenu)
 		{
-			Control first = _collectionPanel.Refresh(_collectionFocus);
-			_collectionFocus = null;
+			Control first = state switch
+			{
+				HubState.Characters => _charactersPanel.Refresh(_selectedCharacterId),
+				HubState.Quests => _questsPanel.Refresh(),
+				HubState.Collection => _collectionPanel.Refresh(_collectionFocus),
+				_ => null,
+			};
+			if (state == HubState.Collection)
+				_collectionFocus = null;
+			if (state == HubState.Chroniques)
+				_chroniquesPanel.Refresh(_selectedCharacterId);
 			if (first != null)
 				first.GrabFocus();
 			else
-				_collectionBackButton.GrabFocusSilently();
-			return;
-		}
-
-		if (state == HubState.Chroniques)
-		{
-			_chroniquesPanel.Refresh(_selectedCharacterId);
-			_chroniquesBackButton.GrabFocusSilently();
+				_pages[state].Back.GrabFocusSilently();
 			return;
 		}
 
 		UpdateVestigesDisplay();
-		if (fromChroniques)
-			_chroniquesButton.GrabFocusSilently();
-		else if (fromCollection)
-			_collectionButton.GrabFocusSilently();
+		if (_pages.TryGetValue(from, out (Control Layer, HubMenuButton Back, HubMenuButton Opener) previous))
+			previous.Opener?.GrabFocusSilently();
 	}
 
 	/// <summary>Le camp sort du noir, puis le titre et le menu arrivent l'un après l'autre.</summary>
@@ -535,12 +515,6 @@ public partial class HubScreen : Control
 		}
 
 		_enterVoidButton.GrabFocusSilently();
-	}
-
-	private void OpenChroniques()
-	{
-		AudioManager.PlayUI("sfx_menu_confirmer");
-		SetState(HubState.Chroniques);
 	}
 
 	private void CycleCharacter(int step)

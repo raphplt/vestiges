@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
-using Vestiges.Progression;
 
 namespace Vestiges.UI;
 
 /// <summary>
-/// Chroniques du Hub : records, statistiques par personnage, endurance et quêtes.
+/// Chroniques du Hub : records, statistiques par personnage et endurance. Les quêtes ont leur page (HubQuestsPanel).
 /// Reconstruit son contenu à chaque changement de sous-onglet.
 /// </summary>
 public partial class HubChroniquesPanel : MarginContainer
@@ -87,7 +86,6 @@ public partial class HubChroniquesPanel : MarginContainer
 		CreateChroniquesSubTab(subTabRow, "global", "Global");
 		CreateChroniquesSubTab(subTabRow, "personnage", "Personnages");
 		CreateChroniquesSubTab(subTabRow, "endurance", "Endurance");
-		CreateChroniquesSubTab(subTabRow, "quetes", "Quêtes");
 
 		vbox.AddChild(new ColorRect { Color = new Color(GoldDim, 0.45f), CustomMinimumSize = new Vector2(0f, 4f) });
 
@@ -113,9 +111,6 @@ public partial class HubChroniquesPanel : MarginContainer
 				break;
 			case "endurance":
 				BuildChroniquesEndurance(scrollContent);
-				break;
-			case "quetes":
-				BuildChroniquesQuetes(scrollContent);
 				break;
 		}
 
@@ -255,48 +250,6 @@ public partial class HubChroniquesPanel : MarginContainer
 			bool isCurrentChar = run.CharacterId == _selectedCharacterId;
 			runLabel.AddThemeColorOverride("font_color", isCurrentChar ? GoldDim : TextDim);
 			container.AddChild(runLabel);
-		}
-	}
-
-	private void BuildChroniquesQuetes(VBoxContainer container)
-	{
-		IReadOnlyList<QuestDefinition> quests = QuestDataLoader.GetAll();
-		int completedCount = 0;
-		foreach (QuestDefinition quest in quests)
-		{
-			if (MetaSaveManager.HasCompletedQuest(quest.Id))
-				completedCount++;
-		}
-
-		Label summary = new()
-		{
-			Text = $"{completedCount}/{quests.Count} quêtes accomplies",
-			HorizontalAlignment = HorizontalAlignment.Center
-		};
-		UITheme.SetTextRole(summary, TextRole.Heading);
-		summary.AddThemeColorOverride("font_color", GoldBright);
-		container.AddChild(summary);
-
-		foreach (QuestDefinition quest in quests)
-		{
-			bool done = MetaSaveManager.HasCompletedQuest(quest.Id);
-			Label title = new()
-			{
-				Text = $"{(done ? "[Accomplie]" : "[En cours]")} {quest.Name} — {QuestBook.RewardSummary(quest)}"
-			};
-			UITheme.SetTextRole(title, TextRole.Lead);
-			title.AddThemeColorOverride("font_color", done ? GoldBright : TextColor);
-			container.AddChild(title);
-
-			string progress = done ? "" : $"\nAvancée : {QuestBook.ProgressText(quest, MetaSaveManager.GetQuestProgress(quest.Id))}";
-			Label details = new()
-			{
-				Text = quest.Description + progress,
-				AutowrapMode = TextServer.AutowrapMode.WordSmart
-			};
-			UITheme.SetTextRole(details, TextRole.Small);
-			details.AddThemeColorOverride("font_color", done ? GoldDim : TextDim);
-			container.AddChild(details);
 		}
 	}
 
