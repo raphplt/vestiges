@@ -1,0 +1,6 @@
+seed-1002 : [Barrier] 67 décor(s) masqué(s) sur la ligne
+seed-1002 : [Barrier] Levée à (2114.378, -1654.9651) (verticale), 1 battant(s) de 45000 PV
+seed-1002 : [BarrierDirector] Barrière levée à 610 s, 0 Mémorial(aux) ravivé(s)
+seed-7 : [Barrier] 45 décor(s) masqué(s) sur la ligne
+seed-7 : [Barrier] Levée à (-2987.9963, 1237.1857) (verticale), 1 battant(s) de 45000 PV
+seed-7 : [BarrierDirector] Barrière levée à 682 s, 0 Mémorial(aux) ravivé(s)

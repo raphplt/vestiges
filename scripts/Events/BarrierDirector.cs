@@ -20,6 +20,7 @@ public partial class BarrierDirector : Node
 	private const float MaxStepPx = 160f;
 	// Marge aux bords de la carte : le Néant du bord n'est pas un terrain de combat.
 	private const float PlacementMargin = 400f;
+	private const int PlacementSamples = 6;
 
 	private BarrierConfig _config;
 	private EventBus _eventBus;
@@ -106,8 +107,9 @@ public partial class BarrierDirector : Node
 	}
 
 	/// <summary>
-	/// Devant le joueur, en travers de son cap ; si la grille y sortirait de la carte ou tomberait dans l'eau, l'une des
-	/// trois autres directions, la plus proche du cap d'abord. À défaut, devant quand même.
+	/// Devant le joueur, en travers de son cap ; si la grille y sortirait de la carte, tomberait dans l'eau ou le Néant,
+	/// l'une des trois autres directions, la plus proche du cap d'abord. À défaut, celle qui a le plus de points d'appui
+	/// sur du sol (près des bords effacés, aucune n'est parfaite).
 	/// </summary>
 	private (bool Horizontal, Vector2 Center) PickPlacement(int leaves)
 	{
@@ -119,23 +121,51 @@ public partial class BarrierDirector : Node
 		Barrier.TryReadLayout("h", out Vector2 strideH, out _, out _);
 		Barrier.TryReadLayout("v", out Vector2 strideV, out _, out _);
 		float halfCore = (leaves + 2 * _config.FixedSpansEachSide) * 0.5f * Mathf.Max(strideH.Length(), strideV.Length());
+		Vector2 best = directions[0];
+		int bestScore = -1;
 		foreach (Vector2 direction in directions)
 		{
 			bool horizontal = direction.X == 0f;
 			Vector2 center = _player.GlobalPosition + direction * _config.DistanceAhead;
 			Vector2 along = horizontal ? Vector2.Right : Vector2.Down;
-			if (world == null || IsPlaceable(world, center, along * halfCore))
+			int score = world == null ? PlacementSamples + 1 : CountFooting(world, center, along * halfCore);
+			if (score > PlacementSamples)
 				return (horizontal, center);
-			GD.Print($"[BarrierDirector] Pose écartée vers {direction} : hors de la carte ou dans l'eau");
+			if (score > bestScore)
+			{
+				best = direction;
+				bestScore = score;
+			}
 		}
-		bool fallback = directions[0].X == 0f;
-		return (fallback, _player.GlobalPosition + directions[0] * _config.DistanceAhead);
+		GD.Print($"[BarrierDirector] Aucune pose sur du sol partout : vers {best}, {bestScore}/{PlacementSamples + 1} appuis");
+		return (best.X == 0f, _player.GlobalPosition + best * _config.DistanceAhead);
 	}
 
-	private static bool IsPlaceable(World.WorldSetup world, Vector2 center, Vector2 halfSpan)
+	/// <summary>
+	/// Points d'appui de la grille sur du sol, de 0 à <see cref="PlacementSamples"/> + 1 : dans la carte loin de ses bords,
+	/// ni eau, ni cellule effacée par la génération, ni Néant de l'Effacement (le joueur n'atteindrait pas le battant).
+	/// </summary>
+	private int CountFooting(World.WorldSetup world, Vector2 center, Vector2 halfSpan)
 	{
 		Rect2 inside = world.WorldBounds.Grow(-PlacementMargin);
-		return inside.HasPoint(center + halfSpan) && inside.HasPoint(center - halfSpan) && !world.IsWaterAt(center);
+		TileMapLayer ground = world.GetNodeOrNull<TileMapLayer>("Ground");
+		World.ErasureManager erasure = GetParent().GetNodeOrNull<World.ErasureManager>("ErasureManager");
+		int footing = 0;
+		for (int i = 0; i <= PlacementSamples; i++)
+		{
+			Vector2 point = center + halfSpan * (2f * i / PlacementSamples - 1f);
+			if (!inside.HasPoint(point) || world.IsWaterAt(point)
+				|| erasure?.GetZonePhaseAt(point) == World.ErasureManager.ErasureZonePhase.Void)
+				continue;
+			if (world.Generator != null && ground != null)
+			{
+				Vector2I cell = ground.LocalToMap(ground.ToLocal(point));
+				if (!world.Generator.IsWithinBounds(cell.X, cell.Y) || world.Generator.IsErased(cell.X, cell.Y))
+					continue;
+			}
+			footing++;
+		}
+		return footing;
 	}
 
 	private void OnBarrierEnded(bool defeated)

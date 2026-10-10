@@ -10,7 +10,7 @@
     "base": 1,
     "per_memorial": 1,
     "max": 5,
-    "hp_base": 30000,
+    "hp_base": 20000,
     "hp_per_leaf": 15000,
     "body_radius": 48,
     "damaged_below": 0.5

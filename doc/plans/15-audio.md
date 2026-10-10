@@ -350,7 +350,7 @@ Le contact de l’orbe demande le son de l’arme orbitale ; l’arme courante p
 
 ## Reprise du 10 octobre — mix, sons manquants, puis musique
 
-Réponses de Raphaël au [DECISIONS §86](DECISIONS.md) : combat aux pics, Résurgence V2 et accent d'entrée, page d'isolement du frottement, ordre mix → sons manquants → musique. Le travail se fait désormais sur le Mac : les dossiers d'écoute Linux (`/home/raphael/.local/share/vestiges-audio/`) n'y sont pas, les nouvelles écoutes vont dans `~/.local/share/vestiges-audio/2026-10-10/` (hors dépôt).
+Réponses de Raphaël au [DECISIONS §88](DECISIONS.md) : combat aux pics, Résurgence V2 et accent d'entrée, page d'isolement du frottement, ordre mix → sons manquants → musique. Le travail se fait désormais sur le Mac : les dossiers d'écoute Linux (`/home/raphael/.local/share/vestiges-audio/`) n'y sont pas, les nouvelles écoutes vont dans `~/.local/share/vestiges-audio/2026-10-10/` (hors dépôt).
 
 Lots, un à la fois, commit par lot :
 1. **M1 — musique aux pics et entrée de la Résurgence.** La musique d'exploration devient le fond de la run. Le combat entre sur une créature notable proche (variante : élite, champion, Souverain, Aberration ; ou rang élite, mini-boss, boss) ou sur une foule très dense, et sort quand il n'y a plus de notable et que la foule redescend sous un second seuil (hystérésis), tenu quelques secondes. Seuils dans `music.json`, fixés d'après la distribution mesurée des créatures proches. Points d'entrée V2 : annonce à 52 s, crise à 34 s. Mesure avant/après de la part du temps en combat sur les mêmes seeds ; `test_music` étendu (foule moyenne sans notable : exploration ; notable : combat ; sortie).

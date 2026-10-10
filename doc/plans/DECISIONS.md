@@ -1002,3 +1002,11 @@ Choix faits par Claude faute de validation de la planche B2a, **tous révisables
 - **Ennemis qui traversent la grille** : la grille n'arrête que le joueur (les créatures, sans corps, passent entre les barreaux).
 - **Mêlée contre un boss** : une partie de boss se frappe à son bord (B1c) ; l'allonge contre les créatures ne change pas.
 - **Sons provisoires** pris dans la banque (levée, battant brisé, chute, poings, chaîne), en données, à remplacer au chantier audio.
+- **L'Indicible (B3)** :
+  - mains en **main grise de noyé** (le modèle écarté pour la Barrière) ;
+  - vent, éclairs et prises qui visent la position où le joueur sera ;
+  - **marée** par bandes depuis un bord ;
+  - **vague** à une ou deux brèches ;
+  - fenêtre « découvert » rendue par le statut **Fragile** existant (+100 %).
+- **Premier réglage (B4)**, mesuré en vraie run longue, bot invincible : réserve de la Barrière **20 000 + 15 000 par battant**, Indicible **90 000 × 3,2**. L'écart entre builds est très grand : réglage fin à la partie de Raphaël.
+- **Fusion du 10 octobre** : un `git pull` est resté en conflit avec la PR #2 (décors, héros). Résolue à la demande de Raphaël (« règle les conflits stp ») en gardant les deux côtés. Les sections du 9 et 10 octobre se sont trouvées en double ; les sections distantes gardent leurs numéros (§86 décors, §87 héros), la reprise audio devient §88 et ce chantier des boss §89.

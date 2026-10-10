@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**10 octobre — les deux boss en autonomie (plan 07, B1–B2, §89) :** parties de boss vues par toutes les armes (la mêlée frappe au bord), barre de boss en haut de l'écran (Souverains compris). La Barrière se lève à 10 min devant le joueur, l'arrête jusqu'à ce qu'il brise un battant, frappe l'immobile (poings) et le va-et-vient (chaîne, verrou), un coffre par battant. Planche B2a intégrée sans validation. Suite : l'Indicible (B3).
+**10 octobre — les deux boss en autonomie (plan 07, B1–B4, §89) :** parties de boss vues par toutes les armes (la mêlée frappe au bord), barre de boss en haut de l'écran (Souverains compris). La Barrière se lève à 10 min devant le joueur, l'arrête jusqu'à ce qu'il brise un battant, frappe l'immobile (poings) et le va-et-vient (chaîne, verrou), un coffre par battant. L'Indicible est refait en trois phases : tempête, marée, seconde vague à brèches, puis il se découvre. Premier réglage en vraie run longue. Planche B2a intégrée sans validation ; reste à jouer.
 
 **10 octobre — reprise audio (plan 15, M1–M3) :** musique de combat réservée aux pics (Souverain, boss, foule ≥ 85 créatures), 22 à 33 % du temps d'exploration au lieu de 83 % ; annonce et Résurgence entrent aux points V2. Pistes séparées synchrones d'une run enregistrée (`--audio-stems`, `tools/audio_stems.py`) pour isoler le frottement ; planche de 57 candidats pour 19 sons manquants, dont les impacts par matière. Écoutes hors dépôt, choix de Raphaël attendus.
 

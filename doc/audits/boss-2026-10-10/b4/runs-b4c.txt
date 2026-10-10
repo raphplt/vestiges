@@ -1,0 +1,57 @@
+seed-1002 : [BarrierDirector] Pose écartée vers (0, 1) : hors de la carte, dans l'eau ou le Néant
+seed-1002 : [BarrierDirector] Pose écartée vers (1, 0) : hors de la carte, dans l'eau ou le Néant
+seed-1002 : [BarrierDirector] Pose écartée vers (-1, 0) : hors de la carte, dans l'eau ou le Néant
+seed-1002 : [BarrierDirector] Pose écartée vers (0, -1) : hors de la carte, dans l'eau ou le Néant
+seed-1002 : [Barrier] 25 décor(s) masqué(s) sur la ligne
+seed-1002 : [Barrier] Levée à (-11917.222, 2252.2134) (horizontale), 1 battant(s) de 45000 PV
+seed-1002 : [BarrierDirector] Barrière levée à 610 s, 0 Mémorial(aux) ravivé(s)
+seed-1002 : [EndgameManager] Late game reached
+seed-1002 : [Indicible] La nuit tombe (réserve 432000 PV)
+seed-1002 : [EndgameManager] Indicible spawned
+seed-1002 : [Barrier] Battant brisé (1/1)
+seed-1002 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed-1002 : [BarrierDirector] Combat fini à 1362 s (brisée), 1/1 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+seed-1002 : 1082.0,phase,LateGame,Exploration
+seed-1002 : 1384.6,crisis_start,5,intensity=3
+seed-123 : [Barrier] 52 décor(s) masqué(s) sur la ligne
+seed-123 : [Barrier] Levée à (2038.5525, -1041.5255) (horizontale), 1 battant(s) de 45000 PV
+seed-123 : [BarrierDirector] Barrière levée à 655 s, 0 Mémorial(aux) ravivé(s)
+seed-123 : [Barrier] Battant brisé (1/1)
+seed-123 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed-123 : [BarrierDirector] Combat fini à 858 s (brisée), 1/1 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+seed-123 : [EndgameManager] Late game reached
+seed-123 : [Indicible] La nuit tombe (réserve 432000 PV)
+seed-123 : [EndgameManager] Indicible spawned
+seed-123 : 1080.3,phase,LateGame,Exploration
+seed-123 : 1530.1,crisis_start,5,intensity=3
+seed-42 : [Barrier] 59 décor(s) masqué(s) sur la ligne
+seed-42 : [Barrier] Levée à (754.33746, -2779.6162) (verticale), 1 battant(s) de 45000 PV
+seed-42 : [BarrierDirector] Barrière levée à 671 s, 0 Mémorial(aux) ravivé(s)
+seed-42 : [Barrier] Battant brisé (1/1)
+seed-42 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed-42 : [BarrierDirector] Combat fini à 694 s (brisée), 1/1 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+seed-42 : [EndgameManager] Late game reached
+seed-42 : [Indicible] La nuit tombe (réserve 432000 PV)
+seed-42 : [EndgameManager] Indicible spawned
+seed-42 : [Indicible] Phase 2 (67 % de la réserve)
+seed-42 : [Indicible] Phase 3 (33 % de la réserve)
+seed-42 : [EndgameManager] Indicible defeated, endgame reached
+seed-42 : [Indicible] Vaincu : le jour revient
+seed-42 : 1080.4,phase,LateGame,Exploration
+seed-42 : 1407.8,phase,Endgame,LateGame
+seed-42 : 1575.1,crisis_start,5,intensity=3
+seed-7 : [BarrierDirector] Pose écartée vers (-1, 0) : hors de la carte, dans l'eau ou le Néant
+seed-7 : [BarrierDirector] Pose écartée vers (0, 1) : hors de la carte, dans l'eau ou le Néant
+seed-7 : [BarrierDirector] Pose écartée vers (0, -1) : hors de la carte, dans l'eau ou le Néant
+seed-7 : [BarrierDirector] Pose écartée vers (1, 0) : hors de la carte, dans l'eau ou le Néant
+seed-7 : [Barrier] 42 décor(s) masqué(s) sur la ligne
+seed-7 : [Barrier] Levée à (10628.48, 3298.9866) (verticale), 1 battant(s) de 45000 PV
+seed-7 : [BarrierDirector] Barrière levée à 682 s, 0 Mémorial(aux) ravivé(s)
+seed-7 : [Barrier] Battant brisé (1/1)
+seed-7 : [Barrier] Fin du combat (brisée), 1/1 battant(s)
+seed-7 : [BarrierDirector] Combat fini à 890 s (brisée), 1/1 battant(s), coups reçus : 0 poing(s), 0 chaîne(s)
+seed-7 : [EndgameManager] Late game reached
+seed-7 : [Indicible] La nuit tombe (réserve 432000 PV)
+seed-7 : [EndgameManager] Indicible spawned
+seed-7 : 1080.3,phase,LateGame,Exploration
+seed-7 : 1470.9,crisis_start,5,intensity=3

@@ -768,7 +768,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 ### Phase C — Late game et endgame (2 semaines)
 
 - [x] Implémenter EndgameManager (détection du late game, transition endgame).
-- [ ] Implémenter le boss / événement majeur de late game (tester les 3 options, en choisir une).
+- [x] Implémenter le boss / événement majeur de late game : l'Indicible (option A), refait en trois phases (tempête, marée, seconde vague) et combattu à ses mains, mesuré en postures et en vraie run ; réglage fin à faire ([plan 07 B3](plans/07-bestiaire-et-rencontres.md#b3a-livré--10-octobre-2026-socle-et-tempête), 10 octobre 2026).
 - [ ] Implémenter le scaling infini d'endgame.
 - [ ] Ajuster le score pour refléter le nouveau flow.
 - [ ] **PLAYTEST : est-ce que le late game / endgame donne envie de rejouer ? Le "just one more run" fonctionne ?**
