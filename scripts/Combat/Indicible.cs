@@ -1,459 +1,463 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Spawn;
 
 namespace Vestiges.Combat;
 
 /// <summary>
-/// L'Indicible — boss de late game. Trop grand pour l'écran.
-/// Reste aux bords, projette des tentacules et des yeux mouvants.
-/// Encercle la zone de confrontation au lieu de charger un point fixe du monde.
+/// L'Indicible (plan 07 B3, fiche du 4 octobre validée au §70) : la nuit du 14, trop grande pour l'écran, sans corps à
+/// viser. Il se combat à ses mains, des parties de boss en réserve commune qui sortent du sol près du joueur puis
+/// agrippent sa position. La réserve franchit deux seuils : la tempête (nuit, vent, éclairs), puis la marée
+/// (<see cref="IndicibleTide"/>), puis la seconde vague et la fenêtre où il se découvre (<see cref="IndicibleWave"/>).
 /// </summary>
-public partial class Indicible : Node2D, ICrowdMember
+public partial class Indicible : Node2D
 {
+	public const string AssetFolder = "res://assets/bosses/indicible";
+	private const float HitFlashSec = 0.12f;
+	private const float SinkSec = 0.35f;
+	private const float StrikeFlashSec = 0.2f;
+	private const float FreeDelaySec = 1.2f;
+	private static readonly NodePath SelfModulateProperty = "self_modulate";
+
+	private enum HandState { Rising, Waiting, Grabbing, Sinking }
+
+	private sealed class Hand
+	{
+		public Enemy Part;
+		public Sprite2D Sprite;
+		public GroundTelegraph Marker;
+		public HandState State;
+		public float Timer;
+		public Vector2 Target;
+		public Tween Flash;
+	}
+
+	private readonly List<Hand> _hands = new();
+	private readonly Dictionary<Enemy, Hand> _handByPart = new();
+	private readonly Stack<Hand> _spareHands = new();
 	private IndicibleConfig _config;
-	private float _tentacleDamage;
-	private float _maxHp;
-	private float _currentHp;
-	private float _tentacleTimer;
-	private float _eyeShiftTimer;
-	private bool _isDying;
-	private bool _isActive;
-	/// <summary>Rang dans <see cref="CrowdIndex"/>, −1 hors de l'index ; tenu par l'index.</summary>
-	public int CrowdSlot { get; set; } = -1;
-	public Vector2 CrowdPush { get; set; }
-	private int _phase; // 0 = idle, 1 = active (HP > 50%), 2 = enraged (HP <= 50%)
-
-	private Player _player;
-	private Camera2D _camera;
 	private EventBus _eventBus;
-	private Vector2 _arenaAnchor;
+	private Player _player;
+	private SpawnManager _spawner;
+	private CanvasModulate _night;
+	private Color _dayColor;
+	private BossHealth _health;
+	private FxFamily _family;
+	private float _damage;
+	private float _handTimer;
+	private float _windTimer;
+	private Vector2 _wind;
+	private float _lightningTimer;
+	private float _lightningWarning;
+	private float _lightningFlash;
+	private Vector2 _lightningCenter;
+	private GroundTelegraph _lightningMarker;
+	private Texture2D _openTexture;
+	private Texture2D _grabTexture;
+	private bool _defeated;
+	private GameManager _gameManager;
+	private IndicibleTide _tide;
+	private IndicibleWave _wave;
+	private Tween _nightTween;
 
-	private readonly List<Node2D> _edgeSegments = new();
-	private readonly List<Polygon2D> _eyes = new();
+	public BossHealth Health => _health;
+	public bool IsDefeated => _defeated;
+	/// <summary>Coups portés au joueur et attaques lancées (mesure).</summary>
+	public int LightningStrikes { get; private set; }
+	public int LightningHits { get; private set; }
+	public int Grabs { get; private set; }
+	public int GrabHits { get; private set; }
+	public int HandsRaised { get; private set; }
+	public int TideHits { get; private set; }
+	public IndicibleTide Tide => _tide;
+	public IndicibleWave Wave => _wave;
 
-
-	public override void _Ready()
+	/// <summary>Faux si la configuration ou un sprite manquent : le boss se retire aussitôt, sans entrer en jeu.</summary>
+	public bool Initialize(float hpScale, float dmgScale, Player player, SpawnManager spawner)
 	{
 		_eventBus = GetNode<EventBus>("/root/EventBus");
-		AddToGroup("enemies");
-		AddToGroup("indicible");
-		CrowdIndex.Register(this);
-	}
-
-	public override void _ExitTree()
-	{
-		CrowdIndex.Unregister(this);
-	}
-
-	/// <summary>Faux si la configuration ou la fiche manquent : le boss se retire aussitôt, sans entrer en jeu.</summary>
-	public bool Initialize(float hpScale, float dmgScale, Vector2 arenaAnchor)
-	{
-		_arenaAnchor = arenaAnchor;
-
-		// Réglages et fiche contrôlés au début de la run (EndgameManager) : ici, ils sont lus sans secours.
 		EnemyData data = EnemyDataLoader.Get(EnemyGrammar.FinalBossId);
 		if (!IndicibleConfig.TryLoad(out _config, out string error) || data == null)
 		{
 			GD.PushError($"[Indicible] Le boss n'apparaît pas : {error ?? "fiche data/enemies/indicible.json absente"}.");
-			QueueFree();
 			return false;
 		}
-		_maxHp = data.Stats.Hp * hpScale;
-		_tentacleDamage = data.Stats.Damage * dmgScale;
-		_currentHp = _maxHp;
-		_isActive = true;
-		_isDying = false;
-		_phase = 1;
-		_tentacleTimer = _config.TentacleInterval * _config.FirstAttackRatio;
-		_eyeShiftTimer = _config.EyeFirstShift;
-
-		GlobalPosition = arenaAnchor;
-
-		BuildEdgePresence();
-		SpawnEyes();
-
+		_openTexture = LoadTexture("indicible_hand_open");
+		_grabTexture = LoadTexture("indicible_hand_grab");
+		if (_openTexture == null || _grabTexture == null)
+			return false;
+		_player = player;
+		_spawner = spawner;
+		_gameManager = GetNodeOrNull<GameManager>("/root/GameManager");
+		_family = PixelPalette.ParseFamily(_config.FxFamily, FxFamily.Void);
+		_damage = data.Stats.Damage * dmgScale;
+		YSortEnabled = true;
+		_health = new BossHealth(Tr(_config.NameKey), data.Stats.Hp * hpScale, _config.PhaseThresholds);
+		_health.PartHit += OnHandHit;
+		_health.PhaseReached += OnPhaseReached;
+		_health.Depleted += OnDepleted;
+		_health.ShowBar(_eventBus);
+		_handTimer = _config.FirstAttackSec;
+		_lightningTimer = _config.FirstAttackSec + _config.LightningInterval * 0.5f;
+		_lightningMarker = new GroundTelegraph { Name = "LightningMarker" };
+		AddChild(_lightningMarker);
+		_tide = new IndicibleTide { Name = "Tide" };
+		AddChild(_tide);
+		_tide.Setup(_config);
+		_wave = new IndicibleWave { Name = "Wave" };
+		AddChild(_wave);
+		_wave.Setup(_config, _health, spawner, _openTexture);
+		ChangeWind();
+		FallNight();
+		AudioManager.Play(_config.RiseAudio, 0f);
+		ScreenShake.Instance?.ShakeHeavy();
 		_eventBus.EmitSignal(EventBus.SignalName.EnemySpawned, EnemyGrammar.FinalBossId, hpScale, dmgScale);
-		GD.Print($"[Indicible] L'Indicible émerge... (HP: {_maxHp:F0})");
+		GD.Print($"[Indicible] La nuit tombe (réserve {_health.Max:F0} PV)");
 		return true;
 	}
 
-	public override void _Process(double delta)
+	/// <summary>Mains autorisées à la fois : une de plus à chaque seuil franchi, et celles de la marée.</summary>
+	private int MaxHands => _config.HandMaxAlive + _config.HandExtraPerPhase * _health.Phase
+		+ (_tide.IsActive ? _config.TideExtraHands : 0);
+
+	public override void _PhysicsProcess(double delta)
 	{
-		if (!_isActive || _isDying)
+		if (_defeated || _player == null || !IsInstanceValid(_player))
 			return;
-
-		CachePlayer();
-		if (_player == null || !IsInstanceValid(_player))
+		// Écran de choix, mort : le boss attend, comme le joueur.
+		if (_gameManager != null && _gameManager.CurrentState != GameManager.GameState.Run)
 			return;
-
 		float dt = (float)delta;
-
-		// Phase enragée à 50% HP
-		if (_phase == 1 && _currentHp <= _maxHp * _config.EnrageHpRatio)
+		// Première phase : la tempête. Ensuite, la marée remplace le vent et les éclairs.
+		if (_health.Phase == 0)
 		{
-			_phase = 2;
-			EnterEnragedPhase();
+			TickWind(dt);
+			TickLightning(dt);
 		}
-
-		_tentacleTimer -= dt;
-		if (_tentacleTimer <= 0f)
+		if (_tide.Tick(_player, dt) && HitPlayer(_damage * _config.TideDeepDamageMultiplier, _player.GlobalPosition))
+			TideHits++;
+		if (_wave.Tick(_player, dt) && HitPlayer(_damage * _config.WaveDamageMultiplier, _player.GlobalPosition))
+			_wave.CountHit();
+		TickHands(dt);
+		_handTimer -= dt;
+		if (_handTimer <= 0f)
 		{
-			int tentacleCount = _phase == 2 ? _config.EnragedTentacleCount : _config.TentacleCount;
-			for (int i = 0; i < tentacleCount; i++)
-				SpawnTentacleAttack();
-			_tentacleTimer = _phase == 2 ? _config.TentacleInterval * _config.EnragedIntervalRatio : _config.TentacleInterval;
+			_handTimer = _config.HandInterval;
+			if (CountLivingHands() < MaxHands)
+				RaiseHand();
 		}
-
-		_eyeShiftTimer -= dt;
-		if (_eyeShiftTimer <= 0f)
-		{
-			ShiftEyes();
-			_eyeShiftTimer = _config.EyeShiftInterval;
-		}
-
-		PulseEdgePresence(dt);
 	}
 
-	public void TakeDamage(float damage)
+	// --- Tempête : nuit, vent, éclairs ---
+
+	private void FallNight()
 	{
-		if (_isDying || !_isActive)
+		_night = GetTree().CurrentScene?.GetNodeOrNull<CanvasModulate>("CanvasModulate");
+		if (_night == null)
 			return;
-
-		_currentHp -= damage;
-		SpawnDamageNumber(damage);
-		FlashEdges();
-
-		if (_currentHp <= 0)
-			Die();
+		_dayColor = _night.Color;
+		_nightTween = _night.CreateTween();
+		_nightTween.TweenProperty(_night, "color", _dayColor * _config.DarkColor, _config.DarkFadeSec);
 	}
 
-	/// <summary>Construit la présence visuelle aux 4 bords de l'écran + hitboxes.</summary>
-	private void BuildEdgePresence()
+	private void LiftNight()
 	{
-		Color darkColor = new(0.1f, 0.04f, 0.18f, 0.7f);
-
-		// 4 segments de bord (haut, bas, gauche, droite)
-		for (int edge = 0; edge < 4; edge++)
-		{
-			Node2D segment = new();
-			Polygon2D body = new();
-
-			float w = edge < 2 ? _config.EdgeHalfLength : _config.EdgeHalfThickness;
-			float h = edge < 2 ? _config.EdgeHalfThickness : _config.EdgeHalfLength;
-
-			body.Polygon = new Vector2[]
-			{
-				new(-w, -h), new(w, -h), new(w, h), new(-w, h)
-			};
-			body.Color = darkColor;
-
-			// Excroissances organiques sur le bord intérieur
-			for (int j = 0; j < 3; j++)
-			{
-				Polygon2D tendril = new();
-				float tx = (float)GD.RandRange(-w * 0.6f, w * 0.6f);
-				float ty = (float)GD.RandRange(-h * 0.6f, h * 0.6f);
-				float ts = (float)GD.RandRange(8f, 20f);
-				tendril.Polygon = new Vector2[]
-				{
-					new(0, -ts), new(ts * 0.4f, 0), new(0, ts), new(-ts * 0.4f, 0)
-				};
-				tendril.Color = new Color(0.15f, 0.06f, 0.25f, 0.5f);
-				tendril.Position = new Vector2(tx, ty);
-				body.AddChild(tendril);
-			}
-
-			// Hitbox : Area2D qui détecte les projectiles joueur
-			Area2D hitbox = new();
-			hitbox.CollisionLayer = 0;
-			hitbox.CollisionMask = 4; // Même mask que les ennemis pour détecter les projectiles
-			CollisionShape2D shape = new();
-			RectangleShape2D rect = new();
-			rect.Size = new Vector2(w * 2f, h * 2f);
-			shape.Shape = rect;
-			hitbox.AddChild(shape);
-			hitbox.AreaEntered += OnHitboxAreaEntered;
-			segment.AddChild(hitbox);
-
-			segment.AddChild(body);
-			AddChild(segment);
-			_edgeSegments.Add(segment);
-		}
-
-		PositionEdgeSegments();
-	}
-
-	private void OnHitboxAreaEntered(Area2D area)
-	{
-		// Le projectile vient d'un pool : il y rentre, il ne se libère pas.
-		if (area is Projectile projectile && !_isDying && projectile.TryAbsorb(out float damage))
-			TakeDamage(damage);
-	}
-
-	private void PositionEdgeSegments()
-	{
-		if (_edgeSegments.Count < 4)
+		if (_night == null || !IsInstanceValid(_night))
 			return;
-
-		// Position relative au centre de l'arène (sera ajusté par la caméra)
-		float spread = _config.EdgeSpread;
-		_edgeSegments[0].Position = new Vector2(0, -spread); // haut
-		_edgeSegments[1].Position = new Vector2(0, spread);  // bas
-		_edgeSegments[2].Position = new Vector2(-spread, 0); // gauche
-		_edgeSegments[3].Position = new Vector2(spread, 0);  // droite
+		_nightTween?.Kill();
+		_nightTween = _night.CreateTween();
+		_nightTween.TweenProperty(_night, "color", _dayColor, _config.DarkFadeSec);
 	}
 
-	/// <summary>Spawn des yeux sur les bords qui bougent périodiquement.</summary>
-	private void SpawnEyes()
+	private void TickWind(float delta)
 	{
-		for (int i = 0; i < _config.EyeCount; i++)
+		_windTimer -= delta;
+		if (_windTimer <= 0f)
+			ChangeWind();
+		_player.ExternalDrift = _wind;
+	}
+
+	private void ChangeWind()
+	{
+		_windTimer = RunRandom.Behavior.RandfRange(_config.WindChangeMinSec, _config.WindChangeMaxSec);
+		_wind = Vector2.FromAngle(RunRandom.Behavior.RandfRange(0f, Mathf.Tau)) * _config.WindSpeed;
+	}
+
+	private void TickLightning(float delta)
+	{
+		if (_lightningFlash > 0f)
 		{
-			Polygon2D eye = new();
-			float eyeSize = (float)GD.RandRange(4f, 8f);
-
-			// Forme d'œil : ovale horizontal
-			int segments = 8;
-			Vector2[] points = new Vector2[segments];
-			for (int s = 0; s < segments; s++)
-			{
-				float angle = Mathf.Tau * s / segments;
-				points[s] = new Vector2(Mathf.Cos(angle) * eyeSize, Mathf.Sin(angle) * eyeSize * 0.5f);
-			}
-			eye.Polygon = points;
-			eye.Color = new Color(0.4f, 0.9f, 0.2f, 0.8f); // Vert acide (yeux des créatures)
-
-			// Pupille
-			Polygon2D pupil = new();
-			float pupilSize = eyeSize * 0.35f;
-			Vector2[] pupilPoints = new Vector2[6];
-			for (int s = 0; s < 6; s++)
-			{
-				float angle = Mathf.Tau * s / 6;
-				pupilPoints[s] = new Vector2(Mathf.Cos(angle) * pupilSize, Mathf.Sin(angle) * pupilSize);
-			}
-			pupil.Polygon = pupilPoints;
-			pupil.Color = new Color(0.05f, 0.02f, 0.08f, 0.95f);
-			eye.AddChild(pupil);
-
-			// Position aléatoire sur un bord
-			PlaceEyeOnEdge(eye);
-			AddChild(eye);
-			_eyes.Add(eye);
+			_lightningFlash -= delta;
+			if (_lightningFlash <= 0f)
+				_lightningMarker.HideMarker();
+			else
+				_lightningMarker.SetFlash(_lightningFlash / StrikeFlashSec);
 		}
+		if (_lightningWarning > 0f)
+		{
+			_lightningWarning -= delta;
+			_lightningMarker.SetProgress(1f - _lightningWarning / _config.LightningWarning);
+			if (_lightningWarning <= 0f)
+				StrikeLightning();
+			return;
+		}
+		_lightningTimer -= delta;
+		if (_lightningTimer > 0f)
+			return;
+		_lightningTimer = _config.LightningInterval;
+		_lightningCenter = DriftedPosition(_config.LightningWarning);
+		_lightningWarning = _config.LightningWarning;
+		_lightningMarker.ShowCircle(_lightningCenter, _config.LightningRadius, _family);
+		AudioManager.Play(_config.LightningWarningAudio, 0.08f, -6f);
+		LightningStrikes++;
 	}
 
-	private void PlaceEyeOnEdge(Polygon2D eye)
+	private void StrikeLightning()
 	{
-		float spread = _config.EyeSpread;
-		int edge = (int)(GD.Randi() % 4);
-		float offset = (float)GD.RandRange(-_config.EyeOffset, _config.EyeOffset);
+		_lightningFlash = StrikeFlashSec;
+		_lightningMarker.SetFlash(1f);
+		AudioManager.Play(_config.LightningStrikeAudio, 0.06f, -2f);
+		ScreenShake.Instance?.ShakeLight();
+		CombatPools.Instance?.ShowHitFlash(_lightningCenter);
+		float reach = _config.LightningRadius + _config.LightningHitMargin;
+		if (Iso.GroundDistanceSquared(_player.GlobalPosition, _lightningCenter) <= reach * reach
+			&& HitPlayer(_damage * _config.LightningDamageMultiplier, _lightningCenter))
+			LightningHits++;
+	}
 
-		eye.Position = edge switch
+	// --- Mains ---
+
+	private int CountLivingHands()
+	{
+		int count = 0;
+		foreach (Hand hand in _hands)
+			count += hand.State is HandState.Rising or HandState.Waiting or HandState.Grabbing ? 1 : 0;
+		return count;
+	}
+
+	private void RaiseHand()
+	{
+		// Pendant la marée, les mains sortent de l'eau quand elle est à portée.
+		if (!_tide.TryWaterPoint(_player.GlobalPosition, _config.HandDistanceMin, _config.HandDistanceMax, out Vector2 position))
 		{
-			0 => new Vector2(offset, -spread),
-			1 => new Vector2(offset, spread),
-			2 => new Vector2(-spread, offset),
-			_ => new Vector2(spread, offset)
+			float angle = RunRandom.Behavior.RandfRange(0f, Mathf.Tau);
+			float distance = RunRandom.Behavior.RandfRange(_config.HandDistanceMin, _config.HandDistanceMax);
+			// Distance au sol : un écart vertical à l'écran compte double.
+			position = _player.GlobalPosition + Iso.ToScreen(Vector2.FromAngle(angle) * distance);
+		}
+		if (!_spawner.IsSpawnablePosition(position))
+			return;
+		Enemy part = _spawner.SpawnEventEnemy(EnemyGrammar.BossPartId, position);
+		if (part == null)
+			return;
+		_health.AddPart(part, _config.HandBodyRadius);
+		Hand hand = _spareHands.Count > 0 ? _spareHands.Pop() : CreateHand();
+		hand.Part = part;
+		hand.State = HandState.Rising;
+		hand.Timer = _config.HandRiseSec;
+		hand.Sprite.Texture = _openTexture;
+		hand.Sprite.Offset = Pivot(_openTexture);
+		hand.Sprite.Position = position;
+		hand.Sprite.Scale = new Vector2(1f, 0f);
+		hand.Sprite.SelfModulate = Colors.White;
+		hand.Sprite.Visible = true;
+		_hands.Add(hand);
+		_handByPart[part] = hand;
+		HandsRaised++;
+		AudioManager.Play(_config.HandRiseAudio, 0.1f, -8f);
+		CombatPools.Instance?.EmitKnockbackDust(position, Vector2.Up);
+	}
+
+	private Hand CreateHand()
+	{
+		Hand hand = new()
+		{
+			Sprite = new Sprite2D { Centered = false, Visible = false },
+			Marker = new GroundTelegraph { Name = "GrabMarker" },
 		};
+		AddChild(hand.Sprite);
+		AddChild(hand.Marker);
+		return hand;
 	}
 
-	private void ShiftEyes()
+	private void TickHands(float delta)
 	{
-		foreach (Polygon2D eye in _eyes)
+		for (int i = _hands.Count - 1; i >= 0; i--)
 		{
-			if (!IsInstanceValid(eye))
-				continue;
-
-			Vector2 newPos = eye.Position;
-			PlaceEyeOnEdge(eye);
-			Vector2 target = eye.Position;
-			eye.Position = newPos;
-
-			Tween tween = eye.CreateTween();
-			tween.TweenProperty(eye, "position", target, _config.EyeShiftDuration)
-				.SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
+			Hand hand = _hands[i];
+			hand.Timer -= delta;
+			switch (hand.State)
+			{
+				case HandState.Rising:
+					hand.Sprite.Scale = new Vector2(1f, Mathf.Clamp(1f - hand.Timer / _config.HandRiseSec, 0f, 1f));
+					if (hand.Timer <= 0f)
+					{
+						hand.State = HandState.Waiting;
+						hand.Timer = _config.HandLifeSec;
+					}
+					break;
+				case HandState.Waiting:
+					if (hand.Timer <= 0f)
+						BeginGrab(hand);
+					break;
+				case HandState.Grabbing:
+					hand.Marker.SetProgress(1f - hand.Timer / _config.GrabWarningSec);
+					if (hand.Timer <= 0f)
+						ResolveGrab(hand);
+					break;
+				case HandState.Sinking:
+					hand.Sprite.Scale = new Vector2(1f, Mathf.Clamp(hand.Timer / SinkSec, 0f, 1f));
+					if (hand.Timer <= StrikeFlashSec * 0.5f)
+						hand.Marker.HideMarker();
+					if (hand.Timer <= 0f)
+						Retire(hand, i);
+					break;
+			}
 		}
 	}
 
-	/// <summary>Attaque tentaculaire : indicateur au sol → dégâts après warning.</summary>
-	private void SpawnTentacleAttack()
+	private void BeginGrab(Hand hand)
 	{
-		if (_player == null || !IsInstanceValid(_player))
+		hand.State = HandState.Grabbing;
+		hand.Timer = _config.GrabWarningSec;
+		// La prise anticipe le pas du joueur (vent compris) : elle punit qui file droit, l'éclair punit qui reste.
+		hand.Target = _player.GlobalPosition + (_player.Velocity + _player.ExternalDrift) * _config.GrabWarningSec;
+		hand.Marker.ShowCircle(hand.Target, _config.GrabRadius, _family);
+		AudioManager.Play(_config.GrabWarningAudio, 0.08f, -6f);
+		Grabs++;
+	}
+
+	/// <summary>La main replonge et ressort sur la position annoncée, poing fermé.</summary>
+	private void ResolveGrab(Hand hand)
+	{
+		hand.State = HandState.Sinking;
+		hand.Timer = SinkSec + StrikeFlashSec;
+		hand.Marker.SetFlash(1f);
+		hand.Sprite.Texture = _grabTexture;
+		hand.Sprite.Offset = Pivot(_grabTexture);
+		hand.Sprite.Position = hand.Target;
+		if (IsOwnHand(hand.Part))
+			hand.Part.GlobalPosition = hand.Target;
+		AudioManager.Play(_config.GrabImpactAudio, 0.08f, -3f);
+		ScreenShake.Instance?.ShakeLight();
+		CombatPools.Instance?.EmitKnockbackDust(hand.Target, Vector2.Up);
+		float reach = _config.GrabRadius + _config.GrabHitMargin;
+		if (Iso.GroundDistanceSquared(_player.GlobalPosition, hand.Target) <= reach * reach
+			&& HitPlayer(_damage * _config.GrabDamageMultiplier, hand.Target))
+			GrabHits++;
+	}
+
+	private void Retire(Hand hand, int index)
+	{
+		hand.Flash?.Kill();
+		hand.Sprite.Visible = false;
+		hand.Marker.HideMarker();
+		_handByPart.Remove(hand.Part);
+		if (IsOwnHand(hand.Part))
+			hand.Part.Vanish();
+		hand.Part = null;
+		_hands.RemoveAt(index);
+		_spareHands.Push(hand);
+	}
+
+	private void OnHandHit(Enemy part, float lost)
+	{
+		if (!_handByPart.TryGetValue(part, out Hand hand))
 			return;
-
-		// Cible : position du joueur + léger décalage, tiré au sol puis projeté
-		Vector2 targetPos = _player.GlobalPosition + Iso.ToScreen(new Vector2(
-			(float)GD.RandRange(-_config.TargetJitter, _config.TargetJitter),
-			(float)GD.RandRange(-_config.TargetJitter, _config.TargetJitter)
-		));
-
-		// Direction au sol depuis un bord aléatoire : le tentacule est couché, sa longueur est une longueur au sol
-		float angle = (float)GD.RandRange(0, Mathf.Tau);
-		float tentacleLength = _config.TentacleLength;
-		Vector2 groundDir = new(Mathf.Cos(angle), Mathf.Sin(angle));
-		Vector2 startPos = targetPos + Iso.ToScreen(groundDir * tentacleLength * 0.5f);
-		Vector2 endPos = targetPos - Iso.ToScreen(groundDir * tentacleLength * 0.5f);
-
-		// Phase 1 : couloir annoncé, qui se remplit jusqu'à la frappe
-		Vector2 dir = -groundDir;
-		PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Blood, _config.WarningDuration, 0.2f, 0f);
-
-		// Phase 2 : Après le warning, la tentacule frappe
-		float damage = _tentacleDamage;
-		GetTree().CreateTimer(_config.WarningDuration).Timeout += () =>
-		{
-			if (_isDying || !_isActive)
-				return;
-
-			// Tentacule : couloir plein d'iridescent qui se défait en trame
-			PlayTentacleLane(startPos, dir, tentacleLength, FxFamily.Void, _config.StrikeVisualDuration, 1f, 0.5f);
-			Infrastructure.AudioManager.Play("sfx_boss_tentacle", 0.04f, -5f);
-
-			// Dégâts au joueur s'il est dans la zone
-			if (IsInstanceValid(_player))
-			{
-				float distToLine = Iso.GroundDistanceToSegment(_player.GlobalPosition, startPos, endPos);
-				if (distToLine < _config.TentacleWidth)
-				{
-					_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, EnemyGrammar.FinalBossId, damage);
-					_player.TakeDamage(damage, startPos);
-				}
-			}
-
-		};
+		hand.Flash?.Kill();
+		hand.Sprite.SelfModulate = new Color(1.9f, 1.9f, 1.9f);
+		hand.Flash = CreateTween();
+		hand.Flash.TweenProperty(hand.Sprite, SelfModulateProperty, Colors.White, HitFlashSec);
 	}
 
-	/// <summary>Couloir couché au sol : <paramref name="groundDirection"/> et <paramref name="length"/> sont mesurés au sol.</summary>
-	private void PlayTentacleLane(Vector2 start, Vector2 groundDirection, float length, FxFamily family,
-								  float duration, float fillDensity, float fadeTail)
+	private void OnPhaseReached(int phase)
 	{
-		if (CombatPools.Instance == null)
-			return;
-		PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, length, _config.TentacleWidth, duration);
-		spec.Angle = groundDirection.Angle();
-		spec.Squash = Iso.GroundSquash;
-		spec.FillDensity = fillDensity;
-		spec.Steps = 8;
-		spec.FadeTail = fadeTail;
-		spec.ZIndex = -1;
-		CombatPools.Instance.PlayFx(start, spec, FxOwner.Enemy);
+		if (phase == 1)
+		{
+			// La tempête retombe, la mer monte.
+			_player.ExternalDrift = Vector2.Zero;
+			_lightningWarning = 0f;
+			_lightningMarker.HideMarker();
+			_tide.Begin(_player.GlobalPosition);
+		}
+		else if (phase == 2)
+		{
+			// La mer se retire avant la seconde vague.
+			_tide.Stop();
+			_wave.Begin();
+		}
+		AudioManager.Play(_config.RiseAudio, 0.04f, -3f);
+		ScreenShake.Instance?.ShakeMedium();
+		GD.Print($"[Indicible] Phase {phase + 1} ({_health.Ratio:P0} de la réserve)");
 	}
 
-	private void PulseEdgePresence(float delta)
+	private void OnDepleted()
 	{
-		// Les segments pulsent lentement
-		float pulse = Mathf.Sin((float)Time.GetTicksMsec() * 0.001f) * 0.1f + 0.9f;
-		foreach (Node2D segment in _edgeSegments)
-		{
-			if (IsInstanceValid(segment))
-				segment.Scale = Vector2.One * pulse;
-		}
+		_defeated = true;
+		_player.ExternalDrift = Vector2.Zero;
+		_tide.Stop();
+		_wave.Stop();
+		_lightningMarker.HideMarker();
+		for (int i = _hands.Count - 1; i >= 0; i--)
+			Retire(_hands[i], i);
+		LiftNight();
+		AudioManager.Play(_config.DefeatedAudio, 0.02f);
+		ScreenShake.Instance?.ShakeHeavy();
+		ScreenShake.Instance?.Hitstop(0.08f);
+		// Mort unique : score, succès et entrée en endgame (EndgameManager) lisent cette élimination.
+		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, EnemyGrammar.FinalBossId, _player.GlobalPosition);
+		GD.Print("[Indicible] Vaincu : le jour revient");
+		// Un tween meurt avec le nœud : une sortie de run dans l'intervalle ne libère rien deux fois.
+		Tween free = CreateTween();
+		free.TweenInterval(FreeDelaySec);
+		free.TweenCallback(Callable.From(QueueFree));
 	}
 
-	private void EnterEnragedPhase()
-	{
-		Infrastructure.AudioManager.Play("sfx_boss_enrage", 0f, -3f);
-		GD.Print("[Indicible] Phase enragée !");
-
-		// Tous les yeux deviennent rouges
-		foreach (Polygon2D eye in _eyes)
-		{
-			if (IsInstanceValid(eye))
-			{
-				Tween tween = eye.CreateTween();
-				tween.TweenProperty(eye, "color", new Color(0.9f, 0.15f, 0.1f, 0.9f), 0.5f);
-			}
-		}
-
-		// Flash rouge sur les bords
-		foreach (Node2D segment in _edgeSegments)
-		{
-			if (!IsInstanceValid(segment))
-				continue;
-			Polygon2D body = segment.GetChildOrNull<Polygon2D>(0);
-			if (body != null)
-			{
-				Tween tween = body.CreateTween();
-				tween.TweenProperty(body, "color", new Color(0.25f, 0.04f, 0.08f, 0.8f), 0.3f);
-				tween.TweenProperty(body, "color", new Color(0.12f, 0.04f, 0.2f, 0.75f), 0.5f);
-			}
-		}
-	}
-
-	private void Die()
-	{
-		Infrastructure.AudioManager.Play("sfx_boss_death", 0f, -3f);
-		_isDying = true;
-		_isActive = false;
-
-		if (IsInGroup("enemies"))
-			RemoveFromGroup("enemies");
-		CrowdIndex.Unregister(this);
-
-		_eventBus.EmitSignal(EventBus.SignalName.EnemyKilled, EnemyGrammar.FinalBossId, GlobalPosition);
-
-		GD.Print("[Indicible] L'Indicible est vaincu !");
-
-		// Désintégration des bords et des yeux
-		foreach (Polygon2D eye in _eyes)
-		{
-			if (!IsInstanceValid(eye))
-				continue;
-			Tween tween = eye.CreateTween();
-			tween.TweenProperty(eye, "modulate:a", 0f, 0.6f);
-			tween.TweenCallback(Callable.From(() => { if (IsInstanceValid(eye)) eye.QueueFree(); }));
-		}
-
-		foreach (Node2D segment in _edgeSegments)
-		{
-			if (!IsInstanceValid(segment))
-				continue;
-			Tween tween = segment.CreateTween();
-			tween.TweenProperty(segment, "modulate:a", 0f, 1f)
-				.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
-			tween.TweenCallback(Callable.From(() => { if (IsInstanceValid(segment)) segment.QueueFree(); }));
-		}
-
-		// Suppression après la fade
-		GetTree().CreateTimer(1.2f).Timeout += QueueFree;
-	}
-
-	private void FlashEdges()
-	{
-		foreach (Node2D segment in _edgeSegments)
-		{
-			if (!IsInstanceValid(segment))
-				continue;
-			Polygon2D body = segment.GetChildOrNull<Polygon2D>(0);
-			if (body == null)
-				continue;
-
-			Color originalColor = body.Color;
-			body.Color = Colors.White;
-			Tween tween = body.CreateTween();
-			tween.TweenProperty(body, "color", originalColor, 0.12f).SetDelay(0.04f);
-		}
-	}
-
-	private void SpawnDamageNumber(float damage)
-	{
-		// Afficher les dégâts sur un bord aléatoire
-		int edge = (int)(GD.Randi() % _edgeSegments.Count);
-		Vector2 pos = _edgeSegments.Count > edge && IsInstanceValid(_edgeSegments[edge])
-			? _edgeSegments[edge].GlobalPosition
-			: GlobalPosition;
-		CombatPools.Instance?.ShowDamageNumber(pos + new Vector2(0, -20), damage, false);
-	}
-
-	private void CachePlayer()
+	/// <summary>Retiré sans être vaincu (fin de run, mesure) : ses mains rentrent, le vent tombe, le jour revient.</summary>
+	public override void _ExitTree()
 	{
 		if (_player != null && IsInstanceValid(_player))
-			return;
+			_player.ExternalDrift = Vector2.Zero;
+		for (int i = _hands.Count - 1; i >= 0; i--)
+			Retire(_hands[i], i);
+		if (!_defeated && _night != null && IsInstanceValid(_night))
+		{
+			_nightTween?.Kill();
+			_night.Color = _dayColor;
+		}
+		_health?.EndEncounter();
+	}
 
-		Node playerNode = GetTree().GetFirstNodeInGroup("player");
-		if (playerNode is Player p)
-			_player = p;
+	/// <summary>
+	/// Où le vent aura porté un joueur qui ne bouge pas, à la fin de l'annonce de l'éclair : l'immobilité reste punie
+	/// malgré la dérive ; celui qui bouge de lui-même s'en écarte.
+	/// </summary>
+	private Vector2 DriftedPosition(float seconds) => _player.GlobalPosition + _wind * seconds;
+
+	/// <summary>La partie est encore une main de ce boss : ni libérée, ni rendue au pool pour une autre créature.</summary>
+	private bool IsOwnHand(Enemy part) => IsInstanceValid(part) && part.IsActive && !part.IsDying && part.Boss == _health;
+
+	private bool HitPlayer(float damage, Vector2 from)
+	{
+		if (_player.Mobility.IsInvulnerable)
+			return false;
+		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, EnemyGrammar.FinalBossId, damage);
+		_player.TakeDamage(damage, from);
+		return true;
+	}
+
+	private static Vector2 Pivot(Texture2D texture) =>
+		World.PropManifest.TryGet(texture, out World.PropManifest.Entry entry) ? -entry.Pivot : -texture.GetSize() * new Vector2(0.5f, 1f);
+
+	private static Texture2D LoadTexture(string stem)
+	{
+		string path = $"{AssetFolder}/{stem}.png";
+		if (ResourceLoader.Exists(path))
+			return GD.Load<Texture2D>(path);
+		GD.PushError($"[Indicible] Sprite absent : {path}");
+		return null;
 	}
 }

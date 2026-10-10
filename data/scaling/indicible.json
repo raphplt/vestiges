@@ -1,31 +1,86 @@
 {
-  "_doc": "Réglages de l'Indicible (plan 26 Q6b), lus par Infrastructure/IndicibleConfig. PV et dégâts d'un tentacule : data/enemies/indicible.json ; apparition et multiplicateurs : crises.json ; récompense : score.json. « tentacles » et « edges » changent le combat (zones de touche) ; « decor » ne change que l'image.",
-  "enrage_hp_ratio": 0.5,
-  "tentacles": {
-    "_doc": "Cadence en secondes ; la première attaque et la cadence enragée sont des parts de la cadence. Le couloir est mesuré au sol : on est touché à moins de « width » de son axe, long de « length ».",
-    "interval_sec": 2.5,
-    "first_attack_ratio": 0.3,
-    "enraged_interval_ratio": 0.6,
-    "count": 2,
-    "enraged_count": 3,
+  "_doc": "L'Indicible (plan 07 B3, fiche du 4 octobre validée au §70), lu par Infrastructure/IndicibleConfig et contrôlé au début de la run : fichier invalide, le boss n'apparaît pas (EndgameManager le dit au chargement). Réserve de PV et dégâts de base : data/enemies/indicible.json ; apparition et multiplicateurs : crises.json ; récompense : score.json. Il se combat à ses mains, des parties de boss en réserve commune (data/scaling/boss_parts.json). Distances au sol en px (un écart vertical à l'écran compte double), durées en s.",
+  "name_key": "BOSS_INDICIBLE",
+  "first_attack_sec": 2,
+  "phase_thresholds": [0.667, 0.333],
+  "darkness": {
+    "_doc": "La nuit tombe sur le monde (CanvasModulate de Main), pas sur l'interface.",
+    "color": [0.42, 0.42, 0.62],
+    "fade_sec": 2.5
+  },
+  "hands": {
+    "_doc": "Mains qui sortent du sol près du joueur, vivent « life_sec », puis agrippent la position où il sera à la fin de l'annonce s'il garde son pas (elles punissent qui file droit). « max_alive » mains à la fois, plus « extra_per_phase » à chaque seuil franchi. Dégâts : ceux de la fiche × multiplicateur.",
+    "max_alive": 3,
+    "extra_per_phase": 1,
+    "interval_sec": 2.2,
+    "distance_min": 80,
+    "distance_max": 150,
+    "rise_sec": 0.35,
+    "life_sec": 4.5,
+    "grab_warning_sec": 0.8,
+    "grab_radius": 34,
+    "hit_margin": 6,
+    "damage_multiplier": 1.2,
+    "body_radius": 24
+  },
+  "storm": {
+    "_doc": "Tempête : le vent fait dériver le joueur (px/s) et change de sens ; des éclairs frappent après une annonce là où le vent aura porté un joueur qui ne bouge pas (ils punissent l'immobilité).",
+    "wind_speed": 30,
+    "wind_change_min_sec": 4,
+    "wind_change_max_sec": 7,
+    "lightning_interval_sec": 3,
+    "lightning_warning_sec": 0.9,
+    "lightning_radius": 38,
+    "lightning_hit_margin": 6,
+    "lightning_damage_multiplier": 1.0
+  },
+  "tide": {
+    "_doc": "Marée (phase 2, sous le premier seuil) : le vent et les éclairs tombent ; l'eau monte par bandes depuis un bord de l'écran, ancrée dans le monde. Chaque bande est annoncée « warning_sec » puis avance de « band_step » px toutes les « band_sec » s, du bord (« start_distance » px du joueur) jusqu'à « end_distance » (au-delà de lui) ; puis l'eau se retire et revient d'un autre bord après « turn_pause_sec ». Sur « shallow_width » px, l'eau est peu profonde et ralentit ; plus loin, elle ralentit plus et blesse chaque seconde (dégâts de la fiche × « deep_damage_multiplier »). Les mains sortent de préférence de l'eau, « extra_hands » de plus.",
+    "band_sec": 2.4,
+    "band_step": 45,
     "warning_sec": 0.8,
-    "width": 30,
-    "length": 120,
-    "target_jitter": 60
+    "start_distance": 270,
+    "end_distance": -200,
+    "turn_pause_sec": 2.5,
+    "shallow_width": 60,
+    "shallow_slow": 0.8,
+    "deep_slow": 0.55,
+    "deep_damage_multiplier": 0.5,
+    "extra_hands": 2,
+    "shallow_color": [0.16, 0.28, 0.42],
+    "deep_color": [0.06, 0.12, 0.24],
+    "opacity": 0.72
   },
-  "edges": {
-    "_doc": "Quatre bords autour du point d'apparition, qui reçoivent les projectiles du joueur.",
-    "spread": 350,
-    "half_length": 200,
-    "half_thickness": 40
+  "wave": {
+    "_doc": "Seconde vague (phase 3, sous le second seuil) : la marée se retire ; toutes les « interval_sec », une vague traverse l'écran d'un bord à l'autre (« half_length » px de part et d'autre du joueur, à « speed » px/s) après une annonce de « warning_sec ». Elle laisse « breach_min » à « breach_max » brèches de « breach_width » px, à moins de « breach_spread » px du joueur : il faut y être. Elle blesse ce qu'elle franchit hors brèche (dégâts de la fiche × « damage_multiplier »). Après chaque vague, l'Indicible se découvre « window_sec » à « window_distance » px du joueur : une grande cible (« window_radius » px) fragile, qui prend « window_bonus » de dégâts en plus.",
+    "interval_sec": 9,
+    "warning_sec": 1.6,
+    "speed": 420,
+    "half_length": 700,
+    "breach_min": 1,
+    "breach_max": 2,
+    "breach_width": 80,
+    "breach_spread": 220,
+    "damage_multiplier": 3,
+    "window_sec": 4.5,
+    "window_distance": 110,
+    "window_radius": 46,
+    "window_bonus": 1.0,
+    "foam_color": [0.72, 0.82, 0.92],
+    "breach_color": [0.95, 0.85, 0.45]
   },
-  "decor": {
-    "eye_count": 5,
-    "eye_spread": 330,
-    "eye_offset": 150,
-    "eye_first_shift_sec": 1,
-    "eye_shift_interval_sec": 3,
-    "eye_shift_sec": 1.2,
-    "strike_visual_sec": 0.4
+  "fx_family": "void",
+  "audio": {
+    "_doc": "Sons provisoires de la banque (plan 15).",
+    "rise": "sfx_boss_enrage",
+    "hand_rise": "sfx_rampant_surgissement",
+    "grab_warning": "sfx_omen_cast",
+    "grab_impact": "sfx_omen_impact",
+    "lightning_warning": "sfx_tonnerre_lointain",
+    "lightning_strike": "sfx_orage_proche",
+    "defeated": "sfx_boss_death",
+    "wave_warning": "sfx_foret_rafales",
+    "wave_crash": "sfx_monde_dissolution",
+    "window_open": "sfx_chest_reveal"
   }
 }

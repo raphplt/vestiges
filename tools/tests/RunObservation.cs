@@ -209,7 +209,8 @@ public partial class RunObservation : Node
                 await MeasureBossDummy(Argument(args, "--weapons", null), double.Parse(Argument(args, "--seconds", "10"), CultureInfo.InvariantCulture),
                     float.Parse(Argument(args, "--distance", "120"), CultureInfo.InvariantCulture), float.Parse(Argument(args, "--radius", "50"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--measure-indicible") >= 0)
-                await MeasureIndicible(double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture));
+                await MeasureIndicible(double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture),
+                    int.Parse(Argument(args, "--phase", "1"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-endgame") >= 0)
                 await CaptureEndgame(double.Parse(Argument(args, "--seconds", "40"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--loot-draws") >= 0)

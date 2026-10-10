@@ -620,7 +620,7 @@ Fiche du 4 octobre (§3 ci-dessus), validée au §70 ; déclenchement inchangé 
 
 ### B2 livré — 10 octobre 2026 (B2a intégré tel que proposé, B2b, B2c)
 
-Raphaël n'avait pas validé la planche B2a ; il a demandé d'avancer en autonomie. Elle est intégrée telle que proposée, poing en **gantelet** ; tout reste révisable (DECISIONS §87).
+Raphaël n'avait pas validé la planche B2a ; il a demandé d'avancer en autonomie. Elle est intégrée telle que proposée, poing en **gantelet** ; tout reste révisable (DECISIONS §89).
 
 - **Sprites** : `tools/generate_props.py barrier` écrit `assets/bosses/barrier/` (18 sprites, manifeste) et `barrier_layout.json`, les pas écran entre piliers et entre bornes d'aile dans les deux orientations (113 px en horizontale ; 64 px en diagonale verticale, d'où deux fois plus de travées pour la même longueur au sol).
 - **Levée** (`Events/BarrierDirector`, créé par `GameBootstrap`) : à `appear_at_sec` 600, ou à la fin d'une Résurgence, de son annonce ou de son accalmie. Elle se lève **devant le joueur selon son cap des 3 dernières secondes**. Le cap ignore les sauts, Failles comprises. La grille est horizontale si le joueur va vers le haut ou le bas, diagonale sinon. Elle se pose à **150 px** : à 350, elle naissait hors de l'écran, la vue faisant 540 px de monde en hauteur. Si elle sortirait de la carte (marge de 400 px) ou tomberait dans l'eau, une autre direction est essayée. Battants : 1 + Mémoriaux ravivés, 5 au plus. Pendant le combat, la foule visée tombe à ×0,5 (`SpawnManager.EncounterDensityMultiplier`) et aucun micro-événement ne part.
@@ -652,3 +652,83 @@ L'immobilité est punie par les poings, le va-et-vient régulier par la chaîne 
 - Deux défauts trouvés par cette mesure et corrigés : la grille pouvait se lever **au bord de la carte**, battant hors d'atteinte (une autre direction est désormais essayée) ; un joueur qui **reculait** de 900 px mettait fin au combat (seul le passage de l'autre côté le fait).
 - Relecture `godot-reviewer` : un coup ignoré (invulnérabilité, palier d'objet) n'est plus compté ni ne consomme la chaîne ; retrait d'un obstacle indexé par décor (il parcourait les 10 000 obstacles à chaque décor masqué) ; décors masqués seulement une fois la grille posée.
 - Suites : smoke, boss_parts, enemy_abilities, weapons, objects, movement-integration, run_trace, run_phase, indicible, catalogs, launchers : 11/11.
+
+### B3a livré — 10 octobre 2026 (socle et tempête)
+
+- **Nouvel Indicible** (`Combat/Indicible`, `Infrastructure/IndicibleConfig`, `data/scaling/indicible.json` réécrits ; l'ancien et ses bords ciblables sont retirés, avec `Projectile.TryAbsorb`). Déclenchement inchangé (`EndgameManager`). Réserve commune de `BossHealth` : PV de la fiche × `boss_hp_scale`, seuils de phase à 2/3 et 1/3, barre de boss « L'Indicible ». La mort, unique, émet `EnemyKilled` « indicible » : score, succès et endgame inchangés.
+- **La nuit tombe** : le `CanvasModulate` de Main s'assombrit en 2,5 s (le HUD n'est pas touché) et revient à la mort, ou aussitôt si le boss sort sans être vaincu.
+- **Vent** : une dérive de 30 px/s qui pousse le joueur (`Player.ExternalDrift`), dont le sens change toutes les 4 à 7 s.
+- **Éclairs** : toutes les 3 s, annonce de 0,9 s là où le vent aura porté un joueur passif. Ils punissent l'immobilité.
+- **Mains** (sprites `tools/generate_props.py indicible` : main grise de noyé, paume ouverte puis poing qui agrippe) : parties de boss en réserve commune, 3 à la fois (+1 par seuil franchi). Elles sortent du sol à 80–150 px du joueur, vivent 4,5 s, puis agrippent, après 0,8 s d'annonce, la position où il sera s'il garde son pas (vent compris) : elles punissent qui file droit. Frapper une main entame la réserve.
+- **Phases 2 et 3** : pour l'instant la même tempête avec plus de mains ; la marée (B3b) et la seconde vague (B3c) les remplaceront.
+- **Défaut trouvé à la mesure et corrigé** : le vent portait le joueur immobile hors de l'éclair pendant l'annonce (1 éclair sur 5, 0 prise sur 6 ; [journal](../audits/boss-2026-10-10/b3a/postures-avant-correction-du-vent.txt)). Éclairs et prises visent désormais la position dérivée.
+- **Réserve** : la fiche passe de 2 000 à 90 000 PV (288 000 à 22 min, ×3,2). L'ancienne valeur fondait en quelques secondes devant des builds qui font 350 à 3 400 dégâts par seconde dès 11 min. Réglage à mesurer en vraie run longue (B4).
+
+**Vérifié :**
+- `tools/test_indicible.sh` (25 contrôles) dans la vraie scène de run : réglages et 10 fichiers invalides refusés, nuit, dérive de 106 px en 14 s, 3 éclairs sur 3 et 3 prises sur 4 sur un joueur immobile, réserve entamée par une main, seuils dans l'ordre, mort unique et +5 500 points, vent retombé.
+- Mesure `--measure-indicible` en postures, 20 s chacune ([journal](../audits/boss-2026-10-10/b3a/postures.txt)) :
+
+| Posture | Éclairs portés | Prises portées |
+|---|---|---|
+| Immobile | 4 / 5 | 6 / 6 |
+| Va-et-vient en ligne droite | 0 / 5 | 3 / 6 |
+| Cercle | 0 / 5 | 0 / 6 |
+
+- Capture `--capture-endgame` ([tempête](../audits/boss-2026-10-10/b3a/tempete.jpg)) : nuit, main, annonce d'éclair, barre.
+- Relecture `godot-reviewer`, corrigée :
+  - le vent passait par la vitesse du joueur, si bien qu'un joueur immobile marchait, faisait des pas et se tournait ; il pousse désormais le corps à part (`MoveAndCollide`), en run, hors dash, sans quitter le sol ;
+  - libération différée par un tween lié au nœud ;
+  - garde commune avant de toucher une main ;
+  - le boss attend hors de l'état de run ;
+  - un seul tween pour la nuit ;
+  - comportement `indicible` retiré de la grammaire (plus aucun consommateur) ;
+  - la capture de fin attend qu'une main existe pour finir le boss.
+- Suites : smoke, indicible, boss_parts, weapons, enemy_abilities, catalogs, run_phase, movement, movement-integration, run_trace, launchers : 11/11 ; après la relecture, indicible, movement, movement-integration, catalogs et enemy_abilities : 5/5, mesure par postures inchangée.
+
+### B3b livré — 10 octobre 2026 (marée)
+
+- **`Combat/IndicibleTide`**, sous le premier seuil (2/3) : le vent et les éclairs tombent ; l'eau monte depuis un bord de l'écran, **ancrée dans le monde**, par bandes de 45 px toutes les 2,4 s, chacune annoncée 0,8 s par une bande claire qui palpite. Le front part à 270 px du joueur et va jusqu'à 200 px au-delà ; puis l'eau se retire et revient d'un autre bord 2,5 s plus tard. Sur 60 px, l'eau est peu profonde : le joueur y va à ×0,8. Plus loin, elle est profonde : ×0,55, et une blessure par seconde (dégâts de la fiche × 0,5). Les mains sortent de l'eau quand elle est à portée, deux de plus pendant la marée. Rendu : deux polygones au sol (couche −5), recalculés seulement quand une bande avance.
+- **Mesure** `--measure-indicible --phase 2`, 30 s par posture ([journal](../audits/boss-2026-10-10/b3b/postures-maree.txt) ; l'eau allait alors jusqu'à 120 px au-delà du joueur, portée ensuite à 200) :
+
+| Posture | Prises portées | Eau profonde | Coups de l'eau |
+|---|---|---|---|
+| Immobile | 11 / 12 | 2,4 s | 3 |
+| Cercle | 0 / 12 | 20,4 s | 22 |
+| Va-et-vient | 5 / 12 | 2,4 s | 3 |
+
+  L'immobile est pris par les mains, celui qui tourne sans regarder entre dans l'eau.
+- Capture `--capture-endgame --phase 2` ([marée](../audits/boss-2026-10-10/b3b/maree.jpg)) : eau profonde, bande peu profonde, main qui sort de l'eau.
+
+### B3c livré — 10 octobre 2026 (seconde vague et fenêtre découverte)
+
+- **`Combat/IndicibleWave`**, sous le second seuil (1/3) : la mer se retire. Toutes les 9 s, une vague traverse l'écran d'un bord à l'autre (700 px de part et d'autre du joueur, 420 px/s), après 1,6 s d'annonce. Ses une ou deux **brèches** de 80 px, à moins de 220 px du joueur, sont des couloirs de lumière chaude. Elle blesse ce qu'elle franchit hors brèche (dégâts de la fiche × 3). Rendu : écume et masse d'eau construites une fois par vague, seul le nœud avance.
+- **Fenêtre découverte** : après chaque vague, l'Indicible se découvre 4,5 s à 110 px du joueur. C'est une grande main violacée de 46 px de rayon, une partie de la réserve commune rendue **Fragile** (+100 % de dégâts, statut existant), entourée d'un anneau.
+- **Mesure** `--measure-indicible --phase 3`, 40 s par posture ([journal](../audits/boss-2026-10-10/b3c/postures-vague.txt)). La nouvelle posture « brèche » fait aller le bot dans la brèche la plus proche dès l'annonce.
+
+| Posture | Vagues portées | Prises portées | PV pris pendant la fenêtre |
+|---|---|---|---|
+| Immobile | 3 / 4 | 16 / 16 | 1 483 |
+| Cercle | 2 / 4 | 0 / 16 | 480 |
+| Va-et-vient | 4 / 4 | 8 / 16 | 1 440 |
+| Brèche | **0 / 4** | 14 / 16 | 182 |
+
+  La vague s'évite par la brèche ; mais rester planté dans la brèche livre aux mains. La phase demande les deux gestes.
+- Captures (image toutes les 0,5 s) : [vague](../audits/boss-2026-10-10/b3c/vague.jpg), [brèches annoncées](../audits/boss-2026-10-10/b3c/breches.jpg), [découvert](../audits/boss-2026-10-10/b3c/decouvert.jpg). Une première version (écume de 30 px, brèches à 35 % d'opacité) se lisait mal la nuit : masse d'eau ajoutée derrière l'écume, brèches à 60 %.
+- **Banc** : `tools/test_indicible.sh`, 31 contrôles (limite portée à 6 000 images) : marée sous le premier seuil sans vent ni éclair, seconde vague sous le second seuil, fenêtre découverte qui prend double, mort unique.
+- **Suites** : smoke, indicible, boss_parts, weapons, enemy_abilities, objects, catalogs, run_phase, movement, movement-integration, run_trace, audio, music, launchers : 14/14.
+
+**Ce qui reste (B4)** : la réserve (90 000 × 3,2) et les dégâts se règlent sur une vraie run longue (22 min et plus) avec le build de référence ; la Barrière avec des Mémoriaux ravivés. Sons provisoires dans les deux boss.
+
+### B4, premier passage — 10 octobre 2026 (mesure en vraie run longue)
+
+Build de référence du plan 30, bot invincible (pour atteindre le boss), 4 graines jusqu'à 26 min ([journaux](../audits/boss-2026-10-10/b4/)). Le bot va au battant de la Barrière ; il ne cherche pas les mains de l'Indicible et ne joue pas la brèche.
+- **Indicible** (levé à 22 min) :
+  - réserve **288 000 PV** (fiche 90 000 × 3,2) : vaincu en **22, 56 et 141 s** ; une graine le laisse en vie après 240 s ;
+  - réserve **432 000 PV** : 88 s, puis plus de 280 s dans les trois autres graines.
+
+  Les runs divergent dès la Barrière et l'écart entre builds est énorme. **288 000 PV retenus** (médiane proche de 100 s, sous les 2 à 3 minutes visées), réglage fin à la partie de Raphaël. Les trois phases s'enchaînent dans les trois combats gagnés (tempête, marée, vague).
+- **Barrière, un battant** (le bot ne ravive pas de Mémorial) :
+  - à **45 000 PV** : 16, 23, 35, 113, 203 et 208 s, deux combats encore ouverts après 118 et 190 s ;
+  - médiane au-delà de 110 s, d'où la base ramenée à **20 000** : 35 000 PV pour un battant, 65 000 pour trois, 95 000 pour cinq.
+- **Défaut trouvé et corrigé :** à 10 min, le bot rôde près des bords déjà effacés. La pose ne vérifiait que les limites de la carte : dans une graine, le battant est tombé dans le Néant, hors d'atteinte pendant 750 s. Elle vérifie désormais sept points d'appui le long de la grille (sol de la carte, pas d'eau, pas de Néant de l'Effacement). Si aucune direction n'est parfaite, elle garde celle qui a le plus d'appuis.
+- Suites après ces réglages : smoke, boss_parts, indicible, catalogs, run_trace, launchers : 6/6.

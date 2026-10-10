@@ -116,8 +116,9 @@ public partial class EndgameManager : Node
 
 		_indicible = new Indicible { Name = "IndicibleBoss" };
 		GetParent().AddChild(_indicible);
-		if (!_indicible.Initialize(_bossHpScale, _bossDmgScale, _player.GlobalPosition))
+		if (!_indicible.Initialize(_bossHpScale, _bossDmgScale, _player, GetParent().GetNode<Spawn.SpawnManager>("SpawnManager")))
 		{
+			_indicible.QueueFree();
 			_bossUnavailable = "initialisation refusée";
 			return;
 		}

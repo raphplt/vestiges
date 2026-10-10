@@ -4,8 +4,8 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Cible suivie dans la durée (tir guidé, tir de rafale en attente), pour une seule vie (plan 26 Q8a) : une créature
-/// rendue au pool reste un objet Godot valide et peut revenir comme une autre créature. Une cible du groupe qui n'est
-/// pas une créature (l'Indicible) reste suivie tant que son nœud vit.
+/// rendue au pool reste un objet Godot valide et peut revenir comme une autre créature. Une cible qui n'est pas une
+/// créature reste suivie tant que son nœud vit.
 /// </summary>
 public readonly struct TargetLock
 {

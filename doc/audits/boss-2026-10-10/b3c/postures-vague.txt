@@ -1,0 +1,5 @@
+[IndicibleMeasure] phase=3 posture=immobile secondes=40 reserve=2996999->2991918 mains=19 eclairs_portes=0/0 prises_portees=16/16 eau_profonde_s=0.0 eau_basse_s=0.0 coups_de_l_eau=0 vagues_portees=3/4 pv_pris_decouvert=1483 deplacement=0
+[IndicibleMeasure] phase=3 posture=cercle secondes=40 reserve=2996999->2994678 mains=19 eclairs_portes=0/0 prises_portees=0/16 eau_profonde_s=0.0 eau_basse_s=0.0 coups_de_l_eau=0 vagues_portees=2/4 pv_pris_decouvert=480 deplacement=409
+[IndicibleMeasure] phase=3 posture=va-et-vient secondes=40 reserve=2996999->2992174 mains=19 eclairs_portes=0/0 prises_portees=8/16 eau_profonde_s=0.0 eau_basse_s=0.0 coups_de_l_eau=0 vagues_portees=4/4 pv_pris_decouvert=1440 deplacement=240
+[IndicibleMeasure] phase=3 posture=brèche secondes=40 reserve=2996999->2992618 mains=19 eclairs_portes=0/0 prises_portees=14/16 eau_profonde_s=0.0 eau_basse_s=0.0 coups_de_l_eau=0 vagues_portees=0/4 pv_pris_decouvert=182 deplacement=61
+[RunObservation] RESULT indicible-measure done

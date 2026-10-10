@@ -8,26 +8,25 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Score;
+using Vestiges.Spawn;
 
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Plan 26 Q6b : réglages de l'Indicible lus depuis les données. La configuration du dépôt redonne les constantes
-/// d'avant le lot, une configuration invalide est refusée, et un combat scripté vérifie le rythme, le nombre de
-/// tentacules, les dégâts, l'enrage et la récompense.
+/// Plan 07 B3 : l'Indicible refait. Réglages lus et contrôlés ; combat scripté dans la vraie scène de run : nuit qui
+/// tombe, vent qui fait dériver le joueur, éclairs et mains qui agrippent un joueur immobile, réserve commune entamée
+/// par les mains, marée sous le premier seuil (B3b), seuils de phase, mort unique (score, élimination « indicible »).
 /// </summary>
 public partial class IndicibleRegression : Node2D
 {
     private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
-    private const double Frame = 1.0 / 60.0;
     private int _failures;
 
     public override async void _Ready()
     {
         try
         {
-            CheckConfigMatchesFormerConstants();
-            CheckInvalidConfigsRejected();
+            CheckConfig();
             await CheckFight();
         }
         catch (Exception ex)
@@ -38,125 +37,135 @@ public partial class IndicibleRegression : Node2D
         GetTree().Quit(_failures == 0 ? 0 : 1);
     }
 
-    private void CheckConfigMatchesFormerConstants()
+    private void CheckConfig()
     {
         Check(IndicibleConfig.TryLoad(out IndicibleConfig c, out string loadError), $"configuration du jeu chargée {loadError}");
-        // Valeurs écrites dans Combat/Indicible.cs avant le lot.
-        (string Name, float Actual, float Former)[] values =
-        {
-            ("enrage_hp_ratio", c.EnrageHpRatio, 0.5f), ("interval_sec", c.TentacleInterval, 2.5f),
-            ("first_attack_ratio", c.FirstAttackRatio, 0.3f), ("enraged_interval_ratio", c.EnragedIntervalRatio, 0.6f),
-            ("count", c.TentacleCount, 2f), ("enraged_count", c.EnragedTentacleCount, 3f), ("warning_sec", c.WarningDuration, 0.8f),
-            ("width", c.TentacleWidth, 30f), ("length", c.TentacleLength, 120f), ("target_jitter", c.TargetJitter, 60f),
-            ("spread", c.EdgeSpread, 350f), ("half_length", c.EdgeHalfLength, 200f), ("half_thickness", c.EdgeHalfThickness, 40f),
-            ("eye_count", c.EyeCount, 5f), ("eye_spread", c.EyeSpread, 330f), ("eye_offset", c.EyeOffset, 150f),
-            ("eye_first_shift_sec", c.EyeFirstShift, 1f), ("eye_shift_interval_sec", c.EyeShiftInterval, 3f),
-            ("eye_shift_sec", c.EyeShiftDuration, 1.2f), ("strike_visual_sec", c.StrikeVisualDuration, 0.4f),
-        };
-        foreach ((string name, float actual, float former) in values)
-            Check(actual == former, $"configuration : {name} = {actual} (avant : {former})");
-        EnemyData data = EnemyDataLoader.Get("indicible");
-        Check(data.Stats.Hp == 2000f && data.Stats.Damage == 15f, $"fiche : {data.Stats.Hp} PV, {data.Stats.Damage} de dégâts (avant : 2000 et 15 en dur)");
-    }
-
-    private void CheckInvalidConfigsRejected()
-    {
+        Check(c.PhaseThresholds.Count == 2 && c.HandMaxAlive >= 1 && c.LightningWarning > 0f, $"deux seuils, {c.HandMaxAlive} main(s) à la fois");
         string valid = FileAccess.GetFileAsString("res://data/scaling/indicible.json");
-        Check(IndicibleConfig.TryParse(valid, out _, out string validError), $"configuration du dépôt acceptée {validError}");
         (string Label, Action<JsonObject> Mutate, string Expected)[] cases =
         {
-            ("section absente", root => root.Remove("edges"), "section edges absente"),
-            ("réglage absent", root => root["tentacles"]!.AsObject().Remove("warning_sec"), "warning_sec absent"),
-            ("cadence nulle", root => root["tentacles"]!["interval_sec"] = 0, "interval_sec"),
-            ("nombre non entier", root => root["tentacles"]!["count"] = 2.5, "count"),
-            ("nombre démesuré", root => root["tentacles"]!["enraged_count"] = 1e12, "enraged_count"),
-            ("part hors de ]0 ; 1]", root => root["enrage_hp_ratio"] = 1.5, "enrage_hp_ratio"),
-            ("texte au lieu d'un nombre", root => root["tentacles"]!["width"] = "trente", "width"),
-            ("écart négatif", root => root["decor"]!["eye_offset"] = -1, "eye_offset"),
+            ("section absente", root => root.Remove("storm"), "section storm absente"),
+            ("réglage absent", root => root["hands"]!.AsObject().Remove("grab_warning_sec"), "grab_warning_sec absent"),
+            ("clé inconnue", root => root["hands"]!["grab_delay"] = 1, "inconnue"),
+            ("seuils croissants", root => root["phase_thresholds"] = new JsonArray(0.3, 0.6), "phase_thresholds"),
+            ("seuil hors de ]0 ; 1[", root => root["phase_thresholds"] = new JsonArray(1.2), "phase_thresholds"),
+            ("distances inversées", root => root["hands"]!["distance_min"] = 300, "distance_max"),
+            ("rayon au-delà des parties", root => root["hands"]!["body_radius"] = 90, "body_radius"),
+            ("nombre démesuré", root => root["hands"]!["max_alive"] = 1e6, "max_alive"),
+            ("son absent", root => root["audio"]!["defeated"] = "sfx_inexistant", "sfx_inexistant"),
+            ("famille inconnue", root => root["fx_family"] = "plasma", "plasma"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
             JsonObject root = JsonNode.Parse(valid)!.AsObject();
             mutate(root);
-            bool rejected = !IndicibleConfig.TryParse(root.ToJsonString(), out IndicibleConfig config, out string error);
+            bool rejected = !IndicibleConfig.TryParse(root.ToJsonString(), 50f, out IndicibleConfig config, out string error);
             Check(rejected && config == null && error.Contains(expected), $"configuration invalide refusée ({label}) : {error}");
         }
     }
 
     /// <summary>
-    /// Joueur immobile et inerte, couloir tiré sans écart autour de lui : chaque tentacule touche, si bien que les
-    /// touches comptent les tentacules de chaque attaque.
+    /// Joueur immobile, armes coupées, dans la vraie scène de run sans flux de créatures : chaque éclair et chaque prise
+    /// tombent sur lui ; les dégâts aux mains sont portés à la main pour franchir les seuils, puis vider la réserve.
     /// </summary>
     private async Task CheckFight()
     {
-        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
-        AddChild(player);
-        player.InitializeCharacter(CharacterDataLoader.Get("vagabond"));
-        player.ProcessMode = ProcessModeEnum.Disabled;
-        player.GlobalPosition = Vector2.Zero;
-        typeof(Player).GetField("_currentHp", Private)!.SetValue(player, 1_000_000f);
-
-        ScoreManager score = new();
-        AddChild(score);
-        EventBus bus = GetNode<EventBus>("/root/EventBus");
-        List<(double Time, float Damage)> hits = new();
-        double now = 0;
-        EventBus.PlayerHitByEventHandler onHit = (source, damage) => { if (source == "indicible") hits.Add((now, damage)); };
-        bus.PlayerHitBy += onHit;
-
-        const float damageScale = 0.5f;
-        Indicible boss = new() { Name = "IndicibleBoss" };
-        AddChild(boss);
-        Check(boss.Initialize(1f, damageScale, Vector2.Zero), "boss initialisé");
-        JsonObject root = JsonNode.Parse(FileAccess.GetFileAsString("res://data/scaling/indicible.json"))!.AsObject();
-        root["tentacles"]!["target_jitter"] = 0;
-        IndicibleConfig.TryParse(root.ToJsonString(), out IndicibleConfig noJitter, out _);
-        typeof(Indicible).GetField("_config", Private)!.SetValue(boss, noJitter);
-        FieldInfo timer = typeof(Indicible).GetField("_tentacleTimer", Private)!;
-        FieldInfo phase = typeof(Indicible).GetField("_phase", Private)!;
-        FieldInfo maxHp = typeof(Indicible).GetField("_maxHp", Private)!;
-        Check((float)maxHp.GetValue(boss)! == 2000f, $"PV du boss : {(float)maxHp.GetValue(boss)!} (fiche × 1)");
-
-        List<(double Time, int Phase, float Reset)> attacks = new();
-        float previous = (float)timer.GetValue(boss)!;
-        Check(Mathf.IsEqualApprox(previous, 0.75f), $"première attaque après {previous} s (2,5 × 0,3)");
-        bool enraged = false;
-        while (now < 14.0)
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        GameManager manager = GetNode<GameManager>("/root/GameManager");
+        manager.RunSeed = 221092026;
+        manager.SelectedCharacterId = "traqueur";
+        World.WorldSetup main = GD.Load<PackedScene>("res://scenes/Main.tscn").Instantiate<World.WorldSetup>();
+        GetTree().Root.AddChild(main);
+        GetTree().CurrentScene = main;
+        ulong deadline = Time.GetTicksMsec() + 120000;
+        // Sans rendu, céder 1 ms laisse du CPU au thread de génération (même attente que l'intégration des déplacements).
+        while ((!main.IsWorldReady || GetTree().Paused || manager.CurrentState != GameManager.GameState.Run) && Time.GetTicksMsec() < deadline)
         {
+            OS.DelayMsec(1);
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            now += Frame;
-            float current = (float)timer.GetValue(boss)!;
-            if (current > previous)
-                attacks.Add((now, (int)phase.GetValue(boss)!, current));
-            previous = current;
-            // Après trois attaques normales, le boss passe sous la moitié de ses PV.
-            if (!enraged && attacks.Count == 3)
-            {
-                boss.TakeDamage(1000f);
-                enraged = true;
-            }
         }
+        Check(main.IsWorldReady && !GetTree().Paused, "scène de run prête");
+        Player player = main.GetNode<Player>("Player");
+        SpawnManager spawner = main.GetNode<SpawnManager>("SpawnManager");
+        spawner.ProcessMode = ProcessModeEnum.Disabled;
+        player.IsAIControlled = true;
+        player.DisableDefenseForTests();
+        foreach (Node child in player.GetChildren())
+            if (child is Timer weaponTimer)
+                weaponTimer.Stop();
+        typeof(Player).GetField("_currentHp", Private)!.SetValue(player, 1_000_000f);
+        CanvasModulate night = main.GetNode<CanvasModulate>("CanvasModulate");
+        Color day = night.Color;
 
-        List<(double Time, int Phase, float Reset)> normal = attacks.FindAll(a => a.Phase == 1);
-        List<(double Time, int Phase, float Reset)> angry = attacks.FindAll(a => a.Phase == 2);
-        Check(normal.Count == 3 && Math.Abs(normal[0].Time - 0.75) < 2.5 * Frame, $"première attaque à {(normal.Count > 0 ? normal[0].Time : -1):0.00} s");
-        Check(normal.TrueForAll(a => Mathf.IsEqualApprox(a.Reset, 2.5f)), "rythme normal : 2,5 s entre deux attaques");
-        Check(angry.Count >= 3 && angry.TrueForAll(a => Mathf.IsEqualApprox(a.Reset, 1.5f)), $"rythme enragé : 1,5 s ({angry.Count} attaques)");
-        Check(angry.Count >= 3 && Math.Abs(angry[2].Time - angry[1].Time - 1.5) < 2.5 * Frame, "enragé : écart mesuré de 1,5 s");
-        foreach ((double time, int attackPhase, float _) in attacks)
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int kills = 0;
+        EventBus.EnemyKilledEventHandler onKill = (id, _) => { if (id == EnemyGrammar.FinalBossId) kills++; };
+        bus.EnemyKilled += onKill;
+        ScoreManager score = main.GetNodeOrNull<ScoreManager>("ScoreManager");
+        int scoreBefore = score?.CurrentScore ?? 0;
+
+        Indicible boss = new() { Name = "IndicibleBoss" };
+        main.AddChild(boss);
+        Check(boss.Initialize(1f, 1f, player, spawner), "boss initialisé");
+        Check(boss.Health.Max == EnemyDataLoader.Get(EnemyGrammar.FinalBossId).Stats.Hp, $"réserve : {boss.Health.Max} PV (fiche × 1)");
+        Vector2 start = player.GlobalPosition;
+        for (int frame = 0; frame < 60 * 14; frame++)
         {
-            if (time + 0.9 > now)
-                continue;
-            int count = hits.FindAll(h => h.Time > time && h.Time <= time + 0.8 + 2 * Frame).Count;
-            int expected = attackPhase == 2 ? 3 : 2;
-            Check(count == expected, $"attaque à {time:0.00} s (phase {attackPhase}) : {count} tentacules, {expected} attendus");
+            player.AIInputOverride = Vector2.Zero;
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         }
-        Check(hits.Count > 0 && hits.TrueForAll(h => Mathf.IsEqualApprox(h.Damage, 15f * damageScale)), $"dégâts d'un tentacule : 15 × {damageScale}");
+        Check(night.Color.V < day.V * 0.8f, $"la nuit tombe : {night.Color} (jour {day})");
+        Check(player.GlobalPosition.DistanceTo(start) > 40f, $"le vent fait dériver le joueur immobile : {player.GlobalPosition.DistanceTo(start):F0} px en 14 s");
+        Check(boss.LightningStrikes >= 3 && boss.LightningHits >= boss.LightningStrikes - 1,
+            $"éclairs sur le joueur immobile : {boss.LightningHits}/{boss.LightningStrikes}");
+        Check(boss.HandsRaised >= 3 && boss.Grabs >= 1 && boss.GrabHits >= 1, $"mains : {boss.HandsRaised} levées, {boss.GrabHits}/{boss.Grabs} prises portées");
 
-        int before = score.CurrentScore;
-        boss.TakeDamage(1_000_000f);
-        Check(score.CurrentScore - before == 5000, $"récompense : +{score.CurrentScore - before} points");
-        bus.PlayerHitBy -= onHit;
+        int lightningBefore = boss.LightningStrikes;
+        List<int> phases = new();
+        boss.Health.PhaseReached += phases.Add;
+        Enemy hand = FirstHand(boss);
+        Check(hand != null, "une main est une cible");
+        hand?.TakeDamage(boss.Health.Max * 0.4f);
+        Check(phases.Count == 1 && Mathf.IsEqualApprox(boss.Health.Ratio, 0.6f, 0.01f), $"coup sur une main : réserve à {boss.Health.Ratio:P0}, phase {phases.Count + 1}");
+        Check(boss.Tide.IsActive && player.ExternalDrift == Vector2.Zero, "sous le premier seuil : le vent tombe, la marée monte");
+        for (int frame = 0; frame < 60 * 4; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        Check(boss.LightningStrikes == lightningBefore || boss.LightningStrikes == lightningBefore + 1,
+            $"plus d'éclairs pendant la marée ({boss.LightningStrikes - lightningBefore} de plus)");
+        hand = FirstHand(boss);
+        hand?.TakeDamage(boss.Health.Max * 0.3f);
+        Check(phases.Count == 2 && boss.Wave.IsActive && !boss.Tide.IsActive, "sous le second seuil : la mer se retire, la seconde vague vient");
+        for (int frame = 0; frame < 60 * 12 && boss.Wave.Waves == 0; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        Check(boss.Wave.Waves >= 1, $"une vague annoncée ({boss.Wave.Waves})");
+        for (int frame = 0; frame < 60 * 6 && boss.Wave.WindowPart == null; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        Enemy window = boss.Wave.WindowPart;
+        Check(window != null && window.BodyRadius > 40f, $"après la vague, l'Indicible se découvre (rayon {window?.BodyRadius ?? 0f})");
+        if (window != null)
+        {
+            float before = boss.Health.Current;
+            window.TakeDamage(100f);
+            Check(Mathf.IsEqualApprox(before - boss.Health.Current, 200f, 1f), $"découvert, il prend double : 100 → {before - boss.Health.Current:F0}");
+        }
+        hand = FirstHand(boss);
+        hand?.TakeDamage(boss.Health.Max * 2f);
+        for (int frame = 0; frame < 120; frame++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        Check(boss.IsDefeated && kills == 1, $"vaincu une fois : {kills} élimination(s) « indicible »");
+        Check(string.Join(",", phases) == "1,2", $"seuils dans l'ordre : {string.Join(",", phases)}");
+        Check(score == null || score.CurrentScore - scoreBefore >= 5000, $"récompense : +{(score?.CurrentScore ?? 0) - scoreBefore} points");
+        Check(player.ExternalDrift == Vector2.Zero, "le vent tombe avec lui");
+        bus.EnemyKilled -= onKill;
+        main.QueueFree();
+    }
+
+    private static Enemy FirstHand(Indicible boss)
+    {
+        foreach (Enemy part in boss.Health.Parts)
+            if (part.IsActive && !part.IsDying)
+                return part;
+        return null;
     }
 
     private void Check(bool passed, string message)

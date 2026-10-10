@@ -1,0 +1,4 @@
+[IndicibleMeasure] posture=immobile secondes=20 reserve=200000->198158 mains=9 eclairs_portes=1/5 prises_portees=0/6 deplacement=135
+[IndicibleMeasure] posture=cercle secondes=20 reserve=200000->199166 mains=9 eclairs_portes=0/5 prises_portees=0/6 deplacement=474
+[IndicibleMeasure] posture=va-et-vient secondes=20 reserve=200000->198384 mains=9 eclairs_portes=0/5 prises_portees=0/6 deplacement=126
+[RunObservation] RESULT indicible-measure done

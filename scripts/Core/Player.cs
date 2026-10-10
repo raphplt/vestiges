@@ -534,6 +534,14 @@ public partial class Player : CharacterBody2D
         {
             movementVelocity = KeepOnWorldGround(previousPosition, dt);
         }
+        // La dérive (vent) pousse le corps sans compter comme un pas : ni marche, ni pas sonores, ni changement de face.
+        if (!dashMovement && inputAllowed && ExternalDrift != Vector2.Zero)
+        {
+            Vector2 beforeDrift = GlobalPosition;
+            MoveAndCollide(ExternalDrift * dt);
+            if (!IsOnWorldGround(GlobalPosition))
+                GlobalPosition = beforeDrift;
+        }
         Mobility.FinishMovement(movementVelocity);
         _mobilityFeedback.UpdateFeedback(dt, Mobility, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
@@ -1441,6 +1449,9 @@ public partial class Player : CharacterBody2D
     /// <summary>La toile de la Tisseuse ralentit le joueur, ou cesse de le ralentir (icône de la jauge, plan 27 V3b).</summary>
     public event System.Action<bool> WebbedChanged;
 
+    /// <summary>Dérive imposée par le monde, en px/s (le vent de l'Indicible), appliquée en run hors dash, en plus du pas.</summary>
+    public Vector2 ExternalDrift { get; set; }
+
     public void ApplySlow(float factor, float duration)
     {
         _slowFactor = factor;
@@ -2141,7 +2152,7 @@ public partial class Player : CharacterBody2D
 
         foreach (Node node in crowd.Targets)
         {
-            // Une cible qui n'est pas une créature (l'Indicible) reste admise.
+            // Toute cible de l'index qui n'est pas une créature mourante est admise.
             if (node is not Node2D enemy || enemy is Enemy { IsActive: false } or Enemy { IsDying: true })
                 continue;
             float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);

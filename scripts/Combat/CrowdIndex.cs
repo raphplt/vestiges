@@ -4,7 +4,7 @@ using Godot;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Index des cibles hostiles vivantes (créatures, Indicible), tenu en C# avec une grille de hachage. Remplace le
+/// Index des cibles hostiles vivantes (créatures, parties de boss comprises), tenu en C# avec une grille de hachage. Remplace le
 /// parcours de tout le groupe « enemies », qui relisait chaque créature à travers l'interop pour chaque arme, chaque
 /// projectile et chaque objet (plan 29, lot A).
 /// La grille est reconstruite au plus une fois par tick physique et par image, ou après une inscription. Une requête
@@ -139,7 +139,7 @@ public static class CrowdIndex
 
 	private static void Refresh()
 	{
-		// Relue à chaque tick physique (les créatures y bougent) et à chaque image (l'Indicible bouge en _Process).
+		// Relue à chaque tick physique (les créatures y bougent) et à chaque image.
 		ulong tick = Engine.GetPhysicsFrames();
 		ulong frame = Engine.GetProcessFrames();
 		if (!_dirty && tick == _builtTick && frame == _builtFrame)

@@ -1,0 +1,4 @@
+[IndicibleMeasure] phase=2 posture=immobile secondes=30 reserve=6002999->5999599 mains=14 eclairs_portes=0/0 prises_portees=11/12 eau_profonde_s=2.4 eau_basse_s=4.8 coups_de_l_eau=3 deplacement=0
+[IndicibleMeasure] phase=2 posture=cercle secondes=30 reserve=6002999->6001102 mains=14 eclairs_portes=0/0 prises_portees=0/12 eau_profonde_s=20.4 eau_basse_s=1.5 coups_de_l_eau=22 deplacement=504
+[IndicibleMeasure] phase=2 posture=va-et-vient secondes=30 reserve=6002999->5999720 mains=14 eclairs_portes=0/0 prises_portees=5/12 eau_profonde_s=2.4 eau_basse_s=4.8 coups_de_l_eau=3 deplacement=7
+[RunObservation] RESULT indicible-measure done

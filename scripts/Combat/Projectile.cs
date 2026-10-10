@@ -357,21 +357,6 @@ public partial class Projectile : Area2D, ITicked
         }
     }
 
-    /// <summary>
-    /// Impact sur une cible qui n'est pas une créature (l'Indicible) : donne ses dégâts et rentre au pool, sans
-    /// perforation. Faux si le projectile a déjà touché ce qui l'arrête.
-    /// </summary>
-    public bool TryAbsorb(out float damage)
-    {
-        damage = _damage;
-        // Un tir de rafale qui attend sur le joueur reste détectable par les zones : il ne touche rien avant de partir.
-        if (_isDespawning || _launchDelay > 0f)
-            return false;
-        _isDespawning = true;
-        CallDeferred(MethodName.Release);
-        return true;
-    }
-
     private void Release()
     {
         Roster.Remove(this);

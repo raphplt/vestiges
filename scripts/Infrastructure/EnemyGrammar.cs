@@ -18,7 +18,6 @@ public enum EnemyBehavior
 	Pack,
 	Sentinel,
 	Weaver,
-	Indicible,
 	/// <summary>Partie d'un boss (battant, main) : immobile, sans attaque ni récompense, ses PV vont au boss (plan 07 B1).</summary>
 	BossPart,
 }
@@ -63,7 +62,7 @@ public static class EnemyGrammar
 	private static readonly (string Key, EnemyBehavior Value)[] Behaviors =
 	{
 		("default", EnemyBehavior.Default), ("pack", EnemyBehavior.Pack), ("sentinel", EnemyBehavior.Sentinel),
-		("weaver", EnemyBehavior.Weaver), ("indicible", EnemyBehavior.Indicible),
+		("weaver", EnemyBehavior.Weaver),
 		("boss_part", EnemyBehavior.BossPart),
 	};
 
