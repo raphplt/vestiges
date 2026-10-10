@@ -43,6 +43,10 @@ class PropModel:
     # Boîte englobante du modèle ((min), (max)) : accélère le rendu des grands volumes.
     bounds: tuple[Sequence[float], Sequence[float]] | None = None
     supersample: int = 4
+    # Lignes internes sur les seules ruptures de profondeur : sans elle, un toit plat ou un plateau vu à 30° se couvre
+    # de lignes internes et noircit. Activée pour les immeubles (plan 31) ; les autres décors la gardent éteinte tant
+    # qu'ils ne sont pas régénérés et revus, pour ne pas changer en silence des sprites validés.
+    smooth_slopes: bool = False
 
 
 @dataclass(frozen=True)
@@ -60,7 +64,8 @@ def render_prop(model: PropModel) -> RenderedProp:
     width, height = model.canvas
     pivot = (width / 2.0, height * 0.72)
     layers = render_layers(model.parts(), model.materials, model.yaw, model.canvas, pivot, MODEL_SCALE,
-                           supersample=model.supersample, ray_range=model.ray_range, bounds=model.bounds)
+                           supersample=model.supersample, ray_range=model.ray_range, bounds=model.bounds,
+                           smooth_slopes=model.smooth_slopes)
     cropped, origin = fit_frame(flatten(layers), pivot)
     box = (origin[0], origin[1], origin[0] + cropped.width, origin[1] + cropped.height)
     footprint = None

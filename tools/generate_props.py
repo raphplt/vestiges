@@ -7,6 +7,7 @@ Usage :
     python3 tools/generate_props.py urban --sheet out.png        # planche de contrôle ×3 sur le sol du biome
     python3 tools/generate_props.py urban --only prop_dumpster --dry-run --sheet out.png
     python3 tools/generate_props.py forest --only prop_stump --editable   # retouche Aseprite (voir tools/sprites/retouch.py)
+    python3 tools/generate_props.py swamp --jobs 4               # rendu des décors en parallèle (même résultat)
 
 Seuls les fichiers du catalogue sont réécrits ; les autres décors du dossier (immeubles, lot P2) restent en place.
 Godot réimporte de lui-même un PNG modifié : les .import existants (et leurs uid) sont conservés.
@@ -19,6 +20,7 @@ import json
 import random
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -57,10 +59,34 @@ MANIFEST_NAME = "props_manifest.json"
 SCALE_REFERENCE = "assets/characters/vagabond/char_vagabond_SE_idle_01.png"
 
 
-def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None, scale: int, editable: bool) -> None:
+def _render_indexed(job: tuple[str, int]):
+    """Rendu dans un processus séparé : les modèles portent des fermetures, on les reconstruit depuis le catalogue."""
+    module_name, index = job
+    started = time.time()
+    rendered = render_prop(importlib.import_module(module_name).catalog()[index])
+    return rendered, time.time() - started
+
+
+def _renders(module_name: str, models, indices: list[int], jobs: int):
+    """Rendus dans l'ordre du catalogue, en parallèle si demandé : le résultat est identique pixel pour pixel."""
+    if jobs <= 1:
+        for model in models:
+            started = time.time()
+            rendered = render_prop(model)
+            yield model, rendered, time.time() - started
+        return
+    with ProcessPoolExecutor(max_workers=jobs) as pool:
+        for model, (rendered, elapsed) in zip(models, pool.map(_render_indexed, [(module_name, i) for i in indices])):
+            yield model, rendered, elapsed
+
+
+def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None, scale: int, editable: bool,
+             jobs: int = 1) -> None:
     module_name, folder, tiles = BIOMES[biome]
     module = importlib.import_module(module_name)
-    models = [m for m in module.catalog() if not only or m.stem in only]
+    catalog = module.catalog()
+    indices = [i for i, m in enumerate(catalog) if not only or m.stem in only]
+    models = [catalog[i] for i in indices]
     # Un ensemble posé pièce à pièce (la Barrière) écrit aussi les pas qui alignent ses pièces.
     if output is not None and hasattr(module, "layout"):
         output.mkdir(parents=True, exist_ok=True)
@@ -69,9 +95,7 @@ def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None
         print(f"[generate_props] disposition : {layout_path}")
     images: list[tuple[str, Image.Image]] = []
     manifest_entries: dict[str, dict] = {}
-    for model in models:
-        started = time.time()
-        rendered = render_prop(model)
+    for model, rendered, elapsed in _renders(module_name, models, indices, jobs):
         images.append((model.stem, rendered.image))
         entry = {"pivot": [round(rendered.pivot[0], 2), round(rendered.pivot[1], 2)]}
         if rendered.footprint is not None:
@@ -83,8 +107,7 @@ def generate(biome: str, only: set[str], output: Path | None, sheet: Path | None
                 manifest_entries[model.stem] = entry
             if editable:
                 create_source(target.with_suffix("").as_posix(), [rendered.layers], [target], "generate_props")
-        print(f"[generate_props] {model.stem} {rendered.image.width}×{rendered.image.height} ({time.time() - started:.1f} s)",
-              flush=True)
+        print(f"[generate_props] {model.stem} {rendered.image.width}×{rendered.image.height} ({elapsed:.1f} s)", flush=True)
     if output is not None:
         write_manifest(output / MANIFEST_NAME, manifest_entries)
     if sheet is not None:
@@ -138,9 +161,10 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="n'écrit pas dans assets/")
     parser.add_argument("--editable", action="store_true",
                         help="crée la retouche Aseprite (art/retouches/) des décors générés ; à combiner avec --only")
+    parser.add_argument("--jobs", type=int, default=1, help="processus de rendu en parallèle")
     args = parser.parse_args()
     output = None if args.dry_run else Path(BIOMES[args.biome][1])
-    generate(args.biome, set(args.only), output, args.sheet, args.scale, args.editable)
+    generate(args.biome, set(args.only), output, args.sheet, args.scale, args.editable, args.jobs)
 
 
 if __name__ == "__main__":

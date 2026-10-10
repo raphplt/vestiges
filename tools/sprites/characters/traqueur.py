@@ -68,8 +68,9 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: np.maximum(ellipsoid(p, h(0, 0.6, 3.6), (5.6 * k, 5.8 * k, 1.4 * k), s.head),
                                   -ellipsoid(p, h(0, -0.6, 5.0), (4.4 * k, 4.4 * k, 3.0 * k), s.head)), CLOAK_LINING),
         Part(lambda p: ellipsoid(p, s.on_torso("neck", (0, -0.4, 0.8)), (5.6, 2.2, 5.0), s.torso), WRAP),
-        Part(lambda p: sphere(p, h(-2.0, -0.3, 4.6), 1.0 * k), EYES),
-        Part(lambda p: sphere(p, h(2.0, -0.3, 4.6), 1.0 * k), EYES),
+        # Deux yeux en amande verticale, bien écartés : ronds et proches, ils fondaient en une seule barre claire.
+        Part(lambda p: ellipsoid(p, h(-2.4, -0.1, 4.7), (0.8 * k, 1.5 * k, 0.8 * k), s.head), EYES),
+        Part(lambda p: ellipsoid(p, h(2.4, -0.1, 4.7), (0.8 * k, 1.5 * k, 0.8 * k), s.head), EYES),
         # Arc plus haut que lui, très en travers du dos : la branche basse sort à côté de la hanche, la haute au-dessus de
         # l'épaule opposée, la corde tendue à part ; il se lit de face comme de dos.
         Part(lambda p: capsule(p, s.on_torso("chest", (-13.0, -17.0, -5.0)), s.on_torso("chest", (-3.0, -1.0, -7.4)), 1.2, 1.8), BOW),

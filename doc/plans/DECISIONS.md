@@ -966,7 +966,24 @@ Reprise des lots B1–B2 du plan 07 (§84). Réponses de Raphaël, toutes confor
 - **Flux de créatures pendant le combat : densité visée ×0,5**, réglage en données.
 - **Tableau de bord §2 :** App ID Steam pas encore obtenu ; l'audio est « à faire bientôt » (à reprendre après B2). Le reste inchangé.
 
-## 86. Reprise du chantier audio — 10 octobre 2026
+## 86. Décors un cran au-dessus — 9 octobre 2026
+
+- Demande : « Je voudrais que tu améliore les sprites de certains décors. Fais d'abord un tour sur le repo pour lister et évaluer la qualité des décors (détails, cohérence globale ect). Je compléterai par mes propres retours. » Audit des 186 sprites présenté ([plan 31 §1](31-decors.md)).
+- Réponse à l'audit : « Je valide tes retours. j'ai rien à dire de plus honnetement. » Ordre : « commencer par le marais et ensuite la partie urbaine ok », « fais vraiment chaque décor avec une attention maximale et produit le meilleur résultat possible ». Chantier ouvert au [plan 31](31-decors.md) ; les questions du tableau de bord §2 sont toutes reportées par Raphaël ou de son ressort (App ID Steam, écoutes, recette en jeu) : rien à lui reposer avant ce chantier.
+- Après les lots marais et urbain (9 octobre, soir) : « c'est magnifique […] continue avec les prochaines décors. Vraiment j'aime bcp ce que tu as fait. je crois que sur les autres il y a moins de choses à revoir. » Marais et urbain validés tels quels ; suite au plan 31 : forêt, champs (ferme comprise), carrière, avec une reprise plus légère. La question des trois murs orphelins (U4) reste ouverte.
+- « ok continue avec la foret stp. go » : lot F1 (forêt) livré ; ses arbres sont partagés avec l'arbre isolé des champs et le verger, régénérés avec lui. Suivants : C1 (champs et ferme), Q1 (carrière).
+- Question U4 (10 octobre) : « oui supprime les. Et passe au champ stp » : `prop_brick_wall`, `prop_concrete_wall` et `prop_concrete_wall_v3` supprimés avec leurs `.import` ; lot C1 (champs et ferme) livré dans la foulée : maisons de ferme régénérées avec les façades urbaines, grange endommagée vraiment abîmée, haies, verger, petits décors des champs. Suivant : Q1 (carrière).
+- « go carrière » (10 octobre) : lot Q1 livré ; les cinq biomes du plan 31 sont repris.
+- Planche orpheline des champs (10 octobre) : « Oui supprime la planche orpheline stp » : `_wild_fields_hero_props.png` supprimée avec son `.import`. L'ancien générateur qui la produisait (`scripts/generate_wild_fields_props.py`) réécrirait sept décors repris en C1 : question posée au tableau de bord.
+
+## 87. Sprites des héros à venir — 10 octobre 2026
+
+- Demande : « j'aimerai bien que tu prépares les sprites des prochaines héros. Base toi sur le lore et les éléments écrits ». Lu comme : les héros du lore (§5) qui n'ont pas de sprites au niveau des trois joués, sept plus une variante : l'Éveillée, le Facteur et la Scaphandrière (casting validé, prototypes anciens), le Sonneur, l'Écolière et la Photographe (ajouts du 4 octobre), la Veilleuse (cachée) et l'Enfant du Bas-Port (variante du Vagabond).
+- Plan [32](32-heros.md), lots H1 (Éveillée, Facteur, Scaphandrière), H2 (Sonneur, Écolière, Photographe), H3 (Veilleuse, Enfant) livrés : huit modèles procéduraux au gabarit des joués, signature tirée du lore pour chacun, sprites écrits dans `assets/characters/<id>/`. Rien n'est branché (aucun n'est dans `characters.json`) ; planches à valider par Raphaël.
+- Réponse aux questions du lot (10 octobre) : « oui stp reprend les 3 jouables et améliore les si tu peux pendant que tu y es. et supprime generate_wild_fields_props (et tout autre script maintenant inutile) ». Lot H4 : yeux en amande du Vagabond, du Traqueur et de la Forgeuse, barbe du Vagabond raccourcie, lunettes de la Forgeuse remontées sur le crâne à monture de laiton, marteau d'acier plus sombre ; sprites régénérés. Scripts supprimés : 13 générateurs historiques de `scripts/` remplacés par le pipeline (Cracheur, Rampant, Ombre rampante, Tréant et leurs aperçus, Traqueur et son aperçu, décors urbains et des champs, tuiles de la forêt et des champs) et 6 prototypes du Traqueur dans `tools/` ; gardés : `scripts/generate_blood.py` et `scripts/generate_tisseuse.py` (seules sources de sprites encore utilisés), `tools/generate_tiles.py` (fond des planches de décors). 27 tuiles orphelines laissées par ces générateurs : question au tableau de bord.
+- Tuiles orphelines (10 octobre) : « oui supprime les tuiles orphelines stp » : les 27 images que plus rien ne chargeait (20 dans `assets/tiles/foret/`, 7 dans `assets/tiles/champs/`) supprimées avec leurs `.import`, après avoir revérifié qu'aucune scène, aucun JSON ni aucun code ne cite leur nom ou leur uid. Les tuiles Wang (`_wNN`) des mêmes matières restent.
+
+## 88. Reprise du chantier audio — 10 octobre 2026
 
 Raphaël : « je voudrais continuer le chantier audio ; go ». L'audio passe donc avant B2 (le §85 le plaçait après). Réponses aux questions de reprise, toutes conformes à la recommandation :
 - **Frottement du mix :** refaire une page d'isolement. Nouvelle run de référence sur le Mac, puis musique, ambiance, effets et chaque boucle écoutés séparément ; Raphaël désigne celui qui frotte.
@@ -975,7 +992,7 @@ Raphaël : « je voudrais continuer le chantier audio ; go ». L'audio passe don
 - **Ordre : mix → sons manquants → musique.** Le mix et les réglages de musique d'abord, puis les sons manquants et les impacts par matière (plan 27 V5) sur planches, enfin la recherche de nouvelles musiques.
 - **Tableau de bord §2 :** inchangé depuis le §85, pas reposé.
 
-## 87. Les deux boss en autonomie — 10 octobre 2026
+## 89. Les deux boss en autonomie — 10 octobre 2026
 
 Raphaël, après la livraison des lots audio M1–M3 : « est-ce que tu peux avancer en autonomie sur un autre sujet stp comme les deux boss (l'Indicible et celui à 10 min) ». Les questions de design étaient toutes tranchées (§70, §84, §85) ; aucune question posée. Lots enchaînés : B1a, B1b, B1c, puis B2 (plan 07).
 
