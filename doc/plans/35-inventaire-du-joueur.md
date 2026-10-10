@@ -166,3 +166,136 @@ Ces couches se recouvrent avec les deux nouvelles étagères (stats et effets) :
 - **Ordre** : après le Péril visible (plan 34 G0) et le Campement (plan 36).
 
 Dans tout ce plan, « Habitudes » se lit désormais « Écussons ».
+
+## 9. Lot I0 — les Écussons, la barre du bas, le sac, la migration (11 octobre 2026)
+
+**Document de conception, rien n'est codé.** I1 et la suite attendent la validation de Raphaël (§9.5).
+
+### 9.1 Les 17 Écussons
+
+Un Écusson est cousu sur la veste : une figure ou un métier, une stat, toujours la même. Il monte de deux façons (H2, §110) :
+- **au level-up**, comme aujourd'hui : carte d'Écusson, gain selon la rareté ;
+- **par l'usage** : chaque Écusson porté remplit un fil quand le joueur fait ce que la figure représente. Un fil plein donne un niveau.
+
+Stats, réglages et paliers restent ceux de l'objet d'aujourd'hui. Seuls le nom, l'icône et la montée changent. Le nom de l'objet actuel peut rester comme sous-titre (« Écusson du batteur — le ressort de sommier »), pour ne pas perdre les quêtes ni la Collection.
+
+| Écusson | Objet d'aujourd'hui (`id`) | Stat | Monte par l'usage quand… | Fil (proposé, à mesurer) |
+|---|---|---|---|---|
+| **du batteur** | Ressort de sommier (`memoire_vive`) | Cadence | les armes frappent | 400 attaques |
+| **du semeur** | Rondelle de cuivre (`resonance`) | Zone | un coup touche 3 créatures ou plus | 120 coups larges |
+| **de l'arpenteur** | Mètre pliant (`portee_etendue`) | Portée | une créature meurt à plus de 250 px | 150 éliminations lointaines |
+| **de l'horloger** | Lunettes de lecture (`oeil_critique`) | Critique (chance et dégâts) | un coup est critique | 200 critiques |
+| **du veilleur** | Bouton de manteau (`ancrage`) | PV max | le joueur reste au contact (créatures à moins de 200 px) | 60 s au contact |
+| **de la couturière** | Bobine de fil (`regeneration`) | Régénération | le joueur regagne des PV, toutes sources | 150 PV soignés |
+| **du rugbyman** | Genouillère (`peau_dure`) | Armure | le joueur encaisse un coup | 40 coups reçus |
+| **du pompier** | Écusson de pompier (`carapace`) | Bouclier | le bouclier absorbe des dégâts | 150 dégâts absorbés |
+| **du coureur** | Lacet rouge (`instinct`) | Vitesse et recharge du dash | le joueur court ou se dashe | 300 m parcourus |
+| **du glaneur** | Aimant de frigo (`siphon_essence`) | Attraction de l'XP | des orbes d'XP sont ramassés | 300 orbes |
+| **du bon élève** | Photo de classe (`photo_de_classe`) | XP gagnée | le joueur gagne un niveau | 4 niveaux |
+| **du forain** | Jeton de fête foraine (`jeton_de_fete`) | Chance | un coffre s'ouvre | 3 coffres |
+| **du jongleur** | Papier carbone (`souffle_du_neant`) | Projectiles | un projectile touche | 500 touches |
+| **du barbier** | Paille tordue (`paille_tordue`) | Vol de vie | le vol de vie rend des PV | 100 PV volés |
+| **de l'apothicaire** | Pince à linge (`persistance`) | Durée des statuts | un statut est posé (brûlure, ralenti, figé, saignement…) | 150 statuts |
+| **de l'archer** | Reflet brisé (`reflet_brise`) | Perforation | un projectile traverse une créature | 200 traversées |
+| **de l'arbitre** | Sifflet d'arbitre (`sifflet_d_arbitre`) | +1 Péril par niveau | **jamais** (voir plus bas) | — |
+
+Notes :
+- **Le batteur, l'horloger, le coureur** portent deux réglages, comme leurs objets aujourd'hui (cadence seule ; chance et dégâts critiques ; vitesse et dash). Ce sont deux faces d'une même figure : on les garde ensemble.
+- **L'arbitre ne doit pas monter par l'usage.** Le Péril se choisit (plan 28) : un Écusson qui l'augmenterait seul trahirait ce choix. Deux options :
+  - A, recommandée : il redevient un **objet** du sac, « +1 Péril », avec doublons ;
+  - B : il reste un Écusson, mais au level-up seulement.
+- **Une bonne part des déclencheurs existe déjà** : `QuestTracker` suit 34 faits (`quests.json`), dont les éliminations critiques, les PV soignés, les dégâts encaissés, la distance, les coffres ouverts et les éliminations proches. La montée par l'usage peut écouter les mêmes événements, sans calcul par image. Les attaques, les touches de projectile, les traversées et les orbes ramassés sont à ajouter.
+- **Réglage du fil** : l'usage doit donner environ **un quart** des niveaux d'un Écusson sur 30 min, le level-up le reste. Les seuils ci-dessus sont des ordres de grandeur, à mesurer au bot (I7) avec les compteurs de `RunObservation`.
+- **Pas de plafond** (§3.2). Le palier du niveau 15 reste ; la question d'un palier tous les 15 niveaux est au §9.5.
+- **Icônes** : un écusson brodé (forme commune : un blason de tissu à bord surpiqué), et dans le champ la silhouette de la figure : baguettes, faux, chaîne d'arpenteur, loupe d'horloger, lanterne, aiguille, ballon ovale, casque, chaussure, panier, cartable, ticket, quilles, rasoir, fiole, flèche, sifflet. Planche au plan 25, à faire après validation.
+
+### 9.2 La barre du bas : 4 armes, 4 Écussons, le sac
+
+Aujourd'hui : 4 cases d'armes (36 unités) au-dessus de 6 petites cases d'objets, centrées sous la barre d'XP. Proposition :
+
+```
+                       ┌────────── barre d'XP ──────────┐
+  ┌────┬────┬────┬────┐   ╭───╮╭───╮╭───╮╭───╮     ┌─┬─┬─┬─┬─┐
+  │ ⚔  │ ⚔  │ 🔒 │ 🔒 │   │ ⬢ ││ ⬢ ││   ││   │     │▪│▪│▪│ │ │  Sac 3/10
+  │ 12 │  4 │    │    │   │ 7 ││ 3 ││   ││   │     ├─┼─┼─┼─┼─┤
+  └────┴────┴────┴────┘   ╰─▔─╯╰─▔─╯╰───╯╰───╯     │ │ │ │ │ │
+   4 armes (36 u.)         4 Écussons (30 u.)       └─┴─┴─┴─┴─┘
+   cadenas = Campement     fil d'usage sous           10 cases de 12 u.,
+                           chaque écusson             puis « +n » au-delà de 10
+```
+
+- **Armes** : inchangées, cadenas au-delà de la limite du Campement (plan 36 M2).
+- **Écussons** : 4 cases en forme d'écusson de tissu, niveau en chiffre. Sous chacune, un **fil** fin qui se remplit avec l'usage. C'est le seul retour de H2 en run : pas de texte ni de bandeau. Un niveau gagné par l'usage fait briller l'écusson une fois.
+- **Sac** : une grille de 2 × 5 mini-icônes à droite, sans niveau, et le compteur « 3/10 ». Au-delà de 10 places (Poches du Campement), la grille garde 10 cases et affiche « +n ». Le détail complet est dans la pause.
+- Largeur totale : environ 4 × 39 + 4 × 33 + 70 = 360 unités, contre 160 aujourd'hui. À ×2, cela tient dans 1 280 px sans toucher la minimap.
+
+### 9.3 L'écran d'échange quand le sac est plein
+
+On ne fige pas le combat sans le vouloir. Le ramassage marche comme l'échange d'armes d'aujourd'hui (`WeaponPickup`) :
+1. On passe sur l'objet. Le sac a de la place : il entre, son icône vole vers le sac (comme les armes).
+2. Le sac est plein : l'objet reste au sol avec l'invite « Sac plein — maintenir [Interagir] pour échanger ». Une jauge se remplit pendant le maintien, comme pour l'arme.
+3. L'invite tenue ouvre l'écran d'échange, et la run se met en pause :
+
+```
+  ┌──────────────────────── Sac plein ─────────────────────────┐
+  │                                                             │
+  │   NOUVEL OBJET              TON SAC (10/10)                 │
+  │  ┌──────────────┐         ┌───┬───┬───┬───┬───┐             │
+  │  │  [icône]     │         │ ▪ │ ▪ │ ▪ │ ▪ │ ▪ │             │
+  │  │ Ticket de    │         ├───┼───┼───┼───┼───┤             │
+  │  │ consigne     │         │ ▪ │ ▪ │ ▪ │[▪]│ ▪ │  ← focus    │
+  │  │ rare         │         └───┴───┴───┴───┴───┘             │
+  │  │ Une résur-   │         Allumette humide (×2)             │
+  │  │ rection.     │         Les coups enflamment : 6 %.       │
+  │  └──────────────┘                                           │
+  │                                                             │
+  │   [Valider] Oublier l'objet choisi   [Retour] Laisser au sol │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+- À gauche, le nouvel objet : nom, rareté, effet. À droite, le sac : le focus parcourt les 10 cases, le détail de la case suit.
+- **Valider** oublie l'objet choisi : il s'efface en poussière, comme l'oubli du bannissement. Le nouvel objet prend sa place.
+- **Retour** laisse le nouvel objet au sol. Il y reste jusqu'à ce que sa zone s'oublie (plan 22 §6).
+- Un doublon est affiché « ×2 » ; oublier en retire un seul exemplaire.
+- Manette : le stick parcourt la grille, A oublie, B ferme. Aucune action ne coûte de Péril (§110).
+
+### 9.4 Migration des données et des quêtes
+
+**Données.**
+- `passive_souvenirs.json` est scindé en deux fichiers, avec un contrat chacun (`objects_contract.json` scindé aussi) :
+  - `badges.json` : les 17 Écussons (ou 16 avec l'option A pour l'arbitre) ;
+  - `items.json` : les objets.
+- **Les identifiants ne changent pas** (`memoire_vive`, `carapace`…). Quêtes, sauvegardes, historique et Collection y font référence. On change le nom affiché, pas l'`id`.
+- Les deux objets désactivés (`flamme_interieure`, `fragment_deternite`) restent désactivés, côté objets.
+- Les 16 objets à effet perdent leurs niveaux : chacun est réglé à une valeur unique, d'abord celle du niveau 10 d'aujourd'hui, à remesurer. Leur palier du niveau 15 devient soit l'effet de base, soit l'effet d'un doublon, au cas par cas. Ce tableau est à faire en I2.
+- Butin : le « niveau d'objet » des coffres (`loot_tables`) devient « objet » (I3).
+
+**Quêtes** (`quests.json`, 18 objets débloqués).
+
+| Quête | Débloque | Devient |
+|---|---|---|
+| Lire de près (`read_closely`) | Lunettes de lecture | Écusson de l'horloger |
+| Encaisser (`take_hits`) | Genouillère | Écusson du rugbyman |
+| Tenir le feu (`hold_the_fire`) | Écusson de pompier | Écusson du pompier |
+| Recopier (`copy_out`) | Papier carbone | Écusson du jongleur |
+| Reprendre des forces (`regain_strength`) | Paille tordue | Écusson du barbier |
+| Clouer (`nail_down`) | Reflet brisé | Écusson de l'archer |
+| Appeler la meute (`call_the_pack`) | Sifflet d'arbitre | objet (option A) ou Écusson de l'arbitre |
+| Fièvre, Retenir, Bouquet final, Grandir, Le détail, Annoter, Pas bouger, Dans la foule, Bien au chaud, De justesse, Économiser | Thermomètre, Épingle, Pétard, Pansements, Loupe, Stylo, Tabouret, Gilet, Thermos, Médaille, Porte-monnaie | objets (sans changement de quête) |
+
+- Un nouveau type de déblocage `badge` s'ajoute à `weapon`, `object` et `character` (`UnlockKind`, `QuestDataLoader`, `MetaSaveManager.IsUnlocked`). Six ou sept quêtes passent de `object` à `badge`. Rien ne change dans les sauvegardes : elles ne gardent que les quêtes accomplies, et les déblocages s'en déduisent.
+- **Réserve de départ** (profil neuf, plan 06 §9) : 10 Écussons (batteur, semeur, arpenteur, veilleur, couturière, coureur, glaneur, bon élève, forain, apothicaire) et 5 objets (Allumette humide, Glaçon, Dé à coudre, Semelle usée, Chewing-gum). Il faudra plus d'objets de départ : 5, c'est peu pour un sac de 10. On pourrait en ajouter 3 à 5 parmi les nouveaux objets (I6).
+- **Textes des quêtes** : les récompenses affichées (« débloque l'objet… ») suivent le type. La quête « Quatre airs » dépend maintenant du Campement (plan 36 §11).
+- **Tests** : `QuestRegression` (comptes 5 / 17 / 18 et réserve de départ), `ObjectsRegression` (objets à niveaux), `catalogs`, `perk_effects`. Ils sont à réécrire avec I1 et I2.
+- **Historique et bilan** : les runs passées gardent les objets sous leur `id`. Le bilan et l'historique liront le bon catalogue par l'`id`, sans migration.
+
+### 9.5 Questions pour Raphaël
+
+1. **Noms des Écussons** : la table du §9.1 te va-t-elle ? Les noms à revoir en priorité : du veilleur (PV max), du rugbyman (armure), du barbier (vol de vie), du bon élève (XP).
+2. **L'arbitre** : redevient-il un objet du sac (A, recommandé : le Péril reste un choix), ou reste-t-il un Écusson qui ne monte qu'au level-up (B) ?
+3. **Paliers sans plafond** : garder le seul palier du niveau 15, ou un palier tous les 15 niveaux (15, 30, 45…) ? Le second demande d'inventer deux effets de plus par Écusson.
+4. **Part de l'usage** : environ un quart des niveaux d'un Écusson en 30 min, le reste au level-up. Plus, moins ?
+5. **Le fil sous chaque Écusson au HUD** : seul retour de l'usage en run (pas de bandeau). D'accord ?
+6. **Sac plein** : invite maintenue puis écran en pause (§9.3), comme l'échange d'armes ? Ou un écran qui s'ouvre tout seul au contact ?
+7. **Objets de départ** : seulement 5 dans la réserve d'un profil neuf. En ajouter 3 à 5 parmi les nouveaux objets (I6), ou débloquer plus tôt ceux des quêtes ★ ?
+8. **Les objets à effet sans niveaux** : partir de la valeur du niveau 10 d'aujourd'hui, et faire du palier 15 l'effet d'un doublon. Ce principe te va-t-il, avant le réglage objet par objet en I2 ?
