@@ -1899,6 +1899,7 @@ public partial class Player : CharacterBody2D
         }
 
         PerformDiscreteAttack(_equippedWeapon.Category, pattern);
+        RepeatFromEcho(_equippedWeapon.Category, pattern);
         _objectMilestones?.CountAttack(_equippedWeapon);
     }
 
@@ -1920,7 +1921,8 @@ public partial class Player : CharacterBody2D
     /// </summary>
     private int RollOwnCount() => Mathf.Max(1, FractionalCount.Roll(GetWeaponStat("projectile_count"), RunRandom.Combat.Randf()));
 
-    private void PerformRangedAttack(AttackPatternKind pattern)
+    /// <returns>Faux si aucune cible n'était à portée : rien n'est parti.</returns>
+    private bool PerformRangedAttack(AttackPatternKind pattern)
     {
         int ownCount = RollOwnCount();
         int extraCount = RollBonusProjectiles(_equippedWeapon);
@@ -1929,14 +1931,15 @@ public partial class Player : CharacterBody2D
         float range = GetEffectiveWeaponRange();
         System.Collections.Generic.List<Node2D> targets = FindNearestEnemies(spreadExtras ? totalProjectiles : ownCount, range);
         if (targets.Count == 0)
-            return;
+            return false;
 
         float baseDamage = ComputeBaseAttackDamage();
         _launchContext = BeginAttack(_equippedWeapon, baseDamage);
         float projectileSpeed = GetWeaponStat("projectile_speed");
         int totalPierce = FractionalCount.Roll(GetWeaponStat("projectile_pierce") + _projectilePierce, RunRandom.Combat.Randf());
-        Vector2 baseDirection = (targets[0].GlobalPosition - GlobalPosition).Normalized();
-        PlayAttackFeedback(isMelee: false, baseDirection);
+        Vector2 baseDirection = (targets[0].GlobalPosition - AttackOrigin).Normalized();
+        if (!_isEchoAttack)
+            PlayAttackFeedback(isMelee: false, baseDirection);
         float spreadAngle = GetWeaponStat("spread_angle");
 
         if (pattern == AttackPatternKind.Burst)
@@ -1947,7 +1950,7 @@ public partial class Player : CharacterBody2D
                 for (int i = 0; i < extraCount; i++)
                     SpawnAimedProjectile(targets[(ownCount + i) % targets.Count], false, 0f, baseDamage, projectileSpeed, range, totalPierce,
                         launchDelay: VolleyDelay(ownCount + i, targets.Count, totalProjectiles));
-            return;
+            return true;
         }
 
         float homingStrength = GetWeaponStat("homing_strength");
@@ -1974,13 +1977,14 @@ public partial class Player : CharacterBody2D
                 proj.SetGroundFire(se.Get(SpecialEffectParam.GroundDamage), StatusDuration(se.Get(SpecialEffectParam.GroundDuration)),
                     ZoneScale(se.Get(SpecialEffectParam.GroundRadius)), StatusDuration(se.Get(SpecialEffectParam.GroundBurnSeconds)));
         }
+        return true;
     }
 
     /// <summary>Un tir vers <paramref name="target"/>, dévié de <paramref name="offsetDegrees"/>, guidé si l'arme l'est.</summary>
     private Projectile SpawnAimedProjectile(Node2D target, bool isHoming, float homingStrength, float baseDamage, float speed,
         float range, int pierce, float offsetDegrees = 0f, float launchDelay = 0f)
     {
-        Vector2 direction = (target.GlobalPosition - GlobalPosition).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
+        Vector2 direction = (target.GlobalPosition - AttackOrigin).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
         bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
         Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit, launchDelay);
         if (proj != null && launchDelay > 0f && offsetDegrees == 0f)
@@ -2156,15 +2160,17 @@ public partial class Player : CharacterBody2D
         float launchDelay = 0f)
     {
         Projectile projectile = CombatPools.Instance?.TakePlayerProjectile();
-        projectile?.Launch(GlobalPosition, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
+        projectile?.Launch(AttackOrigin, direction, damage, speed, Mathf.Clamp(range / Mathf.Max(speed, 1f), 0.2f, 4f),
             pierce, isCrit, this, _equippedWeapon?.Base, _equippedWeapon, context: _launchContext with { ReferenceDamage = damage },
             pierceDamageRamp: PierceDamageRamp, sizeScale: WeaponSizeScale, launchDelay: launchDelay);
+        if (projectile != null && _attackOriginOverride is Vector2 origin)
+            projectile.DepartFrom(origin);
         return projectile;
     }
 
     private System.Collections.Generic.List<Node2D> FindNearestEnemies(int count, float maxRange)
     {
-        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange + Enemy.LargestPartRadius);
+        using CrowdQuery crowd = CrowdIndex.Near(AttackOrigin, maxRange + Enemy.LargestPartRadius);
         System.Collections.Generic.List<(Node2D enemy, float dist)> inRange = new();
 
         foreach (Node node in crowd.Targets)
@@ -2172,7 +2178,7 @@ public partial class Player : CharacterBody2D
             // Toute cible de l'index qui n'est pas une créature mourante est admise.
             if (node is not Node2D enemy || enemy is Enemy { IsActive: false } or Enemy { IsDying: true })
                 continue;
-            float dist = GlobalPosition.DistanceTo(enemy.GlobalPosition);
+            float dist = AttackOrigin.DistanceTo(enemy.GlobalPosition);
             // Une partie de boss se vise à son bord et passe devant la foule qui l'entoure (TargetBias).
             Enemy creature = enemy as Enemy;
             // Une partie encore sous terre (Barrière qui se lève) n'est pas une cible.
@@ -2247,7 +2253,9 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>Dégâts de l'attaque qui part : ceux de l'arme active, et la charge de la Semelle usée s'il y en a une.</summary>
-    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon) * (_objectTriggers?.ConsumeStride() ?? 1f);
+    // La charge de la Semelle usée revient au tir du joueur, jamais à celui que répète une rémanence.
+    private float ComputeBaseAttackDamage() => ComputeBaseAttackDamage(_equippedWeapon) * _attackDamageScale
+        * (_isEchoAttack ? 1f : _objectTriggers?.ConsumeStride() ?? 1f);
 
     private float ComputeBaseAttackDamage(WeaponInstance weapon)
     {

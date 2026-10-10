@@ -98,5 +98,23 @@
             "mobility",
             "attack_speed"
         ]
+    },
+    {
+        "id": "eveillee_double",
+        "name": "Double",
+        "description": "Après sa mobilité, une rémanence reste 1,5 s à son point de départ et répète son prochain tir à 50% des dégâts.",
+        "category": "passive",
+        "rarity": "passive",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "eveillee",
+        "echo": {
+            "seconds": 1.5,
+            "damage_ratio": 0.5
+        },
+        "tags": [
+            "mobility",
+            "projectile"
+        ]
     }
 ]

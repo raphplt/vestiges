@@ -406,3 +406,23 @@ Raphaël signale que GitHub reste sur la vérification de fusion. L'API indique 
 4. Pousser le commit de synchronisation sur `perso-facteur`, puis vérifier l'état de fusion annoncé par GitHub.
 
 **Résolu et vérifié :** décisions du Hub et du Facteur conservées, références de mêlée §102 restaurées, décision du Facteur distinguée en §102 bis. Traductions françaises et anglaises régénérées par Godot depuis le CSV commun ; les 854 messages chargés correspondent aux cellules du CSV, retours à la ligne interprétés compris. Build sans warning ni erreur ; huit suites vertes (`smoke`, `movement`, `movement-integration`, `weapons`, `perk_effects`, `quests`, `catalogs`, `ui_art`), sources inchangées pendant la validation. Preuves : `/tmp/vestiges-pr4-sync-validation-ready` et `/tmp/vestiges-pr4-translations-check.log`. Le premier import du checkout neuf a échoué sur la police du thème encore absente du cache ; après création des imports, le second est vert, sans ignorer l'erreur initiale.
+
+## 12. Lot P3 — L'Éveillée, personnage complet — 10 octobre 2026
+
+Deuxième héros du plan 32, même chemin que le Facteur (DECISIONS §102 bis). Fiche : [06-fiches-casting §3.4](06-fiches-casting.md) ; lore v1.1 §5 (Mireille Aymard, standardiste qui a reçu les appels et ne les a pas passés : un écho en retard). Arme existante retenue au §9.3 : la **Baguette de sourcier** (`essence_staff`, tirs d'Essence qui cherchent leur proie), débloquée avec elle par Entendre les voix.
+
+| Sous-lot | Contenu | Vérification |
+|---|---|---|
+| **P3a — Branchement** | Fiche (80 PV, dégâts modérés, cyan Essence), portrait de Raphaël, passif « Double » déclaré, quête Entendre les voix ; profil de mobilité **Déphasage** (distance et recharge du dash commun, sans traverser les murs). | Quêtes, mouvement, capture du Hub |
+| **P3b — Double** | Après une mobilité, une **rémanence** (silhouette cyan translucide de l'Éveillée) reste 1,5 s à son point de départ et répète **son prochain tir** à 50 % des dégâts, depuis là. Les tirs seulement : rejouer une mêlée loin du corps demanderait de refaire ses traînées, et l'Éveillée est un personnage de distance. Réglages en données (`echo` de la signature). | Test : tir répété depuis la rémanence à 50 %, une seule fois, rien après 1,5 s, rien pour la mêlée ; capture |
+
+**Stats de départ proposées** (valeurs d'essai) : vitesse 205, dégâts 9, cadence 1,0, portée 320, PV 80, régénération 0,9, multiplicateur de score 1,05.
+
+### P3a et P3b livrés — 10 octobre 2026
+
+- **P3a :** l'Éveillée est au catalogue (5 personnages), avec son portrait, la Baguette de sourcier et le profil **Déphasage** (valeurs du dash commun ; seuls son nom et sa description changent). Entendre les voix la débloque.
+- **P3b :** **Double** livré. Réglages en données (`echo` de la signature `eveillee_double` : 1,5 s, 50 %). Le module `RemanenceEcho`, créé par `PerkManager`, arme la rémanence au départ de chaque mobilité, à l'endroit quitté, et y montre la silhouette de l'Éveillée figée, en cyan translucide, qui s'efface avec le temps. Côté joueur (`Player.AttackEcho.cs`), le prochain **tir** est rejoué depuis la rémanence (`AttackOrigin` : ciblage, direction, départ, rafales en attente comprises) à la moitié des dégâts, sans second son ni recul ; une étincelle d'Essence marque le tir répété. Sans cible à portée de la rémanence, elle ne tire pas et reste armée jusqu'à la fin de sa durée ; la mêlée et la chaîne ne sont pas répétées ; la charge de la Semelle usée reste au tir du joueur.
+- **Vérifié :** suite d'armes (tir répété depuis la rémanence à 7,2 → 3,6, une seule fois, rien sans cible, rafale répétée qui part de la rémanence, mêlée non répétée, armée à l'endroit quitté puis retirée après 1,5 s), objets, effets, mouvement, quêtes, catalogues, capacités ennemies, outils de développement ; galerie d'armes avec dash (silhouette au point de départ, puis « 18 » suivi d'un « 9 ») ; fiche du Hub.
+- **Relecture :** trois défauts relevés et corrigés avant le commit (rafale répétée qui repartait du joueur, rémanence consommée sans tir, charge de la Semelle usée prise par l'écho).
+
+**Reste à faire pour l'Éveillée :** sons propres (accord de verre, écho décalé), le contour « double » permanent de la fiche, équilibrage en jouant (la Baguette est une arme de tier 4 : à surveiller comme arme de départ).

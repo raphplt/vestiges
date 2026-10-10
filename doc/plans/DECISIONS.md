@@ -1137,6 +1137,8 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 
 **À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
 
+**Suite, l'Éveillée (même soir) :** Raphaël : « ok top. personnage suivant, stp ». L'Éveillée est livrée (plan 06 P3). Sa rémanence répète le prochain **tir** seulement : rejouer une mêlée loin du corps demanderait de refaire ses traînées, et l'Éveillée est un personnage de distance. À confirmer en jouant.
+
 **Intégration du 10 octobre :** Raphaël demande de débloquer la PR #4, dont GitHub laisse la vérification de fusion affichée. Trois conflits confirmés par API (traductions générées et décisions) ; lot de synchronisation P2e, sans nouvel arbitrage de gameplay.
 
 ## 103. Équilibrage de l'ouverture : tout appliquer, viser le niveau 30 — 10 octobre 2026, soir
