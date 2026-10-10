@@ -18,7 +18,7 @@ Chaque contenu important doit relier **silhouette, comportement, son et fragment
 - Charte : jeu 480×270 ; projet actuel : 1920×1080 avec canvas_items ; HUD : référence 960×540. Les trois valeurs ne forment pas encore un contrat explicite cohérent.
 - [CharacterSpriteLoader.cs](../../scripts/Combat/CharacterSpriteLoader.cs) charge les fichiers individuels par direction NE/NW/SE/SW et action idle/walk/dash/hurt/death, séquence contiguë 00 ou 01, plafond actuel 20 frames.
 - Des assets Traqueur/Vagabond existent ; le nombre de PNG ne prouve pas la couverture de toutes les actions.
-- [process_generated_sprite.py](../../tools/process_generated_sprite.py) vise un Traqueur 48×64 et utilise Lanczos puis palette : ce n'est pas encore un pipeline universel conforme à la charte.
+- `tools/process_generated_sprite.py` (retiré le 10 octobre) visait un Traqueur 48×64 et utilisait Lanczos puis palette : ce n'était pas un pipeline universel conforme à la charte.
 - Les 19 Souvenirs narratifs et six constellations fournissent une base ; quatre récompenses « recipe » héritées doivent être réconciliées avec V2.
 
 ### Audit des sprites existants — 23 septembre 2026
@@ -156,6 +156,7 @@ Trois créatures du début de run passent dans le pipeline, à la même densité
 - Matériaux émissifs (`make_emissive`) pour les yeux vert-acide : ils l'emportent sur un pixel dès un quart des échantillons, ne sont ni ombrés ni cernés. Un œil d'un pixel reste visible.
 - `tools/sprites/models.py` unifie personnages et créatures ; `tools/generate_enemy.py <id> [--sheet]` écrit 8 directions × idle/walk/attack/death (16 frames par direction) et remplace les anciens PNG du dossier.
 - Les anciens générateurs `scripts/generate_rodeur*.py` et `generate_charognard.py` sont retirés : ils auraient écrasé les nouveaux sprites.
+- Le 10 octobre (DECISIONS §85), même chose pour les autres générateurs remplacés : Cracheur, Rampant, Ombre rampante, Tréant et leurs aperçus, Traqueur (`scripts/` et cinq prototypes `tools/*tracker*`, `tools/process_generated_sprite.py`), décors urbains et des champs, tuiles de la forêt et des champs. Restent `scripts/generate_blood.py` et `scripts/generate_tisseuse.py`, seules sources de leurs sprites.
 
 **Créatures :**
 | Créature | Cadre, pieds | Lecture recherchée |
