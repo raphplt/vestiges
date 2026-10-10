@@ -65,8 +65,7 @@
             "unlocks": [
                 {
                     "type": "character",
-                    "id": "eveillee",
-                    "name": "L'Éveillée"
+                    "id": "eveillee"
                 },
                 {
                     "type": "weapon",

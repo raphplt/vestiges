@@ -27,6 +27,8 @@ public partial class Projectile : Area2D, ITicked
     // Rafale (plan 21 G6g) : le tir attend, caché et sans contact, avant de partir de la position du joueur.
     private float _launchDelay;
     private TargetLock _departureTarget;
+    // Point de départ d'une rafale répétée par une rémanence : le tir part de là, pas du joueur.
+    private Vector2? _departureOrigin;
     private int _pierceRemaining;
     // Reflet brisé, palier 15 : chaque ennemi traversé ajoute cette part des dégâts de départ.
     private float _pierceDamageRamp;
@@ -103,6 +105,7 @@ public partial class Projectile : Area2D, ITicked
         GlobalPosition = position;
         _launchDelay = launchDelay;
         _departureTarget = default;
+        _departureOrigin = null;
         // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
         _hitRadius = _baseHitRadius * sizeScale;
@@ -152,10 +155,15 @@ public partial class Projectile : Area2D, ITicked
     /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
     public void AimAtDeparture(Node2D target) => _departureTarget = TargetLock.On(target);
 
-    /// <summary>Fin de l'attente d'une rafale : le tir part du joueur, là où il se trouve maintenant.</summary>
+    /// <summary>Tir d'une rémanence (Double de l'Éveillée) : une rafale en attente part de ce point.</summary>
+    public void DepartFrom(Vector2 origin) => _departureOrigin = origin;
+
+    /// <summary>Fin de l'attente d'une rafale : le tir part du joueur, là où il se trouve maintenant, ou de sa rémanence.</summary>
     private void Depart()
     {
-        if (_owner != null && IsInstanceValid(_owner))
+        if (_departureOrigin is Vector2 origin)
+            GlobalPosition = origin;
+        else if (_owner != null && IsInstanceValid(_owner))
             GlobalPosition = _owner.GlobalPosition;
         if (_departureTarget.IsSet)
         {

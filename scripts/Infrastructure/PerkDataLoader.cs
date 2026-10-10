@@ -24,6 +24,15 @@ public class PerkData
     public List<PerkEffect> Effects { get; set; }
     /// <summary>Élan d'une signature qui récompense le mouvement continu (Tournée du Facteur), sinon null.</summary>
     public PerkMomentum Momentum { get; set; }
+    /// <summary>Rémanence d'une signature qui répète un tir après la mobilité (Double de l'Éveillée), sinon null.</summary>
+    public PerkEcho Echo { get; set; }
+}
+
+/// <summary>Réglages de la rémanence : sa durée et la part des dégâts du tir qu'elle répète.</summary>
+public class PerkEcho
+{
+    public float Seconds { get; set; }
+    public float DamageRatio { get; set; }
 }
 
 /// <summary>Réglages de l'élan : bonus au plein, temps pour l'atteindre, arrêt toléré avant la remise à zéro.</summary>
@@ -97,6 +106,7 @@ public static class PerkDataLoader
                 CharacterId = dict.ContainsKey("character_id") ? dict["character_id"].AsString() : null,
                 Effects = effects,
                 Momentum = dict.ContainsKey("momentum") ? ReadMomentum(dict["momentum"].AsGodotDictionary()) : null,
+                Echo = dict.ContainsKey("echo") ? ReadEcho(dict["echo"].AsGodotDictionary()) : null,
             };
             _allPerks.Add(perk);
         }
@@ -111,6 +121,12 @@ public static class PerkDataLoader
         SpeedBonus = (float)dict["speed_bonus"].AsDouble(),
         AttackSpeedBonus = (float)dict["attack_speed_bonus"].AsDouble(),
         StopGraceSeconds = (float)dict["stop_grace_seconds"].AsDouble(),
+    };
+
+    private static PerkEcho ReadEcho(Godot.Collections.Dictionary dict) => new()
+    {
+        Seconds = Mathf.Max(0.1f, (float)dict["seconds"].AsDouble()),
+        DamageRatio = Mathf.Clamp((float)dict["damage_ratio"].AsDouble(), 0f, 1f),
     };
 
     public static List<PerkData> GetAll()
