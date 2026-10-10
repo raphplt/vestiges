@@ -845,3 +845,19 @@ Suites : smoke, indicible, boss_parts : 3/3. Pas de banc : le banc dense ne fait
   - flash de coup coupé à l'ouverture suivante ;
   - texture réassignée seulement quand l'image change.
 - Captures : [vague et brèches](../audits/boss-2026-10-10/b5/vague-breches.jpg), [l'œil découvert, de nuit](../audits/boss-2026-10-10/b5/oeil-decouvert.jpg). Suites : smoke, indicible : 2/2.
+
+### B5e livré — 10 octobre 2026, soir (neuf sons propres)
+
+Neuf sons propres à l'Indicible remplacent ceux empruntés à la banque. L'apparition des mains garde le son choisi par Raphaël au §91. Matières : tonnerre, mer de vives-eaux, boue, et **le tocsin** que la nuit du 14 on a empêché Baptiste de sonner (lore §4) : étouffé sous l'eau à l'arrivée, il sonne enfin, clair, à la mort.
+- **Arrivée** (5,3 s) : grondement, tonnerre qui roule, houle, deux coups de cloche étouffés.
+- **Prise des mains** : boue aspirée et gargouillis à l'annonce ; coup sourd, gerbe d'eau et de boue à l'impact.
+- **Éclair** : l'air grésille de plus en plus vite sur un tonnerre lointain ; claquement sec, coup sourd, tonnerre qui roule à la frappe.
+- **Vague** : la mer enfle et la terre gronde à l'annonce ; fracas et gerbe au déferlement.
+- **Œil qui s'ouvre** : paupières qui se décollent, bulles, bourdon grave, cloche lointaine.
+- **Mort** (8,3 s) : dernier tonnerre, reflux de la mer, trois coups de cloche clairs.
+
+Sources BigSoundBank (Joseph SARDIN, licence de type CC0) et synthèses originales. Montage reproductible à l'octet près (graine fixe) : `~/.local/share/vestiges-audio/2026-10-10/indicible/prepare.py`, avec les sources, leurs pages et la page d'écoute (`index.html`). Niveaux dans la banque ; le code ne rejoue que l'arrivée, 3 dB plus bas, à chaque seuil.
+
+**Vérifié par mesure** (niveaux, crêtes, [spectrogrammes](../audits/boss-2026-10-10/b5/spectres-sons.jpg)), **pas à l'oreille**. Les deux annonces trop basses (−27 et −30 dB efficaces : crêtes brèves) passent par une saturation douce ; une première, trop forte, remontait tout le bruit de fond de la boue. Suites : smoke, indicible, audio, catalogs : 4/4.
+
+**À faire par Raphaël** : écouter la page, jouer l'Indicible en entier (nuit, pluie, éclairs, mains, marée, vague, œil, mort) et dire ce qui ne va pas.

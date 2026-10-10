@@ -887,5 +887,77 @@
     "effect_id": "barrier_chain_sweep",
     "priority": 70,
     "max_voices": 1
+  },
+  "sfx_indicible_rise": {
+    "path": "res://assets/audio/sfx/selected/indicible_rise.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "indicible_rise",
+    "priority": 90,
+    "max_voices": 1
+  },
+  "sfx_indicible_grab_warning": {
+    "path": "res://assets/audio/sfx/selected/indicible_grab_warning.wav",
+    "volume_db": -4,
+    "min_interval_ms": 120,
+    "effect_id": "indicible_grab_warning",
+    "priority": 60,
+    "max_voices": 3
+  },
+  "sfx_indicible_grab_impact": {
+    "path": "res://assets/audio/sfx/selected/indicible_grab_impact.wav",
+    "volume_db": -2,
+    "min_interval_ms": 120,
+    "effect_id": "indicible_grab_impact",
+    "priority": 70,
+    "max_voices": 3
+  },
+  "sfx_indicible_lightning_warning": {
+    "path": "res://assets/audio/sfx/selected/indicible_lightning_warning.wav",
+    "volume_db": -4,
+    "min_interval_ms": 120,
+    "effect_id": "indicible_lightning_warning",
+    "priority": 60,
+    "max_voices": 2
+  },
+  "sfx_indicible_lightning_strike": {
+    "path": "res://assets/audio/sfx/selected/indicible_lightning_strike.wav",
+    "volume_db": -2,
+    "min_interval_ms": 120,
+    "effect_id": "indicible_lightning_strike",
+    "priority": 75,
+    "max_voices": 2
+  },
+  "sfx_indicible_defeated": {
+    "path": "res://assets/audio/sfx/selected/indicible_defeated.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "indicible_defeated",
+    "priority": 95,
+    "max_voices": 1
+  },
+  "sfx_indicible_wave_warning": {
+    "path": "res://assets/audio/sfx/selected/indicible_wave_warning.wav",
+    "volume_db": -3,
+    "min_interval_ms": 250,
+    "effect_id": "indicible_wave_warning",
+    "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_indicible_wave_crash": {
+    "path": "res://assets/audio/sfx/selected/indicible_wave_crash.wav",
+    "volume_db": -2,
+    "min_interval_ms": 250,
+    "effect_id": "indicible_wave_crash",
+    "priority": 80,
+    "max_voices": 1
+  },
+  "sfx_indicible_window_open": {
+    "path": "res://assets/audio/sfx/selected/indicible_window_open.wav",
+    "volume_db": 0,
+    "min_interval_ms": 250,
+    "effect_id": "indicible_window_open",
+    "priority": 85,
+    "max_voices": 1
   }
 }

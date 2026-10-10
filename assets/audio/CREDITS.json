@@ -1834,5 +1834,113 @@
     "source_url": "https://bigsoundbank.com/medium-chain-2-s0361.html",
     "attribution": "Joseph SARDIN / BigSoundBank — medium-chain-2-s0361 — https://bigsoundbank.com/medium-chain-2-s0361.html — CC0-1.0 (licence BigSoundBank de type CC0)",
     "processing": "Souffle synthétique en bande glissante (250 → 1 600 Hz) ; maillons (BigSoundBank 0361, ×0,65). Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07, sons de la Barrière)."
+  },
+  {
+    "effect_id": "indicible_rise",
+    "candidate_id": "indicible_rise_v1",
+    "file": "assets/audio/sfx/selected/indicible_rise.wav",
+    "sha256": "e6048278a2f95add1894ed493595279c46d1860a342a59bbe64d5d8124de3869",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/thunder-s2718.html ; https://bigsoundbank.com/sea-waves-s0698.html ; https://bigsoundbank.com/1-church-bell-s0830.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — thunder-s2718 — https://bigsoundbank.com/thunder-s2718.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — sea-waves-s0698 — https://bigsoundbank.com/sea-waves-s0698.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — 1-church-bell-s0830 — https://bigsoundbank.com/1-church-bell-s0830.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Grondement synthétique enflé sur 2,2 s ; tonnerre qui roule (BigSoundBank 2718, ×0,85) ; houle (BigSoundBank 0698) ; deux coups de cloche étouffés, filtrés 80–900 Hz (BigSoundBank 0830, ×0,7) ; réverbération 1,2 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_grab_warning",
+    "candidate_id": "indicible_grab_warning_v1",
+    "file": "assets/audio/sfx/selected/indicible_grab_warning.wav",
+    "sha256": "48a3dc98c673ae80badc986f37e6d82d4f2640e796f79ecee9e5fc571ec86d63",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/steps-in-the-mud-s0495.html ; https://bigsoundbank.com/gurgling-sink-1-s1026.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — steps-in-the-mud-s0495 — https://bigsoundbank.com/steps-in-the-mud-s0495.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — gurgling-sink-1-s1026 — https://bigsoundbank.com/gurgling-sink-1-s1026.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Pas dans la boue (BigSoundBank 0495, ×0,6) et évier qui gargouille (BigSoundBank 1026, ×0,7), montée de 0,25 s, saturation douce. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_grab_impact",
+    "candidate_id": "indicible_grab_impact_v1",
+    "file": "assets/audio/sfx/selected/indicible_grab_impact.wav",
+    "sha256": "8ade9c0924b5739e29e437be3e648fae013c80571ee11479f33761b71b381f22",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/splash-big-1-s1519.html ; https://bigsoundbank.com/steps-in-the-mud-s0495.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — splash-big-1-s1519 — https://bigsoundbank.com/splash-big-1-s1519.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — steps-in-the-mud-s0495 — https://bigsoundbank.com/steps-in-the-mud-s0495.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Coup sourd synthétique ; grande éclaboussure (BigSoundBank 1519, ×0,7) ; boue (BigSoundBank 0495, ×0,55) ; salle 0,35 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_lightning_warning",
+    "candidate_id": "indicible_lightning_warning_v1",
+    "file": "assets/audio/sfx/selected/indicible_lightning_warning.wav",
+    "sha256": "e068b945148f33e9ddfd77d941116d37f2b955af6e7cf359b11b92b553a425ad",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/thunder-s2718.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — thunder-s2718 — https://bigsoundbank.com/thunder-s2718.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Grésillement synthétique (claquements de 12 à 90 par seconde, 1,5–11 kHz) ; tonnerre lointain filtré sous 300 Hz (BigSoundBank 2718) ; saturation douce. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_lightning_strike",
+    "candidate_id": "indicible_lightning_strike_v1",
+    "file": "assets/audio/sfx/selected/indicible_lightning_strike.wav",
+    "sha256": "dfd0de04b4c57267c81ad5e2028688421a9ae938e6c1bbb00066697445ee483e",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/thunder-s2718.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — thunder-s2718 — https://bigsoundbank.com/thunder-s2718.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Claquement de bruit aigu et coup sourd synthétiques ; tonnerre (BigSoundBank 2718) ; réverbération 0,8 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_defeated",
+    "candidate_id": "indicible_defeated_v1",
+    "file": "assets/audio/sfx/selected/indicible_defeated.wav",
+    "sha256": "5be236c01f9b234a01231ac1ead82604d8201a5e54ab8fa801267012a63febd8",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/storm-and-rain-3-s2717.html ; https://bigsoundbank.com/small-waves-back-to-the-ocean-s1047.html ; https://bigsoundbank.com/1-church-bell-s0830.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — storm-and-rain-3-s2717 — https://bigsoundbank.com/storm-and-rain-3-s2717.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — small-waves-back-to-the-ocean-s1047 — https://bigsoundbank.com/small-waves-back-to-the-ocean-s1047.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — 1-church-bell-s0830 — https://bigsoundbank.com/1-church-bell-s0830.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Coup sourd synthétique ; dernier tonnerre (BigSoundBank 2717, ×0,9) ; reflux de la mer (BigSoundBank 1047) ; trois coups de cloche clairs (BigSoundBank 0830) ; réverbération 1,5 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_wave_warning",
+    "candidate_id": "indicible_wave_warning_v1",
+    "file": "assets/audio/sfx/selected/indicible_wave_warning.wav",
+    "sha256": "148ae58f84467b9a472e25b931f1bf28fc5c332e391a747cc04640c1d01a7b82",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — sea-of-the-beach-of-dellec-1-s2564 — https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Vague qui monte (BigSoundBank 2564), en crescendo sur 1,1 s ; grondement synthétique. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_wave_crash",
+    "candidate_id": "indicible_wave_crash_v1",
+    "file": "assets/audio/sfx/selected/indicible_wave_crash.wav",
+    "sha256": "06e6f2473daf2aef04868abf4065416fc1e9e9a0b10709055b42bb795e887af8",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html ; https://bigsoundbank.com/splash-big-2-s1520.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — sea-of-the-beach-of-dellec-1-s2564 — https://bigsoundbank.com/sea-of-the-beach-of-dellec-1-s2564.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — splash-big-2-s1520 — https://bigsoundbank.com/splash-big-2-s1520.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Vague qui déferle (BigSoundBank 2564) ; grande éclaboussure (BigSoundBank 1520, ×0,6) ; coup sourd synthétique ; réverbération 0,6 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
+  },
+  {
+    "effect_id": "indicible_window_open",
+    "candidate_id": "indicible_window_open_v1",
+    "file": "assets/audio/sfx/selected/indicible_window_open.wav",
+    "sha256": "2dea77185e0be0511f99443628ef6b182eae5619314f326ce3f0a44db8630335",
+    "author": "VESTIGES (montage) ; Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/suction-cup-on-window-s1262.html ; https://bigsoundbank.com/water-bubbles-s0150.html ; https://bigsoundbank.com/1-church-bell-s0830.html",
+    "attribution": "Joseph SARDIN / BigSoundBank — suction-cup-on-window-s1262 — https://bigsoundbank.com/suction-cup-on-window-s1262.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — water-bubbles-s0150 — https://bigsoundbank.com/water-bubbles-s0150.html — CC0-1.0 (licence BigSoundBank de type CC0) ; Joseph SARDIN / BigSoundBank — 1-church-bell-s0830 — https://bigsoundbank.com/1-church-bell-s0830.html — CC0-1.0 (licence BigSoundBank de type CC0)",
+    "processing": "Ventouse décollée (BigSoundBank 1262, ×0,45) ; bulles (BigSoundBank 0150, ×0,6) ; bourdon synthétique (55–164 Hz) ; cloche lointaine filtrée (BigSoundBank 0830, ×0,5) ; réverbération 0,9 s. Graine 10102026 ; WAV PCM16 / 44,1 kHz stéréo. Script : prepare.py (plan 07 B5e, sons de l'Indicible)."
   }
 ]

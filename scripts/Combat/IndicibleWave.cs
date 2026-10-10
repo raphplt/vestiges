@@ -174,7 +174,7 @@ public partial class IndicibleWave : Node2D
 					_state = WaveState.Rolling;
 					_frontMaterial.SetShaderParameter(FadeParam, 1f);
 					_corridorMaterial.SetShaderParameter(FadeParam, 1f);
-					AudioManager.Play(_config.WaveCrashAudio, 0.04f, -2f);
+					AudioManager.Play(_config.WaveCrashAudio, 0.04f);
 				}
 				return false;
 			default:
@@ -196,7 +196,7 @@ public partial class IndicibleWave : Node2D
 		_front.Visible = true;
 		_corridors.Visible = true;
 		Waves++;
-		AudioManager.Play(_config.WaveWarningAudio, 0.04f, -3f);
+		AudioManager.Play(_config.WaveWarningAudio, 0.04f);
 	}
 
 	private bool Roll(Player player, float delta)
@@ -377,7 +377,7 @@ public partial class IndicibleWave : Node2D
 		_eyeClosing = -1f;
 		AnimateEye(0f);
 		_windowRing.ShowRing(position, _config.WindowRadius * 1.6f, FxFamily.Void);
-		AudioManager.Play(_config.WindowOpenAudio, 0.02f, -2f);
+		AudioManager.Play(_config.WindowOpenAudio, 0.02f);
 		ScreenShake.Instance?.ShakeMedium();
 		CombatPools.Instance?.EmitSparks(position, new SparkBurst
 		{
