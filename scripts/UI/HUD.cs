@@ -71,6 +71,7 @@ public partial class HUD : CanvasLayer
     private readonly NinePatchRect[] _weaponSlotFrames = new NinePatchRect[Player.MaxWeaponSlots];
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[Player.MaxWeaponSlots];
     private readonly Label[] _weaponSlotLevels = new Label[Player.MaxWeaponSlots];
+    private readonly HudSlotLock[] _weaponSlotLocks = new HudSlotLock[Player.MaxWeaponSlots];
     private readonly NinePatchRect[] _passiveSlotFrames = new NinePatchRect[Player.MaxPassiveSlots];
     private readonly TextureRect[] _passiveSlotIcons = new TextureRect[Player.MaxPassiveSlots];
     private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
@@ -114,6 +115,8 @@ public partial class HUD : CanvasLayer
     private static readonly Color ResurgenceViolet = new(0.70f, 0.55f, 0.95f);
     // Réserve de Débordement prête : la case de l'arme s'éclaire en bleu pâle, comme le chiffre du coup renforcé.
     private static readonly Color OverflowSlotTint = new(0.75f, 1.05f, 1.45f);
+    // Case fermée tant que le Campement ne l'a pas ouverte (plan 36) : cadre éteint, cadenas par-dessus.
+    private static readonly Color LockedSlotTint = new(0.45f, 0.43f, 0.48f, 0.7f);
     private readonly System.Collections.Generic.HashSet<string> _overflowReady = new();
     private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
     private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
@@ -463,9 +466,14 @@ public partial class HUD : CanvasLayer
             level.HorizontalAlignment = HorizontalAlignment.Right;
             slotRoot.AddChild(level);
 
+            HudSlotLock slotLock = new() { Visible = false };
+            slotLock.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            slotRoot.AddChild(slotLock);
+
             _weaponSlotFrames[i] = frame;
             _weaponSlotIcons[i] = icon;
             _weaponSlotLevels[i] = level;
+            _weaponSlotLocks[i] = slotLock;
             bar.AddChild(slotRoot);
         }
     }
@@ -667,13 +675,16 @@ public partial class HUD : CanvasLayer
                 LoadWeaponIcon(i, weapon.Sprite);
                 int fragLevel = player.GetWeaponFragmentLevel(weapon.Id);
                 _weaponSlotLevels[i].Text = fragLevel > 1 ? $"{fragLevel}" : "";
+                _weaponSlotLocks[i].Visible = false;
             }
             else
             {
+                bool locked = i >= player.WeaponSlotLimit;
                 _weaponSlotFrames[i].Texture = _slotEmptyTex;
-                _weaponSlotFrames[i].Modulate = Colors.White;
+                _weaponSlotFrames[i].Modulate = locked ? LockedSlotTint : Colors.White;
                 _weaponSlotIcons[i].Visible = false;
                 _weaponSlotLevels[i].Text = "";
+                _weaponSlotLocks[i].Visible = locked;
             }
         }
     }

@@ -132,3 +132,13 @@ Captures en vraie run regardées : bilan, level-up (cartes et effet), coffre, pa
 - [ ] **Herbes qui plient** (10 lot E) : amplitude (5 px) et rayon (30 px) à juger en marchant ; réglages en tête de `prop_forget.gdshaderinc`.
 - [ ] **Ennemis refaits** (08) : Brute, Ombre, Hurleur, Sentinelle, Cracheur, Rampant, Rampant d'Ombre, Tréant. Silhouettes, couleurs, animations (charge, vague, cri, visée, surgissement) à juger en mouvement.
 - [ ] **Réveil du Mémorial et de la Faille** (24 L6b) : au dernier éclat, monde figé, pixelisé, éclats autour de la stèle, puis l'oubli qui recule (0,8 s ; Faille 0,45 s). Trop long avec l'entrée de l'écran ? Caméra qui part vers la stèle gênante ? Le son de fusion provisoire (`sfx_souvenir_trouve`) convient-il ? Captures : `CAPTURE_EXTRA_ARGS="--capture-memorial" tools/capture_run.sh <dossier>`.
+
+
+## Plan 36, le Campement — session cloud du 11 octobre
+
+Livré et testé en headless, page et HUD regardés en capture logicielle ; rien n'a été joué au clavier ni à la manette.
+- [ ] **Page Campement à la manette** : passer d'une ligne à son « Rendre » (gauche/droite), d'une colonne à l'autre, acheter, rendre, « Tout rendre », Retour. Le focus ne doit jamais se perdre.
+- [ ] **Lisibilité de la page** : prix éteint quand il est hors de portée, rang au maximum en or, ligne d'état (achat, refus, remboursement). Assez clair, ou trop proche d'un tableau ?
+- [ ] **Cadenas du HUD** : deux cases éteintes avec un petit cadenas pour un profil neuf. Se voit-il assez à 1080p et en 720p ?
+- [ ] **Début de run à deux armes** (profil neuf) : trop dur ? Mesure au plan 36 §12.
+- [ ] **Bilan** : carte « N Vestiges à dépenser au Campement » après « +N Vestiges ». Utile, ou en trop ?

@@ -411,7 +411,13 @@ public partial class GameOverScreen : CanvasLayer
         _gainCards.Clear();
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
+        {
             AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
+            // Le solde renvoie au Campement, où il se dépense (plan 36) ; faux si le règlement n'a pas été écrit.
+            if (string.IsNullOrEmpty(gm.LastRunSaveError))
+                AddGainCard(string.Format(Tr("UI_END_VESTIGES_BALANCE"), MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French)),
+                    UITheme.TextLight);
+        }
         foreach (string questId in _questsDone)
         {
             QuestDefinition quest = QuestDataLoader.Get(questId);

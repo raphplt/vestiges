@@ -203,3 +203,34 @@ Le contrat des objets n'admet les PV qu'en additif ; le Campement les donne en p
 
 `RunObservation --camp-full` achète tout le Campement avant la run, pour les mesures à deux profils (M3).
 
+## 11. Lot M2 livré : page Campement, HUD verrouillé, bilan — 11 octobre 2026
+
+**Page du Hub.** L'entrée « Campement » se place entre Personnages et Quêtes (`HubCampUpgradesPanel`, sur le modèle des autres pages). L'écran se lit ainsi :
+- en haut, le solde de Vestiges, une ligne d'état et « Tout rendre » ;
+- à gauche, les Capacités puis le Confort ; à droite, les neuf Statistiques ;
+- chaque ligne donne le nom, l'effet acquis et le suivant (« +8 % → +12 % », « 2 → 3 emplacements d'armes »), le rang (« Rang 2/5 ») et le prix du rang suivant, éteint s'il est hors de portée ;
+- le bouton « Rendre » de la ligne rembourse le dernier rang ;
+- en bas, le détail de la ligne active : effet par rang et prix suivant.
+
+Navigation :
+- Valider sur une ligne achète le rang suivant. Un refus dit ce qui manque (« Il manque 400 Vestiges. ») avec le son de refus.
+- Gauche et droite passent de la ligne à son « Rendre ». Retour revient à l'accueil, dont le solde se met à jour.
+- Un « Rendre » éteint par un remboursement rend le focus à sa ligne.
+
+Si le catalogue est refusé, la ligne d'état le dit. En mode dev, elle rappelle que les armes restent à quatre. Le solde de l'accueil s'écrit désormais avec séparateur de milliers.
+
+**HUD.** Les cases d'armes au-delà de la limite de la run sont éteintes et portent un cadenas dessiné en pixels (`HudSlotLock`, dessiné une fois). Un profil neuf voit donc une arme, une case libre et deux cadenas. Capture en profil neuf regardée : `CAPTURE_PROFILE=normal tools/capture_run.sh` (nouvelle option, le profil dev reste le défaut).
+
+**Bilan.** La carte « +N Vestiges » existait déjà. Une carte la suit : « N Vestiges à dépenser au Campement », masquée si l'écriture de fin de run a échoué.
+
+**Vérifications.**
+- Build sans avertissement.
+- Suites : `smoke`, `camp`, `weapons`, `small_places`, `objects`, `movement`, `choice_screen`, `quests`, `catalogs`, `run_trace`, `dev_mode`, `saves`, `launchers`. Toutes vertes, `objects` en locale française (voir plus bas).
+- Captures de la page sous `xvfb-run` (`tools/capture_hub.sh`) : mise en page, focus d'une ligne à son « Rendre », refus faute de Vestiges.
+- Relecture `godot-reviewer`. Corrigés : « 4 → 5 emplacements » affiché en mode dev, focus laissé sur un bouton éteint, espaceur en trop à la réouverture, catalogue refusé sans message, solde sans séparateur, carte de solde après un échec d'écriture, commentaire sur l'ordre d'application.
+
+**Défauts d'environnement trouvés en route, sans lien avec le Campement :**
+- `quests` échouait dans `validate.sh` : le dossier du profil n'existait pas encore au premier `find`. Le lanceur le crée maintenant ; `test_camp.sh` fait de même.
+- `objects` échoue dans un conteneur en anglais : deux contrôles lisent des textes de cartes en français. La suite passe avec `LANG=fr_FR.UTF-8`. Rien n'est changé.
+
+**Une quête dépend maintenant du Campement.** « Quatre airs » (`four_tunes` : quatre armes au niveau 3) débloque la Boîte à musique. Avec deux emplacements au départ, elle demande les deux rangs du Râtelier (2 900 Vestiges, soit 2 runs moyennes, ou 6 de débutant en économisant). Question à Raphaël au §13.

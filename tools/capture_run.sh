@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Captures plein écran d'une vraie run (joueur nomade piloté, invincible, spawn naturel) pour juger HUD et événements.
 # Usage : tools/capture_run.sh <répertoire> [secondes=60] [intervalle=10] [résolution=1920x1080] [seed]
+# CAPTURE_PROFILE=normal : profil neuf sans mode dev (deux emplacements d'armes, réserve de départ), au lieu du profil dev.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
@@ -13,8 +14,10 @@ trap 'rm -rf "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo >/dev/null
 "$GODOT" --headless --editor --import --path . >"$OUTPUT/import.log" 2>&1
+profile_args=(--dev)
+if [[ "${CAPTURE_PROFILE:-dev}" == normal ]]; then profile_args=(); fi
 run_timeout 900 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution "${4:-1920x1080}" --rendering-method gl_compatibility --audio-driver Dummy \
-    res://tools/tests/RunObservation.tscn -- --dev --density --seconds "${2:-60}" --capture-every "${3:-10}" \
+    res://tools/tests/RunObservation.tscn -- ${profile_args[@]+"${profile_args[@]}"} --density --seconds "${2:-60}" --capture-every "${3:-10}" \
     --seed "${5:-221092026}" --output "$OUTPUT" ${CAPTURE_EXTRA_ARGS:-} >"$OUTPUT/run.log" 2>&1 || { tail -20 "$OUTPUT/run.log"; exit 1; }
 rg '\[RunObservation\] RESULT' "$OUTPUT/run.log"
 # Un RESULT n'annule pas une erreur de scénario (ex. identifiant d'ennemi inconnu).

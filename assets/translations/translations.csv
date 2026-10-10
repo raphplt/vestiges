@@ -452,3 +452,23 @@ CAMP_LUCK,Fer à cheval,Horseshoe
 CAMP_LUCK_DESC,Chance +{0} par rang,Luck +{0} per rank
 CAMP_START_ESSENCE,Bocal d'Essence,Essence Jar
 CAMP_START_ESSENCE_DESC,+{0} Essence au départ de chaque run par rang,+{0} Essence at the start of each run per rank
+UI_CAMP_TITLE,Campement,Camp
+UI_CAMP_BRANCH_CAPACITIES,Capacités,Capacities
+UI_CAMP_BRANCH_STATS,Statistiques,Stats
+UI_CAMP_BRANCH_COMFORT,Confort,Comfort
+UI_CAMP_RANK,Rang {0}/{1},Rank {0}/{1}
+UI_CAMP_MAXED,Max,Max
+UI_CAMP_MAX,Rang maximal atteint.,Maximum rank reached.
+UI_CAMP_NEXT_PRICE,Rang suivant : {0} Vestiges.,Next rank: {0} Vestiges.
+UI_CAMP_REFUND,Rendre,Refund
+UI_CAMP_REFUND_ALL,Tout rendre,Refund all
+UI_CAMP_NOT_ENOUGH,Il manque {0} Vestiges.,{0} Vestiges short.
+UI_CAMP_BOUGHT,{0} : rang {1}/{2}.,{0}: rank {1}/{2}.
+UI_CAMP_REFUNDED,{0} rendu : +{1} Vestiges.,{0} refunded: +{1} Vestiges.
+UI_CAMP_REFUNDED_ALL,Campement rendu : +{0} Vestiges.,Camp refunded: +{0} Vestiges.
+UI_CAMP_SAVE_FAILED,Achat non enregistré : {0},Purchase not saved: {0}
+UI_CAMP_DEV_SLOTS,Mode dev : quatre emplacements d'armes quels que soient les rangs.,Dev mode: four weapon slots whatever the ranks.
+UI_CAMP_SLOTS,{0} emplacements d'armes,{0} weapon slots
+UI_CAMP_SLOTS_NEXT,{0} → {1} emplacements d'armes,{0} → {1} weapon slots
+UI_VESTIGES_HINT,Vestiges : à dépenser au Campement,Vestiges: spend them at the Camp
+UI_END_VESTIGES_BALANCE,{0} Vestiges à dépenser au Campement,{0} Vestiges to spend at the Camp
