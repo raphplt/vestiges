@@ -205,7 +205,22 @@ Raphaël ([DECISIONS §99](DECISIONS.md#99-la-mêlée-ne-touche-pas-plus-loin-qu
 - **Dessin :** le bord extérieur de chaque forme passe à l'allonge (100 %), sans multiplicateur par style ni plafond (l'ancien plafond de 120 px aurait laissé une arme montée en portée toucher au-delà de sa traînée). Cloche et Rallonge aplaties comme les arcs.
 - **Effet :** allonge horizontale inchangée ; verticale ÷ 1,35 (Faucille 90 → 67 sous le joueur). Le buste de la cible est à la même distance que ses pieds : la traînée, partie du buste, arrive sur le buste d'une créature à l'allonge.
 - **Vérifié :** cas `Mêlée : la touche s'arrête au bord du coup dessiné` dans `tools/test_weapons.sh` (Faucille : à côté et dessous dans la traînée touchées, dessous à 0,81 allonge écran épargnée ; Scalpel : estoc dessous touché), `failures=0` ; galerie `--capture-weapons` (Faucille, Parcmètre, Cloche, Rallonge, Pelle).
-- **Reste, hors portée :** l'ouverture dessinée d'un arc est bornée à 200° (`PlayMelee`) alors que la touche peut aller jusqu'à 360° avec la zone ; l'estoc touche dans un cône de 60° autour de son trait.
+- **Reste, hors portée :** la largeur, traitée en C2d.
+
+#### C2d. Largeur du coup — 10 octobre 2026
+
+Raphaël ([DECISIONS §100](DECISIONS.md#100-largeur-des-coups-de-mêlée--10-octobre-2026)) : traiter aussi la largeur. Quatre écarts mesurés dans le code :
+
+1. Ouverture dessinée bornée à 200° alors que la touche monte à 360° avec la zone (voies en cercle comme Moisson dessinées en arc partiel).
+2. Ouverture mesurée en angles écran pour la touche, sur l'ellipse pour le dessin : Faucille (90°) vers la droite, traînée à ±36° à l'écran, touche à ±45° ; vers le bas, l'inverse.
+3. Estoc : touche dans un cône de 60° (±46 px de large à 80 px) pour un trait de 7 px.
+4. Forme choisie par le style de l'arme et non par l'attaque : Parapluie « Ouvert » (arc de 120°) dessiné en trait, Faucille « Estoc » et Parcmètre « Contravention » (coups droits) dessinés en arc.
+
+Règle commune, dans `Combat/MeleeStrikeShape` : la forme suit l'attaque, le style n'en donne que la matière. **Attaque droite** = trait vers la cible ; il touche une créature dont le corps (`Enemy.BodyRadius`) recouvre le trait (demi-épaisseur 3,5 px) et dont le centre tombe sur sa longueur, donc aussi celle alignée derrière la cible. **Arc et onde** = traînée aplatie ; ouverture et allonge mesurées sur l'ellipse, ouverture dessinée jusqu'à 360°. Les frappes en éventail tournent sur l'ellipse pour la touche comme pour le dessin ; les échos de la Rondelle de cuivre suivent la même forme.
+
+**Vérifié :** cas `Mêlée, largeur` de `tools/test_weapons.sh` (Faucille : 33° de l'axe touchée, 40° épargnée ; Scalpel : créature alignée derrière la cible touchée, à 30° épargnée), `failures=0` ; `tools/test_objects.sh` et `tools/test_boss_parts.sh` verts ; galerie `--capture-weapons` (Faucille, Scalpel, Pelle ; voies Estoc et Ouvert au niveau 50).
+
+**Effet en jeu :** les estocs (Scalpel, Parapluie, voies Estoc et Contravention) deviennent des coups en ligne : moins de créatures touchées dans une foule éparse, toutes celles alignées dans une file. À jouer.
 
 ### C3. Régénération et première Résurgence
 

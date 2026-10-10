@@ -260,7 +260,7 @@ public partial class Player
     /// Rondelle de cuivre : chaque frappe de mêlée refrappera dans sa propre direction ; un cercle complet refrappe
     /// d'un seul tenant, avec toutes ses frappes.
     /// </summary>
-    private void QueueMeleeEchoes(Vector2 direction, float range, float arcAngle, int strikeCount, float startOffset,
+    private void QueueMeleeEchoes(Vector2 direction, float range, float arcAngle, float squash, int strikeCount, float startOffset,
         float step, float strikeDamage, AttackContext context)
     {
         if (arcAngle >= 359f)
@@ -269,7 +269,7 @@ public partial class Player
             return;
         }
         for (int strike = 0; strike < strikeCount; strike++)
-            _objectMilestones.QueueArcEcho(direction.Rotated(Mathf.DegToRad(startOffset + step * strike)), range, arcAngle,
+            _objectMilestones.QueueArcEcho(MeleeStrikeShape.RotateOnSlash(direction, startOffset + step * strike, squash), range, arcAngle,
                 strikeDamage, _equippedWeapon, context);
     }
 

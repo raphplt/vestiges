@@ -46,7 +46,7 @@ public partial class WeaponRegression : Node2D
             CheckUpgradeGains();
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
-            await CheckMeleeReachFollowsSlash();
+            await CheckMeleeStrikeShape();
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
             CheckContractRejectsBadData();
@@ -98,12 +98,15 @@ public partial class WeaponRegression : Node2D
     }
 
     /// <summary>
-    /// Allonge de mêlée (DECISIONS §99) : un coup ne touche pas plus loin que sa forme dessinée. La traînée de la
-    /// Faucille est aplatie (<see cref="Iso.SlashSquash"/>) : à 0,9 allonge à l'horizontale et sous le joueur dans
-    /// l'ellipse, la créature est touchée ; à 1,1 allonge sur l'ellipse en dessous (0,81 à l'écran, dans l'ancien
-    /// cercle), elle ne l'est pas. L'estoc du Scalpel, trait droit vers la cible, touche à 0,9 allonge en dessous.
+    /// Forme de touche de la mêlée (DECISIONS §99, §100) : un coup ne touche pas hors de sa forme dessinée.
+    /// Allonge : la traînée de la Faucille est aplatie (<see cref="Iso.SlashSquash"/>) ; à 0,9 allonge à l'horizontale
+    /// et sous le joueur dans l'ellipse, la créature est touchée ; à 1,1 allonge sur l'ellipse en dessous (0,81 à
+    /// l'écran, dans l'ancien cercle), elle ne l'est pas ; l'estoc du Scalpel touche à 0,9 allonge en dessous.
+    /// Largeur : l'ouverture de 90° se mesure sur l'ellipse, une créature à 33° de l'axe (41° sur l'ellipse) est
+    /// touchée, à 40° (48°) elle ne l'est plus ; l'estoc touche la créature alignée derrière sa cible, pas celle à
+    /// 30° de son trait.
     /// </summary>
-    private async Task CheckMeleeReachFollowsSlash()
+    private async Task CheckMeleeStrikeShape()
     {
         Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
         AddChild(player);
@@ -113,32 +116,50 @@ public partial class WeaponRegression : Node2D
         MethodInfo attack = typeof(Player).GetMethod("OnWeaponAttackTimeout", Private);
         try
         {
-            async Task<bool> StrikeHits(string weaponId, Vector2 offset)
+            // Pose une créature par décalage (en allonges ; la première, la plus proche, est la cible), frappe une fois
+            // et dit lesquelles sont touchées.
+            async Task<bool[]> Strike(string weaponId, params Vector2[] offsets)
             {
                 while (player.WeaponSlots.Count > 0)
                     player.RemoveWeapon(0);
                 player.AddWeapon(WeaponDataLoader.Get(weaponId));
                 float reach = player.GetWeaponStatForDisplay(player.WeaponSlots[0], "range");
-                Enemy enemy = EnemyScene.Instantiate<Enemy>();
-                AddChild(enemy);
-                enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
-                enemy.SetTicking(false);
-                enemy.GlobalPosition = player.GlobalPosition + offset * reach;
+                Enemy[] enemies = new Enemy[offsets.Length];
+                for (int index = 0; index < offsets.Length; index++)
+                {
+                    enemies[index] = EnemyScene.Instantiate<Enemy>();
+                    AddChild(enemies[index]);
+                    enemies[index].Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+                    enemies[index].SetTicking(false);
+                    enemies[index].GlobalPosition = player.GlobalPosition + offsets[index] * reach;
+                }
                 CrowdIndex.MarkMoved();
                 await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
                 attack.Invoke(player, new object[] { 0 });
-                bool hit = enemy.HpRatio < 1f;
-                enemy.QueueFree();
-                return hit;
+                bool[] hits = new bool[offsets.Length];
+                for (int index = 0; index < offsets.Length; index++)
+                {
+                    hits[index] = enemies[index].HpRatio < 1f;
+                    enemies[index].QueueFree();
+                }
+                return hits;
             }
 
-            bool beside = await StrikeHits("chipped_blade", new Vector2(0.9f, 0f));
-            bool belowInside = await StrikeHits("chipped_blade", new Vector2(0f, 0.9f / Iso.SlashSquash));
-            bool belowOutside = await StrikeHits("chipped_blade", new Vector2(0f, 1.1f / Iso.SlashSquash));
-            bool thrustBelow = await StrikeHits("surgeons_scalpel", new Vector2(0f, 0.9f));
+            static Vector2 At(float degrees, float distance) => Vector2.FromAngle(Mathf.DegToRad(degrees)) * distance;
+
+            bool beside = (await Strike("chipped_blade", new Vector2(0.9f, 0f)))[0];
+            bool belowInside = (await Strike("chipped_blade", new Vector2(0f, 0.9f / Iso.SlashSquash)))[0];
+            bool belowOutside = (await Strike("chipped_blade", new Vector2(0f, 1.1f / Iso.SlashSquash)))[0];
+            bool thrustBelow = (await Strike("surgeons_scalpel", new Vector2(0f, 0.9f)))[0];
             Check(beside && belowInside && !belowOutside && thrustBelow,
-                $"Mêlée : la touche s'arrête au bord du coup dessiné (à côté {beside}, dessous dans la traînée {belowInside}, "
+                $"Mêlée, allonge : la touche s'arrête au bord du coup dessiné (à côté {beside}, dessous dans la traînée {belowInside}, "
                 + $"dessous hors traînée {belowOutside}, estoc dessous {thrustBelow})");
+
+            bool[] arc = await Strike("chipped_blade", new Vector2(0.4f, 0f), At(33f, 0.6f), At(40f, 0.6f));
+            bool[] thrust = await Strike("surgeons_scalpel", new Vector2(0.4f, 0f), new Vector2(0.8f, 0f), At(30f, 0.6f));
+            Check(arc[0] && arc[1] && !arc[2] && thrust[0] && thrust[1] && !thrust[2],
+                $"Mêlée, largeur : ouverture mesurée sur la traînée (33° {arc[1]}, 40° {arc[2]}), estoc en trait "
+                + $"(aligné derrière {thrust[1]}, à 30° {thrust[2]})");
         }
         finally
         {
