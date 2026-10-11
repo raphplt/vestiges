@@ -80,9 +80,7 @@ public partial class RiftDirector : Node
         foreach (ActivePassiveSouvenir badge in _player.BadgeSlots)
             if (!badge.IsMaxLevel)
                 candidates.Add(new FragmentOption(badge.Id, "passive_upgrade", badge.Data.Name));
-        foreach (ActivePassiveSouvenir passive in _player.PassiveSlots)
-            if (!passive.IsMaxLevel)
-                candidates.Add(new FragmentOption(passive.Id, "passive_upgrade", passive.Data.Name));
+
         if (candidates.Count == 0)
             return;
 

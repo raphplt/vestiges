@@ -260,7 +260,7 @@ public partial class GameOverScreen : CanvasLayer
         foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
             build.Badges.Add((badge.Data.Icon, badge.Level));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            build.Passives.Add((passive.Data.Icon, passive.Level));
+            build.Passives.Add((passive.Data.Icon, passive.Copies));
         return build;
     }
 
@@ -364,7 +364,8 @@ public partial class GameOverScreen : CanvasLayer
         // Les Écussons gardent leurs cases, même vides, puis un écart, puis les objets (comme au HUD).
         AddBuildSlots(passives, _build?.Badges, InventoryConfig.BadgeSlots, UITheme.GoldColor);
         passives.AddChild(new Control { CustomMinimumSize = new Vector2(12f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
-        AddBuildSlots(passives, _build?.Passives, Player.MaxPassiveSlots, UITheme.CyanEssence);
+        // Les objets du sac, un par fiche avec ses exemplaires ; au moins une case pour dire que le sac était vide.
+        AddBuildSlots(passives, _build?.Passives, Mathf.Max(_build?.Passives.Count ?? 0, 1), UITheme.CyanEssence);
 
         // Colonne de droite : les faits de la run.
         Control facts = RunSummaryPanels.Facts(BuildFacts(record, totalKills));

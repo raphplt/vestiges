@@ -6,13 +6,14 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Rangée sous les armes (plan 35) : les Écussons à gauche, cadre doré, puis les objets. Chaque case montre l'icône et
-/// le niveau ; une case vide garde son cadre. Rafraîchie sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>, jamais
-/// par image.
+/// Rangée sous les armes (plan 35) : les Écussons à gauche, cadre doré et niveau, puis le sac, une petite case par place
+/// et un exemplaire par case (les doublons côte à côte). Rafraîchie sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>,
+/// jamais par image ; elle se recentre quand le sac change de taille (Poches du Campement).
 /// </summary>
 public partial class HudInventoryBar : HBoxContainer
 {
     private const float SlotSize = 18f;
+    private const float BagSlotSize = 13f;
     private const float ShelfGap = 10f;
     private static readonly Color LevelColor = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     // Les Écussons se distinguent des objets par un cadre doré, en attendant leurs icônes brodées (plan 25).
@@ -32,7 +33,7 @@ public partial class HudInventoryBar : HBoxContainer
     private EventBus _eventBus;
     private GroupCache _groupCache;
 
-    public float Width => (InventoryConfig.BadgeSlots + Player.MaxPassiveSlots) * (SlotSize + 3f) + ShelfGap;
+    private float Width => InventoryConfig.BadgeSlots * (SlotSize + 3f) + ShelfGap + _items.Count * (BagSlotSize + 3f);
 
     public override void _Ready()
     {
@@ -44,8 +45,9 @@ public partial class HudInventoryBar : HBoxContainer
         for (int i = 0; i < InventoryConfig.BadgeSlots; i++)
             _badges.Add(AddSlot());
         AddChild(new Control { CustomMinimumSize = new Vector2(ShelfGap - 3f, 0f), MouseFilter = MouseFilterEnum.Ignore });
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-            _items.Add(AddSlot());
+        for (int i = 0; i < InventoryConfig.BagSize; i++)
+            _items.Add(AddSlot(BagSlotSize));
+        Recenter();
 
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
@@ -59,9 +61,9 @@ public partial class HudInventoryBar : HBoxContainer
             _eventBus.PassiveSouvenirSlotsChanged -= Refresh;
     }
 
-    private Slot AddSlot()
+    private Slot AddSlot(float size = SlotSize)
     {
-        Control root = new() { CustomMinimumSize = new Vector2(SlotSize, SlotSize), MouseFilter = MouseFilterEnum.Ignore };
+        Control root = new() { CustomMinimumSize = new Vector2(size, size), MouseFilter = MouseFilterEnum.Ignore };
         Slot slot = new()
         {
             Frame = new NinePatchRect
@@ -85,16 +87,17 @@ public partial class HudInventoryBar : HBoxContainer
         slot.Frame.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         root.AddChild(slot.Frame);
         slot.Icon.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        slot.Icon.OffsetLeft = 2;
-        slot.Icon.OffsetTop = 2;
-        slot.Icon.OffsetRight = -2;
-        slot.Icon.OffsetBottom = -2;
+        int inset = size > BagSlotSize ? 2 : 1;
+        slot.Icon.OffsetLeft = inset;
+        slot.Icon.OffsetTop = inset;
+        slot.Icon.OffsetRight = -inset;
+        slot.Icon.OffsetBottom = -inset;
         root.AddChild(slot.Icon);
         slot.Level.AddThemeFontSizeOverride("font_size", 8);
         slot.Level.AddThemeColorOverride("font_color", LevelColor);
         slot.Level.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         slot.Level.AddThemeConstantOverride("outline_size", 3);
-        slot.Level.Position = new Vector2(SlotSize - 12, SlotSize - 11);
+        slot.Level.Position = new Vector2(size - 12, size - 11);
         slot.Level.Size = new Vector2(12, 10);
         root.AddChild(slot.Level);
         AddChild(root);
@@ -105,31 +108,50 @@ public partial class HudInventoryBar : HBoxContainer
     {
         if (_groupCache?.GetPlayer() is not Player player)
             return;
-        Fill(_badges, player.BadgeSlots, BadgeFrameTint);
-        Fill(_items, player.PassiveSlots, Colors.White);
+        for (int i = 0; i < _badges.Count; i++)
+            Fill(_badges[i], i < player.BadgeSlots.Count ? player.BadgeSlots[i] : null, BadgeFrameTint, true);
+        if (_items.Count != player.BagCapacity)
+        {
+            while (_items.Count < player.BagCapacity)
+                _items.Add(AddSlot(BagSlotSize));
+            while (_items.Count > player.BagCapacity)
+            {
+                _items[^1].Frame.GetParent().QueueFree();
+                _items.RemoveAt(_items.Count - 1);
+            }
+            Recenter();
+        }
+        int cell = 0;
+        foreach (ActivePassiveSouvenir item in player.PassiveSlots)
+            for (int copy = 0; copy < item.Copies && cell < _items.Count; copy++)
+                Fill(_items[cell++], item, Colors.White, false);
+        while (cell < _items.Count)
+            Fill(_items[cell++], null, Colors.White, false);
     }
 
-    private void Fill(List<Slot> slots, IReadOnlyList<ActivePassiveSouvenir> carried, Color emptyTint)
+    private void Fill(Slot slot, ActivePassiveSouvenir owned, Color tint, bool showLevel)
     {
-        for (int i = 0; i < slots.Count; i++)
+        if (owned == null)
         {
-            Slot slot = slots[i];
-            if (i >= carried.Count)
-            {
-                slot.Frame.Texture = _emptyTexture;
-                slot.Frame.Modulate = emptyTint;
-                slot.Icon.Visible = false;
-                slot.Level.Text = "";
-                continue;
-            }
-            ActivePassiveSouvenir owned = carried[i];
-            string iconPath = owned.Data.IconSmall;
-            Texture2D icon = string.IsNullOrEmpty(iconPath) ? null : GD.Load<Texture2D>(iconPath);
-            slot.Frame.Texture = _filledTexture;
-            slot.Frame.Modulate = icon == null ? owned.Data.IconColor : emptyTint;
-            slot.Icon.Texture = icon;
-            slot.Icon.Visible = icon != null;
-            slot.Level.Text = owned.Level > 1 ? $"{owned.Level}" : "";
+            slot.Frame.Texture = _emptyTexture;
+            slot.Frame.Modulate = tint;
+            slot.Icon.Visible = false;
+            slot.Level.Text = "";
+            return;
         }
+        string iconPath = owned.Data.IconSmall;
+        Texture2D icon = string.IsNullOrEmpty(iconPath) ? null : GD.Load<Texture2D>(iconPath);
+        slot.Frame.Texture = _filledTexture;
+        slot.Frame.Modulate = icon == null ? owned.Data.IconColor : tint;
+        slot.Icon.Texture = icon;
+        slot.Icon.Visible = icon != null;
+        slot.Level.Text = showLevel && owned.Level > 1 ? $"{owned.Level}" : "";
+    }
+
+    /// <summary>Centrée sous les armes, quelle que soit la taille du sac.</summary>
+    private void Recenter()
+    {
+        OffsetLeft = -Width / 2f;
+        OffsetRight = Width / 2f;
     }
 }

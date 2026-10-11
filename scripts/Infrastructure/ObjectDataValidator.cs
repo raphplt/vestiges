@@ -17,7 +17,7 @@ public static class ObjectDataValidator
     private static readonly string[] ObjectKeys =
     {
         "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
-        "survival", "offer_weight", "params", "enabled",
+        "survival", "offer_weight", "params", "enabled", "copy_levels",
     };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
     private static readonly string[] MilestoneKeys = { "level", "effect", "text", "params" };
@@ -139,6 +139,15 @@ public static class ObjectDataValidator
                 return $"{where}, {flag} : booléen attendu";
         }
         int maxLevel = reader.Integer(item, "max_level", 1, MaxLevelBound);
+        // Niveau d'effet d'un objet selon ses exemplaires (plan 35) : seulement pour un objet, jamais au-delà de son maximum.
+        if (reader.Error == null && item.TryGetProperty("copy_levels", out _))
+        {
+            if (Text(item, "kind") != "item")
+                return $"{where}, copy_levels : réservé aux objets";
+            int[] copyLevels = InventoryConfig.ReadCopyLevels(reader, item, "copy_levels");
+            if (reader.Error == null && copyLevels[^1] > maxLevel)
+                reader.Fail($"copy_levels : niveau {copyLevels[^1]} au-delà du maximum {maxLevel}");
+        }
         if (item.TryGetProperty("offer_weight", out _))
             reader.Positive(item, "offer_weight");
         if (reader.Error != null)

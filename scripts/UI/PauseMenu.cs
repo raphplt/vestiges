@@ -267,7 +267,7 @@ public partial class PauseMenu : CanvasLayer
 			AddPassiveRow(badge);
 		if (player.BadgeSlots.Count == 0)
 			PlayerSheet.AddLine(_loadoutContainer, Tr("INVENTORY_NONE_BADGE"), "", TextVeryDim);
-		PlayerSheet.AddSectionTitle(_loadoutContainer, "Objets");
+		PlayerSheet.AddSectionTitle(_loadoutContainer, $"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}");
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
 			AddPassiveRow(passive);
 		if (player.PassiveSlots.Count == 0)
@@ -329,7 +329,7 @@ public partial class PauseMenu : CanvasLayer
 		row.AddThemeConstantOverride("separation", 10);
 		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
 		// Un Écusson n'a pas de plafond à annoncer ; son sous-titre rappelle l'objet d'où il vient.
-		string level = passive.Data.IsBadge ? $"Niv {passive.Level}" : $"Niv {passive.Level}/{passive.Data.MaxLevel}";
+		string level = passive.Data.IsBadge ? $"Niv {passive.Level}" : $"×{passive.Copies}";
 		string title = passive.Data.Subtitle.Length > 0 ? $"{passive.Data.Name} · {passive.Data.Subtitle}" : passive.Data.Name;
 		Label name = PlayerSheet.MakeLabel($"{title}   {level}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -358,7 +358,11 @@ public partial class PauseMenu : CanvasLayer
 				continue;
 			MarginContainer indent = new();
 			indent.AddThemeConstantOverride("margin_left", 42);
-			Label detail = PlayerSheet.MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
+			// Un objet atteint son palier par ses exemplaires, pas par un niveau affiché.
+			string text = passive.Data.IsBadge
+				? string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text)
+				: string.Format(Tr("ITEM_MILESTONE"), passive.Data.CopiesForLevel(milestone.Level), milestone.Text);
+			Label detail = PlayerSheet.MakeLabel(text, TextRole.Small,
 				passive.Reached(milestone) ? GoldBright : TextVeryDim);
 			detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			indent.AddChild(detail);

@@ -175,7 +175,12 @@ public partial class QuestRegression : Node
         HashSet<string> expectedWeapons = new(StartingWeapons);
         expectedWeapons.Remove("chipped_blade");
         Check(offeredWeapons.SetEquals(expectedWeapons), $"offre de niveau : les 7 autres armes de départ ({offeredWeapons.Count})");
-        Check(offeredObjects.SetEquals(StartingObjects), $"offre de niveau : les 15 objets de départ ({offeredObjects.Count})");
+        HashSet<string> startingBadges = new();
+        foreach (string id in StartingObjects)
+            if (PassiveSouvenirDataLoader.Get(id).IsBadge)
+                startingBadges.Add(id);
+        Check(startingBadges.Count == 10 && offeredObjects.SetEquals(startingBadges),
+            $"offre de niveau : les 10 Écussons de départ, aucun objet (ils se trouvent dans le monde) ({offeredObjects.Count})");
         RemoveChild(fragments);
         fragments.QueueFree();
         RemoveChild(player);

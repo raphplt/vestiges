@@ -141,6 +141,8 @@ public partial class CatalogContractRegression : Node
             ("étagère inconnue", items => Item(items, "memoire_vive")["kind"] = "tome", "kind : « badge » ou « item » attendu"),
             ("étagère absente", items => Item(items, "glacon").Remove("kind"), "kind : « badge » ou « item » attendu"),
             ("sous-titre vide", items => Item(items, "memoire_vive")["subtitle"] = "", "subtitle : texte non vide attendu"),
+            ("exemplaires d'un Écusson", items => Item(items, "memoire_vive")["copy_levels"] = new System.Text.Json.Nodes.JsonArray(1, 2), "copy_levels : réservé aux objets"),
+            ("exemplaires au-delà du maximum", items => Item(items, "glacon")["copy_levels"] = new System.Text.Json.Nodes.JsonArray(10, 31), "copy_levels : niveau 31 au-delà du maximum 30"),
             ("Écusson sans sous-titre", items => Item(items, "memoire_vive").Remove("subtitle"), "subtitle : attendu pour un Écusson"),
             ("objet avec sous-titre", items => Item(items, "glacon")["subtitle"] = "Glaçon", "subtitle : réservé aux Écussons"),
             ("réglage de palier absent", items => Milestone(items, "memoire_vive")["params"]!.AsObject().Remove("every"), "every absent (exigé par repeat_attack)"),

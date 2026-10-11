@@ -51,6 +51,8 @@ public static class LootRewards
         List<ResolvedLoot> resolved = new();
         // Niveaux déjà promis par ce même butin : deux tirages sur un objet ne dépassent pas son maximum.
         Dictionary<string, int> reserved = new();
+        // Exemplaires d'objets déjà promis : le sac et le maximum de chaque objet comptent avec eux.
+        Dictionary<string, int> promisedItems = new();
         foreach (LootResolver.LootResult loot in loots)
         {
             switch (loot.Type)
@@ -74,6 +76,18 @@ public static class LootRewards
                     reserved[owned.Id] = already + levels;
                     resolved.Add(new ResolvedLoot("object_level", owned.Id, levels,
                         string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));
+                    break;
+                case "object":
+                    PassiveSouvenirData item = PickItem(player, promisedItems);
+                    if (item == null)
+                    {
+                        resolved.Add(Essence(loot.FallbackEssence));
+                        break;
+                    }
+                    promisedItems[item.Id] = promisedItems.GetValueOrDefault(item.Id) + 1;
+                    // Un exemplaire par tirage ; l'Essence de secours voyage avec, au cas où le sac se remplit d'ici l'ouverture.
+                    resolved.Add(new ResolvedLoot("object", item.Id, 1,
+                        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT"), item.Name), ObjectColor, loot.FallbackEssence));
                     break;
                 case "souvenir":
                     string souvenirId = loot.ItemId == "random_souvenir" ? SouvenirManager.PickRandomUndiscovered() : loot.ItemId;
@@ -120,6 +134,13 @@ public static class LootRewards
                 player.AddOrUpgradePassive(loot.ItemId, loot.Amount);
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
+            case "object":
+                // Le sac a pu se remplir entre le tirage et l'ouverture : l'objet devient alors son Essence de secours.
+                if (player.AddItemCopy(loot.ItemId))
+                    eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
+                else
+                    eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", "essence", Mathf.RoundToInt(loot.Value));
+                break;
             default:
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
@@ -127,8 +148,8 @@ public static class LootRewards
     }
 
     /// <summary>
-    /// Objet porté qui peut encore monter, niveaux déjà promis compris, au hasard ; null si aucun (plan 21 §4 : les
-    /// coffres montent les objets).
+    /// Écusson porté qui peut encore monter, niveaux déjà promis compris, au hasard ; null si aucun (plan 21 §4 : les
+    /// coffres montent les Écussons ; les objets, sans niveaux, en sortent entiers, plan 35).
     /// </summary>
     private static ActivePassiveSouvenir PickOwnedObject(Player player, Dictionary<string, int> reserved)
     {
@@ -138,9 +159,32 @@ public static class LootRewards
         foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
             if (badge.Level + reserved.GetValueOrDefault(badge.Id) < badge.Data.MaxLevel)
                 candidates.Add(badge);
-        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            if (passive.Level + reserved.GetValueOrDefault(passive.Id) < passive.Data.MaxLevel)
-                candidates.Add(passive);
+
+        return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
+    }
+
+    /// <summary>
+    /// Objet débloqué au hasard que le sac peut recevoir, exemplaires déjà promis compris (plan 35) ; null si le sac est
+    /// plein ou si aucun objet ne peut plus monter.
+    /// </summary>
+    private static PassiveSouvenirData PickItem(Player player, Dictionary<string, int> promised)
+    {
+        if (player == null)
+            return null;
+        int promisedTotal = 0;
+        foreach (int count in promised.Values)
+            promisedTotal += count;
+        if (player.BagCount + promisedTotal >= player.BagCapacity)
+            return null;
+        List<PassiveSouvenirData> candidates = new();
+        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+        {
+            if (data.IsBadge || !MetaSaveManager.IsObjectUnlocked(data.Id))
+                continue;
+            int copies = (player.FindObject(data.Id)?.Copies ?? 0) + promised.GetValueOrDefault(data.Id);
+            if (copies < data.MaxCopies)
+                candidates.Add(data);
+        }
         return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
     }
 

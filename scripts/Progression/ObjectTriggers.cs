@@ -227,24 +227,31 @@ public partial class ObjectTriggers : Node
         }
     }
 
-    /// <summary>Écart de valeur d'un effet d'objet de déclencheur (formule additive du niveau).</summary>
+    /// <summary>
+    /// Écart de valeur d'un effet d'objet de déclencheur (formule additive du niveau). Un objet oublié retire sa valeur
+    /// par écart : le résidu d'arrondi est ramené à zéro, sinon un effet éteint continuerait de se déclencher.
+    /// </summary>
     public void Add(string stat, float change)
     {
         switch (stat)
         {
-            case BurnChanceStat: _burnChance += change; break;
-            case ChillChanceStat: _chillChance += change; break;
-            case BurningTargetDamageStat: _burningTargetDamage += change; break;
-            case SlowedTargetDamageStat: _slowedTargetDamage += change; break;
-            case KillExplosionStat: _killExplosion += change; break;
-            case KillHealStat: _killHeal += change; break;
-            case StrideDamageStat: _strideDamage += change; break;
-            case LevelHealStat: _levelHeal += change; break;
-            case CritFragileStat: _critFragile += change; break;
-            case CritEchoStat: _critEcho += change; break;
-            case DashTrailStat: _dashTrail += change; break;
+            case BurnChanceStat: _burnChance = Settle(_burnChance + change); break;
+            case ChillChanceStat: _chillChance = Settle(_chillChance + change); break;
+            case BurningTargetDamageStat: _burningTargetDamage = Settle(_burningTargetDamage + change); break;
+            case SlowedTargetDamageStat: _slowedTargetDamage = Settle(_slowedTargetDamage + change); break;
+            case KillExplosionStat: _killExplosion = Settle(_killExplosion + change); break;
+            case KillHealStat: _killHeal = Settle(_killHeal + change); break;
+            case StrideDamageStat: _strideDamage = Settle(_strideDamage + change); break;
+            case LevelHealStat: _levelHeal = Settle(_levelHeal + change); break;
+            case CritFragileStat: _critFragile = Settle(_critFragile + change); break;
+            case CritEchoStat: _critEcho = Settle(_critEcho + change); break;
+            case DashTrailStat: _dashTrail = Settle(_dashTrail + change); break;
         }
+        SetProcess(NeedsClock);
     }
+
+    /// <summary>Une valeur d'effet plus petite que le plus petit pas d'objet est un reste d'arrondi : zéro.</summary>
+    internal static float Settle(float value) => Mathf.Abs(value) < 1e-5f ? 0f : value;
 
     /// <summary>Branche le palier d'un objet de déclencheur.</summary>
     public void Activate(ObjectMilestoneData milestone)
@@ -268,6 +275,38 @@ public partial class ObjectTriggers : Node
             case CascadeInvulnerabilityEffect:
                 _cascadeLevels = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("levels")));
                 _cascadeSeconds = milestone.Parameter("seconds");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Retire le palier d'un objet oublié ou revenu sous son niveau (plan 35, sac) : chaque réglage reprend sa valeur sans
+    /// palier, celle de l'objet (<paramref name="data"/>) quand le palier la remplaçait.
+    /// </summary>
+    public void Deactivate(ObjectMilestoneData milestone, PassiveSouvenirData data)
+    {
+        switch (milestone.Effect)
+        {
+            case BurnSpreadEffect: _burnSpreadRadius = 0f; break;
+            case DoubleSlowFreezeEffect: _freezeSeconds = 0f; break;
+            case BurnSlowsEffect: _burnSlowFactor = 1f; break;
+            case SlowKillExtendsEffect:
+                _slowKillRadius = 0f;
+                _slowKillSeconds = 0f;
+                _slowKillMaxSeconds = 0f;
+                break;
+            case DoubleExplosionEffect: _secondExplosionDelay = -1f; break;
+            case EliteKillHealEffect: _eliteHealRatio = 0f; break;
+            case DoubleStrideEffect:
+                _strideMaxCharges = 1;
+                _strideCharges = Mathf.Min(_strideCharges, _strideMaxCharges);
+                break;
+            case LongFragileEffect: _critFragileSeconds = Parameter(data, "fragile_seconds"); break;
+            case DoubleCritEchoEffect: _critEchoTargets = 1; break;
+            case StickyFragileEffect: _trailFragile = 0f; break;
+            case CascadeInvulnerabilityEffect:
+                _cascadeLevels = 0;
+                _cascadeSeconds = 0f;
                 break;
         }
     }

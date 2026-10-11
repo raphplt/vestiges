@@ -118,9 +118,10 @@ public partial class ObjectsRegression : Node2D
         Check(InventoryConfig.BadgeSlots == 4 && badges == 4 && _player.BadgeSlots.Count == 4 && _player.PassiveSlots.Count == 0,
             "Quatre emplacements d'Écussons, à part des objets ; le cinquième Écusson est refusé");
         int items = 0;
-        foreach (string id in new[] { "allumette_humide", "glacon", "thermometre", "epingle_a_nourrice", "petard_mouille", "de_a_coudre", "semelle_usee" })
+        foreach (string id in new[] { "allumette_humide", "glacon", "thermometre", "epingle_a_nourrice", "petard_mouille", "de_a_coudre",
+            "semelle_usee", "boite_de_pansements", "loupe_de_philateliste", "stylo_quatre_couleurs", "tabouret_de_camping" })
             items += _player.AddOrUpgradePassive(id) ? 1 : 0;
-        Check(Player.MaxPassiveSlots == 6 && items == 6 && _player.PassiveSlots.Count == 6, "Six emplacements d'objets ; le septième objet est refusé");
+        Check(_player.BagCapacity == 10 && items == 10 && _player.BagCount == 10, "Sac de dix places ; le onzième objet est refusé");
         Check(_player.AddOrUpgradePassive("memoire_vive") && _player.GetPassiveLevel("memoire_vive") == 2
             && _player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 2,
             "Emplacements pleins : un Écusson ou un objet porté monte encore de niveau");
@@ -239,9 +240,10 @@ public partial class ObjectsRegression : Node2D
         List<FragmentOption> pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
         // Profil neuf : seuls les objets de la réserve de départ sont offerts (plan 06 §9.2).
         int fresh = pool.FindAll(option => option.Type == "passive_new").Count;
-        int unlocked = PassiveSouvenirDataLoader.GetAll().FindAll(item => MetaSaveManager.IsObjectUnlocked(item.Id)).Count;
-        bool noRetired = !pool.Exists(option => option.Id is "flamme_interieure" or "fragment_deternite");
-        Check(fresh == unlocked && fresh == 15 && noRetired, $"Offre de niveau : {fresh} objets neufs possibles (réserve de départ), aucun objet retiré");
+        int unlocked = PassiveSouvenirDataLoader.GetAll().FindAll(item => item.IsBadge && MetaSaveManager.IsObjectUnlocked(item.Id)).Count;
+        bool noItem = !pool.Exists(option => option.Type.StartsWith("passive", StringComparison.Ordinal) && !PassiveSouvenirDataLoader.Get(option.Id).IsBadge);
+        Check(fresh == unlocked && fresh == 10 && noItem,
+            $"Offre de niveau : {fresh} Écussons neufs possibles (réserve de départ), aucun objet (ils se trouvent dans le monde)");
 
         // Plus de paliers par niveau (DECISIONS §52) : dès le niveau 2, toutes les armes débloquées sont tirables.
         typeof(FragmentManager).GetField("_currentLevel", Private).SetValue(fragments, 2);
@@ -259,15 +261,11 @@ public partial class ObjectsRegression : Node2D
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique" })
             _player.AddOrUpgradePassive(id);
         pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
-        bool noNewBadge = !pool.Exists(option => option.Type == "passive_new" && PassiveSouvenirDataLoader.Get(option.Id).IsBadge)
-            && pool.Exists(option => option.Type == "passive_new");
-        foreach (string id in new[] { "allumette_humide", "glacon", "de_a_coudre", "semelle_usee", "chewing_gum" })
-            _player.AddOrUpgradePassive(id);
-        PassiveSouvenirData sixthItem = PassiveSouvenirDataLoader.Get("thermometre");
-        _player.AddOrUpgradePassive(sixthItem.Id);
+        _player.AddItemCopy("glacon");
         pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
-        Check(noNewBadge && !pool.Exists(option => option.Type == "passive_new") && pool.FindAll(option => option.Type == "passive_upgrade").Count == 10,
-            "Quatre Écussons pris : plus d'Écusson neuf ; six objets en plus : plus rien de neuf, dix améliorations possibles");
+        Check(!pool.Exists(option => option.Type == "passive_new") && pool.FindAll(option => option.Type == "passive_upgrade").Count == 4
+            && !pool.Exists(option => option.Id == "glacon"),
+            "Quatre Écussons pris : plus d'Écusson neuf, quatre améliorations ; un objet porté ne s'offre jamais au level-up");
     }
 
     private void CheckMilestoneActivation()
@@ -466,10 +464,13 @@ public partial class ObjectsRegression : Node2D
         float fullLoss = hpBefore - Hp(control);
 
         // Six Écussons à la fois pour éprouver tous leurs paliers : la règle des quatre emplacements est vérifiée ailleurs.
-        InventoryConfig.Apply("{\"badge_slots\": 8, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5}");
+        string inventory = Godot.FileAccess.GetFileAsString("res://data/progression/inventory.json");
+        System.Text.Json.Nodes.JsonObject wide = System.Text.Json.Nodes.JsonNode.Parse(inventory)!.AsObject();
+        wide["badge_slots"] = 8;
+        Check(InventoryConfig.Apply(wide.ToJsonString()) == null, "réglages d'essai : huit Écussons");
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "carapace", "instinct" })
             Raise(id, 15);
-        InventoryConfig.Apply(Godot.FileAccess.GetFileAsString("res://data/progression/inventory.json"));
+        InventoryConfig.Apply(inventory);
         ObjectMilestones milestones = _player.ObjectMilestones;
         MethodInfo process = typeof(ObjectMilestones).GetMethod("_Process");
         System.Collections.IList repeats = (System.Collections.IList)typeof(ObjectMilestones).GetField("_pendingRepeats", Private).GetValue(milestones);

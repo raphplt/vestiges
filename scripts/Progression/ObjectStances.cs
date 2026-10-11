@@ -120,11 +120,11 @@ public partial class ObjectStances : Node
     {
         switch (stat)
         {
-            case StillAttackSpeedStat: _stillAttackSpeed += change; ApplyStill(); break;
-            case CrowdDamageStat: _crowdDamage += change; break;
-            case HighHpDamageStat: _highHpDamage += change; break;
-            case LowHpDamageStat: _lowHpDamage += change; break;
-            case EssenceDamageCapStat: _essenceCap += change; RefreshEssenceBonus(); break;
+            case StillAttackSpeedStat: _stillAttackSpeed = ObjectTriggers.Settle(_stillAttackSpeed + change); ApplyStill(); break;
+            case CrowdDamageStat: _crowdDamage = ObjectTriggers.Settle(_crowdDamage + change); break;
+            case HighHpDamageStat: _highHpDamage = ObjectTriggers.Settle(_highHpDamage + change); break;
+            case LowHpDamageStat: _lowHpDamage = ObjectTriggers.Settle(_lowHpDamage + change); break;
+            case EssenceDamageCapStat: _essenceCap = ObjectTriggers.Settle(_essenceCap + change); RefreshEssenceBonus(); break;
         }
     }
 
@@ -138,6 +138,19 @@ public partial class ObjectStances : Node
             case ThermosThresholdEffect: _highHpThreshold = milestone.Parameter("threshold"); break;
             case LowHpSpeedEffect: _lowHpSpeed = milestone.Parameter("speed"); ApplyLowHpSpeed(); break;
             case EssenceRefundEffect: _refundRatio = milestone.Parameter("ratio"); break;
+        }
+    }
+
+    /// <summary>Retire le palier d'un objet d'état oublié (plan 35, sac) : le réglage de l'objet revient.</summary>
+    public void Deactivate(ObjectMilestoneData milestone, PassiveSouvenirData data)
+    {
+        switch (milestone.Effect)
+        {
+            case StillArmorEffect: _stillArmor = 0f; ApplyStill(); break;
+            case CrowdCapEffect: _crowdMax = Mathf.RoundToInt(Parameter(data, "max_enemies")); break;
+            case ThermosThresholdEffect: _highHpThreshold = Parameter(data, "threshold"); break;
+            case LowHpSpeedEffect: _lowHpSpeed = 0f; ApplyLowHpSpeed(); break;
+            case EssenceRefundEffect: _refundRatio = 0f; break;
         }
     }
 

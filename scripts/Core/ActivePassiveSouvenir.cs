@@ -12,6 +12,8 @@ public class ActivePassiveSouvenir
 	public string Id { get; }
 	public PassiveSouvenirData Data { get; }
 	public int Level { get; private set; }
+	/// <summary>Exemplaires d'un objet dans le sac (plan 35) ; 0 pour un Écusson.</summary>
+	public int Copies { get; internal set; }
 	public bool IsMaxLevel => Level >= Data.MaxLevel;
 
 	private readonly float[] _gains;
@@ -44,6 +46,19 @@ public class ActivePassiveSouvenir
 		for (int i = 0; i < _gains.Length; i++)
 			_gains[i] += Data.Effects[i].Step * gain * factor;
 		return true;
+	}
+
+	/// <summary>
+	/// Place un objet à un niveau d'exemplaires, chaque niveau valant un pas entier (plan 35) : 0 le ramène au neutre.
+	/// L'appelant applique l'écart de valeur au joueur.
+	/// </summary>
+	public void SetItemLevel(int level)
+	{
+		if (Data.IsBadge)
+			return;
+		Level = level;
+		for (int i = 0; i < _gains.Length; i++)
+			_gains[i] = Data.Effects[i].Step * level;
 	}
 
 	/// <summary>Rendement d'un niveau : un pas entier, sauf pour un Écusson au-delà du seuil d'inventory.json.</summary>

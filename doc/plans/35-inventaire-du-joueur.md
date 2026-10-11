@@ -309,7 +309,7 @@ Raphaël a accepté les propositions du §9.5 ([DECISIONS §111](DECISIONS.md)).
 | Lot | Contenu | Vérification |
 |---|---|---|
 | **I1** | **Écussons** : `kind` sur les 35 fiches (16 Écussons, 19 objets dont l'arbitre), noms « Écusson du… » avec l'ancien nom en sous-titre ; 4 emplacements à part ; offre au level-up (nouveau, niveau suivant) ; niveau maximum 99, demi-pas au-delà du niveau 30 ; type de déblocage `badge` dans les quêtes ; rangée de 4 Écussons au HUD, section à la pause | suites `objects`, `quests`, `catalogs`, `perk_effects`, nouvelle suite `inventory` ; capture du HUD |
-| **I2** | **Objets en exemplaires** : plus de niveaux ; un exemplaire vaut le niveau 10 d'aujourd'hui, le deuxième atteint le palier (niveau 15), puis 19, 22, 24, 25 ; sac de 10 places (un exemplaire, une place) ; oubli d'un exemplaire, effet et palier retirés proprement. Jusqu'à I3, le level-up offre encore les objets (« un exemplaire »), seulement s'il reste une place | suites `objects`, `inventory` |
+| **I2** | **Objets en exemplaires** : plus de niveaux ; un exemplaire vaut le niveau 10 d'aujourd'hui, le deuxième atteint le palier (niveau 15), puis 19, 22, 24, 25 ; sac de 10 places (un exemplaire, une place) ; oubli d'un exemplaire, effet et palier retirés proprement. Le level-up n'offre plus d'objets dès I2 ; les coffres en donnent (choix fait en codant : pas de règle provisoire à défaire en I3) | suites `objects`, `inventory` |
 | **I3** | **Le monde donne les objets** : le level-up n'en offre plus ; coffres (« objet » au lieu de « niveau d'objet »), élites (au hasard), Souverains (sûr) et Atelier (contre Essence) ; objet posé au sol, ramassé s'il y a de la place, sinon invite à maintenir et écran d'échange en pause | suites `objects`, `small_places`, `inventory` ; captures de l'échange |
 | **I4** | **Surplus d'armes** : une arme au niveau 50 et ascensionnée reste offerte au level-up, avec +4 % de dégâts par carte, sans plafond | suites `weapons`, `inventory` |
 | **I5** | **Interface** : pause (armes, Écussons, sac), fiche du joueur, Collection (Écussons et objets), bilan | captures Hub et run |
@@ -363,3 +363,48 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
   - commentaire périmé ;
   - comparaison ordinale dans un test ;
   - `test_inventory.sh` ajouté à AGENTS.md.
+
+## 12. Lot I2 livré : objets en exemplaires, sac de 10, oubli — 11 octobre 2026
+
+**La règle.**
+- Un objet n'a plus de niveaux : il a des **exemplaires**, et chacun prend une place du sac (10 places).
+- Le nombre d'exemplaires fixe le niveau d'effet de l'objet (`inventory.json`, `item_copy_levels`) :
+
+| Exemplaires | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---:|---:|---:|---:|---:|---:|
+| Niveau d'effet | 10 | 15, palier | 19 | 22 | 24 | 25 |
+
+  Le premier exemplaire vaut le niveau 10 d'aujourd'hui (§111). Le doublon atteint le palier, et le rendement baisse ensuite.
+- Le Sifflet d'arbitre a ses propres exemplaires (`copy_levels` de 1 à 10) : +1 Péril par exemplaire, jusqu'à 10.
+- Le contrôle au chargement refuse `copy_levels` sur un Écusson, au-delà du niveau maximal de l'objet, ou s'ils ne montent pas.
+
+**L'oubli** (`Player.ForgetItemCopy`).
+- Retirer un exemplaire ramène l'objet au niveau des exemplaires restants. Retirer le dernier le fait quitter le sac.
+- L'écart d'effet est retiré (multiplicatif comme additif), ainsi que les paliers que l'objet n'atteint plus. Les objets de déclencheur et d'état ont pour cela un `Deactivate`.
+- Le Péril d'un Sifflet oublié ne se rend pas.
+
+**Les sources, pour l'instant.**
+- Le level-up n'offre plus d'objets : seulement les armes et les Écussons.
+- Les coffres ont un butin « objet » : un objet débloqué au hasard que le sac peut recevoir, sinon l'Essence de secours. Poids : commun 14, rare 22, épique 30, à côté du reste de leur table.
+- Le « niveau d'objet » des coffres et les niveaux de la Faille ne visent plus que les Écussons.
+- Les élites, les Souverains, l'Atelier et l'objet posé au sol (avec l'écran d'échange) viennent en I3.
+
+**Interface.**
+- La rangée du HUD montre le sac : une petite case par place, un exemplaire par case, les doublons côte à côte. La rangée se recentre si le sac grandit (Poches).
+- La pause et la fiche du joueur affichent « Sac n/10 » et « ×2 ».
+- Le bilan montre les objets portés avec leurs exemplaires.
+
+**Vérifications.**
+- Build sans avertissement.
+- Suites vertes : `inventory` (exemplaires, palier au doublon, oubli qui rend effet et palier, objets d'état, sac plein, Poches, coffre), `objects`, `catalogs`, `quests`, `smoke`, `perk_*`, `choice_screen`, `run_trace`, `dev_mode`, `saves`, `small_places`, `weapons`, `ui_art`, `launchers`, `camp`, `field_bonuses`, `run_phase`.
+- Capture regardée : le sac de 10 sous les armes.
+- En 200 s de run, le bot n'a reçu aucun objet : les coffres seuls en donnent peu. I3 ajoute les autres sources, puis on mesure.
+- **Entre I2 et I3**, le jeu n'a pas encore d'écran pour oublier : un sac plein refuse les objets, et le coffre donne alors son Essence de secours. L'écran d'échange arrive avec I3.
+- **Le Sifflet d'arbitre** : le Péril pris ne se rend pas à l'oubli. Reprendre un Sifflet oublié en redonne, puisque chaque exemplaire pris monte le Péril. C'est voulu : le Péril reste un choix, jamais une dette.
+- Relecture `godot-reviewer`. Corrigés :
+  - un effet entièrement oublié gardait un reste d'arrondi (1e-8), qui suffisait à faire tourner l'horloge de la Semelle ou à poser des taches de Chewing-gum. Les valeurs sont maintenant ramenées à zéro, et un test le vérifie sur trois objets ;
+  - un objet de coffre qui ne trouve plus de place à l'ouverture devient son Essence de secours ;
+  - les paliers d'un objet s'affichent en exemplaires (« 2 exemplaires : … ») ;
+  - le bilan n'est plus borné à 10 fiches ;
+  - le sac ne se réduit jamais sous ce qu'il contient ;
+  - clé de traduction devenue inutile retirée.

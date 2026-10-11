@@ -299,23 +299,23 @@ public partial class FragmentManager : Node
             }
         }
 
-        // Écussons et objets (plan 35) : chaque étagère a ses emplacements ; une fiche nouvelle n'est offerte que s'il en
-        // reste sur la sienne.
-        AddObjectOffers(pool, _player.BadgeSlots, InventoryConfig.BadgeSlots, ObjectKind.Badge);
-        AddObjectOffers(pool, _player.PassiveSlots, Player.MaxPassiveSlots, ObjectKind.Item);
+        // Écussons (plan 35) : un neuf tant qu'il reste un emplacement, puis leurs niveaux. Les objets ne s'offrent plus au
+        // level-up : ils se trouvent dans le monde.
+        AddBadgeOffers(pool);
         return pool;
     }
 
-    private void AddObjectOffers(List<FragmentOption> pool, IReadOnlyList<ActivePassiveSouvenir> shelf, int capacity, ObjectKind kind)
+    private void AddBadgeOffers(List<FragmentOption> pool)
     {
-        if (shelf.Count < capacity)
+        IReadOnlyList<ActivePassiveSouvenir> shelf = _player.BadgeSlots;
+        if (shelf.Count < InventoryConfig.BadgeSlots)
         {
             HashSet<string> equippedIds = new();
             foreach (ActivePassiveSouvenir owned in shelf)
                 equippedIds.Add(owned.Id);
             foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
             {
-                if (data.Kind != kind || equippedIds.Contains(data.Id) || _banishedIds.Contains(data.Id)
+                if (!data.IsBadge || equippedIds.Contains(data.Id) || _banishedIds.Contains(data.Id)
                     || !MetaSaveManager.IsObjectUnlocked(data.Id))
                     continue;
                 pool.Add(new FragmentOption(data.Id, "passive_new", data.Name));

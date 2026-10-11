@@ -1100,6 +1100,7 @@
     {
         "id": "sifflet_d_arbitre",
         "kind": "item",
+        "copy_levels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
         "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
         "name": "Sifflet d'arbitre",

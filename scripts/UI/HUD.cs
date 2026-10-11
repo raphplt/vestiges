@@ -473,15 +473,13 @@ public partial class HUD : CanvasLayer
     private void BuildInventoryBar()
     {
         HudInventoryBar bar = new() { Name = "InventoryBar" };
-        _hudRoot.AddChild(bar);
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
         bar.AnchorTop = 1f;
         bar.AnchorBottom = 1f;
-        bar.OffsetLeft = -bar.Width / 2;
-        bar.OffsetRight = bar.Width / 2;
         bar.OffsetTop = -23 - XpBar.BarHeight;
         bar.OffsetBottom = -5 - XpBar.BarHeight;
+        _hudRoot.AddChild(bar);
     }
 
     private static NinePatchRect MakeSlotFrame(Texture2D texture, int margin)

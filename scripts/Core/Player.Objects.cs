@@ -8,12 +8,12 @@ using Vestiges.Progression;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Objets du joueur (plan 21 §4, plan 23 R3) : six emplacements, trente niveaux, des gains selon la rareté et des
-/// paliers. Les Écussons (plan 35) suivent les mêmes règles sur leur propre étagère, sans plafond pratique.
+/// Objets du joueur (plan 21 §4, plan 23 R3, plan 35). Les Écussons, quatre au plus, montent de niveau carte après carte,
+/// avec des gains selon la rareté et des paliers. Les objets vont dans un sac, un exemplaire par place : chaque
+/// exemplaire porte l'objet à un niveau d'effet fixé (10, puis 15 et son palier…), et l'oubli d'un exemplaire le retire.
 /// </summary>
 public partial class Player
 {
-    public const int MaxPassiveSlots = 6;
     private static readonly Color MilestoneColor = new(1f, 0.82f, 0.35f);
     private static readonly Color IgnoredHitColor = new(0.72f, 0.72f, 0.7f);
     private const ulong IgnoredHitFlashIntervalMsec = 250;
@@ -32,8 +32,33 @@ public partial class Player
     private ObjectProcs _objectProcs;
     private float _objectPerilFraction;
 
-    /// <summary>Objets à effet portés.</summary>
+    /// <summary>Objets à effet portés, un par fiche ; leurs exemplaires sont dans <see cref="ActivePassiveSouvenir.Copies"/>.</summary>
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
+
+    /// <summary>Places du sac (plan 35) : inventory.json, puis les Poches du Campement.</summary>
+    public int BagCapacity { get; private set; } = InventoryConfig.BagSize;
+
+    /// <summary>Places occupées : une par exemplaire.</summary>
+    public int BagCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (ActivePassiveSouvenir item in _passiveSlots)
+                count += item.Copies;
+            return count;
+        }
+    }
+
+    public bool HasBagRoom => BagCount < BagCapacity;
+
+    /// <summary>Fixe les places du sac de la run, jamais sous les exemplaires déjà portés.</summary>
+    public void SetBagCapacity(int capacity)
+    {
+        BagCapacity = Mathf.Max(Mathf.Max(1, capacity), BagCount);
+        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
+    }
+
     /// <summary>Écussons portés (plan 35), au plus <see cref="InventoryConfig.BadgeSlots"/>.</summary>
     public IReadOnlyList<ActivePassiveSouvenir> BadgeSlots => _badgeSlots;
     /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
@@ -55,8 +80,9 @@ public partial class Player
     internal void ShowPopup(string text, Color color) => SpawnLootPopup(text, color, GlobalPosition, 0, plusSign: false);
 
     /// <summary>
-    /// Ajoute un objet au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
-    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Faux si rien n'a changé.
+    /// Ajoute un Écusson au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
+    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Faux si rien n'a changé. Pour un objet, c'est le
+    /// mécanisme brut des niveaux d'effet, sans compter d'exemplaire en plus : le jeu passe par <see cref="AddItemCopy"/>.
     /// </summary>
     public bool AddOrUpgradePassive(string passiveId, int cards = 1, float gain = 1f)
     {
@@ -94,10 +120,10 @@ public partial class Player
             }
         }
 
-        if (shelf.Count >= (data.IsBadge ? InventoryConfig.BadgeSlots : MaxPassiveSlots))
+        if (data.IsBadge ? shelf.Count >= InventoryConfig.BadgeSlots : !HasBagRoom)
             return false;
 
-        ActivePassiveSouvenir passive = new(data);
+        ActivePassiveSouvenir passive = new(data) { Copies = data.IsBadge ? 0 : 1 };
         shelf.Add(passive);
         if (HasTriggerEffect(data))
             EnsureObjectTriggers().Configure(data);
@@ -115,6 +141,60 @@ public partial class Player
         GD.Print($"[Player] Passive added [{slotIndex}]: {data.Name} (level 1/{data.MaxLevel})");
         if (cards > 1)
             AddOrUpgradePassive(passiveId, cards - 1, gain);
+        return true;
+    }
+
+    /// <summary>Le sac peut recevoir un exemplaire de cet objet : une place libre, et l'objet pas encore à son maximum.</summary>
+    public bool CanTakeItem(string id)
+    {
+        PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(id);
+        if (data == null || data.IsBadge || !HasBagRoom)
+            return false;
+        ActivePassiveSouvenir owned = FindObject(id);
+        return owned == null || owned.Copies < data.MaxCopies;
+    }
+
+    /// <summary>
+    /// Met un exemplaire d'objet dans le sac : un objet neuf vaut son premier niveau d'exemplaire, un doublon le porte au
+    /// suivant (palier compris). Faux si le sac est plein ou l'objet à son maximum.
+    /// </summary>
+    public bool AddItemCopy(string id)
+    {
+        if (!CanTakeItem(id))
+            return false;
+        PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(id);
+        ActivePassiveSouvenir owned = FindObject(id);
+        if (owned == null)
+            return AddOrUpgradePassive(id, data.CopyLevels[0]);
+        int target = data.CopyLevels[owned.Copies];
+        owned.Copies++;
+        if (target > owned.Level)
+            AddOrUpgradePassive(id, target - owned.Level);
+        else
+            _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
+        return true;
+    }
+
+    /// <summary>
+    /// Oublie un exemplaire d'objet (sac plein, plan 35) : l'objet revient au niveau de ses exemplaires restants, ou
+    /// quitte le sac ; ses effets et les paliers qu'il n'atteint plus sont retirés. Faux s'il n'est pas porté.
+    /// </summary>
+    public bool ForgetItemCopy(string id)
+    {
+        ActivePassiveSouvenir owned = FindObject(id);
+        if (owned == null || owned.Data.IsBadge)
+            return false;
+        int previousLevel = owned.Level;
+        for (int i = 0; i < owned.Data.Effects.Count; i++)
+            _passiveValuesBefore[i] = owned.Value(i);
+        owned.Copies--;
+        owned.SetItemLevel(owned.Copies > 0 ? owned.Data.CopyLevels[owned.Copies - 1] : 0);
+        ApplyPassiveEffects(owned, _passiveValuesBefore);
+        LeaveMilestones(owned, previousLevel);
+        if (owned.Copies <= 0)
+            _passiveSlots.Remove(owned);
+        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
+        GD.Print($"[Player] Item forgotten: {owned.Data.Name} ({owned.Copies} left)");
         return true;
     }
 
@@ -182,12 +262,31 @@ public partial class Player
         }
     }
 
+    /// <summary>Retire les paliers qu'un objet oublié n'atteint plus ; seuls les objets de déclencheur et d'état en ont.</summary>
+    private void LeaveMilestones(ActivePassiveSouvenir item, int fromLevel)
+    {
+        foreach (ObjectMilestoneData milestone in item.Data.Milestones)
+        {
+            if (milestone.Level > fromLevel || item.Reached(milestone) || !ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+                continue;
+            if (ObjectTriggers.IsTriggerMilestone(milestone.Effect))
+                _objectTriggers?.Deactivate(milestone, item.Data);
+            else if (ObjectStances.IsStanceMilestone(milestone.Effect))
+                _objectStances?.Deactivate(milestone, item.Data);
+            else
+                GD.PushError($"[Player] Palier {milestone.Effect} de {item.Id} impossible à retirer : réservé aux Écussons.");
+        }
+    }
+
     /// <summary>
     /// Sifflet d'arbitre (plan 28 P3) : chaque niveau monte le Péril de la run. Une carte rare en donne une fraction de
     /// plus ; les fractions se cumulent et seuls les points entiers passent au Péril.
     /// </summary>
     private void AddObjectPeril(float points)
     {
+        // Le Péril pris ne se rend pas : oublier un Sifflet ne retire rien, et ne doit pas non plus manger les suivants.
+        if (points <= 0f)
+            return;
         _objectPerilFraction += points;
         int whole = Mathf.FloorToInt(_objectPerilFraction + 0.0001f);
         if (whole <= 0)

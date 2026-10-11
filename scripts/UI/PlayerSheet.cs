@@ -107,10 +107,9 @@ public static class PlayerSheet
         AddSectionTitle(container, $"{Tr("INVENTORY_BADGES")}  {player.BadgeSlots.Count}/{InventoryConfig.BadgeSlots}");
         foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
             AddCompactRow(container, badge.Data.IconSmall, badge.Data.Name, string.Format(Tr("INVENTORY_LEVEL"), badge.Level));
-        AddSectionTitle(container, $"{Tr("INVENTORY_OBJECTS")}  {player.PassiveSlots.Count}/{Player.MaxPassiveSlots}");
+        AddSectionTitle(container, $"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}");
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            AddCompactRow(container, passive.Data.IconSmall, passive.Data.Name,
-                string.Format(Tr("INVENTORY_LEVEL"), passive.Level));
+            AddCompactRow(container, passive.Data.IconSmall, passive.Data.Name, $"×{passive.Copies}");
         string slots = reminiscenceSlots > 0 ? $"  {player.Specializations.Count}/{reminiscenceSlots}" : "";
         AddSectionTitle(container, Tr("INVENTORY_REMINISCENCES") + slots);
         foreach (PerkSpecializationData perk in player.Specializations)
