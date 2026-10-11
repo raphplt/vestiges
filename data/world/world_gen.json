@@ -13,8 +13,9 @@
     },
     "ground_blend": {
         "enabled": true,
-        "band_px": 46,
-        "edge_noise": 0.35,
+        "band_px": 30,
+        "edge_noise": 0.2,
+        "grain": 0.1,
         "noise_scale": 0.045
     },
     "paths": {

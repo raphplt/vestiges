@@ -306,4 +306,6 @@ Raphaël, sur une capture forêt/champs : « les tiles ont été refaites, mais 
   - B : plaques plus petites ;
   - C : bords lisses ;
   - D : bande resserrée et bords lisses.
+
+  **Choix de Raphaël : D.** `band_px` 46 → 30, `edge_noise` 0,35 → 0,2, `grain` 0,3 → 0,1.
 - **Vérifié** : `tools/validate.sh` smoke, `erasure_active`, `cartography` 3/3 ; préchauffage des shaders valide.
