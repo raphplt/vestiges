@@ -668,4 +668,4 @@ Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les q
 - **Tir visé :** C (`sfx_aim_warning`), lu par la capacité `aimed_shot` (`aim_audio` dans le contrat, valeur par défaut). `AudioManager.PlayAt(…, endsAfter)` le fait partir à la longueur du fichier moins la visée, pour qu'il culmine au tir (0,35 s pour la Tisseuse, 0,4 et 0,8 s pour le Hurleur). Gain visé −24 effectif, comme les autres annonces de créatures.
 - **Réveil de la Faille :** G (`sfx_rift_wake`), joué par `RiftDirector` au réveil, ducking −4 dB pendant 2 s, gain visé −20 effectif.
 - Le contrôle de la banque a refusé un premier fichier du tir visé (117 ms de silence de tête), retiré.
-- Contrôles : `smoke audio music enemy_abilities` 4/4. Nouveaux contrôles : départ calé du tir visé, et absence de son de soin, le contrôle ayant été retiré avec le soin.
+- Contrôles : `smoke audio music enemy_abilities` 4/4, dont un nouveau contrôle du départ calé du tir visé.
