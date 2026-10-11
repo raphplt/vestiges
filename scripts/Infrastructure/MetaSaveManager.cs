@@ -466,6 +466,7 @@ public static class MetaSaveManager
 
     public static bool IsCharacterUnlocked(string characterId) => IsUnlocked(UnlockKind.Character, characterId);
     public static bool IsWeaponUnlocked(string weaponId) => IsUnlocked(UnlockKind.Weapon, weaponId);
+    public static bool IsReminiscenceUnlocked(string perkId) => IsUnlocked(UnlockKind.Reminiscence, perkId);
     /// <summary>Objet ou Écusson (plan 35) : la quête qui le garde dépend de son étagère.</summary>
     public static bool IsObjectUnlocked(string objectId) =>
         IsUnlocked(PassiveSouvenirDataLoader.Get(objectId)?.UnlockKind ?? UnlockKind.Object, objectId);

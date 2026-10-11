@@ -107,7 +107,8 @@ public partial class HubQuestsPanel : MarginContainer
         List<QuestDefinition> open = new();
         List<QuestDefinition> done = new();
         foreach (QuestDefinition quest in QuestDataLoader.GetAll())
-            (MetaSaveManager.HasCompletedQuest(quest.Id) ? done : open).Add(quest);
+            if (!QuestBook.IsDormant(quest))
+                (MetaSaveManager.HasCompletedQuest(quest.Id) ? done : open).Add(quest);
         open.Sort(CompareQuests);
         done.Sort(CompareQuests);
         foreach (QuestDefinition quest in open)

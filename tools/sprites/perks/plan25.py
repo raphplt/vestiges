@@ -28,11 +28,21 @@ def ember_transfer():
 
 
 def double_impact():
-    """Mémoire vive : deux éclairs d'impact rapprochés ; pas de petit chiffre illisible."""
+    """Mémoire vive : un impact et son écho, le même coup qui revient (chaque 10ᵉ impact rejoue les objets)."""
     def motif(q):
-        bolts = [stroke(q, [(x + 2, 7), (x - 2, 0), (x + 2, 0), (x - 2, -7)], 1.25) for x in (-4, 4)]
-        return [(union(*bolts), 0)]
-    return [LIGHT], motif
+        cx, cy = -3.5, -3.0
+        rays = [stroke(q, [(cx + 2.8 * dx, cy + 2.8 * dy), (cx + 6.5 * dx, cy + 6.5 * dy)], 1.05)
+                for dx, dy in ((1, 0), (0, 1), (-1, 0), (0, -1))]
+        sparks = [stroke(q, [(cx + 2.6 * dx, cy + 2.6 * dy), (cx + 4.2 * dx, cy + 4.2 * dy)], .8)
+                  for dx, dy in ((.7, .7), (-.7, .7), (-.7, -.7), (.7, -.7))]
+        blow = union(sphere(q, at(cx, cy), 2.1), *rays, *sparks)
+        ex, ey = 4.6, 4.6
+        # Écho : la même étoile, plus petite, reliée au coup par deux points de trajectoire.
+        echo = union(sphere(q, at(ex, ey), 1.6), sphere(q, at(.4, .6), .8), sphere(q, at(2.4, 2.6), .8),
+                     *(stroke(q, [(ex + 2.0 * dx, ey + 2.0 * dy), (ex + 4.4 * dx, ey + 4.4 * dy)], 1.0)
+                       for dx, dy in ((1, 0), (0, 1), (-1, 0), (0, -1))))
+        return [(blow, 0), (echo, 1)]
+    return [LIGHT, ESSENCE], motif
 
 
 def erasure_edge():

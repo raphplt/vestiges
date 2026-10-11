@@ -755,6 +755,218 @@
                     "id": "trefle_plastifie"
                 }
             ]
+        },
+        {
+            "id": "pick_up_again",
+            "name": "Se relever",
+            "description": "Tuer 200 créatures avec moins de la moitié de tes PV, toutes runs confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "low_hp_kills",
+                    "target": 200,
+                    "param": 0.5
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "rally"
+                }
+            ]
+        },
+        {
+            "id": "aim_high",
+            "name": "Viser haut",
+            "description": "Vaincre 3 Souverains, toutes runs confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "sovereign_kills",
+                    "target": 3
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "priority_targeting"
+                }
+            ]
+        },
+        {
+            "id": "contagion",
+            "name": "Contagion",
+            "description": "Tuer 1 000 créatures ralenties, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "slowed_kills",
+                    "target": 1000
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "carry_control"
+                }
+            ]
+        },
+        {
+            "id": "three_returns",
+            "name": "Trois retours",
+            "description": "Survivre à trois Résurgences dans la même run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "crises_survived",
+                    "target": 3
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "carried_choice"
+                }
+            ]
+        },
+        {
+            "id": "empty_the_attics",
+            "name": "Vider les greniers",
+            "description": "Ouvrir 120 coffres, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "chests_opened",
+                    "target": 120
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "salvage_xp"
+                }
+            ]
+        },
+        {
+            "id": "known_gestures",
+            "name": "Les gestes connus",
+            "description": "Réussir 20 micro-événements, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "events_succeeded",
+                    "target": 20
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "familiar_loot"
+                }
+            ]
+        },
+        {
+            "id": "elbow_to_elbow",
+            "name": "Coude à coude",
+            "description": "Tuer 1 500 créatures à moins de 80 px de toi, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "close_kills",
+                    "target": 1500,
+                    "param": 80
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "backlash"
+                }
+            ]
+        },
+        {
+            "id": "keep_the_embers",
+            "name": "Garder la braise",
+            "description": "Tuer 1 000 créatures en feu, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "burning_kills",
+                    "target": 1000
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "ember_transfer"
+                }
+            ]
+        },
+        {
+            "id": "same_gesture",
+            "name": "Le même geste",
+            "description": "Tuer 40 créatures en 2 secondes.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "kill_burst",
+                    "target": 40,
+                    "param": 2
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "double_impact"
+                }
+            ]
+        },
+        {
+            "id": "edge_of_oblivion",
+            "name": "Au bord de l'oubli",
+            "description": "Tuer 1 000 créatures en zone effilochée ou effacée, toutes runs confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "erased_zone_kills",
+                    "target": 1000
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "erasure_edge"
+                }
+            ]
+        },
+        {
+            "id": "ballast",
+            "name": "Lester",
+            "description": "Tuer 600 créatures ralenties dans une run.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "slowed_kills",
+                    "target": 600
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "reminiscence",
+                    "id": "dead_weight"
+                }
+            ]
         }
     ]
 }

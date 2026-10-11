@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -283,6 +284,7 @@ public partial class HubCollectionPanel : MarginContainer
     {
         "weapons" => UnlockKind.Weapon,
         "badges" => UnlockKind.Badge,
+        "perks" => UnlockKind.Reminiscence,
         _ => UnlockKind.Object,
     };
 
@@ -290,7 +292,7 @@ public partial class HubCollectionPanel : MarginContainer
     {
         ExaminedEntryId = entry.Id;
         _examined[_tab] = entry.Id;
-        QuestDefinition quest = _tab == "perks" ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
+        QuestDefinition quest = entry.Preview ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
         _questId = quest?.Id;
         _questLink.Visible = !entry.Unlocked && quest != null;
         _detailStats.Visible = entry.Stats.Length > 0;
@@ -313,8 +315,8 @@ public partial class HubCollectionPanel : MarginContainer
             entries.Add(new Entry(weapon.Id, weapon.Name, weapon.Sprite, weapon.Description, WeaponStats(weapon), unlocked, condition));
         }
         // Disponibles d'abord : la grille se lit comme « ce que j'ai », puis « ce qui reste à trouver ».
-        entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));
-        return entries;
+        // Tri stable : l'ordre du catalogue reste celui des fiches entre cartes de même état.
+        return entries.OrderByDescending(entry => entry.Unlocked).ToList();
     }
 
     private static string WeaponStats(WeaponData weapon)
@@ -348,7 +350,7 @@ public partial class HubCollectionPanel : MarginContainer
             string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
             entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, unlocked, condition));
         }
-        entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));
+        entries = entries.OrderByDescending(entry => entry.Unlocked).ToList();
         if (badges)
             return entries;
         foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
@@ -365,9 +367,14 @@ public partial class HubCollectionPanel : MarginContainer
         {
             PerkSpecializationData data = PerkSpecializationDataLoader.Get(art.Id);
             bool active = data != null && PerkSpecializationEffects.IsImplemented(data.Effect);
+            bool unlocked = active && MetaSaveManager.IsReminiscenceUnlocked(art.Id);
+            // Une Réminiscence à venir garde sa mention : sa quête est prête mais n'est pas encore ouverte (§117).
+            string condition = !active ? "Cette Réminiscence n'est pas encore proposée en run."
+                : unlocked ? "" : QuestBook.LockText(UnlockKind.Reminiscence, art.Id);
             entries.Add(new Entry(art.Id, art.Name, data?.Icon ?? art.Icon, data?.Description ?? "Réminiscence",
-                "", active, "Cette Réminiscence n'est pas encore proposée en run.", !active));
+                "", unlocked, condition, !active));
         }
-        return entries;
+        // Tri stable : l'ordre du catalogue reste celui des fiches entre cartes de même état.
+        return entries.OrderByDescending(entry => entry.Unlocked).ToList();
     }
 }

@@ -57,7 +57,10 @@ public sealed class PerkSpecializationOffers
     /// <summary>Un nouveau niveau gagné redonne une occasion au droit reporté.</summary>
     public void Resume() => _deferred = false;
 
-    /// <summary>Perks proposables maintenant : effet branché, ni acquis ni banni, conditions remplies par l'arsenal.</summary>
+    /// <summary>
+    /// Perks proposables maintenant : effet branché, débloqué (réserve de départ ou quête), ni acquis ni banni,
+    /// conditions remplies par l'arsenal.
+    /// </summary>
     public List<FragmentOption> Candidates(Player player, IReadOnlySet<string> banishedWeapons)
     {
         List<FragmentOption> candidates = new();
@@ -101,8 +104,9 @@ public sealed class PerkSpecializationOffers
     }
 
     /// <summary>
-    /// Bannit un perk pour la run. Refusé s'il manquerait ensuite de perks du catalogue pour remplir les emplacements
-    /// restants, ou si l'offre en cours n'aurait plus de carte : l'écran resterait ouvert sans choix.
+    /// Bannit un perk pour la run. Refusé s'il manquerait ensuite de perks débloqués pour remplir les emplacements
+    /// restants, ou si l'offre en cours n'aurait plus de carte : l'écran resterait ouvert sans choix. Une réserve déjà
+    /// plus petite que les emplacements (profil neuf, plan 37 H4) ne les remplira jamais : seule la seconde garde vaut.
     /// </summary>
     public bool TryBanish(string id, Player player, IReadOnlySet<string> banishedWeapons)
     {
@@ -110,7 +114,8 @@ public sealed class PerkSpecializationOffers
         foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
             if (IsAvailable(perk, player))
                 available++;
-        if (available <= Capacity - player.Specializations.Count || !_banished.Add(id))
+        int openSlots = Capacity - player.Specializations.Count;
+        if ((available >= openSlots && available - 1 < openSlots) || !_banished.Add(id))
             return false;
         if (Candidates(player, banishedWeapons).Count > 0)
             return true;
@@ -187,7 +192,8 @@ public sealed class PerkSpecializationOffers
     }
 
     private bool IsAvailable(PerkSpecializationData perk, Player player) =>
-        PerkSpecializationEffects.IsOfferable(perk.Effect) && !_banished.Contains(perk.Id) && !player.HasSpecialization(perk.Id);
+        PerkSpecializationEffects.IsOfferable(perk.Effect) && MetaSaveManager.IsReminiscenceUnlocked(perk.Id)
+        && !_banished.Contains(perk.Id) && !player.HasSpecialization(perk.Id);
 
     private static string FamilyOf(FragmentOption option) => PerkSpecializationDataLoader.Get(option.Id)?.Family;
 

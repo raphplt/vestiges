@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Godot;
 
@@ -7,7 +8,7 @@ namespace Vestiges.Infrastructure;
 
 public enum QuestScope { Run, Cumulative }
 
-public enum UnlockKind { Character, Weapon, Object, Badge }
+public enum UnlockKind { Character, Weapon, Object, Badge, Reminiscence }
 
 /// <summary>Un fait de run (<see cref="QuestStat"/>) et sa cible ; <c>BeforeSec</c> ne compte que ce qui arrive avant.</summary>
 public sealed class QuestCondition
@@ -66,7 +67,8 @@ public static class QuestDataLoader
         string error = FileAccess.FileExists(CatalogPath)
             ? Apply(FileAccess.GetFileAsString(CatalogPath), id => WeaponDataLoader.Get(id) != null,
                 id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && !item.IsBadge),
-                id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && item.IsBadge), id => CharacterDataLoader.Get(id) != null)
+                id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && item.IsBadge), id => CharacterDataLoader.Get(id) != null,
+                ReminiscenceExists)
             : "absent";
         if (error != null)
         {
@@ -104,9 +106,16 @@ public static class QuestDataLoader
         return string.IsNullOrEmpty(id) ? null : _byUnlock.GetValueOrDefault((kind, id));
     }
 
+    /// <summary>
+    /// Une Réminiscence existe dès qu'elle a son image au catalogue de la Collection, même sans effet codé : sa quête est
+    /// alors prête, et attend l'effet (DECISIONS §117).
+    /// </summary>
+    public static bool ReminiscenceExists(string id) =>
+        PerkSpecializationDataLoader.Get(id) != null || CollectionArtDataLoader.Perks.Any(entry => entry.Id == id);
+
     /// <summary>Contrôle un texte de quêtes et ne le publie que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
     public static string Apply(string json, Func<string, bool> weaponExists, Func<string, bool> objectExists,
-        Func<string, bool> badgeExists, Func<string, bool> characterExists)
+        Func<string, bool> badgeExists, Func<string, bool> characterExists, Func<string, bool> reminiscenceExists)
     {
         try
         {
@@ -137,7 +146,8 @@ public static class QuestDataLoader
                     quest.Conditions.Add(ReadCondition(item, condition, scope, weaponExists));
                 foreach (JsonElement unlock in item.List(entry, "unlocks", 1))
                 {
-                    QuestUnlock read = ReadUnlock(item, unlock, weaponExists, objectExists, badgeExists, characterExists);
+                    QuestUnlock read = ReadUnlock(item, unlock, weaponExists, objectExists, badgeExists, characterExists,
+                        reminiscenceExists);
                     if (item.Error == null && !byUnlock.TryAdd((read.Kind, read.Id), quest))
                         item.Fail($"{read.Id} déjà débloqué par la quête {byUnlock[(read.Kind, read.Id)].Id}");
                     quest.Unlocks.Add(read);
@@ -203,7 +213,8 @@ public static class QuestDataLoader
     }
 
     private static QuestUnlock ReadUnlock(JsonConfigReader item, JsonElement unlock, Func<string, bool> weaponExists,
-        Func<string, bool> objectExists, Func<string, bool> badgeExists, Func<string, bool> characterExists)
+        Func<string, bool> objectExists, Func<string, bool> badgeExists, Func<string, bool> characterExists,
+        Func<string, bool> reminiscenceExists)
     {
         if (unlock.ValueKind != JsonValueKind.Object)
         {
@@ -211,11 +222,12 @@ public static class QuestDataLoader
             return new QuestUnlock();
         }
         item.AllowOnly(unlock, "déblocage", "type", "id", "name");
-        UnlockKind kind = item.OneOf(unlock, "type", new[] { "character", "weapon", "object", "badge" }) switch
+        UnlockKind kind = item.OneOf(unlock, "type", new[] { "character", "weapon", "object", "badge", "reminiscence" }) switch
         {
             "weapon" => UnlockKind.Weapon,
             "object" => UnlockKind.Object,
             "badge" => UnlockKind.Badge,
+            "reminiscence" => UnlockKind.Reminiscence,
             _ => UnlockKind.Character,
         };
         string id = item.Text(unlock, "id");
@@ -228,6 +240,7 @@ public static class QuestDataLoader
             UnlockKind.Weapon => weaponExists(id),
             UnlockKind.Object => objectExists(id),
             UnlockKind.Badge => badgeExists(id),
+            UnlockKind.Reminiscence => reminiscenceExists(id),
             _ => characterExists(id),
         };
         // Un personnage à venir n'est pas encore au catalogue : son nom est alors donné ici, et seulement alors.

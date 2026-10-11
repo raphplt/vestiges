@@ -100,3 +100,24 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Collection** : le bouton « Valeurs et règles » est retiré. La règle d'un Écusson ou d'un objet et les chiffres d'une arme s'affichent sous la description ; la fiche défile si elle déborde.
 - **Campement** : sous chaque nom, une phrase dit ce que fait l'amélioration (« Toutes tes armes frappent plus fort. », « Chaque coup reçu fait moins mal. », « Écarter une carte pour toute la run. »…), quatorze clés `CAMP_*_HINT` en français et en anglais. À droite de la ligne : rang, prix, et l'effet actuel puis suivant, en cyan. La phrase posée au survol sur le mur du bas, illisible, est retirée avec sa clé `UI_CAMP_NEXT_PRICE` : le prix est déjà sur la ligne. Les rayons défilent si une langue allonge les lignes.
 - **Vérifié** : captures du Campement et de la Collection (onglet Écussons) regardées, les neuf lignes de Statistiques tiennent en 1080p ; `tools/validate.sh` smoke, `menu_navigation`, `camp`, `ui_art` 4/4.
+
+## 7. Lot H4 livré : Réminiscences par quêtes, icône de Mémoire vive — 11 octobre 2026
+
+- **Nouveau déblocage** `reminiscence` dans `data/quests/quests.json` (`UnlockKind.Reminiscence`). Une Réminiscence existe dès qu'elle a son image au catalogue de la Collection, même sans effet codé. La règle d'accès reste unique : ce qu'aucune quête ne garde est ouvert d'office. `MetaSaveManager.IsReminiscenceUnlocked` filtre les offres de fragments en run (`PerkSpecializationOffers.IsAvailable`).
+- **Réserve de départ, une par famille de la première offre** : Prévoyance (survie), Débordement (combat), Sillage (collecte).
+- **Quatre quêtes actives** :
+
+| Quête | Condition | Débloque |
+|---|---|---|
+| Se relever ★ | 200 éliminations sous la moitié des PV, cumul | Reprise |
+| Viser haut ★ | 3 Souverains, cumul | Convergence |
+| Contagion ★★ | 1 000 éliminations de créatures ralenties, cumul | Propagation |
+| Trois retours ★★ | 3 Résurgences dans la même run | Seconde lecture |
+
+- **Sept quêtes prêtes, « en attente »** (`QuestBook.IsDormant`) : elles ne débloquent que des Réminiscences sans effet codé. Ni affichées au Hub ni suivies en run, elles s'ouvrent seules le jour où l'effet entre dans `PerkSpecializationEffects`. Vider les greniers (120 coffres, cumul) → Délestage ; Les gestes connus (20 micro-événements, cumul) → Habitude ; Coude à coude (1 500 éliminations à moins de 80 px, cumul) → Contrecoup ; Garder la braise (1 000 éliminations en feu, cumul) → Braise ; Le même geste ★★★ (40 éliminations en 2 s) → Mémoire vive ; Au bord de l'oubli (1 000 éliminations en zone effilochée ou effacée, cumul) → Lisière ; Lester ★★★ (600 ralentis tués dans une run) → Poids mort.
+- **Collection** : l'onglet Réminiscences dit « 3 / 14 disponibles » en profil neuf ; une Réminiscence verrouillée montre sa quête et le lien « Voir la quête ». Les « À venir » gardent leur mention. Le tri par état est désormais stable dans les trois onglets (`List.Sort` mélangeait l'ordre du catalogue).
+- **Bannissement** : avec 3 Réminiscences pour 4 emplacements, l'ancienne garde (« assez de perks pour remplir les emplacements ») refusait tout bannissement. Une réserve déjà plus petite que les emplacements ne garde que la seconde garde : l'offre en cours ne doit pas rester vide. Relevé par `godot-reviewer`.
+- **Conséquence à connaître** : en profil neuf, la première offre de Réminiscences montre toujours les trois mêmes cartes, et le 4ᵉ emplacement ne se remplit qu'une fois une quête accomplie. C'est l'effet voulu d'une réserve de 3 (§117).
+- **Mémoire vive** (« chaque 10ᵉ impact déclenche deux fois les objets », plan 21 §5) : les deux éclairs sont remplacés par un impact blanc et son écho cyan, la même étoile en plus petit, reliée par deux points de trajectoire (`tools/sprites/perks/plan25.py`). Seules ses deux images changent à l'export ; planche `doc/plans/planches/25-s8-reminiscences.png` régénérée.
+- **Vérifié** : build sans avertissement ; capture de la Collection en profil neuf ; `QuestRegression` : 49 quêtes, 11 Réminiscences dont 7 en attente, réserve de départ, Réminiscence inconnue refusée, quêtes en attente jamais accomplies en run ; `tools/validate.sh` smoke, `quests`, `perk_acquisition`, `perk_contracts`, `perk_effects`, `menu_navigation`, `ui_art`, `choice_screen`, `inventory`, `objects`, `saves` verts.
+- **Non couvert par un test** : le bannissement avec la seule réserve de départ (`PerkAcquisitionRegression` ouvre toutes les Réminiscences pour éprouver les règles d'offre).

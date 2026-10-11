@@ -166,7 +166,7 @@ public partial class QuestTracker : Node
     {
         foreach (QuestDefinition quest in QuestDataLoader.GetAll())
         {
-            if (MetaSaveManager.HasCompletedQuest(quest.Id))
+            if (MetaSaveManager.HasCompletedQuest(quest.Id) || QuestBook.IsDormant(quest))
                 continue;
             IReadOnlyList<float> stored = MetaSaveManager.GetQuestProgress(quest.Id);
             Tracked tracked = new() { Quest = quest, Watches = new Watch[quest.Conditions.Count] };

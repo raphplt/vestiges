@@ -40,10 +40,24 @@ public partial class QuestRegression
         CheckCumulativeAcrossRuns();
         CheckDeadline();
         int tested = 0;
+        List<string> enRoute = new();
         foreach (QuestDefinition quest in QuestDataLoader.GetAll())
         {
             if (MetaSaveManager.HasCompletedQuest(quest.Id))
+            {
+                enRoute.Add(quest.Id);
                 continue;
+            }
+            if (QuestBook.IsDormant(quest))
+            {
+                // Quête prête mais en attente de l'effet de sa Réminiscence : ni suivie, ni accomplie (plan 37 H4).
+                StartRun();
+                foreach (QuestCondition condition in quest.Conditions)
+                    Drive(condition, true);
+                Check(!MetaSaveManager.HasCompletedQuest(quest.Id) && Count(quest.Id) == 0, $"{quest.Id} : en attente, jamais accomplie");
+                EndRun();
+                continue;
+            }
             StartRun();
             for (int i = 0; i < quest.Conditions.Count; i++)
             {
@@ -60,9 +74,10 @@ public partial class QuestRegression
         }
         // Accomplies avant leur tour, et c'est voulu : Toutes les portes et Grandir (contrôles du cumul et du délai),
         // Porte-bonheur (25 coffres dans une run, au cumul de coffres), Bien au chaud (10 minutes à PV pleins dans le
-        // contrôle du délai), Retenir (150 ralentis, en chemin vers les 300 de Sonner la récré). Les 33 autres l'ont été
-        // chacune par son propre jeu.
-        Check(tested == 33, $"33 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested})");
+        // contrôle du délai), Retenir (150 ralentis, en chemin vers les 300 de Sonner la récré), Se relever (200
+        // éliminations sous la moitié des PV, en chemin vers De justesse) et Trois retours (trois Résurgences dans la
+        // run, en chemin vers Compter les Résurgences). Les 35 autres l'ont été chacune par son propre jeu.
+        Check(tested == 35, $"35 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested} ; en chemin : {string.Join(", ", enRoute)})");
         CheckToastQueue();
         _bus.QuestCompleted -= OnQuestCompleted;
     }

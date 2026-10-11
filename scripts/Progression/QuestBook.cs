@@ -16,6 +16,7 @@ public static class QuestBook
     {
         UnlockKind.Weapon => WeaponDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
         UnlockKind.Object or UnlockKind.Badge => PassiveSouvenirDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
+        UnlockKind.Reminiscence => PerkSpecializationDataLoader.Get(unlock.Id)?.Name ?? ReminiscenceArt(unlock.Id)?.Name ?? unlock.Id,
         _ => unlock.Name ?? CharacterDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
     };
 
@@ -24,8 +25,34 @@ public static class QuestBook
     {
         UnlockKind.Weapon => WeaponDataLoader.Get(unlock.Id)?.Sprite,
         UnlockKind.Object or UnlockKind.Badge => PassiveSouvenirDataLoader.Get(unlock.Id)?.Icon,
+        UnlockKind.Reminiscence => PerkSpecializationDataLoader.Get(unlock.Id)?.Icon ?? ReminiscenceArt(unlock.Id)?.Icon,
         _ => null,
     };
+
+    private static CollectionArtDataLoader.Entry? ReminiscenceArt(string id)
+    {
+        foreach (CollectionArtDataLoader.Entry entry in CollectionArtDataLoader.Perks)
+            if (entry.Id == id)
+                return entry;
+        return null;
+    }
+
+    /// <summary>
+    /// Quête en attente : elle ne débloque que des Réminiscences dont l'effet n'est pas encore codé. Elle reste prête
+    /// dans le catalogue, mais n'est ni affichée ni suivie : le joueur ne peut pas l'accomplir pour rien (§117).
+    /// </summary>
+    public static bool IsDormant(QuestDefinition quest)
+    {
+        foreach (QuestUnlock unlock in quest.Unlocks)
+        {
+            if (unlock.Kind != UnlockKind.Reminiscence)
+                return false;
+            PerkSpecializationData perk = PerkSpecializationDataLoader.Get(unlock.Id);
+            if (perk != null && PerkSpecializationEffects.IsImplemented(perk.Effect))
+                return false;
+        }
+        return true;
+    }
 
     /// <summary>« Le Traqueur et Arc du gymnase ».</summary>
     public static string RewardSummary(QuestDefinition quest)

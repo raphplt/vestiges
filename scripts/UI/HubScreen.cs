@@ -481,6 +481,7 @@ public partial class HubScreen : Control
 			{
 				UnlockKind.Object => "passives",
 				UnlockKind.Badge => "badges",
+				UnlockKind.Reminiscence => "perks",
 				_ => "weapons",
 			};
 			SetState(HubState.Collection);

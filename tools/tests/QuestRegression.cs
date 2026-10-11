@@ -13,7 +13,7 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 38 quêtes et fixtures
+/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 49 quêtes et fixtures
 /// refusées, réserve de départ appliquée par l'offre de niveau et le butin, quête accomplie et avancée retenue
 /// identiques après rechargement. Lot Q2 (<c>--tracking</c>) : suivi en run, voir QuestRegression.Tracking.
 /// </summary>
@@ -32,6 +32,9 @@ public partial class QuestRegression : Node
         "siphon_essence", "photo_de_classe", "jeton_de_fete", "allumette_humide", "glacon", "de_a_coudre",
         "semelle_usee", "chewing_gum", "plan_de_metro", "flacon_de_pharmacie", "montre_arretee",
     };
+
+    /// <summary>Réserve de départ des Réminiscences (plan 37 H4) : une par famille de la première offre.</summary>
+    private static readonly string[] StartingReminiscences = { "overheal_reserve", "overflow", "xp_trail" };
 
     private int _checks;
     private int _failures;
@@ -71,7 +74,9 @@ public partial class QuestRegression : Node
         Dictionary<UnlockKind, int> unlocks = new()
         {
             [UnlockKind.Character] = 0, [UnlockKind.Weapon] = 0, [UnlockKind.Object] = 0, [UnlockKind.Badge] = 0,
+            [UnlockKind.Reminiscence] = 0,
         };
+        int dormant = 0;
         foreach (QuestDefinition quest in quests)
         {
             difficulties[quest.Difficulty]++;
@@ -79,11 +84,15 @@ public partial class QuestRegression : Node
                 cumulative++;
             foreach (QuestUnlock unlock in quest.Unlocks)
                 unlocks[unlock.Kind]++;
+            if (QuestBook.IsDormant(quest))
+                dormant++;
         }
-        Check(quests.Count == 38, $"38 quêtes ({quests.Count})");
-        Check(difficulties[1] == 13 && difficulties[2] == 20 && difficulties[3] == 5,
-            $"13 ★, 20 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
-        Check(cumulative == 2, $"deux quêtes de cumul ({cumulative})");
+        Check(quests.Count == 49, $"49 quêtes ({quests.Count})");
+        Check(difficulties[1] == 15 && difficulties[2] == 27 && difficulties[3] == 7,
+            $"15 ★, 27 ★★, 7 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
+        Check(cumulative == 10, $"dix quêtes de cumul ({cumulative})");
+        Check(unlocks[UnlockKind.Reminiscence] == 11 && dormant == 7,
+            $"11 Réminiscences par quête, dont 7 en attente de leur effet ({unlocks[UnlockKind.Reminiscence]}, {dormant})");
         Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 14
             && unlocks[UnlockKind.Badge] == 6,
             $"5 personnages, 17 armes (13 + 4 de départ de personnage), 14 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
@@ -112,6 +121,7 @@ public partial class QuestRegression : Node
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),
             ("Écusson déclaré objet", root => Unlock(root, 20)["type"] = "object", "pièce inconnue"),
             ("objet déclaré Écusson", root => Unlock(root, 18)["type"] = "badge", "pièce inconnue"),
+            ("Réminiscence inconnue", root => Unlock(root, 38)["id"] = "seconde_peau", "pièce inconnue"),
         };
         Func<string, bool> weapons = id => WeaponDataLoader.Get(id) != null;
         Func<string, bool> objects = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && !item.IsBadge);
@@ -121,10 +131,11 @@ public partial class QuestRegression : Node
         {
             JsonObject root = JsonNode.Parse(valid)!.AsObject();
             mutate(root);
-            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, badges, characters);
+            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, badges, characters,
+                QuestDataLoader.ReminiscenceExists);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"quêtes refusées ({label}) : {message}");
         }
-        Check(QuestDataLoader.GetAll().Count == 38, "un fichier refusé ne remplace pas le catalogue chargé");
+        Check(QuestDataLoader.GetAll().Count == 49, "un fichier refusé ne remplace pas le catalogue chargé");
     }
 
     private void CheckStartingPool()
@@ -147,6 +158,13 @@ public partial class QuestRegression : Node
             if (MetaSaveManager.IsCharacterUnlocked(character.Id))
                 characters.Add(character.Id);
         Check(characters.Count == 1 && characters[0] == "vagabond", $"profil neuf : le Vagabond seul ({string.Join(", ", characters)})");
+
+        HashSet<string> reminiscences = new();
+        foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
+            if (MetaSaveManager.IsReminiscenceUnlocked(perk.Id) && PerkSpecializationEffects.IsImplemented(perk.Effect))
+                reminiscences.Add(perk.Id);
+        Check(reminiscences.SetEquals(StartingReminiscences),
+            $"profil neuf : les 3 Réminiscences de départ ({string.Join(", ", reminiscences)})");
 
         bool lootInPool = true;
         for (int i = 0; i < 300; i++)

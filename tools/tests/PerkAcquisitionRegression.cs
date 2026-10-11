@@ -29,6 +29,7 @@ public partial class PerkAcquisitionRegression : Node2D
             GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
             GetNode<EventBus>("/root/EventBus").SpecializationAcquired += id => _acquired.Add(id);
             PerkSpecializationDataLoader.Load();
+            UnlockAllReminiscences();
 
             _bus = GetNode<EventBus>("/root/EventBus");
             CheckLevelsAloneOfferNoFragment();
@@ -49,6 +50,17 @@ public partial class PerkAcquisitionRegression : Node2D
             GD.PushError(exception.ToString());
             GetTree().Quit(2);
         }
+    }
+
+    /// <summary>
+    /// Ces contrôles portent sur les règles d'offre, pas sur la réserve de départ (plan 37 H4) : toutes les quêtes de
+    /// Réminiscence actives sont accomplies dans le profil isolé du banc.
+    /// </summary>
+    private static void UnlockAllReminiscences()
+    {
+        foreach (QuestDefinition quest in QuestDataLoader.GetAll())
+            if (!QuestBook.IsDormant(quest) && quest.Unlocks.Exists(unlock => unlock.Kind == UnlockKind.Reminiscence))
+                MetaSaveManager.ClaimQuest(quest, out _);
     }
 
     /// <summary>Sans Résurgence, les niveaux ne proposent jamais de fragment ; les choix ordinaires continuent.</summary>
