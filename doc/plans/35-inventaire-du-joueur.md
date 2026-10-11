@@ -302,9 +302,9 @@ On ne fige pas le combat sans le vouloir. Le ramassage marche comme l'échange d
 7. **Objets de départ** : seulement 5 dans la réserve d'un profil neuf. En ajouter 3 à 5 parmi les nouveaux objets (I6), ou débloquer plus tôt ceux des quêtes ★ ?
 8. **Les objets à effet sans niveaux** : partir de la valeur du niveau 10 d'aujourd'hui, et faire du palier 15 l'effet d'un doublon. Ce principe te va-t-il, avant le réglage objet par objet en I2 ?
 
-## 10. Lots de la refonte — 11 octobre 2026 (§111)
+## 10. Lots de la refonte — 11 octobre 2026 (§116)
 
-Raphaël a accepté les propositions du §9.5 ([DECISIONS §111](DECISIONS.md)). L'arbitre redevient un objet, et l'Écusson garde un seul palier, au niveau 15.
+Raphaël a accepté les propositions du §9.5 ([DECISIONS §116](DECISIONS.md)). L'arbitre redevient un objet, et l'Écusson garde un seul palier, au niveau 15.
 
 **Choix techniques, différents de l'I0 sur un point.** `passive_souvenirs.json` n'est pas scindé : chaque fiche gagne un champ `kind` (`badge` ou `item`). Ainsi un seul chargeur et un seul contrat restent, les `id` ne bougent pas et l'historique se lit sans migration. Les réglages de l'inventaire vont dans un petit fichier à part, `data/progression/inventory.json` : 4 Écussons, sac de 10, montée des Écussons, valeur des exemplaires d'un objet.
 
@@ -376,7 +376,7 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
 |---|---:|---:|---:|---:|---:|---:|
 | Niveau d'effet | 10 | 15, palier | 19 | 22 | 24 | 25 |
 
-  Le premier exemplaire vaut le niveau 10 d'aujourd'hui (§111). Le doublon atteint le palier, et le rendement baisse ensuite.
+  Le premier exemplaire vaut le niveau 10 d'aujourd'hui (§116). Le doublon atteint le palier, et le rendement baisse ensuite.
 - Le Sifflet d'arbitre a ses propres exemplaires (`copy_levels` de 1 à 10) : +1 Péril par exemplaire, jusqu'à 10.
 - Le contrôle au chargement refuse `copy_levels` sur un Écusson, au-delà du niveau maximal de l'objet, ou s'ils ne montent pas.
 

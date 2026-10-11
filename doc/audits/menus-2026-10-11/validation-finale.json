@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "menu_navigation",
+      "exit_code": 0
+    },
+    {
+      "name": "choice_screen",
+      "exit_code": 0
+    },
+    {
+      "name": "ui_art",
+      "exit_code": 0
+    },
+    {
+      "name": "input_remap",
+      "exit_code": 0
+    }
+  ],
+  "passed": 5,
+  "expected": 5,
+  "source_changes": []
+}

@@ -14,10 +14,17 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class HubCollectionPanel : MarginContainer
 {
+    [Signal] public delegate void QuestRequestedEventHandler(string questId);
+    public string ExaminedEntryId { get; private set; }
+    public string CurrentTab => _tab;
+    private readonly Dictionary<string, string> _examined = new();
+    private Button _questLink;
+    private Button _statsToggle;
+    private string _questId;
     private const int Columns = 6;
     private const float TileSize = 112f;
     private const float IconSize = 64f;
-    private static readonly Color LockedTint = new(0.13f, 0.12f, 0.17f, 1f);
+    private static readonly Color LockedTint = new(0.48f, 0.45f, 0.5f, 1f);
 
     private static string _tab = "weapons";
 
@@ -81,6 +88,7 @@ public partial class HubCollectionPanel : MarginContainer
             CustomMinimumSize = new Vector2(Columns * (TileSize + 12f) + 12f, 0f),
             SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            FollowFocus = true,
         };
         body.AddChild(scroll);
         _grid = new GridContainer { Columns = Columns };
@@ -90,22 +98,33 @@ public partial class HubCollectionPanel : MarginContainer
 
         VBoxContainer detail = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         detail.AddThemeConstantOverride("separation", 10);
-        body.AddChild(detail);
+        PanelContainer detailPanel = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        detailPanel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        body.AddChild(detailPanel);
+        ScrollContainer detailScroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true };
+        detailPanel.AddChild(detailScroll);
+        detailScroll.AddChild(detail);
         _detailIcon = new TextureRect
         {
-            CustomMinimumSize = new Vector2(128f, 128f),
+            CustomMinimumSize = new Vector2(192f, 192f),
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             TextureFilter = TextureFilterEnum.Nearest,
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
         };
         detail.AddChild(_detailIcon);
-        _detailName = AddDetailLabel(detail, _strongFont, TextRole.Banner, UITheme.GoldBright);
+        _detailName = AddDetailLabel(detail, _strongFont, TextRole.Title, UITheme.TextLight);
         _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
+        _statsToggle = MenuSkin.Button("Valeurs et règles");
+        _statsToggle.Pressed += () => _detailStats.Visible = !_detailStats.Visible;
+        detail.AddChild(_statsToggle);
         _detailStats = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailCondition = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.CyanEssence);
-        _count = AddDetailLabel(detail, _bodyFont, TextRole.Subhead, UITheme.TextVeryDim);
+        _questLink = MenuSkin.Button("Voir la quête  →");
+        _questLink.Pressed += () => { if (_questId != null) EmitSignal(SignalName.QuestRequested, _questId); };
+        detail.AddChild(_questLink);
+        _count = AddDetailLabel(detail, _bodyFont, TextRole.Subhead, UITheme.TextDim);
     }
 
     private static Label AddDetailLabel(VBoxContainer parent, Font font, TextRole role, Color color)
@@ -124,12 +143,11 @@ public partial class HubCollectionPanel : MarginContainer
     /// Reconstruit onglets et grille à l'ouverture ; renvoie la case qui prend le focus : l'arme
     /// <paramref name="focusWeaponId"/> si elle est donnée (arrivée depuis le bilan), sinon la première.
     /// </summary>
-    public Control Refresh(string focusWeaponId = null)
+    public Control Refresh(string focusWeaponId = null, string kind = null)
     {
-        if (!string.IsNullOrEmpty(focusWeaponId))
-            _tab = "weapons";
-        foreach (Node child in _tabs.GetChildren())
-            child.QueueFree();
+        if (!string.IsNullOrEmpty(focusWeaponId) && kind != null)
+            _tab = kind;
+        MenuSkin.Clear(_tabs);
         Button[] tabs =
         {
             AddTab("weapons", "Armes"), AddTab("badges", Tr("INVENTORY_BADGES")), AddTab("passives", "Objets"),
@@ -141,7 +159,7 @@ public partial class HubCollectionPanel : MarginContainer
             tabs[i].FocusNeighborLeft = tabs[Mathf.Max(0, i - 1)].GetPath();
             tabs[i].FocusNeighborRight = tabs[Mathf.Min(tabs.Length - 1, i + 1)].GetPath();
         }
-        return RebuildGrid(focusWeaponId);
+        return RebuildGrid(focusWeaponId ?? _examined.GetValueOrDefault(_tab));
     }
 
     private Button AddTab(string id, string text)
@@ -181,8 +199,7 @@ public partial class HubCollectionPanel : MarginContainer
 
     private Control RebuildGrid(string focusId = null)
     {
-        foreach (Node child in _grid.GetChildren())
-            child.QueueFree();
+        MenuSkin.Clear(_grid);
         List<Entry> entries = _tab switch
         {
             "weapons" => WeaponEntries(),
@@ -260,11 +277,27 @@ public partial class HubCollectionPanel : MarginContainer
         }
         tile.FocusEntered += () => ShowDetail(entry);
         tile.MouseEntered += () => ShowDetail(entry);
+        tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); else if (_statsToggle.Visible) _statsToggle.GrabFocus(); };
+        UITheme.WireButtonAudio(tile);
         return tile;
     }
 
+    private UnlockKind TabUnlockKind() => _tab switch
+    {
+        "weapons" => UnlockKind.Weapon,
+        "badges" => UnlockKind.Badge,
+        _ => UnlockKind.Object,
+    };
+
     private void ShowDetail(Entry entry)
     {
+        ExaminedEntryId = entry.Id;
+        _examined[_tab] = entry.Id;
+        QuestDefinition quest = _tab == "perks" ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
+        _questId = quest?.Id;
+        _questLink.Visible = !entry.Unlocked && quest != null;
+        _statsToggle.Visible = entry.Stats.Length > 0;
+        _detailStats.Visible = false;
         _detailIcon.Texture = !string.IsNullOrEmpty(entry.Icon) && ResourceLoader.Exists(entry.Icon) ? GD.Load<Texture2D>(entry.Icon) : null;
         _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;
         _detailName.Text = entry.Name;

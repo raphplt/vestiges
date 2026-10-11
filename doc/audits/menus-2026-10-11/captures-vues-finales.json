@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "levelup",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-final-vues-levelup",
+    "args": "--capture-levelup --capture-size 1920x1080 --menu-font-scale 1"
+  },
+  {
+    "scenario": "loot",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-final-vues-loot",
+    "args": "--capture-loot --capture-loot-gallery --capture-size 1280x720 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "memorial",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-final-vues-memorial",
+    "args": "--capture-memorial --capture-size 1280x720 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "rift",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-final-vues-rift",
+    "args": "--capture-rift --capture-size 1920x1080 --menu-font-scale 1"
+  },
+  {
+    "scenario": "workshop",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-final-vues-workshop",
+    "args": "--capture-workshop --capture-size 1280x720 --menu-font-scale 1"
+  }
+]

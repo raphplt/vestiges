@@ -7,9 +7,9 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Accueil entre les runs : le camp du Foyer, vivant, où veillent les personnages.
-/// Menu textuel à gauche, personnage choisi au feu (◀ ▶ ou clic pour changer), pages Personnages, Campement, Quêtes et
-/// Collection.
+/// Accueil entre les runs : un camp vivant où veillent les personnages débloqués.
+/// Partir ouvre la sélection du personnage ; le camp reste un décor, les catalogues sont reliés. Le Campement dépense les
+/// Vestiges en progression permanente (plan 36).
 /// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Saira (lisibilité, retour du 24 septembre).
 /// </summary>
 public partial class HubScreen : Control
@@ -19,9 +19,6 @@ public partial class HubScreen : Control
 	private enum HubState { MainMenu, Characters, Camp, Quests, Collection }
 	private HubState _currentState = HubState.MainMenu;
 
-	private static readonly Color NameColor = new(0.91f, 0.88f, 0.83f);
-	private static readonly Color Tagline = new(0.66f, 0.62f, 0.58f);
-	private static readonly Color Locked = new(0.62f, 0.62f, 0.68f);
 	private static readonly Color Night = new(0.04f, 0.04f, 0.08f);
 	private static readonly Color Outline = new(0.03f, 0.03f, 0.06f, 0.9f);
 
@@ -37,20 +34,19 @@ public partial class HubScreen : Control
 	private HubCharactersPanel _charactersPanel;
 	private HubCampUpgradesPanel _campPanel;
 	private string _collectionFocus;
+	private string _characterFocus;
+	private string _questFocus;
+	private string _collectionKind = "weapons";
+	private readonly Stack<(HubState State, string Focus, string Tab)> _returnStack = new();
 	/// <summary>Pages ouvertes depuis le menu : calque, bouton de retour et bouton du menu qui retrouve le focus.</summary>
 	private readonly Dictionary<HubState, (Control Layer, HubMenuButton Back, HubMenuButton Opener)> _pages = new();
 	private readonly List<HubMenuButton> _menuButtons = new();
 	private readonly Dictionary<HubState, HubMenuButton> _openers = new();
-	private Label _nameLabel;
-	private Label _taglineLabel;
-	private Control _nameplate;
 	private Label _vestigesLabel;
 	private LineEdit _seedInput;
 	private SettingsScreen _settingsScreen;
 	private VoidTransition _voidTransition;
 	private bool _departing;
-	private Tween _nameplateTween;
-	private ulong _lastCycleMsec;
 
 	public override void _Ready()
 	{
@@ -64,6 +60,7 @@ public partial class HubScreen : Control
 		string repairError = RunSettlement.RepairPendingHistory();
 
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
+		gm.ChangeState(GameManager.GameState.Hub);
 		_selectedCharacterId = gm.SelectedCharacterId;
 		if (!string.IsNullOrEmpty(_selectedCharacterId) && !MetaSaveManager.IsCharacterUnlocked(_selectedCharacterId))
 			_selectedCharacterId = null;
@@ -81,6 +78,11 @@ public partial class HubScreen : Control
 		ShowSaveNotice(repairError.Length > 0);
 		SetState(HubState.MainMenu);
 		PlayIntro();
+		if (gm.OpenCharacterSelection)
+		{
+			gm.OpenCharacterSelection = false;
+			SetState(HubState.Characters);
+		}
 
 		if (gm.LastRunData != null)
 			gm.LastRunData = null;
@@ -93,20 +95,6 @@ public partial class HubScreen : Control
 		}
 	}
 
-	public override void _Input(InputEvent @event)
-	{
-		// Avant la navigation de focus de l'interface : gauche/droite changent de personnage, pas de bouton.
-		if (_currentState != HubState.MainMenu || _departing || IsSettingsOpen() || GetViewport().GuiGetFocusOwner() is LineEdit)
-			return;
-		if (@event.IsActionPressed("ui_left"))
-			CycleCharacter(-1);
-		else if (@event.IsActionPressed("ui_right"))
-			CycleCharacter(1);
-		else
-			return;
-		GetViewport().SetInputAsHandled();
-	}
-
 	public override void _UnhandledInput(InputEvent @event)
 	{
 		if (IsSettingsOpen() || _departing)
@@ -115,7 +103,7 @@ public partial class HubScreen : Control
 		if (@event.IsActionPressed("ui_cancel") && _currentState != HubState.MainMenu)
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
-			SetState(HubState.MainMenu);
+			ReturnToPrevious();
 			GetViewport().SetInputAsHandled();
 			return;
 		}
@@ -143,20 +131,20 @@ public partial class HubScreen : Control
 		AddChild(_mainMenuLayer);
 		BuildTitle();
 		BuildMenu();
-		BuildNameplate();
 		BuildVestiges();
 		BuildRunOptions();
 
 		_camp = new HubCamp();
 		_backdrop.Scene.AddChild(_camp);
-		_camp.SelectionChanged += OnCharacterSelected;
 		List<CharacterData> characters = CharacterDataLoader.GetAll();
-		_camp.Populate(characters, MetaSaveManager.IsCharacterUnlocked, _selectedCharacterId);
+		_camp.Populate(characters, MetaSaveManager.IsCharacterUnlocked);
 
 		BuildPages();
 
 		_settingsScreen = new SettingsScreen();
 		AddChild(_settingsScreen);
+		_settingsScreen.Opened += () => ShowCurrentPage(false);
+		_settingsScreen.Closed += () => ShowCurrentPage(true);
 		_voidTransition = new VoidTransition();
 		AddChild(_voidTransition);
 	}
@@ -220,79 +208,32 @@ public partial class HubScreen : Control
 		menu.AddThemeConstantOverride("separation", 4);
 		_mainMenuLayer.AddChild(menu);
 
-		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, OnEnterVoidPressed);
+		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, () => OpenPage(HubState.Characters));
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
-		_openers[HubState.Characters] = AddMenuButton(menu, "Personnages", TextRole.Title, _bodyFont, () => OpenPage(HubState.Characters));
+		_openers[HubState.Characters] = _enterVoidButton;
 		_openers[HubState.Camp] = AddMenuButton(menu, Tr("UI_CAMP_TITLE"), TextRole.Title, _bodyFont, () => OpenPage(HubState.Camp));
 		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, _bodyFont, () => OpenPage(HubState.Quests));
 		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, () => OpenPage(HubState.Collection));
-		AddMenuButton(menu, "Paramètres", TextRole.Title, _bodyFont, () =>
+		HBoxContainer utilities = new() { Position = new Vector2(MenuLeft - 40, 970) };
+		utilities.AddThemeConstantOverride("separation", 16);
+		_mainMenuLayer.AddChild(utilities);
+		AddMenuButton(utilities, "Paramètres", TextRole.Heading, _bodyFont, () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			_settingsScreen?.Open();
 		});
-		AddMenuButton(menu, "Quitter", TextRole.Title, _bodyFont, () => _ = GameExit.QuitAsync(GetTree()));
+		AddMenuButton(utilities, "Quitter", TextRole.Heading, _bodyFont, () => _ = GameExit.QuitAsync(GetTree()));
 	}
 
-	private HubMenuButton AddMenuButton(VBoxContainer menu, string text, TextRole role, Font font, System.Action onPressed)
+	private HubMenuButton AddMenuButton(BoxContainer menu, string text, TextRole role, Font font, System.Action onPressed)
 	{
 		HubMenuButton button = new();
 		button.Setup(text, role, font);
+		if (menu is HBoxContainer) button.CustomMinimumSize = new Vector2(210, 48);
 		button.Pressed += onPressed;
 		menu.AddChild(button);
 		_menuButtons.Add(button);
 		return button;
-	}
-
-	/// <summary>Plaque sous le camp : le nom et une phrase, rien d'autre. Les statistiques restent en jeu.</summary>
-	private void BuildNameplate()
-	{
-		_nameplate = new VBoxContainer { Name = "Nameplate", MouseFilter = MouseFilterEnum.Ignore };
-		_nameplate.AddThemeConstantOverride("separation", 0);
-		_nameplate.SetAnchorsAndOffsetsPreset(LayoutPreset.CenterBottom);
-		_nameplate.OffsetLeft = -420f;
-		_nameplate.OffsetRight = 420f;
-		_nameplate.OffsetTop = -150f;
-		_nameplate.OffsetBottom = -54f;
-		_mainMenuLayer.AddChild(_nameplate);
-
-		HBoxContainer row = new() { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
-		row.AddThemeConstantOverride("separation", 28);
-		_nameplate.AddChild(row);
-		row.AddChild(CreateArrow("<", -1));
-		_nameLabel = CreateLabel("", TextRole.Display, NameColor, true);
-		_nameLabel.CustomMinimumSize = new Vector2(520f, 0f);
-		_nameLabel.HorizontalAlignment = HorizontalAlignment.Center;
-		row.AddChild(_nameLabel);
-		row.AddChild(CreateArrow(">", 1));
-
-		_taglineLabel = CreateLabel("", TextRole.Heading, Tagline, false);
-		_taglineLabel.HorizontalAlignment = HorizontalAlignment.Center;
-		_nameplate.AddChild(_taglineLabel);
-	}
-
-	private Button CreateArrow(string glyph, int step)
-	{
-		Button arrow = new()
-		{
-			Text = glyph,
-			Flat = true,
-			FocusMode = FocusModeEnum.None,
-			MouseDefaultCursorShape = CursorShape.PointingHand,
-			CustomMinimumSize = new Vector2(48f, 48f)
-		};
-		arrow.AddThemeFontOverride("font", _strongFont);
-		UITheme.SetTextRole(arrow, TextRole.Display);
-		arrow.AddThemeColorOverride("font_color", UITheme.GoldDim);
-		arrow.AddThemeColorOverride("font_hover_color", UITheme.GoldBright);
-		arrow.AddThemeColorOverride("font_pressed_color", UITheme.GoldBright);
-		arrow.AddThemeConstantOverride("outline_size", 8);
-		arrow.AddThemeColorOverride("font_outline_color", Outline);
-		StyleBoxEmpty empty = new();
-		foreach (string state in new[] { "normal", "hover", "pressed", "focus", "hover_pressed" })
-			arrow.AddThemeStyleboxOverride(state, empty);
-		arrow.Pressed += () => CycleCharacter(step);
-		return arrow;
 	}
 
 	private void BuildVestiges()
@@ -333,9 +274,9 @@ public partial class HubScreen : Control
 		options.AddThemeConstantOverride("separation", 8);
 		options.SetAnchorsAndOffsetsPreset(LayoutPreset.BottomLeft);
 		options.GrowVertical = GrowDirection.Begin;
-		options.OffsetLeft = MenuLeft;
-		options.OffsetBottom = -40f;
-		options.OffsetTop = -40f;
+		options.OffsetLeft = 1450;
+		options.OffsetBottom = -56f;
+		options.OffsetTop = -56f;
 		_mainMenuLayer.AddChild(options);
 
 #if TOOLS
@@ -395,13 +336,18 @@ public partial class HubScreen : Control
 	private void BuildPages()
 	{
 		_charactersPanel = new HubCharactersPanel();
-		AddPage(HubState.Characters, "Personnages", _charactersPanel, 240f, -200f, -140f);
+		AddPage(HubState.Characters, "Personnages", _charactersPanel, 100f, -120f, -160f);
+		_charactersPanel.DepartRequested += StartRun;
+		_charactersPanel.QuestRequested += OpenQuest;
+		_charactersPanel.WeaponRequested += id => OpenReward((int)UnlockKind.Weapon, id);
 		_campPanel = new HubCampUpgradesPanel();
-		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 240f, -200f, -140f);
+		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 120f, -140f, -160f);
 		_questsPanel = new HubQuestsPanel();
-		AddPage(HubState.Quests, "Quêtes", _questsPanel, 240f, -200f, -140f);
+		AddPage(HubState.Quests, "Quêtes", _questsPanel, 120f, -140f, -160f);
+		_questsPanel.RewardRequested += OpenReward;
 		_collectionPanel = new HubCollectionPanel();
-		AddPage(HubState.Collection, "Collection", _collectionPanel, 320f, -240f, -140f);
+		AddPage(HubState.Collection, "Collection", _collectionPanel, 140f, -160f, -160f);
+		_collectionPanel.QuestRequested += OpenQuest;
 	}
 
 	private void AddPage(HubState state, string title, Control panel, float left, float right, float bottom)
@@ -410,29 +356,33 @@ public partial class HubScreen : Control
 		layer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		AddChild(layer);
 
-		ColorRect veil = new() { Color = new Color(Night, 0.82f) };
-		veil.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		layer.AddChild(veil);
-
-		Label header = CreateLabel(title, TextRole.Display, UITheme.GoldColor, true);
-		header.Position = new Vector2(MenuLeft, 72f);
-		layer.AddChild(header);
-
-		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 980f) };
+		MenuSkin.AddBackdrop(layer);
+		HBoxContainer navigation = new() { Position = new Vector2(96, 76) };
+		navigation.AddThemeConstantOverride("separation", 24);
+		layer.AddChild(navigation);
+		foreach ((HubState destination, string caption) in new[] { (HubState.Characters, "Personnages"), (HubState.Quests, "Quêtes"), (HubState.Collection, "Collection") })
+		{
+			Button tab = MenuSkin.Button(caption, state == destination);
+			MenuSkin.StyleLink(tab, state == destination);
+			tab.CustomMinimumSize = new Vector2(240, 56);
+			tab.Pressed += () => OpenPage(destination);
+			navigation.AddChild(tab);
+		}
+		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 970f) };
 		layer.AddChild(back);
 		HubMenuButton backButton = new();
 		backButton.Setup("Retour", TextRole.Title, _bodyFont);
 		backButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
-			SetState(HubState.MainMenu);
+			ReturnToPrevious();
 		};
 		back.AddChild(backButton);
 
 		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		panel.OffsetLeft = left;
 		panel.OffsetRight = right;
-		panel.OffsetTop = 160f;
+		panel.OffsetTop = 180f;
 		panel.OffsetBottom = bottom;
 		layer.AddChild(panel);
 		_pages[state] = (layer, backButton, _openers.GetValueOrDefault(state));
@@ -440,6 +390,7 @@ public partial class HubScreen : Control
 
 	private void OpenPage(HubState state)
 	{
+		_returnStack.Clear();
 		AudioManager.PlayUI("sfx_menu_confirmer");
 		SetState(state);
 	}
@@ -463,22 +414,19 @@ public partial class HubScreen : Control
 	{
 		HubState from = _currentState;
 		_currentState = state;
-		_mainMenuLayer.Visible = state == HubState.MainMenu;
-		foreach ((HubState page, (Control Layer, HubMenuButton Back, HubMenuButton Opener) parts) in _pages)
-			parts.Layer.Visible = page == state;
+		ShowCurrentPage(true);
 
 		if (state != HubState.MainMenu)
 		{
 			Control first = state switch
 			{
-				HubState.Characters => _charactersPanel.Refresh(_selectedCharacterId),
+				HubState.Characters => _charactersPanel.Refresh(_characterFocus ?? _charactersPanel.ExaminedCharacterId ?? _selectedCharacterId),
 				HubState.Camp => _campPanel.Refresh(),
-				HubState.Quests => _questsPanel.Refresh(),
-				HubState.Collection => _collectionPanel.Refresh(_collectionFocus),
+				HubState.Quests => _questsPanel.Refresh(_questFocus),
+				HubState.Collection => _collectionPanel.Refresh(_collectionFocus, _collectionKind),
 				_ => null,
 			};
-			if (state == HubState.Collection)
-				_collectionFocus = null;
+			_collectionFocus = _characterFocus = _questFocus = null;
 			if (first != null)
 				first.GrabFocus();
 			else
@@ -517,66 +465,81 @@ public partial class HubScreen : Control
 		_enterVoidButton.GrabFocusSilently();
 	}
 
-	private void CycleCharacter(int step)
+	private void OpenQuest(string questId)
 	{
-		// Un stick tenu émet un événement « pressé » à chaque mouvement : un pas toutes les 180 ms au plus.
-		ulong now = Time.GetTicksMsec();
-		if (now - _lastCycleMsec < 180)
-			return;
-		_lastCycleMsec = now;
-		AudioManager.PlayUI("sfx_menu_clic");
-		_camp.Cycle(step);
+		PushOrigin();
+		_questFocus = questId;
+		SetState(HubState.Quests);
 	}
 
-	private void OnCharacterSelected(string characterId)
+	private void OpenReward(int kind, string id)
 	{
-		CharacterData data = CharacterDataLoader.Get(characterId);
-		bool unlocked = MetaSaveManager.IsCharacterUnlocked(characterId);
-		if (unlocked)
+		PushOrigin();
+		if ((UnlockKind)kind == UnlockKind.Character)
 		{
-			_selectedCharacterId = characterId;
-			GetNode<GameManager>("/root/GameManager").SelectedCharacterId = characterId;
+			_characterFocus = id;
+			SetState(HubState.Characters);
 		}
-
-		_enterVoidButton.Disabled = !unlocked;
-		_enterVoidButton.QueueRedraw();
-		_nameLabel.Text = unlocked ? data?.Name ?? characterId : "???";
-		_nameLabel.AddThemeColorOverride("font_color", unlocked ? NameColor : Locked);
-		_taglineLabel.Text = unlocked ? data?.Description ?? "" : QuestBook.LockText(UnlockKind.Character, characterId);
-
-		_nameplateTween?.Kill();
-		_nameplate.Modulate = new Color(1f, 1f, 1f, 0.2f);
-		_nameplateTween = _nameplate.CreateTween();
-		_nameplateTween.TweenProperty(_nameplate, "modulate:a", 1f, 0.25f);
+		else
+		{
+			_collectionFocus = id;
+			_collectionKind = (UnlockKind)kind switch
+			{
+				UnlockKind.Object => "passives",
+				UnlockKind.Badge => "badges",
+				_ => "weapons",
+			};
+			SetState(HubState.Collection);
+		}
 	}
 
-	private void OnEnterVoidPressed()
+	private void PushOrigin()
 	{
-		if (_departing || string.IsNullOrEmpty(_selectedCharacterId) || !_camp.IsSelectedUnlocked)
-			return;
+		string focus = _currentState switch
+		{
+			HubState.Characters => _charactersPanel.ExaminedCharacterId,
+			HubState.Quests => _questsPanel.ExaminedQuestId,
+			HubState.Collection => _collectionPanel.ExaminedEntryId,
+			_ => null,
+		};
+		// La pile est bornée, mais le retour garde toujours la visite la plus récente.
+		if (_returnStack.Count == 8)
+		{
+			(HubState State, string Focus, string Tab)[] recent = _returnStack.ToArray();
+			_returnStack.Clear();
+			for (int i = recent.Length - 2; i >= 0; i--) _returnStack.Push(recent[i]);
+		}
+		_returnStack.Push((_currentState, focus, _collectionPanel.CurrentTab));
+	}
 
+	private void ReturnToPrevious()
+	{
+		if (_returnStack.Count == 0) { SetState(HubState.MainMenu); return; }
+		(HubState state, string focus, string tab) = _returnStack.Pop();
+		_collectionKind = tab;
+		if (state == HubState.Characters) _characterFocus = focus;
+		if (state == HubState.Quests) _questFocus = focus;
+		if (state == HubState.Collection) _collectionFocus = focus;
+		SetState(state);
+	}
+
+	private void StartRun(string characterId)
+	{
+		if (_departing || !MetaSaveManager.IsCharacterUnlocked(characterId)) return;
 		_departing = true;
+		_selectedCharacterId = characterId;
 		AudioManager.PlayUI("sfx_menu_confirmer");
-		foreach (HubMenuButton button in _menuButtons)
-			button.Disabled = true;
-
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
-		gm.SelectedCharacterId = _selectedCharacterId;
+		gm.SelectedCharacterId = characterId;
 		gm.ActiveMutators = new List<string>();
 		string seedText = _seedInput.Text.StripEdges();
-		gm.RunSeed = !string.IsNullOrEmpty(seedText) && ulong.TryParse(seedText, out ulong seed) ? seed : 0;
-		GD.Print($"[Hub] Entering Void: {_selectedCharacterId}, seed={gm.RunSeed}");
-
-		// Le personnage quitte le feu, le menu s'éteint, puis le Vide se referme.
-		_camp.Depart(1.1f);
-		Tween leave = CreateTween();
-		leave.TweenProperty(_mainMenuLayer, "modulate:a", 0f, 0.45f);
-		leave.TweenInterval(0.2f);
-		leave.TweenCallback(Callable.From(() => _voidTransition.Play(() =>
+		gm.RunSeed = ulong.TryParse(seedText, out ulong seed) ? seed : 0;
+		GD.Print($"[Hub] Entering Void: {characterId}, seed={gm.RunSeed}");
+		_voidTransition.Play(() =>
 		{
 			gm.ChangeState(GameManager.GameState.Run);
 			GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
-		})));
+		});
 	}
 
 #if TOOLS
@@ -602,6 +565,17 @@ public partial class HubScreen : Control
 	// ================================================================
 	// AIDES
 	// ================================================================
+
+	private void ShowCurrentPage(bool show)
+	{
+		bool showCamp = show && _currentState == HubState.MainMenu;
+		_mainMenuLayer.Visible = showCamp;
+		_mainMenuLayer.ProcessMode = showCamp ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+		_backdrop.Visible = showCamp;
+		_backdrop.ProcessMode = showCamp ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
+		foreach ((HubState state, (Control Layer, HubMenuButton Back, HubMenuButton Opener) page) in _pages)
+			page.Layer.Visible = show && state == _currentState;
+	}
 
 	private bool IsSettingsOpen() => _settingsScreen != null && _settingsScreen.IsOpen;
 

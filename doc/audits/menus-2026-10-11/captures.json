@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "pause",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-pause",
+    "args": "--capture-pause --capture-size 1280x720 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "cascade",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-cascade",
+    "args": "--capture-cascade --capture-size 1920x1080"
+  },
+  {
+    "scenario": "memorial",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-memorial",
+    "args": "--capture-memorial --capture-size 1280x720 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "rift",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-rift",
+    "args": "--capture-rift --capture-size 1920x1080"
+  },
+  {
+    "scenario": "workshop",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-workshop",
+    "args": "--capture-workshop --capture-size 1280x720"
+  },
+  {
+    "scenario": "loot",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-loot",
+    "args": "--capture-loot --capture-loot-gallery --capture-size 1920x1080 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "journal",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-journal",
+    "args": "--capture-journal --capture-size 1280x720 --menu-font-scale 1.3"
+  },
+  {
+    "scenario": "bilan",
+    "exit_code": 0,
+    "output": "/tmp/vestiges-menus-recette-bilan",
+    "args": "--capture-death --play-bot --bilan-rich --restart-from-bilan --skip-reveal --capture-size 1920x1080 --menu-font-scale 1.3"
+  }
+]

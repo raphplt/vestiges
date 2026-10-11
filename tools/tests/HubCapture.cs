@@ -58,8 +58,9 @@ public partial class HubCapture : Node
             if (tab.Length > 0)
             {
                 typeof(Vestiges.UI.HubCollectionPanel).GetField("_tab", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, tab);
+                System.Type stateType = typeof(Vestiges.UI.HubScreen).GetNestedType("HubState", BindingFlags.NonPublic);
                 hub.GetType().GetMethod("OpenPage", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Invoke(hub, new[] { Enum.Parse(hub.GetType().GetNestedType("HubState", BindingFlags.NonPublic), "Collection") });
+                    .Invoke(hub, new[] { System.Enum.Parse(stateType, "Collection") });
                 await Frames(30);
                 Vestiges.UI.HubCollectionPanel collection = (Vestiges.UI.HubCollectionPanel)hub.GetType()
                     .GetField("_collectionPanel", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(hub);

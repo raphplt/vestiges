@@ -14,21 +14,17 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class ChestLootScreen : CanvasLayer
 {
-    private const string MenusPath = "res://assets/ui/menus/";
 
     // --- Colors ---
-    private static readonly Color GoldColor = new(0.83f, 0.66f, 0.26f);
     private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
-    private static readonly Color GoldDim = new(0.63f, 0.47f, 0.16f);
     private static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
     private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
-    private static readonly Color OverlayColor = new(0.0f, 0.0f, 0.02f, 0.8f);
+    private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
 
     // --- Roulette config ---
     private const float RouletteMinInterval = 0.04f;
     private const float RouletteMaxInterval = 0.35f;
     private const float RouletteDuration = 2.5f;
-    private const float PostRevealDelay = 1.8f;
     private const string RevealSound = "sfx_chest_reveal";
     private const float RevealFadeSeconds = 0.5f;
     // Le clic d'ouverture frappe dans ses 0,3 premières secondes : la mélodie entre juste après, sur le défilement.
@@ -40,19 +36,18 @@ public partial class ChestLootScreen : CanvasLayer
     private PanelContainer _panel;
     private VBoxContainer _slotsContainer;
     private Label _title;
-    private Texture2D _panelTex;
-    private Texture2D _separatorTex;
+    private TextureRect _chestArt;
+    private Button _continueButton;
+    private ScrollContainer _scroll;
     private readonly Texture2D[] _revealFrames = new Texture2D[4];
 
     // --- State ---
-    private List<ResolvedLoot> _pendingLoots;
     private string _rarity;
     private Action _onComplete;
     private readonly List<SlotState> _slots = new();
     private bool _isRevealing;
     private AudioStreamPlayer _revealAudio;
     private int _openingSerial;
-    private int _closeSerial;
     private int _slotsRevealed;
 
     // Leurres de la roulette : ce que le coffre aurait pu donner.
@@ -100,94 +95,52 @@ public partial class ChestLootScreen : CanvasLayer
 
     private void LoadTextures()
     {
-        _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
-        _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
         for (int i = 0; i < _revealFrames.Length; i++)
             _revealFrames[i] = GD.Load<Texture2D>($"res://assets/ui/hud/plan25/xp_burst_{i:00}.png");
     }
 
-    private static Texture2D LoadTex(string path)
-    {
-        return UITheme.LoadTex(path);
-    }
-
-    // ==============================
-    // UI construction
-    // ==============================
-
     private void BuildUI()
     {
-        _overlay = new ColorRect();
+        _overlay = new ColorRect { Color = OverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _overlay.Color = OverlayColor;
-        _overlay.MouseFilter = Control.MouseFilterEnum.Stop;
         AddChild(_overlay);
-
-        // Fond en gros pixels, rayons tramés et poussière d'oubli (plan 24 B1).
         _rays = new PixelBackdrop(PixelBackdrop.GoldTint);
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_rays);
 
-        // Panel
-        _panel = new PanelContainer();
+        _panel = new PanelContainer { CustomMinimumSize = new Vector2(1060, 870) };
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-        _panel.GrowHorizontal = Control.GrowDirection.Both;
-        _panel.GrowVertical = Control.GrowDirection.Both;
-        _panel.CustomMinimumSize = new Vector2(420, 100);
-
-        if (_panelTex != null)
-        {
-            StyleBoxTexture panelStyle = CreateNinePatch(_panelTex, 6, 6, 6, 6);
-            panelStyle.ContentMarginLeft = 24;
-            panelStyle.ContentMarginRight = 24;
-            panelStyle.ContentMarginTop = 18;
-            panelStyle.ContentMarginBottom = 22;
-            _panel.AddThemeStyleboxOverride("panel", panelStyle);
-        }
-        else
-        {
-            StyleBoxFlat fallback = new();
-            fallback.BgColor = new Color(0.06f, 0.06f, 0.1f, 0.95f);
-            fallback.SetBorderWidthAll(2);
-            fallback.BorderColor = GoldDim;
-            fallback.SetCornerRadiusAll(4);
-            fallback.ContentMarginLeft = 24;
-            fallback.ContentMarginRight = 24;
-            fallback.ContentMarginTop = 18;
-            fallback.ContentMarginBottom = 22;
-            _panel.AddThemeStyleboxOverride("panel", fallback);
-        }
-
+        _panel.GrowHorizontal = _panel.GrowVertical = Control.GrowDirection.Both;
+        _panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
         AddChild(_panel);
+        VBoxContainer inner = new();
+        inner.AddThemeConstantOverride("separation", 18);
+        _panel.AddChild(inner);
+        HBoxContainer heading = new();
+        heading.AddThemeConstantOverride("separation", 28);
+        inner.AddChild(heading);
+        _chestArt = new TextureRect { CustomMinimumSize = new Vector2(144, 144),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest, MouseFilter = Control.MouseFilterEnum.Ignore };
+        heading.AddChild(_chestArt);
+        VBoxContainer titles = new() { Alignment = BoxContainer.AlignmentMode.Center, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        heading.AddChild(titles);
+        titles.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Body, UITheme.TextDim));
+        _title = UITheme.MakeLabel("", TextRole.Title, GoldBright, TextWeight.Strong);
+        titles.AddChild(_title);
+        titles.AddChild(UITheme.MakeLabel("Butin de l’expédition", TextRole.Subhead, UITheme.TextColor));
 
-        VBoxContainer innerVBox = new();
-        innerVBox.AddThemeConstantOverride("separation", 14);
-        _panel.AddChild(innerVBox);
-
-        // Title
-        _title = new Label();
-        _title.HorizontalAlignment = HorizontalAlignment.Center;
-        UITheme.SetTextRole(_title, TextRole.Heading);
-        _title.AddThemeColorOverride("font_color", GoldBright);
-        _title.Text = "COFFRE";
-        innerVBox.AddChild(_title);
-
-        // Separator
-        if (_separatorTex != null)
-        {
-            TextureRect sep = new();
-            sep.Texture = _separatorTex;
-            sep.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
-            sep.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
-            sep.CustomMinimumSize = new Vector2(0, 6);
-            sep.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
-            innerVBox.AddChild(sep);
-        }
-
-        // Slots container
-        _slotsContainer = new VBoxContainer();
-        _slotsContainer.AddThemeConstantOverride("separation", 10);
-        innerVBox.AddChild(_slotsContainer);
+        _scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        inner.AddChild(_scroll);
+        _slotsContainer = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        _slotsContainer.AddThemeConstantOverride("separation", 12);
+        _scroll.AddChild(_slotsContainer);
+        _continueButton = MenuSkin.Button("Révéler le butin", true);
+        _continueButton.FocusMode = Control.FocusModeEnum.None;
+        _continueButton.ActionMode = BaseButton.ActionModeEnum.Press;
+        _continueButton.Pressed += Advance;
+        inner.AddChild(_continueButton);
     }
 
     // ==============================
@@ -199,11 +152,17 @@ public partial class ChestLootScreen : CanvasLayer
     /// </summary>
     public void ShowLoot(List<ResolvedLoot> loots, string rarity, Action onComplete)
     {
-        _pendingLoots = loots;
+        _openingSerial++;
+        AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
+        _revealAudio = null;
         _rarity = rarity;
         _onComplete = onComplete;
         _slotsRevealed = 0;
-        _isRevealing = true;
+        _isRevealing = loots.Count > 0;
+        _continueButton.Text = _isRevealing ? "Révéler le butin" : "Reprendre la route";
+        string artRarity = rarity is "rare" or "epic" or "lore" ? rarity : "common";
+        _chestArt.Texture = GD.Load<Texture2D>($"res://assets/chests/chest_{artRarity}_open.png");
+        _scroll.ScrollVertical = 0;
 
         ClearSlots();
 
@@ -223,6 +182,7 @@ public partial class ChestLootScreen : CanvasLayer
             _slots.Add(slot);
         }
 
+        MenuSkin.CenterPanel(_panel, 1060f, Mathf.Min(870f, 340f + loots.Count * 116f));
         ShowScreen();
 
         // Le clic d'ouverture d'abord, puis la mélodie qui accompagne le défilement (retour du 28 septembre).
@@ -242,7 +202,7 @@ public partial class ChestLootScreen : CanvasLayer
     private SlotState CreateSlot(ResolvedLoot loot, int index)
     {
         PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(370, 60);
+        card.CustomMinimumSize = new Vector2(950, 104);
 
         ChoiceStyle.StyleCard(card, ChoiceStyle.NeutralBorder, -1, false);
 
@@ -267,12 +227,14 @@ public partial class ChestLootScreen : CanvasLayer
         UITheme.SetTextRole(label, TextRole.Lead);
         label.AddThemeColorOverride("font_color", TextDim);
         label.Text = "???";
+        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        label.CustomMinimumSize = new Vector2(720, 0);
         HBoxContainer contents = new() { Alignment = BoxContainer.AlignmentMode.Center };
         contents.AddThemeConstantOverride("separation", 8);
         margin.AddChild(contents);
         int fakeIndex = GD.RandRange(0, _fakeItems.Length - 1);
         LootDisplayInfo initial = _fakeItems[fakeIndex];
-        TextureRect icon = (TextureRect)PlayerSheet.MakeIcon(null, 32);
+        TextureRect icon = (TextureRect)PlayerSheet.MakeIcon(null, 64);
         icon.Texture = initial.Icon;
         contents.AddChild(icon);
         label.Text = initial.Text;
@@ -280,7 +242,7 @@ public partial class ChestLootScreen : CanvasLayer
         // L'éclat reste un badge secondaire : il ne remplace jamais le signe du gain.
         int rarityRank = RarityArt.Rank(_rarity);
         if (rarityRank >= 0)
-            contents.AddChild(new RarityIcon(rarityRank, 12));
+            contents.AddChild(new RarityIcon(rarityRank, 24));
 
         card.AddChild(flash);
         _slotsContainer.AddChild(card);
@@ -351,7 +313,7 @@ public partial class ChestLootScreen : CanvasLayer
         if (allStopped && _isRevealing)
         {
             _isRevealing = false;
-            ScheduleClose();
+            FinishReveal();
         }
     }
 
@@ -359,17 +321,25 @@ public partial class ChestLootScreen : CanvasLayer
     {
         if (!Visible || !@event.IsPressed() || @event.IsEcho())
             return;
-        // Les directions ne passent rien : le joueur se déplaçait encore en ouvrant le coffre.
-        bool skip = @event is InputEventMouseButton { ButtonIndex: MouseButton.Left or MouseButton.Right }
-            || @event.IsActionPressed("ui_accept") || @event.IsActionPressed("ui_cancel")
-            || @event.IsActionPressed("interact");
-        if (!skip)
+        if (@event.IsActionPressed("ui_down") || @event.IsActionPressed("ui_up"))
+        {
+            _scroll.ScrollVertical += @event.IsActionPressed("ui_down") ? 110 : -110;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        // Cliquer le bouton passe par son signal ; cliquer le décor ne referme pas la lecture.
+        if (!@event.IsActionPressed("ui_accept") && !@event.IsActionPressed("ui_cancel")
+            && !@event.IsActionPressed("interact"))
             return;
         GetViewport().SetInputAsHandled();
-        if (_isRevealing)
-            RevealRemaining();
-        else
-            Close();
+        Advance();
+    }
+
+    private void Advance()
+    {
+        if (!Visible) return;
+        if (_isRevealing) RevealRemaining();
+        else Close();
     }
 
     private void RevealRemaining()
@@ -384,7 +354,7 @@ public partial class ChestLootScreen : CanvasLayer
             RevealSlot(slot, playSound);
             playSound = false;
         }
-        ScheduleClose();
+        FinishReveal();
     }
 
     private void RevealSlot(SlotState slot, bool playSound = true)
@@ -455,20 +425,19 @@ public partial class ChestLootScreen : CanvasLayer
         tween.TweenCallback(Callable.From(burst.QueueFree));
     }
 
-    private void ScheduleClose()
+    private void FinishReveal()
     {
-        // Un minuteur dépassé par une fermeture anticipée ne ferme jamais l'écran d'un coffre suivant.
-        int serial = ++_closeSerial;
-        GetTree().CreateTimer(PostRevealDelay, processAlways: true).Timeout += () =>
-        {
-            if (serial == _closeSerial)
-                Close();
-        };
+        _continueButton.Text = "Reprendre la route";
+        // La musique s'achève, mais la lecture du butin n'est plus minutée.
+        AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
+        _revealAudio = null;
     }
 
     private void Close()
     {
-        _closeSerial++;
+        if (!Visible) return;
+        _openingSerial++;
+        _isRevealing = false;
         // La mélodie s'éteint avec l'écran au lieu de déborder sur la reprise du jeu.
         AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
         _revealAudio = null;
@@ -485,8 +454,7 @@ public partial class ChestLootScreen : CanvasLayer
 
     private void ClearSlots()
     {
-        foreach (Node child in _slotsContainer.GetChildren())
-            child.QueueFree();
+        MenuSkin.Clear(_slotsContainer);
         _slots.Clear();
     }
 
@@ -510,26 +478,4 @@ public partial class ChestLootScreen : CanvasLayer
         GetTree().Paused = false;
     }
 
-    private static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)
-    {
-        StyleBoxTexture sbt = new()
-        {
-            Texture = texture,
-            RegionRect = new Rect2(0, 0, texture.GetWidth(), texture.GetHeight()),
-            AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Tile,
-            AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
-        };
-
-        sbt.TextureMarginLeft = left;
-        sbt.TextureMarginTop = top;
-        sbt.TextureMarginRight = right;
-        sbt.TextureMarginBottom = bottom;
-
-        sbt.ContentMarginLeft = left + 2;
-        sbt.ContentMarginTop = top + 2;
-        sbt.ContentMarginRight = right + 2;
-        sbt.ContentMarginBottom = bottom + 2;
-
-        return sbt;
-    }
 }

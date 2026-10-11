@@ -81,6 +81,8 @@ public static class UITheme
 	{
 		if (path.StartsWith(MenusPath, System.StringComparison.Ordinal))
 		{
+			Texture2D stone = MenuSkin.TextureFor(path[MenusPath.Length..]);
+			if (stone != null) return stone;
 			string skin = ScreenArt.Folder + path[MenusPath.Length..];
 			if (ResourceLoader.Exists(skin))
 				path = skin;
@@ -94,6 +96,7 @@ public static class UITheme
 	/// <summary>Cree un StyleBoxTexture NinePatch depuis une texture.</summary>
 	public static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)
 	{
+		if (MenuSkin.IsFrame(texture)) left = top = right = bottom = 36;
 		StyleBoxTexture sbt = new()
 		{
 			Texture = texture,
@@ -102,6 +105,11 @@ public static class UITheme
 			AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
 		};
 
+		if (MenuSkin.IsFrame(texture))
+		{
+			sbt.AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Stretch;
+			sbt.AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch;
+		}
 		sbt.TextureMarginLeft = left;
 		sbt.TextureMarginTop = top;
 		sbt.TextureMarginRight = right;
@@ -153,7 +161,7 @@ public static class UITheme
 		{
 			DrawCenter = false,
 			BorderWidthLeft = 3,
-			BorderColor = CyanEssence,
+			BorderColor = GoldBright,
 		};
 		control.AddThemeStyleboxOverride("focus", focus);
 	}

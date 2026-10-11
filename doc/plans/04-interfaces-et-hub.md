@@ -1,9 +1,9 @@
 # Plan 04 — Interfaces lisibles et vraie préparation d'exploration
 
-Statut : **socle livré ; étude des menus intérieurs au §7, réorientée après rejet des premières esquisses** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
+Statut : **refonte P1–P7 livrée et vérifiée sur `codex/refonte-menus` (§8–9), recette artistique en jeu ouverte** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
 Références : V2 §15–18 ; Bible §9 ; [dossier](README.md).
 
-**Menus du Hub, 10 octobre 2026 :** la page Chroniques et son entrée sont supprimées à la demande de Raphaël. Menu actuel : Partir, Personnages, Quêtes, Collection, Paramètres, Quitter. Les quêtes accomplies utilisent une médaille pixel art originale ; le premier sceau est remplacé après le retour de Raphaël sur sa lisibilité, au [plan 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026), décision §100.
+**Menus du Hub, 10 octobre 2026 :** la page Chroniques et son entrée sont supprimées à la demande de Raphaël. Menu à cette étape : Partir, Personnages, Quêtes, Collection, Paramètres, Quitter. Le parcours de production du §8 le remplace ensuite. Les quêtes accomplies utilisent une médaille pixel art originale ; le premier sceau est remplacé après le retour de Raphaël sur sa lisibilité, au [plan 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026), décision §100.
 
 **Nouvelle demande du 10 octobre, précisée après les esquisses :** reprendre l'intérieur de Personnages, Quêtes, Collection et Paramètres, ainsi que la pause ; garder l'accueil actuel, apprécié, avec Paramètres et Quitter regroupés en bas. Les deux premières esquisses sont rejetées pour leur rendu trop web. Pierre et Effacement est une préférence de recherche, pas un visuel approuvé ([§7](#7-refonte-des-menus--étude-du-10-octobre-2026), [DECISIONS §106](DECISIONS.md)). Ce cadrage remplace les anciennes propositions de parcours du §3 pour le prochain chantier. Les comptes rendus B/C/R1–R8 restent l'historique de ce qui a été livré.
 
@@ -588,3 +588,78 @@ Pour chaque lot de code : `dotnet build` **zéro warning**, smoke si scènes/ini
 **Vérifications de l'étude initiale :** les trois lanceurs de capture aboutissent, dont les inputs injectés du scénario pause ; `dotnet build --nologo` : **0 warning, 0 erreur**. Les contrôles navigateur des anciennes esquisses portaient sur leur fonctionnement, pas sur leur qualité artistique ; elles restent rejetées. La nouvelle planche est une image fixe examinée visuellement : elle ne vérifie ni les transitions, ni le focus réel, ni une manette physique. Aucun gain de performance revendiqué.
 
 **Vérification de la reprise :** `dotnet build --nologo` relancé, **0 warning, 0 erreur** ; `git diff --check` propre. Planche enregistrée en 1672×941 : format d'étude, pas capture à une résolution du jeu. Aucun script, scène, shader ou asset de production changé dans ce chantier ; smoke non relancé pour ces seules modifications documentaires.
+
+## 8. Production autorisée — 10 octobre 2026
+
+Raphaël donne carte blanche pour refaire les menus sur une branche distincte de main. La planche Personnages lui plaît, mais le nom doit être discret et les statistiques d'arme/mobilité quittent la présentation principale. Il envisage Partir / Recommencer → choix du personnage → run ; l'agent retient ce parcours pour sa lisibilité et sa capacité à accueillir dix héros. Le camp reste le décor de l'accueil et présente les personnages débloqués, sans les sélectionner. Aucune sélection de carte fictive n'est ajoutée.
+
+Branche : `codex/refonte-menus`, worktree isolé. Les modifications des autres chantiers sur main ne sont pas embarquées. Les lots ci-dessous remplacent M0–M5 pour cette production autorisée, sans demande d'accord supplémentaire.
+
+| Lot | Périmètre | Validation |
+|---|---|---|
+| P1 — Départ et personnages | Camp d'ambiance ; Partir et Recommencer ouvrent la sélection ; portrait, nom discret, fiche secondaire ; navigation entre pages et retours explicites. | Build sans warning, démarrage et héros verrouillé, focus. |
+| P2 — Matières et catalogues | Décor intérieur original, cadres et états dessinés ; Quêtes et Collection, conservation de la consultation et liens ciblés. | Captures et navigation en profil neuf/dev, 720p et 1080p. |
+| P3 — Pause et réglages | Build compact, détail ciblé, abandon confirmé ; Paramètres sur un seul plan, utilitaires en bas ; cohérence des contrôles partagés. | Build, smoke, régressions concernées, captures de pause et réglages en run. |
+
+Le HUD de combat, les mécaniques, les récompenses et le lore ne sont pas rééquilibrés. Les menus de choix/bilan gardent leurs contrats ; les contrôles partagés profitent de la nouvelle matière. Pas de fusion vers main dans ce chantier.
+
+### 8.1 Implémentation P1–P3
+
+- **Départ.** L’accueil conserve sa peinture, son titre et son animation. Le camp montre les héros débloqués ; les flèches n’y changent plus le choix. Partir ouvre Personnages. Le choix n’est confirmé qu’au départ depuis la fiche. Recommencer au bilan revient directement à cette sélection, puis lance une nouvelle run. L’état global revient à Hub entre les deux runs.
+- **Personnages.** Galerie verticale défilante, illustration dominante avec tranche dissoute en pixels, nom 30 px, description et passif courts, arme liée à la Collection. Les chiffres d’arme et de mobilité sont repliés sous Détails du personnage. Les héros verrouillés exposent leur quête et ne peuvent pas partir.
+- **Catalogues.** Navigation directe Personnages / Quêtes / Collection. Une quête ouvre sa récompense ; un contenu verrouillé mène à sa quête. Retour restaure l’entrée consultée, la catégorie de Collection et le filtre de quêtes quand il contient la cible. Historique borné aux huit dernières visites. Les personnages futurs sans définition jouable restent « À venir ».
+- **Matières.** Fond intérieur et cadre originaux, pierre urbaine et Effacement ivoire, surfaces de lecture opaques. Boutons ébréchés, tranches éclairées, focus doré. Le portrait garde sa couleur d’origine (modulation appliquée une seule fois). Le camp caché est suspendu. Les textures sont partagées, sans génération de texture par frame. [Assets et consignes de génération](../../assets/ui/menus/stone/GENERATION.md).
+- **Pause.** Quatre armes, six objets et les emplacements de Réminiscences visibles ensemble ; souris, focus ou validation changent la fiche de détail. Les règles, niveaux, paliers et dégâts infligés restent consultables. La colonne des statistiques défile indépendamment, Oublis compris. Abandonner et Quitter demandent confirmation ; le choix initial conserve la partie, Échap annule sans reprendre la run.
+- **Paramètres.** Écran opaque commun à l’accueil et à la pause, quatre onglets, curseurs dessinés, commandes de remappage agrandies. Fermer retrouve le contrôle d’origine et conserve la pause. Paramètres et Quitter sont côte à côte en bas de l’accueil.
+
+La langue des nouveaux libellés suit le français déjà utilisé par ces menus ; la localisation intégrale des menus reste un travail distinct. Le HUD de combat et les règles de progression ne changent pas. Pas de promesse de performance : aucune mesure FPS sur cette machine chargée.
+
+### 8.2 Validation et captures — P1–P3 livrés
+
+- `tools/validate.sh /tmp/vestiges-menus-validation-finale smoke menu_navigation choice_screen dev_mode ui_art input_remap music` : **7/7**, build **0 warning, 0 erreur**, aucune source modifiée pendant les suites.
+- Dernier verrou ajouté au départ : la transition absorbe les entrées avant les contrôles. Validation ciblée `/tmp/vestiges-menus-verrou-depart` : **smoke et menu_navigation 2/2**, **16 contrôles de parcours**, build toujours sans warning. Aucun rendu changé par ce dernier verrou.
+- Profil neuf, 1280×720 : Partir → Vagabond, héros verrouillé → quête précise → retour au héros ; retour accueil → Paramètres, quatre onglets. Captures et logs : `/tmp/vestiges-menus-neuf-720`.
+- Profil dev, 1920×1080 : camp, personnages et quêtes (`/tmp/vestiges-menus-final-hub`) ; Collection et paramètres 720p (`/tmp/vestiges-menus-final-720-v2`). Le portrait assombri de la première capture a été corrigé et recapturé ci-dessous.
+- Vraie pause : quatre armes, six objets, détail du Papier carbone niveau 30, neuf Oublis ; paramètres ouverts/fermés par événements manette A/B, focus restitué, abandon annulé sans reprise, défilement limité à la colonne sélectionnée. Scénario **vert** à 1080p (`/tmp/vestiges-menus-final-pause-v2`) puis à 720p avec le fond opaque et les statistiques agrandies (`/tmp/vestiges-menus-pause-720`).
+- Mort réelle → Recommencer → sélection du Vagabond à la place du Traqueur → Partir → Main initialisé et jouable : scénario **vert**, `/tmp/vestiges-menus-restart-final`. La capture finale montre la nouvelle run après son chargement, pas seulement la transition.
+- Deux défauts des bancs corrigés : l’ancienne ouverture privée de Collection avait été retirée ; le délai du test de relance comptait des frames de rendu alors que la transition avance en physique. Les bancs utilisent maintenant le nouveau parcours et attendent l’état réel du monde. Le test de défilement ajoute les Oublis pour exercer un contenu effectivement plus haut que la colonne.
+
+Captures conservées dans la branche : [Personnages en jeu, 1080p](planches/04-menus-personnages-integre.png) · [Pause en jeu, 720p](planches/04-menus-pause-integree.png).
+
+Les dimensions des PNG ont été contrôlées. Les parcours clavier/manette utilisent les événements du moteur ; aucun essai sur manette physique n’est revendiqué. La direction artistique reste à juger en jouant par Raphaël. Les tests de cette livraison ne constituent ni un banc FPS ni une recette de traduction complète. Branche locale isolée, aucune fusion ni publication.
+
+## 9. Achèvement de tous les menus — 11 octobre 2026
+
+Raphaël demande de terminer la refonte sur `codex/refonte-menus`, y compris montée de niveau, butin, bilan et journal, puis de tester l'ensemble. Direction P1–P3 conservée : pierre sombre ébréchée, Effacement, pixel art, or discret ; accueil et camp conservés.
+
+Lots prévus avant code, réalisés et vérifiés dans cet ordre :
+
+- **P4 — choix et butin.** Composition large et bornée à l'écran, mêmes matières que les menus intérieurs ; inventaire/statistiques consultables sans masquer le choix. Inclure les choix de Mémorial/Faille/Autel qui partagent `ChoiceScreen`. Préserver raretés, gains, bannissement, relance, file de niveaux et garde d'entrée. Butin : révélation puis bouton explicite pour repartir, pas de fermeture avant lecture.
+- **P5 — journal.** Constellations, fragments et lecture séparés ; états inconnus explicites, défilement, sélection conservée, fermeture et navigation clavier/manette. Vérifier le retour à la run et l'absence de conflit avec les autres pauses.
+- **P6 — bilan.** Résumé de l'expédition, record réservé au bilan, équipement/faits et gains organisés sans débordement ; détails consultables, tous les gains accessibles. Garder révélation, sauvegarde, absence de double attribution et Recommencer → choix du personnage.
+- **P7 — recette commune.** Build sans warning, smoke, régressions pertinentes et nouveaux contrôles des parcours ; captures réelles en 1080p/720p, texte agrandi, profils neuf/dev. Examiner les images et corriger avant livraison ; consigner les preuves durables et les limites exactes.
+
+Aucune modification d'équilibrage ni de règles de progression. Le HUD reste un affichage de combat ; les écrans interactifs de la run entrent dans cette reprise.
+
+### 9.1 Implémentation P4–P6
+
+- **Choix de niveau.** Grandes dalles opaques, icônes 96 px, gain au premier plan, rareté portée par l'éclat et la tranche. Inventaire et statistiques séparés, noms longs renvoyés à la ligne, défilement des offres et retour du focus après renouvellement. Relancer, bannir et passer gardent leurs compteurs ; Échap annule le mode bannissement. La file de niveaux garde la run suspendue jusqu'au dernier choix.
+- **Rencontres.** Mémorial, Faille et Atelier partagent la même pierre et le même fond d'Effacement. Fenêtre large, hauteur adaptée au nombre de cartes et plafonnée ; les offres longues défilent, le bouton de sortie reste en place. Les prix et contreparties restent visibles. Les contrôles de première validation, de choix obligatoire et de récompense unique sont conservés.
+- **Butin.** Coffre illustré, nature du gain et rareté séparées. Révéler puis Reprendre la route : le résultat reste affiché jusqu'à la confirmation. La fermeture automatique est supprimée ; l'audio termine sa révélation pendant la lecture. Une confirmation ne peut attribuer le gain qu'une fois. Hauteur adaptée à la quantité de butin, défilement au-delà.
+- **Journal.** Trois espaces : constellations, index, lecture. Constellation gravée indiquant ce qui est retrouvé, texte plus grand, emplacements inconnus sans spoiler, fragment consulté mémorisé. J et Échap/B ferment ; Retour fonctionne à la souris. Entrée Journal ajoutée à la pause et liée dans l'ordre de focus. Fermer rend le contexte d'origine, sans reprendre la run lorsqu'on venait de la pause.
+- **Bilan.** Score, distance et durée en tête ; nom discret sous le portrait. Deux vues sur place : Expédition (cause, faits, frise) et Équipement (armes, dégâts, objets et Réminiscences). Les gains occupent une colonne indépendante, avec défilement pour les listes longues. Révélation et garde de validation conservées ; Rejouer ouvre le choix du personnage. Les enregistrements de run et l'attribution des gains restent dans leurs services existants.
+- **Cohérence.** La notification de Souvenir reprend la pierre. Les anciennes frises de carte devenues inutilisées sont retirées ; les éclats de rareté restent animés. La matière du fond garde ses couleurs d'origine, sans multiplier deux fois la texture dans le shader.
+
+La recette a détecté et corrigé l'entrée Journal absente de la boucle de focus de la pause, ainsi que le défilement qui pouvait suivre le pointeur au lieu de la colonne focalisée. Les grands textes de l'inventaire se renvoient à la ligne. Le banc de bilan envoie désormais le relâchement du bouton A, nécessaire aux boutons natifs.
+
+### 9.2 Validation — P4–P7 livrés
+
+Validation générale **15/15 suites**, build **0 warning, 0 erreur** ; après les derniers ajustements de hauteur, couleur et focus, validation finale **5/5** (smoke, menu_navigation, choice_screen, ui_art, input_remap). Les deux passes constatent zéro source modifiée pendant les tests. La suite de choix couvre désormais **41 contrôles**, et la navigation du Hub conserve ses **16 contrôles**.
+
+Huit scénarios dans Main puis cinq reprises visuelles ont passé : pause, cascade de niveaux, Mémorial, Faille, Atelier, butin, journal et bilan. Captures 1280×720 et 1920×1080 inspectées, dont texte agrandi à 130 %, profil neuf et longues listes de gains. La Faille a été recapturée après le dernier ajustement pour montrer les trois offres et leurs contreparties en entier. Le parcours mort réelle → bilan → Rejouer → autre personnage → nouvelle run jouable a passé.
+
+[Rapport, captures et logs conservés](../audits/menus-2026-10-11/README.md). Les états denses sont des fixtures explicites ; les neuf annonces de quête du bilan ne représentent pas neuf quêtes réellement accomplies. Entrées manette injectées, pas d'essai sur manette physique. Pas de conclusion de FPS ni de validation artistique au nom de Raphaël. Les lots demandés sont terminés sur la même branche, sans fusion vers main.
+
+### 9.3 Préparation de la PR — 11 octobre 2026
+
+À la demande de Raphaël, PR préparée depuis la même branche. Synchronisation avec `origin/main` (`6a353705`) : conflits limités à quatre documents, autres chantiers conservés et décisions des menus renumérotées §114–115. Après synchronisation : **16/16 suites** (quinze suites générales et audio), build **0 warning, 0 erreur**, aucune source modifiée pendant les tests. [Preuves](../audits/menus-2026-10-11/README.md#vérification-avant-pr-après-synchronisation-avec-main). Cette préparation n'intègre pas la refonte dans main.

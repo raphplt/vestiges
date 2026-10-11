@@ -15,7 +15,12 @@ from pathlib import Path
 
 import numpy as np
 
+from audio_bank_audit import momentary_max
+
 ROOT = Path(__file__).resolve().parents[1]
+# Gain proposé : celui qui amène le candidat à la cible des attaques d'armes, comme le contrôle de la banque.
+WEAPON_TARGET = next(f["target"] for f in json.loads((ROOT / "data/audio/mix_targets.json").read_text())["families"]
+                     if f["keys"].startswith("^sfx_weapon_"))
 RATE = 48000
 # source, vitesse, poids : les couches évoquent la matière de l'objet, sans ajouter de longs sons de tir.
 RECIPES = {
@@ -143,20 +148,21 @@ def main():
             samples = candidate(weapon_id, duration, layers, variant, credits, cache)
             name = f"{weapon_id}-{chr(65+variant)}.wav"
             write_wav(output / name, samples)
+            bank_gain = round(WEAPON_TARGET - momentary_max(output / name), 1)
             # Cadence soutenue illustrative : le runtime limite à une voix et 180 ms entre départs.
             period = max(round(.28 * RATE), len(samples) + round(.025 * RATE))
             repeated = np.zeros(period * 7)
             for start in range(0, len(repeated), period):
-                repeated[start:start + len(samples)] += samples * 10 ** (-20 / 20)
+                repeated[start:start + len(samples)] += samples * 10 ** (bank_gain / 20)
             repeated_name = name.replace('.wav', '-cadence.wav')
             write_wav(output / repeated_name, repeated)
             figures.append(f'<div><b>{label}</b><audio controls preload="none" src="{name}"></audio>'
-                           f'<small>Répétition au gain proposé (−20 dB)</small><audio controls preload="none" src="{repeated_name}"></audio>'
+                           f'<small>Répétition au gain proposé ({bank_gain:+.1f} dB)</small><audio controls preload="none" src="{repeated_name}"></audio>'
                            f'<label><input type="radio" name="{weapon_id}" value="{chr(65+variant)}">Choisir</label></div>')
             manifest.append({"weapon_id": weapon_id, "candidate": chr(65+variant), "file": name,
                              "sha256": hashlib.sha256((output / name).read_bytes()).hexdigest(),
                              "duration_sec": len(samples) / RATE, "peak_dbfs": float(20*np.log10(np.max(np.abs(samples)))),
-                             "bank_volume_db": -20, "integrated": False,
+                             "bank_volume_db": bank_gain, "integrated": False,
                              "processing": {"description": description, "variant": label, "layers": layers,
                                             "normalization": "RMS actif −23 dBFS, crête plafonnée à −8 dBFS"},
                              "sources": [credits[e] for e, _, _ in layers],

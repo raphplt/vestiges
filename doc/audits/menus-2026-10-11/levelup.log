@@ -1,0 +1,787 @@
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+OpenGL API 4.1 Metal - 91.7 - Compatibility - Using Device: Apple - Apple M1 Pro
+
+[SteamManager] Session dev/test : succès et classements Steam désactivés.
+[LocaleManager] Locale set to: fr
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_pas_herbe': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_souvenir_trouve': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_level_up_loop': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_level_up_after': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'xp_gain': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_artefact_trouve': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_sante_basse': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_shield_block': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_shield_break': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_degat_critique_recu': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_projectile_vol': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_ombre_attaque': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_rodeur_attaque': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_brute_charge': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_hurleur_cri': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_sentinelle_tir': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_rampant_surgissement': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_ambiance_foret': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_ambiance_oiseaux_1': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_ambiance_oiseaux_2': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_tonnerre_lointain': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_pluie_legere': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_orage_proche': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_foret_rafales': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_brouillard': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_bord_effacement_proche': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_boss_tentacle': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_chest_reveal': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_chipped_blade': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_heavy_hammer': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_makeshift_bow': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_crossbow': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_surgeons_scalpel': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_chain_of_names': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_compass_needle': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_memory_lantern': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_echo_gauntlets': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_sling': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_sharpened_pipe': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_cleaver': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_whip': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_throwing_axes': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_nail_mace': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_lighthouse_shard': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_photographers_flash': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_essence_staff': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_void_edge': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_childs_drawing': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_last_broadcast': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_clock_hand': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_letter_satchel': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_teachers_bell': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_weapon_music_box': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_resurgence_accent': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_armor_parry': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_void_burn': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_unstable_explosion': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_memorial_wake': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_rare_fragment': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_blade': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_blunt': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_glass': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_fire': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_paper': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+WARNING: [AudioManager] MixRate mismatch sur 'sfx_impact_electric': WAV=48000 Hz, serveur=44100 Hz → pitch incorrect probable. Réimporter dans l'éditeur Godot.
+     at: void Vestiges.Infrastructure.AudioManager.PreloadStreams() (res://scripts/Infrastructure/AudioManager.cs:361)
+     C# backtrace (most recent call first):
+         [0] void Godot.GD.PushWarning(string) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/GD.cs:396)
+         [1] void Vestiges.Infrastructure.AudioManager.PreloadStreams() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:361)
+         [2] void Vestiges.Infrastructure.AudioManager._Ready() (/Users/raph/.codex/worktrees/refonte-menus/vestiges/scripts/Infrastructure/AudioManager.cs:192)
+         [3] bool Godot.Node.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Generated/GodotObjects/Node.cs:2660)
+         [4] bool Vestiges.Infrastructure.AudioManager.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name&, Godot.NativeInterop.NativeVariantPtrArgs, Godot.NativeInterop.godot_variant&) (/Users/raph/.codex/worktrees/refonte-menus/vestiges/.godot/mono/temp/obj/Debug/Godot.SourceGenerators/Godot.SourceGenerators.ScriptMethodsGenerator/Vestiges.Infrastructure.AudioManager_ScriptMethods.generated.cs:640)
+         [5] Godot.NativeInterop.godot_bool Godot.Bridge.CSharpInstanceBridge.Call(nint, Godot.NativeInterop.godot_string_name*, Godot.NativeInterop.godot_variant**, int, Godot.NativeInterop.godot_variant_call_error*, Godot.NativeInterop.godot_variant*) (/root/godot/modules/mono/glue/GodotSharp/GodotSharp/Core/Bridge/CSharpInstanceBridge.cs:24)
+[ColorBlindFilter] Mode: Off
+[RunObservation] display=macOS screen=1 position=(6864, 0) size=(3840, 2160)
+[EnemyDataLoader] Loaded 14 enemy definitions
+[PoiDataLoader] Loaded 6 POI definitions
+[BiomeDataLoader] Loaded 5 biomes
+[EnemyVariantDataLoader] Loaded 3 variants, 5 affixes
+[SpawnManager] Config loaded — interval: 1,9s, max: 110, crisis x1,65
+[PerkDataLoader] Loaded 4 character signatures
+[LootTableLoader] Loaded 8 loot tables
+[ChestDataLoader] Loaded 4 chest definitions
+[WeaponUpgradeDataLoader] Loaded 14 upgradeable stats, weapon max level = 50
+[WeaponDataLoader] Loaded 25 weapons
+[PassiveSouvenirDataLoader] Loaded 35 passive souvenirs
+[CharacterDataLoader] Loaded 4 characters
+[QuestDataLoader] Loaded 36 quests
+[SouvenirDataLoader] Loaded 6 constellations, 19 souvenirs
+[MetaSaveManager] Created new V2 meta save
+[RunTracker] Tracking started
+[Chargement] Catalogues
+[WorldGenConfig] Loaded — radius=200×400, zones=3, biomes=5
+[CharacterSpriteLoader] 'traqueur' : 40 animations chargées
+[Chargement] Préparation des shaders...
+[WorldGenerator] Generated elliptic map radius=200×400 — biomes: Carrière Effondrée, Forêt Reconquise, Champs Sauvages, Marécages, Ruines Urbaines
+[Chargement] terrain et biomes (thread) : 727 ms
+[UrbanLayout] 53949 urban cells, bbox=[-198,-378]-[197,398]
+[UrbanLayout] Layout complete: 7459 road cells, 314 buildings, 4432 wall cells
+[ShaderWarmup] shaders=21 draw_calls=25 frames=3
+[Chargement] shaders : 883 ms (total 883 ms)
+[Chargement] Création du monde...
+[WildFieldsLayout] Layout complete: wheat=18766, fallow=7206, meadow=28979, paths=6442, hedges=1307, orchard=543
+[Chargement] plans de la ville, du marais et des champs (thread) : 1159 ms
+[PathNetwork] 165 régions, 183 liaisons, 156 tronçons, 8394 cellules, 431345 cellules explorées, 398 ms
+[Chargement] chemins (thread) : 399 ms
+[SiteComposer] 25 fermes, 826 ms
+[SiteComposer] 18 chantiers, 392 ms
+[Chargement] fermes et chantiers (thread) : 1225 ms
+[BiomeTileMapper] Biome 'collapsed_quarry' : 4 terrain(s) mappé(s)
+[BiomeTileMapper] Biome 'forest_reclaimed' : 3 terrain(s) mappé(s)
+[BiomeTileMapper] Biome 'wild_fields' : 3 terrain(s) mappé(s)
+[BiomeTileMapper] Biome 'swamp' : 3 terrain(s) mappé(s)
+[BiomeTileMapper] Biome 'swamp' : 16 groupe(s) spéciaux
+[BiomeTileMapper] Biome 'urban_ruins' : 2 terrain(s) mappé(s)
+[BiomeTileMapper] Biome 'urban_ruins' : 4 groupe(s) spéciaux
+[BiomeTileMapper] Initialisé — 5 biome(s), 4 fallback(s), 2 eau commune
+[BiomeTileMapper] Runtime tiles 'road_0' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_1' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_2' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_3' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_4' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_5' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_6' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_7' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_8' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_9' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_10' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_11' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_12' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_13' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_14' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_15' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_16' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_17' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_18' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_19' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_20' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_21' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_22' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_23' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_24' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_25' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_26' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_27' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_28' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_29' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_30' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Runtime tiles 'road_31' : 1 source(s) enregistrée(s)
+[BiomeTileMapper] Atlas du sol : 493 tuiles, 2048×512 px
+[Chargement] génération attendue, tuiles préparées : 2850 ms (total 3734 ms)
+[Chargement] Terrain... 3%
+[Chargement] Terrain... 7%
+[Chargement] Terrain... 10%
+[Chargement] Terrain... 14%
+[Chargement] Terrain... 18%
+[Chargement] Terrain... 22%
+[Chargement] Terrain... 27%
+[Chargement] Terrain... 31%
+[Chargement] Terrain... 36%
+[Chargement] Terrain... 42%
+[Chargement] Terrain... 45%
+[Chargement] Terrain... 50%
+[Chargement] Terrain... 54%
+[Chargement] Terrain... 60%
+[Chargement] Terrain... 64%
+[Chargement] Terrain... 69%
+[Chargement] Terrain... 74%
+[Chargement] tuiles : 622 ms (total 4356 ms)
+[GroundMaterial] 401×801 cellules décrites en 58 ms
+[Chargement] matériau du sol et chemins : 69 ms (total 4425 ms)
+[Chargement] Brouillard de guerre...
+[Chargement] brouillard : 41 ms (total 4466 ms)
+[PropManifest] 8 décors dans res://assets/chests/props_manifest.json
+[ChestSpawner] Spawned 39 chests
+[PropManifest] 8 décors dans res://assets/landmarks/props_manifest.json
+[LandmarkSpawner] Spawned 9 memorials
+[LandmarkSpawner] Spawned 6 rifts
+[LandmarkSpawner] Spawned 8 workshops
+[LandmarkSpawner] Spawned 10 peril steles
+[Chargement] points d'intérêt, coffres et lieux : 69 ms (total 4535 ms)
+[Chargement] Décors...
+[PropManifest] 53 décors dans res://assets/props/wild_fields/props_manifest.json
+[PropManifest] 26 décors dans res://assets/props/collapsed_quarry/props_manifest.json
+[WildFieldsComposer] 1432 haies, murets et arbres de verger
+[WildFieldsComposer] 24 scènes-récits
+[PropManifest] 26 décors dans res://assets/props/swamp/props_manifest.json
+[PropManifest] 23 décors dans res://assets/props/forest/props_manifest.json
+[PropManifest] 40 décors dans res://assets/props/urban_ruins/props_manifest.json
+[JunctionPropPlacer] 4390 décors de transition
+[PropSpawner] Found in data/props/: 'collapsed_quarry.json'
+[PropSpawner] => Registered biome 'collapsed_quarry' (20 prop types, density=0,24)
+[PropSpawner] Found in data/props/: 'swamp.json'
+[PropSpawner] => Registered biome 'swamp' (25 prop types, density=0,18)
+[PropSpawner] Found in data/props/: 'wild_fields.json'
+[PropSpawner] => Registered biome 'wild_fields' (23 prop types, density=0,22)
+[PropSpawner] Found in data/props/: 'forest_reclaimed.json'
+[PropSpawner] => Registered biome 'forest_reclaimed' (19 prop types, density=0,2)
+[PropSpawner] Found in data/props/: 'urban_ruins.json'
+[PropSpawner] => Registered biome 'urban_ruins' (12 prop types, density=0,06)
+[PropSpawner] Directory scan done: 5 entries, 5 configs loaded
+[PropSpawner] Starting spawn: radius=200 safe=195 spawn=6 seed=221092026
+[PropSpawner] Configs loaded for biomes: [collapsed_quarry, swamp, wild_fields, forest_reclaimed, urban_ruins]
+[PropSpawner] === SPAWN REPORT ===
+[PropSpawner] Cells evaluated: 153900
+[PropSpawner] Skip no biome config: 0
+[PropSpawner] Skip density filter: 121905
+[PropSpawner] Skip terrain mismatch: 0
+[PropSpawner] Skip too close: 20909
+[PropSpawner] Skip texture missing: 0
+[PropSpawner] TOTAL SPAWNED: 11086
+[Chargement] décors des biomes : 807 ms (total 5342 ms)
+[UrbanBuildingPlacer] Repères : 2 église(s), 2 pylône(s)
+[UrbanPropPlacer] Placed 1627 building masses, 720 road props, 739 sidewalk props
+[Chargement] décors de la ville : 162 ms (total 5504 ms)
+[Chargement] décors du marais : 35 ms (total 5539 ms)
+[WorldSetup] Décalques au sol hors tri : 37 / 21355
+[Chargement] décalques séparés : 27 ms (total 5566 ms)
+[PropOcclusion] 12456 décors occultants indexés dans 3860 cases
+[Chargement] index d'occlusion construit : 26 ms (total 5593 ms)
+[PropChunks] 21355 décors répartis en 468 tronçons de 768 px
+[Chargement] tronçons de décors : 747 ms (total 6339 ms)
+[Chargement] Atmosphère...
+[Chargement] atmosphère : 29 ms (total 6369 ms)
+[WorldSetup] World generated with seed 221092026
+[Chargement] Préparation des créatures...
+[EnemyPool] Prewarmed 20 enemies (async)
+[Chargement] créatures du pool : 81 ms (total 6450 ms)
+[EnemySpriteLoader] 'charognard' : 32 animations chargées depuis 'charognard' en 48,8 ms
+[EnemySpriteLoader] 'fading_spitter' : 32 animations chargées depuis 'cracheur' en 46,2 ms
+[EnemySpriteLoader] 'hurleur' : 32 animations chargées depuis 'hurleur' en 50,9 ms
+[EnemySpriteLoader] 'presage' : 32 animations chargées depuis 'presage' en 53,5 ms
+[EnemySpriteLoader] 'rampant' : 32 animations chargées depuis 'rampant' en 47,8 ms
+[EnemySpriteLoader] 'rodeur' : 32 animations chargées depuis 'rodeur' en 45,2 ms
+[EnemySpriteLoader] 'shade' : 32 animations chargées depuis 'shade' en 46,1 ms
+[EnemySpriteLoader] 'shadow_crawler' : 32 animations chargées depuis 'shadow_crawler' en 49,3 ms
+[EnemySpriteLoader] 'tisseuse' : 16 animations chargées depuis 'tisseuse' en 59,8 ms
+[EnemySpriteLoader] 'treant_corrompu' : 32 animations chargées depuis 'treant_corrompu' en 53,5 ms
+[EnemySpriteLoader] 'void_brute' : 32 animations chargées depuis 'void_brute' en 47,5 ms
+[EnemySpriteLoader] 'wailing_sentinel' : 32 animations chargées depuis 'sentinelle' en 41,1 ms
+[Chargement] animations des créatures : 813 ms (total 7263 ms)
+[CharacterSpriteLoader] 'habitant_ecoliere' : 16 animations chargées
+[CharacterSpriteLoader] 'habitant_vieil_homme' : 16 animations chargées
+[CharacterSpriteLoader] 'habitant_ouvriere' : 16 animations chargées
+[Chargement] effets et scripts de la run : 315 ms (total 7579 ms)
+[Chargement] Initialisation...
+[RunEventDataLoader] Loaded 5 run events, 2 fixed
+[SmallPlaceDirector] well : 10 lieux sur 16 décors
+[SmallPlaceDirector] crystal_vein : 11 lieux sur 20 décors
+[SmallPlaceDirector] scarecrow : 6 lieux sur 7 décors
+[SmallPlaceDirector] mailbox : 24 lieux sur 63 décors
+[SmallPlaceDirector] mine_cart : 14 lieux sur 58 décors
+[SmallPlaceDirector] abandoned_car : 20 lieux sur 142 décors
+[SmallPlaceDirector] phone_booth : 12 lieux sur 54 décors
+[SmallPlaceDirector] bus_shelter : 14 lieux sur 61 décors
+[SmallPlaceDirector] picnic : 6 lieux sur 6 décors
+[QuestTracker] 36 quêtes suivies
+[Player] Weapon added [0]: Arc du gymnase
+[Player] Initialized as Le Traqueur (HP:70, ATK:12, SPD:240)
+[PerkManager] Applied passive: Œil d'Aigle
+[ScoreManager] Character multiplier set to x1,1
+[GameManager] Hub → Run
+[GameBootstrap] Run started with traqueur
+[Chargement] systèmes de la run : 175 ms (total 7753 ms)
+[BiomeAtmosphere] Biome 'urban_ruins' → fog density=0,10, swamp=0,0
+[Player] Passive added [0]: Papier carbone (level 1/30)
+[Player] Passive upgraded: Papier carbone → level 14/30
+[Player] Weapon added [1]: Cloueuse
+[FragmentManager] Level 60: offering 3 fragments (pool had 57)
+[RunObservation] RESULT levelup_captured=True output=/tmp/vestiges-menus-final-vues-levelup

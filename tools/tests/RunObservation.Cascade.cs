@@ -37,6 +37,21 @@ public partial class RunObservation
         eventBus.EmitSignal(EventBus.SignalName.XpGained, XpForLevels(progression, 5));
         await Frames(20);
         Check(ScreenOpen() && fragments.QueuedLevels == 4, $"cinq niveaux d'un coup : écran ouvert, 4 en attente ({fragments.QueuedLevels})");
+        int rerolls = fragments.RerollsRemaining;
+        activate.Invoke(screen, new object[] { fragments.PendingChoices.Count });
+        await Frames(3);
+        Check(fragments.RerollsRemaining == rerolls - 1 && fragments.QueuedLevels == 4 && ScreenOpen(), "relancer ne consomme pas un niveau en attente");
+        int banishes = fragments.BanishesRemaining;
+        activate.Invoke(screen, new object[] { fragments.PendingChoices.Count + 1 });
+        GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        await Frames(3);
+        Check(!(bool)screen.GetType().GetField("_banishMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen)
+            && fragments.BanishesRemaining == banishes && ScreenOpen(), "Échap annule le mode bannissement sans consommer de choix");
+        activate.Invoke(screen, new object[] { fragments.PendingChoices.Count + 1 });
+        activate.Invoke(screen, new object[] { 0 });
+        await Frames(3);
+        Check(fragments.BanishesRemaining == banishes - 1 && fragments.QueuedLevels == 4 && ScreenOpen(), "bannir renouvelle l'offre et conserve la pause");
+        AssertMenuFits((Control)screen.GetType().GetField("_layout", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen), "montée de niveau");
         for (int choice = 0; choice < 5; choice++)
         {
             SaveFrame($"cascade-{choice}");
@@ -55,6 +70,8 @@ public partial class RunObservation
         activate.Invoke(screen, new object[] { 0 });
         await Frames(6);
         GD.Print($"[Cascade] RESULT failures={failures} ; captures dans {_output}");
+        if (failures > 0) throw new System.InvalidOperationException("Échec de la file de niveaux.");
+        GD.Print("[RunObservation] RESULT cascade failures=0");
     }
 
     /// <summary>Attente en temps de jeu : la fenêtre de capture tourne bien au-delà de 60 images par seconde.</summary>

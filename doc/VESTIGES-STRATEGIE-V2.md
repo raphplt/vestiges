@@ -810,6 +810,9 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 15 M6 : fond de forêt original conservé à −2 dB, réservé à la Forêt Reconquise par le biome du joueur ; oiseaux locaux, sorties et retours rapides vérifiés, cinq biomes traversés en run enregistrée, build et smoke/audio/musique verts (10 octobre 2026, §94).
 - [x] Plan 15 M7 : arrêt immédiat des sons de run à la mort, ambiances et boucles comprises ; relances tardives bloquées et deuxième run réactivée, régression avant/après (7 voix résiduelles → 0), mort réelle après combat et smoke/audio/musique vérifiés (10 octobre 2026, §104).
 - [x] Plan 15 X1–X5 (revue de mix) : limiteur Master, bus World étouffé et compressé hors interface, ducking des grands moments, boucles en fondu, atténuation à distance ; banque recalée par famille (Ombre −10 dB, armes égalisées et audibles, pas homogènes, musiques à −16 LUFS), fichiers saturés, déphasés et à silence de tête corrigés ; 140 → 0 échantillons saturés en run enregistrée, smoke/audio/musique verts (10 octobre 2026, §107).
+- [x] Plan 15 X6 : garde-fous du mix dans la suite audio (cibles par famille, plafond, silences de tête, phase ; `tools/audio_bank_audit.py`, `data/audio/mix_targets.json`), variation de volume des 44 sons répétés, réglages par défaut cohérents, gain proposé par l'outil des sons d'armes ; smoke/audio/musique verts (11 octobre 2026).
+- [x] Plan 15 X7 : curseurs audio à 100 % par défaut, équilibre du mix hors curseur, anciens réglages convertis ; sons du monde placés à gauche ou à droite selon leur source à l'écran (créatures, impacts, boss) ; smoke/audio/musique, capacités et Indicible verts (11 octobre 2026, §111).
+- [x] Plan 15 X8 : coup au contact sans son de créature, la blessure seule (§112) ; annonce du tir visé calée pour culminer au tir et réveil de la Faille intégrés ; soin et bouclier rechargé laissés muets par choix ; smoke/audio/musique/capacités verts (11 octobre 2026, §113).
 - [x] Écran de mort reworké (transition visuelle + score détaillé + stats) : bilan en trois zones, première passe du plan 02 lot D (27 septembre 2026) ; séquence de mort dans le monde, lot M1 ; distance, éliminations par arme et frise relevées, lot M2 ; bilan en une page dense, lot M3 ; gains animés, lot M4 (28 septembre 2026). Recette en jeu de Raphaël attendue.
 
 ### Refonte objets et spécialisations — plan 05, 28 septembre 2026
@@ -872,6 +875,15 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Notifications in-game de complétion de quête.
 
 ### Phase F — Art et polish (4+ semaines)
+
+- [x] Plan 04 P1 : Partir/Recommencer → sélection du personnage → run ; camp d’ambiance, nom discret et fiche détaillée facultative. Profils neuf/dev, verrouillage et relance avec changement de héros vérifiés (10 octobre 2026, branche `codex/refonte-menus`).
+- [x] Plan 04 P2 : menus intérieurs Pierre et Effacement, textures partagées, portrait découpé en pixels, liens ciblés Quêtes/Collection/Personnages et retour au contexte ; captures 720p/1080p et régressions vertes (même branche, sans fusion).
+- [x] Plan 04 P3 : pause avec équipement compact et détail sélectionnable, défilement des Oublis, abandon confirmé, paramètres opaques et focus restitué ; vrais scénarios de pause, build sans warning et suites concernées vérifiés. Recette artistique humaine ouverte ([compte rendu](plans/04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés)).
+
+- [x] Plan 04 P4 : montée de niveau, Mémorial/Faille/Atelier et butin dans la direction Pierre et Effacement ; offres défilantes, contreparties lisibles, butin confirmé après lecture. Relance/bannissement/file de niveaux et récompense unique vérifiés (11 octobre 2026, `codex/refonte-menus`).
+- [x] Plan 04 P5 : Journal en trois espaces, fragments inconnus sans spoiler, sélection conservée, accès depuis la pause et retour au contexte. Profils neuf/dev, J/B et focus vérifiés.
+- [x] Plan 04 P6 : bilan Expédition/Équipement, gains défilants, nom discret, record conservé ; mort réelle → Rejouer → choix d'un autre héros → nouvelle run vérifié.
+- [x] Plan 04 P7 : recette des menus, build zéro warning, 15/15 suites générales puis 5/5 finales ; captures réelles 720p/1080p, texte agrandi et huit scénarios en run. [Preuves et limites](audits/menus-2026-10-11/README.md), aucune fusion vers main.
 
 - [ ] Mettre en place le pipeline d'assets (IA + post-processing + Aseprite).
 - [ ] Remplacer les Polygon2D priorité 1 (Player, ennemis principaux, projectiles).

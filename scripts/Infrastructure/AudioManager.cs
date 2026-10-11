@@ -21,6 +21,18 @@ public partial class AudioManager : Node
 	// Sons du monde : sous-bus de SFX (même curseur), seul à être étouffé et compressé ; l'interface reste nette.
 	private const string BusWorld    = "World";
 	private const string BusAmbiance = "Ambiance";
+	// Équilibre interne du mix, hors curseurs : les curseurs du joueur partent tous de 100 %.
+	private const float MusicMixDb    = -6f;
+	private const float AmbianceMixDb = -8f;
+	// Réglages enregistrés avant la version 2 : musique et ambiance y portaient encore cet équilibre.
+	private const int SettingsMixVersion = 2;
+
+	// --- Placement gauche/droite des sons du monde selon leur position à l'écran ---
+	// Cinq positions suffisent pour des sons brefs ; l'écart reste modéré pour ne jamais vider une oreille.
+	private static readonly (string Bus, float Pan)[] PanBuses =
+		{ ("WorldPanL2", -0.5f), ("WorldPanL1", -0.25f), (BusWorld, 0f), ("WorldPanR1", 0.25f), ("WorldPanR2", 0.5f) };
+	private const float PanCenterZone = 0.2f;
+	private const float PanOuterZone = 0.6f;
 
 	// --- Monde assourdi (mort du joueur) ---
 	private const float MuffleOpenHz = 20000f;
@@ -31,6 +43,7 @@ public partial class AudioManager : Node
 	// --- Ducking de la musique sur les grands moments (revue de mix, plan 15 X4) ---
 	private const float DuckAttackSec = 0.08f;
 	private const float DuckReleaseSec = 0.8f;
+	// Équilibre de la musique et ducking : un seul amplificateur, MusicMixDb au repos.
 	private AudioEffectAmplify _musicDuck;
 	private Tween _duckTween;
 	private float _duckHoldUntil;
@@ -124,6 +137,8 @@ public partial class AudioManager : Node
 	// --- Chemins de tous les streams ---
 	private readonly Dictionary<string, string> _paths = new();
 	private readonly Dictionary<string, float> _soundVolumes = new();
+	// Écart aléatoire de volume par lecture : un son répété (coup, pas) ne sonne pas comme une mitraillette.
+	private readonly Dictionary<string, float> _soundVolumeVariance = new();
 
 	public const string SoundBankPath = "res://data/audio/sounds.json";
 
@@ -145,6 +160,8 @@ public partial class AudioManager : Node
 			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
 			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
 			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusWorld;
+			if (settings.ContainsKey("volume_variance_db"))
+				_soundVolumeVariance[key] = (float)settings["volume_variance_db"].AsDouble();
 			if (settings.ContainsKey("duck_music_db"))
 				_soundDucks[key] = ((float)settings["duck_music_db"].AsDouble(), (float)settings["duck_sec"].AsDouble());
 			if (settings.ContainsKey("biome"))
@@ -305,11 +322,20 @@ public partial class AudioManager : Node
 
 	private void EnsureAudioBuses()
 	{
-		EnsureBus(BusMusic,    -6f, BusMaster);
+		EnsureBus(BusMusic,    0f, BusMaster);
 		EnsureBus(BusSfx,      0f, BusMaster);
 		EnsureBus(BusWorld,    0f, BusSfx);
-		EnsureBus(BusAmbiance, -8f, BusMaster);
+		EnsureBus(BusAmbiance, 0f, BusMaster);
+		foreach ((string bus, float pan) in PanBuses)
+		{
+			if (bus == BusWorld)
+				continue;
+			EnsureBus(bus, 0f, BusWorld);
+			EnsureBusEffect(bus, () => new AudioEffectPanner()).Pan = pan;
+		}
 		_musicDuck = EnsureBusEffect(BusMusic, () => new AudioEffectAmplify());
+		_musicDuck.VolumeDb = MusicMixDb;
+		EnsureBusEffect(BusAmbiance, () => new AudioEffectAmplify()).VolumeDb = AmbianceMixDb;
 		// Compression douce du monde : une salve d'impacts et de coups ne saute pas au-dessus du reste.
 		EnsureBusEffect(BusWorld, () => new AudioEffectCompressor { Threshold = -18f, Ratio = 3f, AttackUs = 5000f, ReleaseMs = 150f });
 		// Plafond de sortie : la somme des voix ne sature jamais.
@@ -344,16 +370,17 @@ public partial class AudioManager : Node
 	private void DuckMusic(float db, float holdSec)
 	{
 		float now = NowMsec / 1000f;
-		bool deeper = db < _musicDuck.VolumeDb - 0.01f;
+		float current = _musicDuck.VolumeDb - MusicMixDb;
+		bool deeper = db < current - 0.01f;
 		if (!deeper && now + holdSec <= _duckHoldUntil)
 			return;
 		_duckHoldUntil = Mathf.Max(_duckHoldUntil, now + holdSec);
-		float target = Mathf.Min(db, _musicDuck.VolumeDb);
+		float target = MusicMixDb + Mathf.Min(db, current);
 		_duckTween?.Kill();
 		_duckTween = CreateTween().SetPauseMode(Tween.TweenPauseMode.Process).SetIgnoreTimeScale();
 		_duckTween.TweenProperty(_musicDuck, "volume_db", target, DuckAttackSec);
 		_duckTween.TweenInterval(_duckHoldUntil - now);
-		_duckTween.TweenProperty(_musicDuck, "volume_db", 0f, DuckReleaseSec);
+		_duckTween.TweenProperty(_musicDuck, "volume_db", MusicMixDb, DuckReleaseSec);
 		_duckTween.TweenCallback(Callable.From(() => _duckHoldUntil = 0f));
 	}
 
@@ -362,7 +389,7 @@ public partial class AudioManager : Node
 		_duckTween?.Kill();
 		_duckTween = null;
 		_duckHoldUntil = 0f;
-		_musicDuck.VolumeDb = 0f;
+		_musicDuck.VolumeDb = MusicMixDb;
 	}
 
 	// =========================================================
@@ -375,10 +402,19 @@ public partial class AudioManager : Node
 		if (cfg.Load(SettingsPath) != Error.Ok)
 			return;
 
-		SetBusVolumeLinear("Master",   (float)cfg.GetValue("audio", "master",   1.0).AsDouble());
-		SetBusVolumeLinear(BusMusic,   (float)cfg.GetValue("audio", "music",    1.0).AsDouble());
-		SetBusVolumeLinear(BusSfx,     (float)cfg.GetValue("audio", "sfx",      1.0).AsDouble());
-		SetBusVolumeLinear(BusAmbiance,(float)cfg.GetValue("audio", "ambiance", 0.7).AsDouble());
+		float music = (float)cfg.GetValue("audio", "music", 1.0).AsDouble();
+		float ambiance = (float)cfg.GetValue("audio", "ambiance", 1.0).AsDouble();
+		// Avant la version 2, l'équilibre du mix était dans les curseurs (musique 50 %, ambiance 40 % par défaut) :
+		// le retirer garde le niveau entendu et ramène l'ancien défaut à 100 %.
+		if ((int)cfg.GetValue("audio", "mix_version", 1) < SettingsMixVersion)
+		{
+			music = Mathf.Min(1f, music / Mathf.DbToLinear(MusicMixDb));
+			ambiance = Mathf.Min(1f, ambiance / Mathf.DbToLinear(AmbianceMixDb));
+		}
+		SetBusVolumeLinear("Master",   (float)cfg.GetValue("audio", "master", 1.0).AsDouble());
+		SetBusVolumeLinear(BusMusic,   music);
+		SetBusVolumeLinear(BusSfx,     (float)cfg.GetValue("audio", "sfx", 1.0).AsDouble());
+		SetBusVolumeLinear(BusAmbiance, ambiance);
 	}
 
 	public void SaveSettings()
@@ -388,6 +424,7 @@ public partial class AudioManager : Node
 		cfg.SetValue("audio", "music",    GetBusVolumeLinear(BusMusic));
 		cfg.SetValue("audio", "sfx",      GetBusVolumeLinear(BusSfx));
 		cfg.SetValue("audio", "ambiance", GetBusVolumeLinear(BusAmbiance));
+		cfg.SetValue("audio", "mix_version", SettingsMixVersion);
 		cfg.Save(SettingsPath);
 	}
 
@@ -451,7 +488,37 @@ public partial class AudioManager : Node
 		Instance?.PlaySfx(key, pitchVariance, volumeDb, basePitch);
 	}
 
-	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f)
+	/// <summary>
+	/// Son du monde placé à gauche ou à droite selon la position de sa source à l'écran. <paramref name="endsAfter"/>
+	/// (secondes, 0 = son entier) fait partir un son plus long en cours de route pour qu'il culmine à cet instant :
+	/// une annonce finit avec ce qu'elle annonce.
+	/// </summary>
+	public static void PlayAt(string key, Vector2 worldPosition, float pitchVariance = 0.05f, float volumeDb = 0f, float endsAfter = 0f)
+	{
+		if (Instance == null)
+			return;
+		float from = 0f;
+		if (endsAfter > 0f && Instance._streams.TryGetValue(key, out AudioStream stream))
+			from = Mathf.Max(0f, (float)stream.GetLength() - endsAfter);
+		Instance.PlayWorld(key, pitchVariance, volumeDb, 1f, Instance.PanBusFor(worldPosition), from);
+	}
+
+	private string PanBusFor(Vector2 worldPosition)
+	{
+		Camera2D camera = GetViewport().GetCamera2D();
+		if (camera == null)
+			return BusWorld;
+		float halfWidth = GetViewport().GetVisibleRect().Size.X * 0.5f / camera.Zoom.X;
+		float x = (worldPosition.X - camera.GetScreenCenterPosition().X) / Mathf.Max(1f, halfWidth);
+		float side = Mathf.Abs(x);
+		int step = side < PanCenterZone ? 0 : side < PanOuterZone ? 1 : 2;
+		return PanBuses[2 + (x < 0f ? -step : step)].Bus;
+	}
+
+	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f) =>
+		PlayWorld(key, pitchVariance, volumeDb, basePitch, null);
+
+	private void PlayWorld(string key, float pitchVariance, float volumeDb, float basePitch, string panBus, float fromSeconds = 0f)
 	{
 		if (_runAudioStopped || !_streams.TryGetValue(key, out AudioStream stream))
 			return;
@@ -473,11 +540,14 @@ public partial class AudioManager : Node
 		_sfxLastPlayTime[key] = now;
 		SoundRequested?.Invoke(key, stolen ? SoundOutcome.VoiceStolen : SoundOutcome.Played);
 
-		player.Bus = _soundBuses[key];
+		// Seuls les sons du monde se placent ; une ambiance garde son bus.
+		player.Bus = panBus != null && _soundBuses[key] == BusWorld ? panBus : _soundBuses[key];
 		player.Stream = SelectVariant(key, stream);
 		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
-		player.Play();
+		if (_soundVolumeVariance.TryGetValue(key, out float variance))
+			player.VolumeDb += _rng.RandfRange(-variance, variance);
+		player.Play(fromSeconds);
 		if (_soundDucks.TryGetValue(key, out (float Db, float Sec) duck))
 			DuckMusic(duck.Db, duck.Sec);
 	}
@@ -755,7 +825,7 @@ public partial class AudioManager : Node
 	{
 		// Son de dissolution discret — pas sur chaque kill pour éviter la saturation
 		if (_rng.Randf() < 0.5f)
-			PlaySfx("sfx_monde_dissolution", 0.08f, -6f);
+			PlayWorld("sfx_monde_dissolution", 0.08f, -6f, 1f, PanBusFor(position));
 	}
 
 	private float _lastKnownMaxHp;

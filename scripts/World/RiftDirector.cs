@@ -106,6 +106,7 @@ public partial class RiftDirector : Node
             cards.Add(BuildCard(option, oubli));
         }
 
+        AudioManager.PlayUI("sfx_rift_wake");
         if (_reveal == null)
         {
             OpenOffers(rift, offers, cards, true);

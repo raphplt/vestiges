@@ -75,6 +75,12 @@ public partial class VoidTransition : CanvasLayer
 		_root.Visible = false;
 	}
 
+	public override void _Input(InputEvent @event)
+	{
+		// Le départ est confirmé : aucun contrôle du menu ne doit encore recevoir d’entrée.
+		if (_isPlaying) GetViewport().SetInputAsHandled();
+	}
+
 	/// <summary>Lance la transition. Appelle onComplete quand c'est fini.</summary>
 	public void Play(Action onComplete)
 	{

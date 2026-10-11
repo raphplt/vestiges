@@ -15,6 +15,17 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class PauseMenu : CanvasLayer
 {
+	[Signal] public delegate void JournalRequestedEventHandler();
+	private bool _journalOpen;
+	private Button _journalButton;
+
+	public void RestoreAfterJournal()
+	{
+		_journalOpen = false;
+		_root.Visible = _isPaused;
+		if (_isPaused) _journalButton.GrabFocus();
+	}
+
 	private static readonly Color GoldBright = UITheme.GoldBright;
 	private static readonly Color TextVeryDim = UITheme.TextVeryDim;
 	private static readonly Color StatLabelColor = PlayerSheet.StatLabelColor;
@@ -23,9 +34,14 @@ public partial class PauseMenu : CanvasLayer
 	private const string MenusPath = UITheme.MenusPath;
 
 	private Control _root;
+	private HBoxContainer _content;
 	private bool _isPaused;
 	private SettingsScreen _settingsScreen;
 	private VBoxContainer _loadoutContainer;
+	private VBoxContainer _inventoryContainer;
+	private Control _confirmation;
+	private Control _confirmReturnFocus;
+	private System.Action _confirmAction;
 	private VBoxContainer _sheetContainer;
 	private Texture2D _panelTex;
 	private Texture2D _btnNormalTex;
@@ -48,6 +64,8 @@ public partial class PauseMenu : CanvasLayer
 
 		_settingsScreen = new SettingsScreen { Name = "SettingsScreen" };
 		AddChild(_settingsScreen);
+		_settingsScreen.Opened += () => _root.Visible = false;
+		_settingsScreen.Closed += () => _root.Visible = _isPaused;
 
 		BuildUI();
 		_root.Visible = false;
@@ -55,20 +73,36 @@ public partial class PauseMenu : CanvasLayer
 
 	public override void _Process(double delta)
 	{
-		if (!_isPaused || _settingsScreen.IsOpen)
+		if (!_isPaused || _settingsScreen.IsOpen || _confirmation != null || _journalOpen)
 			return;
 		float axis = Input.GetAxis("scroll_up", "scroll_down");
 		if (axis == 0f)
 			return;
 		int step = Mathf.RoundToInt(axis * ColumnScrollSpeed * (float)delta);
+		Control focus = GetViewport().GuiGetFocusOwner();
 		foreach (ScrollContainer scroll in _columnScrolls)
-			scroll.ScrollVertical += step;
+		{
+			if (scroll == focus || (focus != null && scroll.IsAncestorOf(focus)))
+			{ scroll.ScrollVertical += step; return; }
+		}
+		foreach (ScrollContainer scroll in _columnScrolls)
+		{
+			if (scroll.GetGlobalRect().HasPoint(scroll.GetGlobalMousePosition()))
+			{ scroll.ScrollVertical += step; return; }
+		}
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (!@event.IsActionPressed("ui_cancel"))
+		if (_journalOpen || !@event.IsActionPressed("ui_cancel"))
 			return;
+
+		if (_confirmation != null)
+		{
+			CloseConfirmation();
+			GetViewport().SetInputAsHandled();
+			return;
+		}
 
 		if (_settingsScreen.IsOpen)
 		{
@@ -119,6 +153,7 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
+		GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Hub);
 		GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
 	}
 
@@ -136,23 +171,20 @@ public partial class PauseMenu : CanvasLayer
 		_root.ProcessMode = ProcessModeEnum.Always;
 		AddChild(_root);
 
-		// Overlay sombre
-		ColorRect overlay = new();
-		overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		overlay.Color = new Color(0.02f, 0.025f, 0.05f, 0.84f);
-		_root.AddChild(overlay);
+		MenuSkin.AddBackdrop(_root, subdued: true);
 
-		// Une hauteur bornée laisse le monde visible ; l'équipement garde l'espace principal.
+		// L’équipement garde l’espace principal ; la fiche conserve une hauteur bornée.
 		HBoxContainer hbox = new();
+		_content = hbox;
 		hbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-		hbox.OffsetLeft = -770;
-		hbox.OffsetRight = 770;
-		hbox.OffsetTop = -390;
-		hbox.OffsetBottom = 390;
+		hbox.OffsetLeft = -840;
+		hbox.OffsetRight = 840;
+		hbox.OffsetTop = -410;
+		hbox.OffsetBottom = 410;
 		hbox.AddThemeConstantOverride("separation", 30);
 		_root.AddChild(hbox);
 
-		VBoxContainer vbox = new() { CustomMinimumSize = new Vector2(280, 0) };
+		VBoxContainer vbox = new() { CustomMinimumSize = new Vector2(240, 0) };
 		vbox.AddThemeConstantOverride("separation", 12);
 		hbox.AddChild(vbox);
 		Label title = UITheme.MakeLabel("PAUSE", TextRole.Display, GoldBright, TextWeight.Bold);
@@ -168,12 +200,21 @@ public partial class PauseMenu : CanvasLayer
 		settingsBtn.Pressed += OpenSettings;
 		vbox.AddChild(settingsBtn);
 
-		Button hubBtn = CreateButton("Retour au Hub");
-		hubBtn.Pressed += ReturnToHub;
+		_journalButton = CreateButton("Journal");
+		_journalButton.Pressed += () =>
+		{
+			_journalOpen = true;
+			_root.Visible = false;
+			EmitSignal(SignalName.JournalRequested);
+		};
+		vbox.AddChild(_journalButton);
+
+		Button hubBtn = CreateButton("Abandonner la run");
+		hubBtn.Pressed += () => ConfirmExit(false);
 		vbox.AddChild(hubBtn);
 
 		Button quitBtn = CreateButton("Quitter");
-		quitBtn.Pressed += QuitGame;
+		quitBtn.Pressed += () => ConfirmExit(true);
 		vbox.AddChild(quitBtn);
 
 		Control spacer = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
@@ -189,10 +230,26 @@ public partial class PauseMenu : CanvasLayer
 		hint.AddThemeColorOverride("font_color", TextVeryDim);
 		vbox.AddChild(hint);
 
-		_loadoutContainer = BuildInfoPanel(hbox, "ÉQUIPEMENT", 760);
+		PanelContainer inventoryPanel = new() { CustomMinimumSize = new Vector2(760, 0) };
+		inventoryPanel.AddThemeStyleboxOverride("panel", MenuSkin.Panel(24));
+		hbox.AddChild(inventoryPanel);
+		VBoxContainer inventory = new();
+		inventory.AddThemeConstantOverride("separation", 12);
+		inventoryPanel.AddChild(inventory);
+		inventory.AddChild(UITheme.MakeLabel("ÉQUIPEMENT", TextRole.Subhead, GoldBright));
+		_inventoryContainer = new VBoxContainer();
+		_inventoryContainer.AddThemeConstantOverride("separation", 10);
+		inventory.AddChild(_inventoryContainer);
+		ScrollContainer detailScroll = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FocusMode = Control.FocusModeEnum.All };
+		inventory.AddChild(detailScroll);
+		_columnScrolls.Add(detailScroll);
+		_loadoutContainer = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		_loadoutContainer.AddThemeConstantOverride("separation", 10);
+		detailScroll.AddChild(_loadoutContainer);
 		_sheetContainer = BuildInfoPanel(hbox, "STATISTIQUES", 440);
 		// Boucle explicite : la géométrie des colonnes ne détourne pas la navigation.
-		Button[] buttons = { resumeBtn, settingsBtn, hubBtn, quitBtn };
+		Button[] buttons = { resumeBtn, settingsBtn, _journalButton, hubBtn, quitBtn };
 		for (int i = 0; i < buttons.Length; i++)
 		{
 			Button button = buttons[i];
@@ -234,6 +291,8 @@ public partial class PauseMenu : CanvasLayer
 		{
 			SizeFlagsVertical = Control.SizeFlags.ExpandFill,
 			HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+			FocusMode = Control.FocusModeEnum.All,
+			FollowFocus = true,
 		};
 		wrapper.AddChild(scroll);
 		_columnScrolls.Add(scroll);
@@ -251,34 +310,116 @@ public partial class PauseMenu : CanvasLayer
 	{
 		if (_loadoutContainer == null)
 			return;
-		foreach (Node child in _loadoutContainer.GetChildren())
-			child.QueueFree();
-		foreach (Node child in _sheetContainer.GetChildren())
-			child.QueueFree();
-
-		if (GetTree().GetFirstNodeInGroup("player") is not Player player)
-			return;
-
-		PlayerSheet.AddSectionTitle(_loadoutContainer, "Armes");
+		MenuSkin.Clear(_loadoutContainer);
+		MenuSkin.Clear(_inventoryContainer);
+		MenuSkin.Clear(_sheetContainer);
+		if (GetTree().GetFirstNodeInGroup("player") is not Player player) return;
+		GridContainer weapons = InventoryGroup("Armes", 4);
 		foreach (WeaponInstance weapon in player.WeaponSlots)
-			AddWeaponRow(player, weapon);
-		PlayerSheet.AddSectionTitle(_loadoutContainer, Tr("INVENTORY_BADGES"));
+			AddInventoryTile(weapons, weapon.Sprite, weapon.Name, $"Niv {weapon.Level}", () => AddWeaponRow(player, weapon));
+		FillEmpty(weapons, player.WeaponSlotLimit);
+		GridContainer badges = InventoryGroup(Tr("INVENTORY_BADGES"), 4);
 		foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
-			AddPassiveRow(badge);
-		if (player.BadgeSlots.Count == 0)
-			PlayerSheet.AddLine(_loadoutContainer, Tr("INVENTORY_NONE_BADGE"), "", TextVeryDim);
-		PlayerSheet.AddSectionTitle(_loadoutContainer, $"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}");
+			AddInventoryTile(badges, badge.Data.Icon, badge.Data.Name, $"Niv {badge.Level}", () => AddPassiveRow(badge));
+		FillEmpty(badges, InventoryConfig.BadgeSlots);
+		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
+		GridContainer objects = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6);
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-			AddPassiveRow(passive);
-		if (player.PassiveSlots.Count == 0)
-			PlayerSheet.AddLine(_loadoutContainer, "Aucun pour l'instant.", "", TextVeryDim);
-		PlayerSheet.AddSectionTitle(_loadoutContainer, "Réminiscences");
+			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"×{passive.Copies}", () => AddPassiveRow(passive));
+		FillEmpty(objects, objects.Columns);
+		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)
-			AddPerkRow(perk, player);
-		if (player.Specializations.Count == 0)
-			PlayerSheet.AddLine(_loadoutContainer, "Aucune pour l'instant.", "", TextVeryDim);
+			AddInventoryTile(perks, perk.Icon, perk.Name, "", () => AddPerkRow(perk, player));
+		FillEmpty(perks, PerkSpecializationDataLoader.Config.MaxEquipped);
+		if (player.WeaponSlots.Count > 0) AddWeaponRow(player, player.WeaponSlots[0]);
 
 		UpdateSheet(player);
+	}
+
+	private GridContainer InventoryGroup(string title, int columns)
+	{
+		_inventoryContainer.AddChild(UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor));
+		GridContainer grid = new() { Columns = columns, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+		grid.AddThemeConstantOverride("h_separation", 8);
+		_inventoryContainer.AddChild(grid);
+		return grid;
+	}
+
+	private void AddInventoryTile(GridContainer grid, string icon, string name, string level, System.Action detail)
+	{
+		Button tile = MenuSkin.Button("");
+		tile.TooltipText = name;
+		tile.AccessibilityName = name;
+		tile.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
+		TextureRect picture = new() { Texture = UITheme.LoadTex(icon), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+			Position = new Vector2((tile.CustomMinimumSize.X - 48) / 2, 8), Size = new Vector2(48, 48), MouseFilter = Control.MouseFilterEnum.Ignore };
+		tile.AddChild(picture);
+		Label text = UITheme.MakeLabel(level, TextRole.Body, UITheme.TextLight, align: HorizontalAlignment.Center);
+		text.Position = new Vector2(0, 62);
+		text.Size = new Vector2(tile.CustomMinimumSize.X, 24);
+		tile.AddChild(text);
+		void Inspect() { MenuSkin.Clear(_loadoutContainer); detail(); }
+		tile.MouseEntered += Inspect;
+		tile.FocusEntered += Inspect;
+		tile.Pressed += Inspect;
+		grid.AddChild(tile);
+	}
+
+	private static void FillEmpty(GridContainer grid, int count)
+	{
+		while (grid.GetChildCount() < count)
+		{
+			Button empty = MenuSkin.Button("—");
+			empty.Disabled = true;
+			empty.FocusMode = Control.FocusModeEnum.None;
+			empty.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
+			grid.AddChild(empty);
+		}
+	}
+
+	private void ConfirmExit(bool quit)
+	{
+		_confirmReturnFocus = GetViewport().GuiGetFocusOwner();
+		_confirmAction = quit ? QuitGame : ReturnToHub;
+		_content.Visible = false;
+		_confirmation = new Control { Name = "AbandonConfirmation" };
+		_root.AddChild(_confirmation);
+		_confirmation.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		ColorRect veil = new() { Color = new Color(0.035f, 0.035f, 0.06f, 0.94f) };
+		_confirmation.AddChild(veil);
+		veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		PanelContainer panel = new();
+		_confirmation.AddChild(panel);
+		panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
+		panel.OffsetLeft = -340; panel.OffsetRight = 340; panel.OffsetTop = -160; panel.OffsetBottom = 160;
+		panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel(36));
+		VBoxContainer content = new();
+		content.AddThemeConstantOverride("separation", 24);
+		panel.AddChild(content);
+		content.AddChild(UITheme.MakeLabel(quit ? "Quitter le jeu ?" : "Abandonner la run ?", TextRole.Title, UITheme.TextLight));
+		Label description = UITheme.MakeLabel("La partie en cours sera abandonnée.", TextRole.Heading, UITheme.TextColor);
+		description.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		content.AddChild(description);
+		HBoxContainer actions = new(); actions.AddThemeConstantOverride("separation", 20); content.AddChild(actions);
+		Button cancel = MenuSkin.Button("Continuer la partie", true);
+		cancel.Pressed += CloseConfirmation; actions.AddChild(cancel);
+		Button accept = MenuSkin.Button(quit ? "Quitter" : "Abandonner");
+		accept.Pressed += () => { System.Action action = _confirmAction; CloseConfirmation(); action?.Invoke(); };
+		actions.AddChild(accept);
+		cancel.FocusNeighborLeft = cancel.GetPath(); cancel.FocusNeighborRight = accept.GetPath();
+		accept.FocusNeighborLeft = cancel.GetPath(); accept.FocusNeighborRight = accept.GetPath();
+		foreach (Button button in new[] { cancel, accept })
+		{ button.FocusNeighborTop = button.GetPath(); button.FocusNeighborBottom = button.GetPath(); }
+		cancel.GrabFocus();
+	}
+
+	private void CloseConfirmation()
+	{
+		_confirmation?.QueueFree(); _confirmation = null; _confirmAction = null;
+		_content.Visible = true;
+		if (GodotObject.IsInstanceValid(_confirmReturnFocus)) _confirmReturnFocus.GrabFocus();
+		_confirmReturnFocus = null;
 	}
 
 	/// <summary>Arme : icône, nom, niveau, stats effectives utiles à son motif, dégâts infligés depuis le début.</summary>
@@ -426,7 +567,7 @@ public partial class PauseMenu : CanvasLayer
 	/// <summary>Toutes les stats du joueur, Oublis compris : la même fiche que pendant le level-up.</summary>
 	private void UpdateSheet(Player player) =>
 		PlayerSheet.AddStatLines(_sheetContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
-			GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: true);
+			GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: true, role: TextRole.Subhead);
 
 	private void LoadTextures()
 	{
@@ -449,7 +590,7 @@ public partial class PauseMenu : CanvasLayer
 		{
 			Text = text,
 			Alignment = HorizontalAlignment.Left,
-			CustomMinimumSize = new Vector2(280, 56),
+			CustomMinimumSize = new Vector2(240, 56),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		UITheme.SetTextRole(btn, TextRole.Subhead);

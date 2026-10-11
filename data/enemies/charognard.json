@@ -2,7 +2,6 @@
     "id": "charognard",
     "name": "Charognard",
     "type": "melee",
-    "attack_audio": "sfx_ombre_attaque",
     "behavior": "pack",
     "pack_family": "charognard",
     "stats": {

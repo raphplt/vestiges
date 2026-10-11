@@ -12,7 +12,6 @@ namespace Vestiges.UI;
 public static class RunSummaryPanels
 {
     public const float IconSize = 48f;
-    private const float PortraitScale = 4f;
     private const float RowHeight = 62f;
     private const float NameWidth = 250f;
     private const float BarWidth = 210f;
@@ -20,7 +19,6 @@ public static class RunSummaryPanels
     private const int Separation = 10;
     // Du bord de la ligne à la colonne des éliminations : case, nom, part, dégâts, dégâts par seconde et leurs écarts.
     private const float KillsColumnX = IconSize + 14f + NameWidth + BarWidth + NumberWidth * 2f + Separation * 5;
-    private static readonly Color SlotColor = new(0.08f, 0.07f, 0.12f, 0.9f);
     private static readonly Color BarTrack = new(1f, 1f, 1f, 0.06f);
 
     /// <summary>Une ligne par arme du build, puis les éliminations sans arme (brûlure, feu, explosions) s'il y en a.</summary>
@@ -76,7 +74,9 @@ public static class RunSummaryPanels
         row.AddChild(Slot(data?.Sprite, weapon.Level, top ? UITheme.GoldBright : UITheme.GoldDim));
 
         VBoxContainer name = new() { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-        name.AddChild(Text(data?.Name ?? weapon.Id, TextRole.Lead, accent, weight: TextWeight.Strong));
+        Label weaponName = Text(data?.Name ?? weapon.Id, TextRole.Lead, accent, weight: TextWeight.Strong);
+        weaponName.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        name.AddChild(weaponName);
         name.AddChild(Text(string.Format(TranslationServer.Translate("UI_END_WEAPON_LEVEL"), weapon.Level), TextRole.Small, UITheme.TextDim));
         row.AddChild(Fixed(name, NameWidth));
 
@@ -104,16 +104,7 @@ public static class RunSummaryPanels
             SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        StyleBoxFlat style = new()
-        {
-            BgColor = SlotColor,
-            BorderColor = frame,
-            BorderWidthLeft = 3,
-            BorderWidthRight = 3,
-            BorderWidthTop = 3,
-            BorderWidthBottom = 3,
-        };
-        slot.AddThemeStyleboxOverride("panel", style);
+        slot.AddThemeStyleboxOverride("panel", MenuSkin.Choice(frame));
         if (!string.IsNullOrEmpty(iconPath) && ResourceLoader.Exists(iconPath))
         {
             slot.AddChild(new TextureRect
@@ -153,19 +144,7 @@ public static class RunSummaryPanels
         EnemyData data = erasure || runEvent != null || bossKey != null ? null : EnemyDataLoader.Get(enemyId);
 
         PanelContainer card = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        card.AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = SlotColor,
-            BorderColor = new Color(UITheme.TextLight, 0.35f),
-            BorderWidthLeft = 2,
-            BorderWidthRight = 2,
-            BorderWidthTop = 2,
-            BorderWidthBottom = 2,
-            ContentMarginLeft = 18,
-            ContentMarginRight = 18,
-            ContentMarginTop = 12,
-            ContentMarginBottom = 12,
-        });
+        card.AddThemeStyleboxOverride("panel", MenuSkin.Choice(UITheme.TextDim));
         HBoxContainer row = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         row.AddThemeConstantOverride("separation", 18);
         card.AddChild(row);
@@ -179,7 +158,7 @@ public static class RunSummaryPanels
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                CustomMinimumSize = new Vector2(portrait.GetWidth() * PortraitScale, portrait.GetHeight() * PortraitScale),
+                CustomMinimumSize = new Vector2(64, 64),
                 MouseFilter = Control.MouseFilterEnum.Ignore,
             });
         }
@@ -228,12 +207,12 @@ public static class RunSummaryPanels
     /// <summary>Faits de la run en deux colonnes : libellé discret, valeur lisible.</summary>
     public static Control Facts(IReadOnlyList<(string Caption, string Value)> facts)
     {
-        GridContainer grid = new() { Columns = 2, MouseFilter = Control.MouseFilterEnum.Ignore };
-        grid.AddThemeConstantOverride("h_separation", 24);
-        grid.AddThemeConstantOverride("v_separation", 10);
+        GridContainer grid = new() { Columns = 4, MouseFilter = Control.MouseFilterEnum.Ignore };
+        grid.AddThemeConstantOverride("h_separation", 18);
+        grid.AddThemeConstantOverride("v_separation", 6);
         foreach ((string caption, string value) in facts)
         {
-            grid.AddChild(Fixed(Text(caption, TextRole.Lead, UITheme.TextDim), 230f));
+            grid.AddChild(Fixed(Text(caption, TextRole.Subhead, UITheme.TextDim), 240f));
             grid.AddChild(Text(value, TextRole.Heading, UITheme.TextLight, weight: TextWeight.Strong));
         }
         return grid;

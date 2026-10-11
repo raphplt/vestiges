@@ -38,6 +38,9 @@ public partial class GameManager : Node
     /// <summary>Personnage sélectionné dans le Hub. Persiste entre scènes.</summary>
     public string SelectedCharacterId { get; set; }
 
+    /// <summary>Retour du bilan vers le choix du prochain personnage, consommé à l’arrivée au Hub.</summary>
+    public bool OpenCharacterSelection { get; set; }
+
     /// <summary>Données de la dernière run terminée (pour affichage dans le Hub).</summary>
     public RunRecord LastRunData { get; set; }
 

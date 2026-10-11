@@ -4,7 +4,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Fond commun en 480 × 270 : rotation continue des rayons et scintillement des poussières natives.
+/// Pierre commune aux menus ; poussières et bords rongés sur une grille de 480 × 270.
 /// Une teinte par écran ; <see cref="FadeIn"/> le fait monter à l'ouverture.
 /// </summary>
 public partial class PixelBackdrop : TextureRect
@@ -24,7 +24,7 @@ public partial class PixelBackdrop : TextureRect
 
     public PixelBackdrop(Color tint)
     {
-        _twinkleShader ??= GD.Load<Shader>("res://assets/shaders/ui_dust_twinkle.gdshader");
+        _twinkleShader ??= GD.Load<Shader>("res://assets/shaders/menu_erasure.gdshader");
         Material = new ShaderMaterial { Shader = _twinkleShader };
         SetTint(tint);
         TextureFilter = TextureFilterEnum.Nearest;
@@ -37,11 +37,10 @@ public partial class PixelBackdrop : TextureRect
 
     public void SetTint(Color tint)
     {
-        Texture = ScreenArt.Background(tint == GoldTint ? 0 : tint == MemorialTint ? 1 : tint == RiftTint ? 2 : 3);
+        Texture = GD.Load<Texture2D>("res://assets/ui/menus/stone/interior.png");
         ShaderMaterial material = (ShaderMaterial)Material;
-        string palette = tint == GoldTint ? "legendary" : tint == MemorialTint ? "memorial" : tint == RiftTint ? "rift" : "common";
-        material.SetShaderParameter("ray_color", RarityPalette.Main(palette));
-        material.SetShaderParameter("rotation_degrees_per_second", ScreenArt.RotationDegreesPerSecond);
+        material.SetShaderParameter("dust_color", tint);
+
     }
 
     /// <summary>Passer une entrée termine aussi son fondu, sans changer la rotation.</summary>

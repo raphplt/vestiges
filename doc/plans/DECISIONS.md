@@ -1212,7 +1212,46 @@ Réponses de Raphaël aux questions des plans 35 et 36 :
 - Nom de l'écran : « établi est aussi un truc in game donc ça va pas trop » ; retenu **le Campement** parmi quatre.
 - Ordre : « péril visible, établi puis refonte de l'inventaire » : Péril toujours visible (plan 34 G0), puis le Campement (plan 36), puis l'inventaire (plan 35).
 
-## 111. Questions du Campement et de l'inventaire acceptées, refonte lancée — 11 octobre 2026
+## 111. Curseurs à 100 %, sons placés à l'écran, nouveaux sons à proposer — 11 octobre 2026
+
+Raphaël, après X6 : « les curseurs musique et ambiance, comme tous les autres, doivent être à 100 % par défaut. C'est ce que font tous les jeux. » Le placement gauche/droite des coups et des ennemis, « c'est génial ». Pour les quatre sons manquants : chercher sur le web ou les créer, puis proposer. Il n'aime pas le son de blessure du joueur : en trouver un plus approprié.
+
+**Acquis :** tous les curseurs audio à 100 % sur un profil neuf ; l'équilibre interne (musique −6 dB, ambiance −8 dB) passe hors curseur. Les réglages enregistrés avant gardent leur niveau entendu. Sons du monde placés à gauche ou à droite selon leur source à l'écran (plan 15 X7). **En attente de son écoute :** planche de candidats pour le soin, le bouclier rechargé, l'annonce du tir visé, le réveil de la Faille et la blessure du joueur.
+
+## 112. Pas de son de créature quand son coup touche le joueur — 11 octobre 2026
+
+Raphaël remarque que la blessure du joueur sonne très différemment en jeu (« beaucoup plus métallique et fort ») que le fichier seul. La cause : à chaque coup au contact, le jeu jouait aussi le son d'attaque de la créature. Celui de l'Ombre, du Charognard et du Rampant d'ombre est un frottement métallique écrêté, deux fois plus long que la blessure, et il la couvrait. Trois options lui sont présentées : retirer ce son, le remplacer ou le baisser. Il choisit de le retirer : « ne pas avoir de son de créature qui nous touchent ».
+
+**Acquis :** un coup au contact ne joue que la blessure du joueur. Les sons des créatures restent sur leurs actions (bond, cri, tir, terrier, crachat). Le tir de la Sentinelle garde son son. Les trois sons de contact (`sfx_ombre_attaque`, `sfx_rodeur_attaque`, `sfx_brute_charge`) et le champ `attack_audio` des sept créatures de corps à corps sont retirés.
+
+## 113. Choix de la planche du 11 octobre — 11 octobre 2026
+
+Raphaël, après écoute :
+- **Blessure du joueur :** il garde le son actuel. Il est désormais seul à jouer au contact (§112).
+- **Soin reçu :** une création d'après sa référence est d'abord demandée, puis il renonce : « aucun son pour les soins reçus, ça me va, sinon ça va être la galère à gérer ».
+- **Bouclier rechargé :** aucun son, pas nécessaire.
+- **Annonce du tir visé :** C, bois qui grince sous la tension (synthèse originale).
+- **Réveil de la Faille :** G, gong inversé et déchirure (BigSoundBank, CC0).
+
+**Acquis :** le tir visé fait partir son grincement en cours de route, pour qu'il culmine au tir quelle que soit la durée de visée de la créature. Il est placé à l'écran et s'atténue au loin. La Faille joue son réveil au moment où on la réveille, et la musique baisse brièvement. Le soin et le bouclier restent muets, besoins clos.
+
+## 114. Carte blanche pour la refonte des menus sur une branche séparée — 10 octobre 2026
+
+Raphaël autorise l'implémentation : « refais tous les menus comme tu l'entends », sur une branche autre que main. La nouvelle image est jugée « pas mal » ; il préfère un nom de personnage discret et moins de statistiques d'armes et de mobilité. Il propose, sans l'imposer, Partir / Recommencer → choix du personnage → lancement ; le camp pourrait montrer les héros débloqués, ce qui évite d'y sélectionner un casting de dix personnages. Il demande à l'agent de garder son jugement et de travailler.
+
+Choix de l'agent dans ce mandat : adopter cette étape de sélection, conserver l'écran titre et son camp d'ambiance, privilégier portrait / style de jeu / départ, et réserver les règles détaillées à une fiche facultative. Production en lots P1–P3 au plan 04 §8 dans un worktree local, branche `codex/refonte-menus`. Le transfert de cette conversation vers le cloud n'est pas disponible via l'outil de transfert ; aucun travail parallèle cloud créé.
+
+**Livraison de ce mandat :** lots P1–P3 implémentés et vérifiés sur cette branche, sans fusion : nouveaux menus intérieurs, liens de consultation, pause et paramètres ; build sans warning, suites 7/7 puis 2/2, captures 720p/1080p et relance réelle avec changement de héros. Compte rendu et limites au [plan 04 §8.2](04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés). La livraison ne vaut pas approbation artistique de Raphaël.
+
+## 115. Terminer la refonte de tous les menus — 11 octobre 2026
+
+Raphaël : « termine tout alors, y compris montée de niveau, butin, bilan et journal, dans la même direction graphique et sur la même branche. Va jusqu’au bout et teste le tout avant de me dire que c’est fini. »
+
+Mandat : achever les écrans restants dans la direction pierre/Effacement de P1–P3 sur `codex/refonte-menus`, avec vérification fonctionnelle et visuelle. Lots P4–P7 au [plan 04 §9](04-interfaces-et-hub.md#9-achèvement-de-tous-les-menus--11-octobre-2026). L'accueil et le camp restent conservés. Aucune fusion dans `main` demandée.
+
+**Livré et vérifié :** P4–P7 terminés, dans la continuité de P1–P3 : montée de niveau, rencontres, butin, journal accessible depuis la pause et bilan. Build zéro warning, 15/15 suites générales puis 5/5 finales, captures réelles 720p/1080p avec texte agrandi et relance avec un autre personnage. [Preuves et limites](../audits/menus-2026-10-11/README.md). Aucun accord artistique de Raphaël ni fusion vers main présumés.
+
+## 116. Questions du Campement et de l'inventaire acceptées, refonte lancée — 11 octobre 2026
 
 Raphaël, après le compte rendu du Campement et du lot I0 : « Ok, ces points me vont. continue avec le deuxieme chantier sur la meme branche stp. »
 
