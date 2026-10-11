@@ -86,3 +86,11 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Liste des personnages** dans son propre cadre de pierre. Chaque personnage est une carte de pierre ; son sprite repose dans un médaillon sombre cerclé. La carte examinée (survol ou focus) prend la tranche dorée des dalles de choix, et son médaillon un cercle doré. Fini le voile à 7 % sans contour.
 - **Partir** : dalle de bronze à arête dorée, 92 px de haut, en texte de titre (`MenuSkin.StyleCallToAction`). Il est posé au pied de la fiche, hors du défilement, toujours au même endroit. Son focus l'entoure sans le remplacer.
 - **Vérifié** : build sans avertissement ; captures de la sélection et des pages regardées ; `tools/validate.sh` smoke et `menu_navigation` 2/2.
+
+## 5. Lot H2 livré : Quêtes en liste unique — 11 octobre 2026
+
+- **Plus de filtres** Toutes / En cours / Accomplies. Une seule liste de lignes de 64 px (contre des cartes de 236 × 244) : icône de la récompense, nom, étoiles, objectif sur une ligne (coupé par « … », entier dans la fiche), jauge de progression. Dix quêtes visibles d'un coup, contre huit cartes.
+- **Ordre** : quêtes en cours d'abord, puis un séparateur « Accomplies · N » et les accomplies. Une accomplie prend une dalle de pierre chaude à arête dorée (`MenuSkin.AcquiredCard`), son nom en doré pâle et sa médaille à la place de la jauge. Ligne examinée : tranche cyan (en cours) ou dorée (accomplie).
+- **Fiche de droite** inchangée : condition, avancée chiffrée, liens vers les récompenses.
+- **Outil** : `HubCapture --open-page <Characters|Camp|Quests|Collection>` ouvre une page sans dépendre du focus de l'accueil.
+- **Vérifié** : captures en profil neuf avec quatre quêtes accomplies et deux avancées (haut et bas de liste) ; `tools/validate.sh` smoke, `menu_navigation`, `quests` 3/3.

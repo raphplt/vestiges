@@ -99,6 +99,10 @@ public static class MenuSkin
         }
     }
 
+    /// <summary>Dalle d'une chose acquise (quête accomplie) : pierre chaude à arête dorée, lisible d'un coup d'œil dans une liste.</summary>
+    public static StyleBoxTexture AcquiredCard() =>
+        UITheme.CreateNinePatch(Cached("acquired", () => Stone(new Color("3d3527"), new Color("a88a4c"), new Color("1a150c"), false)), 8, 8, 8, 8);
+
     /// <summary>
     /// Carte d'une liste à choisir (personnages) : dalle de pierre au repos, dalle à tranche dorée quand elle est examinée.
     /// <paramref name="examined"/> garde la carte allumée hors survol.

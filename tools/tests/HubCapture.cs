@@ -54,6 +54,14 @@ public partial class HubCapture : Node
                     int.Parse(dimensions[1], CultureInfo.InvariantCulture));
                 await Frames(30);
             }
+            string page = Argument(args, "--open-page", "");
+            if (page.Length > 0)
+            {
+                System.Type stateType = typeof(Vestiges.UI.HubScreen).GetNestedType("HubState", BindingFlags.NonPublic);
+                hub.GetType().GetMethod("OpenPage", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Invoke(hub, new[] { System.Enum.Parse(stateType, page) });
+                await Frames(30);
+            }
             string tab = Argument(args, "--collection-tab", "");
             if (tab.Length > 0)
             {

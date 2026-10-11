@@ -6,30 +6,27 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Page Quêtes de l'accueil (plan 06 Q3b) : une grille commune, filtrable par statut. Les personnages, armes et
-/// objets sont repérables sur les cartes ; le détail au survol/focus porte la condition et l'avancée utile.
+/// Page Quêtes de l'accueil : une seule liste de lignes compactes, sans filtre (DECISIONS §117). Les quêtes en cours
+/// viennent d'abord, les accomplies ensuite, en doré pâle avec leur médaille ; la fiche à droite porte le détail.
 /// </summary>
 public partial class HubQuestsPanel : MarginContainer
 {
     [Signal] public delegate void RewardRequestedEventHandler(int kind, string id);
     public string ExaminedQuestId { get; private set; }
     private bool _needsRefresh = true;
-    private enum QuestFilter { All, Open, Done }
 
-    private const int Columns = 4;
-    private const float CardWidth = 236f;
-    private const float CardHeight = 244f;
-    private const float Gap = 12f;
-    private const float IconSize = 56f;
+    private const float ListWidth = 1000f;
+    private const float RowHeight = 64f;
+    private const float IconSize = 44f;
+    private const float NameWidth = 290f;
+    private const float StarsWidth = 84f;
+    private const float GaugeWidth = 120f;
     private const float CompletionIconSize = 32f;
+    private static readonly Color DoneTint = new(0.93f, 0.84f, 0.6f);
 
-    private QuestFilter _filter = QuestFilter.All;
-    private readonly List<Button> _filters = new();
-    private readonly List<Button> _cards = new();
-    private Button _activeFilter;
+    private readonly List<Button> _rows = new();
     private ScrollContainer _scroll;
-    private GridContainer _grid;
-    private Label _empty;
+    private VBoxContainer _list;
     private VBoxContainer _detail;
     private Texture2D _completionTexture;
     private HBoxContainer _detailProgressRow;
@@ -43,48 +40,20 @@ public partial class HubQuestsPanel : MarginContainer
     public override void _Ready()
     {
         _completionTexture = UITheme.LoadTex(ScreenArt.Folder + "ui_quest_complete.png");
-        VBoxContainer column = new();
-        column.AddThemeConstantOverride("separation", 14);
-        AddChild(column);
-
-        HBoxContainer filters = new() { Alignment = BoxContainer.AlignmentMode.Center };
-        filters.AddThemeConstantOverride("separation", 32);
-        column.AddChild(filters);
-        AddFilter(filters, QuestFilter.All, "Toutes");
-        AddFilter(filters, QuestFilter.Open, "En cours");
-        AddFilter(filters, QuestFilter.Done, "Accomplies");
-        for (int index = 0; index < _filters.Count; index++)
-        {
-            Button button = _filters[index];
-            button.FocusNeighborLeft = _filters[Mathf.Max(0, index - 1)].GetPath();
-            button.FocusNeighborRight = _filters[Mathf.Min(_filters.Count - 1, index + 1)].GetPath();
-        }
-        column.AddChild(new ColorRect
-        {
-            Color = new Color(UITheme.GoldDim, 0.45f),
-            CustomMinimumSize = new Vector2(0f, 4f),
-            MouseFilter = MouseFilterEnum.Ignore,
-        });
-
         HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
         body.AddThemeConstantOverride("separation", 32);
-        column.AddChild(body);
+        AddChild(body);
         _scroll = new ScrollContainer
         {
-            CustomMinimumSize = new Vector2(Columns * CardWidth + (Columns - 1) * Gap + 24f, 0f),
+            CustomMinimumSize = new Vector2(ListWidth + 24f, 0f),
             SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             FollowFocus = true,
         };
         body.AddChild(_scroll);
-        VBoxContainer content = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        _scroll.AddChild(content);
-        _grid = new GridContainer { Columns = Columns };
-        _grid.AddThemeConstantOverride("h_separation", (int)Gap);
-        _grid.AddThemeConstantOverride("v_separation", (int)Gap);
-        content.AddChild(_grid);
-        _empty = AddLabel(content, "", TextRole.Heading, UITheme.TextDim);
-        _empty.Visible = false;
+        _list = new VBoxContainer { CustomMinimumSize = new Vector2(ListWidth, 0f) };
+        _list.AddThemeConstantOverride("separation", 6);
+        _scroll.AddChild(_list);
 
         _detail = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _detail.AddThemeConstantOverride("separation", 14);
@@ -121,220 +90,132 @@ public partial class HubQuestsPanel : MarginContainer
         return label;
     }
 
-    private void AddFilter(HBoxContainer parent, QuestFilter filter, string text)
-    {
-        Button button = new() { Text = text, Flat = true, FocusMode = FocusModeEnum.All };
-        button.AddThemeFontOverride("font", UITheme.StrongFont);
-        UITheme.SetTextRole(button, TextRole.Title);
-        UITheme.WireButtonAudio(button);
-        button.Pressed += () =>
-        {
-            if (_filter == filter)
-                return;
-            _filter = filter;
-            _needsRefresh = true;
-            Refresh();
-            // Le filtre garde le focus : on peut parcourir les trois états sans remonter depuis une carte.
-            button.GrabFocus();
-        };
-        parent.AddChild(button);
-        _filters.Add(button);
-    }
-
-    /// <summary>Actualise la même grille à l'ouverture ou au changement de filtre ; renvoie la première carte.</summary>
+    /// <summary>Reconstruit la liste à l'ouverture ; renvoie la ligne à focaliser.</summary>
     public Control Refresh(string focusId = null)
     {
-        if (focusId != null && !_cards.Exists(card => card.Name == focusId))
+        if (!_needsRefresh && _rows.Count > 0)
         {
-            _filter = QuestFilter.All;
-            _needsRefresh = true;
-        }
-        if (!_needsRefresh && _cards.Count > 0)
-        {
-            Button current = _cards.Find(card => card.Name == (focusId ?? ExaminedQuestId)) ?? _cards[0];
+            Button current = _rows.Find(row => row.Name == (focusId ?? ExaminedQuestId)) ?? _rows[0];
             if (focusId != null)
                 ShowDetail(QuestDataLoader.Get(focusId));
             return current;
         }
         _needsRefresh = false;
-        UpdateFilters();
-        ClearChildren(_grid);
-        _cards.Clear();
+        ClearChildren(_list);
+        _rows.Clear();
         _scroll.ScrollVertical = 0;
-        List<QuestDefinition> shown = new();
+        List<QuestDefinition> open = new();
+        List<QuestDefinition> done = new();
         foreach (QuestDefinition quest in QuestDataLoader.GetAll())
+            (MetaSaveManager.HasCompletedQuest(quest.Id) ? done : open).Add(quest);
+        open.Sort(CompareQuests);
+        done.Sort(CompareQuests);
+        foreach (QuestDefinition quest in open)
+            AddRow(quest, false);
+        if (done.Count > 0)
         {
-            bool done = MetaSaveManager.HasCompletedQuest(quest.Id);
-            if (_filter == QuestFilter.All || done == (_filter == QuestFilter.Done))
-                shown.Add(quest);
+            Label divider = UITheme.MakeLabel($"Accomplies · {done.Count}", TextRole.Subhead, UITheme.GoldColor, TextWeight.Strong, outline: 4);
+            divider.CustomMinimumSize = new Vector2(0f, 48f);
+            divider.VerticalAlignment = VerticalAlignment.Bottom;
+            _list.AddChild(divider);
+            foreach (QuestDefinition quest in done)
+                AddRow(quest, true);
         }
-        // Un ordre stable entre filtres permet de retrouver une récompense, quelle que soit l'avancée.
-        shown.Sort((a, b) =>
-        {
-            int kind = a.Unlocks[0].Kind.CompareTo(b.Unlocks[0].Kind);
-            if (kind != 0)
-                return kind;
-            int difficulty = a.Difficulty.CompareTo(b.Difficulty);
-            return difficulty != 0 ? difficulty : string.CompareOrdinal(a.Id, b.Id);
-        });
-        foreach (QuestDefinition quest in shown)
-        {
-            Button card = MakeCard(quest);
-            _grid.AddChild(card);
-            _cards.Add(card);
-        }
-        WireGridFocus();
-        _empty.Visible = shown.Count == 0;
-        _detail.Visible = shown.Count > 0;
-        if (shown.Count == 0)
-        {
-            _empty.Text = _filter == QuestFilter.Done ? "Aucune quête accomplie pour le moment." : "Toutes les quêtes sont accomplies.";
-            return _activeFilter;
-        }
-        int selected = Mathf.Max(0, shown.FindIndex(quest => quest.Id == (focusId ?? ExaminedQuestId)));
-        ShowDetail(shown[selected]);
-        return _cards[selected];
+        _detail.Visible = _rows.Count > 0;
+        if (_rows.Count == 0)
+            return null;
+        Button selected = _rows.Find(row => row.Name == (focusId ?? ExaminedQuestId)) ?? _rows[0];
+        ShowDetail(QuestDataLoader.Get(selected.Name));
+        return selected;
     }
 
-    private void UpdateFilters()
+    // Un ordre stable (récompense, difficulté, identifiant) permet de retrouver une quête d'une visite à l'autre.
+    private static int CompareQuests(QuestDefinition a, QuestDefinition b)
     {
-        for (int index = 0; index < _filters.Count; index++)
-        {
-            Button button = _filters[index];
-            bool active = (QuestFilter)index == _filter;
-            StyleBoxFlat underline = new()
-            {
-                BgColor = new Color(0f, 0f, 0f, 0f),
-                BorderColor = UITheme.GoldColor,
-                BorderWidthBottom = active ? 4 : 0,
-                ContentMarginLeft = 12f,
-                ContentMarginRight = 12f,
-                ContentMarginBottom = 8f,
-            };
-            foreach (string state in new[] { "normal", "pressed", "hover", "hover_pressed" })
-                button.AddThemeStyleboxOverride(state, underline);
-            UITheme.ApplyFocusStyle(button);
-            button.AddThemeColorOverride("font_color", active ? UITheme.GoldBright : UITheme.TextDim);
-            button.AddThemeColorOverride("font_hover_color", UITheme.GoldBright);
-            button.AddThemeColorOverride("font_focus_color", UITheme.GoldBright);
-            if (active)
-                _activeFilter = button;
-        }
+        int kind = a.Unlocks[0].Kind.CompareTo(b.Unlocks[0].Kind);
+        if (kind != 0)
+            return kind;
+        int difficulty = a.Difficulty.CompareTo(b.Difficulty);
+        return difficulty != 0 ? difficulty : string.CompareOrdinal(a.Id, b.Id);
     }
 
-    private void WireGridFocus()
+    private void AddRow(QuestDefinition quest, bool done)
     {
-        for (int index = 0; index < _cards.Count; index++)
-        {
-            Button card = _cards[index];
-            card.FocusNeighborLeft = _cards[index % Columns == 0 ? index : index - 1].GetPath();
-            card.FocusNeighborRight = _cards[index % Columns == Columns - 1 || index + 1 == _cards.Count ? index : index + 1].GetPath();
-            card.FocusNeighborTop = index < Columns ? _activeFilter.GetPath() : _cards[index - Columns].GetPath();
-            int nextRow = (index / Columns + 1) * Columns;
-            card.FocusNeighborBottom = nextRow < _cards.Count
-                ? _cards[Mathf.Min(index + Columns, _cards.Count - 1)].GetPath() : card.GetPath();
-        }
-        foreach (Button filter in _filters)
-            filter.FocusNeighborBottom = _cards.Count > 0 ? _cards[0].GetPath() : filter.GetPath();
-    }
-
-    private Button MakeCard(QuestDefinition quest)
-    {
-        bool done = MetaSaveManager.HasCompletedQuest(quest.Id);
-        Button card = new()
+        Button row = new()
         {
             Name = quest.Id,
-            CustomMinimumSize = new Vector2(CardWidth, CardHeight),
+            CustomMinimumSize = new Vector2(ListWidth, RowHeight),
             FocusMode = FocusModeEnum.All,
             TextureFilter = TextureFilterEnum.Nearest,
         };
-        StyleBoxTexture normal = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + "ui_card_normal.png"), 4, 4, 4, 4);
-        StyleBoxTexture lit = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + "ui_card_selected.png"), 4, 4, 4, 4);
-        card.AddThemeStyleboxOverride("normal", normal);
+        StyleBoxTexture rest = done ? MenuSkin.AcquiredCard() : UITheme.CreateNinePatch(MenuSkin.TextureFor("ui_card_normal.png"), 8, 8, 8, 8);
+        StyleBoxTexture lit = MenuSkin.Choice(done ? UITheme.GoldBright : UITheme.CyanEssence, true);
+        row.AddThemeStyleboxOverride("normal", rest);
         foreach (string state in new[] { "pressed", "hover", "focus", "hover_pressed" })
-            card.AddThemeStyleboxOverride(state, lit);
-        MarginContainer inset = new() { MouseFilter = MouseFilterEnum.Ignore };
-        inset.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        inset.AddThemeConstantOverride("margin_left", 14);
-        inset.AddThemeConstantOverride("margin_right", 14);
-        inset.AddThemeConstantOverride("margin_top", 12);
-        inset.AddThemeConstantOverride("margin_bottom", 12);
-        card.AddChild(inset);
-        VBoxContainer content = new() { MouseFilter = MouseFilterEnum.Ignore };
-        content.AddThemeConstantOverride("separation", 4);
-        inset.AddChild(content);
-        HBoxContainer header = new() { MouseFilter = MouseFilterEnum.Ignore };
-        header.AddThemeConstantOverride("separation", 12);
-        content.AddChild(header);
-        Texture2D icon = RewardIcon(quest);
-        if (icon != null)
-            header.AddChild(new TextureRect
-            {
-                Texture = icon,
-                CustomMinimumSize = new Vector2(IconSize, IconSize),
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                TextureFilter = TextureFilterEnum.Nearest,
-                MouseFilter = MouseFilterEnum.Ignore,
-            });
-        VBoxContainer category = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
-        category.AddThemeConstantOverride("separation", 0);
-        header.AddChild(category);
-        category.AddChild(UITheme.MakeLabel(Stars(quest.Difficulty), TextRole.Heading, UITheme.GoldColor,
-            TextWeight.Strong, HorizontalAlignment.Right, outline: 4));
-        category.AddChild(UITheme.MakeLabel(KindName(quest.Unlocks[0].Kind), TextRole.Lead, UITheme.TextDim,
-            align: HorizontalAlignment.Right, outline: 4));
-        AddCardLabel(content, quest.Name, TextRole.Heading, done ? UITheme.GoldBright : UITheme.TextLight, 64f, TextWeight.Strong);
-        AddCardLabel(content, QuestBook.RewardSummary(quest), TextRole.Lead, UITheme.TextColor, 48f);
-        HBoxContainer status = new()
+            row.AddThemeStyleboxOverride(state, lit);
+        HBoxContainer line = new() { MouseFilter = MouseFilterEnum.Ignore };
+        line.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        line.OffsetLeft = 18f;
+        line.OffsetRight = -18f;
+        line.AddThemeConstantOverride("separation", 16);
+        row.AddChild(line);
+        line.AddChild(new TextureRect
         {
-            CustomMinimumSize = new Vector2(CardWidth - 28f, CompletionIconSize),
-            SizeFlagsVertical = SizeFlags.ExpandFill,
+            Texture = RewardIcon(quest),
+            CustomMinimumSize = new Vector2(IconSize, IconSize),
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = TextureFilterEnum.Nearest,
             MouseFilter = MouseFilterEnum.Ignore,
-        };
-        status.AddThemeConstantOverride("separation", 6);
-        content.AddChild(status);
+        });
+        line.AddChild(RowLabel(quest.Name, TextRole.Heading, done ? DoneTint : UITheme.TextLight, NameWidth, TextWeight.Strong));
+        line.AddChild(RowLabel(Stars(quest.Difficulty), TextRole.Heading, UITheme.GoldColor, StarsWidth, TextWeight.Strong));
+        Label objective = RowLabel(quest.Description, TextRole.Lead, UITheme.TextColor, 0f);
+        objective.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        line.AddChild(objective);
         if (done)
         {
             TextureRect completion = CompletionIcon();
-            completion.SizeFlagsVertical = SizeFlags.ShrinkEnd;
-            status.AddChild(completion);
-            Label completed = UITheme.MakeLabel("Accomplie", TextRole.Lead, UITheme.GoldBright, TextWeight.Strong, outline: 4);
-            completed.SizeFlagsVertical = SizeFlags.ShrinkEnd;
-            status.AddChild(completed);
+            completion.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            line.AddChild(completion);
         }
-        float fraction = done ? 1f : QuestBook.Fraction(quest, MetaSaveManager.GetQuestProgress(quest.Id));
+        else
+            line.AddChild(Gauge(QuestBook.Fraction(quest, MetaSaveManager.GetQuestProgress(quest.Id))));
+        row.FocusEntered += () => ShowDetail(quest);
+        row.MouseEntered += () => ShowDetail(quest);
+        row.Pressed += () => { ShowDetail(quest); if (_detailRewards.GetChildCount() > 1) (_detailRewards.GetChild(1) as Control)?.GrabFocus(); };
+        UITheme.WireButtonAudio(row);
+        _list.AddChild(row);
+        _rows.Add(row);
+    }
+
+    private static Label RowLabel(string text, TextRole role, Color color, float width, TextWeight weight = TextWeight.Regular)
+    {
+        Label label = UITheme.MakeLabel(text, role, color, weight, outline: 4);
+        label.CustomMinimumSize = new Vector2(width, 0f);
+        label.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        label.ClipText = true;
+        label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        return label;
+    }
+
+    private static Control Gauge(float fraction)
+    {
         ColorRect track = new()
         {
             Color = new Color(UITheme.BgDark, 0.9f),
-            CustomMinimumSize = new Vector2(CardWidth - 28f, 6f),
+            CustomMinimumSize = new Vector2(GaugeWidth, 8f),
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        content.AddChild(track);
         track.AddChild(new ColorRect
         {
-            Color = done ? UITheme.GoldColor : UITheme.CyanEssence,
-            Size = new Vector2((CardWidth - 28f) * fraction, 6f),
+            Color = UITheme.CyanEssence,
+            Size = new Vector2(Mathf.Round(GaugeWidth * Mathf.Clamp(fraction, 0f, 1f)), 8f),
             MouseFilter = MouseFilterEnum.Ignore,
         });
-        // Le contenu impose sa hauteur : les noms longs ne peuvent pas empiéter sur la récompense ou la jauge.
-        inset.MinimumSizeChanged += () => card.CustomMinimumSize = new Vector2(CardWidth,
-            Mathf.Max(CardHeight, inset.GetCombinedMinimumSize().Y));
-        card.FocusEntered += () => ShowDetail(quest);
-        card.MouseEntered += () => ShowDetail(quest);
-        card.Pressed += () => { ShowDetail(quest); if (_detailRewards.GetChildCount() > 1) (_detailRewards.GetChild(1) as Control)?.GrabFocus(); };
-        UITheme.WireButtonAudio(card);
-        return card;
-    }
-
-    private static void AddCardLabel(VBoxContainer parent, string text, TextRole role, Color color, float height,
-        TextWeight weight = TextWeight.Regular)
-    {
-        Label label = UITheme.MakeLabel(text, role, color, weight, outline: 4);
-        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        label.VerticalAlignment = VerticalAlignment.Top;
-        label.CustomMinimumSize = new Vector2(CardWidth - 28f, height);
-        parent.AddChild(label);
+        return track;
     }
 
     private TextureRect CompletionIcon() => new()
@@ -405,12 +286,4 @@ public partial class HubQuestsPanel : MarginContainer
     }
 
     private static string Stars(int difficulty) => new('★', difficulty);
-
-    private static string KindName(UnlockKind kind) => kind switch
-    {
-        UnlockKind.Character => "Personnage",
-        UnlockKind.Weapon => "Arme",
-        UnlockKind.Badge => "Écusson",
-        _ => "Objet",
-    };
 }
