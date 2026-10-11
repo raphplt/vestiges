@@ -19,6 +19,7 @@ namespace Vestiges.Tests;
 /// Observation de la vraie scène de run, rendue.
 /// --capture-abilities [--enemies a,b] [--shots n] [--still] : captures des attaques d'ennemis choisis (Présage et Charognard par défaut) ;
 ///     --still garde le joueur immobile, pour les attaques qui visent sa position (surgissement).
+/// --capture-size WxH : force la taille réelle de fenêtre après le démarrage de Main.
 /// --capture-map : répartition des biomes autour du spawn (plusieurs seeds) et vues dézoomées.
 /// --capture-cartography : parcours fixe, radar/carte entière, phases et bord du monde (RunObservation.Cartography.cs).
 /// --capture-character --character ID : personnage en marche, dash, dégât et mort dans Main.
@@ -121,7 +122,25 @@ public partial class RunObservation : Node
             Vestiges.Progression.PerkSpecializationEffects.PreviewInactive = Array.IndexOf(args, "--preview-perks") >= 0;
             if (captureMap)
                 MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
+            // Stress typographique de recette : ne modifie ni réglage ni sauvegarde du joueur.
+            float menuFontScale = float.Parse(Argument(args, "--menu-font-scale", "1"), CultureInfo.InvariantCulture);
+            if (menuFontScale != 1f)
+            {
+                int[] sizes = (int[])typeof(Vestiges.UI.UITheme).GetField("RoleSizes", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+                for (int i = 0; i < sizes.Length; i++) sizes[i] = Mathf.RoundToInt(sizes[i] * menuFontScale);
+            }
             await LoadRun(seed, Argument(args, "--character", "traqueur"));
+
+            string captureSize = Argument(args, "--capture-size", "");
+            if (captureSize.Length > 0)
+            {
+                string[] dimensions = captureSize.Split('x');
+                GetWindow().Mode = Window.ModeEnum.Windowed;
+                await Frames(15);
+                GetWindow().Size = new Vector2I(int.Parse(dimensions[0], CultureInfo.InvariantCulture),
+                    int.Parse(dimensions[1], CultureInfo.InvariantCulture));
+                await Frames(30);
+            }
 
             if (captureMap)
                 await CaptureWorldOverview();
@@ -185,6 +204,8 @@ public partial class RunObservation : Node
                 await CaptureIntegratedArt();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)
                 await CaptureLevelUp();
+            else if (Array.IndexOf(args, "--capture-journal") >= 0)
+                await CaptureJournal();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)
                 await CapturePause();
             else if (Array.IndexOf(args, "--capture-choices") >= 0)

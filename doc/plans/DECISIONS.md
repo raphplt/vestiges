@@ -1234,3 +1234,19 @@ Raphaël, après écoute :
 - **Réveil de la Faille :** G, gong inversé et déchirure (BigSoundBank, CC0).
 
 **Acquis :** le tir visé fait partir son grincement en cours de route, pour qu'il culmine au tir quelle que soit la durée de visée de la créature. Il est placé à l'écran et s'atténue au loin. La Faille joue son réveil au moment où on la réveille, et la musique baisse brièvement. Le soin et le bouclier restent muets, besoins clos.
+
+## 114. Carte blanche pour la refonte des menus sur une branche séparée — 10 octobre 2026
+
+Raphaël autorise l'implémentation : « refais tous les menus comme tu l'entends », sur une branche autre que main. La nouvelle image est jugée « pas mal » ; il préfère un nom de personnage discret et moins de statistiques d'armes et de mobilité. Il propose, sans l'imposer, Partir / Recommencer → choix du personnage → lancement ; le camp pourrait montrer les héros débloqués, ce qui évite d'y sélectionner un casting de dix personnages. Il demande à l'agent de garder son jugement et de travailler.
+
+Choix de l'agent dans ce mandat : adopter cette étape de sélection, conserver l'écran titre et son camp d'ambiance, privilégier portrait / style de jeu / départ, et réserver les règles détaillées à une fiche facultative. Production en lots P1–P3 au plan 04 §8 dans un worktree local, branche `codex/refonte-menus`. Le transfert de cette conversation vers le cloud n'est pas disponible via l'outil de transfert ; aucun travail parallèle cloud créé.
+
+**Livraison de ce mandat :** lots P1–P3 implémentés et vérifiés sur cette branche, sans fusion : nouveaux menus intérieurs, liens de consultation, pause et paramètres ; build sans warning, suites 7/7 puis 2/2, captures 720p/1080p et relance réelle avec changement de héros. Compte rendu et limites au [plan 04 §8.2](04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés). La livraison ne vaut pas approbation artistique de Raphaël.
+
+## 115. Terminer la refonte de tous les menus — 11 octobre 2026
+
+Raphaël : « termine tout alors, y compris montée de niveau, butin, bilan et journal, dans la même direction graphique et sur la même branche. Va jusqu’au bout et teste le tout avant de me dire que c’est fini. »
+
+Mandat : achever les écrans restants dans la direction pierre/Effacement de P1–P3 sur `codex/refonte-menus`, avec vérification fonctionnelle et visuelle. Lots P4–P7 au [plan 04 §9](04-interfaces-et-hub.md#9-achèvement-de-tous-les-menus--11-octobre-2026). L'accueil et le camp restent conservés. Aucune fusion dans `main` demandée.
+
+**Livré et vérifié :** P4–P7 terminés, dans la continuité de P1–P3 : montée de niveau, rencontres, butin, journal accessible depuis la pause et bilan. Build zéro warning, 15/15 suites générales puis 5/5 finales, captures réelles 720p/1080p avec texte agrandi et relance avec un autre personnage. [Preuves et limites](../audits/menus-2026-10-11/README.md). Aucun accord artistique de Raphaël ni fusion vers main présumés.

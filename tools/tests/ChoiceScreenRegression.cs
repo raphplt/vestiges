@@ -31,6 +31,8 @@ public partial class ChoiceScreenRegression : Node
             AddChild(_screen);
             CheckReopen();
             CheckValidation();
+            await CheckLoot();
+            await CheckJournal();
             await CheckPause();
             await CheckReveal();
             GD.Print($"[ChoiceScreenRegression] RESULT checks={_checks} failures={_failures}");
@@ -113,6 +115,62 @@ public partial class ChoiceScreenRegression : Node
         Check(chained == 1 && _screen.IsOpen && GetTree().Paused, "achat : la nouvelle offre garde la pause");
         _screen.Activate(int.MaxValue);
         Check(chained == 2 && !GetTree().Paused, "sortie de l'offre rouverte sans second achat");
+    }
+
+    private async Task CheckJournal()
+    {
+        JournalScreen journal = new();
+        AddChild(journal);
+        journal.Show();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Label title = (Label)typeof(JournalScreen).GetField("_fragmentTitle", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(journal)!;
+        Check(journal.IsOpen && GetTree().Paused && title.Text == "Fragment effacé", "journal neuf : pause et contenu inconnu sans spoiler");
+        journal._Input(new InputEventAction { Action = "journal", Pressed = true });
+        Check(!journal.IsOpen && !GetTree().Paused, "J referme le journal et reprend la run");
+        Vestiges.Infrastructure.SouvenirData fragment = Vestiges.Infrastructure.SouvenirDataLoader.GetAll()[0];
+        Vestiges.Infrastructure.MetaSaveManager.DiscoverSouvenir(fragment.Id);
+        GetTree().Paused = true;
+        journal.Show();
+        typeof(JournalScreen).GetMethod("SelectConstellation", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(journal, new object[] { fragment.ConstellationId });
+        typeof(JournalScreen).GetMethod("SelectFragment", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(journal, new object[] { fragment.Id });
+        Check(title.Text == fragment.Name, "journal : seul le souvenir retrouvé livre son texte");
+        journal._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = true });
+        Check(!journal.IsOpen && GetTree().Paused, "journal depuis la pause : B ne relance pas le monde");
+        journal.Show();
+        Check(title.Text == fragment.Name, "journal : la réouverture conserve le fragment consulté");
+        journal.Hide();
+        GetTree().Paused = false;
+        journal.QueueFree();
+    }
+
+    private async Task CheckLoot()
+    {
+        ChestLootScreen loot = new();
+        AddChild(loot);
+        int calls = 0;
+        List<Vestiges.World.ResolvedLoot> rewards = new()
+        {
+            new("essence", null, 12, "Essence ×12", Colors.Cyan),
+            new("xp", null, 40, "+40 XP", Colors.White),
+        };
+        loot.ShowLoot(rewards, "rare", () => calls++);
+        loot._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        Check(loot.Visible && GetTree().Paused && calls == 0, "butin : A révèle sans attribuer ni reprendre");
+        loot._Process(10);
+        for (int i = 0; i < 180; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(loot.Visible && GetTree().Paused && calls == 0, "butin : la lecture n'expire pas après la révélation");
+        loot._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        loot._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        Check(!loot.Visible && !GetTree().Paused && calls == 1, "butin : confirmation unique, reprise de la run");
+        loot.ShowLoot(rewards, "epic", () => calls++);
+        loot._Process(10);
+        loot._Process(0.1);
+        Check(loot.Visible && calls == 1, "butin : révélation naturelle conserve la lecture");
+        loot._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        Check(calls == 2 && !GetTree().Paused, "butin : B/Échap reprend après lecture");
+        loot.QueueFree();
     }
 
     private async Task CheckPause()

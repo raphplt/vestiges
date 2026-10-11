@@ -6,6 +6,7 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.UI;
+using Vestiges.World;
 
 namespace Vestiges.Tests;
 
@@ -13,6 +14,7 @@ namespace Vestiges.Tests;
 /// --capture-death : mort et bilan de fin de run (plan 02 lot D, M1). Le bot joue --seconds secondes pour se constituer
 /// un build, puis meurt pour de bon sous le coup de la créature la plus proche ; captures pendant l'impact, l'effacement,
 /// les trois temps de la révélation et l'écran final.
+/// --restart-from-bilan : Recommencer ouvre le choix, puis Partir relance une vraie run.
 /// --skip-reveal : un appui pendant la révélation du bilan, pour vérifier que l'état final ne change pas (M4).
 /// --play-bot : le bot de mesure joue pendant ces secondes (avec --nomad, il garde un cap) ; relevés de M2 réalistes.
 /// --history-fixture &lt;fichier&gt; : historique posé dans le profil isolé avant la mort, pour vérifier qu'une run
@@ -43,6 +45,21 @@ public partial class RunObservation
         GameOverScreen gameOver = _world.GetNode<GameOverScreen>("GameOverScreen");
         ((HashSet<string>)typeof(GameOverScreen).GetField("_weaponsAtStart", BindingFlags.NonPublic | BindingFlags.Instance)
             .GetValue(gameOver)).Remove("chain_of_names");
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--bilan-rich") >= 0)
+        {
+            // Épreuve de mise en page : neuf annonces et quatre Réminiscences, sans attribuer de quêtes.
+            List<string> gainedQuests = (List<string>)typeof(GameOverScreen).GetField("_questsDone", PrivateField).GetValue(gameOver);
+            foreach (QuestDefinition quest in QuestDataLoader.GetAll())
+            {
+                gainedQuests.Add(quest.Id);
+                if (gainedQuests.Count >= 9) break;
+            }
+            foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
+            {
+                _player.AcquireSpecialization(perk);
+                if (_player.Specializations.Count >= 4) break;
+            }
+        }
         // Le coup fatal vient de la créature la plus proche, pour que la séquence ait un tueur à montrer.
         Enemy killer = NearestEnemy();
         if (killer != null)
@@ -95,7 +112,65 @@ public partial class RunObservation
             markers[marker.Kind] = markers.GetValueOrDefault(marker.Kind) + 1;
         RunSample last = journey.Samples.Count > 0 ? journey.Samples[^1] : default;
         GD.Print($"[RunObservation] JOURNEY samples={journey.Samples.Count} last=({last.Time:0.0} s, niv. {last.Level}, {last.Kills} élim., {last.DistanceMeters:0} m) markers={System.Text.Json.JsonSerializer.Serialize(markers)}");
-        GD.Print($"[RunObservation] RESULT death captured, killer={killer?.EnemyId ?? "none"}, dead={_player.IsDead}");
+        // Les deux vues se consultent sur place ; tous les gains restent dans leur propre défilement.
+        Button equipmentTab = (Button)typeof(GameOverScreen).GetField("_equipmentTab", PrivateField).GetValue(gameOver);
+        equipmentTab.GrabFocus();
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        await Frames(2);
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = false });
+        await Frames(4);
+        if (!(bool)typeof(GameOverScreen).GetField("_equipmentVisible", PrivateField).GetValue(gameOver))
+            throw new System.InvalidOperationException("Le bilan doit ouvrir l'équipement avec A.");
+        SaveFrame("bilan-equipement");
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = true });
+        await Frames(4);
+        if ((bool)typeof(GameOverScreen).GetField("_equipmentVisible", PrivateField).GetValue(gameOver))
+            throw new System.InvalidOperationException("B doit retrouver l'expédition sans quitter le bilan.");
+        SaveFrame("bilan-expedition");
+        Control middle = (Control)typeof(GameOverScreen).GetField("_middle", PrivateField).GetValue(gameOver);
+        AssertMenuFits(middle, "bilan");
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--bilan-rich") >= 0)
+        {
+            ScrollContainer gains = (ScrollContainer)typeof(GameOverScreen).GetField("_gainsScroll", PrivateField).GetValue(gameOver);
+            gains.GrabFocus();
+            Input.ActionPress("scroll_down");
+            await Seconds(1.5f);
+            Input.ActionRelease("scroll_down");
+            await Frames(3);
+            if (gains.ScrollVertical == 0) throw new System.InvalidOperationException("Les gains longs doivent défiler.");
+            SaveFrame("bilan-gains-suite");
+        }
+
+        bool dead = _player.IsDead;
+        string killerId = killer?.EnemyId ?? "none";
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--restart-from-bilan") >= 0)
+        {
+            Button restart = (Button)typeof(GameOverScreen)
+                .GetField("_restartButton", PrivateField).GetValue(gameOver);
+            restart.EmitSignal(BaseButton.SignalName.Pressed);
+            await Frames(150);
+            GameManager manager = GetNode<GameManager>("/root/GameManager");
+            if (GetTree().CurrentScene is not HubScreen hub || GetTree().Paused || manager.CurrentState != GameManager.GameState.Hub)
+                throw new System.InvalidOperationException("Recommencer doit revenir au Hub sans conserver la pause du bilan.");
+            HubCharactersPanel characters = (HubCharactersPanel)typeof(HubScreen)
+                .GetField("_charactersPanel", PrivateField).GetValue(hub);
+            if (!characters.IsVisibleInTree() || manager.OpenCharacterSelection)
+                throw new System.InvalidOperationException("Recommencer doit ouvrir le choix du personnage.");
+            ((Button)characters.FindChild("vagabond", true, false)).GrabFocus();
+            await Frames(3);
+            SaveFrame("restart-characters");
+            Button depart = (Button)typeof(HubCharactersPanel).GetField("_depart", PrivateField).GetValue(characters);
+            depart.EmitSignal(BaseButton.SignalName.Pressed);
+            // La transition est animée en physique : attendre son état, pas un nombre de frames de rendu.
+            for (int tick = 0; tick < 1800 && (GetTree().CurrentScene is not WorldSetup { IsWorldReady: true } || GetTree().Paused); tick++)
+                await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            await Seconds(1.5);
+            if (GetTree().CurrentScene is not WorldSetup { IsWorldReady: true } || GetTree().Paused
+                || manager.CurrentState != GameManager.GameState.Run || manager.SelectedCharacterId != "vagabond")
+                throw new System.InvalidOperationException("Partir depuis la sélection doit relancer Main.");
+            SaveFrame("restart-run");
+        }
+        GD.Print($"[RunObservation] RESULT death captured, killer={killerId}, dead={dead}");
     }
 
     private void AssertDeathAudioStopped(string moment)

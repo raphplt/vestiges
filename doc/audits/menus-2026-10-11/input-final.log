@@ -1,0 +1,29 @@
+Build et import partagés avec le lanceur global.
+[InputRemapRegression] OK move_up : W Up · D-Up · stick
+[InputRemapRegression] OK interaction remappée sur F, bouton A gardé (F)
+[InputRemapRegression] OK move_up : W Up · D-Up · stick
+[InputRemapRegression] OK fichier : seule l'interaction changée est écrite, avec la version
+[InputRemapRegression] RESULT failures=0 checks=4 phase=remap
+[InputRemapRegression] OK move_up : W Up · D-Up · stick
+[InputRemapRegression] OK move_down : S Down · D-Down · stick
+[InputRemapRegression] OK move_left : A Left · D-Left · stick
+[InputRemapRegression] OK move_right : D Right · D-Right · stick
+[InputRemapRegression] OK après redémarrage : interaction sur F, sans E
+[InputRemapRegression] RESULT failures=0 checks=5 phase=restart
+[InputRemapRegression] OK ancien fichier écrit
+[InputRemapRegression] RESULT failures=0 checks=1 phase=legacy-write
+[InputRemapRegression] OK move_up : W Up · D-Up · stick
+[InputRemapRegression] OK move_down : S Down · D-Down · stick
+[InputRemapRegression] OK move_left : A Left · D-Left · stick
+[InputRemapRegression] OK move_right : D Right · D-Right · stick
+[InputRemapRegression] OK ancien fichier : le vrai choix (interaction sur F) est gardé
+[InputRemapRegression] RESULT failures=0 checks=5 phase=legacy-check
+[InputRemapRegression] OK déplacement remappé : flèche gardée (I Up)
+[InputRemapRegression] OK move_up : W Up · D-Up · stick
+[InputRemapRegression] OK move_down : S Down · D-Down · stick
+[InputRemapRegression] OK move_left : A Left · D-Left · stick
+[InputRemapRegression] OK move_right : D Right · D-Right · stick
+[InputRemapRegression] OK réinitialisation : interaction sur E, mobilité sur X
+[InputRemapRegression] OK réinitialisation : fichier supprimé
+[InputRemapRegression] RESULT failures=0 checks=7 phase=reset
+✓ Remapping : un seul changement garde WASD, flèches, croix et stick au redémarrage ; ancien fichier repris ; reset complet.

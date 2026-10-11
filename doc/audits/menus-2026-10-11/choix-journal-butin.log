@@ -1,0 +1,43 @@
+Build et import partagés avec le lanceur global.
+[ChoiceScreenRegression] PASS l'ancienne entrée est arrêtée à la réouverture
+[ChoiceScreenRegression] PASS le titre réouvert est complet
+[ChoiceScreenRegression] PASS sous-titre et sortie réouverts sont visibles
+[ChoiceScreenRegression] PASS pas d'éclair figé dans la nouvelle offre
+[ChoiceScreenRegression] PASS le fond réouvert est à son opacité finale
+[ChoiceScreenRegression] PASS pas d'anciennes cartes dans le layout de la relance
+[ChoiceScreenRegression] PASS la nouvelle offre seule attribue son choix
+[ChoiceScreenRegression] PASS InputEventKey : le premier appui passe l'entrée sans récompense
+[ChoiceScreenRegression] PASS passer l'entrée termine aussi le fondu du fond
+[ChoiceScreenRegression] PASS validation suivante unique, même après un second appel
+[ChoiceScreenRegression] PASS InputEventJoypadButton : le premier appui passe l'entrée sans récompense
+[ChoiceScreenRegression] PASS passer l'entrée termine aussi le fondu du fond
+[ChoiceScreenRegression] PASS validation suivante unique, même après un second appel
+[ChoiceScreenRegression] PASS InputEventMouseButton : le premier appui passe l'entrée sans récompense
+[ChoiceScreenRegression] PASS passer l'entrée termine aussi le fondu du fond
+[ChoiceScreenRegression] PASS validation suivante unique, même après un second appel
+[ChoiceScreenRegression] PASS validation directe/bot : même garde que l'input
+[ChoiceScreenRegression] PASS une carte désactivée ne ferme pas l'offre
+[ChoiceScreenRegression] PASS une bénédiction ne peut pas être annulée
+[ChoiceScreenRegression] PASS refus de Faille unique, puis reprise
+[ChoiceScreenRegression] PASS achat : la nouvelle offre garde la pause
+[ChoiceScreenRegression] PASS sortie de l'offre rouverte sans second achat
+[ChoiceScreenRegression] PASS butin : A révèle sans attribuer ni reprendre
+[ChoiceScreenRegression] PASS butin : la lecture n'expire pas après la révélation
+[ChoiceScreenRegression] PASS butin : confirmation unique, reprise de la run
+[ChoiceScreenRegression] PASS butin : révélation naturelle conserve la lecture
+[ChoiceScreenRegression] PASS butin : B/Échap reprend après lecture
+[ChoiceScreenRegression] PASS journal neuf : pause et contenu inconnu sans spoiler
+[ChoiceScreenRegression] PASS J referme le journal et reprend la run
+[ChoiceScreenRegression] PASS journal : seul le souvenir retrouvé livre son texte
+[ChoiceScreenRegression] PASS journal depuis la pause : B ne relance pas le monde
+[ChoiceScreenRegression] PASS journal : la réouverture conserve le fragment consulté
+[ChoiceScreenRegression] PASS le monde reste arrêté pendant l'offre
+[ChoiceScreenRegression] PASS le monde reprend après le choix
+[ChoiceScreenRegression] PASS réveil : la run se fige dès le départ
+[ChoiceScreenRegression] PASS réveil : une direction ne le passe pas
+[ChoiceScreenRegression] PASS réveil : avancement croissant jusqu'à 1, une seule fin, non passée
+[ChoiceScreenRegression] PASS réveil : la caméra reste sur le lieu, run figée pour l'écran qui suit
+[ChoiceScreenRegression] PASS réveil : la caméra revient au joueur une fois la run relancée
+[ChoiceScreenRegression] PASS réveil : un appui le passe, le lieu atteint son état final
+[ChoiceScreenRegression] PASS réveil passé : aucune seconde fin, run toujours figée
+[ChoiceScreenRegression] RESULT checks=41 failures=0

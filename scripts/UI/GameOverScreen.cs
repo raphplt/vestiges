@@ -9,14 +9,9 @@ using Vestiges.Score;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Bilan de fin de run, en une page dense (plan 02 lot D, M3). En tête, trois chiffres : jusqu'où le joueur est allé,
-/// le score (et, seulement ici, le record), la durée. Au centre, le personnage et ce qui l'a emporté, le tableau des
-/// armes (dégâts, part, dégâts par seconde, éliminations), les souvenirs et les faits de la run. Dessous, la frise de
-/// la run, puis les gains, cartes qui se retournent une à une (M4), et les boutons. Révélation en quelques temps
-/// qu'une touche termine (gains compris, sans son) ; les boutons ne
-/// s'activent qu'après un court délai, pour qu'un clic de combat ne relance pas la run par accident. Tout est relevé à
-/// la mort ; le bilan n'apparaît qu'à la fin de la séquence de mort (<see cref="DeathSequence"/> appelle
-/// <see cref="Reveal"/>).
+/// Bilan de l'expédition : score, distance et durée en tête ; portrait, vues Expédition/Équipement et gains.
+/// Les colonnes défilent indépendamment. La révélation n'attribue rien : les gains sont enregistrés à la mort.
+/// Un premier appui termine la révélation sans activer les boutons ; Rejouer retourne au choix du personnage.
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
 {
@@ -35,9 +30,7 @@ public partial class GameOverScreen : CanvasLayer
     private const float MinRevealEnd = 2.5f;
     private const float ButtonGuardSec = 0.35f;
     private const float SlideIn = 24f;
-    private const float MiddleY = 300f;
-    private const float TimelineY = 766f;
-    private const float GainsY = 884f;
+    private const float MiddleY = 320f;
     private static readonly Color VeilColor = new(0.025f, 0.02f, 0.05f, 0.93f);
 
     private EventBus _eventBus;
@@ -59,12 +52,23 @@ public partial class GameOverScreen : CanvasLayer
     private Label _record;
     private Label _detail;
     private Control _middle;
+    private TextureRect _portrait;
+    private Label _characterName;
+    private VBoxContainer _overview;
+    private VBoxContainer _equipment;
+    private VBoxContainer _facts;
+    private ScrollContainer _detailScroll;
+    private ScrollContainer _gainsScroll;
+    private Button _overviewTab;
+    private Button _equipmentTab;
+    private bool _equipmentVisible;
+    private bool _leaving;
     private Label _timelineCaption;
     private RunTimelineStrip _timeline;
     private Control _gains;
-    private HubMenuButton _restartButton;
-    private HubMenuButton _hubButton;
-    private HubMenuButton _collectionButton;
+    private Button _restartButton;
+    private Button _hubButton;
+    private Button _collectionButton;
     private Label _seed;
     // Armes disponibles au départ de la run : celles qui s'y ajoutent au bilan (Souvenir retrouvé) mènent à la Collection.
     private readonly HashSet<string> _weaponsAtStart = new();
@@ -90,6 +94,7 @@ public partial class GameOverScreen : CanvasLayer
         public string CharacterId;
         public string CharacterName;
         public readonly List<(string Icon, int Level)> Passives = new();
+        public readonly List<(string Icon, string Name)> Perks = new();
     }
 
     public override void _Ready()
@@ -135,72 +140,134 @@ public partial class GameOverScreen : CanvasLayer
 
     private void BuildUI()
     {
-        _veil = new ColorRect { Color = VeilColor, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _veil = new ColorRect { Color = ChoiceStyle.OverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
         _veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_veil);
-
         _root = new Control { Size = DesignSize, MouseFilter = Control.MouseFilterEnum.Ignore };
         AddChild(_root);
+        MenuSkin.AddBackdrop(_root, subdued: true);
 
-        _title = MakeLabel("", _strongFont, TextRole.Banner, UITheme.GoldDim, HorizontalAlignment.Center);
-        Place(_title, 0f, 24f, DesignSize.X, 48f);
-
-        // Trois chiffres en tête : jusqu'où, le score (le héros du bilan, hors échelle), la durée.
-        _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 10);
+        _title = MakeLabel("FIN D’EXPÉDITION", _strongFont, TextRole.Title, UITheme.GoldDim, HorizontalAlignment.Center);
+        Place(_title, 0, 34, DesignSize.X, 42);
+        _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 4);
         _score.AddThemeFontSizeOverride("font_size", ScoreFontSize);
-        Place(_score, 660f, 70f, 600f, 132f);
-        _distance = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 8);
-        Place(_distance, 180f, 96f, 480f, 64f);
-        _distanceCaption = MakeLabel(Tr("UI_END_FARTHEST"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 4);
-        Place(_distanceCaption, 180f, 160f, 480f, 34f);
-        _duration = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 8);
-        Place(_duration, 1260f, 96f, 480f, 64f);
-        _durationCaption = MakeLabel(Tr("UI_END_DURATION_CAPTION"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 4);
-        Place(_durationCaption, 1260f, 160f, 480f, 34f);
+        Place(_score, 660, 80, 600, 132);
+        _distance = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 4);
+        Place(_distance, 180, 110, 480, 64);
+        _distanceCaption = MakeLabel(Tr("UI_END_FARTHEST"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 0);
+        Place(_distanceCaption, 180, 176, 480, 34);
+        _duration = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 4);
+        Place(_duration, 1260, 110, 480, 64);
+        _durationCaption = MakeLabel(Tr("UI_END_DURATION_CAPTION"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 0);
+        Place(_durationCaption, 1260, 176, 480, 34);
+        _record = MakeLabel("", _strongFont, TextRole.Heading, UITheme.TextColor, HorizontalAlignment.Center, 0);
+        Place(_record, 0, 216, DesignSize.X, 38);
+        _detail = MakeLabel("", _bodyFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Center, 0);
+        Place(_detail, 0, 260, DesignSize.X, 30);
 
-        _record = MakeLabel("", _strongFont, TextRole.Title, UITheme.TextColor, HorizontalAlignment.Center);
-        Place(_record, 0f, 204f, DesignSize.X, 42f);
-        _detail = MakeLabel("", _bodyFont, TextRole.Lead, UITheme.TextDim, HorizontalAlignment.Center, 4);
-        Place(_detail, 0f, 246f, DesignSize.X, 30f);
+        HBoxContainer middle = new();
+        middle.AddThemeConstantOverride("separation", 24);
+        _middle = middle;
+        Place(middle, 80, MiddleY, 1760, 620);
+        VBoxContainer character = new() { CustomMinimumSize = new Vector2(260, 0) };
+        middle.AddChild(character);
+        _portrait = new TextureRect { ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, MouseFilter = Control.MouseFilterEnum.Ignore,
+            Material = new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/menu_portrait.gdshader") } };
+        character.AddChild(_portrait);
+        _characterName = UITheme.MakeLabel("", TextRole.Heading, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Center);
+        character.AddChild(_characterName);
 
-        _middle = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
-        Place(_middle, 0f, MiddleY, DesignSize.X, 440f);
+        PanelContainer detail = new() { CustomMinimumSize = new Vector2(980, 0), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        detail.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        middle.AddChild(detail);
+        VBoxContainer detailContent = new();
+        detailContent.AddThemeConstantOverride("separation", 18);
+        detail.AddChild(detailContent);
+        HBoxContainer tabs = new();
+        tabs.AddThemeConstantOverride("separation", 12);
+        detailContent.AddChild(tabs);
+        _overviewTab = MenuSkin.Button("Expédition", true);
+        _equipmentTab = MenuSkin.Button("Équipement");
+        _overviewTab.SizeFlagsHorizontal = _equipmentTab.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        tabs.AddChild(_overviewTab);
+        tabs.AddChild(_equipmentTab);
+        _overviewTab.Pressed += () => SelectDetails(false);
+        _equipmentTab.Pressed += () => SelectDetails(true);
+        _detailScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
+        UITheme.ApplyFocusStyle(_detailScroll);
+        detailContent.AddChild(_detailScroll);
+        VBoxContainer pages = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        _detailScroll.AddChild(pages);
+        _overview = new VBoxContainer();
+        _overview.AddThemeConstantOverride("separation", 12);
+        pages.AddChild(_overview);
+        _facts = new VBoxContainer();
+        _facts.AddThemeConstantOverride("separation", 12);
+        _overview.AddChild(_facts);
+        _timelineCaption = UITheme.MakeLabel(Tr("UI_END_TIMELINE"), TextRole.Subhead, UITheme.GoldBright);
+        _overview.AddChild(_timelineCaption);
+        _timeline = new RunTimelineStrip { CustomMinimumSize = new Vector2(0, 90), MouseFilter = Control.MouseFilterEnum.Ignore };
+        _overview.AddChild(_timeline);
+        _equipment = new VBoxContainer { Visible = false };
+        _equipment.AddThemeConstantOverride("separation", 18);
+        pages.AddChild(_equipment);
 
-        _timelineCaption = MakeLabel(Tr("UI_END_TIMELINE"), _bodyFont, TextRole.Small, UITheme.TextDim, HorizontalAlignment.Left, 4);
-        Place(_timelineCaption, 60f, TimelineY - 26f, 900f, 24f);
-        _timeline = new RunTimelineStrip { MouseFilter = Control.MouseFilterEnum.Ignore };
-        Place(_timeline, 60f, TimelineY, DesignSize.X - 120f, 100f);
-
-        _gains = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-        _gains.AddThemeConstantOverride("separation", 20);
-        Place(_gains, 0f, GainsY, DesignSize.X, 64f);
+        PanelContainer rewards = new() { CustomMinimumSize = new Vector2(450, 0) };
+        rewards.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        middle.AddChild(rewards);
+        VBoxContainer rewardsContent = new();
+        rewardsContent.AddThemeConstantOverride("separation", 18);
+        rewards.AddChild(rewardsContent);
+        rewardsContent.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Heading, UITheme.GoldBright));
+        _gainsScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
+        UITheme.ApplyFocusStyle(_gainsScroll);
+        rewardsContent.AddChild(_gainsScroll);
+        _gains = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        _gains.AddThemeConstantOverride("separation", 12);
+        _gainsScroll.AddChild(_gains);
 
         HBoxContainer buttons = new() { Alignment = BoxContainer.AlignmentMode.Center };
         _buttons = buttons;
-        buttons.AddThemeConstantOverride("separation", 40);
-        Place(buttons, 0f, 962f, DesignSize.X, 70f);
-        _restartButton = new HubMenuButton();
-        _restartButton.Setup(Tr("UI_END_REPLAY"), TextRole.Banner, _strongFont);
+        buttons.AddThemeConstantOverride("separation", 24);
+        Place(buttons, 80, 962, 1760, 58);
+        _restartButton = MenuSkin.Button(Tr("UI_END_REPLAY"), true);
+        _restartButton.CustomMinimumSize = new Vector2(350, 58);
         _restartButton.Pressed += OnRestartPressed;
         buttons.AddChild(_restartButton);
-        _hubButton = new HubMenuButton();
-        _hubButton.Setup(Tr("UI_END_HUB"), TextRole.Banner, _strongFont);
+        _hubButton = MenuSkin.Button(Tr("UI_END_HUB"));
+        _hubButton.CustomMinimumSize = new Vector2(300, 58);
         _hubButton.Pressed += OnHubPressed;
         buttons.AddChild(_hubButton);
-        _collectionButton = new HubMenuButton { Visible = false };
-        _collectionButton.Setup(Tr("UI_END_COLLECTION"), TextRole.Banner, _strongFont);
+        _collectionButton = MenuSkin.Button(Tr("UI_END_COLLECTION"));
+        _collectionButton.Visible = false;
         _collectionButton.Pressed += OnCollectionPressed;
         buttons.AddChild(_collectionButton);
         _restartButton.FocusNeighborRight = _hubButton.GetPath();
         _hubButton.FocusNeighborLeft = _restartButton.GetPath();
-        _hubButton.FocusNeighborRight = _collectionButton.GetPath();
-        _collectionButton.FocusNeighborLeft = _hubButton.GetPath();
-
-        _seed = MakeLabel("", _bodyFont, TextRole.Small, UITheme.TextVeryDim, HorizontalAlignment.Left);
-        Place(_seed, 40f, 1040f, 600f, 28f);
-
+        _overviewTab.FocusNeighborBottom = _detailScroll.GetPath();
+        _equipmentTab.FocusNeighborBottom = _detailScroll.GetPath();
+        _detailScroll.FocusNeighborBottom = _restartButton.GetPath();
+        _detailScroll.FocusNeighborRight = _gainsScroll.GetPath();
+        _gainsScroll.FocusNeighborLeft = _detailScroll.GetPath();
+        _restartButton.FocusNeighborTop = _overviewTab.GetPath();
+        _seed = MakeLabel("", _bodyFont, TextRole.Body, UITheme.TextDim, HorizontalAlignment.Left, 0);
+        Place(_seed, 80, 1036, 1200, 28);
         GetViewport().SizeChanged += FitToViewport;
         FitToViewport();
+    }
+
+    private void SelectDetails(bool equipment)
+    {
+        _equipmentVisible = equipment;
+        _overview.Visible = !equipment;
+        _equipment.Visible = equipment;
+        MenuSkin.StyleButton(_overviewTab, !equipment);
+        MenuSkin.StyleButton(_equipmentTab, equipment);
+        _detailScroll.ScrollVertical = 0;
     }
 
     private void FitToViewport()
@@ -258,6 +325,8 @@ public partial class GameOverScreen : CanvasLayer
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             build.Passives.Add((passive.Data.Icon, passive.Level));
+        foreach (PerkSpecializationData perk in player.Specializations)
+            build.Perks.Add((perk.Icon, perk.Name));
         return build;
     }
 
@@ -275,7 +344,9 @@ public partial class GameOverScreen : CanvasLayer
         _finalDistance = record?.MaxDistanceMeters ?? 0f;
         _finalDuration = record?.RunDurationSec ?? 0f;
 
-        _title.Text = _build?.CharacterName ?? "";
+        _characterName.Text = _build?.CharacterName ?? "";
+        _portrait.Texture = _build != null ? CharacterPortrait.Artwork(_build.CharacterId) ?? CharacterPortrait.Idle(_build.CharacterId) : null;
+        SelectDetails(false);
         _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _detail.Text = FormatDetail();
@@ -315,61 +386,35 @@ public partial class GameOverScreen : CanvasLayer
 
     private void BuildMiddle(RunRecord record)
     {
-        foreach (Node child in _middle.GetChildren())
-            child.QueueFree();
-
-        // Colonne de gauche : le personnage, de face, et ce qui l'a emporté.
-        if (_build != null)
-        {
-            CharacterData data = CharacterDataLoader.Get(_build.CharacterId);
-            SpriteFrames frames = data != null ? CharacterSpriteLoader.LoadOrGet(data.Id, data.SpriteFolder) : null;
-            if (frames != null)
-            {
-                string animation = frames.HasAnimation("S_idle") ? "S_idle" : "SE_idle";
-                AnimatedSprite2D sprite = new()
-                {
-                    SpriteFrames = frames,
-                    Animation = animation,
-                    Scale = new Vector2(5f, 5f),
-                    Position = new Vector2(300f, 110f),
-                    TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                };
-                _middle.AddChild(sprite);
-                sprite.Play(animation);
-            }
-        }
+        MenuSkin.Clear(_facts);
+        MenuSkin.Clear(_equipment);
         Control killer = RunSummaryPanels.KillerCard(record?.DeathCause, _finalDuration);
-        if (killer != null)
-        {
-            killer.Position = new Vector2(60f, 250f);
-            killer.CustomMinimumSize = new Vector2(480f, 0f);
-            _middle.AddChild(killer);
-        }
-
-        // Colonne centrale : les armes, puis les souvenirs.
+        if (killer != null) _facts.AddChild(killer);
         int totalKills = _scoreManager?.TotalKills ?? 0;
-        Control weapons = RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration);
-        weapons.Position = new Vector2(580f, 0f);
-        _middle.AddChild(weapons);
-
-        Label passivesCaption = MakeLabel(Tr("UI_END_PASSIVES"), _strongFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Left, 4);
-        passivesCaption.Position = new Vector2(580f, 348f);
-        _middle.AddChild(passivesCaption);
-        HBoxContainer passives = new() { Position = new Vector2(580f, 376f), MouseFilter = Control.MouseFilterEnum.Ignore };
-        passives.AddThemeConstantOverride("separation", 12);
-        _middle.AddChild(passives);
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            bool filled = _build != null && i < _build.Passives.Count;
-            passives.AddChild(filled
-                ? RunSummaryPanels.Slot(_build.Passives[i].Icon, _build.Passives[i].Level, UITheme.CyanEssence)
-                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
-        }
-
-        // Colonne de droite : les faits de la run.
-        Control facts = RunSummaryPanels.Facts(BuildFacts(record, totalKills));
-        facts.Position = new Vector2(1480f, 6f);
-        _middle.AddChild(facts);
+        _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills)));
+        _equipment.AddChild(RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration));
+        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_OBJECTS"), TextRole.Heading, UITheme.GoldBright));
+        HFlowContainer passives = new();
+        passives.AddThemeConstantOverride("h_separation", 12);
+        passives.AddThemeConstantOverride("v_separation", 12);
+        _equipment.AddChild(passives);
+        if (_build != null)
+            foreach ((string icon, int level) in _build.Passives)
+                passives.AddChild(RunSummaryPanels.Slot(icon, level, UITheme.CyanEssence));
+        if (_build == null || _build.Passives.Count == 0)
+            passives.AddChild(UITheme.MakeLabel("Aucun objet", TextRole.Subhead, UITheme.TextDim));
+        _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Heading, UITheme.GoldBright));
+        if (_build != null)
+            foreach ((string icon, string name) in _build.Perks)
+            {
+                HBoxContainer row = new();
+                row.AddThemeConstantOverride("separation", 14);
+                row.AddChild(PlayerSheet.MakeIcon(icon, 40));
+                row.AddChild(UITheme.MakeLabel(name, TextRole.Subhead, UITheme.TextColor));
+                _equipment.AddChild(row);
+            }
+        if (_build == null || _build.Perks.Count == 0)
+            _equipment.AddChild(UITheme.MakeLabel("Aucune réminiscence", TextRole.Subhead, UITheme.TextDim));
     }
 
     private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)
@@ -406,8 +451,7 @@ public partial class GameOverScreen : CanvasLayer
     /// <summary>Les gains sont déjà acquis (sauvegardés à la mort) : les cartes ne font que les montrer.</summary>
     private void BuildGains(GameManager gm)
     {
-        foreach (Node child in _gains.GetChildren())
-            child.QueueFree();
+        MenuSkin.Clear(_gains);
         _gainCards.Clear();
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
@@ -422,6 +466,8 @@ public partial class GameOverScreen : CanvasLayer
         foreach (WeaponData weapon in _newWeapons)
             AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite, "sfx_souvenir_trouve");
         _collectionButton.Visible = _newWeapons.Count > 0;
+        if (_gainCards.Count == 0)
+            _gains.AddChild(UITheme.MakeLabel("Aucun nouveau gain.", TextRole.Subhead, UITheme.TextDim));
     }
 
     private EndGainCard AddGainCard(string text, Color accent, string icon = null, string flipSound = null)
@@ -452,22 +498,40 @@ public partial class GameOverScreen : CanvasLayer
 
     public override void _Process(double delta)
     {
-        if (!_showing)
-            return;
+        if (!_showing) return;
         _elapsed += (float)delta;
-        ApplyReveal();
+        if (_elapsed <= _revealEnd + 0.1f || _restartButton.Disabled)
+            ApplyReveal();
         if (_elapsed >= _buttonsAt && _restartButton.Disabled)
         {
             SetButtonsEnabled(true);
             _restartButton.GrabFocus();
         }
-        if (_elapsed > _revealEnd + ButtonGuardSec && !_isRecord)
-            SetProcess(false);
+        if (_isRecord && _elapsed > _revealEnd)
+        {
+            float pulse = 0.87f + 0.13f * Mathf.Sin(_elapsed * 3f);
+            _record.Modulate = new Color(pulse, pulse, pulse);
+        }
+        float axis = Input.GetAxis("scroll_up", "scroll_down");
+        if (axis != 0f)
+        {
+            Control focus = GetViewport().GuiGetFocusOwner();
+            ScrollContainer scroll = focus == _gainsScroll || (focus != _detailScroll && _gainsScroll.GetGlobalRect().HasPoint(_gainsScroll.GetGlobalMousePosition()))
+                ? _gainsScroll : _detailScroll;
+            scroll.ScrollVertical += Mathf.RoundToInt(axis * 850f * (float)delta);
+        }
     }
 
     /// <summary>Un appui pendant la révélation la termine, gains compris et sans son ; il ne déclenche jamais un bouton.</summary>
     public override void _Input(InputEvent @event)
     {
+        if (_showing && _elapsed >= _revealEnd && @event.IsActionPressed("ui_cancel") && _equipmentVisible)
+        {
+            SelectDetails(false);
+            _overviewTab.GrabFocus();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (!_showing || _elapsed >= _revealEnd || !@event.IsPressed() || @event.IsEcho())
             return;
         if (@event is not (InputEventKey or InputEventMouseButton or InputEventJoypadButton))
@@ -507,7 +571,7 @@ public partial class GameOverScreen : CanvasLayer
 
         float middle = Mathf.Clamp((_elapsed - BuildStart) / 0.35f, 0f, 1f);
         _middle.Modulate = new Color(1f, 1f, 1f, middle);
-        _middle.Position = new Vector2(0f, MiddleY + (1f - middle) * SlideIn);
+        _middle.Position = new Vector2(80f, MiddleY + (1f - middle) * SlideIn);
 
         float timeline = Mathf.Clamp((_elapsed - TimelineStart) / TimelineSec, 0f, 1f);
         _timelineCaption.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(timeline * 4f, 0f, 1f));
@@ -516,7 +580,6 @@ public partial class GameOverScreen : CanvasLayer
 
         float gains = Mathf.Clamp((_elapsed - GainsStart) / 0.35f, 0f, 1f);
         _gains.Modulate = new Color(1f, 1f, 1f, gains);
-        _gains.Position = new Vector2(0f, GainsY + (1f - gains) * SlideIn);
         for (int i = 0; i < _gainCards.Count; i++)
             _gainCards[i].Advance(_elapsed - CardStart(i), _skipped);
         _buttons.Modulate = new Color(1f, 1f, 1f, gains);
@@ -527,13 +590,18 @@ public partial class GameOverScreen : CanvasLayer
         _restartButton.Disabled = !enabled;
         _hubButton.Disabled = !enabled;
         _collectionButton.Disabled = !enabled;
+        _overviewTab.Disabled = !enabled;
+        _equipmentTab.Disabled = !enabled;
     }
 
     private void OnRestartPressed()
     {
+        if (_leaving || _restartButton.Disabled) return;
+        _leaving = true;
         AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
-        GetTree().ReloadCurrentScene();
+        GetNode<GameManager>("/root/GameManager").OpenCharacterSelection = true;
+        GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
     }
 
     private void OnCollectionPressed()
@@ -544,6 +612,8 @@ public partial class GameOverScreen : CanvasLayer
 
     private void OnHubPressed()
     {
+        if (_leaving || _hubButton.Disabled) return;
+        _leaving = true;
         AudioManager.PlayUI("sfx_menu_confirmer");
         GetTree().Paused = false;
         GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");

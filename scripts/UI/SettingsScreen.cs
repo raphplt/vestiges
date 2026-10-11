@@ -5,12 +5,13 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Settings screen with tabbed navigation (Audio, Graphismes, Contrôles).
-/// Pixel art NinePatch styling. Close button + ESC.
-/// Usable both in-game (pause) and from the Hub via gear button.
+/// Paramètres communs au Hub et à la pause, classés par usage.
+/// Les onglets et leurs réglages se parcourent au clavier ou à la manette.
 /// </summary>
 public partial class SettingsScreen : CanvasLayer
 {
+	[Signal] public delegate void OpenedEventHandler();
+	[Signal] public delegate void ClosedEventHandler();
 	public bool IsOpen { get; private set; }
 
 	private Control _root;
@@ -21,7 +22,6 @@ public partial class SettingsScreen : CanvasLayer
 	private readonly System.Collections.Generic.Dictionary<string, Button> _tabButtons = new();
 
 	// Textures NinePatch
-	private Texture2D _panelTex;
 	private Texture2D _tabNormalTex;
 	private Texture2D _tabHoverTex;
 	private Texture2D _tabActiveTex;
@@ -102,6 +102,7 @@ public partial class SettingsScreen : CanvasLayer
 		IsOpen = true;
 		_returnFocus = GetViewport().GuiGetFocusOwner();
 		_root.Visible = true;
+		EmitSignal(SignalName.Opened);
 		ShowTab(_activeTab);
 		_tabButtons[_activeTab].CallDeferred(Control.MethodName.GrabFocus);
 	}
@@ -113,6 +114,7 @@ public partial class SettingsScreen : CanvasLayer
 		_root.Visible = false;
 		AudioManager.Instance?.SaveSettings();
 		CombatFxSettings.Save();
+		EmitSignal(SignalName.Closed);
 		if (_returnFocus != null && IsInstanceValid(_returnFocus) && _returnFocus.IsVisibleInTree())
 			_returnFocus.GrabFocus();
 		_returnFocus = null;
@@ -138,7 +140,6 @@ public partial class SettingsScreen : CanvasLayer
 
 	private void LoadTextures()
 	{
-		_panelTex = UITheme.LoadTex(UITheme.MenusPath + "ui_panel_frame.png");
 		_tabNormalTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_normal.png");
 		_tabHoverTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_hover.png");
 		_tabActiveTex = UITheme.LoadTex(UITheme.MenusPath + "ui_tab_active.png");
@@ -155,46 +156,19 @@ public partial class SettingsScreen : CanvasLayer
 		_root.ProcessMode = ProcessModeEnum.Always;
 		AddChild(_root);
 
-		// Dark overlay (cliquable pour fermer)
-		ColorRect overlay = new();
-		overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-		overlay.Color = new Color(0.02f, 0.02f, 0.05f, 0.8f);
-		overlay.GuiInput += (InputEvent @event) =>
-		{
-			if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
-				Close();
-		};
-		_root.AddChild(overlay);
+		MenuSkin.AddBackdrop(_root);
 
 		// Main panel (centered, fixed size)
 		PanelContainer mainPanel = new();
 		mainPanel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
 		mainPanel.GrowHorizontal = Control.GrowDirection.Both;
 		mainPanel.GrowVertical = Control.GrowDirection.Both;
-		mainPanel.OffsetLeft = -360;
-		mainPanel.OffsetRight = 360;
-		mainPanel.OffsetTop = -280;
-		mainPanel.OffsetBottom = 280;
+		mainPanel.OffsetLeft = -590;
+		mainPanel.OffsetRight = 590;
+		mainPanel.OffsetTop = -380;
+		mainPanel.OffsetBottom = 380;
 
-		// NinePatch panel styling
-		if (_panelTex != null)
-		{
-			StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 4, 4, 4, 4);
-			panelStyle.ContentMarginLeft = 8;
-			panelStyle.ContentMarginRight = 8;
-			panelStyle.ContentMarginTop = 8;
-			panelStyle.ContentMarginBottom = 8;
-			mainPanel.AddThemeStyleboxOverride("panel", panelStyle);
-		}
-		else
-		{
-			StyleBoxFlat fallback = new();
-			fallback.BgColor = new Color(0.08f, 0.08f, 0.12f, 0.95f);
-			fallback.SetCornerRadiusAll(0);
-			fallback.SetBorderWidthAll(1);
-			fallback.BorderColor = new Color(0.3f, 0.28f, 0.22f, 0.6f);
-			mainPanel.AddThemeStyleboxOverride("panel", fallback);
-		}
+		mainPanel.AddThemeStyleboxOverride("panel", MenuSkin.Panel(36));
 		_root.AddChild(mainPanel);
 
 		VBoxContainer mainVBox = new();
@@ -240,7 +214,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "PARAMÈTRES",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		UITheme.SetTextRole(title, TextRole.Heading);
+		UITheme.SetTextRole(title, TextRole.Title);
 		title.AddThemeColorOverride("font_color", UITheme.GoldColor);
 		row.AddChild(title);
 
@@ -294,11 +268,11 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			CustomMinimumSize = new Vector2(0, 38),
+			CustomMinimumSize = new Vector2(220, 60),
 			FocusMode = Control.FocusModeEnum.All,
 			Flat = true
 		};
-		UITheme.SetTextRole(btn, TextRole.Body);
+		UITheme.SetTextRole(btn, TextRole.Subhead);
 		UITheme.WireButtonAudio(btn);
 
 		btn.Pressed += () => ShowTab(id);
@@ -324,8 +298,7 @@ public partial class SettingsScreen : CanvasLayer
 		}
 
 		// Clear content
-		foreach (Node child in _contentArea.GetChildren())
-			child.QueueFree();
+		MenuSkin.Clear(_contentArea);
 
 		// Build tab content
 		Control content = tabId switch
@@ -338,7 +311,7 @@ public partial class SettingsScreen : CanvasLayer
 		};
 
 		// Le panneau garde sa taille : un onglet que le texte agrandi fait déborder défile.
-		ScrollContainer scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
+		ScrollContainer scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true };
 		scroll.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		content.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		content.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
@@ -385,7 +358,7 @@ public partial class SettingsScreen : CanvasLayer
 		margin.AddThemeConstantOverride("margin_bottom", 16);
 
 		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 18);
+		vbox.AddThemeConstantOverride("separation", 32);
 		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddChild(vbox);
 
@@ -416,7 +389,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(lbl, TextRole.Body);
+		UITheme.SetTextRole(lbl, TextRole.Subhead);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		headerRow.AddChild(lbl);
 
@@ -425,7 +398,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(48, 0),
 			HorizontalAlignment = HorizontalAlignment.Right
 		};
-		UITheme.SetTextRole(pct, TextRole.Body);
+		UITheme.SetTextRole(pct, TextRole.Subhead);
 		pct.AddThemeColorOverride("font_color", UITheme.TextDim);
 		headerRow.AddChild(pct);
 
@@ -480,32 +453,9 @@ public partial class SettingsScreen : CanvasLayer
 		slider.AddThemeStyleboxOverride("grabber_area", grabberArea);
 		slider.AddThemeStyleboxOverride("grabber_area_highlight", grabberArea);
 
-		// Grabber (carre gold, style pixel art)
-		StyleBoxFlat grabber = new()
-		{
-			BgColor = UITheme.GoldColor,
-			BorderColor = new Color(0.42f, 0.30f, 0.22f),
-		};
-		grabber.SetBorderWidthAll(1);
-		grabber.SetCornerRadiusAll(0);
-		grabber.ContentMarginLeft = 6;
-		grabber.ContentMarginRight = 6;
-		grabber.ContentMarginTop = 8;
-		grabber.ContentMarginBottom = 8;
-		slider.AddThemeStyleboxOverride("grabber", grabber);
-
-		StyleBoxFlat grabberHl = new()
-		{
-			BgColor = UITheme.GoldBright,
-			BorderColor = new Color(0.42f, 0.30f, 0.22f),
-		};
-		grabberHl.SetBorderWidthAll(1);
-		grabberHl.SetCornerRadiusAll(0);
-		grabberHl.ContentMarginLeft = 6;
-		grabberHl.ContentMarginRight = 6;
-		grabberHl.ContentMarginTop = 8;
-		grabberHl.ContentMarginBottom = 8;
-		slider.AddThemeStyleboxOverride("grabber_highlight", grabberHl);
+		slider.AddThemeIconOverride("grabber", MenuSkin.SliderThumb(false));
+		slider.AddThemeIconOverride("grabber_highlight", MenuSkin.SliderThumb(true));
+		slider.AddThemeIconOverride("grabber_disabled", MenuSkin.SliderThumb(false));
 	}
 
 	// ================================================================
@@ -588,7 +538,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Particules",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(particleLbl, TextRole.Body);
+		UITheme.SetTextRole(particleLbl, TextRole.Subhead);
 		particleLbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		particleRow.AddChild(particleLbl);
 
@@ -598,7 +548,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(160, 36),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(particleBtn, TextRole.Small);
+		UITheme.SetTextRole(particleBtn, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(particleBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		particleBtn.Pressed += () =>
 		{
@@ -637,7 +587,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(lbl, TextRole.Body);
+		UITheme.SetTextRole(lbl, TextRole.Subhead);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -647,7 +597,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(160, 36),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(btn, TextRole.Small);
+		UITheme.SetTextRole(btn, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(btn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		btn.Pressed += () => onCycle(btn);
 		row.AddChild(btn);
@@ -665,7 +615,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(lbl, TextRole.Body);
+		UITheme.SetTextRole(lbl, TextRole.Subhead);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -678,7 +628,7 @@ public partial class SettingsScreen : CanvasLayer
 			CustomMinimumSize = new Vector2(80, 36),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(toggle, TextRole.Small);
+		UITheme.SetTextRole(toggle, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(toggle, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		toggle.AddThemeColorOverride("font_color", initialValue ? UITheme.GoldColor : UITheme.TextDim);
 
@@ -719,27 +669,27 @@ public partial class SettingsScreen : CanvasLayer
 			Text = "Action",
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(actionHeader, TextRole.Small);
+		UITheme.SetTextRole(actionHeader, TextRole.Subhead);
 		actionHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(actionHeader);
 
 		Label keyHeader = new()
 		{
 			Text = "Clavier",
-			CustomMinimumSize = new Vector2(120, 0),
+			CustomMinimumSize = new Vector2(140, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		UITheme.SetTextRole(keyHeader, TextRole.Small);
+		UITheme.SetTextRole(keyHeader, TextRole.Subhead);
 		keyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(keyHeader);
 
 		Label joyHeader = new()
 		{
 			Text = "Manette",
-			CustomMinimumSize = new Vector2(120, 0),
+			CustomMinimumSize = new Vector2(140, 0),
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
-		UITheme.SetTextRole(joyHeader, TextRole.Small);
+		UITheme.SetTextRole(joyHeader, TextRole.Subhead);
 		joyHeader.AddThemeColorOverride("font_color", UITheme.TextDim);
 		header.AddChild(joyHeader);
 
@@ -768,10 +718,10 @@ public partial class SettingsScreen : CanvasLayer
 		Button resetBtn = new()
 		{
 			Text = "Réinitialiser",
-			CustomMinimumSize = new Vector2(180, 36),
+			CustomMinimumSize = new Vector2(200, 44),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(resetBtn, TextRole.Small);
+		UITheme.SetTextRole(resetBtn, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(resetBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		resetBtn.Pressed += () =>
 		{
@@ -797,7 +747,7 @@ public partial class SettingsScreen : CanvasLayer
 			Text = actionLabel,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
-		UITheme.SetTextRole(lbl, TextRole.Small);
+		UITheme.SetTextRole(lbl, TextRole.Subhead);
 		lbl.AddThemeColorOverride("font_color", UITheme.TextColor);
 		row.AddChild(lbl);
 
@@ -805,10 +755,10 @@ public partial class SettingsScreen : CanvasLayer
 		Button keyBtn = new()
 		{
 			Text = InputRemapManager.GetKeyName(def.Action),
-			CustomMinimumSize = new Vector2(120, 32),
+			CustomMinimumSize = new Vector2(140, 44),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(keyBtn, TextRole.Small);
+		UITheme.SetTextRole(keyBtn, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(keyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		keyBtn.Pressed += () => StartListening(def.Action, keyBtn, true);
 		row.AddChild(keyBtn);
@@ -817,10 +767,10 @@ public partial class SettingsScreen : CanvasLayer
 		Button joyBtn = new()
 		{
 			Text = InputRemapManager.GetJoyButtonName(def.Action),
-			CustomMinimumSize = new Vector2(120, 32),
+			CustomMinimumSize = new Vector2(140, 44),
 			FocusMode = Control.FocusModeEnum.All
 		};
-		UITheme.SetTextRole(joyBtn, TextRole.Small);
+		UITheme.SetTextRole(joyBtn, TextRole.Subhead);
 		UITheme.ApplyButtonStyle(joyBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
 		joyBtn.Pressed += () => StartListening(def.Action, joyBtn, false);
 		row.AddChild(joyBtn);

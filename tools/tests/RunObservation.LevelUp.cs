@@ -138,6 +138,7 @@ public partial class RunObservation
         pause.GetType().GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(pause, null);
         await Frames(10);
         SaveFrame("pause");
+        AssertMenuFits((Control)pause.GetType().GetField("_content", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause), "pause");
         // Les vrais événements traversent le routage de Godot, y compris pendant la pause.
         GetViewport().PushInput(new InputEventKey { Keycode = Key.Down, Pressed = true });
         await Frames(2);
@@ -169,12 +170,60 @@ public partial class RunObservation
             await Frames(5);
             SaveFrame("pause-hover-focus");
         }
-        // Stick droit ou Page bas : les colonnes défilent sans souris.
+        // Journal depuis la pause : ouverture à la manette, retour sans reprise et focus restitué.
+        GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = true });
+        await Frames(2);
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Journal" } journalButton)
+            throw new System.InvalidOperationException("Bas après Paramètres doit atteindre le Journal.");
+        journalButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(3);
+        if (!_world.GetNode<Vestiges.UI.JournalScreen>("JournalScreen").IsOpen)
+            throw new System.InvalidOperationException("Le journal doit s'ouvrir depuis la pause.");
+        SaveFrame("pause-journal");
+        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = true });
+        await Frames(3);
+        if (!GetTree().Paused || GetViewport().GuiGetFocusOwner() != journalButton)
+            throw new System.InvalidOperationException("Fermer le journal doit retrouver la pause et son focus.");
+        // L'abandon est confirmé dans une modale qui garde la run en pause.
+        GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = true });
+        await Frames(1);
+        GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = false });
+        await Frames(2);
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Abandonner la run" } abandon)
+            throw new System.InvalidOperationException("Bas après Paramètres doit atteindre Abandonner.");
+        abandon.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(3);
+        SaveFrame("pause-confirm-abandon");
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Continuer la partie" } || !GetTree().Paused)
+            throw new System.InvalidOperationException("La confirmation doit proposer de conserver la partie.");
+        GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        await Frames(1);
+        GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = false });
+        await Frames(3);
+        if (GetViewport().GuiGetFocusOwner() != abandon || !GetTree().Paused)
+            throw new System.InvalidOperationException("Annuler doit retrouver Abandonner sans reprendre la run.");
+        System.Collections.Generic.List<ScrollContainer> columns = (System.Collections.Generic.List<ScrollContainer>)pause.GetType()
+            .GetField("_columnScrolls", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause);
+        // Les quinze statistiques tiennent sans défilement ; les neuf Oublis forcent le cas long réel.
+        PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
+        foreach (OubliData oubli in OubliDataLoader.All) peril.AddOubli(oubli);
+        pause.GetType().GetMethod("UpdateStats", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(pause, null);
+        await Frames(4);
+        VBoxContainer inventory = (VBoxContainer)pause.GetType()
+            .GetField("_inventoryContainer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause);
+        inventory.GetChild<GridContainer>(3).GetChild<Button>(3).GrabFocus();
+        await Frames(3);
+        SaveFrame("pause-object");
+        columns[1].GrabFocus();
+        // Stick droit ou Page bas : seule la colonne examinée défile.
+        int previousScroll = columns[1].ScrollVertical;
         Input.ActionPress("scroll_down");
         await Frames(30);
         Input.ActionRelease("scroll_down");
         await Frames(5);
         SaveFrame("pause-scrolled");
+        if (columns[1].ScrollVertical <= previousScroll || columns[0].ScrollVertical != 0)
+            throw new System.InvalidOperationException("Le défilement doit affecter seulement la fiche sélectionnée.");
         GD.Print($"[RunObservation] RESULT pause_captured=True output={_output}");
     }
 }
