@@ -1211,3 +1211,14 @@ Réponses de Raphaël aux questions des plans 35 et 36 :
 - Remboursement des achats permanents : **libre et gratuit**.
 - Nom de l'écran : « établi est aussi un truc in game donc ça va pas trop » ; retenu **le Campement** parmi quatre.
 - Ordre : « péril visible, établi puis refonte de l'inventaire » : Péril toujours visible (plan 34 G0), puis le Campement (plan 36), puis l'inventaire (plan 35).
+
+## 111. Questions du Campement et de l'inventaire acceptées, refonte lancée — 11 octobre 2026
+
+Raphaël, après le compte rendu du Campement et du lot I0 : « Ok, ces points me vont. continue avec le deuxieme chantier sur la meme branche stp. »
+
+**Lecture retenue** : les propositions et recommandations des plans 36 §13 et 35 §9.5 sont acceptées. Là où deux options étaient posées sans recommandation, l'agent prend la première, et le dit ici pour que Raphaël puisse la corriger :
+- **Campement** : noms des 13 améliorations gardés ; « Quatre airs » garde quatre armes et passe en ★★ ; armure +1 par rang gardée ; 4ᵉ emplacement à 2 500 gardé.
+- **Écussons** : noms de la table 35 §9.1 gardés ; l'**arbitre redevient un objet** du sac (option A, le Péril reste un choix) ; un seul palier, au niveau 15 (première option) ; l'usage donne environ un quart des niveaux en 30 min ; un fil sous chaque Écusson au HUD, sans bandeau.
+- **Sac** : sac plein, l'objet reste au sol avec une invite à maintenir, qui ouvre l'écran d'échange en pause ; 3 à 5 nouveaux objets rejoignent la réserve de départ ; un objet sans niveaux vaut d'abord son niveau 10 d'aujourd'hui, et son palier du niveau 15 devient l'effet d'un doublon.
+
+**Suite** : refonte de l'inventaire (plan 35, lots I1 à I7, découpés au §10), puis les Poches du Campement (plan 36 M4).

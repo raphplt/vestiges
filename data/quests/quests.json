@@ -162,7 +162,7 @@
             "id": "four_tunes",
             "name": "Quatre airs",
             "description": "Avoir quatre armes au niveau 3 ou plus en même temps.",
-            "difficulty": 1,
+            "difficulty": 2,
             "scope": "run",
             "conditions": [
                 {

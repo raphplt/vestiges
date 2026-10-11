@@ -299,3 +299,22 @@ On ne fige pas le combat sans le vouloir. Le ramassage marche comme l'échange d
 6. **Sac plein** : invite maintenue puis écran en pause (§9.3), comme l'échange d'armes ? Ou un écran qui s'ouvre tout seul au contact ?
 7. **Objets de départ** : seulement 5 dans la réserve d'un profil neuf. En ajouter 3 à 5 parmi les nouveaux objets (I6), ou débloquer plus tôt ceux des quêtes ★ ?
 8. **Les objets à effet sans niveaux** : partir de la valeur du niveau 10 d'aujourd'hui, et faire du palier 15 l'effet d'un doublon. Ce principe te va-t-il, avant le réglage objet par objet en I2 ?
+
+## 10. Lots de la refonte — 11 octobre 2026 (§111)
+
+Raphaël a accepté les propositions du §9.5 ([DECISIONS §111](DECISIONS.md)). L'arbitre redevient un objet, et l'Écusson garde un seul palier, au niveau 15.
+
+**Choix techniques, différents de l'I0 sur un point.** `passive_souvenirs.json` n'est pas scindé : chaque fiche gagne un champ `kind` (`badge` ou `item`). Ainsi un seul chargeur et un seul contrat restent, les `id` ne bougent pas et l'historique se lit sans migration. Les réglages de l'inventaire vont dans un petit fichier à part, `data/progression/inventory.json` : 4 Écussons, sac de 10, montée des Écussons, valeur des exemplaires d'un objet.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **I1** | **Écussons** : `kind` sur les 35 fiches (16 Écussons, 19 objets dont l'arbitre), noms « Écusson du… » avec l'ancien nom en sous-titre ; 4 emplacements à part ; offre au level-up (nouveau, niveau suivant) ; niveau maximum 99, demi-pas au-delà du niveau 30 ; type de déblocage `badge` dans les quêtes ; rangée de 4 Écussons au HUD, section à la pause | suites `objects`, `quests`, `catalogs`, `perk_effects`, nouvelle suite `inventory` ; capture du HUD |
+| **I2** | **Objets en exemplaires** : plus de niveaux ; un exemplaire vaut le niveau 10 d'aujourd'hui, le deuxième atteint le palier (niveau 15), puis 19, 22, 24, 25 ; sac de 10 places (un exemplaire, une place) ; oubli d'un exemplaire, effet et palier retirés proprement. Jusqu'à I3, le level-up offre encore les objets (« un exemplaire »), seulement s'il reste une place | suites `objects`, `inventory` |
+| **I3** | **Le monde donne les objets** : le level-up n'en offre plus ; coffres (« objet » au lieu de « niveau d'objet »), élites (au hasard), Souverains (sûr) et Atelier (contre Essence) ; objet posé au sol, ramassé s'il y a de la place, sinon invite à maintenir et écran d'échange en pause | suites `objects`, `small_places`, `inventory` ; captures de l'échange |
+| **I4** | **Surplus d'armes** : une arme au niveau 50 et ascensionnée reste offerte au level-up, avec +4 % de dégâts par carte, sans plafond | suites `weapons`, `inventory` |
+| **I5** | **Interface** : pause (armes, Écussons, sac), fiche du joueur, Collection (Écussons et objets), bilan | captures Hub et run |
+| **I6** | **Nouveaux objets, première fournée** : Ticket de consigne (une résurrection), Plan de métro (le dash devient un saut court), Flacon de pharmacie (poison), Trèfle plastifié (une carte de plus par level-up), Montre arrêtée (le temps ralentit à la mort d'un Souverain) ; trois d'entre eux rejoignent la réserve de départ | suites `objects`, `quests` ; captures |
+| **I7** | **Montée par l'usage (H2)** : un fil par Écusson porté, déclencheurs du §9.1, seuils en données ; fil au HUD ; mesure de la part de l'usage sur 30 min | suite `inventory`, mesure au bot |
+| M4 (plan 36) | **Poches** au Campement : sac +3 places par rang, 5 rangs (10 → 25) | suite `camp` |
+
+I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.

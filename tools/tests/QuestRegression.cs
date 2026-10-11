@@ -78,8 +78,8 @@ public partial class QuestRegression : Node
                 unlocks[unlock.Kind]++;
         }
         Check(quests.Count == 36, $"36 quêtes ({quests.Count})");
-        Check(difficulties[1] == 14 && difficulties[2] == 17 && difficulties[3] == 5,
-            $"14 ★, 17 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
+        Check(difficulties[1] == 13 && difficulties[2] == 18 && difficulties[3] == 5,
+            $"13 ★, 18 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
         Check(cumulative == 2, $"deux quêtes de cumul ({cumulative})");
         Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 18,
             $"5 personnages, 17 armes (13 + 4 de départ de personnage), 18 objets ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]})");
