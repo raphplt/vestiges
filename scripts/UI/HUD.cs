@@ -36,7 +36,11 @@ public partial class HUD : CanvasLayer
     private static readonly Vector2 ReferenceResolution = new(960, 540);
 
     private const float PlateMargin = 8f;
-    private const float ScorePlateWidth = 150f;
+    private const float ScoreAreaWidth = 260f;
+    // Icônes 32×32 à ×2 (HUD dessiné à ×2, icône de 32 unités) : 2 unités de cadre autour.
+    private const float WeaponSlotSize = 36f;
+    // Les armes reposent juste au-dessus de la barre d'XP ; les Écussons au-dessus d'elles (plan 37 R3).
+    private const float WeaponBarBottom = 6f + XpBar.BarHeight;
     private const float BiomeShowSec = 2f;
     private const float BiomeFadeSec = 0.5f;
     private const float FpsUpdateInterval = 0.25f;
@@ -114,8 +118,6 @@ public partial class HUD : CanvasLayer
     // Case fermée tant que le Campement ne l'a pas ouverte (plan 36) : cadre éteint, cadenas par-dessus.
     private static readonly Color LockedSlotTint = new(0.45f, 0.43f, 0.48f, 0.7f);
     private readonly System.Collections.Generic.HashSet<string> _overflowReady = new();
-    private static readonly Color PlateColor = new(0.04f, 0.045f, 0.08f, 0.82f);
-    private static readonly Color PlateBorder = new(0.83f, 0.66f, 0.26f, 0.35f);
 
     public override void _Ready()
     {
@@ -295,28 +297,6 @@ public partial class HUD : CanvasLayer
         return label;
     }
 
-    private static PanelContainer MakePlate(float left, float top, float width, float height)
-    {
-        PanelContainer plate = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        StyleBoxFlat style = new()
-        {
-            BgColor = PlateColor,
-            BorderColor = PlateBorder,
-            BorderWidthBottom = 1,
-            BorderWidthTop = 1,
-            BorderWidthLeft = 1,
-            BorderWidthRight = 1,
-            ContentMarginLeft = 0,
-            ContentMarginRight = 0,
-            ContentMarginTop = 0,
-            ContentMarginBottom = 0
-        };
-        plate.AddThemeStyleboxOverride("panel", style);
-        plate.Position = new Vector2(left, top);
-        plate.Size = new Vector2(width, height);
-        return plate;
-    }
-
     private void BuildVitals()
     {
         _vitals = new VitalsDisplay { Name = "Vitals", Position = new Vector2(PlateMargin, PlateMargin) };
@@ -332,10 +312,7 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(_fpsLabel);
     }
 
-    /// <summary>
-    /// Le temps en haut au centre, le Péril toujours à sa droite, 0 compris (plan 34 G0 : il se lit sans pause), et
-    /// le nom du biome qui passe dessous quand on y entre.
-    /// </summary>
+    /// <summary>Le temps en haut au centre, seul, et le nom du biome qui passe dessous quand on y entre.</summary>
     private void BuildRunClock()
     {
         Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -348,11 +325,6 @@ public partial class HUD : CanvasLayer
         _timeLabel.Size = new Vector2(120f, 24f);
         _timeLabel.HorizontalAlignment = HorizontalAlignment.Center;
         anchor.AddChild(_timeLabel);
-
-        _perilLabel = MakeLabel(string.Format(Tr("UI_HUD_PERIL"), 0), 12, PlayerSheet.PerilColor, 3);
-        _perilLabel.Position = new Vector2(40f, PlateMargin + 2f);
-        _perilLabel.Size = new Vector2(110f, 18f);
-        anchor.AddChild(_perilLabel);
 
         _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
         _biomeLabel.Position = new Vector2(-120f, PlateMargin + 22f);
@@ -368,6 +340,10 @@ public partial class HUD : CanvasLayer
         _perilPulse = 1f;
     }
 
+    /// <summary>
+    /// Haut droit, sans plaque (plan 37 R2) : le score en grand, puis éliminations, Essence et Péril sur une ligne. Le
+    /// Péril y reste toujours, 0 compris (plan 34 G0 : il se lit sans pause). Chaque texte porte son contour sombre.
+    /// </summary>
     private void BuildScoreArea()
     {
         Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -375,49 +351,53 @@ public partial class HUD : CanvasLayer
         anchor.AnchorRight = 1f;
         _hudRoot.AddChild(anchor);
 
-        PanelContainer plate = MakePlate(-ScorePlateWidth - PlateMargin, PlateMargin, ScorePlateWidth, 40f);
-        anchor.AddChild(plate);
-        Control content = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
-        plate.AddChild(content);
+        HBoxContainer scoreRow = RightAlignedRow(anchor, PlateMargin - 4f, 6);
+        Label caption = MakeLabel(Tr("UI_HUD_SCORE"), 8, PalGrayLight, 3);
+        caption.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        scoreRow.AddChild(caption);
+        _scoreLabel = MakeLabel("0", 22, PalGold, 4);
+        scoreRow.AddChild(_scoreLabel);
 
-        Label caption = MakeLabel(Tr("UI_HUD_SCORE"), 8, PalGrayLight, 0);
-        caption.Position = new Vector2(8, 3);
-        caption.Size = new Vector2(50, 10);
-        content.AddChild(caption);
-
-        _scoreLabel = MakeLabel("0", 18, PalGold, 4);
-        _scoreLabel.Position = new Vector2(8, 0);
-        _scoreLabel.Size = new Vector2(ScorePlateWidth - 16, 24);
-        _scoreLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        content.AddChild(_scoreLabel);
-
-        // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche de la plaque, puis s'efface.
+        // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche du score, puis s'efface.
         _gainLabel = MakeLabel("", 13, PalGold, 4);
-        _gainLabel.Position = new Vector2(-ScorePlateWidth - PlateMargin - 88f, PlateMargin + 10f);
+        // Placé juste à gauche d'un score de sept chiffres : il ne flotte pas loin du nombre qu'il nourrit.
+        _gainLabel.Position = new Vector2(-PlateMargin - 200f, PlateMargin + 2f);
         _gainLabel.Size = new Vector2(80f, 20f);
         _gainLabel.HorizontalAlignment = HorizontalAlignment.Right;
         _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
         anchor.AddChild(_gainLabel);
 
-        // Éliminations à gauche, Essence à droite, sous le score.
-        PixelSkull skull = new() { Position = new Vector2(7, 26) };
-        content.AddChild(skull);
-        _killsLabel = MakeLabel("0", 10, PalWhiteOff);
-        _killsLabel.Position = new Vector2(19, 22);
-        _killsLabel.Size = new Vector2(56, 15);
-        content.AddChild(_killsLabel);
+        HBoxContainer tallyRow = RightAlignedRow(anchor, PlateMargin + 25f, 4);
+        PixelSkull skull = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+        tallyRow.AddChild(skull);
+        _killsLabel = MakeLabel("0", 14, PalWhiteOff, 4);
+        tallyRow.AddChild(_killsLabel);
+        tallyRow.AddChild(new Control { CustomMinimumSize = new Vector2(8f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
+        _essenceLabel = MakeLabel("", 11, PalCyanEssence, 3);
+        _essenceLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        tallyRow.AddChild(_essenceLabel);
+        tallyRow.AddChild(new Control { CustomMinimumSize = new Vector2(8f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
+        _perilLabel = MakeLabel(string.Format(Tr("UI_HUD_PERIL"), 0), 11, PlayerSheet.PerilColor, 3);
+        _perilLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        tallyRow.AddChild(_perilLabel);
+    }
 
-        _essenceLabel = MakeLabel("", 10, PalCyanEssence);
-        _essenceLabel.Position = new Vector2(70, 22);
-        _essenceLabel.Size = new Vector2(ScorePlateWidth - 78, 15);
-        _essenceLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        content.AddChild(_essenceLabel);
+    /// <summary>Rangée collée au bord droit : ses éléments poussent vers la gauche quand un nombre s'allonge.</summary>
+    private static HBoxContainer RightAlignedRow(Control anchor, float top, int separation)
+    {
+        HBoxContainer row = new()
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.End,
+            Position = new Vector2(-ScoreAreaWidth - PlateMargin, top), Size = new Vector2(ScoreAreaWidth, 24f),
+        };
+        row.AddThemeConstantOverride("separation", separation);
+        anchor.AddChild(row);
+        return row;
     }
 
     private void BuildWeaponBar()
     {
-        // Icônes 32×32 à ×2 (HUD dessiné à ×2, icône de 32 unités) : 2 unités de cadre autour.
-        const float slotSize = 36f;
+        const float slotSize = WeaponSlotSize;
         HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
@@ -426,8 +406,8 @@ public partial class HUD : CanvasLayer
         float totalWidth = Player.MaxWeaponSlots * (slotSize + 3);
         bar.OffsetLeft = -totalWidth / 2;
         bar.OffsetRight = totalWidth / 2;
-        bar.OffsetTop = -26 - XpBar.BarHeight - slotSize;
-        bar.OffsetBottom = -26 - XpBar.BarHeight;
+        bar.OffsetTop = -WeaponBarBottom - slotSize;
+        bar.OffsetBottom = -WeaponBarBottom;
         bar.AddThemeConstantOverride("separation", 3);
         bar.Alignment = BoxContainer.AlignmentMode.Center;
         _hudRoot.AddChild(bar);
@@ -470,17 +450,15 @@ public partial class HUD : CanvasLayer
         }
     }
 
-    /// <summary>Écussons et objets sous les armes (plan 35), dans leur propre composant.</summary>
+    /// <summary>
+    /// Écussons au-dessus des armes, objets en colonne à gauche (plan 35, plan 37 R3), dans leur propre composant, qui
+    /// couvre l'écran sans prendre la souris.
+    /// </summary>
     private void BuildInventoryBar()
     {
-        HudInventoryBar bar = new() { Name = "InventoryBar" };
+        HudInventoryBar bar = new() { Name = "InventoryBar", BadgeShelfBottom = WeaponBarBottom + WeaponSlotSize + 5f };
         _inventoryBar = bar;
-        bar.AnchorLeft = 0.5f;
-        bar.AnchorRight = 0.5f;
-        bar.AnchorTop = 1f;
-        bar.AnchorBottom = 1f;
-        bar.OffsetTop = -23 - XpBar.BarHeight;
-        bar.OffsetBottom = -5 - XpBar.BarHeight;
+        bar.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _hudRoot.AddChild(bar);
     }
 
