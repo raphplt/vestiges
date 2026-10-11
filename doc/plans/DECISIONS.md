@@ -1217,3 +1217,9 @@ Réponses de Raphaël aux questions des plans 35 et 36 :
 Raphaël, après X6 : « les curseurs musique et ambiance, comme tous les autres, doivent être à 100 % par défaut. C'est ce que font tous les jeux. » Le placement gauche/droite des coups et des ennemis, « c'est génial ». Pour les quatre sons manquants : chercher sur le web ou les créer, puis proposer. Il n'aime pas le son de blessure du joueur : en trouver un plus approprié.
 
 **Acquis :** tous les curseurs audio à 100 % sur un profil neuf ; l'équilibre interne (musique −6 dB, ambiance −8 dB) passe hors curseur. Les réglages enregistrés avant gardent leur niveau entendu. Sons du monde placés à gauche ou à droite selon leur source à l'écran (plan 15 X7). **En attente de son écoute :** planche de candidats pour le soin, le bouclier rechargé, l'annonce du tir visé, le réveil de la Faille et la blessure du joueur.
+
+## 112. Pas de son de créature quand son coup touche le joueur — 11 octobre 2026
+
+Raphaël remarque que la blessure du joueur sonne très différemment en jeu (« beaucoup plus métallique et fort ») que le fichier seul. La cause : à chaque coup au contact, le jeu jouait aussi le son d'attaque de la créature. Celui de l'Ombre, du Charognard et du Rampant d'ombre est un frottement métallique écrêté, deux fois plus long que la blessure, et il la couvrait. Trois options lui sont présentées : retirer ce son, le remplacer ou le baisser. Il choisit de le retirer : « ne pas avoir de son de créature qui nous touchent ».
+
+**Acquis :** un coup au contact ne joue que la blessure du joueur. Les sons des créatures restent sur leurs actions (bond, cri, tir, terrier, crachat). Le tir de la Sentinelle garde son son. Les trois sons de contact (`sfx_ombre_attaque`, `sfx_rodeur_attaque`, `sfx_brute_charge`) et le champ `attack_audio` des sept créatures de corps à corps sont retirés.

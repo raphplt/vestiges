@@ -659,3 +659,5 @@ Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les q
 - Aucun son n'a été écouté par l'agent ; rien n'est intégré.
 
 **Après le choix :** intégrer le son retenu au gain cible de sa famille (contrôlé par `tools/audio_bank_audit.py`), puis brancher les déclencheurs manquants : soin notable avec cadence bornée, bouclier revenu au plein, visée des créatures à distance (placée à l'écran), réveil de la Faille.
+
+**Retour du 11 octobre sur X8 ([DECISIONS §112](DECISIONS.md))** : le « son de blessure » métallique entendu en jeu était le coup de la créature, joué en même temps que la blessure. Retiré : un coup au contact ne joue plus que la blessure, et les trois sons de contact, devenus inutiles, sont supprimés. La planche ajoute un diagnostic (blessure seule, coup d'Ombre seul, les deux) ; ses scènes de combat, où la blessure était encore couverte, sont refaites sans le coup de créature.

@@ -247,7 +247,7 @@ public partial class AudioMixRegression : Node
 
         // Même image, puis bilan en pause : les attaques et événements retardés ne doivent pas relancer le monde.
         audio.PlaySfx("sfx_weapon_sling", 0f);
-        audio.PlaySfx("sfx_rodeur_attaque", 0f);
+        audio.PlaySfx("sfx_pounce_leap", 0f);
         audio.PlayLoopingSfx("sfx_level_up_loop");
         bus.EmitSignal(EventBus.SignalName.WeaponEquipped, "heavy_hammer", 0);
         bus.EmitSignal(EventBus.SignalName.WeaponDropped, "heavy_hammer");

@@ -1839,12 +1839,13 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		TriggerAttackAnim();
 	}
 
-	/// <summary>Coup au contact : dégâts et griffe visible vers le joueur.</summary>
+	/// <summary>
+	/// Coup au contact : dégâts et griffe visible vers le joueur. Muet côté créature : la blessure du joueur dit seule
+	/// le coup reçu (DECISIONS §112) ; deux sons au même instant brouillaient le message.
+	/// </summary>
 	internal void MeleeHitPlayer(Player player, float damage)
 	{
 		HitPlayer(player, damage);
-		if (_attackAudio != null)
-			Infrastructure.AudioManager.PlayAt(_attackAudio, GlobalPosition, 0.08f, -7f);
 		EnemyAttackFx.PlayMeleeHit(GlobalPosition, player.GlobalPosition);
 	}
 

@@ -223,29 +223,6 @@
     "priority": 80,
     "max_voices": 1
   },
-  "sfx_ombre_attaque": {
-    "path": "res://assets/audio/sfx/creatures/sfx_ombre_attaque.wav",
-    "volume_db": -10,
-    "volume_variance_db": 1,
-    "min_interval_ms": 90,
-    "priority": 30,
-    "max_voices": 2
-  },
-  "sfx_rodeur_attaque": {
-    "path": "res://assets/audio/sfx/creatures/sfx_rodeur_attaque.wav",
-    "volume_db": 0,
-    "volume_variance_db": 1,
-    "min_interval_ms": 90,
-    "priority": 30,
-    "max_voices": 2
-  },
-  "sfx_brute_charge": {
-    "path": "res://assets/audio/sfx/creatures/sfx_brute_charge.wav",
-    "volume_db": -1.5,
-    "min_interval_ms": 90,
-    "priority": 30,
-    "max_voices": 2
-  },
   "sfx_hurleur_cri": {
     "path": "res://assets/audio/sfx/creatures/sfx_hurleur_cri.wav",
     "volume_db": -6,
