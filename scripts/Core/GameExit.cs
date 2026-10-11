@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Core;
 
@@ -22,6 +23,7 @@ public static class GameExit
         try
         {
             tree.CurrentScene?.QueueFree();
+            MouseCursor.Release();
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             GC.Collect();

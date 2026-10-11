@@ -73,6 +73,7 @@ public partial class GameManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         // La fermeture de la fenêtre passe par la sortie propre, comme le bouton Quitter.
         GetTree().AutoAcceptQuit = false;
+        MouseCursor.Install(GetTree(), () => _currentState == GameState.Run);
     }
 
     public override void _Notification(int what)

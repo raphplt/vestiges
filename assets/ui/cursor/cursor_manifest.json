@@ -1,0 +1,16 @@
+{
+  "arrow": {
+    "file": "cursor_arrow.png",
+    "hotspot": [
+      0,
+      0
+    ]
+  },
+  "hand": {
+    "file": "cursor_hand.png",
+    "hotspot": [
+      6,
+      0
+    ]
+  }
+}
