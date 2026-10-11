@@ -46,21 +46,30 @@ public partial class CartographyRegression : Node
         Check(first == new Vector2(-240, -112) && last == new Vector2(-144, -16), "centres des sous-cellules en coordonnées monde négatives");
         Check(raster.IsKnown(cell) && !raster.IsKnown(new Vector2I(-1, -1)), "pas de découverte voisine");
         Check(raster.Flush() && !raster.Flush(), "publication seulement si modifié");
-        Color anchored = raster.Image.GetPixel(0, 0);
-        Check(anchored.R < raster.Image.GetPixel(3, 0).R && anchored.G < raster.Image.GetPixel(0, 3).G, "détails de terrain conservés");
+        // L'intérieur de la cellule : son bord, contre l'inconnu, s'effiloche (contrôlé plus bas).
+        Color anchored = raster.Image.GetPixel(1, 1);
+        Check(anchored.R < raster.Image.GetPixel(2, 1).R && anchored.G < raster.Image.GetPixel(1, 2).G, "détails de terrain conservés");
         Check(!raster.Paint(cell, 0, true) && samples == 16, "revisite sans nouveau relevé");
         long before = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < 1000; i++) raster.Paint(cell, 0, true);
         Check(GC.GetAllocatedBytesForCurrentThread() == before, "mille revisites sans allocation gérée");
         Check(raster.Paint(cell, 2) && samples == 16, "recoloration sans lecture du terrain");
         raster.Flush();
-        Check(raster.Image.GetPixel(0, 0) != anchored, "danger visible");
+        Check(raster.Image.GetPixel(1, 1) != anchored, "danger visible");
         raster.Paint(cell, 0);
         raster.Flush();
-        Check(raster.Image.GetPixel(0, 0) == anchored, "pas de dérive des couleurs après recolorations");
+        Check(raster.Image.GetPixel(1, 1) == anchored, "pas de dérive des couleurs après recolorations");
         raster.Paint(cell, 4);
         raster.Flush();
-        Check(raster.Image.GetPixel(0, 0) != raster.Image.GetPixel(1, 0) && raster.Image.GetPixel(0, 0).A > 0f, "Néant connu hachuré, distinct de l'inconnu");
+        Color[] inside = { raster.Image.GetPixel(1, 1), raster.Image.GetPixel(2, 1), raster.Image.GetPixel(1, 2), raster.Image.GetPixel(2, 2) };
+        Check(Array.Exists(inside, color => color != inside[0]) && Array.Exists(inside, color => color.A > 0f),
+            "Néant connu hachuré, distinct de l'inconnu");
+        raster.Paint(cell, 0);
+        raster.Flush();
+        Check(raster.Image.GetPixel(3, 1).A == 0f && raster.Image.GetPixel(3, 0).A > 0f, "bord tramé contre l'inconnu, un pixel sur deux");
+        raster.Paint(new Vector2I(-1, -1), 0, true);
+        raster.Flush();
+        Check(raster.Image.GetPixel(3, 1).A > 0f && raster.Image.GetPixel(4, 1).A > 0f, "la voisine découverte referme le bord commun");
         using CartographyRaster outside = new(1, 1, 128, Vector2I.Zero, _ => Colors.Transparent);
         outside.Paint(Vector2I.Zero, 4, true);
         outside.Flush();

@@ -7,23 +7,32 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Minimap (plan 22 C6, plan 23 R7, plan 24 A6) : un radar zoomé autour du joueur, et la carte entière avec sa légende
-/// en maintenant « show_map ». Le terrain des biomes, routes et sentiers est échantillonné à la découverte,
-/// avec quatre pixels par axe de cellule d'Effacement ; le danger recolore ce fond sans refaire les relevés.
-/// Mise à jour quatre fois par seconde, sans parcours des décors ni du monde entier.
+/// Minimap (plan 22 C6, plan 23 R7, plan 24 A6) : un radar rond façon boussole autour du joueur (plan 37 R4), et la
+/// carte entière avec sa légende en maintenant « show_map ». Le terrain des biomes, routes et sentiers est échantillonné
+/// à la découverte, avec quatre pixels par axe de cellule d'Effacement ; le danger recolore ce fond sans refaire les
+/// relevés. Trois calques : un masque (disque de brouillard tramé, ou rectangle de la carte entière) qui découpe le
+/// terrain et les repères, puis l'anneau de pierre. Mise à jour quatre fois par seconde, sans parcours des décors ni du
+/// monde entier.
 /// </summary>
 public partial class Minimap : Control
 {
     private const float UpdateInterval = 0.25f;
-    private const float RadarSize = 104f;
-    /// <summary>Cellules de côté que montre le radar : 26 cellules de 128 px, environ trois écrans, quatre unités chacune.</summary>
-    private const int RadarCells = 26;
+    private const float RadarSize = 112f;
+    /// <summary>Cellules de côté que montre le radar : 17 cellules de 128 px, environ deux écrans (×1,5 depuis 26, §117).</summary>
+    private const int RadarCells = 17;
+    private const int BezelWidth = 6;
     private const float FullMaxHeight = 480f;
     private const float FullMaxWidth = 700f;
     private const float Margin = 10f;
     private const float BottomMargin = 64f;
     private const int LegendFontSize = 8;
-    private const int RevealRadiusCells = 12;
+    /// <summary>
+    /// Rayon de découverte, un peu en deçà du bord du radar (8,5 cellules) : le front du brouillard s'y voit avancer.
+    /// Sans lien avec la quête « Dessiner la carte », qui compte le brouillard du monde.
+    /// </summary>
+    private const int RevealRadiusCells = 8;
+    /// <summary>Écart du rayon de découverte d'une cellule à l'autre : le front du brouillard s'effiloche.</summary>
+    private const float RevealJitterCells = 1.6f;
 
     private static readonly Color Frame = new(0.05f, 0.05f, 0.09f, 0.78f);
     private static readonly Color Border = new(0.55f, 0.47f, 0.28f, 0.85f);
@@ -63,6 +72,14 @@ public partial class Minimap : Control
     private Texture2D _steleIcon;
     private Texture2D _workshopIcon;
     private Texture2D _playerIcon;
+    private MinimapLayer _lens;
+    private MinimapLayer _content;
+    private MinimapLayer _bezel;
+    private ShaderMaterial _disc;
+    // Forme dessinée par le masque et l'anneau : ils ne se redessinent qu'au passage du radar à la carte entière.
+    private bool? _shownFull;
+    private static Texture2D _fogDisc;
+    private static Texture2D _ring;
 
     public override void _Ready()
     {
@@ -76,6 +93,17 @@ public partial class Minimap : Control
         _steleIcon = GD.Load<Texture2D>(iconFolder + "minimap_peril_stele.png");
         _workshopIcon = GD.Load<Texture2D>(iconFolder + "minimap_workshop.png");
         _playerIcon = GD.Load<Texture2D>(iconFolder + "minimap_player.png");
+        _fogDisc ??= BuildFogDisc();
+        _ring ??= BuildRing();
+        _lens = new MinimapLayer { Name = "Lens", Paint = DrawLens };
+        AddChild(_lens);
+        // Un shader découpe le terrain et les repères au disque : pas de copie d'écran comme avec un masque d'enfants.
+        _disc = new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/minimap_disc.gdshader") };
+        _disc.SetShaderParameter("center", Vector2.One * RadarSize / 2f);
+        _content = new MinimapLayer { Name = "Content", Paint = DrawContent, Material = _disc };
+        AddChild(_content);
+        _bezel = new MinimapLayer { Name = "Bezel", Paint = DrawBezel };
+        AddChild(_bezel);
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.ZonePhaseChanged += OnZonePhaseChanged;
@@ -200,6 +228,13 @@ public partial class Minimap : Control
         _timer = UpdateInterval;
         if (!EnsureMap() || _groups.GetPlayer() is not Node2D player)
             return;
+        if (_shownFull != full)
+        {
+            _shownFull = full;
+            _disc.SetShaderParameter("radius", full ? 0f : RadarSize / 2f);
+            _lens.QueueRedraw();
+            _bezel.QueueRedraw();
+        }
         _full = full;
         Control parent = GetParent<Control>();
         if (_full)
@@ -226,25 +261,33 @@ public partial class Minimap : Control
         RevealAround(_playerPosition);
         if (_raster.Flush())
             _texture.Update(_raster.Image);
-        QueueRedraw();
+        _content.QueueRedraw();
     }
 
     /// <summary>Les cellules autour du joueur sont vues : elles prennent la couleur de leur phase.</summary>
     private void RevealAround(Vector2 position)
     {
         Vector2I center = new(Mathf.FloorToInt(position.X / _cellSize), Mathf.FloorToInt(position.Y / _cellSize));
-        int radiusSq = RevealRadiusCells * RevealRadiusCells;
         for (int dx = -RevealRadiusCells; dx <= RevealRadiusCells; dx++)
         {
             for (int dy = -RevealRadiusCells; dy <= RevealRadiusCells; dy++)
             {
-                if (dx * dx + dy * dy > radiusSq)
-                    continue;
                 Vector2I cell = new(center.X + dx, center.Y + dy);
+                float radius = RevealRadiusCells - RevealJitterCells * Jitter(cell);
+                if (dx * dx + dy * dy > radius * radius)
+                    continue;
                 if (!_raster.IsKnown(cell))
                     _raster.Paint(cell, (int)_erasure.GetZonePhaseAt(_erasure.CellCenterToWorld(cell)), reveal: true);
             }
         }
+    }
+
+    /// <summary>Bruit fixe par cellule, entre 0 et 1 : le même front revient à chaque passage.</summary>
+    private static float Jitter(Vector2I cell)
+    {
+        uint hash = (uint)(cell.X * 73856093) ^ (uint)(cell.Y * 19349663);
+        hash = (hash ^ (hash >> 13)) * 1274126177u;
+        return (hash & 0xFFFF) / 65535f;
     }
 
     /// <summary>Le front de l'Effacement avance aussi dans les cellules déjà vues.</summary>
@@ -258,23 +301,44 @@ public partial class Minimap : Control
 
     private bool InView(Vector2 world) => _view.HasPoint(world);
 
-    public override void _Draw()
+    /// <summary>Masque : disque de brouillard tramé pour le radar, rectangle sombre pour la carte entière.</summary>
+    private void DrawLens(MinimapLayer layer)
     {
         if (_raster == null)
             return;
+        if (!_full)
+        {
+            layer.DrawTexture(_fogDisc, Vector2.Zero);
+            return;
+        }
         Rect2 area = new(Vector2.Zero, Size);
+        layer.DrawRect(new Rect2(Vector2.Zero, new Vector2(Size.X + 8f + _legend.Size.X, Mathf.Max(Size.Y, _legend.Size.Y))).Grow(6f), Frame with { A = 0.97f });
+        layer.DrawRect(area.Grow(2f), Frame);
+        layer.DrawRect(area, Unknown);
+    }
+
+    /// <summary>Anneau de pierre du radar, ou simple filet doré autour de la carte entière.</summary>
+    private void DrawBezel(MinimapLayer layer)
+    {
+        if (_raster == null)
+            return;
         if (_full)
-            DrawRect(new Rect2(Vector2.Zero, new Vector2(Size.X + 8f + _legend.Size.X, Mathf.Max(Size.Y, _legend.Size.Y))).Grow(6f), Frame with { A = 0.97f });
-        DrawRect(area.Grow(2f), Frame);
-        DrawRect(area, Unknown);
+            layer.DrawRect(new Rect2(Vector2.Zero, Size).Grow(2f), Border, false, 1f);
+        else
+            layer.DrawTexture(_ring, -Vector2.One * BezelWidth);
+    }
+
+    private void DrawContent(MinimapLayer layer)
+    {
+        if (_raster == null)
+            return;
         // Partie de la carte dans la fenêtre : la région de l'image qui lui correspond, posée à sa place.
         Rect2 visible = _view.Intersection(new Rect2(_origin * _cellSize, new Vector2(_width, _height) * _cellSize));
         if (visible.Size.X > 0f && visible.Size.Y > 0f)
         {
             Rect2 source = new((visible.Position - (Vector2)(_origin * _cellSize)) / _cellSize * CartographyRaster.Detail, visible.Size / _cellSize * CartographyRaster.Detail);
-            DrawTextureRectRegion(_texture, new Rect2(ToMap(visible.Position), visible.Size / _view.Size * Size), source);
+            layer.DrawTextureRectRegion(_texture, new Rect2(ToMap(visible.Position), visible.Size / _view.Size * Size), source);
         }
-        DrawRect(area.Grow(2f), Border, false, 1f);
         // Boucles indexées : un foreach sur une IReadOnlyList alloue son énumérateur à chaque repeinte.
         // Un petit lieu servi disparaît de la carte.
         if (_places != null)
@@ -283,7 +347,7 @@ public partial class Minimap : Control
             {
                 SmallPlace place = _places.Places[i];
                 if (place.CanInteract && InView(place.GlobalPosition) && Known(place.GlobalPosition))
-                    DrawIcon(place.GlobalPosition, _placeIcon, PlaceColor);
+                    DrawIcon(layer, place.GlobalPosition, _placeIcon, PlaceColor);
             }
         }
         if (!_chestSignalsForgotten)
@@ -292,35 +356,102 @@ public partial class Minimap : Control
             {
                 Chest chest = Chest.Closed[i];
                 if (chest.CanOpen && InView(chest.GlobalPosition) && Known(chest.GlobalPosition))
-                    DrawIcon(chest.GlobalPosition, _chestIcon, RarityPalette.Main(chest.Rarity));
+                    DrawIcon(layer, chest.GlobalPosition, _chestIcon, RarityPalette.Main(chest.Rarity));
             }
         }
         for (int i = 0; i < Memorial.All.Count; i++)
             if (InView(Memorial.All[i].GlobalPosition) && Known(Memorial.All[i].GlobalPosition))
-                DrawIcon(Memorial.All[i].GlobalPosition, _memorialIcon, MemorialColor);
+                DrawIcon(layer, Memorial.All[i].GlobalPosition, _memorialIcon, MemorialColor);
         for (int i = 0; i < Rift.All.Count; i++)
             if (InView(Rift.All[i].GlobalPosition) && Known(Rift.All[i].GlobalPosition))
-                DrawIcon(Rift.All[i].GlobalPosition, _riftIcon, RiftColor);
+                DrawIcon(layer, Rift.All[i].GlobalPosition, _riftIcon, RiftColor);
         for (int i = 0; i < PerilStele.All.Count; i++)
         {
             PerilStele stele = PerilStele.All[i];
             if (stele.IsLit && InView(stele.GlobalPosition) && Known(stele.GlobalPosition))
-                DrawIcon(stele.GlobalPosition, _steleIcon, PlayerSheet.PerilColor);
+                DrawIcon(layer, stele.GlobalPosition, _steleIcon, PlayerSheet.PerilColor);
         }
         for (int i = 0; i < Workshop.All.Count; i++)
             if (!Workshop.All[i].IsLost && InView(Workshop.All[i].GlobalPosition) && Known(Workshop.All[i].GlobalPosition))
-                DrawIcon(Workshop.All[i].GlobalPosition, _workshopIcon, WorkshopColor);
-        DrawIcon(_playerPosition, _playerIcon, PlayerColor);
+                DrawIcon(layer, Workshop.All[i].GlobalPosition, _workshopIcon, WorkshopColor);
+        DrawIcon(layer, _playerPosition, _playerIcon, PlayerColor);
     }
 
-    private void DrawIcon(Vector2 world, Texture2D icon, Color color)
+    private void DrawIcon(MinimapLayer layer, Vector2 world, Texture2D icon, Color color)
     {
         Vector2 position = ToMap(world).Floor() - new Vector2(2, 2);
         // Un liseré sépare les petits repères du terrain, notamment les coffres des rues claires.
-        DrawTexture(icon, position + Vector2.Left, Frame);
-        DrawTexture(icon, position + Vector2.Right, Frame);
-        DrawTexture(icon, position + Vector2.Up, Frame);
-        DrawTexture(icon, position + Vector2.Down, Frame);
-        DrawTexture(icon, position, color);
+        layer.DrawTexture(icon, position + Vector2.Left, Frame);
+        layer.DrawTexture(icon, position + Vector2.Right, Frame);
+        layer.DrawTexture(icon, position + Vector2.Up, Frame);
+        layer.DrawTexture(icon, position + Vector2.Down, Frame);
+        layer.DrawTexture(icon, position, color);
+    }
+
+    /// <summary>Disque du radar au pixel près : deux tons sombres en trame et un grain fixe, le brouillard de l'inconnu.</summary>
+    private static Texture2D BuildFogDisc()
+    {
+        int size = (int)RadarSize;
+        float radius = size / 2f;
+        using Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+        Color low = new("13121c");
+        Color high = new("1e1c2b");
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+        {
+            float distance = new Vector2(x + 0.5f - radius, y + 0.5f - radius).Length();
+            if (distance > radius)
+                continue;
+            bool lit = ((x + y) & 1) == 0 && Jitter(new Vector2I(x, y)) > 0.45f;
+            image.SetPixel(x, y, (lit ? high : low) with { A = 0.94f });
+        }
+        return ImageTexture.CreateFromImage(image);
+    }
+
+    /// <summary>
+    /// Anneau de pierre au pixel : filet d'encre de part et d'autre, pierre éclairée en haut à gauche, quatre repères
+    /// cardinaux et le nord doré.
+    /// </summary>
+    private static Texture2D BuildRing()
+    {
+        int size = (int)RadarSize + BezelWidth * 2;
+        float center = size / 2f;
+        float inner = RadarSize / 2f;
+        using Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
+        Color ink = new("120f1a");
+        Color stone = new("5f5763");
+        Color light = new("8d8392");
+        Color shadow = new("3b3541");
+        Color gold = new("e0b552");
+        Color goldBright = new("f6dc92");
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+        {
+            Vector2 offset = new(x + 0.5f - center, y + 0.5f - center);
+            float distance = offset.Length();
+            float depth = distance - inner;
+            if (depth < 0f || depth >= BezelWidth)
+                continue;
+            Vector2 direction = offset / distance;
+            Color color;
+            if (depth < 1f || depth >= BezelWidth - 1f)
+                color = ink;
+            else
+            {
+                float lightness = direction.Dot(new Vector2(-0.7071f, -0.7071f));
+                color = lightness > 0.35f ? light : lightness < -0.35f ? shadow : stone;
+                if (((x * 7 + y * 13) % 11) == 0)
+                    color = color.Darkened(0.12f);
+            }
+            // Repères cardinaux : une encoche dorée dans la pierre ; le nord, plus large et plus clair.
+            bool vertical = Mathf.Abs(offset.X) < 1.5f;
+            bool horizontal = Mathf.Abs(offset.Y) < 1.5f;
+            if (depth >= 1f && depth < BezelWidth - 1f && (vertical || horizontal))
+                color = vertical && offset.Y < 0f ? goldBright : gold;
+            if (depth >= 1f && depth < BezelWidth - 1f && offset.Y < 0f && Mathf.Abs(offset.X) < 3f)
+                color = goldBright;
+            image.SetPixel(x, y, color);
+        }
+        return ImageTexture.CreateFromImage(image);
     }
 }

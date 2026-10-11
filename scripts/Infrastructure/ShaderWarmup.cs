@@ -39,6 +39,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/menu_erasure.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/menu_game_veil.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/menu_portrait.gdshader", SampleKind.Sprite),
+        ("res://assets/shaders/minimap_disc.gdshader", SampleKind.Sprite),
     };
     private static readonly Dictionary<string, Shader> Shaders = new();
     private static Texture2D _texture;

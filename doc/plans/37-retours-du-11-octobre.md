@@ -145,3 +145,21 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Haut droit** (`HUD.BuildScoreArea`) : plus de plaque. Le score s'écrit en or, taille 22 (au lieu de 18), précédé d'une petite légende « SCORE ». Dessous, une ligne collée au bord droit : crâne et éliminations en taille 14 (au lieu de 10), Essence, puis **Péril**, toujours affiché. Le gain « +120 » apparaît juste à gauche du score.
 - **Bas** : les armes descendent juste au-dessus de la barre d'XP. Les quatre **Écussons** passent en cartes de 28 unités (au lieu de 18) au-dessus des armes, avec leur cadre doré, leur niveau et leur fil d'usage. Les **objets du sac** quittent le bas : une colonne au bord gauche, centrée en hauteur, sans cadre, une icône de 24 unités par objet, avec « ×2 » pour les doublons et le compte « 7/10 » en tête. Au-delà de douze objets différents, la colonne se dédouble (`HudInventoryBar`). L'envol d'un objet ramassé vise sa ligne.
 - **Vérifié** : captures en vraie run (HUD seul, et inventaire garni : 4 armes, 4 Écussons, 7 objets dont des doublons) regardées. Deux retouches après regard : le gain flottait loin du score, les icônes du sac à 16 unités étaient trop petites. `tools/validate.sh` smoke, `inventory`, `ui_art`, `camp`, `choice_screen`, `objects` 6/6.
+
+## 11. Lot R4 livré : minimap boussole — 11 octobre 2026
+
+- **Radar rond**, 112 unités de diamètre, en trois calques (`MinimapLayer`) :
+  - le **brouillard**, un disque au pixel près en deux tons sombres tramés avec un grain fixe ;
+  - le **terrain et les repères**, découpés au disque par un petit shader (`minimap_disc.gdshader`) ;
+  - l'**anneau de pierre**, au pixel près : filets d'encre, pierre éclairée en haut à gauche, quatre encoches dorées aux points cardinaux et le nord plus large et plus clair.
+  
+  La carte entière (« show_map ») garde son rectangle, sa légende et son filet doré.
+- **Zoom ×1,5** : 17 cellules de côté au lieu de 26, environ deux écrans.
+- **Brouillard moins simple** :
+  - le rayon de découverte varie d'une cellule à l'autre (8 cellules, jusqu'à 1,6 de moins), donc le front est irrégulier au lieu d'être un disque net ;
+  - le bord d'une cellule connue s'effiloche en trame d'un pixel sur deux contre une voisine inconnue, et se referme quand celle-ci est découverte ;
+  - le bord du monde reste net.
+  
+  Le rayon tombe juste en deçà du bord du radar : le front se voit avancer en marchant. Il est sans lien avec la quête « Dessiner la carte », qui compte le brouillard du monde.
+- **Coût** : l'anneau et le brouillard sont des textures générées une fois par session et ne se redessinent qu'au passage radar ↔ carte entière ; seul le terrain se repeint, quatre fois par seconde, comme avant. Un premier montage par masque d'enfants (`ClipChildren`) copiait l'écran à chaque image : remplacé par le shader après relecture `godot-reviewer`, qui l'a relevé avec le rayon de découverte invisible dans le radar et le bord du monde tramé.
+- **Vérifié** : captures du radar (en marchant, au bord du Néant, poche inconnue tramée) et de la carte entière, regardées ; test `CartographyRegression` adapté (intérieur de cellule intact, bord tramé contre l'inconnu, refermé par la voisine) ; `tools/validate.sh` smoke, `cartography`, `ui_art` 3/3 ; préchauffage des shaders valide.
