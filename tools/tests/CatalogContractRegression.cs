@@ -205,6 +205,7 @@ public partial class CatalogContractRegression : Node
             ("poids absent", root => root.Remove("upgrade_weight"), "upgrade_weight absent"),
             ("plancher nul", root => root["min_weight"] = 0, "min_weight : 0 (strictement positif attendu)"),
             ("clé inconnue", root => root["weight"] = 1, "clé « weight » inconnue"),
+            ("surplus nul", root => root["weapon_surplus_damage"] = 0, "weapon_surplus_damage : 0 (strictement positif attendu)"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {

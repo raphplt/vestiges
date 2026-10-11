@@ -458,3 +458,12 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
   - Atelier perdu retiré des offres ;
   - icônes chargées sans erreur si elles manquent.
 - Pas encore : le ramassage n'a ni son ni envol d'icône vers le HUD (I5).
+
+## 14. Lot I4 livré : surplus d'armes — 11 octobre 2026
+
+- Une arme au niveau 50, qui a pris sa voie d'ascension (ou qui n'en a pas), n'a plus rien à gagner. Le level-up lui offre alors une carte **SURPLUS** à la place de son amélioration : +4 % de dégâts de l'arme par carte, additionnés, sans plafond (`weapon_surplus_damage` dans `level_up_offer.json`, contrôlé au chargement).
+- Le gain s'applique après tout le reste, ascension comprise.
+- Tant que l'arme peut encore s'ascensionner, c'est la carte d'ascension qui vient : le surplus ne la remplace pas.
+- La carte dit « Dégâts de l'arme +8 % → +12 % ».
+- Avec les Écussons sans plafond (I1) et le surplus, le level-up n'est plus jamais vide en fin de run.
+- Vérifications : contrôle dans la suite `inventory` (pas de surplus avant l'ascension, deux cartes = ×1,08 sur les dégâts, plus d'amélioration offerte) ; refus d'un gain nul au chargement (`catalogs`) ; `weapons` vert.

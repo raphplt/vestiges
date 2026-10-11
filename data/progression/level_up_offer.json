@@ -1,5 +1,6 @@
 {
-	"_doc": "Poids des cartes d'une offre de level-up (plan 24 lot L3). Toutes les armes débloquées sont proposables dès le premier niveau, au même poids : ni paliers par niveau, ni arme garantie (DECISIONS §52). upgrade_weight multiplie le poids d'une amélioration ; offer_weight d'un objet (passive_souvenirs.json) multiplie le sien ; min_weight est le plancher.",
+	"_doc": "Poids des cartes d'une offre de level-up (plan 24 lot L3). Toutes les armes débloquées sont proposables dès le premier niveau, au même poids : ni paliers par niveau, ni arme garantie (DECISIONS §52). upgrade_weight multiplie le poids d'une amélioration ; offer_weight d'un objet (passive_souvenirs.json) multiplie le sien ; min_weight est le plancher. weapon_surplus_damage : dégâts gagnés par une carte de surplus, offerte pour une arme au niveau maximal et ascensionnée (plan 35 I4) ; sans plafond, additionnés.",
 	"upgrade_weight": 1.15,
-	"min_weight": 0.1
+	"min_weight": 0.1,
+	"weapon_surplus_damage": 0.04
 }

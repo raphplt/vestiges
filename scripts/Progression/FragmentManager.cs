@@ -294,9 +294,9 @@ public partial class FragmentManager : Node
             if (_banishedIds.Contains(w.Id))
                 continue;
             if (!_player.IsWeaponFragmentMaxed(w.Id))
-            {
                 pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name));
-            }
+            else if (w.IsSurplusReady)
+                pool.Add(new FragmentOption(w.Id, FragmentOption.SurplusType, w.Name));
         }
 
         // Écussons (plan 35) : un neuf tant qu'il reste un emplacement, puis leurs niveaux. Les objets ne s'offrent plus au
@@ -580,6 +580,8 @@ public partial class FragmentManager : Node
 public class FragmentOption
 {
     public const string AscensionType = "weapon_ascension";
+    /// <summary>Carte d'une arme qui n'a plus rien à gagner : des dégâts en plus, sans plafond (plan 35 I4).</summary>
+    public const string SurplusType = "weapon_surplus";
 
     public string Id { get; }
     public string Type { get; }
@@ -637,6 +639,8 @@ public class FragmentOption
                 return player.UpgradeWeapon(Id, WeaponGains, Rarity?.Id);
             case AscensionType:
                 return player.AscendWeapon(Id, Ascension.Id);
+            case SurplusType:
+                return player.AddWeaponSurplus(Id, LevelUpOfferConfig.Load().WeaponSurplusDamage);
             case "passive_new":
                 return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":

@@ -45,6 +45,11 @@ public class WeaponInstance
 	public string DefaultFor => Base.DefaultFor;
 
 	public int Level => _level;
+	/// <summary>Cartes de surplus prises (plan 35 I4) et dégâts qu'elles ajoutent, en part de la stat.</summary>
+	public int SurplusCards { get; private set; }
+	public float SurplusDamage { get; private set; }
+	/// <summary>L'arme n'a plus rien à gagner : niveau maximal, et voie choisie s'il y en a. Le level-up lui offre le surplus.</summary>
+	public bool IsSurplusReady => !CanLevelUp && !CanAscend;
 	public int MaxLevel => WeaponUpgradeDataLoader.GetWeaponMaxLevel();
 	public bool CanLevelUp => _level < MaxLevel;
 
@@ -107,6 +112,13 @@ public class WeaponInstance
 		return false;
 	}
 
+	/// <summary>Une carte de surplus : des dégâts en plus, sans plafond.</summary>
+	public void AddSurplus(float damage)
+	{
+		SurplusCards++;
+		SurplusDamage += damage;
+	}
+
 	public bool HasFlag(string flag) => Ascension != null && Ascension.Flags.Contains(flag);
 
 	/// <summary>Copie de l'arme avec une amélioration appliquée : sert à montrer « avant → après ».</summary>
@@ -125,10 +137,17 @@ public class WeaponInstance
 	/// </summary>
 	public float GetStat(string key)
 	{
+		float value;
 		if (Ascension != null && Ascension.StatOverrides.TryGetValue(key, out float overridden))
-			return overridden;
-		float value = LeveledStat(key);
-		return Ascension != null && Ascension.StatMultipliers.TryGetValue(key, out float multiplier) ? value * multiplier : value;
+			value = overridden;
+		else
+		{
+			value = LeveledStat(key);
+			if (Ascension != null && Ascension.StatMultipliers.TryGetValue(key, out float multiplier))
+				value *= multiplier;
+		}
+		// Le surplus s'ajoute à tout le reste : la seule stat qui monte encore après le niveau maximal.
+		return key == "damage" && SurplusDamage > 0f ? value * (1f + SurplusDamage) : value;
 	}
 
 	/// <summary>Stat avant l'ascension : base des données et gains de niveau, plafonnée selon sa configuration.</summary>

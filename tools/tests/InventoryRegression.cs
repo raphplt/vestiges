@@ -16,6 +16,7 @@ namespace Vestiges.Tests;
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
 /// objets en exemplaires (niveau d'effet, palier au doublon), oubli qui retire effet et palier, sac plein, butin « objet ».
 /// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
+/// Lot I4 : surplus d'une arme au bout de sa progression.
 /// </summary>
 public partial class InventoryRegression : Node
 {
@@ -39,6 +40,7 @@ public partial class InventoryRegression : Node
             CheckBag();
             CheckChestItem();
             await CheckWorldItems();
+            CheckWeaponSurplus();
             GD.Print($"[InventoryRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
                 GD.Print("[InventoryRegression] PASS");
@@ -276,6 +278,32 @@ public partial class InventoryRegression : Node
             "objet déjà au maximum : l'échange ne s'ouvre pas, rien n'est oublié");
         choices.QueueFree();
     }
+
+    private void CheckWeaponSurplus()
+    {
+        Setup();
+        FragmentManager fragments = new();
+        AddChild(fragments);
+        typeof(FragmentManager).GetField("_player", Private).SetValue(fragments, _player);
+        Vestiges.Combat.WeaponInstance weapon = _player.WeaponSlots[0];
+        RandomNumberGenerator rng = new() { Seed = 7 };
+        while (weapon.CanLevelUp)
+            _player.UpgradeWeapon(weapon.Id, UpgradeRoller.RollWeaponGains(weapon, UpgradeRoller.Get("common"), rng));
+        bool notYet = !weapon.IsSurplusReady && !Offers(fragments).Exists(option => option.Type == FragmentOption.SurplusType)
+            && !_player.AddWeaponSurplus(weapon.Id, 0.04f);
+        _player.AscendWeapon(weapon.Id, weapon.Base.Ascensions[0].Id);
+        List<FragmentOption> offers = Offers(fragments);
+        float damage = weapon.GetStat("damage");
+        FragmentOption surplus = offers.Find(option => option.Type == FragmentOption.SurplusType && option.Id == weapon.Id);
+        bool applied = surplus != null && surplus.ApplyTo(_player) && surplus.ApplyTo(_player);
+        Check(notYet && applied && weapon.SurplusCards == 2 && Mathf.IsEqualApprox(weapon.GetStat("damage"), damage * 1.08f)
+            && !offers.Exists(option => option.Type == "weapon_upgrade" && option.Id == weapon.Id),
+            $"arme au niveau maximal et ascensionnée : le surplus remplace son amélioration, +4 % de dégâts par carte ({damage:0.#} → {weapon.GetStat("damage"):0.#})");
+        fragments.QueueFree();
+    }
+
+    private static List<FragmentOption> Offers(FragmentManager fragments) =>
+        (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
 
     private float FreezeSeconds() =>
         (float)typeof(ObjectTriggers).GetField("_freezeSeconds", Private).GetValue(_player.ObjectTriggers);

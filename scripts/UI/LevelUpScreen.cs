@@ -254,7 +254,7 @@ public partial class LevelUpScreen : CanvasLayer
     private void BuildCard(FragmentOption choice, Player player)
     {
         bool isAscension = choice.Type == FragmentOption.AscensionType;
-        bool isWeapon = isAscension || choice.Type is "weapon_new" or "weapon_upgrade";
+        bool isWeapon = isAscension || choice.Type is "weapon_new" or "weapon_upgrade" or FragmentOption.SurplusType;
         bool isPerk = choice.Type == PerkSpecializationOffers.OptionType;
         bool isNew = isPerk || isAscension || choice.Type is "weapon_new" or "passive_new";
         Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id)
@@ -345,6 +345,8 @@ public partial class LevelUpScreen : CanvasLayer
             return "";
         if (isNew)
             return Tr("LEVELUP_NEW");
+        if (choice.Type == FragmentOption.SurplusType)
+            return Tr("LEVELUP_SURPLUS");
         int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
         return string.Format(Tr("LEVELUP_LEVEL"), level, level + 1);
     }

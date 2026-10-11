@@ -485,3 +485,5 @@ ITEM_EXCHANGE_LEAVE,Laisser au sol,Leave it
 WORKSHOP_ITEM_TAG,OBJET,ITEM
 WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
 ITEM_BAG_FULL,"Sac plein : il faudra oublier un objet.","Bag full: you will forget an item."
+LEVELUP_SURPLUS,SURPLUS,SURPLUS
+LEVELUP_SURPLUS_LINE,Dégâts de l'arme +{0} % → +{1} %,Weapon damage +{0}% → +{1}%
