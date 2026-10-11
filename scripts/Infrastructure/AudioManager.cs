@@ -21,6 +21,9 @@ public partial class AudioManager : Node
 	// Sons du monde : sous-bus de SFX (même curseur), seul à être étouffé et compressé ; l'interface reste nette.
 	private const string BusWorld    = "World";
 	private const string BusAmbiance = "Ambiance";
+	// Niveaux d'origine des curseurs : un réglage absent du fichier reprend la même valeur qu'un profil neuf.
+	private const float DefaultMusicDb    = -6f;
+	private const float DefaultAmbianceDb = -8f;
 
 	// --- Monde assourdi (mort du joueur) ---
 	private const float MuffleOpenHz = 20000f;
@@ -124,6 +127,8 @@ public partial class AudioManager : Node
 	// --- Chemins de tous les streams ---
 	private readonly Dictionary<string, string> _paths = new();
 	private readonly Dictionary<string, float> _soundVolumes = new();
+	// Écart aléatoire de volume par lecture : un son répété (coup, pas) ne sonne pas comme une mitraillette.
+	private readonly Dictionary<string, float> _soundVolumeVariance = new();
 
 	public const string SoundBankPath = "res://data/audio/sounds.json";
 
@@ -145,6 +150,8 @@ public partial class AudioManager : Node
 			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
 			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
 			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusWorld;
+			if (settings.ContainsKey("volume_variance_db"))
+				_soundVolumeVariance[key] = (float)settings["volume_variance_db"].AsDouble();
 			if (settings.ContainsKey("duck_music_db"))
 				_soundDucks[key] = ((float)settings["duck_music_db"].AsDouble(), (float)settings["duck_sec"].AsDouble());
 			if (settings.ContainsKey("biome"))
@@ -305,10 +312,10 @@ public partial class AudioManager : Node
 
 	private void EnsureAudioBuses()
 	{
-		EnsureBus(BusMusic,    -6f, BusMaster);
+		EnsureBus(BusMusic,    DefaultMusicDb, BusMaster);
 		EnsureBus(BusSfx,      0f, BusMaster);
 		EnsureBus(BusWorld,    0f, BusSfx);
-		EnsureBus(BusAmbiance, -8f, BusMaster);
+		EnsureBus(BusAmbiance, DefaultAmbianceDb, BusMaster);
 		_musicDuck = EnsureBusEffect(BusMusic, () => new AudioEffectAmplify());
 		// Compression douce du monde : une salve d'impacts et de coups ne saute pas au-dessus du reste.
 		EnsureBusEffect(BusWorld, () => new AudioEffectCompressor { Threshold = -18f, Ratio = 3f, AttackUs = 5000f, ReleaseMs = 150f });
@@ -376,9 +383,9 @@ public partial class AudioManager : Node
 			return;
 
 		SetBusVolumeLinear("Master",   (float)cfg.GetValue("audio", "master",   1.0).AsDouble());
-		SetBusVolumeLinear(BusMusic,   (float)cfg.GetValue("audio", "music",    1.0).AsDouble());
+		SetBusVolumeLinear(BusMusic,   (float)cfg.GetValue("audio", "music",    Mathf.DbToLinear(DefaultMusicDb)).AsDouble());
 		SetBusVolumeLinear(BusSfx,     (float)cfg.GetValue("audio", "sfx",      1.0).AsDouble());
-		SetBusVolumeLinear(BusAmbiance,(float)cfg.GetValue("audio", "ambiance", 0.7).AsDouble());
+		SetBusVolumeLinear(BusAmbiance,(float)cfg.GetValue("audio", "ambiance", Mathf.DbToLinear(DefaultAmbianceDb)).AsDouble());
 	}
 
 	public void SaveSettings()
@@ -477,6 +484,8 @@ public partial class AudioManager : Node
 		player.Stream = SelectVariant(key, stream);
 		player.PitchScale = _soundVariants.ContainsKey(key) ? 1f : basePitch + _rng.RandfRange(-pitchVariance, pitchVariance);
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
+		if (_soundVolumeVariance.TryGetValue(key, out float variance))
+			player.VolumeDb += _rng.RandfRange(-variance, variance);
 		player.Play();
 		if (_soundDucks.TryGetValue(key, out (float Db, float Sec) duck))
 			DuckMusic(duck.Db, duck.Sec);

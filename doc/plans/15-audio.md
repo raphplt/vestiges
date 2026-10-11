@@ -601,3 +601,27 @@ Les armes passent de 33 dB sous le coup de l'Ombre à 12 dB au-dessus. La prise 
 **Contrôles** : build sans avertissement ; `tools/validate.sh … smoke audio music` 3/3, avec les nouveaux contrôles (limiteur, bus World compressé, étouffement du monde seul, ducking et retour, fondus d'entrée et de sortie des boucles et de la forêt). Aucun son écouté par l'agent.
 
 **À juger en jouant** : le mixage est plus calme de 4 dB. La musique est maintenant légèrement au-dessus des effets (−22 contre −23,8 LUFS dans le mix) : à remonter par la banque si le combat manque de corps.
+
+### X6 — garde-fous et finitions, livré le 11 octobre
+
+Demande de Raphaël après X1–X5 : s'attaquer aux axes restants. Lot sans décision artistique.
+
+- **Garde-fous du mix** : `tools/audio_bank_audit.py`, avec FFmpeg et la bibliothèque standard de Python seulement, mesure les 127 fichiers de la banque. Il applique `data/audio/mix_targets.json` :
+  - cibles par famille : attaques d'armes −40, impacts −38, critique −33, coup générique −38, pas −35, musiques −15,5 LUFS ±1,5 ;
+  - plafond à −10 pour tout son ponctuel ;
+  - silence de tête de 30 ms au plus, montées voulues exemptées ;
+  - corrélation gauche/droite positive.
+
+  Un écart fait échouer `tools/test_audio.sh` et indique la correction de `volume_db` à faire. Vérifié par l'absurde : coffre remis à 0 dB et Fronde à −14, deux échecs nets. Les trois fichiers écrêtés à la source (Ombre, orage, coffre) restent signalés en avertissement.
+- **Variation de volume** : `volume_variance_db` dans la banque, tirée à chaque lecture admise. 44 sons répétés : attaques et impacts ±1,5 dB, pas ±2, XP, critique, Ombre, Rôdeur, terrier et bond ±1, dissolution et coup générique ±1,5. Contrôle de régression ajouté ; le contrôle de banque GDScript tolère l'écart déclaré.
+- **Réglages** : un fichier de réglages sans clé Musique ou Ambiance reprend désormais le niveau d'un profil neuf (−6 et −8 dB), au lieu de 100 % et 70 %.
+- **Outil des sons d'armes** : `tools/prepare_weapon_audio.py` propose pour chaque candidat le gain qui l'amène à la cible des attaques, au lieu d'un −20 dB fixe.
+
+**Contrôles** : build sans avertissement, `tools/validate.sh … smoke audio music` 3/3 (contrôle du mix : 127 fichiers, 0 échec, 3 avertissements).
+
+**Encore ouvert, à décider ou écouter par Raphaël** :
+1. Curseurs Musique et Ambiance affichés à 50 % et 40 % dans un profil neuf : passer la baisse dans le mix interne pour qu'ils s'affichent à 100 %, avec migration des réglages enregistrés.
+2. Remplacer les trois fichiers écrêtés à la source par des versions propres : la distorsion est dans le fichier, le gain ne l'enlève pas.
+3. Spatialisation stéréo légère des coups et des ennemis selon leur position à l'écran.
+4. Basses très présentes dans les musiques de combat et de nuit (82 à 91 % de l'énergie sous 120 Hz).
+5. Quatre sons manquants : soin, bouclier rechargé, annonce du tir visé, réveil de la Faille.

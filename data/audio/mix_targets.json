@@ -1,0 +1,16 @@
+{
+  "_doc": "Garde-fous du mix (plan 15, revue du 10 octobre). tools/audio_bank_audit.py mesure chaque son de sounds.json et échoue si une famille sort de sa cible. Niveau effectif = sonie momentanée maximale du fichier (EBU R128, 400 ms) + volume_db de la banque + call_offset_db, le décalage passé par le code à l'appel. Musiques : sonie intégrée + volume_db.",
+  "families": [
+    { "id": "attaques d'armes", "keys": "^sfx_weapon_(?!equip$|drop$)", "target": -40, "tolerance": 2 },
+    { "id": "impacts par matière", "keys": "^sfx_impact_", "target": -38, "tolerance": 2 },
+    { "id": "critique", "keys": "^sfx_hit_critique$", "target": -33, "tolerance": 2 },
+    { "id": "coup générique", "keys": "^sfx_hit_ennemi$", "target": -38, "tolerance": 2 },
+    { "id": "pas", "keys": "^sfx_pas_", "call_offset_db": -4, "target": -35, "tolerance": 2 },
+    { "id": "musiques", "keys": "^mus_", "measure": "integrated", "target": -15.5, "tolerance": 1.5 }
+  ],
+  "_doc_limits": "Aucun son ponctuel au-dessus de max_effective (le coffre était à −6,6). Silence de tête au-delà de lead_silence_ms (seuil −50 dBFS) refusé, sauf montées voulues de lead_exempt. Corrélation gauche/droite négative refusée : le son s'annule en mono.",
+  "max_effective": -10,
+  "lead_silence_ms": 30,
+  "lead_exempt": ["sfx_ambiance_oiseaux_2", "sfx_barrier_rise", "sfx_indicible_rise", "sfx_indicible_window_open"],
+  "min_lr_correlation": 0.0
+}

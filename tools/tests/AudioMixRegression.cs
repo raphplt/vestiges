@@ -129,6 +129,26 @@ public partial class AudioMixRegression : Node
         AudioManager.FadeOutUI(reveal, "sfx_chest_reveal", 0.01f);
         await Frames(250);
         Check(Mathf.IsEqualApprox(duck.VolumeDb, 0f), "ducking : la musique revient après le moment");
+
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        AudioVoicePool sfx = (AudioVoicePool)typeof(AudioManager).GetField("_sfxPool", flags).GetValue(audio);
+        System.Collections.Generic.Dictionary<string, ulong> times =
+            (System.Collections.Generic.Dictionary<string, ulong>)typeof(AudioManager).GetField("_sfxLastPlayTime", flags).GetValue(audio);
+        float bank = ((System.Collections.Generic.Dictionary<string, float>)typeof(AudioManager)
+            .GetField("_soundVolumes", flags).GetValue(audio))["sfx_impact_blunt"];
+        AudioStreamPlayer voice = audio.GetNode<AudioStreamPlayer>("Sfx0");
+        System.Collections.Generic.HashSet<float> levels = new();
+        bool bounded = true;
+        for (int i = 0; i < 8; i++)
+        {
+            sfx.Stop();
+            times.Remove("sfx_impact_blunt");
+            audio.PlaySfx("sfx_impact_blunt", 0f);
+            bounded &= Mathf.Abs(voice.VolumeDb - bank) <= 1.5f + 0.001f;
+            levels.Add(voice.VolumeDb);
+        }
+        sfx.Stop();
+        Check(bounded && levels.Count > 1, "impact répété : volume varié de ±1,5 dB autour de la banque");
     }
 
     private static bool HasEffect<T>(int bus) where T : AudioEffect
