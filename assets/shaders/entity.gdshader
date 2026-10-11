@@ -1,5 +1,7 @@
 shader_type canvas_item;
 
+#include "res://assets/shaders/world_grade.gdshaderinc"
+
 // === Outline (sel-out coloré, jamais noir pur) ===
 uniform vec4 outline_color : source_color = vec4(0.12, 0.22, 0.1, 1.0);
 uniform float outline_width : hint_range(0.0, 3.0) = 1.0;
@@ -113,6 +115,11 @@ void fragment() {
 	// --- Normal rendering (aberration + flash) ---
 	if (!done) {
 		vec3 result = tex.rgb;
+		// Étalonnage du biome, atténué pour rester lisible ; les yeux gardent leur vert acide.
+		// Hors run (part nulle), pas de test des yeux.
+		if (world_grade_tone.z > 0.0 && distance(tex.rgb, EYE_COLOR) > 0.2) {
+			result = world_grade(result, world_grade_tone.z);
+		}
 		if (aberration_amount > 0.0) {
 			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);
 		}

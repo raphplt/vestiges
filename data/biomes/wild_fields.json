@@ -10,6 +10,15 @@
     "exploration_enemy_pool": ["presage", "charognard", "charognard", "shade", "rodeur"],
     "resurgence_enemy_pool": ["presage", "presage", "shade", "shade", "shade", "shade", "charognard", "charognard", "void_brute", "void_brute", "hurleur", "hurleur", "tisseuse"],
     "danger_level": 1,
+    "atmosphere": {
+        "tint": [1.0, 0.85, 0.6],
+        "tint_strength": 0.35,
+        "exposure": 1.0,
+        "saturation": 1.0,
+        "contrast": 1.03,
+        "fog_density": 0.05,
+        "fog_color": [0.55, 0.5, 0.35]
+    },
     "map_weight": 1.4,
     "poi_pool": {
         "searchable_building": 0.6,

@@ -148,6 +148,14 @@ erasure_far_memory={
 "type": "float",
 "value": 1.0
 }
+world_grade_tint={
+"type": "vec4",
+"value": Vector4(1, 1, 1, 1)
+}
+world_grade_tone={
+"type": "vec4",
+"value": Vector4(1, 1, 0, 0)
+}
 trample_origin={
 "type": "vec4",
 "value": Vector4(1000000, 1000000, 0, 0)

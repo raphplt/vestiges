@@ -276,14 +276,17 @@ public partial class RunObservation
         Node2D fog = _world.GetNodeOrNull<Node2D>("FogOfWar");
         if (fog != null)
             fog.Visible = false;
-        await Frames(90);
+        // Assez pour que l'écran de chargement ait fini de s'effacer avant la première capture.
+        await Frames(180);
 
         _player.AIInputOverride = Vector2.Zero;
         foreach ((string biome, Vector2 best, int bestCount, int total) in FindPropHotspots())
         {
             _player.GlobalPosition = best + new Vector2(0f, 24f);
             _camera.ResetSmoothing();
-            await Frames(20);
+            // Fondu de l'étalonnage du biome compris (data/world/atmosphere.json, 1,5 s) : attente en temps, pas en images.
+            await ToSignal(GetTree().CreateTimer(2.2), SceneTreeTimer.SignalName.Timeout);
+            await Frames(2);
             using Image image = GetViewport().GetTexture().GetImage();
             image.SavePng($"{_output}/props-{biome}.png");
             GD.Print($"[RunObservation] props {biome}: {total} décors, {bestCount} autour du point capturé {best}");

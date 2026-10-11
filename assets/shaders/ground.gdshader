@@ -24,6 +24,7 @@ uniform float grain = 0.3;
 
 #include "res://assets/shaders/erasure_memory.gdshaderinc"
 #include "res://assets/shaders/ground_forget.gdshaderinc"
+#include "res://assets/shaders/world_grade.gdshaderinc"
 
 const vec2 TILE = vec2(64.0, 32.0);
 const int NONE = 255;
@@ -154,6 +155,8 @@ void fragment() {
 		}
 	}
 
+	// Étalonné avant l'oubli : le blanc de l'Effacement reste le même dans tous les biomes.
+	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
 	float memory = vertex_memory;
 	if (memory < 0.8)
 		COLOR.rgb = forget(COLOR.rgb, p, memory);

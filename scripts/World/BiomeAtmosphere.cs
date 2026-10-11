@@ -6,6 +6,8 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Crée des effets atmosphériques par biome :
+/// - Étalonnage du biome où se trouve le joueur (plan 39 A1), en uniformes globaux lus par le sol, les routes, les
+///   décors et les entités (world_grade.gdshaderinc), fondu au changement de biome
 /// - Particules de brume flottante (marécage, forêt profonde)
 /// - Shader post-process marécage (brume laiteuse, reflets spectraux, réalité fragile)
 /// Se place comme enfant de Main et suit le joueur.
@@ -30,6 +32,18 @@ public partial class BiomeAtmosphere : Node2D
 	private float _swampMoistureCurrent;
 	private const float SwampFadeSpeed = 0.8f;
 
+	private static readonly StringName GradeTintParameter = "world_grade_tint";
+	private static readonly StringName GradeToneParameter = "world_grade_tone";
+	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral);
+
+	private AtmosphereConfig _config;
+	private Grade _gradeFrom = NeutralGrade;
+	private Grade _gradeTo = NeutralGrade;
+	private Grade _gradeShown = NeutralGrade;
+	// 1 : fondu terminé, rien à publier.
+	private float _gradeProgress = 1f;
+	private bool _gradeStarted;
+
 	// Viewport interne = 480×270
 	private const float ViewportWidth = 480f;
 	private const float ViewportHeight = 270f;
@@ -38,6 +52,8 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		_worldSetup = GetParent<WorldSetup>();
 		_eventBus = GetNode<EventBus>("/root/EventBus");
+		if (!AtmosphereConfig.TryLoad(out _config, out string error))
+			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage");
 		CreateFogParticles();
 		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
@@ -68,14 +84,24 @@ public partial class BiomeAtmosphere : Node2D
 			UpdateAtmosphere(biome);
 		}
 
+		if (_gradeProgress < 1f)
+			AdvanceGrade((float)delta);
+
 		float targetMoisture = biomeId == "swamp" ? GetLocalSwampMoisture() : 0f;
 		_swampMoistureCurrent = Mathf.MoveToward(_swampMoistureCurrent, targetMoisture, (float)delta * 0.9f);
 		UpdateSwampAmbientParticles(_swampMoistureCurrent, biomeId == "swamp");
 		UpdateSwampShader((float)delta, _swampMoistureCurrent);
 	}
 
+	public override void _ExitTree()
+	{
+		// Le Hub et les écrans hors run partagent les shaders étalonnés : ils retrouvent le neutre.
+		PublishGrade(NeutralGrade);
+	}
+
 	private void UpdateAtmosphere(BiomeData biome)
 	{
+		SetGradeTarget(biome?.Atmosphere ?? BiomeAtmosphereStyle.Neutral);
 		if (biome == null)
 		{
 			_fogParticles.Emitting = false;
@@ -83,8 +109,8 @@ public partial class BiomeAtmosphere : Node2D
 			return;
 		}
 
-		float fogDensity = GetFogDensity(biome.Id);
-		Color fogColor = GetFogColor(biome.Id);
+		float fogDensity = biome.Atmosphere.FogDensity;
+		Color fogColor = biome.Atmosphere.FogColor;
 
 		if (fogDensity > 0f)
 		{
@@ -110,30 +136,44 @@ public partial class BiomeAtmosphere : Node2D
 		GD.Print($"[BiomeAtmosphere] Biome '{biome.Id}' → fog density={fogDensity:F2}, swamp={_swampIntensityTarget:F1}");
 	}
 
-	private static float GetFogDensity(string biomeId)
+	/// <summary>Le premier biome de la run s'applique d'un coup ; les suivants en fondu depuis l'étalonnage affiché.</summary>
+	private void SetGradeTarget(BiomeAtmosphereStyle style)
 	{
-		return biomeId switch
-		{
-			"swamp" => 0.72f,
-			"forest_reclaimed" => 0.2f,
-			"collapsed_quarry" => 0.3f,
-			"urban_ruins" => 0.1f,
-			"wild_fields" => 0.05f,
-			_ => 0f
-		};
+		if (_config == null)
+			return;
+		_gradeTo = Grade.Of(style);
+		_gradeFrom = _gradeShown;
+		_gradeProgress = _gradeStarted ? 0f : 1f;
+		_gradeStarted = true;
+		if (_gradeProgress >= 1f)
+			PublishGrade(_gradeTo);
 	}
 
-	private static Color GetFogColor(string biomeId)
+	private void AdvanceGrade(float delta)
 	{
-		return biomeId switch
-		{
-			"swamp" => new Color(0.48f, 0.54f, 0.60f, 1f),
-			"forest_reclaimed" => new Color(0.30f, 0.40f, 0.28f, 1f),
-			"collapsed_quarry" => new Color(0.45f, 0.40f, 0.35f, 1f),
-			"urban_ruins" => new Color(0.35f, 0.35f, 0.40f, 1f),
-			"wild_fields" => new Color(0.55f, 0.50f, 0.35f, 1f),
-			_ => new Color(0.5f, 0.5f, 0.5f, 1f)
-		};
+		_gradeProgress = Mathf.Min(1f, _gradeProgress + delta / _config.GradeFadeSeconds);
+		PublishGrade(Grade.Lerp(_gradeFrom, _gradeTo, Mathf.SmoothStep(0f, 1f, _gradeProgress)));
+	}
+
+	private void PublishGrade(Grade grade)
+	{
+		_gradeShown = grade;
+		float entityShare = _config?.EntityGradeShare ?? 0f;
+		RenderingServer.GlobalShaderParameterSet(GradeTintParameter,
+			new Vector4(grade.Multiplier.X, grade.Multiplier.Y, grade.Multiplier.Z, 1f));
+		RenderingServer.GlobalShaderParameterSet(GradeToneParameter,
+			new Vector4(grade.Saturation, grade.Contrast, entityShare, 0f));
+	}
+
+	/// <summary>Étalonnage tel que le shader le lit : les fondus interpolent ces valeurs, pas les réglages JSON.</summary>
+	private readonly record struct Grade(Vector3 Multiplier, float Saturation, float Contrast)
+	{
+		public static Grade Of(BiomeAtmosphereStyle style) => new(style.GradeMultiplier(), style.Saturation, style.Contrast);
+
+		public static Grade Lerp(Grade from, Grade to, float t) => new(
+			from.Multiplier.Lerp(to.Multiplier, t),
+			Mathf.Lerp(from.Saturation, to.Saturation, t),
+			Mathf.Lerp(from.Contrast, to.Contrast, t));
 	}
 
 	private void CreateFogParticles()

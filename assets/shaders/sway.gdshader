@@ -1,6 +1,7 @@
 shader_type canvas_item;
 
 #include "res://assets/shaders/erasure_memory.gdshaderinc"
+#include "res://assets/shaders/world_grade.gdshaderinc"
 
 // === Organic Vegetation Sway Shader ===
 // VESTIGES: Apporte de la vie à la flore tout en restant pixel-perfect.
@@ -47,6 +48,7 @@ void vertex() {
 
 // Canopées dans les zones oubliées : même effritement que les décors (plan 16 O2).
 void fragment() {
+	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

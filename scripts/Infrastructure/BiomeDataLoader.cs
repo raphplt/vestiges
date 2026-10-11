@@ -29,6 +29,8 @@ public sealed class BiomeData
     public PathStyle? PathStyle { get; init; }
     /// <summary>Poids relatif de la surface occupée par le biome.</summary>
     public float MapWeight { get; init; }
+    /// <summary>Neutre (aucun étalonnage, pas de brume) si le biome n'a pas de bloc « atmosphere ».</summary>
+    public BiomeAtmosphereStyle Atmosphere { get; init; } = BiomeAtmosphereStyle.Neutral;
 }
 
 public static class BiomeDataLoader
@@ -152,7 +154,7 @@ public static class BiomeDataLoader
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "biome", "id", "name", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
                 "resurgence_enemy_pool", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "map_weight",
-                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style");
+                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere");
             string id = reader.Text(root, "id");
             string name = OptionalText(reader, root, "name", "");
             string audio = OptionalText(reader, root, "footstep_audio", null);
@@ -208,6 +210,8 @@ public static class BiomeDataLoader
                     ? reader.Positive(path, "width_px") : PathStyle.Default.WidthPx;
                 style = new PathStyle { Tone = reader.Error == null ? new Color(tone) : default, Ruts = ruts, WidthPx = width };
             }
+            BiomeAtmosphereStyle atmosphere = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("atmosphere", out _)
+                ? Atmosphere(reader, reader.Section("atmosphere")) : BiomeAtmosphereStyle.Neutral;
             if (reader.Error != null)
             {
                 error = $"biome « {id ?? "?"} », {reader.Error}";
@@ -219,7 +223,8 @@ public static class BiomeDataLoader
                 ExplorationEnemyPool = exploration.AsReadOnly(), ResurgenceEnemyPool = resurgence.AsReadOnly(),
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),
-                WangTileGroups = new ReadOnlySet<string>(wangSet), BlendTerrains = blend, PathStyle = style
+                WangTileGroups = new ReadOnlySet<string>(wangSet), BlendTerrains = blend, PathStyle = style,
+                Atmosphere = atmosphere
             };
             return true;
         }
@@ -228,6 +233,27 @@ public static class BiomeDataLoader
             error = $"JSON illisible : {exception.Message}";
             return false;
         }
+    }
+
+    /// <summary>
+    /// Bornes larges mais sûres : au-delà, un biome devient illisible (sol noir, couleurs brûlées) plutôt que
+    /// différent.
+    /// </summary>
+    private static BiomeAtmosphereStyle Atmosphere(JsonConfigReader reader, JsonElement section)
+    {
+        reader.AllowOnly(section, "atmosphere", "tint", "tint_strength", "exposure", "saturation", "contrast",
+            "fog_density", "fog_color");
+        BiomeAtmosphereStyle style = new(
+            reader.Rgb(section, "tint"), reader.Chance(section, "tint_strength"), reader.Positive(section, "exposure"),
+            reader.NonNegative(section, "saturation"), reader.Positive(section, "contrast"),
+            reader.Chance(section, "fog_density"), reader.Rgb(section, "fog_color"));
+        if (style.Exposure is < 0.6f or > 1.4f)
+            reader.Fail("atmosphere.exposure : de 0,6 à 1,4 attendu");
+        if (style.Saturation > 1.6f)
+            reader.Fail("atmosphere.saturation : de 0 à 1,6 attendu");
+        if (style.Contrast is < 0.6f or > 1.4f)
+            reader.Fail("atmosphere.contrast : de 0,6 à 1,4 attendu");
+        return style;
     }
 
     private static Dictionary<string, float> Weights(JsonConfigReader reader, JsonElement section, string where, Func<string, bool> known)

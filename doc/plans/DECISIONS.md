@@ -1290,3 +1290,27 @@ Raphaël, après avoir joué : la refonte des menus « dans la globalité, c'est
 - Ordre : Hub, puis run, puis monde.
 
 Lots au [plan 37](37-retours-du-11-octobre.md).
+
+## 119. Atmosphère et détail du monde — 11 octobre 2026
+
+Raphaël demande : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble stp). sois créatif. sors moi une liste de recommendations par priorités et estimation de temps nécessaire. » Sur la liste proposée : « oui crée le plan ».
+
+[Plan 39](39-atmosphere.md). Rien n'est validé au-delà de la création du plan : ordre, sources sonores, météo, lumière par run, musique et anomalies restent des questions (§7).
+
+
+### 119 bis. Réponses aux six questions du plan 39
+
+Posées le 11 octobre avant le lot A1 :
+
+1. **Ordre :** phase A dans l'ordre du plan (A1 → A5).
+2. **Sources des ambiances (A4) :** candidats issus de banques libres, présentés dans une planche d'écoute comme au plan 15 M4 ; Raphaël choisit.
+3. **Météo (A5) :** ambiance, plus la portée de vue réduite par le brouillard épais. Pas d'autre effet de jeu.
+4. **Lumière par run (C6) :** refusée sous la forme proposée : « c'est pas le mieux d'avoir une lumière au hasard par run. Je remettrai peut-être un cycle (sans nuit trop noire) ». C6 est retiré ; un cycle de lumière sans vraie nuit reste une idée de Raphaël, à reprendre par lui, en exception assumée au pivot V2.
+5. **Musique en couches (C3) :** plus tard, on garde les morceaux actuels.
+6. **Anomalies (C7) :** à réactiver, après les phases A et B. Accord de principe sur le plan 14 et sur le retour des anomalies de `scripts/World/Lore/` redessinées ; le détail du plan 14 reste à arbitrer lot par lot.
+
+## 120. Coffres réservés aux objets du sac — 11 octobre 2026
+
+Raphaël : « dans les coffres on ne peut plus obtenir que des objets. retire tous les autres types de loots possibles. » Il demande aussi les raretés des objets, certains lui paraissant plus puissants que d’autres.
+
+Acquis : tous les coffres donnent seulement des objets du sac, y compris l’ancien coffre de lore ; suppression des gains d’Essence, XP, niveaux d’Écussons, Souvenirs et statistiques. Un sac plein laisse l’objet au sol pour l’échanger, sans conversion en Essence. Lot I9 au plan 35. Les objets n’ont actuellement aucune rareté propre ; la question ne vaut pas validation d’un classement ou de probabilités nouvelles.

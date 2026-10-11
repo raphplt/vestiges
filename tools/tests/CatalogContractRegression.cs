@@ -35,6 +35,7 @@ public partial class CatalogContractRegression : Node
             CheckSmallPlaces();
             CheckWaymarks();
             CheckBiomes();
+            CheckAtmosphere();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -482,6 +483,12 @@ public partial class CatalogContractRegression : Node
             ("ornières hors borne", root => root["path_style"]!["ruts"] = 1.1, "ruts"),
             ("largeur nulle", root => root["path_style"]!["width_px"] = 0, "width_px"),
             ("champ de style inconnu", root => root["path_style"]!["width"] = 28, "clé « width » inconnue"),
+            ("atmosphère non objet", root => root["atmosphere"] = 1, "atmosphere"),
+            ("teinte incomplète", root => root["atmosphere"]!["tint"] = new JsonArray(1, 1), "tint"),
+            ("contraste hors borne", root => root["atmosphere"]!["contrast"] = 2, "atmosphere.contrast"),
+            ("exposition hors borne", root => root["atmosphere"]!["exposure"] = 0.3, "atmosphere.exposure"),
+            ("brume hors borne", root => root["atmosphere"]!["fog_density"] = 1.5, "fog_density"),
+            ("champ d'atmosphère inconnu", root => root["atmosphere"]!["fog"] = 0.2, "clé « fog » inconnue"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
@@ -514,13 +521,16 @@ public partial class CatalogContractRegression : Node
             "catalogue de biomes vide refusé");
         string optional = Mutated(valid, root =>
         {
-            foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains" })
+            foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains", "atmosphere" })
                 root.Remove(key);
         });
         Check(BiomeDataLoader.TryParse(optional, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData defaults, out _)
             && defaults.Name == "" && defaults.DangerLevel == 1 && defaults.MapWeight == 1f && defaults.PoiCountMin == 3
             && defaults.PoiCountMax == 5 && defaults.PoiPool.Count == 0 && defaults.PathStyle == null
-            && defaults.WangTileGroups.Count == 0 && !defaults.BlendTerrains, "secours des champs facultatifs conservés");
+            && defaults.WangTileGroups.Count == 0 && !defaults.BlendTerrains && defaults.Atmosphere == BiomeAtmosphereStyle.Neutral,
+            "secours des champs facultatifs conservés");
+        Check(forest.Atmosphere.FogDensity > 0f && forest.Atmosphere.TintStrength > 0f, "atmosphère de la forêt lue");
+        Check(BiomeAtmosphereStyle.Neutral.GradeMultiplier().IsEqualApprox(Vector3.One), "atmosphère neutre sans effet sur la couleur");
         Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyExists, pois.Contains, audioExists, resourceExists,
             out BiomeData styleDefaults, out _) && styleDefaults.PathStyle?.WidthPx == PathStyle.Default.WidthPx,
             "style de chemin facultatif : secours conservés");
@@ -532,6 +542,27 @@ public partial class CatalogContractRegression : Node
             && ((IDictionary<string, IReadOnlyList<string>>)forest.TileSources).IsReadOnly
             && ((IList<string>)forest.TileSources["forest"]).IsReadOnly && ((ISet<string>)forest.WangTileGroups).IsReadOnly,
             "définitions et collections imbriquées publiées en lecture seule");
+    }
+
+    private void CheckAtmosphere()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/atmosphere.json");
+        Check(AtmosphereConfig.TryParse(valid, out AtmosphereConfig config, out string error) && config.GradeFadeSeconds > 0f,
+            $"atmosphère du dépôt acceptée {error}");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("fondu nul", root => root["grade"]!["fade_seconds"] = 0, "fade_seconds"),
+            ("fondu trop long", root => root["grade"]!["fade_seconds"] = 30, "fade_seconds"),
+            ("part hors borne", root => root["grade"]!["entity_share"] = 1.5, "entity_share"),
+            ("section absente", root => root.Remove("grade"), "grade"),
+            ("champ inconnu", root => root["grade"]!["speed"] = 1, "clé « speed » inconnue"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !AtmosphereConfig.TryParse(Mutated(valid, mutate), out AtmosphereConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"atmosphère refusée ({label}) : {message}");
+        }
     }
 
     private static JsonObject Entry(JsonObject root, string list, int index) => root[list]![index]!.AsObject();

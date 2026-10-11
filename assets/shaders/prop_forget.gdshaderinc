@@ -2,6 +2,7 @@
 // fragments au Néant. Un seul matériau partagé par tous les décors ; la mémoire est lue au point au sol du décor.
 
 #include "res://assets/shaders/erasure_memory.gdshaderinc"
+#include "res://assets/shaders/world_grade.gdshaderinc"
 
 varying float prop_memory;
 
@@ -46,6 +47,7 @@ void vertex() {
 }
 
 void fragment() {
+	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

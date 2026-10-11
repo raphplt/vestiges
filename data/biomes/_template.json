@@ -2,6 +2,16 @@
     "id": "biome_id",
     "name": "Nom du biome",
     "danger_level": 1,
+    "_atmosphere": "Facultatif (plan 39 A1). Étalonnage du biome où se trouve le joueur : teinte ramenée à luminance 1 et dosée par tint_strength, exposure 0,6–1,4, saturation 0–1,6, contrast 0,6–1,4 ; brume flottante fog_density 0–1 et fog_color. Sans bloc : neutre, sans brume. Fondu et part reçue par les entités : data/world/atmosphere.json.",
+    "atmosphere": {
+        "tint": [1.0, 1.0, 1.0],
+        "tint_strength": 0.0,
+        "exposure": 1.0,
+        "saturation": 1.0,
+        "contrast": 1.0,
+        "fog_density": 0.0,
+        "fog_color": [0.5, 0.5, 0.5]
+    },
     "terrain_weights": { "grass": 0.5, "forest": 0.5 },
     "exploration_enemy_pool": ["presage", "rodeur"],
     "resurgence_enemy_pool": ["presage", "shade"]

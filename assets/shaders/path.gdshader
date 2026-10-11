@@ -8,6 +8,7 @@ shader_type canvas_item;
 
 #include "res://assets/shaders/erasure_memory.gdshaderinc"
 #include "res://assets/shaders/ground_forget.gdshaderinc"
+#include "res://assets/shaders/world_grade.gdshaderinc"
 
 varying vec2 world_pos;
 varying vec4 style;
@@ -43,6 +44,7 @@ void fragment() {
 	if (hash(p * 1.37 + 2.9) < 0.012)
 		color = min(base * 1.3, vec3(1.0));
 
+	color = world_grade(color, 1.0);
 	float memory = vertex_memory;
 	if (memory < 0.8)
 		color = forget(color, p, memory);

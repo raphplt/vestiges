@@ -11,6 +11,15 @@
     "exploration_enemy_pool": ["presage", "shadow_crawler", "shade", "rodeur", "rodeur", "void_brute", "rampant"],
     "resurgence_enemy_pool": ["presage", "shade", "shade", "void_brute", "void_brute", "wailing_sentinel", "rampant", "hurleur"],
     "danger_level": 3,
+    "atmosphere": {
+        "tint": [1.0, 0.74, 0.58],
+        "tint_strength": 0.38,
+        "exposure": 1.0,
+        "saturation": 0.9,
+        "contrast": 1.08,
+        "fog_density": 0.3,
+        "fog_color": [0.45, 0.4, 0.35]
+    },
     "map_weight": 0.5,
     "poi_pool": {
         "searchable_building": 0.6,

@@ -10,6 +10,15 @@
     "exploration_enemy_pool": ["presage", "shadow_crawler", "fading_spitter", "rampant"],
     "resurgence_enemy_pool": ["presage", "shade", "shade", "shade", "void_brute", "wailing_sentinel", "tisseuse", "hurleur"],
     "danger_level": 3,
+    "atmosphere": {
+        "tint": [0.7, 0.9, 1.0],
+        "tint_strength": 0.45,
+        "exposure": 1.04,
+        "saturation": 0.62,
+        "contrast": 0.88,
+        "fog_density": 0.72,
+        "fog_color": [0.48, 0.54, 0.6]
+    },
     "poi_pool": {
         "searchable_building": 0.5,
         "resource_cache": 0.8,
