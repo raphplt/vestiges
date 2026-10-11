@@ -472,3 +472,6 @@ UI_CAMP_SLOTS,{0} emplacements d'armes,{0} weapon slots
 UI_CAMP_SLOTS_NEXT,{0} → {1} emplacements d'armes,{0} → {1} weapon slots
 UI_VESTIGES_HINT,Vestiges : à dépenser au Campement,Vestiges: spend them at the Camp
 UI_END_VESTIGES_BALANCE,{0} Vestiges à dépenser au Campement,{0} Vestiges to spend at the Camp
+INVENTORY_BADGES,Écussons,Badges
+LEVELUP_KIND_BADGE,ÉCUSSON,BADGE
+INVENTORY_NONE_BADGE,Aucun pour l'instant.,None yet.

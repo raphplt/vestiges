@@ -466,7 +466,9 @@ public static class MetaSaveManager
 
     public static bool IsCharacterUnlocked(string characterId) => IsUnlocked(UnlockKind.Character, characterId);
     public static bool IsWeaponUnlocked(string weaponId) => IsUnlocked(UnlockKind.Weapon, weaponId);
-    public static bool IsObjectUnlocked(string objectId) => IsUnlocked(UnlockKind.Object, objectId);
+    /// <summary>Objet ou Écusson (plan 35) : la quête qui le garde dépend de son étagère.</summary>
+    public static bool IsObjectUnlocked(string objectId) =>
+        IsUnlocked(PassiveSouvenirDataLoader.Get(objectId)?.UnlockKind ?? UnlockKind.Object, objectId);
 
     /// <summary>
     /// Accomplit une quête, ce qui débloque ses pièces : une seule écriture, aussitôt (plan 06 §9.8). Faux si elle

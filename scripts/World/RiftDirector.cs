@@ -77,6 +77,9 @@ public partial class RiftDirector : Node
         foreach (WeaponInstance weapon in _player.WeaponSlots)
             if (weapon.CanLevelUp)
                 candidates.Add(new FragmentOption(weapon.Id, "weapon_upgrade", weapon.Name));
+        foreach (ActivePassiveSouvenir badge in _player.BadgeSlots)
+            if (!badge.IsMaxLevel)
+                candidates.Add(new FragmentOption(badge.Id, "passive_upgrade", badge.Data.Name));
         foreach (ActivePassiveSouvenir passive in _player.PassiveSlots)
             if (!passive.IsMaxLevel)
                 candidates.Add(new FragmentOption(passive.Id, "passive_upgrade", passive.Data.Name));

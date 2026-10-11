@@ -30,7 +30,7 @@ public class ActivePassiveSouvenir
 	public float Value(int effect) => Data.Effects[effect].Neutral + _gains[effect];
 
 	/// <summary>Valeur d'un effet après une carte de gain <paramref name="gain"/> (1 pour une commune).</summary>
-	public float ValueAfter(int effect, float gain) => Value(effect) + Data.Effects[effect].Step * gain;
+	public float ValueAfter(int effect, float gain) => Value(effect) + Data.Effects[effect].Step * gain * StepFactor(Level + 1);
 
 	public bool Reached(ObjectMilestoneData milestone) => Level >= milestone.Level;
 
@@ -40,8 +40,12 @@ public class ActivePassiveSouvenir
 		if (IsMaxLevel)
 			return false;
 		Level++;
+		float factor = StepFactor(Level);
 		for (int i = 0; i < _gains.Length; i++)
-			_gains[i] += Data.Effects[i].Step * gain;
+			_gains[i] += Data.Effects[i].Step * gain * factor;
 		return true;
 	}
+
+	/// <summary>Rendement d'un niveau : un pas entier, sauf pour un Écusson au-delà du seuil d'inventory.json.</summary>
+	private float StepFactor(int level) => Data.IsBadge ? InventoryConfig.BadgeStepFactor(level) : 1f;
 }

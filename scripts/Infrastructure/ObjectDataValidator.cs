@@ -16,7 +16,7 @@ public static class ObjectDataValidator
 
     private static readonly string[] ObjectKeys =
     {
-        "id", "name", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
+        "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
         "survival", "offer_weight", "params", "enabled",
     };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
@@ -112,6 +112,15 @@ public static class ObjectDataValidator
         bool enabled = !item.TryGetProperty("enabled", out JsonElement enabledValue) || enabledValue.ValueKind == JsonValueKind.True;
         if (string.IsNullOrEmpty(Text(item, "name")))
             return $"{where} : name absent ou vide";
+        // Écusson (une stat qui monte, plan 35) ou objet à effet.
+        if (Text(item, "kind") is not ("badge" or "item"))
+            return $"{where}, kind : « badge » ou « item » attendu";
+        // L'Écusson rappelle l'objet d'où il vient ; un objet n'a pas de sous-titre.
+        bool hasSubtitle = item.TryGetProperty("subtitle", out JsonElement subtitle);
+        if (hasSubtitle && (subtitle.ValueKind != JsonValueKind.String || subtitle.GetString().Length == 0))
+            return $"{where}, subtitle : texte non vide attendu";
+        if (hasSubtitle != (Text(item, "kind") == "badge"))
+            return $"{where}, subtitle : {(hasSubtitle ? "réservé aux Écussons" : "attendu pour un Écusson")}";
         // Un objet désactivé, gardé pour les sauvegardes, n'est jamais montré : il peut rester sans description.
         if (Text(item, "description") == null || (enabled && Text(item, "description").Length == 0))
             return $"{where} : description absente{(enabled ? " ou vide" : "")}";

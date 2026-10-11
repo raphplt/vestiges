@@ -104,6 +104,9 @@ public static class PlayerSheet
             string name = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
             AddCompactRow(container, weapon.Sprite, name, string.Format(Tr("INVENTORY_LEVEL"), weapon.Level));
         }
+        AddSectionTitle(container, $"{Tr("INVENTORY_BADGES")}  {player.BadgeSlots.Count}/{InventoryConfig.BadgeSlots}");
+        foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+            AddCompactRow(container, badge.Data.IconSmall, badge.Data.Name, string.Format(Tr("INVENTORY_LEVEL"), badge.Level));
         AddSectionTitle(container, $"{Tr("INVENTORY_OBJECTS")}  {player.PassiveSlots.Count}/{Player.MaxPassiveSlots}");
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             AddCompactRow(container, passive.Data.IconSmall, passive.Data.Name,

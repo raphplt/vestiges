@@ -68,7 +68,10 @@ public partial class QuestRegression : Node
         IReadOnlyList<QuestDefinition> quests = QuestDataLoader.GetAll();
         int[] difficulties = new int[4];
         int cumulative = 0;
-        Dictionary<UnlockKind, int> unlocks = new() { [UnlockKind.Character] = 0, [UnlockKind.Weapon] = 0, [UnlockKind.Object] = 0 };
+        Dictionary<UnlockKind, int> unlocks = new()
+        {
+            [UnlockKind.Character] = 0, [UnlockKind.Weapon] = 0, [UnlockKind.Object] = 0, [UnlockKind.Badge] = 0,
+        };
         foreach (QuestDefinition quest in quests)
         {
             difficulties[quest.Difficulty]++;
@@ -81,8 +84,9 @@ public partial class QuestRegression : Node
         Check(difficulties[1] == 13 && difficulties[2] == 18 && difficulties[3] == 5,
             $"13 ★, 18 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
         Check(cumulative == 2, $"deux quêtes de cumul ({cumulative})");
-        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 18,
-            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 18 objets ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]})");
+        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 12
+            && unlocks[UnlockKind.Badge] == 6,
+            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 12 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow")?.Id == "lead_the_hunt",
             "l'arme de départ du Traqueur vient avec lui");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "letter_satchel")?.Id == "the_round",
@@ -106,15 +110,18 @@ public partial class QuestRegression : Node
             ("difficulté hors bornes", root => Quest(root, 0)["difficulty"] = 4, "difficulty"),
             ("clé inconnue", root => Quest(root, 0)["reward"] = "souvenir", "clé « reward » inconnue"),
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),
+            ("Écusson déclaré objet", root => Unlock(root, 20)["type"] = "object", "pièce inconnue"),
+            ("objet déclaré Écusson", root => Unlock(root, 18)["type"] = "badge", "pièce inconnue"),
         };
         Func<string, bool> weapons = id => WeaponDataLoader.Get(id) != null;
-        Func<string, bool> objects = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id);
+        Func<string, bool> objects = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && !item.IsBadge);
+        Func<string, bool> badges = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && item.IsBadge);
         Func<string, bool> characters = id => CharacterDataLoader.Get(id) != null;
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
             JsonObject root = JsonNode.Parse(valid)!.AsObject();
             mutate(root);
-            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, characters);
+            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, badges, characters);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"quêtes refusées ({label}) : {message}");
         }
         Check(QuestDataLoader.GetAll().Count == 36, "un fichier refusé ne remplace pas le catalogue chargé");

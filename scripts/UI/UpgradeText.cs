@@ -147,13 +147,5 @@ public static class UpgradeText
         return null;
     }
 
-    private static ActivePassiveSouvenir FindPassive(Player player, string id)
-    {
-        if (player == null)
-            return null;
-        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            if (passive.Id == id)
-                return passive;
-        return null;
-    }
+    private static ActivePassiveSouvenir FindPassive(Player player, string id) => player?.FindObject(id);
 }

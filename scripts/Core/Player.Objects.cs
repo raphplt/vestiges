@@ -7,7 +7,10 @@ using Vestiges.Progression;
 
 namespace Vestiges.Core;
 
-/// <summary>Objets du joueur (plan 21 §4, plan 23 R3) : six emplacements, trente niveaux, des gains selon la rareté et des paliers.</summary>
+/// <summary>
+/// Objets du joueur (plan 21 §4, plan 23 R3) : six emplacements, trente niveaux, des gains selon la rareté et des
+/// paliers. Les Écussons (plan 35) suivent les mêmes règles sur leur propre étagère, sans plafond pratique.
+/// </summary>
 public partial class Player
 {
     public const int MaxPassiveSlots = 6;
@@ -17,6 +20,7 @@ public partial class Player
     private ulong _lastIgnoredHitFlashMsec;
 
     private readonly List<ActivePassiveSouvenir> _passiveSlots = new();
+    private readonly List<ActivePassiveSouvenir> _badgeSlots = new();
     // Papier carbone : projectiles en plus, pleins, en fraction (2,5 : deux, et une chance sur deux d'un troisième).
     private float _bonusProjectiles;
     private float _statusDurationMultiplier = 1f;
@@ -28,7 +32,10 @@ public partial class Player
     private ObjectProcs _objectProcs;
     private float _objectPerilFraction;
 
+    /// <summary>Objets à effet portés.</summary>
     public IReadOnlyList<ActivePassiveSouvenir> PassiveSlots => _passiveSlots;
+    /// <summary>Écussons portés (plan 35), au plus <see cref="InventoryConfig.BadgeSlots"/>.</summary>
+    public IReadOnlyList<ActivePassiveSouvenir> BadgeSlots => _badgeSlots;
     /// <summary>Projectiles, ou frappes de mêlée, en plus à chaque attaque (Papier carbone), en fraction.</summary>
     public float BonusProjectiles => _bonusProjectiles;
     /// <summary>Durée des statuts infligés et des zones au sol (Pince à linge).</summary>
@@ -62,7 +69,8 @@ public partial class Player
             AddChild(_objectProcs);
         }
 
-        foreach (ActivePassiveSouvenir existing in _passiveSlots)
+        List<ActivePassiveSouvenir> shelf = data.IsBadge ? _badgeSlots : _passiveSlots;
+        foreach (ActivePassiveSouvenir existing in shelf)
         {
             if (existing.Id == passiveId)
             {
@@ -86,11 +94,11 @@ public partial class Player
             }
         }
 
-        if (_passiveSlots.Count >= MaxPassiveSlots)
+        if (shelf.Count >= (data.IsBadge ? InventoryConfig.BadgeSlots : MaxPassiveSlots))
             return false;
 
         ActivePassiveSouvenir passive = new(data);
-        _passiveSlots.Add(passive);
+        shelf.Add(passive);
         if (HasTriggerEffect(data))
             EnsureObjectTriggers().Configure(data);
         if (HasStanceEffect(data))
@@ -100,7 +108,7 @@ public partial class Player
             _passiveValuesBefore[i] = data.Effects[i].Neutral;
         ApplyPassiveEffects(passive, _passiveValuesBefore);
 
-        int slotIndex = _passiveSlots.Count - 1;
+        int slotIndex = shelf.Count - 1;
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, passiveId, slotIndex);
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
 
@@ -110,26 +118,22 @@ public partial class Player
         return true;
     }
 
-    /// <summary>Vérifie si un passif donné est au max.</summary>
-    public bool IsPassiveMaxLevel(string passiveId)
-    {
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.Id == passiveId)
-                return p.IsMaxLevel;
-        }
-        return false;
-    }
+    /// <summary>Vérifie si un objet ou un Écusson donné est au max.</summary>
+    public bool IsPassiveMaxLevel(string passiveId) => FindObject(passiveId)?.IsMaxLevel ?? false;
 
-    /// <summary>Retourne le niveau actuel d'un passif (0 si pas équipé).</summary>
-    public int GetPassiveLevel(string passiveId)
+    /// <summary>Retourne le niveau actuel d'un objet ou d'un Écusson (0 s'il n'est pas porté).</summary>
+    public int GetPassiveLevel(string passiveId) => FindObject(passiveId)?.Level ?? 0;
+
+    /// <summary>Objet ou Écusson porté, ou null.</summary>
+    public ActivePassiveSouvenir FindObject(string id)
     {
-        foreach (ActivePassiveSouvenir p in _passiveSlots)
-        {
-            if (p.Id == passiveId)
-                return p.Level;
-        }
-        return 0;
+        foreach (ActivePassiveSouvenir badge in _badgeSlots)
+            if (badge.Id == id)
+                return badge;
+        foreach (ActivePassiveSouvenir item in _passiveSlots)
+            if (item.Id == id)
+                return item;
+        return null;
     }
 
     /// <summary>Fait passer chaque effet de l'objet de sa valeur d'avant la carte (<paramref name="before"/>) à sa valeur actuelle.</summary>

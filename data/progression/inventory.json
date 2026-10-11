@@ -1,0 +1,6 @@
+{
+	"_doc": "Inventaire du joueur (plan 35) : 4 armes (Player.MaxWeaponSlots, limite de run fixée par le Campement), les Écussons (kind badge de passive_souvenirs.json) et les objets. badge_slots : Écussons portés à la fois. badge_soft_cap_level : au-delà de ce niveau, chaque niveau d'Écusson ne vaut plus que badge_soft_cap_factor pas (rendement décroissant ; le niveau maximal est le max_level de la fiche). Lu et contrôlé par Infrastructure/InventoryConfig.",
+	"badge_slots": 4,
+	"badge_soft_cap_level": 30,
+	"badge_soft_cap_factor": 0.5
+}

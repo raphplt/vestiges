@@ -421,7 +421,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "oeil_critique"
                 }
             ]
@@ -440,7 +440,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "peau_dure"
                 }
             ]
@@ -459,7 +459,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "paille_tordue"
                 }
             ]
@@ -597,7 +597,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "carapace"
                 }
             ]
@@ -693,7 +693,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "reflet_brise"
                 }
             ]
@@ -712,7 +712,7 @@
             ],
             "unlocks": [
                 {
-                    "type": "object",
+                    "type": "badge",
                     "id": "souffle_du_neant"
                 }
             ]

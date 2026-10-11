@@ -15,7 +15,7 @@ public static class QuestBook
     public static string UnlockName(QuestUnlock unlock) => unlock.Kind switch
     {
         UnlockKind.Weapon => WeaponDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
-        UnlockKind.Object => PassiveSouvenirDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
+        UnlockKind.Object or UnlockKind.Badge => PassiveSouvenirDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
         _ => unlock.Name ?? CharacterDataLoader.Get(unlock.Id)?.Name ?? unlock.Id,
     };
 
@@ -23,7 +23,7 @@ public static class QuestBook
     public static string UnlockIcon(QuestUnlock unlock) => unlock.Kind switch
     {
         UnlockKind.Weapon => WeaponDataLoader.Get(unlock.Id)?.Sprite,
-        UnlockKind.Object => PassiveSouvenirDataLoader.Get(unlock.Id)?.Icon,
+        UnlockKind.Object or UnlockKind.Badge => PassiveSouvenirDataLoader.Get(unlock.Id)?.Icon,
         _ => null,
     };
 

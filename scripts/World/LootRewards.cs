@@ -135,6 +135,9 @@ public static class LootRewards
         if (player == null)
             return null;
         List<ActivePassiveSouvenir> candidates = new();
+        foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+            if (badge.Level + reserved.GetValueOrDefault(badge.Id) < badge.Data.MaxLevel)
+                candidates.Add(badge);
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             if (passive.Level + reserved.GetValueOrDefault(passive.Id) < passive.Data.MaxLevel)
                 candidates.Add(passive);

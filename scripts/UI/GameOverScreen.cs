@@ -89,6 +89,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         public string CharacterId;
         public string CharacterName;
+        public readonly List<(string Icon, int Level)> Badges = new();
         public readonly List<(string Icon, int Level)> Passives = new();
     }
 
@@ -256,6 +257,8 @@ public partial class GameOverScreen : CanvasLayer
     {
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
+        foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+            build.Badges.Add((badge.Data.Icon, badge.Level));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             build.Passives.Add((passive.Data.Icon, passive.Level));
         return build;
@@ -358,18 +361,26 @@ public partial class GameOverScreen : CanvasLayer
         HBoxContainer passives = new() { Position = new Vector2(580f, 376f), MouseFilter = Control.MouseFilterEnum.Ignore };
         passives.AddThemeConstantOverride("separation", 12);
         _middle.AddChild(passives);
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            bool filled = _build != null && i < _build.Passives.Count;
-            passives.AddChild(filled
-                ? RunSummaryPanels.Slot(_build.Passives[i].Icon, _build.Passives[i].Level, UITheme.CyanEssence)
-                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
-        }
+        // Les Écussons gardent leurs cases, même vides, puis un écart, puis les objets (comme au HUD).
+        AddBuildSlots(passives, _build?.Badges, InventoryConfig.BadgeSlots, UITheme.GoldColor);
+        passives.AddChild(new Control { CustomMinimumSize = new Vector2(12f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
+        AddBuildSlots(passives, _build?.Passives, Player.MaxPassiveSlots, UITheme.CyanEssence);
 
         // Colonne de droite : les faits de la run.
         Control facts = RunSummaryPanels.Facts(BuildFacts(record, totalKills));
         facts.Position = new Vector2(1480f, 6f);
         _middle.AddChild(facts);
+    }
+
+    private static void AddBuildSlots(HBoxContainer row, List<(string Icon, int Level)> carried, int slots, Color frame)
+    {
+        for (int i = 0; i < slots; i++)
+        {
+            bool filled = carried != null && i < carried.Count;
+            row.AddChild(filled
+                ? RunSummaryPanels.Slot(carried[i].Icon, carried[i].Level, frame)
+                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
+        }
     }
 
     private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)

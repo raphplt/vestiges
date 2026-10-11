@@ -84,14 +84,18 @@ public partial class ObjectsRegression : Node2D
         List<PassiveSouvenirData> offered = PassiveSouvenirDataLoader.GetAll();
         bool wellFormed = true;
         bool anySurvival = false;
+        int badges = 0;
         foreach (PassiveSouvenirData data in offered)
         {
-            wellFormed &= data.MaxLevel == 30 && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name);
+            badges += data.IsBadge ? 1 : 0;
+            wellFormed &= data.MaxLevel == (data.IsBadge ? 99 : 30) && data.Effects.Count > 0 && !string.IsNullOrEmpty(data.Name)
+                && data.IsBadge == data.Name.StartsWith("Écusson", StringComparison.Ordinal) && data.IsBadge == (data.Subtitle.Length > 0);
             anySurvival |= data.Survival;
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 33 && wellFormed && anySurvival, $"Catalogue : {offered.Count} objets proposés, niveau max 30, paliers au niveau 15, au moins un de survie");
+        Check(offered.Count == 33 && badges == 16 && wellFormed && anySurvival,
+            $"Catalogue : {offered.Count} fiches proposées, {badges} Écussons (niveau max 99) et objets (niveau max 30), paliers au niveau 15, au moins une de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
             retired &= PassiveSouvenirDataLoader.Get(id) != null && !offered.Exists(data => data.Id == id);
@@ -108,12 +112,18 @@ public partial class ObjectsRegression : Node2D
     private void CheckSlots()
     {
         Setup();
-        string[] ids = { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration", "peau_dure" };
-        int added = 0;
-        foreach (string id in ids)
-            added += _player.AddOrUpgradePassive(id) ? 1 : 0;
-        Check(Player.MaxPassiveSlots == 6 && added == 6 && _player.PassiveSlots.Count == 6, "Six emplacements d'objets ; le septième objet est refusé");
-        Check(_player.AddOrUpgradePassive("memoire_vive") && _player.GetPassiveLevel("memoire_vive") == 2, "Emplacements pleins : un objet possédé monte encore de niveau");
+        int badges = 0;
+        foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage" })
+            badges += _player.AddOrUpgradePassive(id) ? 1 : 0;
+        Check(InventoryConfig.BadgeSlots == 4 && badges == 4 && _player.BadgeSlots.Count == 4 && _player.PassiveSlots.Count == 0,
+            "Quatre emplacements d'Écussons, à part des objets ; le cinquième Écusson est refusé");
+        int items = 0;
+        foreach (string id in new[] { "allumette_humide", "glacon", "thermometre", "epingle_a_nourrice", "petard_mouille", "de_a_coudre", "semelle_usee" })
+            items += _player.AddOrUpgradePassive(id) ? 1 : 0;
+        Check(Player.MaxPassiveSlots == 6 && items == 6 && _player.PassiveSlots.Count == 6, "Six emplacements d'objets ; le septième objet est refusé");
+        Check(_player.AddOrUpgradePassive("memoire_vive") && _player.GetPassiveLevel("memoire_vive") == 2
+            && _player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 2,
+            "Emplacements pleins : un Écusson ou un objet porté monte encore de niveau");
     }
 
     private void CheckLevels()
@@ -124,10 +134,15 @@ public partial class ObjectsRegression : Node2D
         bool one = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.08f);
         _player.AddOrUpgradePassive("memoire_vive", 4);
         bool five = Near(_player.AttackSpeedMultiplier / baseSpeed, 1.4f) && _player.GetPassiveLevel("memoire_vive") == 5;
-        _player.AddOrUpgradePassive("memoire_vive", 200);
+        _player.AddOrUpgradePassive("memoire_vive", 25);
         bool thirty = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.4f) && _player.GetPassiveLevel("memoire_vive") == 30;
-        bool capped = !_player.AddOrUpgradePassive("memoire_vive") && Near(_player.AttackSpeedMultiplier / baseSpeed, 3.4f);
-        Check(one && five && thirty && capped, "Ressort de sommier : +8 % de cadence par carte commune, +240 % au niveau 30, plafonné");
+        _player.AddOrUpgradePassive("memoire_vive");
+        bool halfStep = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.44f);
+        _player.AddOrUpgradePassive("memoire_vive", 200);
+        bool capped = _player.GetPassiveLevel("memoire_vive") == 99 && !_player.AddOrUpgradePassive("memoire_vive")
+            && Near(_player.AttackSpeedMultiplier / baseSpeed, 6.16f);
+        Check(one && five && thirty && halfStep && capped,
+            "Écusson du batteur : +8 % de cadence par carte commune, +240 % au niveau 30, puis un demi-pas par niveau jusqu'au 99");
 
         float hp = _player.EffectiveMaxHp;
         float current = _player.CurrentHp;
@@ -241,11 +256,18 @@ public partial class ObjectsRegression : Node2D
                 unlockedTiers.Add(weapon.Tier);
         Check(tiers.SetEquals(unlockedTiers) && tiers.Count > 1, $"Offre au niveau 2 : armes neuves de tous les paliers débloqués ({string.Join(", ", tiers)})");
 
-        foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "ancrage", "regeneration" })
+        foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique" })
             _player.AddOrUpgradePassive(id);
         pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
-        Check(!pool.Exists(option => option.Type == "passive_new") && pool.FindAll(option => option.Type == "passive_upgrade").Count == 6,
-            "Six objets pris : plus d'objet neuf, six améliorations possibles");
+        bool noNewBadge = !pool.Exists(option => option.Type == "passive_new" && PassiveSouvenirDataLoader.Get(option.Id).IsBadge)
+            && pool.Exists(option => option.Type == "passive_new");
+        foreach (string id in new[] { "allumette_humide", "glacon", "de_a_coudre", "semelle_usee", "chewing_gum" })
+            _player.AddOrUpgradePassive(id);
+        PassiveSouvenirData sixthItem = PassiveSouvenirDataLoader.Get("thermometre");
+        _player.AddOrUpgradePassive(sixthItem.Id);
+        pool = (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
+        Check(noNewBadge && !pool.Exists(option => option.Type == "passive_new") && pool.FindAll(option => option.Type == "passive_upgrade").Count == 10,
+            "Quatre Écussons pris : plus d'Écusson neuf ; six objets en plus : plus rien de neuf, dix améliorations possibles");
     }
 
     private void CheckMilestoneActivation()
@@ -443,8 +465,11 @@ public partial class ObjectsRegression : Node2D
         control.TakeDamage(10f);
         float fullLoss = hpBefore - Hp(control);
 
+        // Six Écussons à la fois pour éprouver tous leurs paliers : la règle des quatre emplacements est vérifiée ailleurs.
+        InventoryConfig.Apply("{\"badge_slots\": 8, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5}");
         foreach (string id in new[] { "memoire_vive", "resonance", "portee_etendue", "oeil_critique", "carapace", "instinct" })
             Raise(id, 15);
+        InventoryConfig.Apply(Godot.FileAccess.GetFileAsString("res://data/progression/inventory.json"));
         ObjectMilestones milestones = _player.ObjectMilestones;
         MethodInfo process = typeof(ObjectMilestones).GetMethod("_Process");
         System.Collections.IList repeats = (System.Collections.IList)typeof(ObjectMilestones).GetField("_pendingRepeats", Private).GetValue(milestones);

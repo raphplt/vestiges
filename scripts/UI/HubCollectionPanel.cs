@@ -296,7 +296,7 @@ public partial class HubCollectionPanel : MarginContainer
         {
             string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
             bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
-            string condition = unlocked ? "" : QuestBook.LockText(UnlockKind.Object, passive.Id);
+            string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
             entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, unlocked, condition));
         }
         entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));

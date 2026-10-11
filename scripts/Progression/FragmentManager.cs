@@ -265,9 +265,7 @@ public partial class FragmentManager : Node
     private List<FragmentOption> BuildFragmentPool()
     {
         List<FragmentOption> pool = new();
-        int passiveCount = _player.PassiveSlots.Count;
         bool weaponSlotsFull = !_player.HasFreeWeaponSlot;
-        bool passiveSlotsFull = passiveCount >= Player.MaxPassiveSlots;
 
         // Armes nouvelles (si slots dispo) : toutes celles qui sont débloquées, au même poids, dès le premier niveau.
         if (!weaponSlotsFull)
@@ -301,37 +299,33 @@ public partial class FragmentManager : Node
             }
         }
 
-        // Souvenirs Passifs nouveaux (si slots dispo)
-        if (!passiveSlotsFull)
-        {
-            HashSet<string> equippedPassiveIds = new();
-            foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
-                equippedPassiveIds.Add(p.Id);
-
-            foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
-            {
-                if (equippedPassiveIds.Contains(passive.Id))
-                    continue;
-                if (_banishedIds.Contains(passive.Id))
-                    continue;
-                if (!MetaSaveManager.IsObjectUnlocked(passive.Id))
-                    continue;
-                pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name));
-            }
-        }
-
-        // Upgrades de passifs existants
-        foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
-        {
-            if (_banishedIds.Contains(p.Id))
-                continue;
-            if (!p.IsMaxLevel)
-            {
-                pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name));
-            }
-        }
-
+        // Écussons et objets (plan 35) : chaque étagère a ses emplacements ; une fiche nouvelle n'est offerte que s'il en
+        // reste sur la sienne.
+        AddObjectOffers(pool, _player.BadgeSlots, InventoryConfig.BadgeSlots, ObjectKind.Badge);
+        AddObjectOffers(pool, _player.PassiveSlots, Player.MaxPassiveSlots, ObjectKind.Item);
         return pool;
+    }
+
+    private void AddObjectOffers(List<FragmentOption> pool, IReadOnlyList<ActivePassiveSouvenir> shelf, int capacity, ObjectKind kind)
+    {
+        if (shelf.Count < capacity)
+        {
+            HashSet<string> equippedIds = new();
+            foreach (ActivePassiveSouvenir owned in shelf)
+                equippedIds.Add(owned.Id);
+            foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            {
+                if (data.Kind != kind || equippedIds.Contains(data.Id) || _banishedIds.Contains(data.Id)
+                    || !MetaSaveManager.IsObjectUnlocked(data.Id))
+                    continue;
+                pool.Add(new FragmentOption(data.Id, "passive_new", data.Name));
+            }
+        }
+        foreach (ActivePassiveSouvenir owned in shelf)
+        {
+            if (!_banishedIds.Contains(owned.Id) && !owned.IsMaxLevel)
+                pool.Add(new FragmentOption(owned.Id, "passive_upgrade", owned.Data.Name));
+        }
     }
 
     /// <summary>Relance les choix de fragments (consomme un reroll).</summary>
@@ -472,7 +466,7 @@ public partial class FragmentManager : Node
 
     /// <summary>
     /// Tant que le joueur n'a aucun passif de survie, une des cartes en propose un (plan 03, lot 8B) :
-    /// sans cela, trois passifs de survie sur quatorze passaient souvent toute une run sans être vus.
+    /// sans cela, les Écussons et objets de survie, peu nombreux, passaient souvent toute une run sans être vus.
     /// La dernière carte est remplacée, les deux premières gardant le mélange nouveauté / amélioration.
     /// </summary>
     private void EnsureSurvivalChoice(List<FragmentOption> picked, List<FragmentOption> pool)
@@ -481,6 +475,9 @@ public partial class FragmentManager : Node
         if (picked.Count < 3 || picked[^1].Type == FragmentOption.AscensionType)
             return;
         foreach (ActivePassiveSouvenir owned in _player.PassiveSlots)
+            if (owned.Data.Survival)
+                return;
+        foreach (ActivePassiveSouvenir owned in _player.BadgeSlots)
             if (owned.Data.Survival)
                 return;
         foreach (FragmentOption option in picked)

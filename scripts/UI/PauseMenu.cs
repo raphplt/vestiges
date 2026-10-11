@@ -262,6 +262,11 @@ public partial class PauseMenu : CanvasLayer
 		PlayerSheet.AddSectionTitle(_loadoutContainer, "Armes");
 		foreach (WeaponInstance weapon in player.WeaponSlots)
 			AddWeaponRow(player, weapon);
+		PlayerSheet.AddSectionTitle(_loadoutContainer, Tr("INVENTORY_BADGES"));
+		foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+			AddPassiveRow(badge);
+		if (player.BadgeSlots.Count == 0)
+			PlayerSheet.AddLine(_loadoutContainer, Tr("INVENTORY_NONE_BADGE"), "", TextVeryDim);
 		PlayerSheet.AddSectionTitle(_loadoutContainer, "Objets");
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
 			AddPassiveRow(passive);
@@ -323,7 +328,10 @@ public partial class PauseMenu : CanvasLayer
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
 		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
-		Label name = PlayerSheet.MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
+		// Un Écusson n'a pas de plafond à annoncer ; son sous-titre rappelle l'objet d'où il vient.
+		string level = passive.Data.IsBadge ? $"Niv {passive.Level}" : $"Niv {passive.Level}/{passive.Data.MaxLevel}";
+		string title = passive.Data.Subtitle.Length > 0 ? $"{passive.Data.Name} · {passive.Data.Subtitle}" : passive.Data.Name;
+		Label name = PlayerSheet.MakeLabel($"{title}   {level}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		row.AddChild(name);

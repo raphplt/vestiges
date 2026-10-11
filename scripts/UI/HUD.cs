@@ -72,13 +72,8 @@ public partial class HUD : CanvasLayer
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[Player.MaxWeaponSlots];
     private readonly Label[] _weaponSlotLevels = new Label[Player.MaxWeaponSlots];
     private readonly HudSlotLock[] _weaponSlotLocks = new HudSlotLock[Player.MaxWeaponSlots];
-    private readonly NinePatchRect[] _passiveSlotFrames = new NinePatchRect[Player.MaxPassiveSlots];
-    private readonly TextureRect[] _passiveSlotIcons = new TextureRect[Player.MaxPassiveSlots];
-    private readonly Label[] _passiveSlotLabels = new Label[Player.MaxPassiveSlots];
     private Texture2D _slotEmptyTex;
     private Texture2D _slotFilledTex;
-    private Texture2D _passiveEmptyTex;
-    private Texture2D _passiveFilledTex;
 
     // --- State ---
     private EventBus _eventBus;
@@ -140,13 +135,10 @@ public partial class HUD : CanvasLayer
         _eventBus.EssenceChanged += OnEssenceChanged;
         _eventBus.WeaponInventoryChanged += OnWeaponInventoryChanged;
         _eventBus.WeaponUpgraded += OnWeaponUpgraded;
-        _eventBus.PassiveSouvenirSlotsChanged += OnPassiveSlotsChanged;
         _eventBus.SpecializationGaugeChanged += OnSpecializationGauge;
 
         _slotEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_empty.png");
         _slotFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_filled.png");
-        _passiveEmptyTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
-        _passiveFilledTex = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
 
         // Sous tout le HUD : la vignette de blessure ne couvre jamais une jauge ni un texte.
         AddChild(new HurtVignette { Name = "HurtVignette" });
@@ -165,7 +157,7 @@ public partial class HUD : CanvasLayer
         BuildScoreArea();
         _hudRoot.AddChild(_essenceFlights);
         BuildWeaponBar();
-        BuildPassiveBar();
+        BuildInventoryBar();
         _xpBar = new XpBar { Name = "XpBar" };
         _hudRoot.AddChild(_xpBar);
 
@@ -261,7 +253,6 @@ public partial class HUD : CanvasLayer
             _eventBus.EssenceChanged -= OnEssenceChanged;
             _eventBus.WeaponInventoryChanged -= OnWeaponInventoryChanged;
             _eventBus.WeaponUpgraded -= OnWeaponUpgraded;
-            _eventBus.PassiveSouvenirSlotsChanged -= OnPassiveSlotsChanged;
             _eventBus.SpecializationGaugeChanged -= OnSpecializationGauge;
         }
 
@@ -478,54 +469,19 @@ public partial class HUD : CanvasLayer
         }
     }
 
-    private void BuildPassiveBar()
+    /// <summary>Écussons et objets sous les armes (plan 35), dans leur propre composant.</summary>
+    private void BuildInventoryBar()
     {
-        const float passiveSize = 18f;
-        HBoxContainer bar = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        HudInventoryBar bar = new() { Name = "InventoryBar" };
+        _hudRoot.AddChild(bar);
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
         bar.AnchorTop = 1f;
         bar.AnchorBottom = 1f;
-        float totalWidth = Player.MaxPassiveSlots * (passiveSize + 3);
-        bar.OffsetLeft = -totalWidth / 2;
-        bar.OffsetRight = totalWidth / 2;
+        bar.OffsetLeft = -bar.Width / 2;
+        bar.OffsetRight = bar.Width / 2;
         bar.OffsetTop = -23 - XpBar.BarHeight;
         bar.OffsetBottom = -5 - XpBar.BarHeight;
-        bar.AddThemeConstantOverride("separation", 3);
-        bar.Alignment = BoxContainer.AlignmentMode.Center;
-        _hudRoot.AddChild(bar);
-
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            Control slotRoot = new() { CustomMinimumSize = new Vector2(passiveSize, passiveSize) };
-            NinePatchRect frame = MakeSlotFrame(_passiveEmptyTex, 3);
-            slotRoot.AddChild(frame);
-
-            TextureRect icon = new()
-            {
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                Visible = false
-            };
-            icon.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-            icon.OffsetLeft = 2;
-            icon.OffsetTop = 2;
-            icon.OffsetRight = -2;
-            icon.OffsetBottom = -2;
-            slotRoot.AddChild(icon);
-
-            Label level = MakeLabel("", 8, PalWhiteOff, 3);
-            level.Position = new Vector2(passiveSize - 10, passiveSize - 11);
-            level.Size = new Vector2(10, 10);
-            level.HorizontalAlignment = HorizontalAlignment.Right;
-            slotRoot.AddChild(level);
-
-            _passiveSlotFrames[i] = frame;
-            _passiveSlotIcons[i] = icon;
-            _passiveSlotLabels[i] = level;
-            bar.AddChild(slotRoot);
-        }
     }
 
     private static NinePatchRect MakeSlotFrame(Texture2D texture, int margin)
@@ -710,40 +666,6 @@ public partial class HUD : CanvasLayer
     }
 
     private void OnWeaponUpgraded(string _weaponId, int _slotIndex, string _stat, int _newLevel) => OnWeaponInventoryChanged();
-
-    private void OnPassiveSlotsChanged()
-    {
-        Player player = ResolvePlayer();
-        if (player == null)
-            return;
-
-        System.Collections.Generic.IReadOnlyList<ActivePassiveSouvenir> passives = player.PassiveSlots;
-        for (int i = 0; i < Player.MaxPassiveSlots; i++)
-        {
-            if (i < passives.Count)
-            {
-                ActivePassiveSouvenir passive = passives[i];
-                _passiveSlotFrames[i].Texture = _passiveFilledTex;
-                _passiveSlotFrames[i].Modulate = Colors.White;
-                _passiveSlotLabels[i].Text = passive.Level > 1 ? $"{passive.Level}" : "";
-
-                string iconPath = passive.Data.IconSmall;
-                Texture2D iconTex = string.IsNullOrEmpty(iconPath) ? null : GD.Load<Texture2D>(iconPath);
-                _passiveSlotIcons[i].Texture = iconTex;
-                _passiveSlotIcons[i].Modulate = Colors.White;
-                _passiveSlotIcons[i].Visible = iconTex != null;
-                if (iconTex == null)
-                    _passiveSlotFrames[i].Modulate = passive.Data.IconColor;
-            }
-            else
-            {
-                _passiveSlotFrames[i].Texture = _passiveEmptyTex;
-                _passiveSlotFrames[i].Modulate = Colors.White;
-                _passiveSlotIcons[i].Visible = false;
-                _passiveSlotLabels[i].Text = "";
-            }
-        }
-    }
 
     /// <summary>Icône de la case qui porte l'arme <paramref name="weaponId"/>, ou nul.</summary>
     private Control WeaponSlotIconOf(string weaponId)

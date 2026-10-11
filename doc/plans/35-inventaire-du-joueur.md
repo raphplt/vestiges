@@ -318,3 +318,48 @@ Raphaël a accepté les propositions du §9.5 ([DECISIONS §111](DECISIONS.md)).
 | M4 (plan 36) | **Poches** au Campement : sac +3 places par rang, 5 rangs (10 → 25) | suite `camp` |
 
 I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
+
+## 11. Lot I1 livré : les Écussons — 11 octobre 2026
+
+**Données.**
+- Les 35 fiches de `passive_souvenirs.json` portent maintenant `kind`. On compte 16 Écussons (« Écusson du batteur »…, l'ancien nom passé en `subtitle`) et 19 objets, dont l'arbitre et les deux fiches désactivées.
+- Le contrôle au chargement refuse une étagère absente ou inconnue, et un sous-titre vide.
+- `inventory.json` donne 4 emplacements d'Écussons et le rendement : au-delà du niveau 30, un niveau d'Écusson ne vaut plus qu'un demi-pas. Les Écussons montent jusqu'au niveau 99 ; les objets restent plafonnés à 30.
+- Valeurs : l'Écusson du batteur vaut +240 % de cadence au niveau 30 (inchangé), puis +4 % par niveau, jusqu'à +516 % au niveau 99.
+
+**Jeu.**
+- Le joueur a deux étagères : 4 Écussons, et les objets (encore 6 emplacements à niveaux, en attendant I2).
+- Le level-up offre un Écusson neuf tant qu'il reste une place, et ses niveaux suivants sans plafond pratique. L'objet suit sa propre règle, à part.
+- Les cartes affichent « ÉCUSSON ». L'aperçu d'une carte suit le même rendement que la valeur obtenue.
+- Le coffre (« niveau d'objet »), la Faille et la carte de survie voient les deux étagères.
+
+**Quêtes.**
+- Nouveau type de déblocage `badge`. Six quêtes débloquent maintenant un Écusson : Lire de près, Encaisser, Tenir le feu, Recopier, Reprendre des forces, Clouer.
+- Un Écusson déclaré `object`, ou l'inverse, est refusé au chargement.
+- La page Quêtes affiche « Écusson ». Les sauvegardes ne changent pas : les déblocages se déduisent des quêtes accomplies.
+
+**Interface.**
+- La rangée sous les armes sort de `HUD.cs` dans `HudInventoryBar` : 4 cases d'Écussons à cadre doré, un écart, puis les objets.
+- La pause et la fiche du joueur ont une section Écussons, au niveau sans plafond, avec le sous-titre.
+- Le bilan montre les Écussons puis les objets.
+
+**Vérifications.**
+- Build sans avertissement.
+- 17 suites vertes : `smoke`, `inventory` (nouvelle, 14 contrôles), `objects`, `quests`, `catalogs`, `perk_effects`, `perk_acquisition`, `perk_contracts`, `choice_screen`, `run_trace`, `dev_mode`, `saves`, `small_places`, `weapons`, `ui_art`, `launchers`, `camp`.
+- Tests mis à jour :
+  - `objects` : 4 Écussons et 6 objets, rendement au-delà du niveau 30, offre par étagère ;
+  - `catalogs` : refus de `kind` et de `subtitle` ;
+  - `quests` : 12 objets et 6 Écussons débloqués, refus d'un mauvais type.
+- Capture en run regardée : la rangée Écussons et objets sous les armes.
+
+**Reste pour la suite :**
+- Les icônes des Écussons sont celles des anciens objets. La broderie est à faire au plan 25.
+- La Collection range encore Écussons et objets ensemble (I5).
+- **À mesurer en fin de run longue.** Au niveau 99, certains Écussons deviennent extrêmes, même avec le demi-pas : critique au-delà de 100 % (horloger), +32 projectiles (jongleur), +32 perforations (archer). Il faut y arriver d'abord (99 niveaux sur un seul Écusson). Les bornes éventuelles sont à décider sur la mesure du late game (plan 34), pas avant.
+- Relecture `godot-reviewer`. Corrigés :
+  - sous-titre exigé pour un Écusson et refusé pour un objet ;
+  - au bilan, les cases d'Écussons restent réservées, avec un écart avant les objets ;
+  - textes de la pause traduits ;
+  - commentaire périmé ;
+  - comparaison ordinale dans un test ;
+  - `test_inventory.sh` ajouté à AGENTS.md.

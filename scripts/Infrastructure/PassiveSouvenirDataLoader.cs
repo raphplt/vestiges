@@ -3,10 +3,20 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
+/// <summary>Étagère d'un objet du catalogue (plan 35) : Écusson ou objet à effet.</summary>
+public enum ObjectKind
+{
+	Badge,
+	Item,
+}
+
 public class PassiveSouvenirData
 {
 	public string Id;
+	public ObjectKind Kind;
 	public string Name;
+	/// <summary>Pour un Écusson, l'objet d'où il vient (« Ressort de sommier ») ; vide sinon.</summary>
+	public string Subtitle = "";
 	public string Description;
 	public string Icon;
 	public string IconSmall;
@@ -24,6 +34,11 @@ public class PassiveSouvenirData
 	public bool Survival;
 	/// <summary>Poids de l'objet dans les offres de niveau, 1 par défaut (plan 21 G6a : Papier carbone favorisé).</summary>
 	public float OfferWeight = 1f;
+
+	public bool IsBadge => Kind == ObjectKind.Badge;
+
+	/// <summary>Type de déblocage qui garde cette fiche dans les quêtes.</summary>
+	public UnlockKind UnlockKind => IsBadge ? UnlockKind.Badge : UnlockKind.Object;
 
 	private static readonly System.Text.RegularExpressions.Regex ParameterToken = new(@"\{(\w+)(%?)\}");
 	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
@@ -112,7 +127,9 @@ public static class PassiveSouvenirDataLoader
 		PassiveSouvenirData data = new()
 		{
 			Id = dict["id"].AsString(),
+			Kind = dict["kind"].AsString() == "badge" ? ObjectKind.Badge : ObjectKind.Item,
 			Name = dict["name"].AsString(),
+			Subtitle = dict.ContainsKey("subtitle") ? dict["subtitle"].AsString() : "",
 			Description = dict["description"].AsString(),
 			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
 			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",

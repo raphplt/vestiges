@@ -306,7 +306,8 @@ public partial class LevelUpScreen : CanvasLayer
             ? RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()
             : isPerk ? PerkTag(choice.Id)
             : isAscension ? Tr("LEVELUP_ASCENSION")
-            : Tr(isWeapon ? "LEVELUP_KIND_WEAPON" : "LEVELUP_KIND_OBJECT");
+            : Tr(isWeapon ? "LEVELUP_KIND_WEAPON"
+                : PassiveSouvenirDataLoader.Get(choice.Id)?.IsBadge == true ? "LEVELUP_KIND_BADGE" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
         Label tagLabel = MakeLabel(tag, TextRole.Caption, frame, true);
