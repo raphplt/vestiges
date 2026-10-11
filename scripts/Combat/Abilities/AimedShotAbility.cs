@@ -30,6 +30,7 @@ public class AimedShotAbility : IEnemyAbility
     private Color _flash;
 
     private bool _aiming;
+    private string _aimAudio;
     private bool _ringShown;
     private float _timer;
     private float _cooldownTimer;
@@ -62,6 +63,7 @@ public class AimedShotAbility : IEnemyAbility
         _showRange = data.Number("show_range") > 0f;
         _ringMargin = data.Number("range_reveal_margin");
         _family = PixelPalette.ParseFamily(data.Text("fx_family"), FxFamily.Hostile);
+        _aimAudio = data.Text("aim_audio");
         _flash = PixelPalette.Ramp(_family).Light;
 
         Cancel();
@@ -112,6 +114,9 @@ public class AimedShotAbility : IEnemyAbility
         owner.FlashWarning(_flash, _windupSeconds);
         if (_laneLength > 0f)
             _lane.ShowLine(owner.GlobalPosition, owner.GlobalPosition + _direction * _laneLength, _laneWidth, _family);
+        // La tension culmine au tir, quelle que soit la durée de visée de la créature.
+        if (!string.IsNullOrEmpty(_aimAudio))
+            owner.PlayNearbyAudio(_aimAudio, _windupSeconds);
         return true;
     }
 

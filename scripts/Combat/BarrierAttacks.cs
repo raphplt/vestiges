@@ -155,7 +155,7 @@ public sealed class BarrierAttacks
 	private void ShowStrike(Strike strike)
 	{
 		strike.Marker.ShowCircle(strike.Center, _config.FistRadius, _family);
-		AudioManager.Play(_config.FistWarningAudio, 0.08f);
+		AudioManager.PlayAt(_config.FistWarningAudio, strike.Center, 0.08f);
 		FistsLaunched++;
 	}
 
@@ -209,7 +209,7 @@ public sealed class BarrierAttacks
 		strike.Fist.Modulate = Colors.White;
 		strike.Fist.Visible = _fistTexture != null;
 		strike.Shown = FistShowSec;
-		AudioManager.Play(_config.FistImpactAudio, 0.08f);
+		AudioManager.PlayAt(_config.FistImpactAudio, strike.Center, 0.08f);
 		ScreenShake.Instance?.ShakeLight();
 		CombatPools.Instance?.EmitKnockbackDust(strike.Center, Vector2.Up);
 		float reach = _config.FistRadius + _config.FistHitMargin;

@@ -34,6 +34,12 @@ Les [huit scénarios de recette](captures.json) ont tous terminé sans échec, p
 
 La dernière modification ajoute 40 px à la hauteur calculée du panneau de rencontre (plafond 920 px) ; les captures Mémorial/Atelier de la reprise précédente montrent une fenêtre légèrement plus courte. La Faille a été recapturée après cet ajustement, puis les cinq suites finales ont passé.
 
+## Vérification avant PR, après synchronisation avec main
+
+`origin/main` (`6a353705`) a été intégré à la branche de refonte. Quatre conflits documentaires ont été résolus en conservant les autres chantiers ; les décisions de cette refonte portent désormais les numéros §114–115. Aucun fichier de code n'était en conflit.
+
+**16/16 suites vertes**, aucune source modifiée pendant l'exécution, build **0 warning, 0 erreur** : les quinze suites générales ci-dessus et la suite `audio`, ajoutée pour contrôler les évolutions du mix reçues de main. [Résultats](pr-validation.json), [build](pr-build.log), [audio](pr-audio.log). Ces résultats portent sur la version proposée en PR ; les captures documentent les menus avant cette synchronisation.
+
 ## Portée de la recette
 
 Les entrées clavier/manette sont injectées dans Godot ; aucune manette physique n'a été essayée. Les captures utilisent des états de test pour exercer les contenus rares ou longs. `--bilan-rich` ajoute **neuf annonces de quête fictives au seul affichage**, et quatre Réminiscences : il ne prétend pas que ces neuf quêtes ont été accomplies pendant les 25 secondes de combat. La mort, les statistiques de combat et la relance proviennent bien de Main. Le réglage de banc `--menu-font-scale 1.3` agrandit les rôles typographiques du processus, sans changer les préférences sauvegardées.

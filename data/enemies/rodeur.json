@@ -2,11 +2,10 @@
     "id": "rodeur",
     "name": "Rôdeur",
     "type": "melee",
-    "attack_audio": "sfx_rodeur_attaque",
     "stats": {
-        "hp": 45,
+        "hp": 50,
         "speed": 30,
-        "damage": 11,
+        "damage": 12,
         "xp_reward": 20,
         "perception": 400,
         "leash": 720,

@@ -1137,6 +1137,8 @@ Raphaël : « Rajoute-les dans characters.json, rajoute-leur un passif raccord a
 
 **À juger en jouant :** valeurs d'essai (stats du Facteur, 2 rebonds à −15 %, élan +25 %/+15 % en 4 s, glissade 0,4 s à ×1,5 et 3 s de recharge) ; son provisoire de la Sacoche à auditionner.
 
+**Suite, l'Éveillée (même soir) :** Raphaël : « ok top. personnage suivant, stp ». L'Éveillée est livrée (plan 06 P3). Sa rémanence répète le prochain **tir** seulement : rejouer une mêlée loin du corps demanderait de refaire ses traînées, et l'Éveillée est un personnage de distance. À confirmer en jouant.
+
 **Intégration du 10 octobre :** Raphaël demande de débloquer la PR #4, dont GitHub laisse la vérification de fusion affichée. Trois conflits confirmés par API (traductions générées et décisions) ; lot de synchronisation P2e, sans nouvel arbitrage de gameplay.
 
 ## 103. Équilibrage de l'ouverture : tout appliquer, viser le niveau 30 — 10 octobre 2026, soir
@@ -1171,7 +1173,69 @@ Raphaël préfère, entre les deux pistes, « le truc avec la pierre et l'efface
 
 **Étude révisée :** [plan 04 §7](04-interfaces-et-hub.md#7-refonte-des-menus--étude-du-10-octobre-2026), lecture du lore v1.1 validé, références de menus de jeux et [nouvelle planche Personnages](planches/04-menus-personnages-pierre-v2.png). Pierre de la ville, contours effacés, illustration dominante et contrôles dessinés ; lots centrés sur un écran intérieur de référence avant déclinaison. Le déplacement de la graine, le retrait du solde, le changement du fond et la refonte du bilan/Journal/choix sont sortis de cette passe. Cette planche et les propositions UX restent à examiner ; aucun code de jeu modifié ni item de roadmap coché.
 
-## 107. Carte blanche pour la refonte des menus sur une branche séparée — 10 octobre 2026
+## 107. Passe de mix : tout appliquer d'un coup — 10 octobre 2026, soir
+
+Raphaël demande d'abord de baisser les armes du joueur (« sur-mixé »), puis une grande revue du mix. La revue mesure la banque entière et une run enregistrée par familles ([plan 15](15-audio.md#revue-de-mix--10-octobre-soir)). Résultat : le « trop fort » venait surtout du coup de l'Ombre (presque tout le volume des effets), du critique et du coffre, pas des attaques d'armes, devenues inaudibles. Réponse de Raphaël : « tu as déjà bien identifié la plupart des problèmes que j'ai moi-même remarqués. Je valide 100 % de tes propositions et remarques. Fais les corrections directement […], juste éventuellement une passe finale. »
+
+**Acquis :** lots X1–X5 appliqués sans écoute intermédiaire. Limiteur Master ; bus World étouffé et compressé, hors interface ; ducking des grands moments déclaré dans la banque ; boucles en fondu ; atténuation à distance des sons d'ennemis. Gains recalés par famille sur la sonie mesurée : Ombre −10 dB, armes égalisées et remontées, critique +5 dB au-dessus de l'impact, pas homogènes, musiques à −16 LUFS (Résurgence et nuit à −15). Fichiers corrigés : silences de tête, phases, pas d'herbe ; sons morts retirés. Mesure : 140 → 0 échantillons saturés. **À juger en jouant :** mix plus calme de 4 dB, musique légèrement au-dessus des effets.
+
+## 108. Calendrier de 30 min jusqu'à l'Indicible, late game à étudier — 10 octobre 2026, nuit
+
+Raphaël, après Q1 : « remettre 50 hp de base pour le rodeur et 12 dégâts. aussi les 2 miniboss prévus dans les 10 min arrivent trop tôt […] il faut revoir le calendrier de la run. un truc qui tient en 30 min (moment de l'indicible) : après on sera dans le late game. dans ces 30 min il faut caler environ 4 résurgences, le boss intermédiaire (la barrière), 3/4 "miniboss", des élites. Avant tout ça tenait en 22 min je crois. Et le late game, que se passe-t-il ? » Calendrier à quatre Souverains choisi parmi trois. Phases : « pour moi le late game c'est ce qui se passe après l'indicible. après à partir de 20 min on est en mid-game et à 30 on est déjà au début du late game. mais je pensais plus au late game genre qu'est-ce qu'on prévoit quoi ? » ; étude du late game demandée tout de suite.
+
+**Appliqué, à jouer :** Rôdeur 50 PV et 12 dégâts. Calendrier : Souverains à 4:00, 9:30, 21:00, 27:00 ; Résurgences à 6:00, 12:00, 18:00, 24:00 ; Barrière à 15:00 ; Indicible avec la 5ᵉ Résurgence vers 30:00 ; late game à partir de lui. Effacement étiré d'autant, montée des PV adoucie après 8 min, réserve de la Barrière recalée sur 15 min, quêtes de niveau remises à 30. Détail et mesures : [plan 33 §8](33-equilibrage-ouverture.md#8-calendrier-de-30-min-jusquà-lindicible--10-octobre-2026-nuit).
+
+**Proposé, à trancher :** contenu du late game au [plan 34](34-late-game.md) (Profondeur, Marées, monde d'après, butin, sortie volontaire).
+
+## 109. Late game validé dans l'ensemble, inventaire et progression permanente à repenser — 11 octobre 2026
+
+Raphaël, après le plan 34 (retour dicté, extraits) :
+- **Late game** : « ta proposition globale pour le late game tient » ; sur Megabonk, « il y a bien un late game "infini" avec juste des vagues d'ennemis en boucle. je pense qu'on peut faire un peu mieux. mais […] avoir des vagues de plus en plus dures, ça me va » ; « la profondeur aussi me va, mais […] je ne crois pas qu'il faille en faire […] une sorte de compteur en plus. Je pense que sur le jeu, il manque le fait de montrer in-game sans faire pause le péril de la partie […] l'avoir tout le temps […] en late game il faut qu'il augmente tout seul, continuellement » ; « c'est pas mal d'avoir des niveaux de profondeur genre dire ouais profondeur 14 […] faut voir » ; Marées : « ça me va, c'est cool justement, ça change des résurgences classiques […] vu que l'eau est revenue dans le lore du jeu » ; « avoir une sorte de boss continuel, ça peut être bien » ; monde d'après : « hyper bien », mais « un gros, gros coup visuel, ça peut pas se faire à la va-vite […] peut-être pas la plus grande priorité ».
+- **Butin et inventaire** : « il y aura un moment où toutes les armes, elles seront maxées. Tous les objets aussi. […] ce qui aurait été bien, ce serait que comme Megabonk, qu'on ait un système avec des objets à récolter à l'infini » ; « qu'on repense encore une dernière fois à l'inventaire du joueur » ; « un nombre limité d'armes on va dire 4, un nombre limité de tomes — là j'appelle ça des tomes mais […] ça sera autre chose — pareil ça pourrait être 4, un nombre potentiellement illimité d'objets » ; « si on veut être différent de Megabonk […] un inventaire de 10 objets […] qui peut être augmenté » ; « globalement 10, 20, 25 objets […] mais pas non plus infini » ; « des objets uniques […] meilleures améliorations, […] te téléporter […] du tout court de distance, […] un revive, […] des dégâts de poison […] le but c'est pas d'en avoir 30 ou 40 du même » ; « j'ai peur qu'avec 4 armes et 4 tomes […] ça soit pareil que Megabonk ». Les objets actuels « ont été pensés comme les tomes de Megabonk » : leurs concepts passent dans la nouvelle entité.
+- **Progression permanente** : « il y a des améliorations globales que tu peux faire, par exemple j'améliore le nombre d'armes que je peux porter, j'améliore des statistiques […] ça manque et ça serait crucial de rajouter ça rapidement ».
+
+**Acquis :**
+- Late game : vagues de plus en plus dures (Marées) et boss qui revient ; Péril visible en permanence en run et montant seul en late game, sans second compteur ; monde d'après à faire plus tard, sérieusement. Lots révisés au [plan 34 §8](34-late-game.md).
+- Inventaire : 4 armes ; une étagère d'améliorations répétables, une stat chacune, au nom à trouver (pas « tomes ») ; des objets à effet unique, en nombre plus grand que les armes mais limité, sac agrandissable. Ce choix **remplace §33–§34** (6 objets à niveaux) et rouvre §21 en assumant la proximité avec Megabonk, avec des différences à trouver.
+- Progression permanente à ajouter, prioritaire : elle contredit le GDD §5 (« jamais de puissance brute »), que ce choix remplace.
+
+**Proposé, à trancher :** [plan 35](35-inventaire-du-joueur.md) (Habitudes, sac, sources des objets) et [plan 36](36-progression-permanente.md) (l'Établi, ses rayons, son économie).
+
+## 110. Écussons, sac de 10, Campement, armes de 2 à 4 — 11 octobre 2026
+
+Réponses de Raphaël aux questions des plans 35 et 36 :
+- Nom de la deuxième étagère : Habitudes, Gestes, Ancrages, Cicatrices refusés, « tes premiers concepts sont trop flous il faudrait plus des objets concrets ». Retenu parmi quatre familles concrètes : **les Écussons**, cousus sur la veste, un par stat (« Écusson du boxeur » ×7 pour les dégâts…).
+- Montée des Écussons : **au level-up et par l'usage** (option H2).
+- Objets à effet unique : **trouvés dans le monde** (coffres, élites, Souverains, Ateliers, Marées), plus au level-up ; **sac de 10**, agrandissable ; doublons permis ; sac plein, on en oublie un.
+- Emplacements d'armes : « commencer à 2 et pouvoir monter jusqu'à 4 », achetés en progression permanente.
+- Remboursement des achats permanents : **libre et gratuit**.
+- Nom de l'écran : « établi est aussi un truc in game donc ça va pas trop » ; retenu **le Campement** parmi quatre.
+- Ordre : « péril visible, établi puis refonte de l'inventaire » : Péril toujours visible (plan 34 G0), puis le Campement (plan 36), puis l'inventaire (plan 35).
+
+## 111. Curseurs à 100 %, sons placés à l'écran, nouveaux sons à proposer — 11 octobre 2026
+
+Raphaël, après X6 : « les curseurs musique et ambiance, comme tous les autres, doivent être à 100 % par défaut. C'est ce que font tous les jeux. » Le placement gauche/droite des coups et des ennemis, « c'est génial ». Pour les quatre sons manquants : chercher sur le web ou les créer, puis proposer. Il n'aime pas le son de blessure du joueur : en trouver un plus approprié.
+
+**Acquis :** tous les curseurs audio à 100 % sur un profil neuf ; l'équilibre interne (musique −6 dB, ambiance −8 dB) passe hors curseur. Les réglages enregistrés avant gardent leur niveau entendu. Sons du monde placés à gauche ou à droite selon leur source à l'écran (plan 15 X7). **En attente de son écoute :** planche de candidats pour le soin, le bouclier rechargé, l'annonce du tir visé, le réveil de la Faille et la blessure du joueur.
+
+## 112. Pas de son de créature quand son coup touche le joueur — 11 octobre 2026
+
+Raphaël remarque que la blessure du joueur sonne très différemment en jeu (« beaucoup plus métallique et fort ») que le fichier seul. La cause : à chaque coup au contact, le jeu jouait aussi le son d'attaque de la créature. Celui de l'Ombre, du Charognard et du Rampant d'ombre est un frottement métallique écrêté, deux fois plus long que la blessure, et il la couvrait. Trois options lui sont présentées : retirer ce son, le remplacer ou le baisser. Il choisit de le retirer : « ne pas avoir de son de créature qui nous touchent ».
+
+**Acquis :** un coup au contact ne joue que la blessure du joueur. Les sons des créatures restent sur leurs actions (bond, cri, tir, terrier, crachat). Le tir de la Sentinelle garde son son. Les trois sons de contact (`sfx_ombre_attaque`, `sfx_rodeur_attaque`, `sfx_brute_charge`) et le champ `attack_audio` des sept créatures de corps à corps sont retirés.
+
+## 113. Choix de la planche du 11 octobre — 11 octobre 2026
+
+Raphaël, après écoute :
+- **Blessure du joueur :** il garde le son actuel. Il est désormais seul à jouer au contact (§112).
+- **Soin reçu :** une création d'après sa référence est d'abord demandée, puis il renonce : « aucun son pour les soins reçus, ça me va, sinon ça va être la galère à gérer ».
+- **Bouclier rechargé :** aucun son, pas nécessaire.
+- **Annonce du tir visé :** C, bois qui grince sous la tension (synthèse originale).
+- **Réveil de la Faille :** G, gong inversé et déchirure (BigSoundBank, CC0).
+
+**Acquis :** le tir visé fait partir son grincement en cours de route, pour qu'il culmine au tir quelle que soit la durée de visée de la créature. Il est placé à l'écran et s'atténue au loin. La Faille joue son réveil au moment où on la réveille, et la musique baisse brièvement. Le soin et le bouclier restent muets, besoins clos.
+
+## 114. Carte blanche pour la refonte des menus sur une branche séparée — 10 octobre 2026
 
 Raphaël autorise l'implémentation : « refais tous les menus comme tu l'entends », sur une branche autre que main. La nouvelle image est jugée « pas mal » ; il préfère un nom de personnage discret et moins de statistiques d'armes et de mobilité. Il propose, sans l'imposer, Partir / Recommencer → choix du personnage → lancement ; le camp pourrait montrer les héros débloqués, ce qui évite d'y sélectionner un casting de dix personnages. Il demande à l'agent de garder son jugement et de travailler.
 
@@ -1179,7 +1243,7 @@ Choix de l'agent dans ce mandat : adopter cette étape de sélection, conserver 
 
 **Livraison de ce mandat :** lots P1–P3 implémentés et vérifiés sur cette branche, sans fusion : nouveaux menus intérieurs, liens de consultation, pause et paramètres ; build sans warning, suites 7/7 puis 2/2, captures 720p/1080p et relance réelle avec changement de héros. Compte rendu et limites au [plan 04 §8.2](04-interfaces-et-hub.md#82-validation-et-captures--p1p3-livrés). La livraison ne vaut pas approbation artistique de Raphaël.
 
-## 108. Terminer la refonte de tous les menus — 11 octobre 2026
+## 115. Terminer la refonte de tous les menus — 11 octobre 2026
 
 Raphaël : « termine tout alors, y compris montée de niveau, butin, bilan et journal, dans la même direction graphique et sur la même branche. Va jusqu’au bout et teste le tout avant de me dire que c’est fini. »
 

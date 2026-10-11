@@ -132,7 +132,8 @@
         "first_delay": { "optional": true, "min": 0, "_comment": "Absent : délai tiré entre 0,3 et 1 s." }
       },
       "texts": {
-        "fx_family": { "kind": "family", "default": "hostile" }
+        "fx_family": { "kind": "family", "default": "hostile" },
+        "aim_audio": { "kind": "sound", "default": "sfx_aim_warning", "_comment": "Bois qui grince, calé pour culminer au tir (DECISIONS §113)." }
       }
     }
   }

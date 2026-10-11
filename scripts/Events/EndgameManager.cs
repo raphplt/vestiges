@@ -16,7 +16,7 @@ public partial class EndgameManager : Node
 	private float _lateGameErasureThreshold = 0.68f;
 	private int _lateGameCrisisThreshold = 4;
 	private int _bossCrisisThreshold = 5;
-	private float _bossTimeThresholdSec = 22f * 60f;
+	private float _bossTimeThresholdSec = 30f * 60f;
 	private float _bossHpScale = 3.2f;
 	private float _bossDmgScale = 1.65f;
 
@@ -52,7 +52,7 @@ public partial class EndgameManager : Node
 		_eventBus.EnemyKilled += OnEnemyKilled;
 		_eventBus.CrisisStarted += OnCrisisStarted;
 
-		// Contrôlés dès le début de la run : une faute de réglage du boss se voit au chargement, pas à 22 minutes.
+		// Contrôlés dès le début de la run : une faute de réglage du boss se voit au chargement, pas à 30 minutes.
 		// Le reste de la run se joue ; seuls le boss et la fin de partie qu'il ouvre sont retirés.
 		if (!IndicibleConfig.TryLoad(out _, out string error))
 			_bossUnavailable = error;

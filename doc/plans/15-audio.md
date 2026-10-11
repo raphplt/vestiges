@@ -479,3 +479,193 @@ Lot unique : arrêter dès l'état Death les voix d'armes/ennemis, les sons d'in
 **Avant/après, même scénario `AudioMixRegression`, seed 221092026 :** sept voix de monde préparées (arme, ennemi, forêt, météo, choix et deux alertes), plus un son UI en cours. Avant : **7 → 7** voix à la mort, quatre contrôles en échec. Après : **7 → 0**, ancien son UI arrêté ; événements tardifs, bilan en pause, musique de mort et deuxième run verts. `tools/validate.sh /tmp/vestiges-audio-death-after-20261010-01 smoke audio music` : **3/3**, aucune source modifiée pendant la validation, build sans avertissement ni erreur. Build final après ajout du contrôle de capture : zéro avertissement/erreur.
 
 **Mort réelle :** `tools/capture_run.sh`, seed 221092026, Traqueur, 25 s avec `--capture-death --play-bot --nomad --skip-reveal`, dans `/tmp/vestiges-audio-death-combat-20261010-01`. Douze ennemis apparus, attaques de l'Arc et une élimination avant la mort ; dix contrôles `DEATH_AUDIO` confirment zéro voix de run active, immédiatement puis pendant la séquence et le bilan en pause jusqu'à huit secondes. Bilan capturé et inspecté. La première prise de huit secondes, avant les premiers ennemis, reste dans `/tmp/vestiges-audio-death-capture-20261010-01`. Ces captures utilisent le driver audio factice : l'arrêt des lecteurs est vérifié, sans prétendre à une écoute du mix.
+
+## Revue de mix — 10 octobre (soir)
+
+Demande de Raphaël : « baisse le volume des armes du joueur, il est sur-mixé », puis « une grosse passe pour identifier ce qui va et ce qui ne va pas ». Sons d'attaque des armes passés de −14 à −20 dB et impacts de −3 dB avant la revue (committé avec `6d2f4e86`) ; la Sacoche de lettres, arrivée ensuite, alignée à −20 dB. **La revue montre que ce n'était probablement pas le bon coupable** (ci-dessous).
+
+### Méthode
+
+- **Banque entière** (142 fichiers) : sonie momentanée maximale (EBU R128, 400 ms) pour les sons courts, intégrée pour les musiques et nappes, crête vraie, échantillons saturés, silence de tête et de queue, centroïde spectral, part des basses, corrélation gauche/droite et perte en mono. Le « niveau effectif » ajoute le `volume_db` de la banque et le décalage passé à l'appel.
+- **Run enregistrée** : `tools/record_run_audio.sh` avec `--audio-stems`, 300 s, seed 221092026, Traqueur, bot invincible, jusqu'au début de la première Résurgence ; 5 275 événements tracés.
+- **Resynthèse par famille** : chaque son tracé rejoué à son gain sur une piste par famille. Elle retrouve la sonie de la piste d'effets réelle à 0,2 dB près (−15,9 contre −15,7 LUFS) et celle d'un passage de combat à 0,0 dB près ; on peut donc lui faire dire qui pèse quoi.
+- **Code** : bus, pools, appels et décalages relus (rapport d'agent, lecture seule).
+- Scripts et venv (NumPy, SciPy, pyloudnorm, soundfile) hors dépôt, dans le dossier temporaire de la session ; aucun son écouté par l'agent.
+
+### Ce que pèse chaque famille dans la run
+
+| Famille | Intégrée | Court terme p50 / p95 |
+|---|---|---|
+| Effets, total | −15,7 LUFS | −19,6 / −12,8 |
+| dont `sfx_ombre_attaque` seul | **−15,6** | −24,0 / −16,5 |
+| dont autres sons d'ennemis | −22 à −33 | — |
+| dont impacts et critiques des armes | −34,2 | −40,0 / −30,6 |
+| dont attaques des armes | **−49,1** | −51,1 / −47,9 |
+| Pas | −34,2 | −39,8 / −29,9 |
+| XP | −40,9 | — |
+| Musique (après bus −6 dB) | ≈ −22,5 | — |
+| Ambiance (après bus −8 dB) | ≈ −33 | audible 21 % du temps |
+| Mixage complet | −16,2 LUFS | crête **+0,2 dBFS, 140 échantillons saturés** |
+
+### Ce qui ne va pas, par gravité
+
+1. **`sfx_ombre_attaque` fait à lui seul presque tout le volume des effets.** C'est le coup porté au joueur par l'Ombre, le Charognard et le Rampant d'ombre (`attack_audio`, appel à −7 dB) : 167 fois en 5 min, fichier saturé (28 échantillons à 0 dBFS, crête vraie +0,3), joué à 0 dB de banque. C'est un « wouch » de coup : il est probablement ce qui sonne comme « les armes trop fortes ». Le bot invincible encaisse plus qu'un joueur, mais l'écart reste énorme : 33 dB au-dessus des attaques d'armes.
+2. **Les attaques des armes du joueur sont devenues presque inaudibles** : −49 LUFS, 15 dB sous les impacts et 27 dB sous la musique. Les fichiers sont eux-mêmes inégaux (16 dB d'écart momentané entre la Lanterne ou la Masse et la Fronde ou l'Arc).
+3. **Le coup critique saute de 11 à 20 dB** : `sfx_hit_critique` (0 dB, crête −3 dBFS) remplace l'impact par matière (−13/−15 dB).
+4. **La révélation de coffre est le son le plus fort de la run** (−6,6 LUFS momentanés, 3,5 dB au-dessus du combat le plus dense) **et sature la sortie à chaque coffre** : fichier écrêté (82 échantillons), 0 dB, aucun limiteur. Les 140 échantillons saturés du mixage tombent tous sur les cinq coffres.
+5. **Aucun limiteur ni compresseur** sur aucun bus. Fichiers écrêtés à la source : `sfx_ombre_attaque`, `sfx_orage_proche` (93), `sfx_chest_reveal` (82).
+6. **Pas incohérents selon le sol** : 22 dB d'écart (eau −17, béton −29, gravier −29, bois −34, herbe −39). `sfx_pas_herbe` concentre 98 % de son énergie sous 120 Hz (centroïde 22 Hz) : inaudible sur haut-parleurs de portable. Ses 0,73 s de silence de queue avec une seule voix bloquent les pas suivants (136 refus sur 250 demandes).
+7. **Silences de tête** : 50 à 90 ms sur sept sons d'armes (fronde, tuyau, couperet, fouet, bâton, lame du Néant, dessin), donc une attaque qui sonne en retard. 140 à 675 ms sur des annonces : `sfx_resurgence_accent` 675 ms, vague et éclair de l'Indicible, chaîne de la Barrière. Une annonce doit partir à l'instant.
+8. **Musiques à niveaux non maîtrisés** : intégrées de −13,9 (Résurgence) à −18,6 LUFS (annonce), soit +4 dB en entrant en Résurgence sans que ce soit réglé. `mus_jour_exploration` commence par 4,2 s de silence et `mus_hub` par 2,2 s, ce qui laisse un trou après chaque fondu de 3 s. Combat, Résurgence et nuit ont 82 à 91 % de leur énergie sous 120 Hz : elles disparaissent sur petits haut-parleurs et masquent les impacts graves.
+9. **Phase** : quatre fichiers stéréo en opposition partielle (corrélation négative) perdent 4 à 6 dB en mono (téléphone, Steam Deck, un seul haut-parleur) : `sfx_weapon_drop`, `sfx_artefact_trouve`, `sfx_bord_effacement_proche`, `sfx_sante_basse`.
+10. **Récompenses déséquilibrées** : `sfx_artefact_trouve` −9 contre `sfx_souvenir_trouve` −33, soit 24 dB entre deux trouvailles. `sfx_level_up_after` et `sfx_perk_choix` pèsent 18 % de l'énergie des effets à eux deux.
+11. **Code** : le filtre d'étouffement (mort, Mémorial) s'applique aussi à l'interface, qui joue sur le bus SFX. Il n'y a ni spatialisation ni atténuation à distance (porte nette à 650 px pour les actions ennemies). Les boucles démarrent et s'arrêtent sans fondu. `sfx_danger_building` est joué deux fois au même événement. 16 sons de la banque ne sont jamais appelés (13 attaques génériques, `sfx_boss_enrage`, `sfx_boss_death`, `sfx_projectile_vol`).
+
+### Ce qui va
+
+- **Architecture saine** : priorités, voix par clé et cadence tiennent la densité. 463 impacts contondants refusés sans trou audible, et 7 dB seulement entre médiane et 95e centile des effets : la foule ne fait pas exploser le volume.
+- **Mixage global dans la norme PC** : −16,2 LUFS intégrés.
+- **Sons de l'Indicible et de la Barrière cohérents** : −20 à −33 effectifs, propres, compatibles mono.
+- **Musique bien pilotée** : fondu à puissance constante, points d'entrée, combat réservé aux pics. Musique et effets restent séparables.
+- **Ambiance de forêt** stable à −25 LUFS, cantonnée à son biome.
+- **Outillage rare pour un jeu indépendant** (trace, pistes séparées, enregistrement moteur) : il a rendu cette revue possible sans écouter.
+
+### Écoute à faire
+
+Page locale hors dépôt, régénérable par les scripts de la revue : même passage de début de Résurgence (22 s) en **réel**, **A** actuel, **B** Ombre −8 dB, **C** B + attaques d'armes à −14, **D** B + attaques d'armes à −8. On y trouve aussi les sons suspects isolés à leur niveau en jeu. Question : quelle version, et l'Ombre est-elle bien le son « trop fort » entendu ?
+
+### Lots proposés (rien n'est codé)
+
+- **X1 — sécurité, sans décision artistique** : limiteur sur Master (plafond −1 dB) ; trois fichiers écrêtés ramenés à −1 dBTP ; silences de tête retirés (sons d'armes, annonces) ; quatre fichiers en opposition de phase rendus compatibles mono ; silence d'entrée des musiques sauté par un point d'entrée. Vérification : nouvelle prise même seed, zéro échantillon saturé, sonie par famille avant/après.
+- **X2 — hiérarchie, selon l'écoute** : gain de l'Ombre ; attaques d'armes remontées et égalisées entre elles (cible commune momentanée) ; critique ramené à +4/+6 dB au-dessus de l'impact ; coffre −6 dB ; pas égalisés (cible commune, herbe à remplacer ou à filtrer) ; trouvailles rapprochées.
+- **X3 — musique** : niveaux des sept morceaux alignés (cible −16 LUFS ±1 ou écarts voulus écrits dans `music.json`), éventuellement un passe-haut léger sur les morceaux les plus graves.
+- **X4 — bus** : bus UI séparé, hors étouffement ; compresseur doux sur SFX ; ducking léger de la musique sur les gros événements ; atténuation progressive à distance au lieu de la porte de 650 px.
+- **X5 — ménage** : 16 sons jamais appelés retirés ou branchés ; doublon de `sfx_danger_building`.
+
+### X1–X5 livrés — 10 octobre (soir)
+
+Raphaël valide toutes les propositions et remarques de la revue, sans écoute intermédiaire ([DECISIONS §107](DECISIONS.md)). Un seul lot, une seule passe finale.
+
+**Fichiers** (sha256 et traitement notés dans `assets/audio/CREDITS.json`) :
+- silences de tête retirés (seuil −50 dBFS, 3 ms gardés, 2 ms de fondu) : six attaques d'armes (47 à 83 ms), dissolution, dash, tir ennemi, quatre annonces de boss, accent de Résurgence (441 ms) ;
+- polarité du canal droit inversée sur quatre fichiers en opposition de phase ;
+- pas d'herbe filtré sous 60 Hz et ramené à −6 dBFS de crête, 0,6 s de silence de queue retiré ; pas de bois +6 dB ; souvenir trouvé +14 dB ;
+- musiques : silence de tête d'exploration (1,35 s) et du Hub (0,61 s), de queue du Hub et de l'annonce (2,15 s), retirés et réencodés en Vorbis q6 ; introduction quasi muette restante sautée par `start_sec` (hub 1,6 s, exploration et accalmie 2,8 s, combat 1,0 s), la boucle repart du début du fichier ;
+- trois sons morts supprimés (`boss_enrage`, `boss_death`, `sfx_projectile_vol`). Les douze attaques génériques sortent de la banque, mais leurs fichiers restent : `tools/prepare_weapon_audio.py` s'en sert comme matière des sons d'armes.
+
+**Banque** : gains calculés sur la sonie momentanée maximale de chaque fichier. Effectif = sonie + banque + décalage d'appel.
+
+| Famille | Cible effective |
+|---|---|
+| Attaques des 25 armes | −40 (banque −1 à −17,5) |
+| Impacts par matière | −38 |
+| Critique | −33 |
+| Coup générique | −38 |
+| Pas, tous sols | −35 |
+| Musiques (intégrée) | −16 LUFS ; Résurgence et nuit −15 |
+
+Réglages fixes : Ombre −10, tir de Sentinelle −7, coffre révélé −8, boucle et suite du niveau −6 et −8, choix −4, niveau −3, artefact −6. Ducking déclaré dans la banque (`duck_music_db`, `duck_sec`) pour neuf grands moments : coffre, niveau, trouvailles, accent de Résurgence, fragment rare, défaites de la Barrière et de l'Indicible, réveil du Mémorial.
+
+**Code** :
+- `AudioManager` : bus `World`, sous-bus de SFX réglé par le même curseur, qui porte tous les sons du monde. Seul ce bus est étouffé à la mort et au Mémorial : l'interface reste nette. Il est aussi compressé doucement (−18 dB, 3:1).
+- Limiteur sur Master (plafond −1 dB).
+- Ducking de la musique par un amplificateur sur Music : attaque 0,08 s, tenue, retour en 0,8 s, remis à zéro à la mort.
+- Boucles (choix, santé basse, bord, météo) en fondu d'entrée de 0,35 s et de sortie de 0,5 s ; fond de forêt en fondu d'entrée de 1,2 s ; arrêt net conservé à la mort.
+- Branche morte `resurgence`/`the_call` retirée : c'est elle qui portait le doublon de `sfx_danger_building`.
+- `Enemy.PlayNearbyAudio` : plein niveau jusqu'à 250 px, puis −14 dB en courbe douce jusqu'au rayon muet de 650 px, au lieu de la porte nette.
+- `AudioStemRecorder` isole les pas sur le bus `World`.
+- Relecture `godot-reviewer` : deux constats corrigés. Une boucle redemandée pendant son fondu de sortie remonte depuis le niveau atteint au lieu de repartir du début. L'amplificateur de ducking est remis à 0 dB quand l'autoload quitte l'arbre.
+
+**Mesures**, même seed 221092026, Traqueur, 300 s, bot invincible.
+
+| | Avant | Après |
+|---|---|---|
+| Mixage complet | −16,2 LUFS, crête +0,2 dBFS, **140 échantillons saturés** | −20,5 LUFS, crête −2,1 dBFS, **0 saturé** |
+| Piste d'effets | −15,7 | −23,8 (pas compris) |
+| Musique (avant bus) | −16,5 | −16,0 |
+| Pas d'herbe refusés faute de voix | 136 sur 250 | 3 sur 195 |
+
+Par famille, nouvelle banque sur la même trace qu'avant (resynthèse, sans compresseur ni atténuation à distance) :
+
+| Famille | Avant | Après |
+|---|---|---|
+| Ombre | −15,6 | −25,6 |
+| Attaques des armes | −49,1 | −37,2 |
+| Impacts et critiques | −34,2 | −35,7 |
+| Autres ennemis | −24,9 | −25,1 |
+| Pas | −34,3 | −35,5 |
+| Écrans et récompenses | −13,8 | −20,0 |
+
+Les armes passent de 33 dB sous le coup de l'Ombre à 12 dB au-dessus. La prise « après » vient du worktree de la branche, sans les réglages d'équilibrage non committés de la prise « avant » : sa trace diffère (4 714 événements contre 5 275). Seule la comparaison par resynthèse est à trace égale.
+
+**Contrôles** : build sans avertissement ; `tools/validate.sh … smoke audio music` 3/3, avec les nouveaux contrôles (limiteur, bus World compressé, étouffement du monde seul, ducking et retour, fondus d'entrée et de sortie des boucles et de la forêt). Aucun son écouté par l'agent.
+
+**À juger en jouant** : le mixage est plus calme de 4 dB. La musique est maintenant légèrement au-dessus des effets (−22 contre −23,8 LUFS dans le mix) : à remonter par la banque si le combat manque de corps.
+
+### X6 — garde-fous et finitions, livré le 11 octobre
+
+Demande de Raphaël après X1–X5 : s'attaquer aux axes restants. Lot sans décision artistique.
+
+- **Garde-fous du mix** : `tools/audio_bank_audit.py`, avec FFmpeg et la bibliothèque standard de Python seulement, mesure les 127 fichiers de la banque. Il applique `data/audio/mix_targets.json` :
+  - cibles par famille : attaques d'armes −40, impacts −38, critique −33, coup générique −38, pas −35, musiques −15,5 LUFS ±1,5 ;
+  - plafond à −10 pour tout son ponctuel ;
+  - silence de tête de 30 ms au plus, montées voulues exemptées ;
+  - corrélation gauche/droite positive.
+
+  Un écart fait échouer `tools/test_audio.sh` et indique la correction de `volume_db` à faire. Vérifié par l'absurde : coffre remis à 0 dB et Fronde à −14, deux échecs nets. Les trois fichiers écrêtés à la source (Ombre, orage, coffre) restent signalés en avertissement.
+- **Variation de volume** : `volume_variance_db` dans la banque, tirée à chaque lecture admise. 44 sons répétés : attaques et impacts ±1,5 dB, pas ±2, XP, critique, Ombre, Rôdeur, terrier et bond ±1, dissolution et coup générique ±1,5. Contrôle de régression ajouté ; le contrôle de banque GDScript tolère l'écart déclaré.
+- **Réglages** : un fichier de réglages sans clé Musique ou Ambiance reprend désormais le niveau d'un profil neuf (−6 et −8 dB), au lieu de 100 % et 70 %.
+- **Outil des sons d'armes** : `tools/prepare_weapon_audio.py` propose pour chaque candidat le gain qui l'amène à la cible des attaques, au lieu d'un −20 dB fixe.
+
+**Contrôles** : build sans avertissement, `tools/validate.sh … smoke audio music` 3/3 (contrôle du mix : 127 fichiers, 0 échec, 3 avertissements).
+
+**Encore ouvert, à décider ou écouter par Raphaël** :
+1. Curseurs Musique et Ambiance affichés à 50 % et 40 % dans un profil neuf : passer la baisse dans le mix interne pour qu'ils s'affichent à 100 %, avec migration des réglages enregistrés.
+2. Remplacer les trois fichiers écrêtés à la source par des versions propres : la distorsion est dans le fichier, le gain ne l'enlève pas.
+3. Spatialisation stéréo légère des coups et des ennemis selon leur position à l'écran.
+4. Basses très présentes dans les musiques de combat et de nuit (82 à 91 % de l'énergie sous 120 Hz).
+5. Quatre sons manquants : soin, bouclier rechargé, annonce du tir visé, réveil de la Faille.
+
+### X7 — curseurs à 100 % et placement à l'écran, livré le 11 octobre
+
+Demande de Raphaël ([DECISIONS §111](DECISIONS.md)).
+
+- **Curseurs** : Master, Musique, Effets et Ambiance valent 100 % sur un profil neuf. L'équilibre du mix vit hors des curseurs, dans un amplificateur sur chaque bus : musique −6 dB (le même amplificateur porte le ducking), ambiance −8 dB.
+  - Les réglages enregistrés avant (sans `mix_version`) sont convertis en gardant le niveau entendu : l'ancien défaut de 50 % devient 100 %, une ambiance réglée à 20 % passe à 50 %. La version 2 est écrite à la sauvegarde.
+- **Placement gauche/droite** : `AudioManager.PlayAt(clé, position)` choisit l'un de cinq bus orientés selon la position de la source à l'écran. Ils sont envoyés au bus du monde, donc étouffés et compressés avec lui.
+  - Positions : panoramique ±0,25 au-delà de 20 % de la demi-largeur, ±0,5 au-delà de 60 %.
+  - Sons placés : impacts et critiques sur les créatures, coups au contact, actions des créatures (tirs, cris, terrier, crachat), bond, Présage, dissolution à la mort, poings de la Barrière, éclairs et mains de l'Indicible.
+  - Les sons du joueur, les annonces globales et l'interface restent au centre.
+- **Contrôles** : `tools/validate.sh … smoke audio music` 3/3, puis `enemy_abilities indicible` 2/2. Nouveaux contrôles : curseurs à 100 % en profil neuf, équilibre de l'ambiance hors curseur, conversion des anciens réglages sans double conversion, choix du bus selon la position, bus orientés envoyés au monde, impact à droite joué à droite, ducking relatif à l'équilibre.
+
+### X8 — planche des sons manquants et de la blessure, 11 octobre (à écouter)
+
+Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les quatre sons manquants, et remplacer la blessure du joueur, qu'il n'aime pas.
+
+`~/.local/share/vestiges-audio/2026-10-11/propositions/index.html` (hors dépôt) propose 39 candidats sur cinq besoins :
+
+| Besoin | Synthèses originales | Sources CC0 |
+|---|---|---|
+| Blessure | 4 | 5 |
+| Soin | 3 | 4 |
+| Bouclier rechargé | 3 | 4 |
+| Tir visé | 3 | 4 |
+| Faille | 3 | 4 |
+
+- **Sources CC0** : BigSoundBank (Joseph Sardin), Kenney (RPG Audio, Impact Sounds), OpenGameArt (Still North Media, Ogrebane, qubodup, Independent.nu, Spring Spring), plus quelques superpositions. Les sources refusées le 10 octobre sont écartées.
+- Tous les candidats sont amenés à la même sonie (−20 LUFS momentanés), pour comparer le timbre et non le volume.
+- La blessure se réécoute aussi dans une scène de combat de 6 s au niveau du jeu : Résurgence, arc, impacts, coups d'Ombre. Le son actuel est donné en référence, comme celui de la Faille.
+- Sources archivées avec leurs pages et licences (`sources/`, `License.txt` de Kenney), synthèses reproductibles (`synth.py`, graine fixe), découpes et empreintes dans `manifest.json`, choix gardés dans le navigateur avec export `choix-sons-2026-10-11.json`.
+- Aucun son n'a été écouté par l'agent ; rien n'est intégré.
+
+**Après le choix :** intégrer le son retenu au gain cible de sa famille (contrôlé par `tools/audio_bank_audit.py`), puis brancher les déclencheurs manquants : soin notable avec cadence bornée, bouclier revenu au plein, visée des créatures à distance (placée à l'écran), réveil de la Faille.
+
+**Retour du 11 octobre sur X8 ([DECISIONS §112](DECISIONS.md))** : le « son de blessure » métallique entendu en jeu était le coup de la créature, joué en même temps que la blessure. Retiré : un coup au contact ne joue plus que la blessure, et les trois sons de contact, devenus inutiles, sont supprimés. La planche ajoute un diagnostic (blessure seule, coup d'Ombre seul, les deux) ; ses scènes de combat, où la blessure était encore couverte, sont refaites sans le coup de créature.
+
+**Choix du 11 octobre ([DECISIONS §113](DECISIONS.md)), intégrés :**
+- **Blessure :** son actuel gardé.
+- **Soin et bouclier rechargé :** sans son, besoins clos. Les trois créations de soin d'après la référence de Raphaël restent archivées hors dépôt (`2026-10-11/soin/`).
+- **Tir visé :** C (`sfx_aim_warning`), lu par la capacité `aimed_shot` (`aim_audio` dans le contrat, valeur par défaut). `AudioManager.PlayAt(…, endsAfter)` le fait partir à la longueur du fichier moins la visée, pour qu'il culmine au tir (0,35 s pour la Tisseuse, 0,4 et 0,8 s pour le Hurleur). Gain visé −24 effectif, comme les autres annonces de créatures.
+- **Réveil de la Faille :** G (`sfx_rift_wake`), joué par `RiftDirector` au réveil, ducking −4 dB pendant 2 s, gain visé −20 effectif.
+- Le contrôle de la banque a refusé un premier fichier du tir visé (117 ms de silence de tête), retiré.
+- Contrôles : `smoke audio music enemy_abilities` 4/4, dont un nouveau contrôle du départ calé du tir visé.

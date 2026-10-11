@@ -1,6 +1,6 @@
 # Plan 04 — Interfaces lisibles et vraie préparation d'exploration
 
-Statut : **refonte P1–P3 livrée et vérifiée sur `codex/refonte-menus` (§8), recette artistique en jeu ouverte** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
+Statut : **refonte P1–P7 livrée et vérifiée sur `codex/refonte-menus` (§8–9), recette artistique en jeu ouverte** · Priorité : P1 · Dépendances : cadrage 08, catégories 05/06.
 Références : V2 §15–18 ; Bible §9 ; [dossier](README.md).
 
 **Menus du Hub, 10 octobre 2026 :** la page Chroniques et son entrée sont supprimées à la demande de Raphaël. Menu à cette étape : Partir, Personnages, Quêtes, Collection, Paramètres, Quitter. Le parcours de production du §8 le remplace ensuite. Les quêtes accomplies utilisent une médaille pixel art originale ; le premier sceau est remplacé après le retour de Raphaël sur sa lisibilité, au [plan 06 Q3d](06-personnages-quetes-defis.md#q3d--lisibilité-de-licône-de-complétion--10-octobre-2026), décision §100.
@@ -659,3 +659,7 @@ Validation générale **15/15 suites**, build **0 warning, 0 erreur** ; après l
 Huit scénarios dans Main puis cinq reprises visuelles ont passé : pause, cascade de niveaux, Mémorial, Faille, Atelier, butin, journal et bilan. Captures 1280×720 et 1920×1080 inspectées, dont texte agrandi à 130 %, profil neuf et longues listes de gains. La Faille a été recapturée après le dernier ajustement pour montrer les trois offres et leurs contreparties en entier. Le parcours mort réelle → bilan → Rejouer → autre personnage → nouvelle run jouable a passé.
 
 [Rapport, captures et logs conservés](../audits/menus-2026-10-11/README.md). Les états denses sont des fixtures explicites ; les neuf annonces de quête du bilan ne représentent pas neuf quêtes réellement accomplies. Entrées manette injectées, pas d'essai sur manette physique. Pas de conclusion de FPS ni de validation artistique au nom de Raphaël. Les lots demandés sont terminés sur la même branche, sans fusion vers main.
+
+### 9.3 Préparation de la PR — 11 octobre 2026
+
+À la demande de Raphaël, PR préparée depuis la même branche. Synchronisation avec `origin/main` (`6a353705`) : conflits limités à quatre documents, autres chantiers conservés et décisions des menus renumérotées §114–115. Après synchronisation : **16/16 suites** (quinze suites générales et audio), build **0 warning, 0 erreur**, aucune source modifiée pendant les tests. [Preuves](../audits/menus-2026-10-11/README.md#vérification-avant-pr-après-synchronisation-avec-main). Cette préparation n'intègre pas la refonte dans main.

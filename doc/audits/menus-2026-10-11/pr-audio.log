@@ -1,0 +1,94 @@
+Build et import partagés avec le lanceur global.
+[AudioMixRegression] OK pool plein : une voix ordinaire attend
+[AudioMixRegression] OK blessure prioritaire : remplace une voix ordinaire
+[AudioMixRegression] OK l'alerte existante reste audible
+[AudioMixRegression] OK limite simultanée : une seule alerte identique
+[AudioMixRegression] OK le test réemploie le lecteur en fondu
+[AudioMixRegression] OK ancien fondu annulé au réemploi
+[AudioMixRegression] OK Format8Bits mono : trois secondes entières en boucle
+[AudioMixRegression] OK stream partagé : bornes et mode conservés
+[AudioMixRegression] OK Format16Bits mono : trois secondes entières en boucle
+[AudioMixRegression] OK stream partagé : bornes et mode conservés
+[AudioMixRegression] OK Format8Bits stéréo : trois secondes entières en boucle
+[AudioMixRegression] OK stream partagé : bornes et mode conservés
+[AudioMixRegression] OK Format16Bits stéréo : trois secondes entières en boucle
+[AudioMixRegression] OK stream partagé : bornes et mode conservés
+[AudioMixRegression] OK le témoin de forêt teste le format QOA importé
+[AudioMixRegression] OK QOA : 384 000 échantillons malgré les 310 208 octets compressés
+[AudioMixRegression] OK survol UI limité même hors pause
+[AudioMixRegression] OK confirmation audible pendant la pause
+[AudioMixRegression] OK boucle : entrée en fondu, pas d'un coup
+[AudioMixRegression] OK gain de banque appliqué aux boucles au terme du fondu
+[AudioMixRegression] OK boucle : sortie en fondu, pas d'un coup
+[AudioMixRegression] OK boucle : arrêtée au terme du fondu de sortie
+[AudioMixRegression] OK Master : limiteur de sortie
+[AudioMixRegression] OK monde : sous-bus compressé des effets, réglé par le curseur Effets
+[AudioMixRegression] OK étouffement : le monde seulement, l'interface reste nette
+[AudioMixRegression] OK étouffement retiré
+[AudioMixRegression] OK coffre révélé : musique baissée de 5 dB sous son équilibre de −6
+[AudioMixRegression] OK ducking : la musique revient à son équilibre après le moment
+[AudioMixRegression] OK profil neuf : curseur Master à 100 %
+[AudioMixRegression] OK profil neuf : curseur Music à 100 %
+[AudioMixRegression] OK profil neuf : curseur SFX à 100 %
+[AudioMixRegression] OK profil neuf : curseur Ambiance à 100 %
+[AudioMixRegression] OK ambiance : équilibre de −8 dB hors curseur
+[AudioMixRegression] OK anciens réglages : l'ancien défaut devient 100 %, un réglage plus bas garde son niveau entendu
+[AudioMixRegression] OK réglages version 2 : relus sans seconde conversion
+[AudioMixRegression] OK placement : centre, gauche et droite selon la position à l'écran
+[AudioMixRegression] OK placement : bus orientés envoyés au monde, donc étouffés et compressés avec lui
+[AudioMixRegression] OK impact à droite de l'écran joué à droite
+[AudioMixRegression] OK impact répété : volume varié de ±1,5 dB autour de la banque
+[AudioMixRegression] OK Boîte : cinq notes admises, jamais deux identiques à la suite
+[AudioMixRegression] OK Boîte : notes justes, aucun désaccordage aléatoire
+[AudioMixRegression] OK Boîte : cadence et plafond communs, refus sans avancer le tirage
+[AudioMixRegression] OK Boîte : fondu UI appliqué aussi à une variante
+[AudioMixRegression] OK premier coup résolu : blessure audible sans état HP préalable
+[AudioMixRegression] OK bouclier et dommage non appliqué : aucun son de blessure
+[AudioMixRegression] OK Néant : brûlure seule, sans blessure ni accent critique
+[AudioMixRegression] OK Néant : cadence bornée même sur deux demandes rapprochées
+[AudioMixRegression] OK Néant : nouvelle tranche audible après l'intervalle
+[AudioMixRegression] OK annonce : aucun accent de début de crise prématuré
+[AudioMixRegression] OK début réel de Résurgence : accent choisi
+[AudioMixRegression] OK armure sans réduction : pas de parade sonore
+[AudioMixRegression] OK coup ignoré : parade choisie audible sans pool de particules
+[AudioMixRegression] OK tir visé : le grincement part en cours pour culminer au tir
+[AudioMixRegression] OK biome inconnu au départ : aucun fond de forêt
+[AudioMixRegression] OK urban_ruins : aucun démarrage du fond de forêt
+[AudioMixRegression] OK wild_fields : aucun démarrage du fond de forêt
+[AudioMixRegression] OK swamp : aucun démarrage du fond de forêt
+[AudioMixRegression] OK collapsed_quarry : aucun démarrage du fond de forêt
+[AudioMixRegression] OK entrée en forêt : le fond entre en fondu
+[AudioMixRegression] OK entrée en forêt : fond complet à −2 dB
+[AudioMixRegression] OK biome identique : ni redémarrage ni nouveau tirage
+[AudioMixRegression] OK forêt : les oiseaux accompagnent le fond
+[AudioMixRegression] OK sortie vers urban_ruins : fond éteint et pas de nouveaux oiseaux
+[AudioMixRegression] OK retour en forêt : le fond revient
+[AudioMixRegression] OK sortie vers wild_fields : fond éteint et pas de nouveaux oiseaux
+[AudioMixRegression] OK retour en forêt : le fond revient
+[AudioMixRegression] OK sortie vers swamp : fond éteint et pas de nouveaux oiseaux
+[AudioMixRegression] OK retour en forêt : le fond revient
+[AudioMixRegression] OK sortie vers collapsed_quarry : fond éteint et pas de nouveaux oiseaux
+[AudioMixRegression] OK retour en forêt : le fond revient
+[AudioMixRegression] OK sortie vers  : fond éteint et pas de nouveaux oiseaux
+[AudioMixRegression] OK retour en forêt : le fond revient
+[AudioMixRegression] OK biomes non forestiers successifs : le fondu de sortie ne repart pas à zéro
+[AudioMixRegression] OK retour rapide : l'ancien fondu ne coupe pas le fond
+[AudioMixRegression] OK hors forêt : météo audible, sans réactiver le fond de forêt
+[AudioMixRegression] OK nouvelle run : l'ancien biome ne suffit pas à lancer la forêt
+[AudioMixRegression] OK ambiance démarrée en exploration
+[AudioMixRegression] OK forêt : la boucle du lecteur couvre les huit secondes
+[AudioMixRegression] OK tonnerre : la boucle contexte couvre les 6,08 secondes
+[AudioMixRegression] OK retour exploration : ancien fondu annulé
+[AudioMixRegression] OK Hub : arrêt des ambiances de run
+[AudioMixRegression] OK avant mort : arme, ennemi, forêt, météo et boucle de choix actifs
+[AudioMixRegression] DEATH seed=221092026 before=7 at_death=0
+[AudioMixRegression] OK mort : arrêt immédiat des sept voix de monde et du son UI engagé
+[AudioMixRegression] OK mort : événements d'équipement tardifs sans son d'interface
+[AudioMixRegression] OK mort : demandes et événements tardifs restent muets
+[AudioMixRegression] OK bilan en pause : monde silencieux, audio dédié disponible
+[AudioMixRegression] OK la musique de mort garde son intention
+[AudioMixRegression] OK retour au Hub : aucune voix de monde résiduelle
+[AudioMixRegression] OK deuxième run : sons et ambiance réactivés sans ancienne météo
+[AudioMixRegression] OK deuxième run : aucun ancien fondu ne coupe l'ambiance
+[AudioMixRegression] OK gain de banque appliqué au fondu musical
+[AudioMixRegression] RESULT failures=0

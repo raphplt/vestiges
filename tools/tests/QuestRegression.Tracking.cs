@@ -340,9 +340,9 @@ public partial class QuestRegression
     {
         StartRun();
         _tracker._Process(601f);
-        _bus.EmitSignal(EventBus.SignalName.LevelUp, 20);
+        _bus.EmitSignal(EventBus.SignalName.LevelUp, 30);
         Check(!MetaSaveManager.HasCompletedQuest("against_the_clock") && MetaSaveManager.HasCompletedQuest("grow"),
-            "niveau 20 après la 10ᵉ minute : Grandir oui, Contre la montre non");
+            "niveau 30 après la 10ᵉ minute : Grandir oui, Contre la montre non");
         EndRun();
     }
 

@@ -31,7 +31,8 @@ func verify_bank() -> void:
         if player.stream not in streams or not player.playing:
             fail("Lecture absente : " + key)
             return
-        if not is_equal_approx(player.volume_db, float(entry.volume_db) - 2.0):
+        # Les sons répétés varient de ±volume_variance_db autour du gain de banque.
+        if absf(player.volume_db - (float(entry.volume_db) - 2.0)) > float(entry.get("volume_variance_db", 0.0)) + 0.001:
             fail("Gain incorrect : " + key)
             return
         if entry.min_interval_ms > 0:
