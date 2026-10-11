@@ -3,6 +3,8 @@ Le Rampant — ce qui se déplace sous le sol et surgit (Bible §6.2, plan 07 lo
 Hors de terre : une larve segmentée et basse, cuirassée de plaques de pierre et de mottes de terre, qui ondule. À
 l'avant, une gueule ronde à trois mandibules et deux yeux vert-acide enfoncés entre les plaques. Il surgit en se
 dressant, la gueule ouverte.
+Reprise du 11 octobre (plan 37 M4) : brun sur brun, il se lisait comme une bûche. Chair de larve blême entre des
+plaques d'ardoise sombres, mandibules d'os plus grandes.
 """
 from __future__ import annotations
 
@@ -19,15 +21,15 @@ FRAME_PIVOT = (24.0, 31.0)
 
 HIDE, PLATE, EARTH, MANDIBLE, MAW, EYE = range(6)
 MATERIALS = [
-    make_material("hide", "#6A5440"),
-    make_material("plate", "#7A7068"),
-    make_material("earth", "#5A4A3A"),
+    make_material("hide", "#CDB99C"),
+    make_material("plate", "#555C6A"),
+    make_material("earth", "#4C3A2E"),
     make_material("mandible", "#C9BFA6", contrast=0.6),
     make_material("maw", "#2B1B2A", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
 ]
 
-K = 2.2
+K = 2.4
 SEGMENTS = 6
 
 
@@ -59,9 +61,10 @@ def parts(l: Larva) -> list[Part]:
         center = roll @ center
         result += [
             Part(lambda p, c=center, r=radius: ellipsoid(p, c, (r, r * 0.8, r * 0.75)), HIDE),
-            # Plaque de pierre sur le dos, un peu de travers ; mottes de terre accrochées.
+            # Plaque de pierre sur le dos, un peu de travers, plus étroite que l'anneau : la chair blême se voit entre
+            # deux plaques. Mottes de terre accrochées.
             Part(lambda p, c=center, r=radius, i=index: ellipsoid(p, c + [0.4 * K * (-1) ** i, r * 0.55, 0.0],
-                                                                  (r * 0.9, r * 0.35, r * 0.7), rotation_z(0.2 * (-1) ** i)), PLATE),
+                                                                  (r * 0.75, r * 0.32, r * 0.42), rotation_z(0.25 * (-1) ** i)), PLATE),
         ]
         if index % 2 == 1:
             result.append(Part(lambda p, c=center, r=radius: sphere(p, c + [r * 0.7, r * 0.3, 0.0], r * 0.35), EARTH))
@@ -76,8 +79,8 @@ def parts(l: Larva) -> list[Part]:
     for angle in (0.3, 2.4, 4.4):
         spread = 1.0 + l.jaw * 0.8
         base = front + np.array([np.cos(angle) * radius * 0.45, np.sin(angle) * radius * 0.45, 0.0])
-        tip = base + np.array([np.cos(angle) * spread * 1.2 * K, np.sin(angle) * spread * 1.2 * K, 2.2 * K])
-        result.append(Part(lambda p, a=base, b=tip: capsule(p, a, b, 0.55 * K, 0.2 * K), MANDIBLE))
+        tip = base + np.array([np.cos(angle) * spread * 1.6 * K, np.sin(angle) * spread * 1.6 * K, 2.8 * K])
+        result.append(Part(lambda p, a=base, b=tip: capsule(p, a, b, 0.7 * K, 0.25 * K), MANDIBLE))
     return result
 
 

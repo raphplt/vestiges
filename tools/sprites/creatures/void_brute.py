@@ -4,6 +4,9 @@ Quadrupède massif et bas : son corps a absorbé des débris du monde. Une porti
 béton hérissée de ferraille sur le dos, un pied de chaise qui sort de l'épaule. La patte avant gauche est un pilier
 de béton, la droite de chair. Tête basse, soudée à une plaque de pierre ; trois yeux vert-acide qui ne s'alignent
 pas. Elle charge tête baissée (plan 07 lot B).
+Reprise du 11 octobre (plan 37 M4) : chair violacée uniforme, elle se lisait comme un ours violet. Chair à vif
+couturée, débris plus clairs et plus saillants : dalle de béton pâle, fers à béton rouillés plus épais et plus
+nombreux, portière rouge.
 """
 from __future__ import annotations
 
@@ -20,13 +23,13 @@ FRAME_PIVOT = (32.0, 47.0)
 
 FLESH, FLESH_DARK, CONCRETE, REBAR, DOOR, WOOD, STONE, MAW, EYE = range(9)
 MATERIALS = [
-    make_material("flesh", "#5E4A5E"),
-    make_material("flesh_dark", "#3A2C3E"),
-    make_material("concrete", "#8A8680"),
-    make_material("rebar", "#6A4A34", contrast=0.7),
-    make_material("door", "#8A3A2E"),
-    make_material("wood", "#6E5238"),
-    make_material("stone", "#6A6660"),
+    make_material("flesh", "#7A5258"),
+    make_material("flesh_dark", "#3E2830"),
+    make_material("concrete", "#ABA79E"),
+    make_material("rebar", "#A0603A", contrast=0.7),
+    make_material("door", "#A8402E"),
+    make_material("wood", "#94704A"),
+    make_material("stone", "#8E8A82"),
     make_material("maw", "#221A2A", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
 ]
@@ -69,9 +72,14 @@ def parts(b: Brute) -> list[Part]:
         # Dalle de béton enfoncée dans le dos, fers à béton tordus qui en sortent.
         Part(lambda p: rounded_box(p, at((-0.8 * K, 5.6 * K, -1.5 * K)), (4.2 * K, 1.3 * K, 5.0 * K), 0.3 * K,
                                    rotation @ rotation_z(0.25) @ rotation_y(0.3)), CONCRETE),
-        Part(lambda p: capsule(p, at((-2.0 * K, 6.4 * K, 1.0 * K)), at((-3.4 * K, 10.0 * K, 2.6 * K)), 0.35 * K), REBAR),
-        Part(lambda p: capsule(p, at((0.6 * K, 6.6 * K, -3.0 * K)), at((1.6 * K, 9.6 * K, -5.2 * K)), 0.35 * K), REBAR),
-        Part(lambda p: capsule(p, at((1.6 * K, 9.6 * K, -5.2 * K)), at((3.4 * K, 10.2 * K, -4.6 * K)), 0.3 * K), REBAR),
+        Part(lambda p: capsule(p, at((-2.0 * K, 6.4 * K, 1.0 * K)), at((-3.6 * K, 10.6 * K, 2.8 * K)), 0.5 * K), REBAR),
+        Part(lambda p: capsule(p, at((0.6 * K, 6.6 * K, -3.0 * K)), at((1.6 * K, 10.0 * K, -5.2 * K)), 0.5 * K), REBAR),
+        Part(lambda p: capsule(p, at((1.6 * K, 10.0 * K, -5.2 * K)), at((3.6 * K, 10.6 * K, -4.6 * K)), 0.45 * K), REBAR),
+        Part(lambda p: capsule(p, at((-3.4 * K, 6.2 * K, -4.0 * K)), at((-5.0 * K, 9.4 * K, -6.0 * K)), 0.45 * K), REBAR),
+        Part(lambda p: capsule(p, at((2.4 * K, 6.8 * K, 1.6 * K)), at((3.0 * K, 10.4 * K, 3.4 * K)), 0.45 * K), REBAR),
+        # Coutures sombres là où la chair a avalé les débris.
+        Part(lambda p: ellipsoid(p, at((3.8 * K, 1.6 * K, 2.0 * K)), (0.5 * K, 3.4 * K, 0.6 * K), rotation @ rotation_x(0.6)), FLESH_DARK),
+        Part(lambda p: ellipsoid(p, at((-3.2 * K, 3.2 * K, -4.6 * K)), (0.5 * K, 2.6 * K, 0.6 * K), rotation @ rotation_z(0.5)), FLESH_DARK),
         # Portière de voiture fondue dans le flanc droit, peinture rouge écaillée.
         Part(lambda p: rounded_box(p, at((-6.6 * K, 0.4 * K, -2.0 * K)), (0.6 * K, 3.0 * K, 4.4 * K), 0.4 * K,
                                    rotation @ rotation_z(-0.12)), DOOR),

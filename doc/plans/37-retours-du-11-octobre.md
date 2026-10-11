@@ -236,4 +236,29 @@ Raphaël a demandé d'enchaîner sans attendre la validation de la planche : la 
 - **Gameplay inchangé** : mêmes cadres et mêmes pieds pour les trois premiers ; la Tisseuse est plus petite à l'écran que l'ancienne (environ 30 px de large contre 40), son emprise de jeu ne change pas.
 - **Résultat** : [avant/après](planches/37-m4-ennemis.png), aperçus sur trois sols et capture en jeu.
 - **Vérifié** : aperçus regardés sur trois sols, capture du bestiaire en jeu ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs`, `ui_art` 4/4 ; régénération identique octet pour octet.
-- **Suite** : les huit autres créatures (Hurleur, Cracheur, Rampant, Sentinelle, Ombre, Rampant d'ombre, Tréant, Brute) après l'avis de Raphaël sur cette direction.
+- **Suite** : Raphaël valide la direction et demande les huit autres, « qualité max » (§17).
+
+## 17. Lot M4, seconde vague livrée : les huit autres créatures — 11 octobre 2026
+
+Raphaël : « ouais. essaie de revoir les autres ennemis qui ont besoin d'un upgrade visuel. fait la qualité max. »
+
+- **Constat**, même aperçu sur trois sols :
+  - le Hurleur, petit tube vert-de-gris, disparaissait dans l'herbe ;
+  - le Rampant se lisait comme une bûche brune ;
+  - la Sentinelle était une tige grêle ;
+  - le Tréant, une souche coiffée d'une boule verte ;
+  - la Brute, un ours violet ;
+  - le Cracheur, l'Ombre et le Rampant d'ombre restaient lisibles mais plats.
+- **Retenu** :
+  - **Hurleur** : chair livide veinée de lie-de-vin, un tiers plus grand, trois plis, lambeaux pendus au bord de la bouche verte, trois yeux. La cible prioritaire se voit de loin ;
+  - **Rampant** : larve blême entre des plaques d'ardoise plus étroites que les anneaux, mandibules d'os plus grandes, un peu plus grand ;
+  - **Sentinelle** : réverbère lisible. Socle de béton clair, fût de fonte rouillée envahi de bourrelets de chair, chapeau de lanterne en fonte sous lequel pend le bulbe de chair. Paupières entrouvertes au repos, les yeux se devinent. Plus haute qu'un humain ;
+  - **Tréant** : bois mort grisé fendu de noir, bouche creuse sous les deux nœuds verts, couronne de feuilles rousses en touffes avec de la mousse et des branches nues, tronc plus haut, bras plus longs et plus clairs ;
+  - **Brute** : chair à vif couturée au lieu du violet uniforme, dalle de béton pâle, cinq fers à béton rouillés plus épais, portière rouge, pied de chaise clair ;
+  - **Cracheur** : lambeaux d'une chemise délavée (il a été quelqu'un), poche de bile plus grosse avec un reflet humide, bras qui pendent devant le corps penché, tête et yeux plus grands ;
+  - **Ombre** : reflets irisés violet et cyan qui la détachent des sols sombres, yeux plus hauts sur leurs tiges, flaque un peu plus grande ;
+  - **Rampant d'ombre** : masque agrandi, traînées rouges plus vives (trois), membres un ton au-dessus du corps.
+- **Gameplay inchangé** : mêmes cadres, mêmes pivots, mêmes `sprite_feet_offset` ; seules les images changent.
+- **Hors champ** : l'Indicible et la Barrière, refaits le 10 octobre (plan 07 B3–B5) sur planches validées, ne sont pas touchés.
+- **Résultat** : [avant/après](planches/37-m4-ennemis-2.png), aperçus et les douze créatures en jeu.
+- **Vérifié** : aperçus regardés sur trois sols, planches de contrôle des quatre animations en huit directions, deux captures du bestiaire en jeu ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs`, `ui_art`.

@@ -3,6 +3,9 @@ La Sentinelle — un pilier organique ancré dans les ruines, comme un réverbè
 Un fût de chair et de béton planté sur des racines, courbé en crosse comme un lampadaire. La tête, là où serait la
 lanterne, porte des paupières : fermées au repos, elles s'ouvrent sur trois yeux vert-acide pour viser et tirer.
 Elle ne bouge pas.
+Reprise du 11 octobre (plan 37 M4) : tige vert-de-gris grêle, elle se perdait dans le décor. Le réverbère se lit
+désormais : socle de béton clair, fût de fonte rouillée envahi de bourrelets de chair, chapeau de lanterne en fonte
+sous lequel pend le bulbe de chair aux paupières.
 """
 from __future__ import annotations
 
@@ -17,17 +20,18 @@ from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, rounded_box, spher
 FRAME_SIZE = (32, 56)
 FRAME_PIVOT = (16.0, 52.0)
 
-FLESH, CONCRETE, ROOT, LID, RUST, EYE = range(6)
+FLESH, CONCRETE, ROOT, LID, RUST, EYE, IRON = range(7)
 MATERIALS = [
-    make_material("flesh", "#5A6A4E"),
-    make_material("concrete", "#8A8680"),
-    make_material("root", "#3E3428"),
-    make_material("lid", "#46503C"),
-    make_material("rust", "#6A3A24"),
+    make_material("flesh", "#A48C9C"),
+    make_material("concrete", "#A29E96"),
+    make_material("root", "#3A2832"),
+    make_material("lid", "#6A5266"),
+    make_material("rust", "#8A4E34"),
     make_emissive("eye", "#7FFF00"),
+    make_material("iron", "#3C404C"),
 ]
 
-K = 1.25
+K = 1.6
 
 
 @dataclass(frozen=True)
@@ -45,25 +49,30 @@ def parts(s: Pillar) -> list[Part]:
         return rotation @ np.array([x * K, y * K, z * K])
 
     neck = at(0.0, 26.0)
-    head = at(3.5, 28.5 - s.recoil, 3.5 + s.recoil)
+    head = at(1.2, 28.5 - s.recoil, 4.6 + s.recoil)
     result = [
-        # Fût : béton en bas (le réverbère d'origine), chair qui l'a envahi en haut.
-        Part(lambda p: capsule(p, at(0.0, 1.0), at(0.0, 12.0), 2.8 * K, 2.3 * K), CONCRETE),
-        Part(lambda p: rounded_box(p, at(0.0, 1.2), (3.4 * K, 1.2 * K, 3.4 * K), 0.4 * K, rotation), CONCRETE),
-        Part(lambda p: capsule(p, at(0.0, 10.0), neck, 2.4 * K, 1.8 * K), FLESH),
-        # Crosse du réverbère : la tête pend vers l'avant.
-        Part(lambda p: capsule(p, neck, head, 1.8 * K, 2.0 * K), FLESH),
-        Part(lambda p: ellipsoid(p, head, (3.6 * K, 2.6 * K, 3.4 * K), rotation), FLESH),
-        # Traces de rouille et d'anciennes fixations.
-        Part(lambda p: ellipsoid(p, at(1.6, 7.0, 1.8), (1.0 * K, 1.8 * K, 0.6 * K), rotation), RUST),
+        # Socle de béton du réverbère d'origine, fût de fonte rouillée.
+        Part(lambda p: rounded_box(p, at(0.0, 1.4), (3.6 * K, 1.4 * K, 3.6 * K), 0.4 * K, rotation), CONCRETE),
+        Part(lambda p: capsule(p, at(0.0, 2.0), at(0.0, 6.0), 2.9 * K, 2.4 * K), CONCRETE),
+        Part(lambda p: capsule(p, at(0.0, 5.0), neck, 1.5 * K, 1.2 * K), RUST),
+        # Bourrelets de chair qui ont envahi le fût, de plus en plus serrés vers le haut.
+        Part(lambda p: ellipsoid(p, at(0.3, 11.0, 0.2), (3.1 * K, 3.4 * K, 2.9 * K), rotation), FLESH),
+        Part(lambda p: ellipsoid(p, at(-0.4, 17.0, 0.0), (2.8 * K, 3.8 * K, 2.6 * K), rotation), FLESH),
+        Part(lambda p: ellipsoid(p, at(0.5, 22.5, 0.4), (2.4 * K, 2.6 * K, 2.3 * K), rotation), FLESH),
+        # Crosse du réverbère : la tête pend vers l'avant, sous un chapeau de lanterne en fonte.
+        Part(lambda p: capsule(p, neck, head + rotation @ np.array([0.0, 3.6 * K, -1.0 * K]), 1.2 * K, 1.0 * K), RUST),
+        Part(lambda p: ellipsoid(p, head + rotation @ np.array([0.0, 3.4 * K, -0.4 * K]), (3.6 * K, 1.1 * K, 3.4 * K), rotation), IRON),
+        Part(lambda p: capsule(p, head + rotation @ np.array([0.0, 4.2 * K, -0.4 * K]), head + rotation @ np.array([0.0, 5.6 * K, -0.4 * K]),
+                               1.1 * K, 0.4 * K), IRON),
+        Part(lambda p: ellipsoid(p, head, (3.8 * K, 3.0 * K, 3.6 * K), rotation), FLESH),
     ]
     # Paupières : elles se rétractent pour découvrir les yeux.
-    eyes = [(1.4, 0.2, 0.75), (-1.2, 0.8, 0.6), (0.2, -1.0, 0.55)]
+    eyes = [(1.4, 0.2, 1.05), (-1.3, 0.7, 0.85), (0.2, -1.3, 0.75)]
     for x, y, radius in eyes:
-        center = head + rotation @ np.array([x * K, y * K, 2.8 * K])
+        center = head + rotation @ np.array([x * K, y * K, 3.0 * K])
         result.append(Part(lambda p, c=center, r=radius: sphere(p, c, r * K * (0.3 + 0.7 * s.open)), EYE))
-        lid = center + rotation @ np.array([0.0, (0.6 + 0.9 * s.open) * K, 0.3 * K])
-        result.append(Part(lambda p, c=lid, r=radius: ellipsoid(p, c, (r * 1.5 * K, r * (1.2 - 0.8 * s.open) * K + 0.2, r * K)),
+        lid = center + rotation @ np.array([0.0, (0.7 + 1.8 * s.open) * K, -0.2 * K])
+        result.append(Part(lambda p, c=lid, r=radius: ellipsoid(p, c, (r * 1.5 * K, r * (1.1 - 0.8 * s.open) * K + 0.2, r * K)),
                            LID))
     for angle in (0.4, 1.9, 3.3, 4.9):
         base = at(np.cos(angle) * 2.0, 2.0, np.sin(angle) * 2.0)
@@ -74,7 +83,9 @@ def parts(s: Pillar) -> list[Part]:
 
 def _animations() -> dict[str, list[Pillar]]:
     rest = Pillar()
-    idle = [rest, replace(rest, sway=0.02), replace(rest, sway=0.03, open=0.15), replace(rest, sway=0.01)]
+    # Paupières entrouvertes au repos : elle veille, ses yeux se devinent.
+    idle = [replace(rest, open=0.55), replace(rest, sway=0.02, open=0.55), replace(rest, sway=0.03, open=0.7),
+            replace(rest, sway=0.01, open=0.55)]
     return {
         "idle": idle,
         # Elle ne marche pas : la même veille, un peu plus ouverte quand on la presse.

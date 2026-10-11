@@ -3,6 +3,8 @@ Le Hurleur — un tube de chair avec une ouverture en haut (Bible §6.2).
 Colonne de chair plissée, un peu penchée, qui se traîne sur trois moignons de racines. Au sommet, une bouche ronde
 cerclée de dents ; quand elle s'ouvre, la lumière verte de l'intérieur éclaire le haut du corps. Deux petits yeux
 décalés sur le flanc. Son cri appelle des renforts (plan 07 lot B) : la cible à abattre en premier.
+Reprise du 11 octobre (plan 37 M4) : il était un petit tube vert-de-gris, perdu dans l'herbe. Chair livide
+veinée de lie-de-vin, plus grand, plis plus marqués : la cible prioritaire doit se voir de loin.
 """
 from __future__ import annotations
 
@@ -19,15 +21,15 @@ FRAME_PIVOT = (16.0, 45.0)
 
 FLESH, FOLD, ROOT, TOOTH, THROAT, EYE = range(6)
 MATERIALS = [
-    make_material("flesh", "#6E7A5A"),
-    make_material("fold", "#4A5440"),
-    make_material("root", "#3E3428"),
+    make_material("flesh", "#A9807F"),
+    make_material("fold", "#5E2E40"),
+    make_material("root", "#3A2832"),
     make_material("tooth", "#C9BFA6", contrast=0.6),
     make_emissive("throat", "#7FFF00"),
     make_emissive("eye", "#B8FF6A"),
 ]
 
-K = 1.4
+K = 1.8
 HEIGHT = 17.0 * K
 
 
@@ -56,7 +58,8 @@ def parts(t: Tube) -> list[Part]:
         Part(lambda p: np.maximum(capsule(p, at(height * 0.45, 0.4 * K), top, 3.8 * K, 3.4 * K + t.mouth * 0.6 * K),
                                   -ellipsoid(p, top + rotation @ np.array([0.0, 1.2 * K, 0.0]),
                                              ((3.0 + t.mouth) * K, 2.6 * K, (3.0 + t.mouth) * K), rotation)), FLESH),
-        Part(lambda p: ellipsoid(p, at(height * 0.42, 0.4 * K), (4.3 * K, 0.9 * K, 4.2 * K), rotation), FOLD),
+        Part(lambda p: ellipsoid(p, at(height * 0.22, 0.5 * K), (4.5 * K, 0.8 * K, 4.4 * K), rotation), FOLD),
+        Part(lambda p: ellipsoid(p, at(height * 0.44, 0.4 * K), (4.3 * K, 0.9 * K, 4.2 * K), rotation), FOLD),
         Part(lambda p: ellipsoid(p, at(height * 0.72, 0.2 * K), (4.0 * K, 0.8 * K, 3.9 * K), rotation), FOLD),
         # Bouche au sommet : anneau de chair, gorge lumineuse qui s'élargit quand il crie.
         # Entonnoir évasé, plus large que le corps : l'intérieur lumineux se voit d'en haut.
@@ -68,14 +71,21 @@ def parts(t: Tube) -> list[Part]:
         Part(lambda p: ellipsoid(p, top + rotation @ np.array([0.0, -0.2 * K, 0.0]),
                                  ((2.9 + t.mouth) * K, 0.8 * K, (2.9 + t.mouth) * K), rotation), THROAT),
         # Yeux décalés sur le flanc avant.
-        Part(lambda p: sphere(p, at(height * 0.6, 1.6 * K, 3.4 * K), 0.7 * K), EYE),
-        Part(lambda p: sphere(p, at(height * 0.52, -1.8 * K, 3.2 * K), 0.55 * K), EYE),
+        Part(lambda p: sphere(p, at(height * 0.6, 1.6 * K, 3.4 * K), 0.8 * K), EYE),
+        Part(lambda p: sphere(p, at(height * 0.52, -1.8 * K, 3.2 * K), 0.65 * K), EYE),
+        Part(lambda p: sphere(p, at(height * 0.33, 0.2 * K, 3.9 * K), 0.5 * K), EYE),
     ]
     for index in range(7):
         angle = index * np.pi * 2 / 7
         base = top + rotation @ np.array([np.cos(angle) * (3.9 + t.mouth) * K, 0.8 * K, np.sin(angle) * (3.9 + t.mouth) * K])
         tip = base + rotation @ np.array([np.cos(angle) * 0.5 * K, (1.3 + t.mouth * 0.6) * K, np.sin(angle) * 0.5 * K])
         result.append(Part(lambda p, a=base, b=tip: capsule(p, a, b, 0.45 * K, 0.15 * K), TOOTH))
+    # Lambeaux de chair pendus au rebord de la bouche : ils cassent le cylindre et battent quand il crie.
+    for angle, length in ((0.9, 1.0), (2.3, 0.7), (3.6, 0.85), (5.2, 0.6)):
+        rim = top + rotation @ np.array([np.cos(angle) * (4.4 + t.mouth) * K, 0.0, np.sin(angle) * (4.4 + t.mouth) * K])
+        sway = np.array([np.cos(angle) * (0.6 + t.mouth) * K, 0.0, np.sin(angle) * (0.6 + t.mouth) * K])
+        tip = rim + sway + np.array([0.0, -3.8 * length * K, 0.0])
+        result.append(Part(lambda p, a=rim, b=tip: capsule(p, a, b, 0.85 * K, 0.4 * K), FOLD))
     for index, angle in enumerate((0.3, 2.4, 4.3)):
         lift = max(0.0, np.sin(t.step + index * 2.1)) * 1.4 * K
         hip = at(2.5 * K, np.cos(angle) * 2.8 * K, np.sin(angle) * 2.8 * K)

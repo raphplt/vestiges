@@ -2,6 +2,8 @@
 Le Rampant d'Ombre — une ombre qui a appris à marcher à quatre pattes en copiant quelqu'un (plan 07, Bible §6.2).
 Corps long et noir, quatre membres trop longs aux coudes relevés comme une araignée, traînées rouge sombre sur le dos.
 Au bout du cou, un masque pâle et lisse, sans expression, percé de deux yeux vert-acide inégaux. Il poursuit vite.
+Reprise du 11 octobre (plan 37 M4) : masque agrandi, traînées rouges plus vives, membres un ton au-dessus du corps
+pour que les pattes se détachent du tronc.
 """
 from __future__ import annotations
 
@@ -19,8 +21,8 @@ FRAME_PIVOT = (20.0, 28.0)
 BODY, STREAK, LIMB, MASK, EYE = range(5)
 MATERIALS = [
     make_material("body", "#22182A", contrast=0.7),
-    make_material("streak", "#8A2A2A"),
-    make_material("limb", "#2E2236", contrast=0.7),
+    make_material("streak", "#B0342E"),
+    make_material("limb", "#3E2E4C", contrast=0.7),
     make_material("mask", "#D8D0C0", contrast=0.6),
     make_emissive("eye", "#7FFF00"),
 ]
@@ -55,14 +57,15 @@ def parts(c: Crawler) -> list[Part]:
     head = at((0.6 * K, (2.2 + c.neck * 2.0) * K, (9.5 + c.neck * 2.5) * K))
     result = [
         Part(lambda p: ellipsoid(p, center, (3.4 * K, 2.8 * K, 7.8 * K), rotation), BODY),
-        Part(lambda p: capsule(p, at((-1.0 * K, 2.4 * K, -5.0 * K)), at((0.8 * K, 2.6 * K, 4.0 * K)), 0.6 * K, 0.4 * K), STREAK),
-        Part(lambda p: capsule(p, at((1.8 * K, 2.0 * K, -2.0 * K)), at((2.2 * K, 1.6 * K, 2.5 * K)), 0.4 * K, 0.3 * K), STREAK),
+        Part(lambda p: capsule(p, at((-1.0 * K, 2.5 * K, -5.0 * K)), at((0.8 * K, 2.7 * K, 4.0 * K)), 0.8 * K, 0.5 * K), STREAK),
+        Part(lambda p: capsule(p, at((1.8 * K, 2.1 * K, -2.0 * K)), at((2.2 * K, 1.7 * K, 2.5 * K)), 0.55 * K, 0.4 * K), STREAK),
+        Part(lambda p: capsule(p, at((-2.2 * K, 1.8 * K, -1.0 * K)), at((-2.0 * K, 2.0 * K, -6.0 * K)), 0.5 * K, 0.35 * K), STREAK),
         Part(lambda p: capsule(p, neck_base, head, 1.4 * K, 1.1 * K), BODY),
         # Masque pâle et lisse, tourné un peu de travers.
-        Part(lambda p: ellipsoid(p, head + rotation @ np.array([0.0, 0.0, 0.8 * K]), (2.2 * K, 2.6 * K, 1.2 * K),
+        Part(lambda p: ellipsoid(p, head + rotation @ np.array([0.0, 0.0, 0.8 * K]), (2.6 * K, 3.0 * K, 1.4 * K),
                                  rotation @ rotation_z(0.2)), MASK),
-        Part(lambda p: sphere(p, head + rotation @ np.array([0.8 * K, 0.6 * K, 1.8 * K]), 0.6 * K), EYE),
-        Part(lambda p: sphere(p, head + rotation @ np.array([-0.9 * K, 0.1 * K, 1.8 * K]), 0.45 * K), EYE),
+        Part(lambda p: sphere(p, head + rotation @ np.array([0.9 * K, 0.7 * K, 2.0 * K]), 0.7 * K), EYE),
+        Part(lambda p: sphere(p, head + rotation @ np.array([-1.0 * K, 0.1 * K, 2.0 * K]), 0.55 * K), EYE),
     ]
     for (x, z, length), offset in zip(HIPS, GAIT_OFFSETS):
         hip = at((x, 0.0, z))

@@ -2,6 +2,8 @@
 L'Ombre — presque bidimensionnelle, une tache sombre qui glisse sur le sol (Bible §6.2).
 Une flaque d'encre aux reflets irisés, bordée de filaments, d'où se dresse une crête basse. Ses yeux sont les seuls
 éléments solides : trois points vert-acide sur de courtes tiges, jamais alignés. Fragile, rapide, en masse.
+Reprise du 11 octobre (plan 37 M4) : ses reflets trop sombres la noyaient dans l'herbe et la terre. Reflets irisés
+violet et cyan bien visibles, yeux plus hauts sur leurs tiges, flaque un peu plus grande.
 """
 from __future__ import annotations
 
@@ -16,15 +18,16 @@ from ..sdf import capsule, ellipsoid, rotation_x, sphere
 FRAME_SIZE = (32, 28)
 FRAME_PIVOT = (16.0, 21.0)
 
-INK, SHEEN, CREST, EYE = range(4)
+INK, SHEEN, CREST, EYE, SHEEN_COLD = range(5)
 MATERIALS = [
     make_material("ink", "#1E1A28", contrast=0.6),
-    make_material("sheen", "#4A3466", contrast=0.7),
+    make_material("sheen", "#6E58AE", contrast=0.7),
     make_material("crest", "#2D1B3D", contrast=0.6),
     make_emissive("eye", "#7FFF00"),
+    make_material("sheen_cold", "#3E8C9E", contrast=0.7),
 ]
 
-K = 1.45
+K = 1.6
 
 
 @dataclass(frozen=True)
@@ -53,15 +56,16 @@ def parts(s: Stain) -> list[Part]:
     result = [
         Part(lambda p: ellipsoid(p, body_center, (5.8 * K, 1.3 * K * flat + 0.3, 6.2 * K * s.stretch)), INK),
         # Reflets irisés à la surface de l'encre.
-        Part(lambda p: ellipsoid(p, body_center + [1.2 * K, 0.9 * K * flat, -1.0 * K], (2.6 * K, 0.5 * K, 2.2 * K)), SHEEN),
-        Part(lambda p: ellipsoid(p, body_center + [-2.2 * K, 0.8 * K * flat, 2.2 * K * s.stretch], (1.4 * K, 0.4 * K, 1.2 * K)), SHEEN),
+        Part(lambda p: ellipsoid(p, body_center + [1.6 * K, 1.05 * K * flat, -1.6 * K], (2.6 * K, 0.5 * K, 2.2 * K)), SHEEN),
+        Part(lambda p: ellipsoid(p, body_center + [-2.6 * K, 1.0 * K * flat, 2.4 * K * s.stretch], (1.8 * K, 0.45 * K, 1.5 * K)), SHEEN_COLD),
+        Part(lambda p: ellipsoid(p, body_center + [3.4 * K, 0.85 * K * flat, 2.8 * K * s.stretch], (1.2 * K, 0.4 * K, 1.0 * K)), SHEEN_COLD),
         Part(lambda p: capsule(p, body_center + [0.0, 0.4 * K, 0.0], crest_top + [s.lean * K, 0.0, 0.0],
                                3.0 * K * flat + 0.3, 1.2 * K * flat + 0.2), CREST),
     ]
     result += [Part(lambda p, a=a, b=b: capsule(p, a, b, 0.9 * K, 0.35 * K), INK) for a, b in tendrils]
     for (x, y, z), radius in eyes:
         base = crest_top * 0.55 + np.array([x * K, 0.0, z * K])
-        tip = base + np.array([0.0, (y * 0.3 + s.eye_lift) * K * flat, 0.0])
+        tip = base + np.array([0.0, (y * 0.45 + s.eye_lift) * K * flat, 0.0])
         result += [
             Part(lambda p, a=base, b=tip: capsule(p, a, b, 0.4 * K, 0.3 * K), CREST),
             Part(lambda p, c=tip, r=radius: sphere(p, c, r * K), EYE),
