@@ -309,3 +309,12 @@ Raphaël, sur une capture forêt/champs : « les tiles ont été refaites, mais 
 
   **Choix de Raphaël : D.** `band_px` 46 → 30, `edge_noise` 0,35 → 0,2, `grain` 0,3 → 0,1.
 - **Vérifié** : `tools/validate.sh` smoke, `erasure_active`, `cartography` 3/3 ; préchauffage des shaders valide.
+
+## 21. Écran du coffre resserré — 11 octobre 2026
+
+Raphaël : « tu trouve pas c'est trop large les rectangles », puis « "ce qui demeure" supprime ce texte ».
+
+- Panneau de 1 060 à 720 px de large, lignes de butin de 950 à 610 px, icônes de 64 à 52 px : le nom de l'objet ne flotte plus dans un rectangle vide. Hauteur recalée sur la taille réelle d'une ligne : cinq gains tiennent sans défilement.
+- Surtitre « CE QUI DEMEURE » retiré de l'écran du coffre (il reste sur le bilan de fin de run).
+- Nombre de gains, rappel : un coffre commun ou rare donne un tirage, plus parfois un bonus de stat (deux lignes au plus) ; un épique, deux tirages et le bonus. Les cinq lignes vues sur une capture viennent de la galerie de test (`--capture-loot-gallery`), qui force cinq gains par page pour vérifier la mise en page.
+- **Vérifié** : captures du coffre à un gain et de la galerie à cinq ; `tools/validate.sh` smoke, `choice_screen`.

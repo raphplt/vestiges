@@ -29,6 +29,13 @@ public partial class ChestLootScreen : CanvasLayer
     private const float RevealFadeSeconds = 0.5f;
     // Le clic d'ouverture frappe dans ses 0,3 premières secondes : la mélodie entre juste après, sur le défilement.
     private const float RevealMelodyDelay = 0.3f;
+    // Largeur resserrée sur le contenu (retour du 11 octobre) : une ligne d'objet tient en 600 px, au-delà le nom
+    // flottait dans un rectangle vide.
+    private const float PanelWidth = 720f;
+    private const float CardWidth = 610f;
+    private const float PanelBaseHeight = 300f;
+    private const float SlotHeight = 104f;
+    private const int IconSize = 52;
 
     // --- UI nodes ---
     private ColorRect _overlay;
@@ -108,7 +115,7 @@ public partial class ChestLootScreen : CanvasLayer
         _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_rays);
 
-        _panel = new PanelContainer { CustomMinimumSize = new Vector2(1060, 870) };
+        _panel = new PanelContainer { CustomMinimumSize = new Vector2(PanelWidth, 870) };
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _panel.GrowHorizontal = _panel.GrowVertical = Control.GrowDirection.Both;
         _panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
@@ -125,7 +132,6 @@ public partial class ChestLootScreen : CanvasLayer
         heading.AddChild(_chestArt);
         VBoxContainer titles = new() { Alignment = BoxContainer.AlignmentMode.Center, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         heading.AddChild(titles);
-        titles.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Body, UITheme.TextDim));
         _title = UITheme.MakeLabel("", TextRole.Title, GoldBright, TextWeight.Strong);
         titles.AddChild(_title);
         titles.AddChild(UITheme.MakeLabel("Butin de l’expédition", TextRole.Subhead, UITheme.TextColor));
@@ -182,7 +188,7 @@ public partial class ChestLootScreen : CanvasLayer
             _slots.Add(slot);
         }
 
-        MenuSkin.CenterPanel(_panel, 1060f, Mathf.Min(870f, 340f + loots.Count * 116f));
+        MenuSkin.CenterPanel(_panel, PanelWidth, Mathf.Min(870f, PanelBaseHeight + loots.Count * SlotHeight));
         ShowScreen();
 
         // Le clic d'ouverture d'abord, puis la mélodie qui accompagne le défilement (retour du 28 septembre).
@@ -202,7 +208,7 @@ public partial class ChestLootScreen : CanvasLayer
     private SlotState CreateSlot(ResolvedLoot loot, int index)
     {
         PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(950, 104);
+        card.CustomMinimumSize = new Vector2(CardWidth, 84);
 
         ChoiceStyle.StyleCard(card, ChoiceStyle.NeutralBorder, -1, false);
 
@@ -216,8 +222,8 @@ public partial class ChestLootScreen : CanvasLayer
         MarginContainer margin = new();
         margin.AddThemeConstantOverride("margin_left", 16);
         margin.AddThemeConstantOverride("margin_right", 16);
-        margin.AddThemeConstantOverride("margin_top", 8);
-        margin.AddThemeConstantOverride("margin_bottom", 8);
+        margin.AddThemeConstantOverride("margin_top", 4);
+        margin.AddThemeConstantOverride("margin_bottom", 4);
         card.AddChild(margin);
 
         Label label = new();
@@ -228,13 +234,13 @@ public partial class ChestLootScreen : CanvasLayer
         label.AddThemeColorOverride("font_color", TextDim);
         label.Text = "???";
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        label.CustomMinimumSize = new Vector2(720, 0);
+        label.CustomMinimumSize = new Vector2(CardWidth - 170f, 0);
         HBoxContainer contents = new() { Alignment = BoxContainer.AlignmentMode.Center };
         contents.AddThemeConstantOverride("separation", 8);
         margin.AddChild(contents);
         int fakeIndex = GD.RandRange(0, _fakeItems.Length - 1);
         LootDisplayInfo initial = _fakeItems[fakeIndex];
-        TextureRect icon = (TextureRect)PlayerSheet.MakeIcon(null, 64);
+        TextureRect icon = (TextureRect)PlayerSheet.MakeIcon(null, IconSize);
         icon.Texture = initial.Icon;
         contents.AddChild(icon);
         label.Text = initial.Text;
