@@ -154,6 +154,13 @@ public partial class Player
         return owned == null || owned.Copies < data.MaxCopies;
     }
 
+    /// <summary>Objet déjà à son maximum d'exemplaires : aucun échange ne peut le faire entrer.</summary>
+    public bool IsItemAtMax(string id)
+    {
+        ActivePassiveSouvenir owned = FindObject(id);
+        return owned != null && !owned.Data.IsBadge && owned.Copies >= owned.Data.MaxCopies;
+    }
+
     /// <summary>
     /// Met un exemplaire d'objet dans le sac : un objet neuf vaut son premier niveau d'exemplaire, un doublon le porte au
     /// suivant (palier compris). Faux si le sac est plein ou l'objet à son maximum.

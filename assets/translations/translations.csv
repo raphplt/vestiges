@@ -477,3 +477,11 @@ INVENTORY_NONE_BADGE,Aucun pour l'instant.,None yet.
 CHEST_LOOT_OBJECT,Objet : {0},Item: {0}
 INVENTORY_BAG,Sac,Bag
 ITEM_MILESTONE,{0} exemplaires : {1},{0} copies: {1}
+ITEM_EXCHANGE_PROMPT,Sac plein — échanger contre {0},Bag full — swap for {0}
+ITEM_EXCHANGE_TITLE,Sac plein ({0}/{1}),Bag full ({0}/{1})
+ITEM_EXCHANGE_SUBTITLE,Nouvel objet : {0} — {1} Choisis un exemplaire à oublier.,New item: {0} — {1} Pick a copy to forget.
+ITEM_EXCHANGE_FORGET,OUBLIER UN EXEMPLAIRE,FORGET ONE COPY
+ITEM_EXCHANGE_LEAVE,Laisser au sol,Leave it
+WORKSHOP_ITEM_TAG,OBJET,ITEM
+WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
+ITEM_BAG_FULL,"Sac plein : il faudra oublier un objet.","Bag full: you will forget an item."

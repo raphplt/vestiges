@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
+using Vestiges.UI;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -13,6 +15,7 @@ namespace Vestiges.Tests;
 /// Inventaire du joueur (plan 35), dans un profil neuf et isolé. Lot I1 : réglages contrôlés, Écussons à part des objets,
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
 /// objets en exemplaires (niveau d'effet, palier au doublon), oubli qui retire effet et palier, sac plein, butin « objet ».
+/// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
 /// </summary>
 public partial class InventoryRegression : Node
 {
@@ -23,7 +26,7 @@ public partial class InventoryRegression : Node
     private int _failures;
     private Player _player;
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         try
         {
@@ -35,6 +38,7 @@ public partial class InventoryRegression : Node
             CheckForgetting();
             CheckBag();
             CheckChestItem();
+            await CheckWorldItems();
             GD.Print($"[InventoryRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
                 GD.Print("[InventoryRegression] PASS");
@@ -201,6 +205,76 @@ public partial class InventoryRegression : Node
         _player.SetBagCapacity(1);
         resolved = LootRewards.Resolve(loot, _player);
         Check(resolved[0].Type == "essence" && resolved[0].Amount == 6, "sac plein : le coffre donne son Essence de secours");
+    }
+
+    private async Task CheckWorldItems()
+    {
+        Setup();
+        Check(Mathf.IsEqualApprox(InventoryConfig.EliteItemChance, 0.25f) && InventoryConfig.SovereignItems == 1,
+            "une élite lâche un objet une fois sur quatre, un Souverain toujours");
+        ChoiceScreen choices = new();
+        AddChild(choices);
+        ItemExchange exchange = new();
+        exchange.Setup(choices);
+        AddChild(exchange);
+        Node2D ground = new();
+        AddChild(ground);
+        ItemDropDirector drops = new();
+        drops.Setup(exchange, ground);
+        AddChild(drops);
+        MethodInfo onKill = typeof(ItemDropDirector).GetMethod("OnEnemyKill", Private);
+        onKill.Invoke(drops, new object[] { new Vestiges.Combat.EnemyKillResult(default, "rodeur", new Vector2(300f, 0f), default, default,
+            default, Sovereign: true) });
+        onKill.Invoke(drops, new object[] { new Vestiges.Combat.EnemyKillResult(default, "rodeur", new Vector2(300f, 0f), default, default,
+            default) });
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        ItemPickup pickup = ground.GetChildCount() == 1 ? ground.GetChild<ItemPickup>(0) : null;
+        PassiveSouvenirData dropped = PassiveSouvenirDataLoader.Get(pickup?.ItemId ?? "");
+        Check(pickup != null && dropped != null && !dropped.IsBadge && MetaSaveManager.IsObjectUnlocked(dropped.Id),
+            $"un Souverain lâche un objet débloqué, une créature ordinaire rien ({ground.GetChildCount()} au sol)");
+
+        pickup.Interact(_player);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(_player.FindObject(dropped.Id)?.Copies == 1 && !IsInstanceValid(pickup), "ramassé : l'objet entre dans le sac et quitte le sol");
+
+        // Sac plein : l'invite ouvre l'échange ; oublier la première fiche fait la place et prend le nouvel objet.
+        foreach (string id in new[] { "glacon", "allumette_humide", "de_a_coudre", "semelle_usee", "chewing_gum" })
+            while (_player.HasBagRoom && _player.AddItemCopy(id)) { }
+        string first = _player.PassiveSlots[0].Id;
+        int firstCopies = _player.PassiveSlots[0].Copies;
+        // Un objet que le joueur peut encore cumuler, absent du sac : le tirage au hasard pourrait tomber sur un objet au maximum.
+        ItemPickup full = drops.Drop(new Vector2(500f, 0f), PassiveSouvenirDataLoader.Get("thermometre"));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        PassiveSouvenirData incoming = PassiveSouvenirDataLoader.Get(full.ItemId);
+        int incomingBefore = _player.FindObject(incoming.Id)?.Copies ?? 0;
+        full.Interact(_player);
+        bool opened = choices.IsOpen && GetTree().Paused;
+        choices.Activate(_player.PassiveSlots.Count);
+        choices.Activate(_player.PassiveSlots.Count);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        bool leftAlone = IsInstanceValid(full) && _player.BagCount == 10 && !choices.IsOpen;
+        full.Interact(_player);
+        choices.Activate(0);
+        choices.Activate(0);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        int expectedFirst = first == incoming.Id ? firstCopies : firstCopies - 1;
+        Check(opened && leftAlone, "sac plein : l'invite ouvre l'échange en pause ; « Laisser au sol » ne change rien");
+        Check((_player.FindObject(first)?.Copies ?? 0) == expectedFirst && (_player.FindObject(incoming.Id)?.Copies ?? 0) == incomingBefore + (first == incoming.Id ? 0 : 1)
+            && _player.BagCount == 10 && !IsInstanceValid(full) && !GetTree().Paused,
+            $"échange : un exemplaire de {first} oublié, {incoming.Id} pris, la run reprend");
+        // Objet déjà au maximum (six Glaçons) : rien ne s'ouvre, aucun exemplaire n'est perdu.
+        while (_player.FindObject("glacon")?.Copies < 6)
+        {
+            _player.ForgetItemCopy(_player.PassiveSlots[^1].Id);
+            _player.AddItemCopy("glacon");
+        }
+        int bag = _player.BagCount;
+        ItemPickup maxed = drops.Drop(new Vector2(600f, 0f), PassiveSouvenirDataLoader.Get("glacon"));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        maxed.Interact(_player);
+        Check(!choices.IsOpen && _player.BagCount == bag && IsInstanceValid(maxed) && !exchange.Open(_player, PassiveSouvenirDataLoader.Get("glacon"), () => true),
+            "objet déjà au maximum : l'échange ne s'ouvre pas, rien n'est oublié");
+        choices.QueueFree();
     }
 
     private float FreezeSeconds() =>

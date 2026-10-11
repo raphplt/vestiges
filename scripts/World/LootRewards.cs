@@ -174,18 +174,25 @@ public static class LootRewards
         int promisedTotal = 0;
         foreach (int count in promised.Values)
             promisedTotal += count;
-        if (player.BagCount + promisedTotal >= player.BagCapacity)
-            return null;
+        return player.BagCount + promisedTotal >= player.BagCapacity ? null : PickUnlockedItem(player, RunRandom.Loot, promised);
+    }
+
+    /// <summary>
+    /// Objet débloqué au hasard que le joueur peut encore cumuler, exemplaires promis compris (plan 35) ; null si aucun.
+    /// La place dans le sac n'est pas exigée : un objet au sol ou en vente se prend par l'échange.
+    /// </summary>
+    public static PassiveSouvenirData PickUnlockedItem(Player player, RandomNumberGenerator rng, Dictionary<string, int> promised = null)
+    {
         List<PassiveSouvenirData> candidates = new();
         foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
         {
             if (data.IsBadge || !MetaSaveManager.IsObjectUnlocked(data.Id))
                 continue;
-            int copies = (player.FindObject(data.Id)?.Copies ?? 0) + promised.GetValueOrDefault(data.Id);
+            int copies = (player?.FindObject(data.Id)?.Copies ?? 0) + (promised?.GetValueOrDefault(data.Id) ?? 0);
             if (copies < data.MaxCopies)
                 candidates.Add(data);
         }
-        return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
+        return candidates.Count > 0 ? candidates[(int)(rng.Randi() % candidates.Count)] : null;
     }
 
     private static ResolvedLoot Essence(int amount) =>

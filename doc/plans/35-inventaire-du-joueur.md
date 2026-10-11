@@ -408,3 +408,53 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
   - le bilan n'est plus borné à 10 fiches ;
   - le sac ne se réduit jamais sous ce qu'il contient ;
   - clé de traduction devenue inutile retirée.
+
+## 13. Lot I3 livré : le monde donne les objets, l'écran d'échange — 11 octobre 2026
+
+**Sources** (réglages dans `inventory.json` et `landmarks.json`) :
+- **Coffres** : butin « objet » (depuis I2).
+- **Élites** : une chance sur quatre de lâcher un objet au sol (`elite_item_chance`).
+- **Souverains** : un objet, toujours (`sovereign_items`).
+- **Atelier** : chaque Atelier met en vente un objet débloqué, tiré à la première visite, pour 120 Essence (`item_cost`, avec la même hausse que ses autres services). Sac plein : l'achat passe par l'écran d'échange.
+- Les objets tirés sont ceux que le profil a débloqués (réserve de départ, puis quêtes).
+
+**Au sol** (`ItemPickup`).
+- L'objet flotte sur un anneau cyan. Il entre seul dans le sac s'il reste une place.
+- Sinon, l'invite « Sac plein — échanger contre X » se maintient (0,35 s) et ouvre l'**écran d'échange**, en pause.
+- Laissé au sol, l'objet s'efface après 2 minutes, comme une arme.
+
+**Écran d'échange** (`ItemExchange`, sur l'écran de choix commun).
+- Le titre donne le sac (« Sac plein (10/10) »), et le sous-titre le nouvel objet et sa règle.
+- Une carte par objet du sac, avec ses exemplaires : « Glaçon dans un mouchoir ×6 ». Choisir une carte oublie un exemplaire et prend le nouvel objet.
+- « Laisser au sol » ne change rien.
+- L'oubli ne coûte rien (§110).
+
+**Mesure** (Vagabond en profil neuf, bot mortel qui ratisse les lieux et ramasse les objets au sol, 4 graines, 30 min) :
+
+| Graine | Objets reçus | Sac à 30 min | Élites abattues | Souverains abattus | Coffres ouverts | Ateliers |
+|---|---:|---:|---:|---:|---:|---:|
+| 42 | 10 | 10/10 | 16 | 4 | 34 | 4 |
+| 1002 | 10 | 10/10 | 11 | 0 | 17 | 2 |
+| 7 | 6 | 6/10 | 9 | 1 | 28 | 2 |
+| 123 | 10 | 10/10 | 16 | 1 | 36 | 5 |
+
+- Le sac se remplit en une run de 30 min dans trois graines sur quatre. L'échange devient donc un choix de fin de run, comme voulu.
+- Le bot n'achète pas à l'Atelier et rate souvent les Souverains (la chasse échoue s'il ne les poursuit pas) : un joueur trouvera un peu plus d'objets.
+- Avant les élites et les Souverains (coffres seuls, première mesure) : 2 à 4 objets en 30 min.
+
+**Vérifications.**
+- Build sans avertissement.
+- Suite `inventory` : objet lâché par un Souverain, rien par une créature ordinaire, ramassage, échange qui s'ouvre en pause, « Laisser au sol », oubli et prise, reprise de la run.
+- `catalogs` vert (`item_cost`), `objects`, `small_places`, `quests`, `smoke` verts.
+- Captures sous `xvfb-run` (`CAPTURE_EXTRA_ARGS="--capture-exchange"`, nouveau mode) regardées : l'objet au sol et son invite, puis l'écran d'échange avec les exemplaires.
+- Relecture `godot-reviewer`. Un vrai défaut corrigé : un objet au sol **déjà à son maximum d'exemplaires** ouvrait l'échange, faisait oublier un autre objet et ne rentrait pas. Désormais :
+  - les objets lâchés et vendus sont tirés parmi ceux que le joueur peut encore cumuler ;
+  - l'échange ne s'ouvre pas pour un objet au maximum (il rougit au sol), et l'objet entrant n'est jamais proposé à l'oubli ;
+  - si la prise échoue malgré tout, l'exemplaire oublié revient ;
+  - la carte de l'Atelier est éteinte pour un objet au maximum, et l'Atelier se rouvre si l'on renonce à l'échange.
+- Corrigés aussi :
+  - invite composée une fois ;
+  - tirages sur des flux à part (`item_drops`, `workshop_items`), pour ne décaler ni les coffres ni les Trempes ;
+  - Atelier perdu retiré des offres ;
+  - icônes chargées sans erreur si elles manquent.
+- Pas encore : le ramassage n'a ni son ni envol d'icône vers le HUD (I5).

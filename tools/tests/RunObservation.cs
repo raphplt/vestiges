@@ -63,6 +63,7 @@ namespace Vestiges.Tests;
 /// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
+/// --capture-exchange : sac plein, un objet au sol et l'écran d'échange (RunObservation.Items.cs, plan 35 I3).
 /// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -226,6 +227,8 @@ public partial class RunObservation : Node
                 await CapturePlayerHit();
             else if (Array.IndexOf(args, "--capture-bile") >= 0)
                 await CaptureBileLob();
+            else if (Array.IndexOf(args, "--capture-exchange") >= 0)
+                await CaptureExchange();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
@@ -291,6 +294,25 @@ public partial class RunObservation : Node
         _camera = _player.GetNode<Camera2D>("Camera");
         _player.IsGodMode = true;
         _player.IsAIControlled = true;
+    }
+
+    /// <summary>Objet au sol le plus proche que le sac peut recevoir, ou null.</summary>
+    private ItemPickup NearestTakeableItem(float range)
+    {
+        ItemPickup best = null;
+        float bestDistance = range;
+        foreach (Node node in GetTree().GetNodesInGroup("item_pickups"))
+        {
+            if (node is not ItemPickup pickup || !pickup.CanInteract || !_player.CanTakeItem(pickup.ItemId))
+                continue;
+            float distance = _player.GlobalPosition.DistanceTo(pickup.GlobalPosition);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = pickup;
+            }
+        }
+        return best;
     }
 
     /// <summary>Le profil de mesure, isolé, gagne de quoi tout acheter au Campement et l'achète par la vraie boutique.</summary>
@@ -607,6 +629,17 @@ public partial class RunObservation : Node
             Input.ActionPress("show_map");
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
+        // Objets entrés dans le sac, toutes sources (plan 35 I3).
+        int itemsReceived = 0;
+        EventBus.LootReceivedEventHandler onLoot = (type, _, amount) => itemsReceived += type == "object" ? amount : 0;
+        eventBus.LootReceived += onLoot;
+        int eliteKills = 0, sovereignKills = 0;
+        System.Action<Vestiges.Combat.EnemyKillResult> onKillResolved = kill =>
+        {
+            eliteKills += kill.Elite && !kill.Sovereign ? 1 : 0;
+            sovereignKills += kill.Sovereign ? 1 : 0;
+        };
+        eventBus.EnemyKillResolved += onKillResolved;
         double eventDetourUntil = 0;
         double nextBarrierLog = 0;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
@@ -684,6 +717,9 @@ public partial class RunObservation : Node
                 }
             }
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
+            // Un objet au sol à portée de détour, s'il entre dans le sac : le bot va le ramasser (plan 35 I3).
+            if (_visitPlaces && !holding && NearestTakeableItem(400f) is ItemPickup nearItem)
+                waypoint = nearItem.GlobalPosition;
             // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
             if (holding)
                 lastProgressTime = t;
@@ -784,6 +820,8 @@ public partial class RunObservation : Node
         eventBus.EnemySpawned -= onSpawned;
         eventBus.EntityDamaged -= onDamaged;
         eventBus.EssenceChanged -= onEssence;
+        eventBus.LootReceived -= onLoot;
+        eventBus.EnemyKillResolved -= onKillResolved;
         eventBus.RunEventStarted -= onEvent;
         projectiles?.Save($"{_output}/projectiles-{seed}.csv");
         frameStats?.Write(ProjectSettings.GlobalizePath($"{_output}/frames-{seed}.csv"), gameTime);
@@ -802,6 +840,8 @@ public partial class RunObservation : Node
                 openRifts++;
         summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
         summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned} score={score.CurrentScore}");
+        summary.Append(CultureInfo.InvariantCulture,
+            $" items_received={itemsReceived} bag={_player.BagCount}/{_player.BagCapacity} items_on_ground={GetTree().GetNodesInGroup("item_pickups").Count} elite_kills={eliteKills} sovereign_kills={sovereignKills}");
         summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
         AppendBreakdown(summary, "hit_by", damageBySource);
         AppendBreakdown(summary, "hit_gated", gatedBySource);

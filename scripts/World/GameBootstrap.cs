@@ -222,6 +222,14 @@ public partial class GameBootstrap : Node
         ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
         sceneRoot.AddChild(choiceScreen);
 
+        // Objets du monde (plan 35 I3) : échange quand le sac est plein, objets lâchés par les élites et les Souverains.
+        ItemExchange itemExchange = new() { Name = "ItemExchange" };
+        itemExchange.Setup(choiceScreen);
+        sceneRoot.AddChild(itemExchange);
+        ItemDropDirector itemDrops = new() { Name = "ItemDropDirector" };
+        itemDrops.Setup(itemExchange, GetNode("../PoiContainer"));
+        sceneRoot.AddChild(itemDrops);
+
         LandmarkReveal landmarkReveal = new() { Name = "LandmarkReveal" };
         landmarkReveal.Setup(player.GetNode<Camera2D>("Camera"));
         sceneRoot.AddChild(landmarkReveal);
@@ -231,7 +239,7 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(memorialDirector);
 
         WorkshopDirector workshopDirector = new() { Name = "WorkshopDirector" };
-        workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager);
+        workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager, itemExchange);
         sceneRoot.AddChild(workshopDirector);
 
         RiftDirector riftDirector = new() { Name = "RiftDirector" };

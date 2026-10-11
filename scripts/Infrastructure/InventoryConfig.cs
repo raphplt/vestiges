@@ -6,7 +6,7 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Réglages de l'inventaire du joueur (data/progression/inventory.json, plan 35) : emplacements d'Écussons, rendement
-/// des niveaux d'Écusson, sac d'objets et valeur des exemplaires. Contrôlés en entier ; un fichier refusé arrête le
+/// des niveaux d'Écusson, sac d'objets, valeur des exemplaires et objets lâchés dans le monde. Contrôlés en entier ; un fichier refusé arrête le
 /// chargement de la run.
 /// </summary>
 public static class InventoryConfig
@@ -18,6 +18,8 @@ public static class InventoryConfig
     private static float _badgeSoftCapFactor = 0.5f;
     private static int _bagSize = 10;
     private static int[] _itemCopyLevels = { 10, 15, 19, 22, 24, 25 };
+    private static float _eliteItemChance = 0.25f;
+    private static int _sovereignItems = 1;
     private static bool _loaded;
     private static string _loadError;
 
@@ -51,6 +53,26 @@ public static class InventoryConfig
         }
     }
 
+    /// <summary>Chance qu'une élite lâche un objet au sol (plan 35 I3).</summary>
+    public static float EliteItemChance
+    {
+        get
+        {
+            Load();
+            return _eliteItemChance;
+        }
+    }
+
+    /// <summary>Objets qu'un Souverain lâche à sa mort.</summary>
+    public static int SovereignItems
+    {
+        get
+        {
+            Load();
+            return _sovereignItems;
+        }
+    }
+
     /// <summary>Part du pas que vaut le niveau <paramref name="level"/> d'un Écusson : 1, puis le facteur au-delà du seuil.</summary>
     public static float BadgeStepFactor(int level)
     {
@@ -73,12 +95,14 @@ public static class InventoryConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             reader.AllowOnly(reader.Root, "inventaire", "badge_slots", "badge_soft_cap_level", "badge_soft_cap_factor", "bag_size",
-                "item_copy_levels");
+                "item_copy_levels", "elite_item_chance", "sovereign_items");
             int badgeSlots = reader.Integer(reader.Root, "badge_slots", 1, 8);
             int softCapLevel = reader.Integer(reader.Root, "badge_soft_cap_level", 1, 1000);
             float softCapFactor = reader.Ratio(reader.Root, "badge_soft_cap_factor");
             int bagSize = reader.Integer(reader.Root, "bag_size", 1, 50);
             int[] copyLevels = ReadCopyLevels(reader, reader.Root, "item_copy_levels");
+            float eliteChance = reader.Chance(reader.Root, "elite_item_chance");
+            int sovereignItems = reader.Integer(reader.Root, "sovereign_items", 0, 5);
             if (reader.Error != null)
                 return reader.Error;
             _badgeSlots = badgeSlots;
@@ -86,6 +110,8 @@ public static class InventoryConfig
             _badgeSoftCapFactor = softCapFactor;
             _bagSize = bagSize;
             _itemCopyLevels = copyLevels;
+            _eliteItemChance = eliteChance;
+            _sovereignItems = sovereignItems;
             return null;
         }
         catch (JsonException ex)
