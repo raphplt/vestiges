@@ -1261,3 +1261,32 @@ Raphaël, après le compte rendu du Campement et du lot I0 : « Ok, ces points m
 - **Sac** : sac plein, l'objet reste au sol avec une invite à maintenir, qui ouvre l'écran d'échange en pause ; 3 à 5 nouveaux objets rejoignent la réserve de départ ; un objet sans niveaux vaut d'abord son niveau 10 d'aujourd'hui, et son palier du niveau 15 devient l'effet d'un doublon.
 
 **Suite** : refonte de l'inventaire (plan 35, lots I1 à I7, découpés au §10), puis les Poches du Campement (plan 36 M4).
+
+## 117. Retours sur les livraisons du 9 au 11 octobre — 11 octobre 2026
+
+Raphaël, après avoir joué : la refonte des menus « dans la globalité, c'est cool », le menu de level-up « très bien fait, c'est assez stylé », « le son c'est beaucoup mieux », « la courbe de difficulté elle est mieux ». Ses demandes, dans ses mots quand ils comptent :
+- **Partir** : la sélection des personnages seule, sans onglet vers Quêtes et Collection. Bouton Partir « pas assez visible ». La liste des personnages « se détache pas assez de l'arrière-plan », pas de cadre, survol en « fond semi-transparent sans contour, sans habillage ».
+- **Pages séparées** : depuis Campement, ne pas pouvoir aller vers Quêtes et Collection, « autant garder des vraies pages séparées ».
+- **Quêtes** : « je t'ai dit que je voulais pas un truc avec Tout, En cours et Accompli, il faut juste un seul affichage », accomplies distinguées par la couleur ; cartes trop grandes.
+- **Collection** : pas de bouton pour afficher valeurs et règles, souvent une seule ligne.
+- **Réminiscences** : toutes débloquées par défaut, « elles devraient n'avoir que quelques-unes de dispo de base, et toutes les autres via des quêtes ». Icône de Mémoire vive à refaire.
+- **Campement** : « on comprend pas ce que ça fait », il faut un sous-texte qui explique.
+- **Curseur** custom, de base et au survol.
+- **Chargement** : l'animation « lag beaucoup ».
+- **Minimap** : trop basique, brouillard trop simple, un peu trop dézoomée.
+- **Menus en run** (level-up, coffre, pause) : garder les panneaux, mais revoir le jeu derrière, « un peu transparent », « un petit effet pour qu'il soit pas full visible ».
+- **HUD** : Péril pas à côté du chrono, plutôt à droite près du score ; score et niveaux sans encadrés, éliminations écrites trop petit.
+- **Barre du bas** : Écussons plus grands, objets ailleurs (« à gauche de l'écran en vertical »), pas tout au même endroit.
+- **Routes** de la ville trop en ligne droite, « pas en vue isométrique », surtout le bord du haut.
+- **Cercle** de la Veillée pas en pixel art ; certains pixel art n'ont pas la même qualité.
+- **Transitions** entre zones : « des pixels dans tous les sens », à rendre plus doux.
+- **Ennemis** : seuls sprites non repris récemment, en retravailler certains.
+
+**Choix du jour (questions posées) :**
+- Réminiscences : 3 de base, 4 par quêtes, et « préparer les autres » (quêtes des 7 à venir).
+- Quêtes en lignes compactes, accomplies en fin de liste. Curseur flèche pixel art et main au survol. Collection : tout affiché, défilement si besoin.
+- Menus de run : jeu flouté et assombri. HUD : texte posé avec contour. Objets en colonne à gauche sans cadre. Minimap **ronde, façon boussole** (contre la recommandation carrée).
+- Routes : mêmes axes, bords en perspective iso. Transitions : lisière organique en amas. Ennemis : Rôdeur, Charognard, Présage et Tisseuse d'abord.
+- Ordre : Hub, puis run, puis monde.
+
+Lots au [plan 37](37-retours-du-11-octobre.md).

@@ -32,11 +32,17 @@ public static class MenuSkin
         bool active = name.Contains("hover") || name.Contains("selected") || name.Contains("active");
         bool pressed = name.Contains("pressed");
         bool disabled = name.Contains("disabled") || name.Contains("locked");
+        Texture2D texture = Stone(disabled ? new Color("20202a") : new Color("302e35"), active ? new Color("b69a62") : new Color("69616a"),
+            new Color("131321"), pressed);
+        Textures[name] = texture;
+        return texture;
+    }
+
+    /// <summary>Dalle de 64 px : surface grenue, arête claire en haut à gauche, ombre en bas à droite, coins et tranche ébréchés.</summary>
+    private static Texture2D Stone(Color body, Color rim, Color shadow, bool pressed)
+    {
         const int size = 64;
         using Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
-        Color body = disabled ? new Color("20202a") : new Color("302e35");
-        Color rim = active ? new Color("b69a62") : new Color("69616a");
-        Color shadow = new("131321");
         for (int y = 0; y < size; y++)
         for (int x = 0; x < size; x++)
         {
@@ -55,9 +61,55 @@ public static class MenuSkin
         // Petites cassures dans la tranche, loin de la surface de lecture.
         foreach (Vector2I chip in new[] { new Vector2I(11, 1), new Vector2I(42, 2), new Vector2I(2, 48), new Vector2I(53, 61) })
             image.FillRect(new Rect2I(chip, new Vector2I(3, 2)), shadow);
-        Texture2D texture = ImageTexture.CreateFromImage(image);
-        Textures[name] = texture;
+        return ImageTexture.CreateFromImage(image);
+    }
+
+    private static Texture2D Cached(string key, System.Func<Texture2D> create)
+    {
+        if (!Textures.TryGetValue(key, out Texture2D texture))
+            Textures[key] = texture = create();
         return texture;
+    }
+
+    /// <summary>Action qui engage la partie (Partir) : dalle de bronze à arête dorée, plus haute que tout autre bouton.</summary>
+    public static void StyleCallToAction(Button button)
+    {
+        Color shadow = new("2a1d0c");
+        Texture2D normal = Cached("cta", () => Stone(new Color("6e5022"), new Color("e2c06e"), shadow, false));
+        Texture2D hover = Cached("cta-hover", () => Stone(new Color("8a6629"), new Color("f6dc92"), shadow, false));
+        Texture2D pressed = Cached("cta-pressed", () => Stone(new Color("8a6629"), new Color("f6dc92"), shadow, true));
+        UITheme.ApplyButtonStyle(button, normal, hover, pressed, TextureFor("ui_button_disabled.png"));
+        // Le focus entoure la dalle sans la remplacer : au repos, Partir garde souvent le focus.
+        StyleBoxFlat focus = new() { DrawCenter = false, BorderColor = new Color("f6dc92") };
+        focus.SetBorderWidthAll(2);
+        focus.SetExpandMarginAll(4);
+        button.AddThemeStyleboxOverride("focus", focus);
+        button.AddThemeFontOverride("font", UITheme.StrongFont);
+        UITheme.SetTextRole(button, TextRole.Title);
+        foreach (string state in new[] { "font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color" })
+            button.AddThemeColorOverride(state, UITheme.TextLight);
+        button.AddThemeColorOverride("font_disabled_color", UITheme.TextDim);
+        button.AddThemeColorOverride("font_outline_color", shadow);
+        button.AddThemeConstantOverride("outline_size", 6);
+        foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+        {
+            StyleBox style = button.GetThemeStylebox(state);
+            style.ContentMarginLeft = style.ContentMarginRight = 24;
+            style.ContentMarginTop = style.ContentMarginBottom = 14;
+        }
+    }
+
+    /// <summary>
+    /// Carte d'une liste à choisir (personnages) : dalle de pierre au repos, dalle à tranche dorée quand elle est examinée.
+    /// <paramref name="examined"/> garde la carte allumée hors survol.
+    /// </summary>
+    public static void StyleRosterCard(Button card, bool examined)
+    {
+        StyleBoxTexture rest = UITheme.CreateNinePatch(TextureFor("ui_card_normal.png"), 8, 8, 8, 8);
+        StyleBoxTexture lit = Choice(UITheme.GoldBright, true);
+        card.AddThemeStyleboxOverride("normal", examined ? lit : rest);
+        foreach (string state in new[] { "hover", "focus", "pressed", "hover_pressed" })
+            card.AddThemeStyleboxOverride(state, lit);
     }
 
     /// <summary>Dalle de choix : tranche de rareté, surface opaque et repère de sélection gravé.</summary>

@@ -336,7 +336,7 @@ public partial class HubScreen : Control
 	private void BuildPages()
 	{
 		_charactersPanel = new HubCharactersPanel();
-		AddPage(HubState.Characters, "Personnages", _charactersPanel, 100f, -120f, -160f);
+		AddPage(HubState.Characters, "Choisir un personnage", _charactersPanel, 100f, -120f, -160f);
 		_charactersPanel.DepartRequested += StartRun;
 		_charactersPanel.QuestRequested += OpenQuest;
 		_charactersPanel.WeaponRequested += id => OpenReward((int)UnlockKind.Weapon, id);
@@ -357,17 +357,11 @@ public partial class HubScreen : Control
 		AddChild(layer);
 
 		MenuSkin.AddBackdrop(layer);
-		HBoxContainer navigation = new() { Position = new Vector2(96, 76) };
-		navigation.AddThemeConstantOverride("separation", 24);
-		layer.AddChild(navigation);
-		foreach ((HubState destination, string caption) in new[] { (HubState.Characters, "Personnages"), (HubState.Quests, "Quêtes"), (HubState.Collection, "Collection") })
-		{
-			Button tab = MenuSkin.Button(caption, state == destination);
-			MenuSkin.StyleLink(tab, state == destination);
-			tab.CustomMinimumSize = new Vector2(240, 56);
-			tab.Pressed += () => OpenPage(destination);
-			navigation.AddChild(tab);
-		}
+		// Chaque page est une destination à part : un titre, pas d'onglets vers les autres (DECISIONS §117).
+		Label heading = CreateLabel(title, TextRole.Title, UITheme.GoldBright, true);
+		heading.Name = "PageTitle";
+		heading.Position = new Vector2(MenuLeft + 36f, 96f);
+		layer.AddChild(heading);
 		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 970f) };
 		layer.AddChild(back);
 		HubMenuButton backButton = new();

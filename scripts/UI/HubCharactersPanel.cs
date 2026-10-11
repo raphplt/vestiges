@@ -24,6 +24,9 @@ public partial class HubCharactersPanel : MarginContainer
     private Button _weapon;
     private CharacterData _examined;
     private readonly Dictionary<string, Button> _rows = new();
+    private readonly Dictionary<string, Panel> _medallions = new();
+    private readonly StyleBoxFlat _medallionRest = Medallion(new Color("4a4550"));
+    private readonly StyleBoxFlat _medallionLit = Medallion(UITheme.GoldColor);
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
     private int _idleCount;
     private float _idleTime;
@@ -35,14 +38,18 @@ public partial class HubCharactersPanel : MarginContainer
         HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
         body.AddThemeConstantOverride("separation", 32);
         AddChild(body);
+        // La liste a son propre cadre de pierre : elle se détache du mur au lieu de flotter dessus (DECISIONS §117).
+        PanelContainer rosterFrame = new() { CustomMinimumSize = new Vector2(372, 0) };
+        rosterFrame.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        body.AddChild(rosterFrame);
         ScrollContainer roster = new()
         {
-            Name = "CharacterRoster", CustomMinimumSize = new Vector2(300, 0),
+            Name = "CharacterRoster",
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
         };
-        body.AddChild(roster);
+        rosterFrame.AddChild(roster);
         _list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        _list.AddThemeConstantOverride("separation", 16);
+        _list.AddThemeConstantOverride("separation", 10);
         roster.AddChild(_list);
         _portrait = new TextureRect
         {
@@ -55,8 +62,14 @@ public partial class HubCharactersPanel : MarginContainer
         PanelContainer panel = new() { CustomMinimumSize = new Vector2(400, 0), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
         body.AddChild(panel);
-        ScrollContainer scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true };
-        panel.AddChild(scroll);
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 20);
+        panel.AddChild(column);
+        ScrollContainer scroll = new()
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true, SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        column.AddChild(scroll);
         VBoxContainer sheet = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         sheet.AddThemeConstantOverride("separation", 22);
         scroll.AddChild(sheet);
@@ -78,7 +91,6 @@ public partial class HubCharactersPanel : MarginContainer
         sheet.AddChild(_detailsButton);
         _details = Label(sheet, "", TextRole.Body, UITheme.TextColor);
         _details.Visible = false;
-        sheet.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(0, 24) });
         _condition = Label(sheet, "", TextRole.Body, UITheme.TextColor);
         _quest = MenuSkin.Button("Voir la quête");
         _quest.Pressed += () =>
@@ -87,11 +99,21 @@ public partial class HubCharactersPanel : MarginContainer
             if (quest != null) EmitSignal(SignalName.QuestRequested, quest.Id);
         };
         sheet.AddChild(_quest);
-        _depart = MenuSkin.Button("Partir", true);
+        // Partir reste au pied de la fiche, hors du défilement : toujours au même endroit, toujours visible.
+        _depart = MenuSkin.Button("Partir");
+        MenuSkin.StyleCallToAction(_depart);
         _depart.Name = "DepartButton";
-        _depart.CustomMinimumSize = new Vector2(0, 68);
+        _depart.CustomMinimumSize = new Vector2(0, 92);
         _depart.Pressed += () => { if (CanDepart) EmitSignal(SignalName.DepartRequested, _examined.Id); };
-        sheet.AddChild(_depart);
+        column.AddChild(_depart);
+    }
+
+    /// <summary>Creux sombre derrière le sprite, cerclé d'un trait plein : le personnage se lit sur un fond, pas sur la pierre.</summary>
+    private static StyleBoxFlat Medallion(Color rim)
+    {
+        StyleBoxFlat style = new() { BgColor = new Color("15141d"), BorderColor = rim, AntiAliasing = false };
+        style.SetBorderWidthAll(2);
+        return style;
     }
 
     private static Label Label(Container parent, string text, TextRole role, Color color)
@@ -110,23 +132,26 @@ public partial class HubCharactersPanel : MarginContainer
             {
                 bool unlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
                 Button row = MenuSkin.Button("");
-                MenuSkin.StyleLink(row);
+                MenuSkin.StyleRosterCard(row, false);
                 row.Name = character.Id;
                 row.AccessibilityName = character.Name;
-                row.CustomMinimumSize = new Vector2(284, 118);
+                row.CustomMinimumSize = new Vector2(300, 112);
+                Panel medallion = new() { Position = new Vector2(14, 10), Size = new Vector2(68, 92), MouseFilter = MouseFilterEnum.Ignore };
+                row.AddChild(medallion);
+                _medallions[character.Id] = medallion;
                 TextureRect sprite = new()
                 {
-                    Texture = CharacterPortrait.Idle(character.Id), Position = new Vector2(12, 10), Size = new Vector2(64, 96),
+                    Texture = CharacterPortrait.Idle(character.Id), Position = new Vector2(16, 8), Size = new Vector2(64, 96),
                     ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                     TextureFilter = TextureFilterEnum.Nearest, MouseFilter = MouseFilterEnum.Ignore,
                     Modulate = unlocked ? Colors.White : new Color(0.55f, 0.53f, 0.58f),
                 };
                 row.AddChild(sprite);
                 Label name = UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextDim);
-                name.Position = new Vector2(88, 28);
+                name.Position = new Vector2(98, 26);
                 row.AddChild(name);
                 Label state = UITheme.MakeLabel(unlocked ? "Jouable" : "À débloquer", TextRole.Small, UITheme.TextDim);
-                state.Position = new Vector2(88, 66);
+                state.Position = new Vector2(98, 62);
                 row.AddChild(state);
                 row.FocusEntered += () => ShowSheet(character);
                 row.MouseEntered += () => ShowSheet(character);
@@ -179,7 +204,11 @@ public partial class HubCharactersPanel : MarginContainer
         _depart.Disabled = !CanDepart;
         _depart.Text = CanDepart ? "Partir" : "Personnage verrouillé";
         foreach ((string id, Button row) in _rows)
-            row.SelfModulate = id == character.Id ? Colors.White : new Color(0.78f, 0.78f, 0.82f);
+        {
+            bool examined = id == character.Id;
+            MenuSkin.StyleRosterCard(row, examined);
+            _medallions[id].AddThemeStyleboxOverride("panel", examined ? _medallionLit : _medallionRest);
+        }
     }
 
     public override void _Process(double delta)

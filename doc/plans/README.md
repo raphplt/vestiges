@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 octobre — retours de Raphaël sur trois jours de livraisons ([plan 37](37-retours-du-11-octobre.md), §117) :** Hub (pages séparées, sélection, Quêtes en liste unique, Collection sans bouton, Campement expliqué, Réminiscences par quêtes, curseur), interface de run (jeu flouté derrière les menus, HUD sans encadrés, objets à gauche, minimap boussole, chargement fluide), monde (cercles en pixel art, transitions de biomes, bords de routes en iso, ennemis). Lot H1 engagé.
+
 **11 octobre — l'inventaire, lots I1 à I7 (plan 35 §11–§17) et les Poches (plan 36 M4) :** 4 Écussons qui montent au level-up et par l'usage (un fil sous chaque Écusson ; un quart des niveaux par l'usage, mesuré au bot), sac d'objets en exemplaires (10 places, 25 avec les Poches), objets lâchés par les coffres, élites, Souverains et vendus aux Ateliers, écran d'échange quand le sac est plein, surplus d'arme au niveau 50, cinq nouveaux objets (Ticket de consigne, Plan de métro, Flacon de pharmacie, Trèfle plastifié, Montre arrêtée). Points à juger dans `A-VERIFIER.md`.
 
 **11 octobre — l'inventaire, lot I0 (plan 35 §9) :** les 17 Écussons nommés (du batteur, du coureur, du pompier…) avec leur déclencheur de montée par l'usage, maquettes de la barre du bas (4 armes, 4 Écussons, sac compact) et de l'écran d'échange, migration des données et des 18 quêtes d'objets. Rien n'est codé : huit questions au plan 35 §9.5 avant I1.
