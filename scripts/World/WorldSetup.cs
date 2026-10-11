@@ -281,7 +281,7 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("points d'intérêt, coffres et lieux");
 
         onProgress?.Invoke("Décors...");
-        SpawnEnvironmentProps(_urbanLayout, _swampLayout);
+        await SpawnEnvironmentPropsAsync(_urbanLayout, _swampLayout);
         LoadGuard.InjectFault("décors");
         LoadProfiler.Mark("décors des biomes");
         await YieldFrame();
@@ -297,7 +297,7 @@ public partial class WorldSetup : Node2D
             SwampPropPlacer.PlaceProps(_swampLayout, _ground, _propStaging, _usedCells);
         }
         LoadProfiler.Mark("décors du marais");
-        BuildPropOcclusion();
+        await BuildPropOcclusionAsync();
         await YieldFrame();
         LoadProfiler.Mark("tronçons de décors");
 
@@ -317,42 +317,6 @@ public partial class WorldSetup : Node2D
         IsWorldReady = true;
         LoadProfiler.Mark("atmosphère");
         GD.Print($"[WorldSetup] World generated with seed {Seed}");
-    }
-
-    /// <summary>Initialisation synchrone legacy (simulation / fallback).</summary>
-    public void InitializeWorldSync()
-    {
-        _generation.Wait();
-        PrepareTiles();
-        CreateVoidBackground();
-        ApplyTerrain(_terrain, _urbanLayout);
-        GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, new Vector2I(_config.MapRadius, _config.MapRadiusY), _config.GroundBlend);
-        AddPaths();
-        InitializeFog();
-        if (_config.PoisEnabled && !PoisDisabled)
-            SpawnPois();
-        SpawnSites();
-        SpawnEnvironmentProps(_urbanLayout, _swampLayout);
-        if (_urbanLayout != null)
-        {
-            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
-        }
-        if (_swampLayout != null)
-        {
-            SwampPropPlacer.PlaceProps(_swampLayout, _ground, _propStaging, _usedCells);
-        }
-        BuildPropOcclusion();
-        if (_config.LoreElementsEnabled)
-            SpawnLoreElements();
-        InitBiomeAtmosphere();
-
-        _terrain = null;
-        _urbanLayout = null;
-        _swampLayout = null;
-        _wildFieldsLayout = null;
-        _pathNetwork = null;
-        IsWorldReady = true;
-        GD.Print($"[WorldSetup] World generated with seed {Seed} (sync)");
     }
 
     /// <summary>Rend la main au moteur pour une image, puis s'arrête si la scène a été quittée entre-temps.</summary>
@@ -431,61 +395,7 @@ public partial class WorldSetup : Node2D
         MoveChild(voidBg, 0);
     }
 
-    private void ApplyTerrain(TerrainType[,] terrain, UrbanLayout urbanLayout)
-    {
-        _ground.Clear();
-        _roadOverlay?.Clear();
-
-        int radius = _config.MapRadius;
-        int radiusY = _config.MapRadiusY;
-        float fadeStart = radius - _config.EdgeFadeWidth;
-        bool hasDissolution = _tileMapper.HasDissolutionTiles;
-
-        for (int gx = 0; gx < radius * 2 + 1; gx++)
-        {
-            for (int gy = 0; gy < radiusY * 2 + 1; gy++)
-            {
-                int x = gx - radius;
-                int y = gy - radiusY;
-
-                if (!_generator.IsWithinBounds(x, y))
-                    continue;
-
-                Vector2I cell = new(x, y);
-                float dist = _generator.EllipseDistance(x, y);
-
-                if (_generator.IsErased(x, y))
-                {
-                    if (hasDissolution && dist <= radius)
-                    {
-                        float decay = Mathf.Clamp((dist - fadeStart) / _config.EdgeFadeWidth, 0f, 1f);
-                        int dissId = _tileMapper.GetDissolutionSourceId(decay);
-                        if (dissId >= 0)
-                        {
-                            _tileMapper.SetCell(_ground, cell, dissId);
-                            continue;
-                        }
-                    }
-                    continue;
-                }
-
-                TerrainType terrainType = terrain[gx, gy];
-                int biomeIndex = _generator.GetBiomeIndex(x, y);
-                UrbanCellType urbanCellType = UrbanCellType.None;
-                if (urbanLayout != null)
-                    urbanCellType = urbanLayout.CellGrid[gx, gy];
-
-                int sourceId = _tileMapper.GetSourceId(biomeIndex, terrainType, x, y, urbanCellType, _generator);
-                if (sourceId < 0)
-                    continue;
-                _tileMapper.SetCell(_ground, cell, sourceId);
-            }
-        }
-
-        ApplyRoadOverlay(urbanLayout);
-    }
-
-    /// <summary>Version async de ApplyTerrain : yield toutes les ~600 tiles.</summary>
+    /// <summary>Pose des tuiles du sol, en rendant la main au moteur par tranches de temps.</summary>
     private async Task ApplyTerrainAsync(TerrainType[,] terrain, UrbanLayout urbanLayout, Action<string> onProgress)
     {
         _ground.Clear();
@@ -598,7 +508,7 @@ public partial class WorldSetup : Node2D
         LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);
     }
 
-    private void BuildPropOcclusion()
+    private async Task BuildPropOcclusionAsync()
     {
         Node2D propContainer = GetNode<Node2D>("PropContainer");
         Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
@@ -609,18 +519,24 @@ public partial class WorldSetup : Node2D
         {
             SeparateGroundDecals(_propStaging, decalStaging);
             LoadProfiler.Mark("décalques séparés");
+            await YieldFrame();
             Node2D player = GetNodeOrNull<Node2D>("Player");
             PropOcclusion occlusion = new() { Name = "PropOcclusion" };
             AddChild(occlusion);
             occlusion.Build(_propStaging, player);
             LoadProfiler.Mark("index d'occlusion construit");
+            await YieldFrame();
 
-            // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent d'un bloc (voir PropChunks).
+            // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent tronçon par tronçon (voir PropChunks).
             PropChunks chunks = new() { Name = "PropChunks" };
             AddChild(chunks);
             chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (_propStaging, propContainer), (decalStaging, decals));
             _propStaging.Free();
             _propStaging = null;
+            LoadProfiler.Mark("décors rangés en tronçons");
+            BeginLoadSlice();
+            while (chunks.AttachPending(LoadSliceSpent))
+                await YieldLoadSlice();
         }
         finally
         {
@@ -648,7 +564,8 @@ public partial class WorldSetup : Node2D
         GD.Print($"[WorldSetup] Décalques au sol hors tri : {moved} / {moved + propContainer.GetChildCount()}");
     }
 
-    private void SpawnEnvironmentProps(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
+    /// <summary>Décors des biomes, placeur après placeur ; le moteur reprend la main entre chacun et par tranches de temps.</summary>
+    private async Task SpawnEnvironmentPropsAsync(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
     {
         // Conteneur final, trié en Y avec le joueur, les ennemis et les POI : un décor masque ce qui passe derrière lui.
         if (GetNodeOrNull<Node2D>("PropContainer") == null)
@@ -661,12 +578,22 @@ public partial class WorldSetup : Node2D
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
         SiteComposer.Place(_farms, _farmConfig.Site, propContainer, Seed);
+        LoadProfiler.Mark("décors des fermes");
+        await YieldFrame();
         SiteComposer.Place(_quarrySites, _quarryPlan, propContainer, Seed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
+        LoadProfiler.Mark("décors des carrières");
+        await YieldFrame();
         WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
+        await YieldFrame();
         _storyScenes = WildFieldsComposer.PlaceScenes(_generator, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
+        LoadProfiler.Mark("décors des champs");
+        await YieldFrame();
         JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, Seed);
-        _propSpawner.SpawnProps(_generator, _terrain, _ground, propContainer, _usedCells, Seed, blockedCells, _wildFieldsLayout);
+        LoadProfiler.Mark("décors des carrefours");
+        await YieldLoadSlice();
+        await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, Seed, LoadSliceSpent,
+            YieldLoadSlice, blockedCells, _wildFieldsLayout);
     }
 
     private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
@@ -718,34 +645,6 @@ public partial class WorldSetup : Node2D
         }
 
         MoveChild(_roadOverlay, _ground.GetIndex() + 1);
-    }
-
-    private void ApplyRoadOverlay(UrbanLayout urbanLayout)
-    {
-        if (_roadOverlay == null)
-            return;
-
-        _roadOverlay.Clear();
-        if (urbanLayout == null)
-            return;
-
-        int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
-        if (urbanIndex < 0)
-            return;
-
-        for (int gx = 0; gx < urbanLayout.CellGrid.GetLength(0); gx++)
-        {
-            for (int gy = 0; gy < urbanLayout.CellGrid.GetLength(1); gy++)
-            {
-                if (urbanLayout.CellGrid[gx, gy] != UrbanCellType.Road)
-                    continue;
-
-                int x = gx - urbanLayout.MapRadius;
-                int y = gy - urbanLayout.MapRadiusY;
-                if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, x, y, out int sourceId) && sourceId >= 0)
-                    _tileMapper.SetCell(_roadOverlay, new Vector2I(x, y), sourceId);
-            }
-        }
     }
 
     private async Task ApplyRoadOverlayAsync(UrbanLayout urbanLayout, Action<string> onProgress)

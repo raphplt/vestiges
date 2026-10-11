@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Infrastructure;
 
@@ -44,13 +46,17 @@ public partial class PropSpawner : Node2D
 	/// Spawn tous les props pour la carte générée.
 	/// Appelé par WorldSetup après la génération du terrain.
 	/// </summary>
-	public void SpawnProps(
+	/// <param name="sliceSpent">Vrai quand la tranche de temps de chargement est épuisée : le placeur rend alors la main.</param>
+	/// <param name="yieldSlice">Rend la main au moteur pour une image et ouvre une nouvelle tranche.</param>
+	public async Task SpawnPropsAsync(
 		WorldGenerator generator,
 		TerrainType[,] terrainGrid,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
 		ulong seed,
+		Func<bool> sliceSpent,
+		Func<Task> yieldSlice,
 		HashSet<Vector2I> blockedCells = null,
 		WildFieldsLayout wildFieldsLayout = null)
 	{
@@ -95,6 +101,9 @@ public partial class PropSpawner : Node2D
 		{
 			for (int y = -safeRadiusY; y <= safeRadiusY; y++)
 			{
+				// Le premier chargement d'une texture de décor peut coûter cher : la tranche se vérifie à chaque cellule.
+				if (sliceSpent())
+					await yieldSlice();
 				if (generator.EllipseDistance(x, y) > safeRadius)
 					continue;
 
@@ -161,8 +170,10 @@ public partial class PropSpawner : Node2D
 			}
 		}
 
+		LoadProfiler.Mark("décors semés sur la carte");
+		await yieldSlice();
 		if (wildFieldsLayout != null && configs.TryGetValue("wild_fields", out BiomePropConfig wildFieldsConfig))
-			totalSpawned += PlaceWildFieldsHeroProps(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, wildFieldsConfig, wildFieldsLayout, seed);
+			totalSpawned += await PlaceWildFieldsHeroPropsAsync(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, wildFieldsConfig, wildFieldsLayout, seed, yieldSlice);
 
 		GD.Print($"[PropSpawner] === SPAWN REPORT ===");
 		GD.Print($"[PropSpawner] Cells evaluated: {cellsEvaluated}");
@@ -204,7 +215,8 @@ public partial class PropSpawner : Node2D
 		return candidates[candidates.Count - 1];
 	}
 
-	private int PlaceWildFieldsHeroProps(
+	/// <summary>Cinq grands décors des champs, un par image : chacun cherche sa place dans de longues listes de cellules.</summary>
+	private async Task<int> PlaceWildFieldsHeroPropsAsync(
 		WorldGenerator generator,
 		TerrainType[,] terrainGrid,
 		TileMapLayer ground,
@@ -214,7 +226,8 @@ public partial class PropSpawner : Node2D
 		Dictionary<string, Texture2D> textureCache,
 		BiomePropConfig config,
 		WildFieldsLayout layout,
-		ulong seed)
+		ulong seed,
+		Func<Task> yieldSlice)
 	{
 		if (layout.MapRadius <= 0)
 			return 0;
@@ -223,12 +236,21 @@ public partial class PropSpawner : Node2D
 		foreach (PropDefinition prop in config.Props)
 			propsById[prop.Id] = prop;
 
+		(string Id, HashSet<Vector2I>[] Sources, ulong Salt)[] heroes =
+		{
+			("rusted_plow", new[] { layout.FallowCells, layout.PathCells, layout.WheatCells }, 0x1A31UL),
+			("tractor_remains", new[] { layout.FallowCells, layout.PathCells, layout.MeadowCells }, 0x2B52UL),
+			("tractor_husk", new[] { layout.PathCells, layout.FallowCells, layout.WheatCells }, 0x3C73UL),
+			("windmill_ruin", new[] { layout.MeadowCells, layout.WheatCells }, 0x4D94UL),
+			("silo_ruin", new[] { layout.PathCells, layout.FallowCells, layout.MeadowCells }, 0x5EB5UL),
+		};
 		int placed = 0;
-		placed += TryPlaceWildFieldsHeroProp("rusted_plow", BuildWildFieldCandidateCells(layout, layout.FallowCells, layout.PathCells, layout.WheatCells), 0x1A31UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
-		placed += TryPlaceWildFieldsHeroProp("tractor_remains", BuildWildFieldCandidateCells(layout, layout.FallowCells, layout.PathCells, layout.MeadowCells), 0x2B52UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
-		placed += TryPlaceWildFieldsHeroProp("tractor_husk", BuildWildFieldCandidateCells(layout, layout.PathCells, layout.FallowCells, layout.WheatCells), 0x3C73UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
-		placed += TryPlaceWildFieldsHeroProp("windmill_ruin", BuildWildFieldCandidateCells(layout, layout.MeadowCells, layout.WheatCells), 0x4D94UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
-		placed += TryPlaceWildFieldsHeroProp("silo_ruin", BuildWildFieldCandidateCells(layout, layout.PathCells, layout.FallowCells, layout.MeadowCells), 0x5EB5UL, propsById, generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+		foreach ((string id, HashSet<Vector2I>[] sources, ulong salt) in heroes)
+		{
+			placed += TryPlaceWildFieldsHeroProp(id, BuildWildFieldCandidateCells(layout, sources), salt, propsById, generator, terrainGrid,
+				ground, container, usedCells, blockedCells, textureCache, seed) ? 1 : 0;
+			await yieldSlice();
+		}
 
 		if (placed > 0)
 			GD.Print($"[PropSpawner] Wild fields hero props placed: {placed}");

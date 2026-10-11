@@ -255,6 +255,9 @@ public partial class GameBootstrap : Node
         smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.Seed);
         sceneRoot.AddChild(smallPlaces);
         smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
+        LoadProfiler.Mark("directeurs et petits lieux");
+        // Jeu toujours en pause : rendre la main ici coupe la dernière image figée du chargement en deux (plan 37 R5).
+        await NextLoadingFrame();
 
         // Bonus lâchés (plan 24 C4) : gourde, aimant, couverture, café, pétard.
         sceneRoot.AddChild(new FieldBonusDirector { Name = "FieldBonusDirector" });
@@ -268,6 +271,7 @@ public partial class GameBootstrap : Node
         hud.SetEssenceTracker(essenceTracker);
 
         InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, fragmentManager, essenceTracker);
+        LoadProfiler.Mark("personnage et run");
 
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
         {

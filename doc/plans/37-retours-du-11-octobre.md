@@ -163,3 +163,20 @@ Un lot à la fois, capture regardée avant de conclure.
   Le rayon tombe juste en deçà du bord du radar : le front se voit avancer en marchant. Il est sans lien avec la quête « Dessiner la carte », qui compte le brouillard du monde.
 - **Coût** : l'anneau et le brouillard sont des textures générées une fois par session et ne se redessinent qu'au passage radar ↔ carte entière ; seul le terrain se repeint, quatre fois par seconde, comme avant. Un premier montage par masque d'enfants (`ClipChildren`) copiait l'écran à chaque image : remplacé par le shader après relecture `godot-reviewer`, qui l'a relevé avec le rayon de découverte invisible dans le radar et le bord du monde tramé.
 - **Vérifié** : captures du radar (en marchant, au bord du Néant, poche inconnue tramée) et de la carte entière, regardées ; test `CartographyRegression` adapté (intérieur de cellule intact, bord tramé contre l'inconnu, refermé par la voisine) ; `tools/validate.sh` smoke, `cartography`, `ui_art` 3/3 ; préchauffage des shaders valide.
+
+## 12. Lot R5 livré : chargement fluide — 11 octobre 2026
+
+**Constat mesuré.** Une nouvelle mesure dans `RunObservation` relève la pire image entre le lancement et le début de la run. Mesures avant, même graine, deux passes : 6,8 à 7,2 s de chargement, **pire image de 1 074 à 1 144 ms**. Les décors des biomes entraient d'un bloc (991 ms), les tronçons de décors aussi (904 ms), et le préchauffage dessinait tous ses shaders dans la même image.
+
+**Découpage, sans rien changer à ce qui est posé.**
+- **Décors des biomes** (`SpawnEnvironmentPropsAsync`) : reprise de main entre chaque placeur (fermes, carrières, champs, scènes, carrefours). `PropSpawner.SpawnPropsAsync` rend la main dès que sa tranche de 12 ms est épuisée, vérifiée à chaque cellule, puisque le premier chargement d'une texture de décor coûte cher. Les cinq grands décors des champs se posent un par image.
+- **Tronçons** (`PropChunks`) : le rangement reste d'un bloc (145 ms) ; l'entrée des tronçons dans l'arbre se fait par tranches de 12 ms (`AttachPending`). Une scène quittée en plein chargement libère les tronçons pas encore entrés. Reprise de main aussi autour de l'index d'occlusion.
+- **Préchauffage des shaders** : quatre échantillons par image au lieu de tous dans la même.
+- **Fin du chargement** : une reprise de main après les directeurs et les petits lieux, jeu toujours en pause.
+- **Code mort retiré** : le chemin synchrone `InitializeWorldSync` (et `ApplyTerrain`, `ApplyRoadOverlay` synchrones) n'avait plus d'appelant.
+
+**Après**, mêmes conditions, deux passes : 6,9 s de chargement (inchangé), **pire image de 250 ms** (4 à 4,5 fois moins). Monde identique : 11 086 décors semés, 21 355 rangés en 468 tronçons, 12 456 décors occultants, avant comme après.
+
+**Reste** : l'image du démarrage de la run (~250 ms : câblage des systèmes et ajouts différés), et une dizaine d'images de 60 à 170 ms (préparation des tuiles, matériau du sol, décors de la ville, rangement des tronçons). Les couper toucherait l'ordre d'initialisation de la run : pas fait sans nouvelle demande.
+
+**Vérifié** : `tools/validate.sh` smoke, `loading`, `movement-integration`, `run_trace`, `small_places`, `dev_mode` 6/6 ; préchauffage des shaders valide ; relecture `godot-reviewer` (sortie de scène, déterminisme, pause pendant les reprises de main) sans bloquant, trois points mineurs corrigés. Mesures prises machine chargée (3 à 6 de charge, une autre session au travail) : seul l'avant/après relatif compte.

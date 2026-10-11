@@ -297,11 +297,26 @@ public partial class RunObservation : Node
         bool captureLoading = Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loading") >= 0;
         ulong nextLoadingFrame = 0;
         int loadingFrame = 0;
+        // Fluidité de l'écran de chargement (plan 37 R5) : la pire image et les images figées plus de 50 ms.
+        ulong loadingStart = Time.GetTicksUsec();
+        ulong previousFrame = loadingStart;
+        ulong worstFrame = 0;
+        int frozenFrames = 0;
+        int loadingFrames = 0;
         while (!_world.IsWorldReady || GetTree().Paused || manager.CurrentState != GameManager.GameState.Run)
         {
             if (Time.GetTicksMsec() > timeout)
                 throw new InvalidOperationException("Initialisation Main supérieure à 120 s.");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            ulong now = Time.GetTicksUsec();
+            worstFrame = Math.Max(worstFrame, now - previousFrame);
+            if (now - previousFrame > 50_000)
+            {
+                frozenFrames++;
+                GD.Print($"[RunObservation] Chargement figé {(now - previousFrame) / 1000} ms, fini à {(now - loadingStart) / 1000} ms");
+            }
+            previousFrame = now;
+            loadingFrames++;
             if (captureLoading && Time.GetTicksMsec() >= nextLoadingFrame)
             {
                 await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
@@ -309,6 +324,8 @@ public partial class RunObservation : Node
                 nextLoadingFrame = Time.GetTicksMsec() + 250;
             }
         }
+        GD.Print($"[RunObservation] Chargement : {(previousFrame - loadingStart) / 1000} ms, {loadingFrames} images, pire image "
+            + $"{worstFrame / 1000} ms, {frozenFrames} images de plus de 50 ms");
         if (_world.FindChild("ShaderWarmup", true, false) != null)
             throw new InvalidOperationException("Viewport de préchauffage encore présent après le chargement.");
         _player = _world.GetNode<Player>("Player");

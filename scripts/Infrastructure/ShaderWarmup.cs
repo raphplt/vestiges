@@ -12,6 +12,7 @@ namespace Vestiges.Infrastructure;
 /// </summary>
 public partial class ShaderWarmup : SubViewport
 {
+    private const int SamplesPerFrame = 4;
     private enum SampleKind { Sprite, Rectangle, Mesh }
     private static readonly (string Path, SampleKind Kind)[] Samples =
     {
@@ -85,6 +86,7 @@ public partial class ShaderWarmup : SubViewport
             }
             sample.Name = System.IO.Path.GetFileNameWithoutExtension(path);
             sample.Material = material;
+            sample.Visible = false;
             content.AddChild(sample);
         }
         // Matériau généré par Godot : même fabrique que la lueur des vraies orbes, sans créer d'orbe ramassable.
@@ -92,6 +94,7 @@ public partial class ShaderWarmup : SubViewport
         glow.Name = "XpGlow";
         glow.Position = new Vector2(128, Size.Y - 12);
         glow.Preprocess = 0.5;
+        glow.Visible = false;
         content.AddChild(glow);
         // Particules de la run, avec les matériaux partagés qu'elles garderont : leur shader est compilé ici, pas à la
         // première Résurgence (plan 29). Opaques le temps du préchauffage : une brume transparente n'est pas dessinée.
@@ -108,6 +111,7 @@ public partial class ShaderWarmup : SubViewport
             sample.ZIndex = 0;
             sample.Position = new Vector2(32 + index * 60, Size.Y - 12);
             sample.Preprocess = 0.5;
+            sample.Visible = false;
             content.AddChild(sample);
         }
     }
@@ -121,7 +125,20 @@ public partial class ShaderWarmup : SubViewport
         owner.AddChild(viewport);
         try
         {
-            for (int frame = 0; frame < 3; frame++)
+            // Quatre échantillons par image : la compilation se répartit au lieu de figer une seule image près d'une
+            // demi-seconde pendant que l'écran de chargement s'anime (plan 37 R5).
+            Node samples = viewport.GetNode("Samples");
+            int frames = 0;
+            for (int index = 0; index < samples.GetChildCount(); index += SamplesPerFrame)
+            {
+                for (int offset = index; offset < Mathf.Min(index + SamplesPerFrame, samples.GetChildCount()); offset++)
+                    samples.GetChild<CanvasItem>(offset).Visible = true;
+                await owner.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                frames++;
+                if (!IsInstanceValid(viewport) || !viewport.IsInsideTree())
+                    return;
+            }
+            for (int frame = 0; frame < 3; frame++, frames++)
             {
                 await owner.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
                 if (!IsInstanceValid(viewport) || !viewport.IsInsideTree())
@@ -129,7 +146,7 @@ public partial class ShaderWarmup : SubViewport
             }
             int draws = RenderingServer.ViewportGetRenderInfo(viewport.GetViewportRid(),
                 RenderingServer.ViewportRenderInfoType.Canvas, RenderingServer.ViewportRenderInfo.DrawCallsInFrame);
-            GD.Print($"[ShaderWarmup] shaders={Samples.Length} draw_calls={draws} frames=3");
+            GD.Print($"[ShaderWarmup] shaders={Samples.Length} draw_calls={draws} frames={frames}");
         }
         finally
         {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -17,13 +18,16 @@ public partial class PropChunks : Node
     private const float ViewMargin = 360f;
 
     private readonly Dictionary<Vector2I, List<Node2D>> _chunks = new();
+    private readonly List<(Node2D Chunk, Node2D Target)> _pending = new();
+    private int _attached;
     private Camera2D _camera;
     private Rect2I _visibleRange;
     private bool _hasRange;
 
     /// <summary>
-    /// Range les décors de chaque source, hors de l'arbre et à l'origine, dans des tronçons masqués, puis ajoute les
-    /// tronçons à leur conteneur final, qui leur transmet son tri en Y : chaque décor entre une seule fois dans la scène.
+    /// Range les décors de chaque source, hors de l'arbre et à l'origine, dans des tronçons masqués, destinés à leur
+    /// conteneur final, qui leur transmettra son tri en Y ; <see cref="AttachPending"/> les y fait entrer. Chaque décor
+    /// entre une seule fois dans la scène.
     /// </summary>
     public void Build(Camera2D camera, params (Node2D Source, Node2D Target)[] containers)
     {
@@ -51,9 +55,37 @@ public partial class PropChunks : Node
                 moved++;
             }
             foreach (Node2D chunk in byCell.Values)
-                target.AddChild(chunk);
+                _pending.Add((chunk, target));
         }
         GD.Print($"[PropChunks] {moved} décors répartis en {_chunks.Count} tronçons de {ChunkSize} px");
+    }
+
+    /// <summary>
+    /// Fait entrer les tronçons rangés dans l'arbre jusqu'à épuisement de la tranche de temps : l'entrée de dix mille
+    /// décors d'un bloc figeait l'écran de chargement près d'une seconde (plan 37 R5). Vrai s'il en reste.
+    /// </summary>
+    public bool AttachPending(Func<bool> sliceSpent)
+    {
+        while (_attached < _pending.Count)
+        {
+            (Node2D chunk, Node2D target) = _pending[_attached++];
+            target.AddChild(chunk);
+            if (sliceSpent())
+                break;
+        }
+        if (_attached < _pending.Count)
+            return true;
+        _pending.Clear();
+        _attached = 0;
+        return false;
+    }
+
+    /// <summary>Scène quittée pendant le chargement : les tronçons pas encore entrés n'ont aucun parent qui les libère.</summary>
+    public override void _ExitTree()
+    {
+        for (int i = _attached; i < _pending.Count; i++)
+            _pending[i].Chunk.Free();
+        _attached = _pending.Count;
     }
 
     public override void _Process(double delta)
