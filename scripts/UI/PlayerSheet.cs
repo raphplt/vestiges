@@ -122,13 +122,13 @@ public static class PlayerSheet
         row.AddThemeConstantOverride("separation", 8);
         if (iconPath != null)
             row.AddChild(MakeIcon(iconPath, 32));
-        Label label = MakeLabel(name, TextRole.Small, StatValueColor);
+        Label label = MakeLabel(name, TextRole.Subhead, StatValueColor);
         label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
-        label.ClipText = true;
+        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        label.CustomMinimumSize = new Vector2(100, 0);
         row.AddChild(label);
         if (level.Length > 0)
-            row.AddChild(MakeLabel(level, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
+            row.AddChild(MakeLabel(level, TextRole.Subhead, StatBonusColor, HorizontalAlignment.Right));
         container.AddChild(row);
     }
 

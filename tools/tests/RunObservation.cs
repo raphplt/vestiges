@@ -122,6 +122,13 @@ public partial class RunObservation : Node
             Vestiges.Progression.PerkSpecializationEffects.PreviewInactive = Array.IndexOf(args, "--preview-perks") >= 0;
             if (captureMap)
                 MeasureBiomeLayout(seed, int.Parse(Argument(args, "--map-seeds", "40"), CultureInfo.InvariantCulture), 4);
+            // Stress typographique de recette : ne modifie ni réglage ni sauvegarde du joueur.
+            float menuFontScale = float.Parse(Argument(args, "--menu-font-scale", "1"), CultureInfo.InvariantCulture);
+            if (menuFontScale != 1f)
+            {
+                int[] sizes = (int[])typeof(Vestiges.UI.UITheme).GetField("RoleSizes", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+                for (int i = 0; i < sizes.Length; i++) sizes[i] = Mathf.RoundToInt(sizes[i] * menuFontScale);
+            }
             await LoadRun(seed, Argument(args, "--character", "traqueur"));
 
             string captureSize = Argument(args, "--capture-size", "");
@@ -197,6 +204,8 @@ public partial class RunObservation : Node
                 await CaptureIntegratedArt();
             else if (Array.IndexOf(args, "--capture-levelup") >= 0)
                 await CaptureLevelUp();
+            else if (Array.IndexOf(args, "--capture-journal") >= 0)
+                await CaptureJournal();
             else if (Array.IndexOf(args, "--capture-pause") >= 0)
                 await CapturePause();
             else if (Array.IndexOf(args, "--capture-choices") >= 0)

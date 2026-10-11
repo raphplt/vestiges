@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "name": "smoke",
+      "exit_code": 0
+    },
+    {
+      "name": "menu_navigation",
+      "exit_code": 0
+    },
+    {
+      "name": "choice_screen",
+      "exit_code": 0
+    },
+    {
+      "name": "ui_art",
+      "exit_code": 0
+    },
+    {
+      "name": "perk_acquisition",
+      "exit_code": 0
+    },
+    {
+      "name": "perk_contracts",
+      "exit_code": 0
+    },
+    {
+      "name": "objects",
+      "exit_code": 0
+    },
+    {
+      "name": "weapons",
+      "exit_code": 0
+    },
+    {
+      "name": "saves",
+      "exit_code": 0
+    },
+    {
+      "name": "run_trace",
+      "exit_code": 0
+    },
+    {
+      "name": "input_remap",
+      "exit_code": 0
+    },
+    {
+      "name": "music",
+      "exit_code": 0
+    },
+    {
+      "name": "quests",
+      "exit_code": 0
+    },
+    {
+      "name": "loading",
+      "exit_code": 0
+    },
+    {
+      "name": "dev_mode",
+      "exit_code": 0
+    }
+  ],
+  "passed": 15,
+  "expected": 15,
+  "source_changes": []
+}

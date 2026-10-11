@@ -13,11 +13,9 @@ public partial class EndGainCard : PanelContainer
     private const float FlipSec = 0.3f;
     private const float CountSec = 0.8f;
     private const float TickInterval = 0.06f;
-    private static readonly Color SlotColor = new(0.08f, 0.07f, 0.12f, 0.9f);
-    private static readonly Color BackColor = new(0.05f, 0.045f, 0.08f, 0.95f);
 
-    private StyleBoxFlat _face;
-    private StyleBoxFlat _back;
+    private StyleBoxTexture _face;
+    private StyleBoxTexture _back;
     private Control _content;
     private Label _label;
     private string _flipSound = "sfx_perk_choix";
@@ -35,26 +33,13 @@ public partial class EndGainCard : PanelContainer
         MouseFilter = MouseFilterEnum.Ignore;
         if (flipSound != null)
             _flipSound = flipSound;
-        _face = new StyleBoxFlat
-        {
-            BgColor = SlotColor,
-            BorderColor = accent,
-            BorderWidthTop = 3,
-            ContentMarginLeft = 20,
-            ContentMarginRight = 20,
-            ContentMarginTop = 10,
-            ContentMarginBottom = 10,
-        };
-        _back = (StyleBoxFlat)_face.Duplicate();
-        _back.BgColor = BackColor;
-        _back.BorderColor = new Color(accent, 0.45f);
-        _back.BorderWidthLeft = 2;
-        _back.BorderWidthRight = 2;
-        _back.BorderWidthBottom = 2;
-
-        _label = new Label { Text = text, HorizontalAlignment = HorizontalAlignment.Center, MouseFilter = MouseFilterEnum.Ignore };
+        _face = MenuSkin.Choice(accent);
+        _back = MenuSkin.Choice(UITheme.TextVeryDim);
+        CustomMinimumSize = new Vector2(340, 104);
+        _label = new Label { Text = text, HorizontalAlignment = HorizontalAlignment.Left, MouseFilter = MouseFilterEnum.Ignore,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(270, 0) };
         _label.AddThemeFontOverride("font", font);
-        UITheme.SetTextRole(_label, TextRole.Lead);
+        UITheme.SetTextRole(_label, TextRole.Subhead);
         _label.AddThemeColorOverride("font_color", accent);
         _label.AddThemeColorOverride("font_outline_color", UITheme.OutlineColor);
         _label.AddThemeConstantOverride("outline_size", 4);
@@ -92,7 +77,6 @@ public partial class EndGainCard : PanelContainer
         _counterFormat = format;
         _counterTarget = target;
         _label.Text = string.Format(format, target.ToString("N0"));
-        _label.CustomMinimumSize = new Vector2(_label.GetMinimumSize().X, 0f);
     }
 
     /// <summary>

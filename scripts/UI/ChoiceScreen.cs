@@ -13,7 +13,8 @@ namespace Vestiges.UI;
 public partial class ChoiceScreen : CanvasLayer
 {
     // Largeur du texte d'une carte : carte moins marges, icône et écart.
-    private const float TextWidth = ChoiceStyle.CardWidth - 110f;
+    private const float CardWidth = 1000f;
+    private const float TextWidth = CardWidth - 170f;
 
     private ColorRect _overlay;
     private PixelBackdrop _backdrop;
@@ -22,6 +23,7 @@ public partial class ChoiceScreen : CanvasLayer
     private Label _title;
     private Label _subtitle;
     private VBoxContainer _cardsContainer;
+    private ScrollContainer _scroll;
     private HBoxContainer _actions;
     private readonly List<PanelContainer> _cardPanels = new();
     private readonly List<ChoiceCard> _cards = new();
@@ -64,10 +66,10 @@ public partial class ChoiceScreen : CanvasLayer
             _cancelButton = new Button
             {
                 Text = cancelText,
-                CustomMinimumSize = new Vector2(150, 34),
+                CustomMinimumSize = new Vector2(260, 56),
                 FocusMode = Control.FocusModeEnum.None,
             };
-            UITheme.SetTextRole(_cancelButton, TextRole.Small);
+            UITheme.SetTextRole(_cancelButton, TextRole.Subhead);
             _cancelButton.AddThemeColorOverride("font_color", ChoiceStyle.TextColor);
             UITheme.WireButtonAudio(_cancelButton);
             _cancelButton.Pressed += () => Activate(_cards.Count);
@@ -76,6 +78,7 @@ public partial class ChoiceScreen : CanvasLayer
             _actions.AddChild(_cancelButton);
         }
 
+        MenuSkin.CenterPanel(_panel, CardWidth + 100f, Mathf.Min(920f, 310f + cards.Count * 190f));
         SetFocus(FirstEnabled());
         Visible = true;
         GetTree().Paused = true;
@@ -97,7 +100,7 @@ public partial class ChoiceScreen : CanvasLayer
         foreach (PanelContainer card in _cardPanels)
         {
             card.Modulate = Colors.Transparent;
-            card.PivotOffset = new Vector2(ChoiceStyle.CardWidth / 2f, 32f);
+            card.PivotOffset = new Vector2(CardWidth / 2f, 32f);
         }
         _actions.Modulate = Colors.Transparent;
 
@@ -118,6 +121,7 @@ public partial class ChoiceScreen : CanvasLayer
             _entrance.TweenInterval(0.04f);
         }
         _entrance.TweenProperty(_actions, "modulate", Colors.White, 0.15f);
+        _entrance.TweenCallback(Callable.From(() => SetFocus(_focusIndex)));
     }
 
     /// <summary>Termine l'entrée d'un coup : tout est en place.</summary>
@@ -142,6 +146,7 @@ public partial class ChoiceScreen : CanvasLayer
             card.Scale = Vector2.One;
         }
         _actions.Modulate = Colors.White;
+        SetFocus(_focusIndex);
     }
 
     private void BuildUI()
@@ -155,34 +160,29 @@ public partial class ChoiceScreen : CanvasLayer
         _backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_backdrop);
 
-        _panel = new PanelContainer { CustomMinimumSize = new Vector2(ChoiceStyle.CardWidth + 40f, 100) };
+        _panel = new PanelContainer { CustomMinimumSize = new Vector2(CardWidth + 100f, 880) };
         _panel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _panel.GrowHorizontal = Control.GrowDirection.Both;
         _panel.GrowVertical = Control.GrowDirection.Both;
-        Texture2D frame = UITheme.LoadTex(UITheme.MenusPath + "ui_panel_frame.png");
-        if (frame != null)
-        {
-            StyleBoxTexture style = UITheme.CreateNinePatch(frame, 6, 6, 6, 6);
-            style.ContentMarginLeft = 20;
-            style.ContentMarginRight = 20;
-            style.ContentMarginTop = 16;
-            style.ContentMarginBottom = 18;
-            _panel.AddThemeStyleboxOverride("panel", style);
-        }
+        _panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
         AddChild(_panel);
 
         VBoxContainer inner = new();
         inner.AddThemeConstantOverride("separation", 10);
         _panel.AddChild(inner);
 
-        _title = ChoiceStyle.MakeLabel("", TextRole.Subhead, ChoiceStyle.GoldBright, false, HorizontalAlignment.Center);
+        _title = ChoiceStyle.MakeLabel("", TextRole.Title, ChoiceStyle.GoldBright, false, HorizontalAlignment.Center);
         inner.AddChild(_title);
-        _subtitle = ChoiceStyle.MakeLabel("", TextRole.Small, ChoiceStyle.TextColor, false, HorizontalAlignment.Center);
+        _subtitle = ChoiceStyle.MakeLabel("", TextRole.Subhead, ChoiceStyle.TextColor, false, HorizontalAlignment.Center);
         inner.AddChild(_subtitle);
 
         _cardsContainer = new VBoxContainer();
         _cardsContainer.AddThemeConstantOverride("separation", 8);
-        inner.AddChild(_cardsContainer);
+        _scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill };
+        _cardsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _scroll.AddChild(_cardsContainer);
+        inner.AddChild(_scroll);
 
         _actions = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         inner.AddChild(_actions);
@@ -191,7 +191,7 @@ public partial class ChoiceScreen : CanvasLayer
     private void AddCard(ChoiceCard card)
     {
         int index = _cards.Count;
-        PanelContainer panel = new() { CustomMinimumSize = new Vector2(ChoiceStyle.CardWidth, 64), MouseFilter = Control.MouseFilterEnum.Stop };
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(CardWidth, 176), MouseFilter = Control.MouseFilterEnum.Stop };
         panel.GuiInput += @event =>
         {
             if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
@@ -216,7 +216,7 @@ public partial class ChoiceScreen : CanvasLayer
             {
                 Texture = card.Icon,
                 // Icônes 32×32 à échelle entière (×2).
-                CustomMinimumSize = new Vector2(64, 64),
+                CustomMinimumSize = new Vector2(96, 96),
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -232,14 +232,14 @@ public partial class ChoiceScreen : CanvasLayer
         text.AddChild(header);
         if (card.Rank >= 0)
             header.AddChild(new RarityIcon(card.Rank));
-        header.AddChild(ChoiceStyle.MakeLabel(card.Tag, TextRole.Caption, card.Frame, true));
+        header.AddChild(ChoiceStyle.MakeLabel(card.Tag, TextRole.Body, card.Frame, true));
         if (!string.IsNullOrEmpty(card.Price))
-            header.AddChild(ChoiceStyle.MakeLabel(card.Price, TextRole.Caption, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));
-        text.AddChild(ChoiceStyle.MakeLabel(card.Title, TextRole.Body, ChoiceStyle.TextLight, false));
+            header.AddChild(ChoiceStyle.MakeLabel(card.Price, TextRole.Subhead, card.Enabled ? ChoiceStyle.GoldBright : ChoiceStyle.TextDim, false, HorizontalAlignment.Right));
+        text.AddChild(ChoiceStyle.MakeLabel(card.Title, TextRole.Heading, ChoiceStyle.TextLight, false));
         foreach ((string line, Color color) in card.Lines)
         {
             // Les lignes longues (Oublis) passent à la ligne au lieu de déborder de la carte.
-            Label label = ChoiceStyle.MakeLabel(line, TextRole.Small, color, false);
+            Label label = ChoiceStyle.MakeLabel(line, TextRole.Subhead, color, false);
             label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             // Largeur fixée : sans elle, une étiquette qui passe à la ligne se mesure à zéro et fausse la taille du panneau.
             label.CustomMinimumSize = new Vector2(TextWidth, 0f);
@@ -265,6 +265,8 @@ public partial class ChoiceScreen : CanvasLayer
         }
 
         int total = _cards.Count + (_cancelButton != null ? 1 : 0);
+        if (total == 0)
+            return;
         if (@event.IsActionPressed("ui_down"))
             SetFocus((_focusIndex + 1) % total);
         else if (@event.IsActionPressed("ui_up"))
@@ -284,6 +286,8 @@ public partial class ChoiceScreen : CanvasLayer
     private void SetFocus(int index)
     {
         _focusIndex = index;
+        if (index < _cardPanels.Count)
+            _scroll.EnsureControlVisible(_cardPanels[index]);
         for (int i = 0; i < _cards.Count; i++)
             ChoiceStyle.StyleCard(_cardPanels[i], _cards[i].Frame, _cards[i].Rank, i == index, _cards[i].Enabled);
         if (_cancelButton != null)
@@ -339,6 +343,7 @@ public partial class ChoiceScreen : CanvasLayer
 
     private void Clear()
     {
+        _scroll.ScrollVertical = 0;
         foreach (Node child in _cardsContainer.GetChildren())
         {
             _cardsContainer.RemoveChild(child);

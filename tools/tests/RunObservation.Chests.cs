@@ -173,6 +173,7 @@ public partial class RunObservation
         }
         await ToSignal(GetTree().CreateTimer(4, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         SaveFrame("loot-revealed");
+        _world.GetNode<Vestiges.UI.ChestLootScreen>("ChestLootScreen")._Input(new InputEventAction { Action = "ui_accept", Pressed = true });
         if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-gallery") >= 0)
         {
             while (GetTree().Paused)
@@ -217,8 +218,8 @@ public partial class RunObservation
             SaveFrame($"loot-gallery-{start / 5}-roulette");
             await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
             SaveFrame($"loot-gallery-{start / 5}-revealed");
-            while (!complete)
-                await Frames(1);
+            screen._Input(new InputEventAction { Action = "ui_accept", Pressed = true });
+            if (!complete) throw new System.InvalidOperationException("Le butin ne se ferme pas après confirmation.");
         }
     }
 

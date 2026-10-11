@@ -60,12 +60,45 @@ public static class MenuSkin
         return texture;
     }
 
+    /// <summary>Dalle de choix : tranche de rareté, surface opaque et repère de sélection gravé.</summary>
+    public static StyleBoxTexture Choice(Color accent, bool focused = false, int rank = -1)
+    {
+        string key = $"choice-{accent.ToHtml()}-{focused}-{rank}";
+        if (!Textures.TryGetValue(key, out Texture2D texture))
+        {
+            using Image image = TextureFor(focused ? "ui_card_selected.png" : "ui_card_normal.png").GetImage();
+            Color edge = focused ? accent.Lightened(0.22f) : accent.Darkened(0.18f);
+            image.FillRect(new Rect2I(2, 7, focused ? 5 : 2 + Mathf.Max(0, rank) / 2, 50), edge);
+            image.FillRect(new Rect2I(7, 2, 50, 2), edge.Darkened(0.25f));
+            if (focused)
+                image.FillRect(new Rect2I(8, 29, 3, 6), UITheme.TextLight);
+            texture = ImageTexture.CreateFromImage(image);
+            Textures[key] = texture;
+        }
+        StyleBoxTexture style = UITheme.CreateNinePatch(texture, 12, 8, 8, 8);
+        style.AxisStretchHorizontal = style.AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch;
+        style.ContentMarginLeft = 16;
+        style.ContentMarginRight = 12;
+        style.ContentMarginTop = style.ContentMarginBottom = 10;
+        return style;
+    }
+
     public static StyleBoxTexture Panel(int margin = 28)
     {
         StyleBoxTexture style = UITheme.CreateNinePatch(TextureFor("ui_panel_frame.png"), 8, 8, 8, 8);
         style.ContentMarginLeft = style.ContentMarginRight = Mathf.Max(36, margin);
         style.ContentMarginTop = style.ContentMarginBottom = Mathf.Max(36, margin);
         return style;
+    }
+
+    /// <summary>Une fenêtre de rencontre grandit avec ses cartes, sans dépasser la hauteur de lecture.</summary>
+    public static void CenterPanel(PanelContainer panel, float width, float height)
+    {
+        panel.CustomMinimumSize = new Vector2(width, height);
+        panel.OffsetLeft = -width / 2f;
+        panel.OffsetRight = width / 2f;
+        panel.OffsetTop = -height / 2f;
+        panel.OffsetBottom = height / 2f;
     }
 
     public static void StyleButton(Button button, bool primary = false)

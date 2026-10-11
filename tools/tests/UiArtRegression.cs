@@ -100,9 +100,10 @@ public partial class UiArtRegression : Node
             PixelBackdrop backdrop = new(PixelBackdrop.MemorialTint);
             AddChild(backdrop);
             Check(backdrop.Material is ShaderMaterial material
-                && Mathf.IsEqualApprox(material.GetShaderParameter("rotation_degrees_per_second").AsSingle(), 8f)
+                && material.Shader.ResourcePath.EndsWith("menu_erasure.gdshader")
+                && material.GetShaderParameter("dust_color").AsColor() == PixelBackdrop.MemorialTint
                 && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
-                "Rotation continue à 8 degrés/s, grille native et filtre nearest");
+                "Pierre et Effacement : teinte du lieu, shader commun et filtre nearest");
             GD.Print($"[UiArtRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }

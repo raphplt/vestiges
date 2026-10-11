@@ -35,3 +35,11 @@ Le contrôle des exports (`tools/test_dev_release.sh`) fait désormais partie du
 Sur un checkout neuf sans cache d'import, Godot peut signaler que la police du thème n'est pas encore importée avant son premier scan. Ce premier lancement reste un échec explicite, même s'il produit les imports. Conserver son journal puis relancer avec un autre dossier de résultats après avoir vérifié le diagnostic ; ne pas ignorer des erreurs d'import répétées.
 
 Le scénario `CAPTURE_EXTRA_ARGS="--capture-pause --capture-size 1280x720" tools/capture_run.sh <dossier> 8 4 1280x720` vérifie aussi les paramètres par événements manette, l’annulation de l’abandon et le défilement d’une fiche chargée d’Oublis. `--capture-death --restart-from-bilan` vérifie le bilan, le retour au choix du personnage et le départ d’une nouvelle run. `--capture-size WxH` force la taille de fenêtre après le démarrage de Main ; les captures restent à contrôler visuellement.
+
+### Refonte des menus — complément du 11 octobre 2026
+
+`choice_screen` couvre aussi le butin (révélation, attente de lecture, confirmation unique) et le journal (profil neuf sans spoiler, fragment retrouvé, J/B, retour au contexte et sélection conservée). `--capture-cascade` contrôle la relance, le bannissement, son annulation, les niveaux en attente et la reprise.
+
+Captures supplémentaires : `CAPTURE_EXTRA_ARGS="--capture-journal --capture-size 1280x720" tools/capture_run.sh <dossier>` ; `CAPTURE_DEV=" "` désactive le profil dev du banc pour contrôler un profil neuf. `--menu-font-scale 1.3` agrandit les rôles typographiques dans le processus de test seulement : il ne crée pas un réglage utilisateur et ne modifie aucune sauvegarde.
+
+`--capture-death --bilan-rich --restart-from-bilan` ajoute neuf annonces de quête fictives **au seul affichage du bilan**, quatre Réminiscences, puis vérifie Équipement → Expédition, le défilement des gains et la relance avec un autre personnage. Cette variante éprouve la mise en page ; elle ne valide pas que ces neuf quêtes ont été réellement accomplies. Les stats de combat et la mort viennent de Main. [Preuves de la recette](audits/menus-2026-10-11/README.md).

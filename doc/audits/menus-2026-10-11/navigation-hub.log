@@ -1,0 +1,18 @@
+Build et import partagés avec le lanceur global.
+[MenuNavigationRegression] OK Le camp ne sélectionne plus de héros
+[MenuNavigationRegression] OK Partir ouvre le choix sans lancer la run
+[MenuNavigationRegression] OK Le héros du profil neuf est jouable
+[MenuNavigationRegression] OK Les statistiques sont secondaires
+[MenuNavigationRegression] OK Le profil neuf contient un héros verrouillé
+[MenuNavigationRegression] OK Le héros verrouillé ne peut pas partir
+[MenuNavigationRegression] OK Examiner un héros ne change pas le choix confirmé
+[MenuNavigationRegression] OK Le lien atteint la bonne quête
+[MenuNavigationRegression] OK Retour restaure la fiche verrouillée
+[MenuNavigationRegression] OK La quête de référence débloque aussi une arme
+[MenuNavigationRegression] OK La récompense ouvre son entrée de Collection
+[MenuNavigationRegression] OK Retour restaure la quête d'origine
+[MenuNavigationRegression] OK Paramètres restitue le focus
+[MenuNavigationRegression] OK La relance ouvre la sélection et consomme sa destination
+[MenuNavigationRegression] OK Le retour du bilan rétablit l’état du Hub
+[MenuNavigationRegression] OK La transition bloque la navigation après le départ confirmé
+[MenuNavigationRegression] RESULT checks=16 failures=0

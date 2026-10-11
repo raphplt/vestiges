@@ -25,13 +25,12 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
     private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
     private const float PanelEntranceScale = 0.82f;
-    private const float InventoryWidth = 330f;
-    private const float StatsWidth = 300f;
-    private const float SideMinHeight = 480f;
+    private const float InventoryWidth = 340f;
+    private const float StatsWidth = 340f;
+    private const float SideMinHeight = 0f;
     private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
 
-    private Texture2D _panelTex;
     private Texture2D _separatorTex;
 
     private ColorRect _overlay;
@@ -44,6 +43,8 @@ public partial class LevelUpScreen : CanvasLayer
     private readonly List<ScrollContainer> _sideScrolls = new();
     private const float SideScrollSpeed = 900f;
     private VBoxContainer _cardsContainer;
+    private ScrollContainer _choiceScroll;
+    private ScrollContainer _activeSideScroll;
     private HBoxContainer _actionButtons;
     private Label _title;
     private Label _hint;
@@ -60,7 +61,6 @@ public partial class LevelUpScreen : CanvasLayer
 
     public override void _Ready()
     {
-        _panelTex = LoadTex(MenusPath + "ui_panel_frame.png");
         _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
         BuildUI();
 
@@ -115,7 +115,7 @@ public partial class LevelUpScreen : CanvasLayer
         AddChild(_rays);
 
         // Inventaire à gauche, cartes au centre, stats à droite : on choisit en voyant ce qu'on a (plan 23 R2).
-        _layout = new HBoxContainer();
+        _layout = new HBoxContainer { CustomMinimumSize = new Vector2(0, 850) };
         _layout.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
         _layout.GrowHorizontal = Control.GrowDirection.Both;
         _layout.GrowVertical = Control.GrowDirection.Both;
@@ -132,7 +132,7 @@ public partial class LevelUpScreen : CanvasLayer
         _panel.AddChild(inner);
 
         _title = new Label { HorizontalAlignment = HorizontalAlignment.Center, Text = Tr("LEVELUP_TITLE") };
-        UITheme.SetTextRole(_title, TextRole.Subhead);
+        UITheme.SetTextRole(_title, TextRole.Title);
         _title.AddThemeColorOverride("font_color", GoldBright);
         inner.AddChild(_title);
 
@@ -150,7 +150,14 @@ public partial class LevelUpScreen : CanvasLayer
 
         _cardsContainer = new VBoxContainer();
         _cardsContainer.AddThemeConstantOverride("separation", 8);
-        inner.AddChild(_cardsContainer);
+        _choiceScroll = new ScrollContainer
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        _cardsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _choiceScroll.AddChild(_cardsContainer);
+        inner.AddChild(_choiceScroll);
 
         _hint = new Label { HorizontalAlignment = HorizontalAlignment.Center, Visible = false, Text = Tr("LEVELUP_BANISH_HINT") };
         UITheme.SetTextRole(_hint, TextRole.Caption);
@@ -166,14 +173,7 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void StylePanel(PanelContainer panel)
     {
-        if (_panelTex == null)
-            return;
-        StyleBoxTexture panelStyle = UITheme.CreateNinePatch(_panelTex, 6, 6, 6, 6);
-        panelStyle.ContentMarginLeft = 20;
-        panelStyle.ContentMarginRight = 20;
-        panelStyle.ContentMarginTop = 16;
-        panelStyle.ContentMarginBottom = 18;
-        panel.AddThemeStyleboxOverride("panel", panelStyle);
+        panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
     }
 
     /// <summary>Colonne latérale : titre, puis un contenu qui défile s'il dépasse la hauteur des cartes.</summary>
@@ -186,7 +186,7 @@ public partial class LevelUpScreen : CanvasLayer
         inner.AddThemeConstantOverride("separation", 8);
         panel.AddChild(inner);
         Label label = new() { Text = title };
-        UITheme.SetTextRole(label, TextRole.Small);
+        UITheme.SetTextRole(label, TextRole.Heading);
         label.AddThemeColorOverride("font_color", GoldBright);
         inner.AddChild(label);
         ScrollContainer scroll = new()
@@ -197,6 +197,10 @@ public partial class LevelUpScreen : CanvasLayer
         };
         inner.AddChild(scroll);
         _sideScrolls.Add(scroll);
+        _activeSideScroll ??= scroll;
+        scroll.MouseEntered += () => _activeSideScroll = scroll;
+        scroll.FocusMode = Control.FocusModeEnum.All;
+        scroll.FocusEntered += () => _activeSideScroll = scroll;
         // La barre de défilement se pose sur le bord droit : la colonne des valeurs garde sa marge.
         MarginContainer gutter = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         gutter.AddThemeConstantOverride("margin_right", 14);
@@ -210,15 +214,13 @@ public partial class LevelUpScreen : CanvasLayer
     /// <summary>Inventaire et stats du moment : reconstruits à chaque offre, un choix précédent a pu les changer.</summary>
     private void RefreshSidePanels(Player player)
     {
-        foreach (Node child in _inventoryContainer.GetChildren())
-            child.QueueFree();
-        foreach (Node child in _statsContainer.GetChildren())
-            child.QueueFree();
+        MenuSkin.Clear(_inventoryContainer);
+        MenuSkin.Clear(_statsContainer);
         if (player == null)
             return;
         PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
         PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
-            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
+            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Subhead);
     }
 
     // ==============================
@@ -260,7 +262,7 @@ public partial class LevelUpScreen : CanvasLayer
         Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id)
             : isAscension ? ChoiceStyle.GoldBright : isPerk ? ChoiceStyle.PerkBorder : NeutralBorder;
 
-        PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 76), MouseFilter = Control.MouseFilterEnum.Stop };
+        PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 172), MouseFilter = Control.MouseFilterEnum.Stop };
         int index = _cards.Count;
         card.GuiInput += @event =>
         {
@@ -287,7 +289,7 @@ public partial class LevelUpScreen : CanvasLayer
             {
                 Texture = icon,
                 // Icônes 32×32 à échelle entière (×2).
-                CustomMinimumSize = new Vector2(64, 64),
+                CustomMinimumSize = new Vector2(96, 96),
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -309,25 +311,30 @@ public partial class LevelUpScreen : CanvasLayer
             : Tr(isWeapon ? "LEVELUP_KIND_WEAPON" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
-        Label tagLabel = MakeLabel(tag, TextRole.Caption, frame, true);
+        Label tagLabel = MakeLabel(tag, TextRole.Body, frame, true);
         RarityIcon rarityIcon = choice.Rarity != null ? new RarityIcon(choice.Rarity.Rank) : null;
         if (rarityIcon != null)
             header.AddChild(rarityIcon);
         header.AddChild(tagLabel);
         if (choice.RarityRaised && !choice.IsCarried)
             ShowRarityRaise(header, tagLabel, rarityIcon, choice, tag, frame, _cards.Count);
-        header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Caption,
+        header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Body,
             isNew && !isPerk ? GoldBright : TextColor, false, HorizontalAlignment.Right));
 
         HBoxContainer title = new();
         title.AddThemeConstantOverride("separation", 10);
         text.AddChild(title);
         Color titleColor = choice.Rarity != null ? RarityPalette.Colors(choice.Rarity.Id).Light : TextLight;
-        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Body, titleColor, false));
+        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Heading, titleColor, false));
         if (UpgradeText.ReachesMilestone(choice, player))
             title.AddChild(MilestoneBadge());
         foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
-            text.AddChild(MakeLabel(line, TextRole.Small, color, false));
+        {
+            Label gain = MakeLabel(line, TextRole.Subhead, color, false);
+            gain.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            gain.CustomMinimumSize = new Vector2(CardWidth - 170, 0);
+            text.AddChild(gain);
+        }
 
         _cards.Add(card);
         _cardColors.Add(frame);
@@ -354,7 +361,7 @@ public partial class LevelUpScreen : CanvasLayer
         PanelContainer badge = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
         StyleBoxFlat style = new() { BgColor = GoldBright with { A = 0.18f }, BorderColor = GoldBright };
         style.SetBorderWidthAll(1);
-        style.SetCornerRadiusAll(3);
+
         style.ContentMarginLeft = 6;
         style.ContentMarginRight = 6;
         badge.AddThemeStyleboxOverride("panel", style);
@@ -412,11 +419,11 @@ public partial class LevelUpScreen : CanvasLayer
         {
             Text = text,
             Disabled = !enabled,
-            CustomMinimumSize = new Vector2(150, 34),
+            CustomMinimumSize = new Vector2(190, 54),
             FocusMode = Control.FocusModeEnum.None,
             ProcessMode = ProcessModeEnum.Always,
         };
-        UITheme.SetTextRole(button, TextRole.Small);
+        UITheme.SetTextRole(button, TextRole.Subhead);
         button.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
         StyleButton(button, false);
         UITheme.WireButtonAudio(button);
@@ -436,8 +443,8 @@ public partial class LevelUpScreen : CanvasLayer
         if (axis == 0f)
             return;
         int step = Mathf.RoundToInt(axis * SideScrollSpeed * (float)delta);
-        foreach (ScrollContainer scroll in _sideScrolls)
-            scroll.ScrollVertical += step;
+        if (_activeSideScroll != null)
+            _activeSideScroll.ScrollVertical += step;
     }
 
     public override void _Input(InputEvent @event)
@@ -446,6 +453,12 @@ public partial class LevelUpScreen : CanvasLayer
             return;
 
         int total = _cards.Count + _buttons.Count;
+        if (@event.IsActionPressed("ui_cancel") && _banishMode)
+        {
+            ToggleBanish();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (@event.IsActionPressed("ui_down") || @event.IsActionPressed("ui_right") && _focusIndex >= _cards.Count)
             SetFocus((_focusIndex + 1) % total);
         else if (@event.IsActionPressed("ui_up") || @event.IsActionPressed("ui_left") && _focusIndex >= _cards.Count)
@@ -460,6 +473,8 @@ public partial class LevelUpScreen : CanvasLayer
     private void SetFocus(int index)
     {
         _focusIndex = index;
+        if (index < _cards.Count)
+            _choiceScroll.EnsureControlVisible(_cards[index]);
         for (int i = 0; i < _cards.Count; i++)
             StyleCard(i, i == index);
         for (int i = 0; i < _buttons.Count; i++)
@@ -539,10 +554,9 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void ClearCards()
     {
-        foreach (Node child in _cardsContainer.GetChildren())
-            child.QueueFree();
-        foreach (Node child in _actionButtons.GetChildren())
-            child.QueueFree();
+        MenuSkin.Clear(_cardsContainer);
+        MenuSkin.Clear(_actionButtons);
+        _choiceScroll.ScrollVertical = 0;
         _cards.Clear();
         _cardOptions.Clear();
         _cardColors.Clear();

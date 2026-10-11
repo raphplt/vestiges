@@ -627,3 +627,35 @@ La langue des nouveaux libellés suit le français déjà utilisé par ces menus
 Captures conservées dans la branche : [Personnages en jeu, 1080p](planches/04-menus-personnages-integre.png) · [Pause en jeu, 720p](planches/04-menus-pause-integree.png).
 
 Les dimensions des PNG ont été contrôlées. Les parcours clavier/manette utilisent les événements du moteur ; aucun essai sur manette physique n’est revendiqué. La direction artistique reste à juger en jouant par Raphaël. Les tests de cette livraison ne constituent ni un banc FPS ni une recette de traduction complète. Branche locale isolée, aucune fusion ni publication.
+
+## 9. Achèvement de tous les menus — 11 octobre 2026
+
+Raphaël demande de terminer la refonte sur `codex/refonte-menus`, y compris montée de niveau, butin, bilan et journal, puis de tester l'ensemble. Direction P1–P3 conservée : pierre sombre ébréchée, Effacement, pixel art, or discret ; accueil et camp conservés.
+
+Lots prévus avant code, réalisés et vérifiés dans cet ordre :
+
+- **P4 — choix et butin.** Composition large et bornée à l'écran, mêmes matières que les menus intérieurs ; inventaire/statistiques consultables sans masquer le choix. Inclure les choix de Mémorial/Faille/Autel qui partagent `ChoiceScreen`. Préserver raretés, gains, bannissement, relance, file de niveaux et garde d'entrée. Butin : révélation puis bouton explicite pour repartir, pas de fermeture avant lecture.
+- **P5 — journal.** Constellations, fragments et lecture séparés ; états inconnus explicites, défilement, sélection conservée, fermeture et navigation clavier/manette. Vérifier le retour à la run et l'absence de conflit avec les autres pauses.
+- **P6 — bilan.** Résumé de l'expédition, record réservé au bilan, équipement/faits et gains organisés sans débordement ; détails consultables, tous les gains accessibles. Garder révélation, sauvegarde, absence de double attribution et Recommencer → choix du personnage.
+- **P7 — recette commune.** Build sans warning, smoke, régressions pertinentes et nouveaux contrôles des parcours ; captures réelles en 1080p/720p, texte agrandi, profils neuf/dev. Examiner les images et corriger avant livraison ; consigner les preuves durables et les limites exactes.
+
+Aucune modification d'équilibrage ni de règles de progression. Le HUD reste un affichage de combat ; les écrans interactifs de la run entrent dans cette reprise.
+
+### 9.1 Implémentation P4–P6
+
+- **Choix de niveau.** Grandes dalles opaques, icônes 96 px, gain au premier plan, rareté portée par l'éclat et la tranche. Inventaire et statistiques séparés, noms longs renvoyés à la ligne, défilement des offres et retour du focus après renouvellement. Relancer, bannir et passer gardent leurs compteurs ; Échap annule le mode bannissement. La file de niveaux garde la run suspendue jusqu'au dernier choix.
+- **Rencontres.** Mémorial, Faille et Atelier partagent la même pierre et le même fond d'Effacement. Fenêtre large, hauteur adaptée au nombre de cartes et plafonnée ; les offres longues défilent, le bouton de sortie reste en place. Les prix et contreparties restent visibles. Les contrôles de première validation, de choix obligatoire et de récompense unique sont conservés.
+- **Butin.** Coffre illustré, nature du gain et rareté séparées. Révéler puis Reprendre la route : le résultat reste affiché jusqu'à la confirmation. La fermeture automatique est supprimée ; l'audio termine sa révélation pendant la lecture. Une confirmation ne peut attribuer le gain qu'une fois. Hauteur adaptée à la quantité de butin, défilement au-delà.
+- **Journal.** Trois espaces : constellations, index, lecture. Constellation gravée indiquant ce qui est retrouvé, texte plus grand, emplacements inconnus sans spoiler, fragment consulté mémorisé. J et Échap/B ferment ; Retour fonctionne à la souris. Entrée Journal ajoutée à la pause et liée dans l'ordre de focus. Fermer rend le contexte d'origine, sans reprendre la run lorsqu'on venait de la pause.
+- **Bilan.** Score, distance et durée en tête ; nom discret sous le portrait. Deux vues sur place : Expédition (cause, faits, frise) et Équipement (armes, dégâts, objets et Réminiscences). Les gains occupent une colonne indépendante, avec défilement pour les listes longues. Révélation et garde de validation conservées ; Rejouer ouvre le choix du personnage. Les enregistrements de run et l'attribution des gains restent dans leurs services existants.
+- **Cohérence.** La notification de Souvenir reprend la pierre. Les anciennes frises de carte devenues inutilisées sont retirées ; les éclats de rareté restent animés. La matière du fond garde ses couleurs d'origine, sans multiplier deux fois la texture dans le shader.
+
+La recette a détecté et corrigé l'entrée Journal absente de la boucle de focus de la pause, ainsi que le défilement qui pouvait suivre le pointeur au lieu de la colonne focalisée. Les grands textes de l'inventaire se renvoient à la ligne. Le banc de bilan envoie désormais le relâchement du bouton A, nécessaire aux boutons natifs.
+
+### 9.2 Validation — P4–P7 livrés
+
+Validation générale **15/15 suites**, build **0 warning, 0 erreur** ; après les derniers ajustements de hauteur, couleur et focus, validation finale **5/5** (smoke, menu_navigation, choice_screen, ui_art, input_remap). Les deux passes constatent zéro source modifiée pendant les tests. La suite de choix couvre désormais **41 contrôles**, et la navigation du Hub conserve ses **16 contrôles**.
+
+Huit scénarios dans Main puis cinq reprises visuelles ont passé : pause, cascade de niveaux, Mémorial, Faille, Atelier, butin, journal et bilan. Captures 1280×720 et 1920×1080 inspectées, dont texte agrandi à 130 %, profil neuf et longues listes de gains. La Faille a été recapturée après le dernier ajustement pour montrer les trois offres et leurs contreparties en entier. Le parcours mort réelle → bilan → Rejouer → autre personnage → nouvelle run jouable a passé.
+
+[Rapport, captures et logs conservés](../audits/menus-2026-10-11/README.md). Les états denses sont des fixtures explicites ; les neuf annonces de quête du bilan ne représentent pas neuf quêtes réellement accomplies. Entrées manette injectées, pas d'essai sur manette physique. Pas de conclusion de FPS ni de validation artistique au nom de Raphaël. Les lots demandés sont terminés sur la même branche, sans fusion vers main.

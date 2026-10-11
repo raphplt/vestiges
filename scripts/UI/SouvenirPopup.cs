@@ -49,24 +49,7 @@ public partial class SouvenirPopup : CanvasLayer
         _panel.CustomMinimumSize = new Vector2(400, 0);
         _panel.MouseFilter = Control.MouseFilterEnum.Ignore;
 
-        StyleBoxFlat style = new()
-        {
-            BgColor = new Color(0.05f, 0.04f, 0.1f, 0.92f),
-            BorderColor = new Color(0.85f, 0.75f, 0.4f, 0.7f),
-            BorderWidthBottom = 2,
-            BorderWidthTop = 2,
-            BorderWidthLeft = 2,
-            BorderWidthRight = 2,
-            CornerRadiusBottomLeft = 8,
-            CornerRadiusBottomRight = 8,
-            CornerRadiusTopLeft = 8,
-            CornerRadiusTopRight = 8,
-            ContentMarginLeft = 20,
-            ContentMarginRight = 20,
-            ContentMarginTop = 14,
-            ContentMarginBottom = 14
-        };
-        _panel.AddThemeStyleboxOverride("panel", style);
+        _panel.AddThemeStyleboxOverride("panel", MenuSkin.Choice(UITheme.GoldColor));
         root.AddChild(_panel);
 
         VBoxContainer vbox = new();

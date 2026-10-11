@@ -15,6 +15,17 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class PauseMenu : CanvasLayer
 {
+	[Signal] public delegate void JournalRequestedEventHandler();
+	private bool _journalOpen;
+	private Button _journalButton;
+
+	public void RestoreAfterJournal()
+	{
+		_journalOpen = false;
+		_root.Visible = _isPaused;
+		if (_isPaused) _journalButton.GrabFocus();
+	}
+
 	private static readonly Color GoldBright = UITheme.GoldBright;
 	private static readonly Color TextVeryDim = UITheme.TextVeryDim;
 	private static readonly Color StatLabelColor = PlayerSheet.StatLabelColor;
@@ -62,7 +73,7 @@ public partial class PauseMenu : CanvasLayer
 
 	public override void _Process(double delta)
 	{
-		if (!_isPaused || _settingsScreen.IsOpen || _confirmation != null)
+		if (!_isPaused || _settingsScreen.IsOpen || _confirmation != null || _journalOpen)
 			return;
 		float axis = Input.GetAxis("scroll_up", "scroll_down");
 		if (axis == 0f)
@@ -71,14 +82,19 @@ public partial class PauseMenu : CanvasLayer
 		Control focus = GetViewport().GuiGetFocusOwner();
 		foreach (ScrollContainer scroll in _columnScrolls)
 		{
-			if (scroll == focus || (focus != null && scroll.IsAncestorOf(focus)) || scroll.GetGlobalRect().HasPoint(scroll.GetGlobalMousePosition()))
-			{ scroll.ScrollVertical += step; break; }
+			if (scroll == focus || (focus != null && scroll.IsAncestorOf(focus)))
+			{ scroll.ScrollVertical += step; return; }
+		}
+		foreach (ScrollContainer scroll in _columnScrolls)
+		{
+			if (scroll.GetGlobalRect().HasPoint(scroll.GetGlobalMousePosition()))
+			{ scroll.ScrollVertical += step; return; }
 		}
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		if (!@event.IsActionPressed("ui_cancel"))
+		if (_journalOpen || !@event.IsActionPressed("ui_cancel"))
 			return;
 
 		if (_confirmation != null)
@@ -184,6 +200,15 @@ public partial class PauseMenu : CanvasLayer
 		settingsBtn.Pressed += OpenSettings;
 		vbox.AddChild(settingsBtn);
 
+		_journalButton = CreateButton("Journal");
+		_journalButton.Pressed += () =>
+		{
+			_journalOpen = true;
+			_root.Visible = false;
+			EmitSignal(SignalName.JournalRequested);
+		};
+		vbox.AddChild(_journalButton);
+
 		Button hubBtn = CreateButton("Abandonner la run");
 		hubBtn.Pressed += () => ConfirmExit(false);
 		vbox.AddChild(hubBtn);
@@ -224,7 +249,7 @@ public partial class PauseMenu : CanvasLayer
 		detailScroll.AddChild(_loadoutContainer);
 		_sheetContainer = BuildInfoPanel(hbox, "STATISTIQUES", 440);
 		// Boucle explicite : la géométrie des colonnes ne détourne pas la navigation.
-		Button[] buttons = { resumeBtn, settingsBtn, hubBtn, quitBtn };
+		Button[] buttons = { resumeBtn, settingsBtn, _journalButton, hubBtn, quitBtn };
 		for (int i = 0; i < buttons.Length; i++)
 		{
 			Button button = buttons[i];

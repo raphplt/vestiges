@@ -14,7 +14,7 @@ isolate_godot_profile "$TEST_DIR"
 dotnet build --nologo >/dev/null
 "$GODOT" --headless --editor --import --path . >"$OUTPUT/import.log" 2>&1
 run_timeout 900 "$GODOT" --path . --windowed $SCREEN_ARGS --resolution "${4:-1920x1080}" --rendering-method gl_compatibility --audio-driver Dummy \
-    res://tools/tests/RunObservation.tscn -- --dev --density --seconds "${2:-60}" --capture-every "${3:-10}" \
+    res://tools/tests/RunObservation.tscn -- ${CAPTURE_DEV:---dev} --density --seconds "${2:-60}" --capture-every "${3:-10}" \
     --seed "${5:-221092026}" --output "$OUTPUT" ${CAPTURE_EXTRA_ARGS:-} >"$OUTPUT/run.log" 2>&1 || { tail -20 "$OUTPUT/run.log"; exit 1; }
 rg '\[RunObservation\] RESULT' "$OUTPUT/run.log"
 # Un RESULT n'annule pas une erreur de scénario (ex. identifiant d'ennemi inconnu).

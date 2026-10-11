@@ -1,0 +1,186 @@
+Build et import partagés avec le lanceur global.
+[UiArtRegression] PASS Objet memoire_vive : deux tailles importées
+[UiArtRegression] PASS Objet resonance : deux tailles importées
+[UiArtRegression] PASS Objet portee_etendue : deux tailles importées
+[UiArtRegression] PASS Objet oeil_critique : deux tailles importées
+[UiArtRegression] PASS Objet ancrage : deux tailles importées
+[UiArtRegression] PASS Objet regeneration : deux tailles importées
+[UiArtRegression] PASS Objet peau_dure : deux tailles importées
+[UiArtRegression] PASS Objet carapace : deux tailles importées
+[UiArtRegression] PASS Objet instinct : deux tailles importées
+[UiArtRegression] PASS Objet siphon_essence : deux tailles importées
+[UiArtRegression] PASS Objet photo_de_classe : deux tailles importées
+[UiArtRegression] PASS Objet jeton_de_fete : deux tailles importées
+[UiArtRegression] PASS Objet souffle_du_neant : deux tailles importées
+[UiArtRegression] PASS Objet paille_tordue : deux tailles importées
+[UiArtRegression] PASS Objet persistance : deux tailles importées
+[UiArtRegression] PASS Objet allumette_humide : deux tailles importées
+[UiArtRegression] PASS Objet glacon : deux tailles importées
+[UiArtRegression] PASS Objet thermometre : deux tailles importées
+[UiArtRegression] PASS Objet epingle_a_nourrice : deux tailles importées
+[UiArtRegression] PASS Objet petard_mouille : deux tailles importées
+[UiArtRegression] PASS Objet de_a_coudre : deux tailles importées
+[UiArtRegression] PASS Objet semelle_usee : deux tailles importées
+[UiArtRegression] PASS Objet boite_de_pansements : deux tailles importées
+[UiArtRegression] PASS Objet loupe_de_philateliste : deux tailles importées
+[UiArtRegression] PASS Objet stylo_quatre_couleurs : deux tailles importées
+[UiArtRegression] PASS Objet tabouret_de_camping : deux tailles importées
+[UiArtRegression] PASS Objet chewing_gum : deux tailles importées
+[UiArtRegression] PASS Objet gilet_reflechissant : deux tailles importées
+[UiArtRegression] PASS Objet thermos : deux tailles importées
+[UiArtRegression] PASS Objet medaille_cabossee : deux tailles importées
+[UiArtRegression] PASS Objet porte_monnaie_use : deux tailles importées
+[UiArtRegression] PASS Objet reflet_brise : deux tailles importées
+[UiArtRegression] PASS Objet sifflet_d_arbitre : deux tailles importées
+[UiArtRegression] PASS Réminiscence priority_targeting : deux tailles importées
+[UiArtRegression] PASS Réminiscence overflow : deux tailles importées
+[UiArtRegression] PASS Réminiscence carry_control : deux tailles importées
+[UiArtRegression] PASS Réminiscence overheal_reserve : deux tailles importées
+[UiArtRegression] PASS Réminiscence rally : deux tailles importées
+[UiArtRegression] PASS Réminiscence xp_trail : deux tailles importées
+[UiArtRegression] PASS Réminiscence salvage_xp : deux tailles importées
+[UiArtRegression] PASS Réminiscence carried_choice : deux tailles importées
+[UiArtRegression] PASS Réminiscence familiar_loot : deux tailles importées
+[UiArtRegression] PASS Les manifestes visuels n'ajoutent pas de règles aux catalogues de jeu
+[UiArtRegression] PASS Collection : les ensembles d'identifiants des manifestes sont conservés
+[UiArtRegression] PASS Collection : contenus de gameplay et images de contenus futurs restent distincts
+[UiArtRegression] PASS Collection objet memoire_vive
+[UiArtRegression] PASS Collection objet souffle_du_neant
+[UiArtRegression] PASS Collection objet reflet_brise
+[UiArtRegression] PASS Collection objet resonance
+[UiArtRegression] PASS Collection objet portee_etendue
+[UiArtRegression] PASS Collection objet persistance
+[UiArtRegression] PASS Collection objet oeil_critique
+[UiArtRegression] PASS Collection objet ancrage
+[UiArtRegression] PASS Collection objet regeneration
+[UiArtRegression] PASS Collection objet peau_dure
+[UiArtRegression] PASS Collection objet carapace
+[UiArtRegression] PASS Collection objet instinct
+[UiArtRegression] PASS Collection objet siphon_essence
+[UiArtRegression] PASS Collection objet photo_de_classe
+[UiArtRegression] PASS Collection objet jeton_de_fete
+[UiArtRegression] PASS Collection objet paille_tordue
+[UiArtRegression] PASS Collection objet sifflet_d_arbitre
+[UiArtRegression] PASS Collection objet allumette_humide
+[UiArtRegression] PASS Collection objet glacon
+[UiArtRegression] PASS Collection objet thermometre
+[UiArtRegression] PASS Collection objet epingle_a_nourrice
+[UiArtRegression] PASS Collection objet petard_mouille
+[UiArtRegression] PASS Collection objet de_a_coudre
+[UiArtRegression] PASS Collection objet semelle_usee
+[UiArtRegression] PASS Collection objet boite_de_pansements
+[UiArtRegression] PASS Collection objet loupe_de_philateliste
+[UiArtRegression] PASS Collection objet stylo_quatre_couleurs
+[UiArtRegression] PASS Collection objet tabouret_de_camping
+[UiArtRegression] PASS Collection objet chewing_gum
+[UiArtRegression] PASS Collection objet gilet_reflechissant
+[UiArtRegression] PASS Collection objet thermos
+[UiArtRegression] PASS Collection objet medaille_cabossee
+[UiArtRegression] PASS Collection objet porte_monnaie_use
+[UiArtRegression] PASS Collection objet glass_paperweight
+[UiArtRegression] PASS Collection objet torn_calendar
+[UiArtRegression] PASS Collection objet opening_locket
+[UiArtRegression] PASS Collection Réminiscence priority_targeting
+[UiArtRegression] PASS Collection Réminiscence overflow
+[UiArtRegression] PASS Collection Réminiscence carry_control
+[UiArtRegression] PASS Collection Réminiscence overheal_reserve
+[UiArtRegression] PASS Collection Réminiscence rally
+[UiArtRegression] PASS Collection Réminiscence xp_trail
+[UiArtRegression] PASS Collection Réminiscence salvage_xp
+[UiArtRegression] PASS Collection Réminiscence carried_choice
+[UiArtRegression] PASS Collection Réminiscence familiar_loot
+[UiArtRegression] PASS Collection Réminiscence backlash
+[UiArtRegression] PASS Collection Réminiscence ember_transfer
+[UiArtRegression] PASS Collection Réminiscence double_impact
+[UiArtRegression] PASS Collection Réminiscence erasure_edge
+[UiArtRegression] PASS Collection Réminiscence dead_weight
+[UiArtRegression] PASS Rareté 0 : atlas complets
+[UiArtRegression] PASS Transition depuis le rang 0
+[UiArtRegression] PASS Rareté 1 : atlas complets
+[UiArtRegression] PASS Transition depuis le rang 1
+[UiArtRegression] PASS Rareté 2 : atlas complets
+[UiArtRegression] PASS Transition depuis le rang 2
+[UiArtRegression] PASS Rareté 3 : atlas complets
+[UiArtRegression] PASS Transition depuis le rang 3
+[UiArtRegression] PASS Rareté 4 : atlas complets
+[UiArtRegression] PASS Bonus canteen : animation et lueur 2:1
+[UiArtRegression] PASS Bonus magnet : animation et lueur 2:1
+[UiArtRegression] PASS Bonus blanket : animation et lueur 2:1
+[UiArtRegression] PASS Bonus coffee : animation et lueur 2:1
+[UiArtRegression] PASS Bonus firecracker : animation et lueur 2:1
+[UiArtRegression] PASS Texture native du fond 0
+[UiArtRegression] PASS Texture native du fond 1
+[UiArtRegression] PASS Texture native du fond 2
+[UiArtRegression] PASS Texture native du fond 3
+[UiArtRegression] PASS Les cinq sols de chargement sont importés
+[UiArtRegression] PASS Thème : button_normal, surface de lecture opaque
+[UiArtRegression] PASS Thème : button_normal, texture partagée
+[UiArtRegression] PASS Thème : button_hover, surface de lecture opaque
+[UiArtRegression] PASS Thème : button_hover, texture partagée
+[UiArtRegression] PASS Thème : button_pressed, surface de lecture opaque
+[UiArtRegression] PASS Thème : button_pressed, texture partagée
+[UiArtRegression] PASS Thème : button_disabled, surface de lecture opaque
+[UiArtRegression] PASS Thème : button_disabled, texture partagée
+[UiArtRegression] PASS Thème : card_normal, surface de lecture opaque
+[UiArtRegression] PASS Thème : card_normal, texture partagée
+[UiArtRegression] PASS Thème : card_selected, surface de lecture opaque
+[UiArtRegression] PASS Thème : card_selected, texture partagée
+[UiArtRegression] PASS Thème : card_locked, surface de lecture opaque
+[UiArtRegression] PASS Thème : card_locked, texture partagée
+[UiArtRegression] PASS Thème : panel_frame, surface de lecture opaque
+[UiArtRegression] PASS Thème : panel_frame, texture partagée
+[UiArtRegression] PASS Coffre : icône distincte pour attack_speed
+[UiArtRegression] PASS Coffre : icône distincte pour speed
+[UiArtRegression] PASS Coffre : icône distincte pour max_hp
+[UiArtRegression] PASS Coffre : icône distincte pour armor
+[UiArtRegression] PASS Coffre : icône distincte pour regen_rate
+[UiArtRegression] PASS Coffre : icône distincte pour lifesteal
+[UiArtRegression] PASS Coffre : icône distincte pour crit_chance
+[UiArtRegression] PASS Coffre : icône distincte pour crit_multiplier
+[UiArtRegression] PASS Coffre : icône distincte pour aoe_radius
+[UiArtRegression] PASS Coffre : icône distincte pour attack_range
+[UiArtRegression] PASS Coffre : icône distincte pour status_duration
+[UiArtRegression] PASS Coffre : icône distincte pour xp_magnet_radius
+[UiArtRegression] PASS Coffre : icône distincte pour luck
+[UiArtRegression] PASS Coffre : icône distincte pour xp_gain
+[UiArtRegression] PASS Coffre : icône de essence
+[UiArtRegression] PASS Coffre : icône de xp
+[UiArtRegression] PASS Coffre : icône de souvenir
+[UiArtRegression] PASS Coffre : sprite propre de memoire_vive
+[UiArtRegression] PASS Coffre : sprite propre de resonance
+[UiArtRegression] PASS Coffre : sprite propre de portee_etendue
+[UiArtRegression] PASS Coffre : sprite propre de oeil_critique
+[UiArtRegression] PASS Coffre : sprite propre de ancrage
+[UiArtRegression] PASS Coffre : sprite propre de regeneration
+[UiArtRegression] PASS Coffre : sprite propre de peau_dure
+[UiArtRegression] PASS Coffre : sprite propre de carapace
+[UiArtRegression] PASS Coffre : sprite propre de instinct
+[UiArtRegression] PASS Coffre : sprite propre de siphon_essence
+[UiArtRegression] PASS Coffre : sprite propre de photo_de_classe
+[UiArtRegression] PASS Coffre : sprite propre de jeton_de_fete
+[UiArtRegression] PASS Coffre : sprite propre de souffle_du_neant
+[UiArtRegression] PASS Coffre : sprite propre de paille_tordue
+[UiArtRegression] PASS Coffre : sprite propre de persistance
+[UiArtRegression] PASS Coffre : sprite propre de allumette_humide
+[UiArtRegression] PASS Coffre : sprite propre de glacon
+[UiArtRegression] PASS Coffre : sprite propre de thermometre
+[UiArtRegression] PASS Coffre : sprite propre de epingle_a_nourrice
+[UiArtRegression] PASS Coffre : sprite propre de petard_mouille
+[UiArtRegression] PASS Coffre : sprite propre de de_a_coudre
+[UiArtRegression] PASS Coffre : sprite propre de semelle_usee
+[UiArtRegression] PASS Coffre : sprite propre de boite_de_pansements
+[UiArtRegression] PASS Coffre : sprite propre de loupe_de_philateliste
+[UiArtRegression] PASS Coffre : sprite propre de stylo_quatre_couleurs
+[UiArtRegression] PASS Coffre : sprite propre de tabouret_de_camping
+[UiArtRegression] PASS Coffre : sprite propre de chewing_gum
+[UiArtRegression] PASS Coffre : sprite propre de gilet_reflechissant
+[UiArtRegression] PASS Coffre : sprite propre de thermos
+[UiArtRegression] PASS Coffre : sprite propre de medaille_cabossee
+[UiArtRegression] PASS Coffre : sprite propre de porte_monnaie_use
+[UiArtRegression] PASS Coffre : sprite propre de reflet_brise
+[UiArtRegression] PASS Coffre : sprite propre de sifflet_d_arbitre
+[UiArtRegression] PASS Chance : rang initial avant le départ
+[UiArtRegression] PASS Chance : éclatement à sa taille native
+[UiArtRegression] PASS Chance : trois rangs révélés, animation arrêtée au bon éclat
+[UiArtRegression] PASS Pierre et Effacement : teinte du lieu, shader commun et filtre nearest
+[UiArtRegression] RESULT failures=0
