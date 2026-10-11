@@ -294,3 +294,16 @@ Raphaël, sur une capture de l'Ombre : « celui là est ptet un peu trop simple 
 - **Taille** : cadre 36 × 36, pivot (18, 28), `sprite_feet_offset` 10.
 - **Résultat** : [avant/après et un groupe en jeu](planches/37-m4-ombre.png).
 - **Vérifié** : aperçus sur trois sols, planche de contrôle des quatre animations, capture en jeu d'un groupe de six ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs` 3/3.
+
+## 20. Transitions : pointillés corrigés, réglages à choisir — 11 octobre 2026
+
+Raphaël, sur une capture forêt/champs : « les tiles ont été refaites, mais je sais pas trop quoi en penser j'avoue... »
+
+- **Bug corrigé** : des lignes pointillées dessinaient la grille iso sur tout le sol. Sur l'arête d'un losange, la tuile laisse un pixel sur deux transparent, et la tuile voisine, d'une autre matière, se voyait au travers. Le défaut précédait M2 ; le tramage d'avant le noyait, les grandes plaques le montraient. Le shader du sol redonne désormais à chaque pixel la matière de la case qui le contient, et lit les tuiles un cran vers l'intérieur sur une arête vide ([avant/après](planches/37-m2-pointilles.png)).
+- **Réglable** : la part du grain fin qui ronge le bord des plaques (`ground_blend.grain`, 0,3, inchangé).
+- **À choisir** : quatre réglages au même endroit ([planche](planches/37-m2-reglages.png)) :
+  - A : actuel corrigé ;
+  - B : plaques plus petites ;
+  - C : bords lisses ;
+  - D : bande resserrée et bords lisses.
+- **Vérifié** : `tools/validate.sh` smoke, `erasure_active`, `cartography` 3/3 ; préchauffage des shaders valide.

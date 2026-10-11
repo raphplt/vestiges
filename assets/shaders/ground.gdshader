@@ -19,6 +19,8 @@ uniform float band_px = 34.0;
 // Amplitude du bruit qui fait onduler la lisière (0 = bande régulière).
 uniform float edge_noise = 0.35;
 uniform float noise_scale = 0.045;
+// Part du grain fin qui ronge le bord des plaques (0 = bord lisse).
+uniform float grain = 0.3;
 
 #include "res://assets/shaders/erasure_memory.gdshaderinc"
 #include "res://assets/shaders/ground_forget.gdshaderinc"
@@ -77,6 +79,14 @@ vec4 tile_texel(vec4 data, vec2 local) {
 	return texelFetch(tile_atlas, origin + texel, 0);
 }
 
+// Texel de la tuile d'une case ; sur l'arête vide d'un losange, repris un cran vers l'intérieur.
+vec4 cell_texel(vec4 data, vec2 local) {
+	vec4 texel = tile_texel(data, local);
+	if (texel.a < 0.5)
+		texel = tile_texel(data, local - sign(local) * vec2(2.0, 1.0));
+	return texel;
+}
+
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	vertex_color = COLOR;
@@ -90,6 +100,15 @@ void fragment() {
 		ivec2 cell = cell_of(p);
 		vec4 own_data = cell_data(cell);
 		int own = biome_of(own_data);
+		vec2 local = p - cell_center(cell);
+		// Sur l'arête d'un losange, la tuile laisse un pixel sur deux transparent et la tuile voisine, d'une autre
+		// matière, se voyait au travers : une ligne pointillée le long de chaque arête. Le pixel reprend la matière de
+		// la case qui le contient.
+		if (own != NONE) {
+			vec4 base = cell_texel(own_data, local);
+			if (base.a > 0.5)
+				COLOR = vec4(base.rgb, 1.0) * vertex_color;
+		}
 		if (own != NONE && own_data.a > 0.5) {
 			float nearest = 1e9;
 			ivec2 other_cell = ivec2(0);
@@ -122,12 +141,12 @@ void fragment() {
 				// double. Un seuil tiré pixel par pixel donnait des pixels épars, un seuil commun aux deux côtés gardait
 				// le bord droit des losanges en échangeant seulement les matières.
 				vec2 grid = floor(p / 2.0) * 2.0;
-				float shape = mix(value_noise(grid * 0.06 + 17.3), value_noise(grid * 0.22 + 3.1), 0.3);
+				float shape = mix(value_noise(grid * 0.06 + 17.3), value_noise(grid * 0.22 + 3.1), grain);
 				shape += (value_noise(p * noise_scale) - 0.5) * edge_noise;
 				float side = own < other_biome ? 1.0 : -1.0;
 				float advance = side * (shape - 0.5) * 2.0 * band_px;
 				if (advance > nearest - band_px / float(RINGS) * 0.5) {
-					vec4 other = tile_texel(cell_data(other_cell), p - cell_center(cell));
+					vec4 other = cell_texel(cell_data(other_cell), local);
 					if (other.a > 0.5)
 						COLOR = vec4(other.rgb, 1.0) * vertex_color;
 				}

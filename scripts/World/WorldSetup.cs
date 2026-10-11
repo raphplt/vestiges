@@ -1043,6 +1043,7 @@ public class WorldGenConfig
                 BandPx = (float)blend.GetValueOrDefault("band_px", defaults.BandPx).AsDouble(),
                 EdgeNoise = (float)blend.GetValueOrDefault("edge_noise", defaults.EdgeNoise).AsDouble(),
                 NoiseScale = (float)blend.GetValueOrDefault("noise_scale", defaults.NoiseScale).AsDouble(),
+                Grain = (float)blend.GetValueOrDefault("grain", defaults.Grain).AsDouble(),
             };
         }
 

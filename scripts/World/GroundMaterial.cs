@@ -9,6 +9,8 @@ public struct GroundBlendConfig
     public float BandPx;
     public float EdgeNoise;
     public float NoiseScale;
+    // Part du grain fin qui ronge le bord des plaques (0 = bord lisse, 1 = grain seul).
+    public float Grain;
 
     public static GroundBlendConfig Default => new()
     {
@@ -16,6 +18,7 @@ public struct GroundBlendConfig
         BandPx = 34f,
         EdgeNoise = 0.35f,
         NoiseScale = 0.045f,
+        Grain = 0.3f,
     };
 }
 
@@ -98,6 +101,7 @@ public static class GroundMaterial
         material.SetShaderParameter("band_px", config.BandPx);
         material.SetShaderParameter("edge_noise", config.EdgeNoise);
         material.SetShaderParameter("noise_scale", config.NoiseScale);
+        material.SetShaderParameter("grain", config.Grain);
         GD.Print($"[GroundMaterial] {size.X}×{size.Y} cellules décrites en {Time.GetTicksMsec() - started} ms");
     }
 
