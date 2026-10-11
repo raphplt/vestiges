@@ -191,3 +191,17 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Autres tracés lisses repris** : l'anneau « dash prêt » sous le joueur (ellipse cuite) et les coins du marqueur de cible de la Convergence (traits d'un pixel qui s'écartent par paliers, position calée au pixel).
 - **Restent lisses** : les effets de l'Indicible (fosse, éclairs) et les fissures de la Barrière, à reprendre avec le plan 07 si Raphaël les remarque.
 - **Vérifié** : captures de la Veillée (zoom sur l'anneau : marches pixel, trame) et du vestige tombé, regardées. L'ellipse blanche saisie à l'impact du vestige est l'éclair existant de `GroundTelegraph`, déjà en pixel art. `tools/validate.sh` smoke, `movement-integration`, `perk_effects`, `small_places` 4/4.
+
+## 14. Lot M2 livré : transitions entre biomes en plaques — 11 octobre 2026
+
+- **Cause des « pixels dans tous les sens »** : près d'une frontière, chaque carré de 2 × 2 pixels tirait au hasard s'il prenait la matière voisine.
+- **Premier essai, écarté** : un seuil de bruit cohérent donnait la même décision des deux côtés de la frontière. Les matières s'échangeaient sur la même bande et le bord droit des losanges restait visible, simplement inversé.
+- **Retenu** (`ground.gdshader`) :
+  - un bruit **déplace la frontière** vers l'un ou l'autre biome, d'une bande au plus, avec un signe fixé par l'ordre des deux biomes, pour que les deux côtés voient la même frontière déplacée ;
+  - de grandes plaques (bruit au 1/16) rongées d'un grain plus fin, au pixel double ;
+  - la distance à la frontière est sondée sur six anneaux au lieu de trois, depuis un point déformé par un bruit, pour que la lisière ne suive plus les losanges de la grille.
+  
+  Bande élargie de 34 à 46 px (`data/world/world_gen.json`). S'applique aussi aux matières d'un même biome qui se fondent (boue, eau et herbe du marais).
+- **Résultat** : mares bordées de boue aux contours organiques, champs et prairies qui avancent par plaques, plus de pixels isolés ni de losanges francs ([avant/après](planches/37-m2-transitions.png), même graine, même instant).
+- **Coût** : seules les cellules proches d'une frontière sondent ; elles font jusqu'à 48 lectures au lieu de 24, plus cinq bruits. La capture en 4K reste au plafond de 144 FPS ; **banc A/B à faire machine calme** (une autre session tournait).
+- **Vérifié** : captures avant/après regardées ; `tools/validate.sh` smoke, `erasure_active`, `catalogs` 3/3 ; préchauffage valide.

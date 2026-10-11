@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 // Sol de la run (couches Ground et RoadOverlay).
 // 1. Jonctions : près d'une frontière de biomes, une partie des pixels prend la matière du biome voisin.
-//    Tramage net (Bayer en pixels monde), lisière perturbée par un bruit lent ; le gameplay ne change pas.
+//    Plaques organiques au pixel double, lisière perturbée par un bruit lent ; le gameplay ne change pas.
 // 2. Oubli : la mémoire des zones (ErasureManager) délave le sol, le blanchit par tramage, le fissure
 //    de lumière, jusqu'au Néant blanc animé. Phases de la Stratégie V2 §8.
 
@@ -25,6 +25,8 @@ uniform float noise_scale = 0.045;
 
 const vec2 TILE = vec2(64.0, 32.0);
 const int NONE = 255;
+// Anneaux de sondage de la frontière : assez pour que la lisière ne marche pas par paliers (plan 37 M2).
+const int RINGS = 6;
 
 varying vec2 world_pos;
 varying vec4 vertex_color;
@@ -91,17 +93,21 @@ void fragment() {
 		if (own != NONE && own_data.a > 0.5) {
 			float nearest = 1e9;
 			ivec2 other_cell = ivec2(0);
+			int other_biome = own;
 			// Anneau extérieur d'abord : loin de toute frontière (cas courant), 8 lectures suffisent.
-			for (int ring = 3; ring >= 1; ring--) {
-				float radius = band_px * float(ring) / 3.0;
+			// Point sondé déformé par un bruit : la distance à la frontière ne suit plus les losanges de la grille.
+			vec2 warped = p + (vec2(value_noise(p * 0.07 + 5.1), value_noise(p * 0.07 + 41.7)) - 0.5) * 20.0;
+			for (int ring = RINGS; ring >= 1; ring--) {
+				float radius = band_px * float(ring) / float(RINGS);
 				bool found = false;
 				for (int i = 0; i < 8; i++) {
 					float angle = float(i) * 0.7853982;
-					ivec2 c = cell_of(p + vec2(cos(angle), sin(angle) * 0.5) * radius);
+					ivec2 c = cell_of(warped + vec2(cos(angle), sin(angle) * 0.5) * radius);
 					int b = biome_of(cell_data(c));
 					if (b != NONE && b != own) {
 						nearest = radius;
 						other_cell = c;
+						other_biome = b;
 						found = true;
 						break;
 					}
@@ -110,11 +116,17 @@ void fragment() {
 					break;
 			}
 			if (nearest < 1e8) {
-				float closeness = 1.0 - nearest / (band_px + band_px / 3.0);
-				float wander = (value_noise(p * noise_scale) - 0.5) * 2.0 * edge_noise;
-				float chance = 0.5 * closeness + wander * closeness;
-				// Seuil par amas de 2×2 pixels : touffes et gravillons plutôt qu'une trame régulière.
-				if (chance > hash(floor(p / 2.0) + 0.37)) {
+				// Lisière organique (plan 37 M2) : un bruit déplace la frontière vers l'un ou l'autre biome, d'une
+				// bande au plus. Le signe dépend de l'ordre des deux biomes, si bien que les deux côtés voient la même
+				// frontière déplacée : de grandes plaques avancent sur le voisin, rongées d'un grain plus fin, au pixel
+				// double. Un seuil tiré pixel par pixel donnait des pixels épars, un seuil commun aux deux côtés gardait
+				// le bord droit des losanges en échangeant seulement les matières.
+				vec2 grid = floor(p / 2.0) * 2.0;
+				float shape = mix(value_noise(grid * 0.06 + 17.3), value_noise(grid * 0.22 + 3.1), 0.3);
+				shape += (value_noise(p * noise_scale) - 0.5) * edge_noise;
+				float side = own < other_biome ? 1.0 : -1.0;
+				float advance = side * (shape - 0.5) * 2.0 * band_px;
+				if (advance > nearest - band_px / float(RINGS) * 0.5) {
 					vec4 other = tile_texel(cell_data(other_cell), p - cell_center(cell));
 					if (other.a > 0.5)
 						COLOR = vec4(other.rgb, 1.0) * vertex_color;
