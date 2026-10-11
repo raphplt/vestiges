@@ -23,7 +23,7 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color TextColor = ChoiceStyle.TextColor;
     private static readonly Color TextDim = ChoiceStyle.TextDim;
     private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
-    private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
+    private static readonly Color OverlayColor = ChoiceStyle.InRunOverlayColor;
     private const float PanelEntranceScale = 0.82f;
     private const float InventoryWidth = 340f;
     private const float StatsWidth = 340f;

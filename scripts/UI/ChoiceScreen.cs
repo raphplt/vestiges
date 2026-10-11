@@ -105,7 +105,7 @@ public partial class ChoiceScreen : CanvasLayer
         _actions.Modulate = Colors.Transparent;
 
         _entrance = CreateTween();
-        _entrance.TweenProperty(_overlay, "color", ChoiceStyle.OverlayColor, 0.25f);
+        _entrance.TweenProperty(_overlay, "color", ChoiceStyle.InRunOverlayColor, 0.25f);
         _entrance.TweenProperty(_title, "visible_ratio", 1f, 0.3f);
         _entrance.TweenProperty(_subtitle, "modulate", Colors.White, 0.15f);
         foreach (PanelContainer card in _cardPanels)
@@ -137,7 +137,7 @@ public partial class ChoiceScreen : CanvasLayer
     private void ResetEntrance()
     {
         _backdrop.FinishFade();
-        _overlay.Color = ChoiceStyle.OverlayColor;
+        _overlay.Color = ChoiceStyle.InRunOverlayColor;
         _title.VisibleRatio = 1f;
         _subtitle.Modulate = Colors.White;
         foreach (PanelContainer card in _cardPanels)
@@ -151,7 +151,7 @@ public partial class ChoiceScreen : CanvasLayer
 
     private void BuildUI()
     {
-        _overlay = new ColorRect { Color = ChoiceStyle.OverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
+        _overlay = new ColorRect { Color = ChoiceStyle.InRunOverlayColor, MouseFilter = Control.MouseFilterEnum.Stop };
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_overlay);
 

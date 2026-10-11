@@ -171,7 +171,7 @@ public partial class PauseMenu : CanvasLayer
 		_root.ProcessMode = ProcessModeEnum.Always;
 		AddChild(_root);
 
-		MenuSkin.AddBackdrop(_root, subdued: true);
+		MenuSkin.AddGameBackdrop(_root, PixelBackdrop.NeutralTint);
 
 		// L’équipement garde l’espace principal ; la fiche conserve une hauteur bornée.
 		HBoxContainer hbox = new();

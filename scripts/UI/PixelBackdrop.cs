@@ -4,7 +4,8 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Pierre commune aux menus ; poussières et bords rongés sur une grille de 480 × 270.
+/// Fond commun aux menus, poussières et bords rongés sur une grille de 480 × 270. Par-dessus le jeu (menus ouverts en
+/// run, plan 37 R1), il montre le jeu flou et assombri derrière le panneau ; sinon, la pierre des menus (chargement).
 /// Une teinte par écran ; <see cref="FadeIn"/> le fait monter à l'ouverture.
 /// </summary>
 public partial class PixelBackdrop : TextureRect
@@ -15,22 +16,27 @@ public partial class PixelBackdrop : TextureRect
     public static readonly Color WorkshopTint = new(0.92f, 0.56f, 0.3f);
     public static readonly Color NeutralTint = new(0.55f, 0.52f, 0.46f);
 
-    private static Shader _twinkleShader;
+    private static Shader _stoneShader;
+    private static Shader _gameShader;
+    private readonly float _opacity;
     private Tween _fade;
 
     public PixelBackdrop() : this(GoldTint)
     {
     }
 
-    public PixelBackdrop(Color tint)
+    /// <param name="overGame">Vrai pour un menu ouvert en run : le jeu se devine derrière (DECISIONS §117).</param>
+    public PixelBackdrop(Color tint, bool overGame = true)
     {
-        _twinkleShader ??= GD.Load<Shader>("res://assets/shaders/menu_erasure.gdshader");
-        Material = new ShaderMaterial { Shader = _twinkleShader };
+        _stoneShader ??= GD.Load<Shader>("res://assets/shaders/menu_erasure.gdshader");
+        _gameShader ??= GD.Load<Shader>("res://assets/shaders/menu_game_veil.gdshader");
+        Material = new ShaderMaterial { Shader = overGame ? _gameShader : _stoneShader };
+        _opacity = overGame ? 1f : 0.75f;
         SetTint(tint);
         TextureFilter = TextureFilterEnum.Nearest;
         ExpandMode = ExpandModeEnum.IgnoreSize;
         StretchMode = StretchModeEnum.Scale;
-        Modulate = new Color(1f, 1f, 1f, 0.75f);
+        Modulate = new Color(1f, 1f, 1f, _opacity);
         MouseFilter = MouseFilterEnum.Ignore;
         ProcessMode = ProcessModeEnum.Always;
     }
@@ -40,14 +46,13 @@ public partial class PixelBackdrop : TextureRect
         Texture = GD.Load<Texture2D>("res://assets/ui/menus/stone/interior.png");
         ShaderMaterial material = (ShaderMaterial)Material;
         material.SetShaderParameter("dust_color", tint);
-
     }
 
     /// <summary>Passer une entrée termine aussi son fondu, sans changer la rotation.</summary>
     public void FinishFade()
     {
         _fade?.Kill();
-        Modulate = new Color(1f, 1f, 1f, 0.75f);
+        Modulate = new Color(1f, 1f, 1f, _opacity);
     }
 
     /// <summary>Le fond monte de rien à plein en <paramref name="seconds"/>.</summary>
@@ -56,6 +61,6 @@ public partial class PixelBackdrop : TextureRect
         _fade?.Kill();
         Modulate = new Color(1f, 1f, 1f, 0f);
         _fade = CreateTween();
-        _fade.TweenProperty(this, "modulate:a", 0.75f, seconds);
+        _fade.TweenProperty(this, "modulate:a", _opacity, seconds);
     }
 }

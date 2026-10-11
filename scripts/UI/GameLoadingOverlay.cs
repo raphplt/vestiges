@@ -66,7 +66,7 @@ public partial class GameLoadingOverlay : CanvasLayer
 		_root.AddChild(_background);
 
 		// Fond natif partagé avec les écrans de choix.
-		_particleLayer = new PixelBackdrop(PixelBackdrop.NeutralTint) { Modulate = new Color(1f, 1f, 1f, 0.25f) };
+		_particleLayer = new PixelBackdrop(PixelBackdrop.NeutralTint, overGame: false) { Modulate = new Color(1f, 1f, 1f, 0.25f) };
 		_particleLayer.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_particleLayer.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_particleLayer);

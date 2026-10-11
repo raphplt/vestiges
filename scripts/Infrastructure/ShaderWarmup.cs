@@ -36,6 +36,9 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/indicible_tide.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/indicible_wave.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/ui_dust_twinkle.gdshader", SampleKind.Sprite),
+        ("res://assets/shaders/menu_erasure.gdshader", SampleKind.Sprite),
+        ("res://assets/shaders/menu_game_veil.gdshader", SampleKind.Rectangle),
+        ("res://assets/shaders/menu_portrait.gdshader", SampleKind.Sprite),
     };
     private static readonly Dictionary<string, Shader> Shaders = new();
     private static Texture2D _texture;

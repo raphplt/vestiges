@@ -76,6 +76,9 @@ public partial class GameManager : Node
         MouseCursor.Install(GetTree(), () => _currentState == GameState.Run);
     }
 
+    // Toute fermeture, même sans GameExit (bancs, tests), rend les curseurs avant que le moteur ne s'arrête.
+    public override void _ExitTree() => MouseCursor.Release();
+
     public override void _Notification(int what)
     {
         if (what == NotificationWMCloseRequest)

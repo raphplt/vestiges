@@ -211,6 +211,15 @@ public static class MenuSkin
         art.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
     }
 
+    /// <summary>Fond d'un écran ouvert en run (pause, journal) : le jeu flou et assombri derrière (plan 37 R1).</summary>
+    public static PixelBackdrop AddGameBackdrop(Control parent, Color tint)
+    {
+        PixelBackdrop backdrop = new(tint);
+        parent.AddChild(backdrop);
+        backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        return backdrop;
+    }
+
     public static Texture2D SliderThumb(bool active)
     {
         string key = active ? "thumb-active" : "thumb";

@@ -58,9 +58,9 @@ public partial class ChoiceScreenRegression : Node
         Check(Field<Label>("_title").VisibleRatio == 1f, "le titre réouvert est complet");
         Check(Field<Label>("_subtitle").Modulate.A == 1f && Field<HBoxContainer>("_actions").Modulate.A == 1f,
             "sous-titre et sortie réouverts sont visibles");
-        Check(Field<ColorRect>("_overlay").Color == ChoiceStyle.OverlayColor,
+        Check(Field<ColorRect>("_overlay").Color == ChoiceStyle.InRunOverlayColor,
             "pas d'éclair figé dans la nouvelle offre");
-        Check(Mathf.IsEqualApprox(Field<PixelBackdrop>("_backdrop").Modulate.A, 0.75f),
+        Check(Mathf.IsEqualApprox(Field<PixelBackdrop>("_backdrop").Modulate.A, 1f),
             "le fond réouvert est à son opacité finale");
         Check(Field<VBoxContainer>("_cardsContainer").GetChildCount() == _cards.Count
             && Field<HBoxContainer>("_actions").GetChildCount() == 1, "pas d'anciennes cartes dans le layout de la relance");
@@ -82,7 +82,7 @@ public partial class ChoiceScreenRegression : Node
             _screen._Input(input);
             Check(_screen.IsOpen && calls == 0 && Field<Label>("_title").VisibleRatio == 1f,
                 $"{input.GetType().Name} : le premier appui passe l'entrée sans récompense");
-            Check(Mathf.IsEqualApprox(Field<PixelBackdrop>("_backdrop").Modulate.A, 0.75f),
+            Check(Mathf.IsEqualApprox(Field<PixelBackdrop>("_backdrop").Modulate.A, 1f),
                 "passer l'entrée termine aussi le fondu du fond");
             _screen.Activate(1);
             _screen.Activate(1);

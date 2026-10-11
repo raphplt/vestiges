@@ -100,10 +100,14 @@ public partial class UiArtRegression : Node
             PixelBackdrop backdrop = new(PixelBackdrop.MemorialTint);
             AddChild(backdrop);
             Check(backdrop.Material is ShaderMaterial material
-                && material.Shader.ResourcePath.EndsWith("menu_erasure.gdshader")
+                && material.Shader.ResourcePath.EndsWith("menu_game_veil.gdshader")
                 && material.GetShaderParameter("dust_color").AsColor() == PixelBackdrop.MemorialTint
                 && backdrop.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
-                "Pierre et Effacement : teinte du lieu, shader commun et filtre nearest");
+                "Menu en run : jeu flouté derrière, teinte du lieu et filtre nearest");
+            PixelBackdrop stone = new(PixelBackdrop.NeutralTint, overGame: false);
+            AddChild(stone);
+            Check(stone.Material is ShaderMaterial stoneMaterial && stoneMaterial.Shader.ResourcePath.EndsWith("menu_erasure.gdshader"),
+                "Chargement : la pierre et l'Effacement, sans le jeu derrière");
             GD.Print($"[UiArtRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }

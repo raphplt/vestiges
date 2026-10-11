@@ -19,7 +19,7 @@ public partial class ChestLootScreen : CanvasLayer
     private static readonly Color GoldBright = new(0.9f, 0.78f, 0.39f);
     private static readonly Color TextLight = new(0.92f, 0.9f, 0.85f);
     private static readonly Color TextDim = new(0.5f, 0.5f, 0.55f);
-    private static readonly Color OverlayColor = ChoiceStyle.OverlayColor;
+    private static readonly Color OverlayColor = ChoiceStyle.InRunOverlayColor;
 
     // --- Roulette config ---
     private const float RouletteMinInterval = 0.04f;

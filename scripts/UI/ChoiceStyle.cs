@@ -22,6 +22,11 @@ public static class ChoiceStyle
     public static readonly Color PerkBorder = new(0.80f, 0.74f, 0.58f);
     public static readonly Color CardBg = new(0.07f, 0.07f, 0.11f, 0.96f);
     public static readonly Color OverlayColor = new(0.035f, 0.035f, 0.055f, 1f);
+    /// <summary>
+    /// Voile d'un menu ouvert en run : transparent, il ne fait que bloquer les clics ; le fond flouté par-dessus montre
+    /// le jeu (plan 37 R1). Le bilan garde le voile opaque.
+    /// </summary>
+    public static readonly Color InRunOverlayColor = new(0.035f, 0.035f, 0.055f, 0f);
 
     /// <summary>La tranche et le symbole portent la rareté, le creux reste calme pour lire le gain.</summary>
     public static void StyleCard(PanelContainer card, Color border, int rank, bool focused, bool enabled = true)

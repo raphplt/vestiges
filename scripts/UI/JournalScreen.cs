@@ -97,7 +97,7 @@ public partial class JournalScreen : CanvasLayer
         _root = new Control();
         _root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_root);
-        MenuSkin.AddBackdrop(_root, subdued: true);
+        MenuSkin.AddGameBackdrop(_root, PixelBackdrop.NeutralTint);
         MarginContainer margin = new();
         margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         margin.AddThemeConstantOverride("margin_left", 110);
