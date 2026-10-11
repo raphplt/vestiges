@@ -15,266 +15,130 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
-from sprites.ground import TILE_H, TILE_W, Detail, GroundMaterial, render_tiles  # noqa: E402
+from sprites.ground import TILE_H, TILE_W, Detail, GroundMaterial, Stipple, render_tiles  # noqa: E402
+from sprites.ground_motifs import (calm, cracks, crystals, flowers, glints, grass, litter, moss, mud, reeds,  # noqa: E402
+                                   rubble, stains, stones, stubble, water, weeds, wheat)
 from tile_preview import cell_hash  # noqa: E402
 
 # Sels des arêtes : identiques à WangTiles.cs.
 SALT_NE = 0x51ED
 SALT_NW = 0xA7E3
 
-LEAF_LITTER = Detail(("01", "10"), ("#4a3728", "#7a5c42"))
-GOLD_LEAF = Detail((".0", "01"), ("#c49b3e", "#7a5c42"), weight=0.6)
+# Quelques motifs posés au centre des tuiles, en plus du semis.
 FERN = Detail(("0.0", ".1.", "..."), ("#4a8c3f", "#2d5a27"), weight=0.8)
-MOSS_SPOT = Detail(("00",), ("#7bc558",), weight=0.5)
-
 ROOT_LINE = Detail(("00.", ".00"), ("#2a1e16",), weight=0.8)
-PEBBLE = Detail(("01",), ("#7a7a70", "#4a4a44"), weight=0.6)
-VIOLET_FLOWER = Detail((".0.", "010", ".0."), ("#6a4a8a", "#c49b3e"), weight=0.25)
-
-GRAVEL = Detail(("01", "10"), ("#8a7a6a", "#5a5050"))
-PALE_STONE = Detail(("0",), ("#b4a080",), weight=0.7)
-RUST_FLAKE = Detail(("01",), ("#6a3a28", "#5a2a18"), weight=0.6)
-CRYSTAL_CHIP = Detail((".0", "01"), ("#7ae0f0", "#4abae0"), weight=0.25)
 CRYSTAL_CLUSTER = Detail((".0.", "010", "11."), ("#7ae0f0", "#4abae0"), weight=1.0)
-BOLT = Detail(("0",), ("#8a7a6a",), weight=0.5)
-CRACK = Detail(("0..", ".00", "..0"), ("#1a1218",), weight=0.7)
-
-RED_FLOWER = Detail((".0.", "010", ".0."), ("#c44a3a", "#c8d480"))
-BLUE_FLOWER = Detail((".0.", "010", ".0."), ("#5a7aca", "#d0d8d0"))
-WHITE_FLOWER = Detail(("0",), ("#d0d8d0",), weight=1.2)
-YELLOW_FLOWER = Detail(("0",), ("#e0d070",), weight=1.2)
-CLOVER = Detail(("01",), ("#7cba5a", "#3a6a30"), weight=0.8)
-STRAW = Detail(("00",), ("#b8a080",), weight=1.0)
-WHEAT_TIP = Detail(("0",), ("#e8e0d4",), weight=0.8)
-FIELD_PEBBLE = Detail(("0",), ("#b8a080",), weight=0.7)
-
-REED = Detail(("0.0", "0.0", "1.1"), ("#3a6a38", "#2a4430"), weight=1.0)
-MUD_SPOT = Detail(("01",), ("#3a2e22", "#2a1e16"), weight=0.8)
-PALE_MOSS = Detail(("0",), ("#b8c8be",), weight=0.6)
 GLOWING_SPORE = Detail(("0",), ("#6aca5a",), weight=0.3)
-PUDDLE_GLINT = Detail(("01",), ("#7a8a9a", "#5a6a72"), weight=1.0)
 LILY_PAD = Detail((".0.", "010", ".0."), ("#3a6a38", "#6aca5a"), weight=0.8)
-WATER_GLINT = Detail(("00",), ("#8a9ea8",), weight=1.0)
 
-CONCRETE_CRACK = Detail(("0..", ".0.", ".00"), ("#2e2e2e",), weight=1.0)
-WEED = Detail(("0.0", ".1."), ("#4a7a3a", "#3a5a2e"), weight=0.8)
-RUST_STAIN = Detail(("01", "1."), ("#a85c30", "#8a5a42"), weight=0.5)
-DIRT_HOLE = Detail(("00", "01"), ("#5a4a38", "#3e3226"), weight=0.8)
-GLASS = Detail(("0",), ("#5a7a9a",), weight=0.4)
+# Palettes des motifs (plan 37) : ombre portée, ton moyen, clair, reflet.
+GRASS_FIELD = ("#335f2a", "#3f7533", "#6aa94c", "#8cc663")
+GRASS_SHADE = ("#13270f", "#234620", "#386a2e", "#4f8644")
+GRASS_SWAMP = ("#2e4a3e", "#3f6454", "#5a8670", "#78a48a")
+LEAF = ("#16290f", "#5a4528", "#7c6036", "#9a7a44")
+LEAF_SOIL = ("#140d08", "#4e3a24", "#664c2e", "#80603a")
+MOSS = ("#18301a", "#355e2b", "#4c7d3a", "#6a9a4a")
+STONE_WARM = ("#4e3f2f", "#8a7a64", "#ab9a7e", "#cbbd9e")
+STONE_FIELD = ("#3e4a28", "#8a8a70", "#aaa88a", "#cac6a6")
+STONE_GREY = ("#2a2a2a", "#5a5a56", "#72726c", "#8c8c86")
+STONE_QUARRY = ("#171214", "#4a4244", "#625a5a", "#7e7676")
+STONE_RUST = ("#1c1210", "#5a3a2a", "#7a4e34", "#9a6a48")
+WHEAT = ("#5e6a2a", "#a8a050", "#d0c46a", "#ece2a0")
+WHEAT_DENSE = ("#525e24", "#9a9446", "#c4b85e", "#e4d894")
+STUBBLE = ("#5a4a36", "#8a7656", "#a08a66", "#b49e7a")
+MUD = ("#18190f", "#2a2c22", "#3c3e30", "#5a5c4a")
+REEDS = ("#1a261a", "#3a5a34", "#5a7a44", "#8a9a5a")
+CRYSTAL = ("#1a1220", "#3a8aa8", "#6ad0e8", "#c8f4ff")
+RUST = ("#3a1c12", "#5e3220", "#7e4a2c", "#96603a")
+OIL = ("#141418", "#24242a", "#34343a", "#44444a")
+URBAN_WEED = ("#26321f", "#3e5a30", "#56763c", "#6e8c4a")
+
+
+def material(name: str, tones: tuple[str, str, str, str], shares: tuple[float, float, float, float], feature_px: float,
+             stipples: tuple, seed: int, details: tuple = (), details_per_tile: float = 0.0, **extra) -> GroundMaterial:
+    """Fond resserré (calm), grandes formes lentes, et les motifs qui disent la matière."""
+    return GroundMaterial(name=name, tones=calm(tones), shares=shares, feature_px=feature_px, stipples=stipples,
+                          seed=seed, details=details, details_per_tile=details_per_tile, **extra)
+
 
 MATERIALS: dict[str, tuple[str, GroundMaterial]] = {
-    "foret_sol": ("foret", GroundMaterial(
-        name="foret_sol",
-        tones=("#1c3719", "#21421d", "#28502a", "#365f2f"),
-        shares=(0.28, 0.44, 0.23, 0.05),
-        feature_px=22.0,
-        details=(LEAF_LITTER, GOLD_LEAF, FERN, MOSS_SPOT),
-        details_per_tile=0.7,
-        seed=4127,
-    )),
-    "foret_terre": ("foret", GroundMaterial(
-        name="foret_terre",
-        tones=("#2a1e16", "#382719", "#4a3728", "#5c4431"),
-        shares=(0.18, 0.42, 0.30, 0.10),
-        feature_px=18.0,
-        details=(ROOT_LINE, PEBBLE, LEAF_LITTER, GOLD_LEAF, MOSS_SPOT),
-        details_per_tile=1.1,
-        seed=5231,
-    )),
-    "foret_sousbois": ("foret", GroundMaterial(
-        name="foret_sousbois",
-        tones=("#1c3719", "#27491f", "#2f5a26", "#3f7432"),
-        shares=(0.30, 0.38, 0.24, 0.08),
-        feature_px=12.0,
-        details=(FERN, GOLD_LEAF, LEAF_LITTER, VIOLET_FLOWER, MOSS_SPOT),
-        details_per_tile=1.4,
-        seed=6311,
-    )),
-    "carriere_sol": ("carriere", GroundMaterial(
-        name="carriere_sol",
-        tones=("#2a2222", "#342b2b", "#3e3434", "#4f4545"),
-        shares=(0.22, 0.42, 0.28, 0.08),
-        feature_px=16.0,
-        details=(GRAVEL, PALE_STONE, RUST_FLAKE, CRYSTAL_CHIP),
-        details_per_tile=1.2,
-        seed=7411,
-    )),
-    "carriere_roche": ("carriere", GroundMaterial(
-        name="carriere_roche",
-        tones=("#302a2c", "#3b3537", "#474042", "#554e4f"),
-        shares=(0.18, 0.42, 0.32, 0.08),
-        feature_px=26.0,
-        details=(CRACK, GRAVEL, PALE_STONE),
-        details_per_tile=1.0,
-        seed=7523,
-    )),
-    "carriere_industriel": ("carriere", GroundMaterial(
-        name="carriere_industriel",
-        tones=("#302220", "#3b2922", "#473126", "#553a2c"),
-        shares=(0.20, 0.42, 0.30, 0.08),
-        feature_px=20.0,
-        details=(BOLT, RUST_FLAKE, CRACK),
-        details_per_tile=1.0,
-        seed=7639,
-    )),
-    "carriere_cristal": ("carriere", GroundMaterial(
-        name="carriere_cristal",
-        tones=("#140e14", "#1e181e", "#2a2222", "#383030"),
-        shares=(0.26, 0.38, 0.26, 0.10),
-        feature_px=14.0,
-        details=(CRYSTAL_CLUSTER, CRYSTAL_CHIP, CRACK),
-        details_per_tile=1.1,
-        seed=7757,
-    )),
-    "champs_herbe": ("champs", GroundMaterial(
-        name="champs_herbe",
-        tones=("#3f7334", "#4a8a3c", "#56a045", "#6fb453"),
-        shares=(0.16, 0.36, 0.36, 0.12),
-        feature_px=18.0,
-        details=(CLOVER, WHITE_FLOWER, YELLOW_FLOWER),
-        details_per_tile=0.8,
-        seed=8101,
-    )),
-    "champs_fleurs": ("champs", GroundMaterial(
-        name="champs_fleurs",
-        tones=("#3f7334", "#4a8a3c", "#56a045", "#6fb453"),
-        shares=(0.16, 0.36, 0.36, 0.12),
-        feature_px=18.0,
-        details=(RED_FLOWER, BLUE_FLOWER, WHITE_FLOWER, YELLOW_FLOWER),
-        details_per_tile=3.0,
-        seed=8117,
-    )),
-    "champs_sol": ("champs", GroundMaterial(
-        name="champs_sol",
-        tones=("#557f3c", "#63953f", "#7aa447", "#98b252"),
-        shares=(0.18, 0.38, 0.32, 0.12),
-        feature_px=20.0,
-        details=(CLOVER, FIELD_PEBBLE, YELLOW_FLOWER),
-        details_per_tile=0.6,
-        seed=8123,
-    )),
-    "champs_ble": ("champs", GroundMaterial(
-        name="champs_ble",
-        tones=("#8a9a48", "#a2ae55", "#b6be64", "#cbd283"),
-        shares=(0.18, 0.36, 0.32, 0.14),
-        feature_px=7.0,
-        stretch=(5.0, 1.0),
-        details=(WHEAT_TIP, STRAW),
-        details_per_tile=0.8,
-        seed=8147,
-    )),
-    "champs_ble_dense": ("champs", GroundMaterial(
-        name="champs_ble_dense",
-        tones=("#7e8c40", "#96a14c", "#aeb65b", "#c9cf82"),
-        shares=(0.22, 0.34, 0.30, 0.14),
-        feature_px=6.0,
-        stretch=(6.0, 1.0),
-        details=(WHEAT_TIP, WHEAT_TIP, STRAW),
-        details_per_tile=1.4,
-        seed=8161,
-    )),
-    "champs_chaume": ("champs", GroundMaterial(
-        name="champs_chaume",
-        tones=("#6a5a42", "#78664c", "#8a7058", "#a08a6a"),
-        shares=(0.18, 0.38, 0.32, 0.12),
-        feature_px=6.0,
-        stretch=(5.0, 1.0),
-        details=(STRAW, FIELD_PEBBLE),
-        details_per_tile=1.0,
-        seed=8171,
-    )),
-    "champs_chemin": ("champs", GroundMaterial(
-        name="champs_chemin",
-        tones=("#6a5a42", "#7a6650", "#8a7058", "#a88f6c"),
-        shares=(0.16, 0.38, 0.34, 0.12),
-        feature_px=14.0,
-        details=(FIELD_PEBBLE, STRAW),
-        details_per_tile=0.9,
-        seed=8179,
-    )),
-    "champs_bosquet": ("champs", GroundMaterial(
-        name="champs_bosquet",
-        tones=("#2e5a28", "#386a30", "#44803a", "#56a045"),
-        shares=(0.22, 0.38, 0.28, 0.12),
-        feature_px=12.0,
-        details=(FERN, LEAF_LITTER, CLOVER),
-        details_per_tile=1.2,
-        seed=8191,
-    )),
-    "marecages_sol": ("marecages", GroundMaterial(
-        name="marecages_sol",
-        tones=("#3a574d", "#446458", "#527266", "#6c8a7c"),
-        shares=(0.18, 0.40, 0.30, 0.12),
-        feature_px=17.0,
-        details=(REED, MUD_SPOT, PALE_MOSS, GLOWING_SPORE),
-        details_per_tile=1.0,
-        seed=9011,
-    )),
-    "marecages_vase": ("marecages", GroundMaterial(
-        name="marecages_vase",
-        tones=("#2c2d24", "#36372b", "#424233", "#525240"),
-        shares=(0.20, 0.40, 0.30, 0.10),
-        feature_px=15.0,
-        details=(PUDDLE_GLINT, REED, GLOWING_SPORE),
-        details_per_tile=1.0,
-        seed=9029,
-    )),
-    "marecages_eau": ("marecages", GroundMaterial(
-        name="marecages_eau",
-        tones=("#203840", "#28444c", "#325058", "#40606a"),
-        shares=(0.20, 0.42, 0.30, 0.08),
-        feature_px=24.0,
-        stretch=(2.0, 1.0),
-        details=(WATER_GLINT, LILY_PAD),
-        details_per_tile=0.7,
-        seed=9043,
-    )),
-    "ruines_sol": ("ruines", GroundMaterial(
-        name="ruines_sol",
-        tones=("#3a3a3a", "#444444", "#505050", "#626262"),
-        shares=(0.20, 0.40, 0.30, 0.10),
-        feature_px=18.0,
-        details=(CONCRETE_CRACK, WEED, RUST_STAIN, GLASS),
-        details_per_tile=1.1,
-        seed=9511,
-    )),
-    "ruines_trottoir": ("ruines", GroundMaterial(
-        name="ruines_trottoir",
-        tones=("#5e5e5a", "#686864", "#73736d", "#838379"),
-        shares=(0.18, 0.40, 0.32, 0.10),
-        feature_px=20.0,
-        slab_px=16,
-        joint="#5a5a56",
-        joint_wear=0.35,
-        details=(CONCRETE_CRACK, WEED, RUST_STAIN),
-        details_per_tile=0.8,
-        seed=9533,
-    )),
-    "ruines_carrelage": ("ruines", GroundMaterial(
-        name="ruines_carrelage",
-        tones=("#5a5652", "#666058", "#726b62", "#857c70"),
-        shares=(0.18, 0.40, 0.32, 0.10),
-        feature_px=16.0,
-        slab_px=8,
-        joint="#56514b",
-        joint_wear=0.3,
-        details=(DIRT_HOLE, CONCRETE_CRACK, RUST_STAIN),
-        details_per_tile=1.2,
-        seed=9551,
-    )),
-    "ruines_place": ("ruines", GroundMaterial(
-        name="ruines_place",
-        tones=("#5c5a56", "#67645f", "#736f68", "#86817a"),
-        shares=(0.18, 0.40, 0.32, 0.10),
-        feature_px=24.0,
-        slab_px=32,
-        joint="#58554f",
-        joint_wear=0.3,
-        running_bond=True,
-        details=(CONCRETE_CRACK, WEED, DIRT_HOLE),
-        details_per_tile=0.9,
-        seed=9573,
-    )),
+    "foret_sol": ("foret", material(
+        "foret_sol", ("#1c3719", "#21421d", "#28502a", "#365f2f"), (0.28, 0.44, 0.23, 0.05), 30.0,
+        grass(GRASS_SHADE, 0.8, 0.5) + litter(LEAF, 0.4) + moss(MOSS, 0.6, 0.68), 4127, (FERN,), 0.3)),
+    "foret_terre": ("foret", material(
+        "foret_terre", ("#2a1e16", "#382719", "#4a3728", "#5c4431"), (0.18, 0.42, 0.30, 0.10), 26.0,
+        litter(LEAF_SOIL, 0.8, 0.45) + stones(STONE_WARM, 0.5, 0.45) + moss(MOSS, 0.5, 0.72), 5231,
+        (ROOT_LINE,), 0.5)),
+    "foret_sousbois": ("foret", material(
+        "foret_sousbois", ("#1c3719", "#27491f", "#2f5a26", "#3f7432"), (0.30, 0.38, 0.24, 0.08), 26.0,
+        litter(LEAF) + moss(MOSS) + grass(GRASS_SHADE, 0.4, 0.6)
+        + (Stipple((".3.", "322", ".1.", ".0."), ("#16290f", "#c8bca0", "#a0896a", "#e8dcc4"), 0.0008, (0.4, 1.0)),),
+        6311, (FERN,), 0.4)),
+    "carriere_sol": ("carriere", material(
+        "carriere_sol", ("#2a2222", "#342b2b", "#3e3434", "#4f4545"), (0.25, 0.4, 0.25, 0.1), 24.0,
+        stones(STONE_QUARRY, 1.2) + cracks("#1a1416", 1.0) + crystals(CRYSTAL, 0.25), 7757)),
+    "carriere_roche": ("carriere", material(
+        "carriere_roche", ("#302a2c", "#3b3537", "#474042", "#554e4f"), (0.25, 0.4, 0.25, 0.1), 34.0,
+        stones(STONE_QUARRY, 1.6, 0.7) + cracks("#1c1618", 1.5, 0.6), 7759)),
+    "carriere_industriel": ("carriere", material(
+        "carriere_industriel", ("#302220", "#3b2922", "#473126", "#553a2c"), (0.25, 0.4, 0.25, 0.1), 28.0,
+        stones(STONE_RUST, 0.8) + stains(RUST, 0.6) + stains(OIL, 0.6) + glints("#7a6a5a", "#2a201c", 0.5), 7761)),
+    "carriere_cristal": ("carriere", material(
+        "carriere_cristal", ("#140e14", "#1e181e", "#2a2222", "#383030"), (0.25, 0.4, 0.25, 0.1), 22.0,
+        crystals(CRYSTAL, 0.45) + stones(STONE_QUARRY, 0.6) + glints("#7ae0f0", "#1a1220", 0.4), 7763,
+        (CRYSTAL_CLUSTER,), 0.5)),
+    "champs_herbe": ("champs", material(
+        "champs_herbe", ("#3f7334", "#4a8a3c", "#56a045", "#6fb453"), (0.16, 0.36, 0.36, 0.12), 30.0,
+        grass(GRASS_FIELD) + flowers("#3c7031", "#e8e4d8", "#e0c050"), 8101)),
+    "champs_fleurs": ("champs", material(
+        "champs_fleurs", ("#3f7334", "#4a8a3c", "#56a045", "#6fb453"), (0.16, 0.36, 0.36, 0.12), 30.0,
+        grass(GRASS_FIELD, 0.7) + flowers("#3c7031", "#c44a3a", "#e8cf52", 3.0)
+        + flowers("#3c7031", "#6a8ad8", "#e8e4d8", 3.0) + flowers("#3c7031", "#e8e4d8", "#e0c050", 2.0), 8117)),
+    "champs_sol": ("champs", material(
+        "champs_sol", ("#557f3c", "#63953f", "#7aa447", "#98b252"), (0.18, 0.38, 0.32, 0.12), 30.0,
+        grass(("#3e5e28", "#55803a", "#86ac52", "#a8c46a"), 0.6, 0.55) + stones(STONE_FIELD, 0.4, 0.4), 8123)),
+    "champs_ble": ("champs", material(
+        "champs_ble", ("#8a9a48", "#a2ae55", "#b6be64", "#cbd283"), (0.18, 0.36, 0.32, 0.14), 9.0,
+        wheat(WHEAT), 8147, stretch=(5.0, 1.0))),
+    "champs_ble_dense": ("champs", material(
+        "champs_ble_dense", ("#7e8c40", "#96a14c", "#aeb65b", "#c9cf82"), (0.22, 0.34, 0.30, 0.14), 8.0,
+        wheat(WHEAT_DENSE, 1.5), 8161, stretch=(6.0, 1.0))),
+    "champs_chaume": ("champs", material(
+        "champs_chaume", ("#6a5a42", "#78664c", "#8a7058", "#a08a6a"), (0.18, 0.38, 0.32, 0.12), 9.0,
+        stubble(STUBBLE, 0.6) + stones(STONE_WARM, 0.3, 0.4), 8171, stretch=(5.0, 1.0))),
+    "champs_chemin": ("champs", material(
+        "champs_chemin", ("#6a5a42", "#7a6650", "#8a7058", "#a88f6c"), (0.16, 0.38, 0.34, 0.12), 22.0,
+        cracks("#55452f") + stones(STONE_WARM)
+        + (Stipple(("3.", "23", "02"), ("#5a4a34", "#6a7a3a", "#8aa04a", "#a8b85a"), 0.004, (0.7, 1.0)),), 8179)),
+    "champs_bosquet": ("champs", material(
+        "champs_bosquet", ("#2e5a28", "#386a30", "#44803a", "#56a045"), (0.22, 0.38, 0.28, 0.12), 26.0,
+        grass(("#22441e", "#33612b", "#4f8a3c", "#68a44c"), 0.9, 0.45) + litter(LEAF, 0.6) + moss(MOSS, 0.5), 8191, (FERN,), 0.4)),
+    "marecages_sol": ("marecages", material(
+        "marecages_sol", ("#3a574d", "#446458", "#527266", "#6c8a7c"), (0.18, 0.40, 0.30, 0.12), 26.0,
+        grass(GRASS_SWAMP, 0.8, 0.5) + reeds(REEDS, 0.6) + mud(("#2a3a32", "#3a4a40", "#4e5e52", "#6a7a72"), "#7a8a8a", 0.5), 9011,
+        (GLOWING_SPORE,), 0.4)),
+    "marecages_vase": ("marecages", material(
+        "marecages_vase", ("#2c2d24", "#36372b", "#424233", "#525240"), (0.20, 0.40, 0.30, 0.10), 24.0,
+        mud(MUD, "#8a9a96", 1.4) + reeds(REEDS, 0.6), 9029, (GLOWING_SPORE,), 0.3)),
+    "marecages_eau": ("marecages", material(
+        "marecages_eau", ("#203840", "#28444c", "#325058", "#40606a"), (0.20, 0.42, 0.30, 0.08), 30.0,
+        water("#7a9aa6", "#1a3038"), 9043, (LILY_PAD,), 0.5, stretch=(2.0, 1.0))),
+    "ruines_sol": ("ruines", material(
+        "ruines_sol", ("#3a3a3a", "#444444", "#505050", "#626262"), (0.20, 0.40, 0.30, 0.10), 26.0,
+        cracks("#262626", 1.2) + rubble(STONE_GREY, 0.6) + weeds(URBAN_WEED) + stains(OIL, 0.6)
+        + glints("#7a92a6", "#26262a", 0.4), 9511)),
+    "ruines_trottoir": ("ruines", material(
+        "ruines_trottoir", ("#5e5e5a", "#686864", "#73736d", "#838379"), (0.18, 0.40, 0.32, 0.10), 28.0,
+        cracks("#4a4a44") + rubble(STONE_GREY, 0.4) + weeds(URBAN_WEED, 1.2) + stains(RUST, 0.3), 9533,
+        slab_px=16, joint="#56564f", joint_wear=0.35)),
+    "ruines_carrelage": ("ruines", material(
+        "ruines_carrelage", ("#5a5652", "#666058", "#726b62", "#857c70"), (0.18, 0.40, 0.32, 0.10), 22.0,
+        cracks("#423d38") + rubble(("#2a2622", "#7a5040", "#9a6a52", "#b8866a"), 0.6) + weeds(URBAN_WEED, 0.6),
+        9551, slab_px=8, joint="#524d47", joint_wear=0.3)),
+    "ruines_place": ("ruines", material(
+        "ruines_place", ("#5c5a56", "#67645f", "#736f68", "#86817a"), (0.18, 0.40, 0.32, 0.10), 32.0,
+        cracks("#44413c", 1.2) + rubble(STONE_GREY, 0.5) + weeds(URBAN_WEED), 9573,
+        slab_px=32, joint="#55524c", joint_wear=0.3, running_bond=True)),
 }
 
 

@@ -318,3 +318,17 @@ Raphaël : « tu trouve pas c'est trop large les rectangles », puis « "ce qui 
 - Surtitre « CE QUI DEMEURE » retiré de l'écran du coffre (il reste sur le bilan de fin de run).
 - Nombre de gains, rappel : un coffre commun ou rare donne un tirage, plus parfois un bonus de stat (deux lignes au plus) ; un épique, deux tirages et le bonus. Les cinq lignes vues sur une capture viennent de la galerie de test (`--capture-loot-gallery`), qui force cinq gains par page pour vérifier la mise en page.
 - **Vérifié** : captures du coffre à un gain et de la galerie à cinq ; `tools/validate.sh` smoke, `choice_screen`.
+
+## 22. Tuiles du sol redessinées — 11 octobre 2026
+
+Raphaël : « pour les tiles je voulais plus dire dans le design des tiles elles meme ». Sur une première planche à semis de pixels : « oui mais un peu mieux (là on dirait juste des pixels au hasard posés sur le décor existant) ».
+
+- **Constat** : les 22 matières étaient le même bruit en taches à quatre tons, comme un tissu de camouflage. Herbe, terre, sous-bois et béton ne se distinguaient que par la couleur.
+- **Retenu** (`tools/sprites/ground.py`, `tools/sprites/ground_motifs.py`, `tools/generate_ground.py`) :
+  - fond resserré (`calm`) en grandes formes lentes, à tons proches : le sol est calme ;
+  - **motifs dessinés** de 2 à 7 px, ombrés (lumière en haut à gauche, ombre portée en bas), en familles déclinées dans la palette de chaque matière : touffes et brins d'herbe, petites fleurs, feuilles mortes à nervure, brindilles, coussins de mousse, champignons, cailloux et pierres, fissures, épis, chaume, flaques, joncs, rides d'eau, gravats, herbes folles, taches de rouille, cristaux ;
+  - semés **en plaques** selon le champ de fond, avec des zones calmes entre elles : plus aucun pixel isolé tiré au hasard ;
+  - **raccords** : le tirage se fait dans le repère de l'arête la plus proche, comme le fond. Deux tuiles voisines sèment les mêmes motifs, qui débordent l'une sur l'autre sans couture. Rien n'est semé près des sommets, partagés par toute la carte : sinon un motif s'y répéterait en grille.
+- **Résultat** : [en jeu, avant/après](planches/37-tuiles.png) (la lisière D est aussi appliquée à droite), et les 22 matières côte à côte ([1](planches/37-tuiles-matieres-1.png), [2](planches/37-tuiles-matieres-2.png), [3](planches/37-tuiles-matieres-3.png)).
+- **Limite connue** : 16 tuiles par matière, donc un motif marquant peut se répéter à quelques tuiles d'intervalle.
+- **Vérifié** : captures de la forêt, du marais, de la carrière et de la ville ; régénération identique octet pour octet ; `tools/validate.sh` smoke, `cartography`, `erasure_active` 3/3.

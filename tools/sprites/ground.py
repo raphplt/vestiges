@@ -40,6 +40,20 @@ class Detail:
 
 
 @dataclass(frozen=True)
+class Stipple:
+    """
+    Micro-détail semé au pixel sur toute la surface (brin d'herbe, feuille morte, caillou) : motif ancré par son coin
+    bas-gauche, probabilité par pixel. Le tirage se fait dans le repère de l'arête ou du sommet le plus proche, comme le
+    fond : de part et d'autre d'une arête, deux tuiles sèment les mêmes détails, qui se raccordent sans couture.
+    """
+    pattern: tuple[str, ...]
+    colors: tuple[str, ...]
+    density: float
+    # Ne pousse que là où le champ de fond tombe dans cette plage (0 à 1) : des touffes en plaques, pas un semis uniforme.
+    field_range: tuple[float, float] = (0.0, 1.0)
+
+
+@dataclass(frozen=True)
 class GroundMaterial:
     """Quatre tons du plus sombre au plus clair et la part de surface visée pour chacun."""
     name: str
@@ -58,6 +72,7 @@ class GroundMaterial:
     running_bond: bool = False
     # Part des joints effacés par l'usure (0 = joints intacts).
     joint_wear: float = 0.0
+    stipples: tuple[Stipple, ...] = ()
     ramp: tuple[RampColor, ...] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -165,6 +180,82 @@ def _joint_mask(material: GroundMaterial, ground: np.ndarray) -> np.ndarray:
     return joints & (wear > material.joint_wear)
 
 
+# Repères du semis : décalages des champs d'arête, de sommet et de cœur, les mêmes que ceux du fond.
+EDGE_OFFSET, VERTEX_OFFSET, CORE_OFFSET = 500.0, 900.0, 1300.0
+STIPPLE_MARGIN = 8
+
+
+def _dominant_frames(index: int, ground: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Pour chaque point, repère local et clé de la région qui domine : arête, sommet, ou cœur de la tuile."""
+    frames, keys, weights = [], [], []
+    for a, b, bit, family in EDGES.values():
+        color = 1 if index & bit else 0
+        middle = np.array([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 * GROUND_Y])
+        frames.append(ground - middle + EDGE_OFFSET)
+        keys.append((1 if family == "d1" else 3) + color)
+        weights.append(np.exp(-(_segment_distance(ground, a, b) / 5.0) ** 2))
+    for vertex in VERTICES:
+        v = np.array([vertex[0], vertex[1] * GROUND_Y])
+        frames.append(ground - v + VERTEX_OFFSET)
+        keys.append(7)
+        weights.append(4.0 * np.exp(-(np.linalg.norm(ground - v, axis=1) / 2.2) ** 2))
+    frames.append(ground + CORE_OFFSET)
+    keys.append(11 + index)
+    weights.append(np.full(len(ground), 0.12))
+    best = np.argmax(np.stack(weights), axis=0)
+    local = np.stack(frames)[best, np.arange(len(ground))]
+    return local, np.asarray(keys)[best]
+
+
+def _pixel_hash(local: np.ndarray, keys: np.ndarray, salt: int) -> np.ndarray:
+    ix = np.floor(local[:, 0]).astype(np.int64)
+    iy = np.floor(local[:, 1]).astype(np.int64)
+    h = (ix * 374761393 + iy * 668265263 + keys * 2246822519 + salt * 3266489917) & 0xFFFFFFFF
+    h = ((h ^ (h >> 15)) * 2246822519) & 0xFFFFFFFF
+    h = ((h ^ (h >> 13)) * 3266489917) & 0xFFFFFFFF
+    return ((h ^ (h >> 16)) & 0xFFFFFF) / float(0x1000000)
+
+
+def _place_stipples(material: GroundMaterial, index: int, image: Image.Image) -> None:
+    """Sème les micro-détails sur la tuile et sur une marge autour : un motif ancré chez la voisine y déborde aussi."""
+    if not material.stipples:
+        return
+    m = STIPPLE_MARGIN
+    ys, xs = np.mgrid[-m:TILE_H + m, -m:TILE_W + m]
+    xs, ys = xs.reshape(-1), ys.reshape(-1)
+    ground = np.stack([xs + 0.5, (ys + 0.5) * GROUND_Y], axis=1)
+    local, keys = _dominant_frames(index, ground)
+    # Les sommets partagent un seul tirage sur toute la carte : un motif ancré près d'un sommet se répéterait à chaque
+    # coin de losange, en grille. Près d'un sommet, un motif déborderait aussi sur la tuile d'en face, qui ne partage
+    # pas l'arête où il est ancré. On n'y sème donc rien.
+    corners = np.array([[vx, vy] for vx, vy in VERTICES])
+    screen = np.stack([xs + 0.5, ys + 0.5], axis=1)
+    near_corner = np.min(np.linalg.norm((screen[:, None, :] - corners[None, :, :]) * [1.0, GROUND_Y], axis=2), axis=1) < 10.0
+    stamps = []
+    for salt, stipple in enumerate(material.stipples):
+        chosen = (_pixel_hash(local, keys, salt + 1) < stipple.density) & ~near_corner
+        if stipple.field_range != (0.0, 1.0):
+            field = np.zeros(len(ground))
+            for key in np.unique(keys[chosen]):
+                mask = chosen & (keys == key)
+                field[mask] = _field(material, local[mask], int(key))
+            low, high = stipple.field_range
+            chosen &= (field >= low) & (field <= high)
+        stamps += [(int(y), int(x), stipple) for x, y in zip(xs[chosen], ys[chosen])]
+    stamps.sort(key=lambda stamp: stamp[0])
+    data = image.load()
+    for ay, ax, stipple in stamps:
+        colors = [hex_to_rgb(c) for c in stipple.colors]
+        rows = len(stipple.pattern)
+        for dy, row in enumerate(stipple.pattern):
+            for dx, char in enumerate(row):
+                if char == ".":
+                    continue
+                px, py = ax + dx, ay + dy - rows + 1
+                if 0 <= px < TILE_W and 0 <= py < TILE_H and data[px, py][3] > 0:
+                    data[px, py] = (*colors[int(char)], 255)
+
+
 def _interior_distance(ground: np.ndarray) -> np.ndarray:
     return np.min(np.stack([_segment_distance(ground, a, b) for a, b, _, _ in EDGES.values()]), axis=0)
 
@@ -183,6 +274,7 @@ def render_tiles(material: GroundMaterial) -> list[Image.Image]:
         data = image.load()
         for (x, y), tone, joint in zip(pixels, tones, joints):
             data[int(x), int(y)] = (*(joint_color if joint else material.ramp[int(tone)]), 255)
+        _place_stipples(material, index, image)
         _place_details(material, index, image, pixels, interior)
         tiles.append(image)
     return tiles
