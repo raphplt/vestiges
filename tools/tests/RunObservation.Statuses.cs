@@ -174,6 +174,70 @@ public partial class RunObservation
         GD.Print($"[RunObservation] RESULT status-crowd créatures=60 dossier={_output}");
     }
 
+    private async Task CaptureLowHealth()
+    {
+        await PrepareCloseUpScene();
+        ProcessMode = ProcessModeEnum.Always;
+        _player.IsGodMode = false;
+        // Les seuils sont éprouvés sans régénération entre les poses.
+        _player.BaseRegenRate = -_player.BonusRegenRate;
+        _player.SurviveFatalHitsForTests = false;
+        AudioManager audio = AudioManager.Instance;
+        AudioStreamPlayer heart = audio.GetNode<AudioStreamPlayer>("LowHealthLoop");
+        CanvasItem vignette = _world.GetNode<CanvasItem>("HUD/LowHealthVignette");
+        int checks = 0;
+        void Check(bool condition, string message)
+        {
+            if (!condition)
+                throw new System.InvalidOperationException("Santé basse : " + message);
+            checks++;
+            GD.Print("[LowHealth] OK " + message);
+        }
+        void SetRatio(float ratio)
+        {
+            float target = _player.EffectiveMaxHp * ratio;
+            if (target < _player.CurrentHp)
+                _player.TakeErasureDamage(_player.CurrentHp - target);
+            else
+                _player.Heal(target - _player.CurrentHp);
+        }
+        SetRatio(1f);
+        await Seconds(1.0);
+        Check(!heart.Playing && !vignette.Visible, "pleine vie : aucun effet");
+        Save("health-0-full.png");
+        SetRatio(0.30f);
+        await Seconds(1.0);
+        Check(heart.Playing && vignette.Visible, "30 % : cœur et vignette actifs");
+        Check(Mathf.IsEqualApprox(heart.PitchScale, 1f), "72 BPM au seuil");
+        Save("health-1-low.png");
+        SetRatio(0.08f);
+        await Seconds(1.0);
+        Check(audio.LowHealthIntensity > 0.98f && heart.PitchScale > 1.65f, "8 % : intensité maximale et 120 BPM");
+        Save("health-2-critical.png");
+        GetTree().Paused = true;
+        await Frames(10);
+        Check(!heart.CanProcess() && heart.StreamPaused, "pause : battement suspendu");
+        GetTree().Paused = false;
+        await Seconds(0.2);
+        Check(heart.CanProcess() && !heart.StreamPaused, "reprise : battement rétabli");
+        SetRatio(0.32f);
+        await Seconds(1.0);
+        Check(heart.Playing && vignette.Visible, "soin à 32 % : hystérésis");
+        SetRatio(0.35f);
+        await Seconds(1.0);
+        Check(!heart.Playing && !vignette.Visible, "soin à 35 % : sortie complète");
+        Save("health-3-healed.png");
+        SetRatio(0.32f);
+        await Seconds(0.8);
+        Check(!heart.Playing && !vignette.Visible, "32 % depuis le haut : pas de redémarrage");
+        SetRatio(0.08f);
+        await Seconds(1.0);
+        _player.TakeErasureDamage(_player.CurrentHp + 1f);
+        await Frames(3);
+        Check(!heart.Playing && audio.LowHealthIntensity == 0f, "mort : arrêt immédiat");
+        GD.Print($"[RunObservation] RESULT low-health checks={checks} dossier={_output}");
+    }
+
     private async Task CapturePlayerHit()
     {
         await PrepareCloseUpScene();

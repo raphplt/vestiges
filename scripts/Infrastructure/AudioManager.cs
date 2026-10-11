@@ -76,7 +76,6 @@ public partial class AudioManager : Node
 	private AudioStreamPlayer _loopingSfxPlayer;
 	private string _loopingSfxKey = "";
 	private AudioStreamPlayer _lowHealthLoopPlayer;
-	private string _lowHealthLoopKey = "";
 	private AudioStreamPlayer _borderWarningPlayer;
 	private string _borderWarningKey = "";
 
@@ -125,8 +124,23 @@ public partial class AudioManager : Node
 	private World.ErasureManager _erasureManager;
 	private World.WorldSetup _worldSetup;
 	private TileMapLayer _ground;
-	private const float LowHealthStartThreshold = 0.25f;
-	private const float LowHealthStopThreshold = 0.33f;
+	private PlayerFeedbackConfig _playerFeedback;
+	private bool _lowHealthActive;
+	public float LowHealthIntensity { get; private set; }
+
+	/// <summary>Deux contractions calées sur le son effectivement lu, même quand son tempo change.</summary>
+	public float HeartbeatPulse
+	{
+		get
+		{
+			if (!_lowHealthLoopPlayer.Playing)
+				return 0f;
+			float phase = _lowHealthLoopPlayer.GetPlaybackPosition();
+			float first = Mathf.Max(0f, 1f - Mathf.Abs(phase - 0.07f) / 0.09f);
+			float second = Mathf.Max(0f, 1f - Mathf.Abs(phase - 0.24f) / 0.07f);
+			return Mathf.Max(first, second * 0.7f);
+		}
+	}
 	private const float CriticalDamageThresholdRatio = 0.18f;
 	private const float BorderEffacementThreshold = 0.18f;
 	private const float MapBorderWarningCells = 2.5f;
@@ -241,7 +255,10 @@ public partial class AudioManager : Node
 
 		_loopingSfxPlayer = new AudioStreamPlayer { Bus = BusSfx, Name = "LoopingSfx", ProcessMode = ProcessModeEnum.Always };
 		AddChild(_loopingSfxPlayer);
-		_lowHealthLoopPlayer = new AudioStreamPlayer { Bus = BusWorld, Name = "LowHealthLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -10f };
+		_playerFeedback = PlayerFeedbackConfig.Get();
+		_lowHealthLoopPlayer = new AudioStreamPlayer { Bus = BusWorld, Name = "LowHealthLoop", VolumeDb = SilentDb };
+		if (_streams.TryGetValue("sfx_sante_basse", out AudioStream heartbeat))
+			_lowHealthLoopPlayer.Stream = CreateLoopableStream(heartbeat);
 		AddChild(_lowHealthLoopPlayer);
 		_borderWarningPlayer = new AudioStreamPlayer { Bus = BusWorld, Name = "BorderWarningLoop", ProcessMode = ProcessModeEnum.Always, VolumeDb = -12f };
 		AddChild(_borderWarningPlayer);
@@ -698,7 +715,7 @@ public partial class AudioManager : Node
 		}
 
 		UpdateContextAmbiance();
-		UpdatePlayerWarnings();
+		UpdatePlayerWarnings(dt);
 	}
 
 	// =========================================================
@@ -844,7 +861,7 @@ public partial class AudioManager : Node
 	private void OnPlayerDamaged(float currentHp, float maxHp)
 	{
 		_lastKnownMaxHp = maxHp;
-		UpdatePlayerWarnings();
+		UpdatePlayerWarnings(0f);
 	}
 
 	/// <summary>La perte résolue distingue le Néant d'un coup, même sans signal préalable d'attaquant.</summary>
@@ -950,7 +967,7 @@ public partial class AudioManager : Node
 		_uiSfxPool.Stop();
 		StopLoopNow(_loopingSfxPlayer, ref _loopingSfxKey);
 		StopLoopNow(_ambianceOverlayPlayer, ref _ambianceOverlayKey);
-		StopLoopNow(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+		StopLowHealthWarning();
 		StopLoopNow(_borderWarningPlayer, ref _borderWarningKey);
 		ResetMusicDuck();
 		_sfxLastPlayTime.Clear();
@@ -1004,7 +1021,7 @@ public partial class AudioManager : Node
 		};
 	}
 
-	private void UpdatePlayerWarnings()
+	private void UpdatePlayerWarnings(float delta)
 	{
 		if (_runAudioStopped)
 			return;
@@ -1014,17 +1031,12 @@ public partial class AudioManager : Node
 
 		if (_player == null || !GodotObject.IsInstanceValid(_player) || _player.IsDead)
 		{
-			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+			StopLowHealthWarning();
 			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
 			return;
 		}
 
-		float maxHp = Mathf.Max(1f, _player.EffectiveMaxHp);
-		float hpRatio = _player.CurrentHp / maxHp;
-		if (hpRatio <= LowHealthStartThreshold)
-			PlayLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey, "sfx_sante_basse", -10f);
-		else if (hpRatio >= LowHealthStopThreshold)
-			StopLoopOnPlayer(_lowHealthLoopPlayer, ref _lowHealthLoopKey);
+		UpdateLowHealthWarning(_player.CurrentHp / Mathf.Max(1f, _player.EffectiveMaxHp), delta);
 
 		if (_erasureManager == null || !GodotObject.IsInstanceValid(_erasureManager))
 		{
@@ -1038,6 +1050,42 @@ public partial class AudioManager : Node
 			PlayLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey, "sfx_bord_effacement_proche", -11f);
 		else
 			StopLoopOnPlayer(_borderWarningPlayer, ref _borderWarningKey);
+	}
+
+	private void UpdateLowHealthWarning(float ratio, float delta)
+	{
+		if (_playerFeedback == null)
+			return;
+		if (ratio <= _playerFeedback.LowHealthEnter)
+			_lowHealthActive = true;
+		else if (ratio >= _playerFeedback.LowHealthExit)
+			_lowHealthActive = false;
+		float severity = Mathf.Clamp((_playerFeedback.LowHealthEnter - ratio)
+			/ (_playerFeedback.LowHealthEnter - _playerFeedback.LowHealthCritical), 0f, 1f);
+		float target = _lowHealthActive ? Mathf.Lerp(0.35f, 1f, severity) : 0f;
+		LowHealthIntensity = Mathf.MoveToward(LowHealthIntensity, target, delta / _playerFeedback.LowHealthFadeSeconds);
+		if (LowHealthIntensity <= 0f)
+		{
+			if (_lowHealthLoopPlayer.Playing)
+				_lowHealthLoopPlayer.Stop();
+			return;
+		}
+		if (_lowHealthLoopPlayer.Stream == null)
+			return;
+		if (!_lowHealthLoopPlayer.Playing)
+			_lowHealthLoopPlayer.Play();
+		float strength = Mathf.Clamp((LowHealthIntensity - 0.35f) / 0.65f, 0f, 1f);
+		_lowHealthLoopPlayer.PitchScale = Mathf.Lerp(_playerFeedback.HeartbeatPitch.Min, _playerFeedback.HeartbeatPitch.Max, strength);
+		float volume = Mathf.Lerp(_playerFeedback.HeartbeatVolumeDb.Min, _playerFeedback.HeartbeatVolumeDb.Max, strength);
+		_lowHealthLoopPlayer.VolumeDb = volume + Mathf.LinearToDb(Mathf.Min(1f, LowHealthIntensity / 0.35f))
+			+ _soundVolumes.GetValueOrDefault("sfx_sante_basse");
+	}
+
+	private void StopLowHealthWarning()
+	{
+		_lowHealthActive = false;
+		LowHealthIntensity = 0f;
+		_lowHealthLoopPlayer.Stop();
 	}
 
 	private void CachePlayer()

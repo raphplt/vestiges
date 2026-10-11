@@ -1,5 +1,5 @@
 {
-  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig. web (V3b) : toile de la Tisseuse sur le sprite, teinte et fils à la manière des fêlures (espacement en pixels). erasure (V3b) : le joueur que l'Effacement ralentit pâlit (teinte, la toile reste prioritaire) et laisse une poussière pâle toutes les interval_sec. defense (V3c) : familles des éclats du bouclier, de l'armure qui pare (à partir d'une part de coup retirée et d'un nombre de PV) et des soins (au plus un toutes les heal_min_interval_sec). void (V3d) : la vignette pulse à chaque tranche du Néant, à la couleur claire de sa famille, à l'opacité donnée.",
+  "_doc": "Ce que le joueur ressent quand il est touché (plan 27 V3). hurt : éclair à la couleur moyenne de sa famille, durée en secondes ; secousse en trauma (0 à 1, multiplié par le réglage du joueur ; la secousse vaut trauma² × 6 px), plus une part des PV max perdus. vignette : bords tramés à l'opacité maximale, épaisseur en part de l'écran, part tournée vers le côté du coup. number : chiffre des dégâts reçus (§72). Lu par Infrastructure/PlayerFeedbackConfig. web (V3b) : toile de la Tisseuse sur le sprite, teinte et fils à la manière des fêlures (espacement en pixels). erasure (V3b) : le joueur que l'Effacement ralentit pâlit (teinte, la toile reste prioritaire) et laisse une poussière pâle toutes les interval_sec. defense (V3c) : familles des éclats du bouclier, de l'armure qui pare (à partir d'une part de coup retirée et d'un nombre de PV) et des soins (au plus un toutes les heal_min_interval_sec). void (V3d) : la vignette pulse à chaque tranche du Néant, à la couleur claire de sa famille, à l'opacité donnée. low_health (plan 38) : seuils entrée/sortie/critique en part des PV max, opacité et épaisseur maximales, fondu en secondes ; heartbeat_pitch accélère la boucle de base à 72 BPM, heartbeat_volume_db donne les gains du seuil au danger critique.",
   "hurt": {
     "flash_family": "blood",
     "flash_seconds": 0.22,
@@ -38,5 +38,21 @@
   "void": {
     "family": "pale",
     "max_opacity": 0.4
+  },
+  "low_health": {
+    "enter_ratio": 0.3,
+    "exit_ratio": 0.35,
+    "critical_ratio": 0.08,
+    "max_opacity": 0.56,
+    "thickness": 0.22,
+    "fade_seconds": 0.6,
+    "heartbeat_pitch": [
+      1.0,
+      1.666667
+    ],
+    "heartbeat_volume_db": [
+      -15,
+      -7
+    ]
   }
 }

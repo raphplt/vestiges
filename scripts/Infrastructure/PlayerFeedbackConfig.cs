@@ -41,6 +41,14 @@ public sealed class PlayerFeedbackConfig
     /// <summary>Néant (V3d) : couleur de la vignette qui pulse à chaque tranche, force dans l'alpha.</summary>
     public Color VoidVignetteColor { get; private init; }
     public float ErasureInterval { get; private init; }
+    public float LowHealthEnter { get; private init; }
+    public float LowHealthExit { get; private init; }
+    public float LowHealthCritical { get; private init; }
+    public float LowHealthOpacity { get; private init; }
+    public float LowHealthThickness { get; private init; }
+    public float LowHealthFadeSeconds { get; private init; }
+    public (float Min, float Max) HeartbeatPitch { get; private init; }
+    public (float Min, float Max) HeartbeatVolumeDb { get; private init; }
 
     /// <summary>Réglages lus une fois ; null s'ils sont refusés (signalé une fois).</summary>
     public static PlayerFeedbackConfig Get()
@@ -70,6 +78,7 @@ public sealed class PlayerFeedbackConfig
             JsonElement erasure = reader.Section("erasure");
             JsonElement defense = reader.Section("defense");
             JsonElement voidSection = reader.Section("void");
+            JsonElement lowHealth = reader.Section("low_health");
             PlayerFeedbackConfig parsed = new()
             {
                 HurtFlashColor = Family(reader, hurt, "flash_family"),
@@ -95,7 +104,17 @@ public sealed class PlayerFeedbackConfig
                 HealFamily = ParseFamily(reader, defense, "heal_family"),
                 HealMinInterval = reader.NonNegative(defense, "heal_min_interval_sec"),
                 VoidVignetteColor = Ramp(reader, voidSection, "family").Light with { A = reader.Chance(voidSection, "max_opacity") },
+                LowHealthEnter = reader.Ratio(lowHealth, "enter_ratio"),
+                LowHealthExit = reader.Ratio(lowHealth, "exit_ratio"),
+                LowHealthCritical = reader.Ratio(lowHealth, "critical_ratio"),
+                LowHealthOpacity = reader.Chance(lowHealth, "max_opacity"),
+                LowHealthThickness = reader.Ratio(lowHealth, "thickness"),
+                LowHealthFadeSeconds = reader.Positive(lowHealth, "fade_seconds"),
+                HeartbeatPitch = reader.Range(lowHealth, "heartbeat_pitch", 0.5f, 2f),
+                HeartbeatVolumeDb = reader.Range(lowHealth, "heartbeat_volume_db", -60f, 0f),
             };
+            if (parsed.LowHealthCritical >= parsed.LowHealthEnter || parsed.LowHealthEnter >= parsed.LowHealthExit)
+                reader.Fail("low_health : critical_ratio < enter_ratio < exit_ratio attendu");
             error = reader.Error;
             config = error == null ? parsed : null;
             return error == null;

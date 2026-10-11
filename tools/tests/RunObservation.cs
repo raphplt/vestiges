@@ -62,6 +62,7 @@ namespace Vestiges.Tests;
 /// --capture-statuses [--status-enemy id] : rangée de créatures, chacune sous un état (RunObservation.Statuses.cs).
 /// --capture-status-crowd : soixante créatures sous Cloche et Berceuse (RunObservation.Statuses.cs).
 /// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
+/// --capture-low-health : santé pleine, seuils, cœur, pause, soin et mort.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
 /// --capture-exchange : sac plein, un objet au sol et l'écran d'échange (RunObservation.Items.cs, plan 35 I3).
@@ -244,6 +245,8 @@ public partial class RunObservation : Node
                 await CaptureStatuses();
             else if (Array.IndexOf(args, "--capture-status-crowd") >= 0)
                 await CaptureStatusCrowd();
+            else if (Array.IndexOf(args, "--capture-low-health") >= 0)
+                await CaptureLowHealth();
             else if (Array.IndexOf(args, "--capture-player-hit") >= 0)
                 await CapturePlayerHit();
             else if (Array.IndexOf(args, "--capture-bile") >= 0)

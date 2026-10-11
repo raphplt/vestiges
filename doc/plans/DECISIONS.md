@@ -1291,6 +1291,16 @@ Raphaël, après avoir joué : la refonte des menus « dans la globalité, c'est
 
 Lots au [plan 37](37-retours-du-11-octobre.md).
 
+## 118. Retour de santé basse — 11 octobre 2026
+
+Raphaël demande d'adapter l'affichage quand le joueur est bas en vie : une vignette « rouge sang », un bruit de cœur qui bat, et éventuellement d'autres détails ; « Prépare ça ».
+
+Lot S1 au [plan 38](38-sante-basse.md). Les seuils, le tempo et l'intensité sont des réglages initiaux proposés par l'agent, à éprouver en jeu ; aucune validation artistique présumée.
+
+### 118 bis. Vignette plus douce et arrondie
+
+Raphaël n'aime pas le premier rendu : « un truc plus dégradé avec plus d'arrondis et éventuellement des effets pixels/disparition en lien avec le thème du jeu ». Reprise visuelle au lot S2 du [plan 38](38-sante-basse.md) : halo elliptique, dégradé doux et matière qui se dissout par amas de pixels.
+
 ## 119. Atmosphère et détail du monde — 11 octobre 2026
 
 Raphaël demande : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble stp). sois créatif. sors moi une liste de recommendations par priorités et estimation de temps nécessaire. » Sur la liste proposée : « oui crée le plan ».
