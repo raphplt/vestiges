@@ -180,3 +180,14 @@ Un lot à la fois, capture regardée avant de conclure.
 **Reste** : l'image du démarrage de la run (~250 ms : câblage des systèmes et ajouts différés), et une dizaine d'images de 60 à 170 ms (préparation des tuiles, matériau du sol, décors de la ville, rangement des tronçons). Les couper toucherait l'ordre d'initialisation de la run : pas fait sans nouvelle demande.
 
 **Vérifié** : `tools/validate.sh` smoke, `loading`, `movement-integration`, `run_trace`, `small_places`, `dev_mode` 6/6 ; préchauffage des shaders valide ; relecture `godot-reviewer` (sortie de scène, déterminisme, pause pendant les reprises de main) sans bloquant, trois points mineurs corrigés. Mesures prises machine chargée (3 à 6 de charge, une autre session au travail) : seul l'avant/après relatif compte.
+
+## 13. Lot M1 livré : repères au sol en pixel art — 11 octobre 2026
+
+- **Repère des micro-événements** (`RunEventMarker`) : redessiné au pixel du monde, comme les anneaux d'affixe.
+  - La Veillée a désormais un fond tramé d'un pixel sur deux, un bord plein, un arc de progression fait des pixels du bord (en 64 pas, dans le sens des aiguilles depuis le haut) et un anneau intérieur qui respire par poses de 0,2 s.
+  - Le vestige tombé est un losange au pixel : contour sombre, cœur clair, reflet ; sa traînée et sa lueur au sol sont tramées.
+  - Le repère est calé sur un pixel entier et ne se redessine qu'au changement de pose ou de progression ; il ne repeint plus à chaque image.
+- **Ellipses cuites** (`PixelEllipseArt`) : bord ou trame d'une ellipse au sol, dans une texture blanche par rayon, gardée pour la session. Une zone de 96 px se dessine en une texture au lieu de milliers de rectangles. Même forme que `PixelGroundRing`, désormais partagée (`PixelGroundRing.Ellipse`).
+- **Autres tracés lisses repris** : l'anneau « dash prêt » sous le joueur (ellipse cuite) et les coins du marqueur de cible de la Convergence (traits d'un pixel qui s'écartent par paliers, position calée au pixel).
+- **Restent lisses** : les effets de l'Indicible (fosse, éclairs) et les fissures de la Barrière, à reprendre avec le plan 07 si Raphaël les remarque.
+- **Vérifié** : captures de la Veillée (zoom sur l'anneau : marches pixel, trame) et du vestige tombé, regardées. L'ellipse blanche saisie à l'impact du vestige est l'éclair existant de `GroundTelegraph`, déjà en pixel art. `tools/validate.sh` smoke, `movement-integration`, `perk_effects`, `small_places` 4/4.

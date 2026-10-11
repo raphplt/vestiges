@@ -81,7 +81,7 @@ public partial class PixelGroundRing : Node2D
 
     public override void _Draw()
     {
-        (Vector2I[] rim, Vector2I[] fill) = ShapeOf(_baseRadius + PoseOffsets[_pose]);
+        (Vector2I[] rim, Vector2I[] fill) = Ellipse(_baseRadius + PoseOffsets[_pose]);
         Color color = _colors[_colorIndex];
         Color fillColor = color with { A = FillAlpha };
         foreach (Vector2I pixel in fill)
@@ -91,8 +91,11 @@ public partial class PixelGroundRing : Node2D
             DrawRect(new Rect2(pixel, Vector2.One), rimColor);
     }
 
-    /// <summary>Ellipse au sol (deux fois plus large que haute) : pixels du bord et trame d'un pixel sur deux dedans.</summary>
-    private static (Vector2I[] Rim, Vector2I[] Fill) ShapeOf(int radius)
+    /// <summary>
+    /// Ellipse au sol (deux fois plus large que haute) : pixels du bord et trame d'un pixel sur deux dedans. Partagée
+    /// avec les repères des micro-événements (<see cref="PixelEllipseArt"/>).
+    /// </summary>
+    public static (Vector2I[] Rim, Vector2I[] Fill) Ellipse(int radius)
     {
         if (Shapes.TryGetValue(radius, out (Vector2I[] Rim, Vector2I[] Fill) shape))
             return shape;

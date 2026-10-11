@@ -107,25 +107,14 @@ public partial class MobilityFeedback : Node2D
         QueueRedraw();
     }
 
-    // Anneau « dash prêt » posé au sol autour des pieds : ellipse 2:1, calculée une fois.
-    private static readonly Vector2[] ReadyRing = BuildReadyRing(16f, 16);
-
-    private static Vector2[] BuildReadyRing(float radius, int segments)
-    {
-        Vector2[] points = new Vector2[segments + 1];
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = Mathf.Tau * i / segments;
-            points[i] = Iso.ToScreen(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius);
-        }
-        return points;
-    }
+    // Anneau « dash prêt » posé au sol autour des pieds : ellipse 2:1 au pixel du monde (plan 37 M1).
+    private const int ReadyRingRadius = 16;
 
     public override void _Draw()
     {
         DrawRect(new Rect2(-12f, 20f, 24f, 2f), new Color(0.04f, 0.06f, 0.09f, 0.8f));
         DrawRect(new Rect2(-12f, 20f, 24f * Mathf.Clamp(_charge, 0f, 1f), 2f), ReadyColor);
         if (_dashVisible)
-            DrawPolyline(ReadyRing, ReadyColor, 1f);
+            DrawTexture(PixelEllipseArt.Get(ReadyRingRadius, false), PixelEllipseArt.Offset(ReadyRingRadius), ReadyColor);
     }
 }

@@ -51,23 +51,28 @@ public partial class PriorityTargetMarker : Node2D
             Release();
             return;
         }
-        GlobalPosition = _target.GlobalPosition;
+        GlobalPosition = _target.GlobalPosition.Round();
         _pulse += (float)delta * 4f;
         QueueRedraw();
     }
 
     public override void _Draw()
     {
-        float spread = 1f + 0.08f * Mathf.Sin(_pulse);
-        float rx = RadiusX * spread;
-        float ry = RadiusY * spread;
+        // Coins d'un pixel de large, qui s'écartent par paliers d'un pixel (plan 37 M1) au lieu de glisser.
+        int spread = Mathf.RoundToInt(1f + Mathf.Sin(_pulse));
+        int rx = Mathf.RoundToInt(RadiusX) + spread;
+        int ry = Mathf.RoundToInt(RadiusY) + spread;
+        int arm = Mathf.RoundToInt(Corner);
+        int armY = Mathf.Max(2, Mathf.RoundToInt(Corner * 0.5f));
         for (int sx = -1; sx <= 1; sx += 2)
         {
             for (int sy = -1; sy <= 1; sy += 2)
             {
-                Vector2 corner = new(sx * rx, sy * ry);
-                DrawLine(corner, corner - new Vector2(sx * Corner, 0f), MarkColor, 1.5f);
-                DrawLine(corner, corner - new Vector2(0f, sy * Corner * 0.5f), MarkColor, 1.5f);
+                // Coin au pixel : le trait horizontal part du coin vers l'intérieur, le vertical aussi.
+                int x = sx < 0 ? -rx : rx - 1;
+                int y = sy < 0 ? -ry : ry - 1;
+                DrawRect(new Rect2(sx < 0 ? x : x - arm + 1, y, arm, 1), MarkColor);
+                DrawRect(new Rect2(x, sy < 0 ? y : y - armY + 1, 1, armY), MarkColor);
             }
         }
     }
