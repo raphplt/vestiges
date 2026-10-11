@@ -19,19 +19,14 @@ public readonly struct ResolvedLoot
     public readonly int Amount;
     public readonly string Label;
     public readonly Color Color;
-    /// <summary>Bonus de stat : valeur passée au joueur (×(1 + x) en multiplicatif) et type de modificateur.</summary>
-    public readonly float Value;
-    public readonly string ModifierType;
 
-    public ResolvedLoot(string type, string itemId, int amount, string label, Color color, float value = 0f, string modifierType = null)
+    public ResolvedLoot(string type, string itemId, int amount, string label, Color color)
     {
         Type = type;
         ItemId = itemId;
         Amount = amount;
         Label = label;
         Color = color;
-        Value = value;
-        ModifierType = modifierType;
     }
 }
 
@@ -40,7 +35,6 @@ public static class LootRewards
     private static readonly Color EssenceColor = new("5EC4C4");
     private static readonly Color XpColor = new("8AB8C4");
     private static readonly Color ObjectColor = new("6ACA5A");
-    private static readonly Color StatColor = new("E6C45A");
 
     /// <summary>
     /// Tirages concrets. Les butins sans équivalent V2 (ressources, malédictions) sont ignorés ; un Souvenir
@@ -78,16 +72,13 @@ public static class LootRewards
                         string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));
                     break;
                 case "object":
-                    PassiveSouvenirData item = PickItem(player, promisedItems);
+                    PassiveSouvenirData item = PickUnlockedItem(player, RunRandom.Loot, promisedItems);
                     if (item == null)
-                    {
-                        resolved.Add(Essence(loot.FallbackEssence));
                         break;
-                    }
                     promisedItems[item.Id] = promisedItems.GetValueOrDefault(item.Id) + 1;
-                    // Un exemplaire par tirage ; l'Essence de secours voyage avec, au cas où le sac se remplit d'ici l'ouverture.
+                    // Un exemplaire par tirage ; le sac plein sera géré au ramassage, sans remplacer l'objet.
                     resolved.Add(new ResolvedLoot("object", item.Id, 1,
-                        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT"), item.Name), ObjectColor, loot.FallbackEssence));
+                        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT"), item.Name), ObjectColor));
                     break;
                 case "souvenir":
                     string souvenirId = loot.ItemId == "random_souvenir" ? SouvenirManager.PickRandomUndiscovered() : loot.ItemId;
@@ -101,45 +92,24 @@ public static class LootRewards
         return resolved;
     }
 
-    /// <summary>
-    /// Bonus d'une stat au hasard, en plus du butin tiré (DECISIONS §38) : un niveau d'objet commun de la stat, multiplié
-    /// selon la rareté du coffre. Null si la table est vide ou si cette rareté n'en donne pas (multiplicateur 0).
-    /// </summary>
-    public static ResolvedLoot? RollStatBonus(string chestRarity)
-    {
-        ChestStatBonusData data = ChestDataLoader.LoadStatBonus();
-        if (data.Stats.Count == 0 || data.Multiplier(chestRarity) <= 0f)
-            return null;
-        ChestStatBonus bonus = data.Stats[(int)(RunRandom.Loot.Randi() % data.Stats.Count)];
-        float amount = bonus.Amount * data.Multiplier(chestRarity);
-        bool multiplicative = bonus.ModifierType == "multiplicative";
-        float value = multiplicative ? 1f + amount : amount;
-        string label = $"{StatCatalog.Name(bonus.Stat)} {StatCatalog.FormatBonus(bonus.Stat, value, multiplicative)}";
-        return new ResolvedLoot("stat", bonus.Stat, 1, label, StatColor, value, bonus.ModifierType);
-    }
-
     /// <summary>Applique un butin résolu. Les coffres et les lieux ne donnent pas d'armes (DECISIONS §40).</summary>
-    public static void Apply(in ResolvedLoot loot, Player player, EventBus eventBus)
+    public static void Apply(in ResolvedLoot loot, Player player, EventBus eventBus, Vector2? dropPosition = null)
     {
         switch (loot.Type)
         {
             case "xp":
                 eventBus.EmitSignal(EventBus.SignalName.XpGained, (float)loot.Amount);
                 break;
-            case "stat":
-                player.ApplyPerkModifier(loot.ItemId, loot.Value, loot.ModifierType);
-                eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
-                break;
             case "object_level":
                 player.AddOrUpgradePassive(loot.ItemId, loot.Amount);
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
             case "object":
-                // Le sac a pu se remplir entre le tirage et l'ouverture : l'objet devient alors son Essence de secours.
+                // Le trop-plein reste échangeable au sol, y compris si le sac s'est rempli après le tirage.
                 if (player.AddItemCopy(loot.ItemId))
                     eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 else
-                    eventBus.EmitSignal(EventBus.SignalName.LootReceived, "essence", "essence", Mathf.RoundToInt(loot.Value));
+                    eventBus.EmitSignal(EventBus.SignalName.ItemDropRequested, loot.ItemId, dropPosition ?? player.GlobalPosition);
                 break;
             default:
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
@@ -148,8 +118,8 @@ public static class LootRewards
     }
 
     /// <summary>
-    /// Écusson porté qui peut encore monter, niveaux déjà promis compris, au hasard ; null si aucun (plan 21 §4 : les
-    /// coffres montent les Écussons ; les objets, sans niveaux, en sortent entiers, plan 35).
+    /// Écusson porté qui peut encore monter, niveaux déjà promis compris, au hasard ; null si aucun (les
+    /// anciens lieux peuvent encore offrir des niveaux d’Écussons, contrairement aux coffres).
     /// </summary>
     private static ActivePassiveSouvenir PickOwnedObject(Player player, Dictionary<string, int> reserved)
     {
@@ -161,20 +131,6 @@ public static class LootRewards
                 candidates.Add(badge);
 
         return candidates.Count > 0 ? candidates[(int)(RunRandom.Loot.Randi() % candidates.Count)] : null;
-    }
-
-    /// <summary>
-    /// Objet débloqué au hasard que le sac peut recevoir, exemplaires déjà promis compris (plan 35) ; null si le sac est
-    /// plein ou si aucun objet ne peut plus monter.
-    /// </summary>
-    private static PassiveSouvenirData PickItem(Player player, Dictionary<string, int> promised)
-    {
-        if (player == null)
-            return null;
-        int promisedTotal = 0;
-        foreach (int count in promised.Values)
-            promisedTotal += count;
-        return player.BagCount + promisedTotal >= player.BagCapacity ? null : PickUnlockedItem(player, RunRandom.Loot, promised);
     }
 
     /// <summary>

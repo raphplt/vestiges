@@ -101,18 +101,16 @@ public partial class WorldInteraction : Node
     private void OpenChest(Chest chest)
     {
         List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _player);
-        if (LootRewards.RollStatBonus(chest.Rarity) is { } statBonus)
-            loots.Add(statBonus);
         if (_lootScreen != null && loots.Count > 0)
-            _lootScreen.ShowLoot(loots, chest.Rarity, () => ApplyAll(loots));
+            _lootScreen.ShowLoot(loots, chest.Rarity, () => ApplyAll(loots, chest.GlobalPosition));
         else
-            ApplyAll(loots);
+            ApplyAll(loots, chest.GlobalPosition);
     }
 
-    private void ApplyAll(List<ResolvedLoot> loots)
+    private void ApplyAll(List<ResolvedLoot> loots, Vector2 position)
     {
-        foreach (ResolvedLoot loot in loots)
-            LootRewards.Apply(loot, _player, _eventBus);
+        for (int i = 0; i < loots.Count; i++)
+            LootRewards.Apply(loots[i], _player, _eventBus, position + new Vector2(18f * i, 24f));
     }
 
     private static bool IsValid(IInteractable interactable) =>

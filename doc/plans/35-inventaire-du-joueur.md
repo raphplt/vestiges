@@ -572,3 +572,23 @@ Un quart des niveaux vient de l'usage, comme visé (§9.1). Le détail varie ave
 - Mesure : nouveau rapport `badge_levels`, `badge_usage_levels`, `badges` et `usage_totals` (tous les déclencheurs comptés pendant la mesure, portés ou non) dans `RunObservation`.
 - Relecture `godot-reviewer`, corrigés : bouclier recompté dans un appel imbriqué (l'Écusson du pompier monte et rend du bouclier), tics de cône comptés comme des coups, lancers suivis un seul à la fois, statuts et éliminations dus aux objets comptés, horloge qui tournait pour rien, éclat du HUD qui pouvait se doubler.
 - Reste approximatif, assumé : le glaneur compte aussi l'XP d'un lieu ou d'un fragment de lore (quelques fois par run, contre des milliers d'orbes).
+
+## 18. Lot I9 — coffres réservés aux objets du sac (11 octobre 2026)
+
+Demande de Raphaël : les coffres ne donnent plus que des objets.
+
+Lot livré :
+- Les quatre tables de coffres (commun, rare, épique, ancien coffre de lore) ne tirent que des exemplaires d’objets débloqués. Nombre de tirages conservé : un, sauf deux pour l’épique.
+- Supprimer le bonus de statistique et son ancienne configuration. Aucun remplacement par de l’Essence : sac plein, l’objet est posé au sol pour l’échange existant.
+- La roulette ne montre que des objets accessibles ; adapter la galerie et les régressions.
+- Valider par build sans avertissement, suites inventaire/objets/catalogues/interface, smoke et capture du butin en run.
+
+Raretés des objets : aucune dans le modèle actuel, tirage uniforme parmi les objets accessibles et encore cumulables. Raphaël signale des écarts de puissance ; une répartition par rareté reste à définir, sans classement arbitraire ajouté dans ce lot.
+
+**Validation I9 :** build à 0 avertissement ; `smoke`, `inventory` (67 contrôles), `objects`, `catalogs`, `choice_screen`, `ui_art` verts (`/tmp/vestiges-chests-items-20261011`). Après retrait des champs de bonus devenus inutiles et adaptation des fixtures UI, nouveau build et suites `inventory`/`choice_screen` verts (`/tmp/vestiges-chests-items-final-20261011`). Les tests couvrent les quatre coffres, le sac plein au tirage et après le premier objet d’un épique, l’absence de conversion en Essence, le dépôt au sol et l’ouverture/annulation de l’échange. Capture réelle seed 42 regardée : roulette et résultat uniquement objet (`/tmp/vestiges-chests-items-capture-20261011/loot-revealed.png`).
+
+Le retrait des bonus de statistiques et l’augmentation du nombre d’objets changent l’économie de puissance : aucun nouvel équilibrage de run longue n’est revendiqué. Sans rareté propre aux objets, commun et rare donnent pour l’instant le même tirage ; l’épique donne deux objets.
+
+## 19. I10 — rareté fixe des objets, préparation (11 octobre 2026)
+
+Raphaël demande un rang fixe par objet, des probabilités liées au rang et un classement cohérent avec la puissance. [Proposition complète](35-raretes-des-objets.md) : 22 objets classés dans les cinq rangs existants, probabilités par source, prix d’Atelier, apparence et lots I10a–I10d. Principe acquis ; classement et taux proposés, pas encore implémentés ni mesurés. Aucun multiplicateur automatique de puissance ajouté par la rareté.

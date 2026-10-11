@@ -294,12 +294,10 @@ public partial class CatalogContractRegression : Node
     {
         string chests = FileAccess.GetFileAsString("res://data/chests/chests.json");
         string placement = FileAccess.GetFileAsString("res://data/chests/chest_placement.json");
-        string statBonus = FileAccess.GetFileAsString("res://data/chests/chest_stat_bonus.json");
-        ObjectDataValidator.TryParseContract(FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _);
         ChestDataLoader.References refs = new(path => ResourceLoader.Exists(path),
             DataKeySets.ListIds("res://data/ui/rarities.json", "rarities"),
-            DataKeySets.StringList("res://data/enemies/_contract.json", "families"), LootTableLoader.Exists, contract);
-        Check(ChestDataLoader.Apply(chests, placement, statBonus, refs) == null, "coffres du dépôt acceptés (trois fichiers)");
+            DataKeySets.StringList("res://data/enemies/_contract.json", "families"), LootTableLoader.Exists);
+        Check(ChestDataLoader.Apply(chests, placement, refs) == null, "coffres du dépôt acceptés (deux fichiers)");
         int groups = ChestDataLoader.LoadPlacement().Groups.Count;
         (string, Action<JsonArray>, string)[] chestCases =
         {
@@ -316,7 +314,7 @@ public partial class CatalogContractRegression : Node
         {
             JsonArray list = JsonNode.Parse(chests)!.AsArray();
             mutate(list);
-            string message = ChestDataLoader.Apply(list.ToJsonString(), placement, statBonus, refs);
+            string message = ChestDataLoader.Apply(list.ToJsonString(), placement, refs);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"coffres refusés ({label}) : {message}");
         }
         (string, Action<JsonObject>, string)[] placementCases =
@@ -327,22 +325,8 @@ public partial class CatalogContractRegression : Node
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in placementCases)
         {
-            string message = ChestDataLoader.Apply(chests, Mutated(placement, mutate), statBonus, refs);
+            string message = ChestDataLoader.Apply(chests, Mutated(placement, mutate), refs);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"placement refusé ({label}) : {message}");
-        }
-        (string, Action<JsonObject>, string)[] bonusCases =
-        {
-            ("rareté de coffre sans multiplicateur", root => root["rarity_multiplier"]!.AsObject().Remove("lore"), "rareté « lore » du coffre chest_lore absente"),
-            ("statistique d'objet", root => root["stats"]![0]!["stat"] = "burn_chance", "« burn_chance » n'est pas une statistique du joueur"),
-            ("modificateur non admis", root => root["stats"]![2]!["modifier_type"] = "multiplicative", "modificateur « multiplicative » non admis pour max_hp"),
-            ("valeur nulle", root => root["stats"]![0]!["amount"] = 0, "amount : 0"),
-        };
-        foreach ((string label, Action<JsonObject> mutate, string expected) in bonusCases)
-        {
-            JsonObject root = JsonNode.Parse(placement)!.AsObject();
-            root["groups"]!.AsArray().RemoveAt(0);
-            string message = ChestDataLoader.Apply(chests, root.ToJsonString(), Mutated(statBonus, mutate), refs);
-            Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"bonus de coffre refusé ({label}) : {message}");
         }
         Check(ChestDataLoader.LoadPlacement().Groups.Count == groups, "coffres : aucun refus n'a publié de valeur");
     }

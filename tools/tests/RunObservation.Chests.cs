@@ -91,8 +91,7 @@ public partial class RunObservation
     }
 
     /// <summary>
-    /// --loot-draws : répartition du butin de chaque coffre. Le joueur porte un objet à monter et un objet au niveau
-    /// maximal : un niveau d'objet ne doit viser que le premier ; plus aucun Don ne sort.
+    /// --loot-draws : tous les tirages de coffre doivent donner exclusivement des objets du sac.
     /// </summary>
     private void MeasureLootDraws(int draws)
     {
@@ -108,7 +107,7 @@ public partial class RunObservation
                 foreach (ResolvedLoot loot in LootRewards.Resolve(LootResolver.Roll(chest.LootTableId, chest.LootRolls), _player))
                 {
                     types[loot.Type] = types.GetValueOrDefault(loot.Type) + 1;
-                    if (loot.Type == "perk" || (loot.Type == "object_level" && loot.ItemId != "resonance"))
+                    if (loot.Type != "object")
                     {
                         failures++;
                         GD.PushError($"[RunObservation] butin inattendu : {loot.Type} {loot.ItemId} ({chest.Id})");
@@ -186,28 +185,10 @@ public partial class RunObservation
     /// <summary>Galerie de présentation : récompenses résolues, sans appliquer un butin supplémentaire au joueur.</summary>
     private async Task CaptureLootGallery()
     {
-        _player.AddOrUpgradePassive("oeil_critique");
-        List<ResolvedLoot> rewards = LootRewards.Resolve(new List<LootResolver.LootResult>
-        {
-            new() { Type = "essence", Amount = 12 },
-            new() { Type = "xp", Amount = 40 },
-            new() { Type = "object_level", Amount = 1, FallbackEssence = 8 },
-            // Le profil dev connaît déjà tous les Souvenirs : un tirage aléatoire deviendrait de l'Essence.
-            new() { Type = "souvenir", ItemId = "billet_de_train", Amount = 1 },
-        }, _player);
-        Dictionary<string, ResolvedLoot> stats = new();
-        int expected = ChestDataLoader.LoadStatBonus().Stats.Count;
-        for (int draw = 0; draw < 1000 && stats.Count < expected; draw++)
-            if (LootRewards.RollStatBonus("rare") is ResolvedLoot bonus)
-                stats.TryAdd(bonus.ItemId, bonus);
-        if (stats.Count != expected)
-            throw new System.InvalidOperationException("Galerie de bonus de coffre incomplète.");
-        // Les trois gains cités par Raphaël sont visibles sur la même capture.
-        rewards.Insert(1, stats["max_hp"]);
-        rewards.Insert(2, stats["crit_multiplier"]);
-        stats.Remove("max_hp");
-        stats.Remove("crit_multiplier");
-        rewards.AddRange(stats.Values);
+        List<ResolvedLoot> rewards = new();
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            if (!item.IsBadge && MetaSaveManager.IsObjectUnlocked(item.Id))
+                rewards.Add(new ResolvedLoot("object", item.Id, 1, item.Name, new Color("6ACA5A")));
         Vestiges.UI.ChestLootScreen screen = _world.GetNode<Vestiges.UI.ChestLootScreen>("ChestLootScreen");
         for (int start = 0; start < rewards.Count; start += 5)
         {

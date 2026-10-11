@@ -1319,12 +1319,18 @@ Posées le 11 octobre avant le lot A1 :
 5. **Musique en couches (C3) :** plus tard, on garde les morceaux actuels.
 6. **Anomalies (C7) :** à réactiver, après les phases A et B. Accord de principe sur le plan 14 et sur le retour des anomalies de `scripts/World/Lore/` redessinées ; le détail du plan 14 reste à arbitrer lot par lot.
 
+### 119 ter. Étalonnage adouci, A2 lancé
+
+Sur A1 (11 octobre, soir) : « l'étalonnage est peut-être un peu fort quand on passe d'un biome à l'autre », puis « continue un dernier coup ». L'agent dose tous les étalonnages à 65 % (`grade.strength` de `data/world/atmosphere.json`) et allonge le fondu de 1,5 à 2,5 s ; ces deux valeurs sont des propositions, à juger en jouant. Lot A2 (ombres de nuages) réalisé dans la foulée.
+
 ## 120. Coffres réservés aux objets du sac — 11 octobre 2026
 
 Raphaël : « dans les coffres on ne peut plus obtenir que des objets. retire tous les autres types de loots possibles. » Il demande aussi les raretés des objets, certains lui paraissant plus puissants que d’autres.
 
 Acquis : tous les coffres donnent seulement des objets du sac, y compris l’ancien coffre de lore ; suppression des gains d’Essence, XP, niveaux d’Écussons, Souvenirs et statistiques. Un sac plein laisse l’objet au sol pour l’échanger, sans conversion en Essence. Lot I9 au plan 35. Les objets n’ont actuellement aucune rareté propre ; la question ne vaut pas validation d’un classement ou de probabilités nouvelles.
 
-### 119 ter. Étalonnage adouci, A2 lancé
+## 121. Rareté fixe des objets et fréquence liée à leur puissance — 11 octobre 2026
 
-Sur A1 (11 octobre, soir) : « l'étalonnage est peut-être un peu fort quand on passe d'un biome à l'autre », puis « continue un dernier coup ». L'agent dose tous les étalonnages à 65 % (`grade.strength` de `data/world/atmosphere.json`) et allonge le fondu de 1,5 à 2,5 s ; ces deux valeurs sont des propositions, à juger en jouant. Lot A2 (ombres de nuages) réalisé dans la foulée.
+Raphaël : « il faudrait que les objets aient des raretés par défaut. Rareté fixe par objet. proba de l’avoir game lié à sa rareté. Puissance de l’objet liée à sa rareté aussi (les classer dans les bonnes raretés). prépare ca. »
+
+**Acquis :** chaque objet a une rareté de catalogue fixe ; sa fréquence dépend de cette rareté ; classer les effets existants selon leur force réelle. **Préparation livrée :** [plan 35 I10](35-raretes-des-objets.md), 22 objets, cinq rangs, tables par source et lots d’implémentation. Le classement précis et les taux sont proposés, pas encore mesurés. La puissance justifie le rang, sans multiplicateur automatique ajouté. Aucune modification du gameplay dans cette préparation.

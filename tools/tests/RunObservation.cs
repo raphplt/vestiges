@@ -43,7 +43,7 @@ namespace Vestiges.Tests;
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
-/// --capture-loot : écran de butin du coffre le plus proche, bonus de stat compris (RunObservation.Chests.cs).
+/// --capture-loot : écran de butin du coffre le plus proche, objets du sac uniquement (RunObservation.Chests.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-cascade : file de niveaux, cinq niveaux enchaînés puis un niveau ouvert aussitôt (RunObservation.Cascade.cs).

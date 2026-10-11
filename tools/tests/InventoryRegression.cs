@@ -39,7 +39,7 @@ public partial class InventoryRegression : Node
             CheckItemCopies();
             CheckForgetting();
             CheckBag();
-            CheckChestItem();
+            await CheckChestItem();
             await CheckWorldItems();
             CheckWeaponSurplus();
             CheckTicket();
@@ -205,19 +205,79 @@ public partial class InventoryRegression : Node
         Check(_player.HasBagRoom && _player.AddItemCopy("glacon"), "les Poches agrandissent le sac");
     }
 
-    private void CheckChestItem()
+    private async Task CheckChestItem()
     {
         Setup();
-        List<LootResolver.LootResult> loot = new() { new LootResolver.LootResult { Type = "object", ItemId = "random_item", Amount = 1, FallbackEssence = 6 } };
-        List<ResolvedLoot> resolved = LootRewards.Resolve(loot, _player);
-        PassiveSouvenirData item = PassiveSouvenirDataLoader.Get(resolved[0].ItemId);
-        Check(resolved[0].Type == "object" && item != null && !item.IsBadge && MetaSaveManager.IsObjectUnlocked(item.Id),
-            $"coffre : un objet débloqué ({resolved[0].ItemId})");
-        LootRewards.Apply(resolved[0], _player, GetNode<EventBus>("/root/EventBus"));
-        Check(_player.FindObject(item.Id)?.Copies == 1, "l'objet du coffre entre dans le sac");
-        _player.SetBagCapacity(1);
-        resolved = LootRewards.Resolve(loot, _player);
-        Check(resolved[0].Type == "essence" && resolved[0].Amount == 6, "sac plein : le coffre donne son Essence de secours");
+        foreach (ChestData chest in ChestDataLoader.GetAll())
+        {
+            bool valid = true;
+            for (int draw = 0; draw < 30; draw++)
+            {
+                List<ResolvedLoot> rewards = LootRewards.Resolve(LootResolver.Roll(chest.LootTableId, chest.LootRolls), _player);
+                valid &= rewards.Count == chest.LootRolls;
+                foreach (ResolvedLoot reward in rewards)
+                {
+                    PassiveSouvenirData item = PassiveSouvenirDataLoader.Get(reward.ItemId);
+                    valid &= reward.Type == "object" && reward.Amount == 1 && item != null
+                        && !item.IsBadge && MetaSaveManager.IsObjectUnlocked(item.Id);
+                }
+            }
+            Check(valid, $"{chest.Id} : uniquement {chest.LootRolls} objet(s) débloqué(s), sur 30 ouvertures");
+        }
+
+        ChoiceScreen choices = new();
+        AddChild(choices);
+        ItemExchange exchange = new();
+        exchange.Setup(choices);
+        AddChild(exchange);
+        Node2D ground = new();
+        AddChild(ground);
+        ItemDropDirector drops = new();
+        drops.Setup(exchange, ground);
+        AddChild(drops);
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int otherLoot = 0;
+        void OnLoot(string type, string id, int amount) { if (type != "object") otherLoot++; }
+        bus.LootReceived += OnLoot;
+        try
+        {
+            // Un épique donne deux objets même s'il ne reste qu'une place ; le second doit rester échangeable.
+            _player.SetBagCapacity(1);
+            WorldInteraction interaction = new();
+            AddChild(interaction);
+            interaction.Setup(_player);
+            Chest chest = new();
+            AddChild(chest);
+            chest.Initialize(ChestDataLoader.Get("chest_epic"));
+            chest.GlobalPosition = new Vector2(600f, 0f);
+            typeof(WorldInteraction).GetMethod("OpenChest", Private).Invoke(interaction, new object[] { chest });
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            ItemPickup overflow = ground.GetChildCount() == 1 ? ground.GetChild<ItemPickup>(0) : null;
+            Check(chest.IsOpened && _player.BagCount == 1 && overflow != null && otherLoot == 0,
+                "coffre épique : un objet dans la dernière place, un au sol, aucune autre récompense");
+
+            List<ResolvedLoot> fullBag = LootRewards.Resolve(LootResolver.Roll("chest_common", 1), _player);
+            Check(fullBag.Count == 1 && fullBag[0].Type == "object", "sac plein au tirage : toujours un objet");
+            LootRewards.Apply(fullBag[0], _player, bus, new Vector2(700f, 0f));
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Check(ground.GetChildCount() == 2 && otherLoot == 0, "sac plein : objet posé, aucune conversion en Essence");
+
+            overflow?.Interact(_player);
+            Check(choices.IsOpen && GetTree().Paused, "objet du coffre : échange ouvert en pause");
+            choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
+            Check(_player.BagCount == 1 && IsInstanceValid(overflow), "refuser l'échange conserve l'objet au sol");
+            interaction.QueueFree();
+            chest.QueueFree();
+        }
+        finally
+        {
+            bus.LootReceived -= OnLoot;
+            drops.QueueFree();
+            ground.QueueFree();
+            exchange.QueueFree();
+            choices.QueueFree();
+        }
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
 
     private async Task CheckWorldItems()

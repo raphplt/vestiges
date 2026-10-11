@@ -73,17 +73,10 @@ public partial class UiArtRegression : Node
                 Check(texture == UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png"), $"Thème : {skin}, texture partagée");
             }
 
-            System.Collections.Generic.HashSet<string> statIcons = new();
-            foreach (ChestStatBonus stat in ChestDataLoader.LoadStatBonus().Stats)
-            {
-                Texture2D icon = LootIconResolver.Get("stat", stat.Stat);
-                Check(icon != null && statIcons.Add(icon.ResourcePath), $"Coffre : icône distincte pour {stat.Stat}");
-            }
-            foreach (string type in new[] { "essence", "xp", "souvenir" })
-                Check(LootIconResolver.Get(type) != null, $"Coffre : icône de {type}");
             foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
-                Check(LootIconResolver.Get("object_level", item.Id)?.ResourcePath == item.Icon,
-                    $"Coffre : sprite propre de {item.Id}");
+                if (!item.IsBadge)
+                    Check(LootIconResolver.Get("object", item.Id)?.ResourcePath == item.Icon,
+                        $"Coffre : sprite propre de {item.Id}");
 
             RarityIcon reveal = new(3);
             AddChild(reveal);

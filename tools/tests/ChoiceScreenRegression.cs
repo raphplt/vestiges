@@ -152,8 +152,8 @@ public partial class ChoiceScreenRegression : Node
         int calls = 0;
         List<Vestiges.World.ResolvedLoot> rewards = new()
         {
-            new("essence", null, 12, "Essence ×12", Colors.Cyan),
-            new("xp", null, 40, "+40 XP", Colors.White),
+            new("object", "glacon", 1, "Glaçon dans un mouchoir", Colors.Green),
+            new("object", "allumette_humide", 1, "Allumette humide", Colors.Green),
         };
         loot.ShowLoot(rewards, "rare", () => calls++);
         loot._Input(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });

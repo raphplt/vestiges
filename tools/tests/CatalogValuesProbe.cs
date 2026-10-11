@@ -69,7 +69,7 @@ public partial class CatalogValuesProbe : Node
             lines.Add(Invariant($"blessing {blessing.Id} {blessing.NameKey} {blessing.Stat} {blessing.ModifierType} {blessing.Amount:R}"));
         foreach (OubliData oubli in OubliDataLoader.All)
             lines.Add(Invariant($"oubli {oubli.Id} {oubli.NameKey} {oubli.DescriptionKey} {oubli.Effect} {oubli.Amount:R} permanent={oubli.Permanent}"));
-        // Q7c-2 : coffres, placement, bonus de stat, bonus lâchés.
+        // Q7c-2 : coffres, placement, bonus lâchés.
         List<ChestData> chests = ChestDataLoader.GetAll();
         chests.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
         foreach (ChestData chest in chests)
@@ -78,11 +78,6 @@ public partial class CatalogValuesProbe : Node
         lines.Add(Invariant($"chest placement spacing={placement.MinSpacingPx:R} candidates={placement.CandidatesPerChest} attempts={placement.AttemptsPerChest} path={placement.PathBonus:R} clear={placement.Clearance} building={placement.BuildingClearance} pointer={placement.PointerRangePx:R}/{placement.PointerMax}"));
         foreach (ChestPlacementGroup group in placement.Groups)
             lines.Add(Invariant($"chest group {group}"));
-        ChestStatBonusData statBonus = ChestDataLoader.LoadStatBonus();
-        foreach (string rarity in new[] { "common", "rare", "epic", "lore", "legendary" })
-            lines.Add(Invariant($"chest bonus multiplier {rarity} {statBonus.Multiplier(rarity):R}"));
-        foreach (ChestStatBonus bonus in statBonus.Stats)
-            lines.Add(Invariant($"chest bonus {bonus}"));
         // Q7c-3 : petits lieux et repères.
         SmallPlaceConfig places = SmallPlaceDataLoader.Load();
         lines.Add(Invariant($"places enabled={places.Enabled} spacing={places.MinSpacingPx:R} sign={places.SignRangePx:R}"));

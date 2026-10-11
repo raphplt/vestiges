@@ -43,36 +43,18 @@ public class ChestPlacementData
     public List<ChestPlacementGroup> Groups = new();
 }
 
-/// <summary>Une stat que le bonus d'un coffre peut tirer ; <see cref="Amount"/> vaut pour un coffre commun.</summary>
-public readonly record struct ChestStatBonus(string Stat, string ModifierType, float Amount);
-
-/// <summary>Bonus d'une stat au hasard donné par chaque coffre (data/chests/chest_stat_bonus.json, DECISIONS §38).</summary>
-public class ChestStatBonusData
-{
-    public List<ChestStatBonus> Stats = new();
-    public Dictionary<string, float> RarityMultiplier = new();
-
-    public float Multiplier(string rarity) => RarityMultiplier.GetValueOrDefault(rarity, 1f);
-}
-
-/// <summary>
-/// Coffres (data/chests/chests.json), leur placement (chest_placement.json) et le bonus de stat de chaque coffre
-/// (chest_stat_bonus.json), contrôlés ensemble et en entier (plan 26 Q7c) : rien n'est publié tant que les trois
-/// fichiers et leurs références (raretés, familles d'effets, tables de butin, statistiques, images) ne sont pas valides.
-/// </summary>
+/// <summary>Coffres et placement, contrôlés ensemble avant publication des deux catalogues.</summary>
 public static class ChestDataLoader
 {
     private const string ChestsPath = "res://data/chests/chests.json";
     private const string PlacementPath = "res://data/chests/chest_placement.json";
-    private const string StatBonusPath = "res://data/chests/chest_stat_bonus.json";
 
     private static readonly Dictionary<string, ChestData> _cache = new();
     private static ChestPlacementData _placement = new();
-    private static ChestStatBonusData _statBonus = new();
     private static bool _loaded;
     private static string _loadError;
 
-    /// <summary>Les trois fichiers lus et contrôlés ; faux, avec la raison, s'ils ont été refusés (la run ne démarre pas).</summary>
+    /// <summary>Les deux fichiers lus et contrôlés ; faux, avec la raison, s'ils ont été refusés (la run ne démarre pas).</summary>
     public static bool TryLoad(out string error)
     {
         Load();
@@ -85,12 +67,11 @@ public static class ChestDataLoader
         if (_loaded)
             return;
         _loaded = true;
-        string error = Apply(Read(ChestsPath), Read(PlacementPath), Read(StatBonusPath), new References(
+        string error = Apply(Read(ChestsPath), Read(PlacementPath), new References(
             path => ResourceLoader.Exists(path),
             DataKeySets.ListIds("res://data/ui/rarities.json", "rarities"),
             DataKeySets.StringList("res://data/enemies/_contract.json", "families"),
-            LootTableLoader.Exists,
-            ObjectDataValidator.TryParseContract(FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _) ? contract : null));
+            LootTableLoader.Exists));
         if (error != null)
         {
             _loadError = error;
@@ -102,17 +83,15 @@ public static class ChestDataLoader
 
     private static string Read(string path) => FileAccess.FileExists(path) ? FileAccess.GetFileAsString(path) : null;
 
-    /// <summary>Références qu'un coffre peut nommer : images, raretés de la palette, familles d'effets, tables de butin, statistiques.</summary>
+    /// <summary>Références qu'un coffre peut nommer : images, raretés de la palette, familles d'effets, tables de butin.</summary>
     public sealed record References(Func<string, bool> ResourceExists, IReadOnlyCollection<string> Rarities,
-        IReadOnlyCollection<string> Families, Func<string, bool> LootTableExists, ObjectDataValidator.Contract Objects);
+        IReadOnlyCollection<string> Families, Func<string, bool> LootTableExists);
 
-    /// <summary>Contrôle les trois textes et ne les publie que s'ils sont tous valides. Rend l'erreur, ou null.</summary>
-    public static string Apply(string chestsJson, string placementJson, string statBonusJson, References refs)
+    /// <summary>Contrôle les deux textes et ne les publie que s'ils sont tous valides. Rend l'erreur, ou null.</summary>
+    public static string Apply(string chestsJson, string placementJson, References refs)
     {
-        if (chestsJson == null || placementJson == null || statBonusJson == null)
+        if (chestsJson == null || placementJson == null)
             return "un des fichiers de coffres est absent";
-        if (refs.Objects == null)
-            return "contrat des objets illisible";
         try
         {
             Dictionary<string, ChestData> chests = new();
@@ -123,15 +102,10 @@ public static class ChestDataLoader
             error = ParsePlacement(placementJson, chests, placement);
             if (error != null)
                 return $"{PlacementPath} : {error}";
-            ChestStatBonusData statBonus = new();
-            error = ParseStatBonus(statBonusJson, chests, refs, statBonus);
-            if (error != null)
-                return $"{StatBonusPath} : {error}";
             _cache.Clear();
             foreach ((string id, ChestData chest) in chests)
                 _cache[id] = chest;
             _placement = placement;
-            _statBonus = statBonus;
             _loadError = null;
             return null;
         }
@@ -215,48 +189,6 @@ public static class ChestDataLoader
     {
         reader.AllowOnly(owner, "dégagement", "side", "north", "south");
         return new PixelClearance(reader.NonNegative(owner, "side"), reader.NonNegative(owner, "north"), reader.NonNegative(owner, "south"));
-    }
-
-    private static string ParseStatBonus(string json, Dictionary<string, ChestData> chests, References refs, ChestStatBonusData statBonus)
-    {
-        using JsonDocument document = JsonDocument.Parse(json);
-        JsonConfigReader reader = new(document.RootElement);
-        JsonElement root = reader.Root;
-        reader.AllowOnly(root, "bonus de stat", "rarity_multiplier", "stats");
-        JsonElement multipliers = reader.Section("rarity_multiplier");
-        foreach ((string rarity, _) in reader.Entries(multipliers, "rarity_multiplier"))
-        {
-            float value = reader.NonNegative(multipliers, rarity);
-            if (reader.Error == null && !JsonConfigReader.Contains(refs.Rarities, rarity))
-                reader.Fail($"rarity_multiplier : rareté « {rarity} » inconnue");
-            statBonus.RarityMultiplier[rarity] = value;
-        }
-        // Une rareté de coffre sans multiplicateur prendrait 1 sans que personne ne l'ait voulu.
-        foreach (ChestData chest in chests.Values)
-        {
-            if (reader.Error == null && !statBonus.RarityMultiplier.ContainsKey(chest.Rarity))
-                reader.Fail($"rarity_multiplier : rareté « {chest.Rarity} » du coffre {chest.Id} absente");
-        }
-        foreach (JsonElement entry in reader.List(root, "stats", 1))
-        {
-            reader.AllowOnly(entry, "stats", "stat", "modifier_type", "amount");
-            string stat = reader.Text(entry, "stat");
-            string modifier = reader.Text(entry, "modifier_type");
-            float amount = reader.Positive(entry, "amount");
-            if (reader.Error == null && !refs.Objects.PlayerStats.Contains(stat))
-                reader.Fail($"stats : « {stat} » n'est pas une statistique du joueur");
-            if (reader.Error == null && !refs.Objects.Stats[stat].Modifiers.Contains(modifier))
-                reader.Fail($"stats : modificateur « {modifier} » non admis pour {stat}");
-            statBonus.Stats.Add(new ChestStatBonus(stat, modifier, amount));
-        }
-        return reader.Error;
-    }
-
-
-    public static ChestStatBonusData LoadStatBonus()
-    {
-        Load();
-        return _statBonus;
     }
 
     public static ChestPlacementData LoadPlacement()

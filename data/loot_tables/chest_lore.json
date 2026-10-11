@@ -1,8 +1,12 @@
 {
     "id": "chest_lore",
     "entries": [
-        { "type": "souvenir", "item": "random_souvenir", "weight": 45, "min_amount": 1, "max_amount": 1 },
-        { "type": "essence", "item": "essence", "weight": 35, "min_amount": 10, "max_amount": 18 },
-        { "type": "xp", "item": "xp", "weight": 20, "min_amount": 25, "max_amount": 45 }
+        {
+            "type": "object",
+            "item": "random_item",
+            "weight": 1,
+            "min_amount": 1,
+            "max_amount": 1
+        }
     ]
 }

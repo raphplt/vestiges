@@ -29,13 +29,20 @@ public partial class ItemDropDirector : Node
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKillResolved += OnEnemyKill;
+        _eventBus.ItemDropRequested += OnItemDropRequested;
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EnemyKillResolved -= OnEnemyKill;
+            _eventBus.ItemDropRequested -= OnItemDropRequested;
+        }
     }
+
+    private void OnItemDropRequested(string itemId, Vector2 position) =>
+        Drop(position, PassiveSouvenirDataLoader.Get(itemId));
 
     private void OnEnemyKill(EnemyKillResult kill)
     {

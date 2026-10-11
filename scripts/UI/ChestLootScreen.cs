@@ -8,7 +8,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Écran roulette du butin d'un coffre : chaque case fait défiler des leurres puis s'arrête sur le butin
-/// déjà résolu (Essence, XP, stat, niveaux d'objet ou Souvenir). Met le jeu en pause, joue le son d'ouverture.
+/// déjà résolu (objets du sac). Met le jeu en pause, joue le son d'ouverture.
 /// Un appui révèle d'un coup les cases encore en défilement, un second ferme l'écran sans attendre.
 /// Couleurs de rareté : palette unique (RarityPalette).
 /// </summary>
@@ -86,16 +86,6 @@ public partial class ChestLootScreen : CanvasLayer
     public override void _Ready()
     {
         LoadTextures();
-        _fakeItems = new[]
-        {
-            new LootDisplayInfo("Essence ×6", UITheme.CyanEssence, LootIconResolver.Get("essence")),
-            new LootDisplayInfo("Essence ×12", UITheme.CyanEssence, LootIconResolver.Get("essence")),
-            new LootDisplayInfo("+25 XP", new Color("8AB8C4"), LootIconResolver.Get("xp")),
-            new LootDisplayInfo("+40 XP", new Color("8AB8C4"), LootIconResolver.Get("xp")),
-            new LootDisplayInfo($"{StatCatalog.Name("max_hp")} +15", GoldBright, LootIconResolver.Get("stat", "max_hp")),
-            new LootDisplayInfo($"{StatCatalog.Name("crit_multiplier")} +10 %", GoldBright, LootIconResolver.Get("stat", "crit_multiplier")),
-            new LootDisplayInfo($"{StatCatalog.Name("armor")} +2", GoldBright, LootIconResolver.Get("stat", "armor")),
-        };
         BuildUI();
         HideScreen();
     }
@@ -158,6 +148,15 @@ public partial class ChestLootScreen : CanvasLayer
     /// </summary>
     public void ShowLoot(List<ResolvedLoot> loots, string rarity, Action onComplete)
     {
+        // Seulement des objets accessibles : la roulette ne promet plus d'autres catégories de butin.
+        List<LootDisplayInfo> candidates = new();
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            if (!item.IsBadge && MetaSaveManager.IsObjectUnlocked(item.Id))
+                candidates.Add(new LootDisplayInfo(item.Name, new Color("6ACA5A"), LootIconResolver.Get("object", item.Id)));
+        if (candidates.Count == 0)
+            foreach (ResolvedLoot loot in loots)
+                candidates.Add(new LootDisplayInfo(loot.Label, loot.Color, LootIconResolver.Get(loot.Type, loot.ItemId)));
+        _fakeItems = candidates.ToArray();
         _openingSerial++;
         AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
         _revealAudio = null;
