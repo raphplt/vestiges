@@ -292,7 +292,11 @@ public partial class PauseMenu : CanvasLayer
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
 		string title = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
-		Label name = PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor);
+		// Le surplus (cartes prises arme au maximum) est déjà compté dans les dégâts : on le nomme pour qu'il se lise.
+		string surplus = weapon.SurplusCards > 0
+			? "   " + string.Format(Tr("PAUSE_WEAPON_SURPLUS"), Mathf.RoundToInt(weapon.SurplusDamage * 100f))
+			: "";
+		Label name = PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}{surplus}", TextRole.Body, StatValueColor);
 		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(name);
 

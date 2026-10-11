@@ -73,6 +73,16 @@ public static class InventoryConfig
         }
     }
 
+    /// <summary>Niveau d'Écusson au-delà duquel chaque niveau ne vaut plus qu'une part du pas.</summary>
+    public static int BadgeSoftCapLevel
+    {
+        get
+        {
+            Load();
+            return _badgeSoftCapLevel;
+        }
+    }
+
     /// <summary>Part du pas que vaut le niveau <paramref name="level"/> d'un Écusson : 1, puis le facteur au-delà du seuil.</summary>
     public static float BadgeStepFactor(int level)
     {

@@ -142,3 +142,12 @@ Livré et testé en headless, page et HUD regardés en capture logicielle ; rien
 - [ ] **Cadenas du HUD** : deux cases éteintes avec un petit cadenas pour un profil neuf. Se voit-il assez à 1080p et en 720p ?
 - [ ] **Début de run à deux armes** (profil neuf) : trop dur ? Mesure au plan 36 §12.
 - [ ] **Bilan** : carte « N Vestiges à dépenser au Campement » après « +N Vestiges ». Utile, ou en trop ?
+
+## Plan 35, l'inventaire — session cloud du 11 octobre
+
+Livré et testé en headless (suite `inventory`), HUD, pause, échange et Collection regardés en capture logicielle ; rien n'a été joué au clavier ni à la manette.
+- [ ] **Barre du bas** : 4 armes, puis 4 Écussons (cadre doré, niveau) et le sac en petites cases, doublons côte à côte. Lisible à 1080p et en 720p ? Les Écussons se distinguent-ils assez des objets sans icônes brodées ?
+- [ ] **Écran d'échange à la manette** (sac plein) : maintenir pour ouvrir, choisir l'exemplaire à oublier, « Laisser au sol ». Le focus ne doit jamais se perdre ; la pause doit tenir pendant le choix.
+- [ ] **Ramassage d'un objet** : envol de l'icône vers sa case du sac, son de trouvaille (`sfx_souvenir_trouve`, provisoire). Assez visible en combat ?
+- [ ] **Surplus d'arme** : carte « SURPLUS » au level-up d'une arme au bout de sa progression, mention « Surplus +N % » à la pause. Compréhensible ?
+- [ ] **Collection** : onglet Écussons à part, règles de montée (Écussons) et d'exemplaires (objets) sous chaque fiche.

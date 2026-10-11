@@ -467,3 +467,21 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
 - La carte dit « Dégâts de l'arme +8 % → +12 % ».
 - Avec les Écussons sans plafond (I1) et le surplus, le level-up n'est plus jamais vide en fin de run.
 - Vérifications : contrôle dans la suite `inventory` (pas de surplus avant l'ascension, deux cartes = ×1,08 sur les dégâts, plus d'amélioration offerte) ; refus d'un gain nul au chargement (`catalogs`) ; `weapons` vert.
+
+## 15. Lot I5 livré : interface — 11 octobre 2026
+
+Pause, fiche du joueur, barre du bas et bilan suivaient déjà l'inventaire depuis I1 et I2 (Écussons, sac, exemplaires). I5 complète le reste :
+- **Collection** : onglet **Écussons** à part, entre Armes et Objets. Sous chaque fiche, la règle tirée des données :
+  - Écusson : l'objet d'où il vient, montée au level-up jusqu'au niveau 99, demi-pas au-delà du seuil (`inventory.json`) ;
+  - objet : exemplaires au plus et exemplaire du palier, ou exemplaires seuls s'il n'a pas de palier.
+- **Ramassage d'un objet** : son de trouvaille, et l'icône s'envole du sol vers sa case du sac (nouveau signal `ItemPickedUp`, même envol que les armes).
+- **Pause** : « Surplus +N % » à côté du niveau d'une arme qui en a reçu (I4).
+- **Bilan** : la rangée s'appelle « Écussons et objets ».
+- Outillage : `--collection-tab` de `HubCapture` rouvrait la Collection par une méthode disparue ; il passe désormais par `OpenPage`.
+
+**Vérifications.**
+- Build sans avertissement ; `smoke`, `ui_art`, `inventory`, `choice_screen`, `objects`, `quests` verts.
+- Captures regardées sous `xvfb-run` :
+  - pause (`--capture-pause`, refaite pour 4 Écussons, un sac à doublons et un surplus) : arme « Surplus +8 % », section Écussons, barre du bas avec 7 exemplaires sur 10 ;
+  - Collection, onglets Écussons et Objets (`HUB_EXTRA_ARGS="--collection-tab badges"`).
+- Non vérifié : l'envol de l'icône (trop bref pour la capture), à juger en jeu (A-VERIFIER).

@@ -72,6 +72,7 @@ public partial class HUD : CanvasLayer
     private readonly TextureRect[] _weaponSlotIcons = new TextureRect[Player.MaxWeaponSlots];
     private readonly Label[] _weaponSlotLevels = new Label[Player.MaxWeaponSlots];
     private readonly HudSlotLock[] _weaponSlotLocks = new HudSlotLock[Player.MaxWeaponSlots];
+    private HudInventoryBar _inventoryBar;
     private Texture2D _slotEmptyTex;
     private Texture2D _slotFilledTex;
 
@@ -148,7 +149,7 @@ public partial class HUD : CanvasLayer
         GetViewport().SizeChanged += OnViewportResized;
 
         BuildVitals();
-        _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf) { Name = "LootFlight" });
+        _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf, id => _inventoryBar?.ItemIconOf(id)) { Name = "LootFlight" });
         _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + _vitals.Size.Y + 6f) });
         _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -473,6 +474,7 @@ public partial class HUD : CanvasLayer
     private void BuildInventoryBar()
     {
         HudInventoryBar bar = new() { Name = "InventoryBar" };
+        _inventoryBar = bar;
         bar.AnchorLeft = 0.5f;
         bar.AnchorRight = 0.5f;
         bar.AnchorTop = 1f;

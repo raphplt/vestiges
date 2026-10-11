@@ -148,6 +148,21 @@ public partial class HudInventoryBar : HBoxContainer
         slot.Level.Text = showLevel && owned.Level > 1 ? $"{owned.Level}" : "";
     }
 
+    /// <summary>Icône de la dernière case du sac qui porte cet objet, ou null : là où atterrit un objet ramassé.</summary>
+    public Control ItemIconOf(string itemId)
+    {
+        if (_groupCache?.GetPlayer() is not Player player)
+            return null;
+        int cell = 0;
+        foreach (ActivePassiveSouvenir item in player.PassiveSlots)
+        {
+            cell += item.Copies;
+            if (item.Id == itemId)
+                return cell - 1 < _items.Count ? _items[cell - 1].Icon : null;
+        }
+        return null;
+    }
+
     /// <summary>Centrée sous les armes, quelle que soit la taille du sac.</summary>
     private void Recenter()
     {

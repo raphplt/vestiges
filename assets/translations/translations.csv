@@ -231,7 +231,7 @@ UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
 UI_END_BEST,Meilleur : {0},Best: {0}
 UI_END_DETAIL,{0} éliminations,{0} kills
 UI_END_WEAPONS,ARMES,WEAPONS
-UI_END_PASSIVES,SOUVENIRS,SOUVENIRS
+UI_END_PASSIVES,ÉCUSSONS ET OBJETS,BADGES AND ITEMS
 UI_END_KILLS,Éliminations,Kills
 UI_END_CRISES,Résurgences,Resurgences
 UI_END_FELL_TO,Dernier coup,Last hit
@@ -487,3 +487,7 @@ WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
 ITEM_BAG_FULL,"Sac plein : il faudra oublier un objet.","Bag full: you will forget an item."
 LEVELUP_SURPLUS,SURPLUS,SURPLUS
 LEVELUP_SURPLUS_LINE,Dégâts de l'arme +{0} % → +{1} %,Weapon damage +{0}% → +{1}%
+PAUSE_WEAPON_SURPLUS,Surplus +{0} %,Surplus +{0}%
+COLLECTION_BADGE_RULE,"Cousu en souvenir de : {0}. Monte au level-up jusqu'au niveau {1}, à demi-pas après le niveau {2}.","Sewn in memory of: {0}. Rises on level-up up to level {1}, at half step after level {2}."
+COLLECTION_ITEM_RULE,Jusqu'à {0} exemplaires dans le sac ; palier au {1}ᵉ.,Up to {0} copies in the bag; tier at copy {1}.
+COLLECTION_ITEM_RULE_PLAIN,Jusqu'à {0} exemplaires dans le sac.,Up to {0} copies in the bag.

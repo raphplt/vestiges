@@ -110,7 +110,10 @@ public partial class ItemPickup : Area2D, IInteractable
             return false;
         _collected = true;
         Interactables.Unregister(this);
-        GetNodeOrNull<EventBus>("/root/EventBus")?.EmitSignal(EventBus.SignalName.LootReceived, "object", _item.Id, 1);
+        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+        eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "object", _item.Id, 1);
+        eventBus?.EmitSignal(EventBus.SignalName.ItemPickedUp, _item.Id, _visual.GlobalPosition);
+        AudioManager.PlayUI("sfx_souvenir_trouve");
         QueueFree();
         return true;
     }
