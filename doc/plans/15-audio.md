@@ -625,3 +625,15 @@ Demande de Raphaël après X1–X5 : s'attaquer aux axes restants. Lot sans déc
 3. Spatialisation stéréo légère des coups et des ennemis selon leur position à l'écran.
 4. Basses très présentes dans les musiques de combat et de nuit (82 à 91 % de l'énergie sous 120 Hz).
 5. Quatre sons manquants : soin, bouclier rechargé, annonce du tir visé, réveil de la Faille.
+
+### X7 — curseurs à 100 % et placement à l'écran, livré le 11 octobre
+
+Demande de Raphaël ([DECISIONS §111](DECISIONS.md)).
+
+- **Curseurs** : Master, Musique, Effets et Ambiance valent 100 % sur un profil neuf. L'équilibre du mix vit hors des curseurs, dans un amplificateur sur chaque bus : musique −6 dB (le même amplificateur porte le ducking), ambiance −8 dB.
+  - Les réglages enregistrés avant (sans `mix_version`) sont convertis en gardant le niveau entendu : l'ancien défaut de 50 % devient 100 %, une ambiance réglée à 20 % passe à 50 %. La version 2 est écrite à la sauvegarde.
+- **Placement gauche/droite** : `AudioManager.PlayAt(clé, position)` choisit l'un de cinq bus orientés selon la position de la source à l'écran. Ils sont envoyés au bus du monde, donc étouffés et compressés avec lui.
+  - Positions : panoramique ±0,25 au-delà de 20 % de la demi-largeur, ±0,5 au-delà de 60 %.
+  - Sons placés : impacts et critiques sur les créatures, coups au contact, actions des créatures (tirs, cris, terrier, crachat), bond, Présage, dissolution à la mort, poings de la Barrière, éclairs et mains de l'Indicible.
+  - Les sons du joueur, les annonces globales et l'interface restent au centre.
+- **Contrôles** : `tools/validate.sh … smoke audio music` 3/3, puis `enemy_abilities indicible` 2/2. Nouveaux contrôles : curseurs à 100 % en profil neuf, équilibre de l'ambiance hors curseur, conversion des anciens réglages sans double conversion, choix du bus selon la position, bus orientés envoyés au monde, impact à droite joué à droite, ducking relatif à l'équilibre.

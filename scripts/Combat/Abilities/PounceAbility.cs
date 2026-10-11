@@ -142,7 +142,7 @@ public class PounceAbility : IEnemyAbility
             owner.FlashWarning(_windupFlash, _windupSeconds);
         _marker.ShowLine(owner.GlobalPosition, owner.GlobalPosition + _direction * _distance, _markerWidth, _family);
         if (_windupAudio.Length > 0)
-            AudioManager.Play(_windupAudio, 0.1f, -6f);
+            AudioManager.PlayAt(_windupAudio, owner.GlobalPosition, 0.1f, -6f);
     }
 
     private void StartLeap(Enemy owner)
@@ -154,7 +154,7 @@ public class PounceAbility : IEnemyAbility
         owner.PlayAttackAnim();
         _marker.HideMarker();
         if (_leapAudio.Length > 0)
-            AudioManager.Play(_leapAudio, 0.1f, -4f);
+            AudioManager.PlayAt(_leapAudio, owner.GlobalPosition, 0.1f, -4f);
     }
 
     private void ShakeOnImpact()

@@ -125,10 +125,11 @@ public partial class AudioMixRegression : Node
             duck ??= AudioServer.GetBusEffect(music, i) as AudioEffectAmplify;
         AudioStreamPlayer reveal = audio.PlayUiSfx("sfx_chest_reveal");
         await Frames(15);
-        Check(duck != null && Mathf.IsEqualApprox(duck.VolumeDb, -5f), "coffre révélé : musique baissée de 5 dB");
+        Check(duck != null && Mathf.IsEqualApprox(duck.VolumeDb, -11f), "coffre révélé : musique baissée de 5 dB sous son équilibre de −6");
         AudioManager.FadeOutUI(reveal, "sfx_chest_reveal", 0.01f);
         await Frames(250);
-        Check(Mathf.IsEqualApprox(duck.VolumeDb, 0f), "ducking : la musique revient après le moment");
+        Check(Mathf.IsEqualApprox(duck.VolumeDb, -6f), "ducking : la musique revient à son équilibre après le moment");
+        await CheckSlidersAndPanning(audio);
 
         const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
         AudioVoicePool sfx = (AudioVoicePool)typeof(AudioManager).GetField("_sfxPool", flags).GetValue(audio);
@@ -149,6 +150,56 @@ public partial class AudioMixRegression : Node
         }
         sfx.Stop();
         Check(bounded && levels.Count > 1, "impact répété : volume varié de ±1,5 dB autour de la banque");
+    }
+
+    /// <summary>Curseurs à 100 % par défaut, anciens réglages convertis, sons du monde placés selon l'écran.</summary>
+    private async Task CheckSlidersAndPanning(AudioManager audio)
+    {
+        foreach (string bus in new[] { "Master", "Music", "SFX", "Ambiance" })
+            Check(Mathf.IsEqualApprox(audio.GetBusVolumeLinear(bus), 1f), $"profil neuf : curseur {bus} à 100 %");
+        int ambiance = AudioServer.GetBusIndex("Ambiance");
+        AudioEffectAmplify trim = null;
+        for (int i = 0; i < AudioServer.GetBusEffectCount(ambiance); i++)
+            trim ??= AudioServer.GetBusEffect(ambiance, i) as AudioEffectAmplify;
+        Check(trim != null && Mathf.IsEqualApprox(trim.VolumeDb, -8f), "ambiance : équilibre de −8 dB hors curseur");
+
+        const string path = "user://audio_settings.cfg";
+        ConfigFile old = new();
+        old.SetValue("audio", "music", 0.5);
+        old.SetValue("audio", "ambiance", 0.2);
+        old.Save(path);
+        audio.LoadSettings();
+        Check(Mathf.Abs(audio.GetBusVolumeLinear("Music") - 1f) < 0.01f && Mathf.Abs(audio.GetBusVolumeLinear("Ambiance") - 0.5f) < 0.01f,
+            "anciens réglages : l'ancien défaut devient 100 %, un réglage plus bas garde son niveau entendu");
+        audio.SaveSettings();
+        audio.SetBusVolumeLinear("Music", 0.3f);
+        audio.LoadSettings();
+        Check(Mathf.Abs(audio.GetBusVolumeLinear("Music") - 1f) < 0.01f, "réglages version 2 : relus sans seconde conversion");
+        DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath(path));
+        audio.SetBusVolumeLinear("Music", 1f);
+        audio.SetBusVolumeLinear("Ambiance", 1f);
+
+        Camera2D camera = new() { Enabled = true };
+        AddChild(camera);
+        camera.MakeCurrent();
+        await Frames(2);
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        System.Reflection.MethodInfo panBus = typeof(AudioManager).GetMethod("PanBusFor", flags);
+        Vector2 center = camera.GetScreenCenterPosition();
+        float half = GetViewport().GetVisibleRect().Size.X * 0.5f;
+        string Bus(float offset) => (string)panBus.Invoke(audio, new object[] { center + new Vector2(offset, 0f) });
+        Check(Bus(0f) == "World" && Bus(-half * 0.4f) == "WorldPanL1" && Bus(half * 0.9f) == "WorldPanR2" && Bus(-half * 3f) == "WorldPanL2",
+            "placement : centre, gauche et droite selon la position à l'écran");
+        int right = AudioServer.GetBusIndex("WorldPanR2");
+        Check(right >= 0 && AudioServer.GetBusSend(right) == "World" && HasEffect<AudioEffectPanner>(right),
+            "placement : bus orientés envoyés au monde, donc étouffés et compressés avec lui");
+        AudioManager.PlayAt("sfx_impact_blunt", center + new Vector2(half * 0.9f, 0f), 0f);
+        bool playedRight = false;
+        foreach (Node child in audio.GetChildren())
+            playedRight |= child is AudioStreamPlayer voice && voice.Playing && voice.Bus == "WorldPanR2";
+        Check(playedRight, "impact à droite de l'écran joué à droite");
+        camera.QueueFree();
+        await Frames(1);
     }
 
     private static bool HasEffect<T>(int bus) where T : AudioEffect

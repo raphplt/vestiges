@@ -808,7 +808,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (distance >= RangedAttackAudioRadius)
 			return;
 		float far = Mathf.SmoothStep(NearbyAudioFullRadius, RangedAttackAudioRadius, distance);
-		Infrastructure.AudioManager.Play(key, 0.06f, NearbyAudioBaseDb + NearbyAudioFalloffDb * far);
+		Infrastructure.AudioManager.PlayAt(key, GlobalPosition, 0.06f, NearbyAudioBaseDb + NearbyAudioFalloffDb * far);
 	}
 
 	/// <summary>Sentinelle : immobile, tire à distance. Pilier organique ancré.</summary>
@@ -1060,7 +1060,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			TriggerHitFeedback();
 			SpawnHitFlashSprite();
 			string impactAudio = source.IsWeaponWork ? source.Weapon.Base.ImpactAudio : null;
-			Infrastructure.AudioManager.Play(isCrit ? "sfx_hit_critique" : impactAudio ?? "sfx_hit_ennemi", 0.07f);
+			Infrastructure.AudioManager.PlayAt(isCrit ? "sfx_hit_critique" : impactAudio ?? "sfx_hit_ennemi", GlobalPosition, 0.07f);
 		}
 
 		// Screen shake + hitstop selon l'intensité
@@ -1844,7 +1844,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	{
 		HitPlayer(player, damage);
 		if (_attackAudio != null)
-			Infrastructure.AudioManager.Play(_attackAudio, 0.08f, -7f);
+			Infrastructure.AudioManager.PlayAt(_attackAudio, GlobalPosition, 0.08f, -7f);
 		EnemyAttackFx.PlayMeleeHit(GlobalPosition, player.GlobalPosition);
 	}
 

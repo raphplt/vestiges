@@ -1211,3 +1211,9 @@ Réponses de Raphaël aux questions des plans 35 et 36 :
 - Remboursement des achats permanents : **libre et gratuit**.
 - Nom de l'écran : « établi est aussi un truc in game donc ça va pas trop » ; retenu **le Campement** parmi quatre.
 - Ordre : « péril visible, établi puis refonte de l'inventaire » : Péril toujours visible (plan 34 G0), puis le Campement (plan 36), puis l'inventaire (plan 35).
+
+## 111. Curseurs à 100 %, sons placés à l'écran, nouveaux sons à proposer — 11 octobre 2026
+
+Raphaël, après X6 : « les curseurs musique et ambiance, comme tous les autres, doivent être à 100 % par défaut. C'est ce que font tous les jeux. » Le placement gauche/droite des coups et des ennemis, « c'est génial ». Pour les quatre sons manquants : chercher sur le web ou les créer, puis proposer. Il n'aime pas le son de blessure du joueur : en trouver un plus approprié.
+
+**Acquis :** tous les curseurs audio à 100 % sur un profil neuf ; l'équilibre interne (musique −6 dB, ambiance −8 dB) passe hors curseur. Les réglages enregistrés avant gardent leur niveau entendu. Sons du monde placés à gauche ou à droite selon leur source à l'écran (plan 15 X7). **En attente de son écoute :** planche de candidats pour le soin, le bouclier rechargé, l'annonce du tir visé, le réveil de la Faille et la blessure du joueur.

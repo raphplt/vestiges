@@ -226,7 +226,7 @@ public partial class Indicible : Node2D
 		_lightningCenter = DriftedPosition(_config.LightningWarning);
 		_lightningWarning = _config.LightningWarning;
 		_lightningMarker.ShowCircle(_lightningCenter, _config.LightningRadius, _family);
-		AudioManager.Play(_config.LightningWarningAudio, 0.08f);
+		AudioManager.PlayAt(_config.LightningWarningAudio, _lightningCenter, 0.08f);
 		LightningStrikes++;
 	}
 
@@ -234,7 +234,7 @@ public partial class Indicible : Node2D
 	{
 		_lightningFlash = StrikeFlashSec;
 		_lightningMarker.SetFlash(1f);
-		AudioManager.Play(_config.LightningStrikeAudio, 0.06f);
+		AudioManager.PlayAt(_config.LightningStrikeAudio, _lightningCenter, 0.06f);
 		ScreenShake.Instance?.ShakeLight();
 		_storm.Strike(_lightningCenter);
 		float reach = _config.LightningRadius + _config.LightningHitMargin;
@@ -399,7 +399,7 @@ public partial class Indicible : Node2D
 		hand.Marker.ShowCircle(hand.Target, _config.GrabRadius, _family);
 		hand.Sprite.Texture = _grabTexture;
 		Pose(hand, 0f, 0f);
-		AudioManager.Play(_config.GrabWarningAudio, 0.08f);
+		AudioManager.PlayAt(_config.GrabWarningAudio, hand.Target, 0.08f);
 		Grabs++;
 	}
 
@@ -416,7 +416,7 @@ public partial class Indicible : Node2D
 		Pose(hand, 1f, 0f);
 		if (IsOwnHand(hand.Part))
 			hand.Part.GlobalPosition = hand.Target;
-		AudioManager.Play(_config.GrabImpactAudio, 0.08f);
+		AudioManager.PlayAt(_config.GrabImpactAudio, hand.Target, 0.08f);
 		ScreenShake.Instance?.ShakeLight();
 		Erupt(hand.Target, hand.InWater, true);
 		float reach = _config.GrabRadius + _config.GrabHitMargin;

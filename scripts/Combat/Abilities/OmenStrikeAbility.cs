@@ -143,7 +143,7 @@ public class OmenStrikeAbility : IEnemyAbility
         }
         owner.PlayAttackAnim();
         if (_castAudio.Length > 0)
-            AudioManager.Play(_castAudio, 0.08f, -6f);
+            AudioManager.PlayAt(_castAudio, owner.GlobalPosition, 0.08f, -6f);
     }
 
     private void Resolve(Enemy owner, Player player)
@@ -158,7 +158,7 @@ public class OmenStrikeAbility : IEnemyAbility
         CombatPools.Instance?.ShowProjectileImpact(_impactCenter, _eyeSet?.Impact);
 
         if (_impactAudio.Length > 0)
-            AudioManager.Play(_impactAudio, 0.08f, -4f);
+            AudioManager.PlayAt(_impactAudio, _impactCenter, 0.08f, -4f);
 
         float reach = _radius + _hitMargin;
         // Rayon au sol : la frappe touche exactement l'ellipse annoncée.
