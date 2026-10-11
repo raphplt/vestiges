@@ -426,32 +426,46 @@ MAP_LEGEND_VOID,Néant connu,Known void
 BOSS_BARRIER,La Barrière,The Barrier
 BOSS_INDICIBLE,L'Indicible,The Unspeakable
 CAMP_WEAPON_SLOTS,Râtelier,Weapon Rack
+CAMP_WEAPON_SLOTS_HINT,Porter plus d'armes en même temps.,Carry more weapons at once.
 CAMP_WEAPON_SLOTS_DESC,+{0} emplacement d'arme par rang,+{0} weapon slot per rank
 CAMP_POCKETS,Poches,Pockets
+CAMP_POCKETS_HINT,Plus de place pour les objets trouvés.,More room for the items you find.
 CAMP_POCKETS_DESC,+{0} places dans le sac d'objets par rang,+{0} bag spaces per rank
 CAMP_REROLLS,Jeu de cartes,Deck of Cards
+CAMP_REROLLS_HINT,Retirer les cartes d'un level-up.,Redraw the cards of a level-up.
 CAMP_REROLLS_DESC,+{0} relance par run et par rang,+{0} reroll per run and per rank
 CAMP_BANISHES,Boîte d'allumettes,Box of Matches
+CAMP_BANISHES_HINT,Écarter une carte pour toute la run.,Remove a card for the whole run.
 CAMP_BANISHES_DESC,+{0} bannissement gratuit par run et par rang,+{0} free banish per run and per rank
 CAMP_MAX_HP,Sac de couchage,Sleeping Bag
+CAMP_MAX_HP_HINT,Tu commences chaque run plus solide.,You start every run tougher.
 CAMP_MAX_HP_DESC,PV max +{0} par rang,Max HP +{0} per rank
 CAMP_DAMAGE,Pierre à aiguiser,Whetstone
+CAMP_DAMAGE_HINT,Toutes tes armes frappent plus fort.,All your weapons hit harder.
 CAMP_DAMAGE_DESC,Dégâts +{0} par rang,Damage +{0} per rank
 CAMP_ATTACK_SPEED,Métronome,Metronome
+CAMP_ATTACK_SPEED_HINT,Toutes tes armes attaquent plus vite.,All your weapons attack faster.
 CAMP_ATTACK_SPEED_DESC,Cadence +{0} par rang,Attack speed +{0} per rank
 CAMP_SPEED,Bonnes chaussures,Good Boots
+CAMP_SPEED_HINT,Tu te déplaces plus vite.,You move faster.
 CAMP_SPEED_DESC,Vitesse +{0} par rang,Speed +{0} per rank
 CAMP_REGEN,Marmite,Cooking Pot
+CAMP_REGEN_HINT,Tu reprends des PV avec le temps.,You recover HP over time.
 CAMP_REGEN_DESC,Régénération +{0} PV/s par rang,Regeneration +{0} HP/s per rank
 CAMP_ARMOR,Rembourrage,Padding
+CAMP_ARMOR_HINT,Chaque coup reçu fait moins mal.,Every hit you take hurts less.
 CAMP_ARMOR_DESC,Armure +{0} par rang,Armor +{0} per rank
 CAMP_MAGNET,Filet à papillons,Butterfly Net
+CAMP_MAGNET_HINT,Tu ramasses l'XP de plus loin.,You collect XP from farther away.
 CAMP_MAGNET_DESC,Attraction de l'XP +{0} par rang,XP pickup range +{0} per rank
 CAMP_XP,Carnet de notes,Notebook
+CAMP_XP_HINT,Tu montes de niveau plus vite.,You level up faster.
 CAMP_XP_DESC,XP gagnée +{0} par rang,XP gained +{0} per rank
 CAMP_LUCK,Patte de lapin,Rabbit's Foot
+CAMP_LUCK_HINT,Des cartes plus rares à chaque choix.,Rarer cards at every choice.
 CAMP_LUCK_DESC,Chance +{0} par rang,Luck +{0} per rank
 CAMP_START_ESSENCE,Bocal d'Essence,Essence Jar
+CAMP_START_ESSENCE_HINT,De l'Essence en poche dès le départ.,Essence in your pocket from the start.
 CAMP_START_ESSENCE_DESC,+{0} Essence au départ de chaque run par rang,+{0} Essence at the start of each run per rank
 UI_CAMP_TITLE,Campement,Camp
 UI_CAMP_BRANCH_CAPACITIES,Capacités,Capacities
@@ -460,7 +474,6 @@ UI_CAMP_BRANCH_COMFORT,Confort,Comfort
 UI_CAMP_RANK,Rang {0}/{1},Rank {0}/{1}
 UI_CAMP_MAXED,Max,Max
 UI_CAMP_MAX,Rang maximal atteint.,Maximum rank reached.
-UI_CAMP_NEXT_PRICE,Rang suivant : {0} Vestiges.,Next rank: {0} Vestiges.
 UI_CAMP_REFUND,Rendre,Refund
 UI_CAMP_REFUND_ALL,Tout rendre,Refund all
 UI_CAMP_NOT_ENOUGH,Il manque {0} Vestiges.,{0} Vestiges short.

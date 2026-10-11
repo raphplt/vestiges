@@ -19,7 +19,6 @@ public partial class HubCollectionPanel : MarginContainer
     public string CurrentTab => _tab;
     private readonly Dictionary<string, string> _examined = new();
     private Button _questLink;
-    private Button _statsToggle;
     private string _questId;
     private const int Columns = 6;
     private const float TileSize = 112f;
@@ -116,9 +115,7 @@ public partial class HubCollectionPanel : MarginContainer
         _detailName = AddDetailLabel(detail, _strongFont, TextRole.Title, UITheme.TextLight);
         _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
-        _statsToggle = MenuSkin.Button("Valeurs et règles");
-        _statsToggle.Pressed += () => _detailStats.Visible = !_detailStats.Visible;
-        detail.AddChild(_statsToggle);
+        // Règles et chiffres toujours affichés : souvent une ligne, jamais derrière un bouton (DECISIONS §117).
         _detailStats = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailCondition = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.CyanEssence);
         _questLink = MenuSkin.Button("Voir la quête  →");
@@ -277,7 +274,7 @@ public partial class HubCollectionPanel : MarginContainer
         }
         tile.FocusEntered += () => ShowDetail(entry);
         tile.MouseEntered += () => ShowDetail(entry);
-        tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); else if (_statsToggle.Visible) _statsToggle.GrabFocus(); };
+        tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); };
         UITheme.WireButtonAudio(tile);
         return tile;
     }
@@ -296,8 +293,7 @@ public partial class HubCollectionPanel : MarginContainer
         QuestDefinition quest = _tab == "perks" ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
         _questId = quest?.Id;
         _questLink.Visible = !entry.Unlocked && quest != null;
-        _statsToggle.Visible = entry.Stats.Length > 0;
-        _detailStats.Visible = false;
+        _detailStats.Visible = entry.Stats.Length > 0;
         _detailIcon.Texture = !string.IsNullOrEmpty(entry.Icon) && ResourceLoader.Exists(entry.Icon) ? GD.Load<Texture2D>(entry.Icon) : null;
         _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;
         _detailName.Text = entry.Name;

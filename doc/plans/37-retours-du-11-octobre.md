@@ -94,3 +94,9 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Fiche de droite** inchangée : condition, avancée chiffrée, liens vers les récompenses.
 - **Outil** : `HubCapture --open-page <Characters|Camp|Quests|Collection>` ouvre une page sans dépendre du focus de l'accueil.
 - **Vérifié** : captures en profil neuf avec quatre quêtes accomplies et deux avancées (haut et bas de liste) ; `tools/validate.sh` smoke, `menu_navigation`, `quests` 3/3.
+
+## 6. Lot H3 livré : Collection et Campement lisibles — 11 octobre 2026
+
+- **Collection** : le bouton « Valeurs et règles » est retiré. La règle d'un Écusson ou d'un objet et les chiffres d'une arme s'affichent sous la description ; la fiche défile si elle déborde.
+- **Campement** : sous chaque nom, une phrase dit ce que fait l'amélioration (« Toutes tes armes frappent plus fort. », « Chaque coup reçu fait moins mal. », « Écarter une carte pour toute la run. »…), quatorze clés `CAMP_*_HINT` en français et en anglais. À droite de la ligne : rang, prix, et l'effet actuel puis suivant, en cyan. La phrase posée au survol sur le mur du bas, illisible, est retirée avec sa clé `UI_CAMP_NEXT_PRICE` : le prix est déjà sur la ligne. Les rayons défilent si une langue allonge les lignes.
+- **Vérifié** : captures du Campement et de la Collection (onglet Écussons) regardées, les neuf lignes de Statistiques tiennent en 1080p ; `tools/validate.sh` smoke, `menu_navigation`, `camp`, `ui_art` 4/4.
