@@ -6,8 +6,9 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Crée des effets atmosphériques par biome :
-/// - Étalonnage du biome où se trouve le joueur (plan 39 A1), en uniformes globaux lus par le sol, les routes, les
-///   décors et les entités (world_grade.gdshaderinc), fondu au changement de biome
+/// - Étalonnage du biome où se trouve le joueur (plan 39 A1) et ombres de nuages qui défilent (A2), en uniformes
+///   globaux lus par le sol, les routes, les décors et les entités (world_grade.gdshaderinc), fondus au changement de
+///   biome
 /// - Particules de brume flottante (marécage, forêt profonde)
 /// - Shader post-process marécage (brume laiteuse, reflets spectraux, réalité fragile)
 /// Se place comme enfant de Main et suit le joueur.
@@ -34,7 +35,9 @@ public partial class BiomeAtmosphere : Node2D
 
 	private static readonly StringName GradeTintParameter = "world_grade_tint";
 	private static readonly StringName GradeToneParameter = "world_grade_tone";
-	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral);
+	private static readonly StringName CloudsParameter = "world_clouds";
+	private static readonly StringName CloudScaleParameter = "world_cloud_scale";
+	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f);
 
 	private AtmosphereConfig _config;
 	private Grade _gradeFrom = NeutralGrade;
@@ -43,6 +46,8 @@ public partial class BiomeAtmosphere : Node2D
 	// 1 : fondu terminé, rien à publier.
 	private float _gradeProgress = 1f;
 	private bool _gradeStarted;
+	// Défilement des nuages en px au sol, cumulé : le bruit n'a pas de période, le décalage ne revient jamais en arrière.
+	private Vector2 _cloudOffset;
 
 	// Viewport interne = 480×270
 	private const float ViewportWidth = 480f;
@@ -53,7 +58,9 @@ public partial class BiomeAtmosphere : Node2D
 		_worldSetup = GetParent<WorldSetup>();
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		if (!AtmosphereConfig.TryLoad(out _config, out string error))
-			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage");
+			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage ni nuages");
+		else
+			RenderingServer.GlobalShaderParameterSet(CloudScaleParameter, 1f / _config.CloudScalePx);
 		CreateFogParticles();
 		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
@@ -86,6 +93,8 @@ public partial class BiomeAtmosphere : Node2D
 
 		if (_gradeProgress < 1f)
 			AdvanceGrade((float)delta);
+		else if (_gradeShown.CloudOpacity > 0f)
+			AdvanceClouds((float)delta);
 
 		float targetMoisture = biomeId == "swamp" ? GetLocalSwampMoisture() : 0f;
 		_swampMoistureCurrent = Mathf.MoveToward(_swampMoistureCurrent, targetMoisture, (float)delta * 0.9f);
@@ -141,7 +150,7 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		if (_config == null)
 			return;
-		_gradeTo = Grade.Of(style);
+		_gradeTo = Grade.Of(style, _config.GradeStrength);
 		_gradeFrom = _gradeShown;
 		_gradeProgress = _gradeStarted ? 0f : 1f;
 		_gradeStarted = true;
@@ -149,8 +158,15 @@ public partial class BiomeAtmosphere : Node2D
 			PublishGrade(_gradeTo);
 	}
 
+	private void AdvanceClouds(float delta)
+	{
+		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * delta);
+		PublishClouds(_gradeShown);
+	}
+
 	private void AdvanceGrade(float delta)
 	{
+		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * delta);
 		_gradeProgress = Mathf.Min(1f, _gradeProgress + delta / _config.GradeFadeSeconds);
 		PublishGrade(Grade.Lerp(_gradeFrom, _gradeTo, Mathf.SmoothStep(0f, 1f, _gradeProgress)));
 	}
@@ -163,17 +179,32 @@ public partial class BiomeAtmosphere : Node2D
 			new Vector4(grade.Multiplier.X, grade.Multiplier.Y, grade.Multiplier.Z, 1f));
 		RenderingServer.GlobalShaderParameterSet(GradeToneParameter,
 			new Vector4(grade.Saturation, grade.Contrast, entityShare, 0f));
+		PublishClouds(grade);
+	}
+
+	/// <summary>Le nuage se déplace vers la droite : le motif lu en monde recule d'autant (décalage soustrait).</summary>
+	private void PublishClouds(Grade grade)
+	{
+		RenderingServer.GlobalShaderParameterSet(CloudsParameter,
+			new Vector4(-_cloudOffset.X, -_cloudOffset.Y, grade.CloudCover, grade.CloudOpacity));
 	}
 
 	/// <summary>Étalonnage tel que le shader le lit : les fondus interpolent ces valeurs, pas les réglages JSON.</summary>
-	private readonly record struct Grade(Vector3 Multiplier, float Saturation, float Contrast)
+	private readonly record struct Grade(Vector3 Multiplier, float Saturation, float Contrast, float CloudCover, float CloudOpacity)
 	{
-		public static Grade Of(BiomeAtmosphereStyle style) => new(style.GradeMultiplier(), style.Saturation, style.Contrast);
+		/// <summary>La force commune dose l'écart au neutre de l'étalonnage, pas les nuages.</summary>
+		public static Grade Of(BiomeAtmosphereStyle style, float strength) => new(
+			Vector3.One.Lerp(style.GradeMultiplier(), strength),
+			Mathf.Lerp(1f, style.Saturation, strength),
+			Mathf.Lerp(1f, style.Contrast, strength),
+			style.CloudCover, style.CloudOpacity);
 
 		public static Grade Lerp(Grade from, Grade to, float t) => new(
 			from.Multiplier.Lerp(to.Multiplier, t),
 			Mathf.Lerp(from.Saturation, to.Saturation, t),
-			Mathf.Lerp(from.Contrast, to.Contrast, t));
+			Mathf.Lerp(from.Contrast, to.Contrast, t),
+			Mathf.Lerp(from.CloudCover, to.CloudCover, t),
+			Mathf.Lerp(from.CloudOpacity, to.CloudOpacity, t));
 	}
 
 	private void CreateFogParticles()

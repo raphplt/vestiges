@@ -155,8 +155,8 @@ void fragment() {
 		}
 	}
 
-	// Étalonné avant l'oubli : le blanc de l'Effacement reste le même dans tous les biomes.
-	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
+	// Étalonné et ombragé avant l'oubli : le blanc de l'Effacement reste le même dans tous les biomes.
+	COLOR.rgb = cloud_shade(world_grade(COLOR.rgb, 1.0), p, 1.0);
 	float memory = vertex_memory;
 	if (memory < 0.8)
 		COLOR.rgb = forget(COLOR.rgb, p, memory);

@@ -47,6 +47,7 @@ const int MAX_EDGE_DEPTH = 4;
 // Modulate et SelfModulate seuls. En fragment, COLOR vaut déjà texture × Modulate : le multiplier par la texture
 // l'élèverait au carré (sprites assombris), l'ignorer perd le flash des coups, les fondus et les teintes d'annonce.
 varying vec4 modulate;
+varying vec2 entity_world;
 
 // Hash noise pour la dissolution
 float hash(vec2 p) {
@@ -68,6 +69,7 @@ float noise(vec2 p) {
 
 void vertex() {
 	modulate = COLOR;
+	entity_world = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 }
 
 void fragment() {
@@ -118,7 +120,7 @@ void fragment() {
 		// Étalonnage du biome, atténué pour rester lisible ; les yeux gardent leur vert acide.
 		// Hors run (part nulle), pas de test des yeux.
 		if (world_grade_tone.z > 0.0 && distance(tex.rgb, EYE_COLOR) > 0.2) {
-			result = world_grade(result, world_grade_tone.z);
+			result = cloud_shade(world_grade(result, world_grade_tone.z), floor(entity_world), world_grade_tone.z);
 		}
 		if (aberration_amount > 0.0) {
 			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);

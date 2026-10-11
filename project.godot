@@ -156,6 +156,14 @@ world_grade_tone={
 "type": "vec4",
 "value": Vector4(1, 1, 0, 0)
 }
+world_clouds={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+world_cloud_scale={
+"type": "float",
+"value": 0.002
+}
 trample_origin={
 "type": "vec4",
 "value": Vector4(1000000, 1000000, 0, 0)

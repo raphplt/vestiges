@@ -489,6 +489,8 @@ public partial class CatalogContractRegression : Node
             ("exposition hors borne", root => root["atmosphere"]!["exposure"] = 0.3, "atmosphere.exposure"),
             ("brume hors borne", root => root["atmosphere"]!["fog_density"] = 1.5, "fog_density"),
             ("champ d'atmosphère inconnu", root => root["atmosphere"]!["fog"] = 0.2, "clé « fog » inconnue"),
+            ("ombre de nuage trop noire", root => root["atmosphere"]!["cloud_opacity"] = 0.9, "cloud_opacity"),
+            ("couverture absente", root => root["atmosphere"]!.AsObject().Remove("cloud_cover"), "cloud_cover"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
@@ -554,6 +556,10 @@ public partial class CatalogContractRegression : Node
             ("fondu nul", root => root["grade"]!["fade_seconds"] = 0, "fade_seconds"),
             ("fondu trop long", root => root["grade"]!["fade_seconds"] = 30, "fade_seconds"),
             ("part hors borne", root => root["grade"]!["entity_share"] = 1.5, "entity_share"),
+            ("force hors borne", root => root["grade"]!["strength"] = 1.5, "strength"),
+            ("nuages trop petits", root => root["clouds"]!["scale_px"] = 10, "scale_px"),
+            ("nuages trop rapides", root => root["clouds"]!["speed_px_s"] = 500, "speed_px_s"),
+            ("nuages absents", root => root.Remove("clouds"), "clouds"),
             ("section absente", root => root.Remove("grade"), "grade"),
             ("champ inconnu", root => root["grade"]!["speed"] = 1, "clé « speed » inconnue"),
         };

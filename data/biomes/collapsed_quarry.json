@@ -18,7 +18,9 @@
         "saturation": 0.9,
         "contrast": 1.08,
         "fog_density": 0.3,
-        "fog_color": [0.45, 0.4, 0.35]
+        "fog_color": [0.45, 0.4, 0.35],
+        "cloud_cover": 0.45,
+        "cloud_opacity": 0.28
     },
     "map_weight": 0.5,
     "poi_pool": {

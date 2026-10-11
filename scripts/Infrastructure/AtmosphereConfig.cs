@@ -16,6 +16,13 @@ public sealed class AtmosphereConfig
     public float GradeFadeSeconds { get; private init; }
     /// <summary>Part de l'étalonnage reçue par le joueur et les créatures.</summary>
     public float EntityGradeShare { get; private init; }
+    /// <summary>Dosage commun des étalonnages de biome (1 : réglages des biomes tels quels).</summary>
+    public float GradeStrength { get; private init; }
+
+    /// <summary>Ombres de nuages (A2) : sens de défilement à l'écran (unitaire), vitesse et taille d'un nuage au sol.</summary>
+    public Vector2 CloudDirection { get; private init; }
+    public float CloudSpeedPxPerSecond { get; private init; }
+    public float CloudScalePx { get; private init; }
 
     public static bool TryLoad(out AtmosphereConfig config, out string error)
     {
@@ -43,16 +50,26 @@ public sealed class AtmosphereConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "racine", "grade");
+            reader.AllowOnly(root, "racine", "grade", "clouds");
             JsonElement grade = reader.Section("grade");
-            reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share");
+            reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share", "strength");
+            JsonElement clouds = reader.Section("clouds");
+            reader.AllowOnly(clouds, "clouds", "direction_deg", "speed_px_s", "scale_px");
             AtmosphereConfig parsed = new()
             {
                 GradeFadeSeconds = reader.Positive(grade, "fade_seconds"),
                 EntityGradeShare = reader.Chance(grade, "entity_share"),
+                GradeStrength = reader.Chance(grade, "strength"),
+                CloudDirection = Vector2.Right.Rotated(Mathf.DegToRad(reader.Number(clouds, "direction_deg"))),
+                CloudSpeedPxPerSecond = reader.NonNegative(clouds, "speed_px_s"),
+                CloudScalePx = reader.Positive(clouds, "scale_px"),
             };
             if (parsed.GradeFadeSeconds > 10f)
                 reader.Fail("grade.fade_seconds : au plus 10 s attendu");
+            if (parsed.CloudSpeedPxPerSecond > 200f)
+                reader.Fail("clouds.speed_px_s : au plus 200 attendu");
+            if (parsed.CloudScalePx is > 0f and (< 64f or > 4096f))
+                reader.Fail("clouds.scale_px : de 64 à 4096 attendu");
             error = reader.Error;
             config = error == null ? parsed : null;
             return error == null;

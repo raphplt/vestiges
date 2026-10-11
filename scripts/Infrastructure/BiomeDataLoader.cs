@@ -242,11 +242,14 @@ public static class BiomeDataLoader
     private static BiomeAtmosphereStyle Atmosphere(JsonConfigReader reader, JsonElement section)
     {
         reader.AllowOnly(section, "atmosphere", "tint", "tint_strength", "exposure", "saturation", "contrast",
-            "fog_density", "fog_color");
+            "fog_density", "fog_color", "cloud_cover", "cloud_opacity");
         BiomeAtmosphereStyle style = new(
             reader.Rgb(section, "tint"), reader.Chance(section, "tint_strength"), reader.Positive(section, "exposure"),
             reader.NonNegative(section, "saturation"), reader.Positive(section, "contrast"),
-            reader.Chance(section, "fog_density"), reader.Rgb(section, "fog_color"));
+            reader.Chance(section, "fog_density"), reader.Rgb(section, "fog_color"),
+            reader.Chance(section, "cloud_cover"), reader.Chance(section, "cloud_opacity"));
+        if (style.CloudOpacity > 0.6f)
+            reader.Fail("atmosphere.cloud_opacity : au plus 0,6 attendu");
         if (style.Exposure is < 0.6f or > 1.4f)
             reader.Fail("atmosphere.exposure : de 0,6 à 1,4 attendu");
         if (style.Saturation > 1.6f)

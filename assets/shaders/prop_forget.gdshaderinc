@@ -5,6 +5,7 @@
 #include "res://assets/shaders/world_grade.gdshaderinc"
 
 varying float prop_memory;
+varying vec2 prop_world;
 
 #ifdef PROP_TRAMPLE
 // Herbes qui plient (plan 10 lot E) : les petits décors traversables s'écartent du joueur. Le haut du sprite se cisaille
@@ -24,6 +25,7 @@ const float TRAMPLE_HEIGHT = 28.0;
 void vertex() {
 	vec2 ground = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xy;
 	prop_memory = memory_at(ground);
+	prop_world = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 #ifdef PROP_TRAMPLE
 	// Le passage le plus proche (joueur ou créature) couche la touffe.
 	vec2 away = ground - trample_origin.xy;
@@ -47,7 +49,7 @@ void vertex() {
 }
 
 void fragment() {
-	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
+	COLOR.rgb = cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

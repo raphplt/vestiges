@@ -18,6 +18,7 @@ uniform float height_offset = 0.0; // Décale le point de pivot (0 = haut, 1 = b
 uniform vec2 pixel_size = vec2(1.0, 1.0); // Définir la taille du sprite ou 1.0/TEXTURE_PIXEL_SIZE
 
 varying float prop_memory;
+varying vec2 prop_world;
 
 // Hash et Noise pour un vent organique
 float get_wind(vec2 vertex, vec2 uv, float timer){
@@ -43,12 +44,13 @@ void vertex() {
 	vec2 snapped_pos = floor((VERTEX + offset) / pixel_size) * pixel_size;
 	
 	VERTEX = snapped_pos;
+	prop_world = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	prop_memory = memory_at((MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xy);
 }
 
 // Canopées dans les zones oubliées : même effritement que les décors (plan 16 O2).
 void fragment() {
-	COLOR.rgb = world_grade(COLOR.rgb, 1.0);
+	COLOR.rgb = cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

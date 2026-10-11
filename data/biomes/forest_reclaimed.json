@@ -17,7 +17,9 @@
         "saturation": 0.9,
         "contrast": 1.04,
         "fog_density": 0.2,
-        "fog_color": [0.3, 0.4, 0.28]
+        "fog_color": [0.3, 0.4, 0.28],
+        "cloud_cover": 0.45,
+        "cloud_opacity": 0.26
     },
     "poi_pool": {
         "searchable_building": 1.0,

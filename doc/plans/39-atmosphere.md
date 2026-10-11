@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1 livré** (§8).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1 et A2 livrés** (§8, §9).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -217,3 +217,32 @@ Détail : [DECISIONS §119 bis](DECISIONS.md).
 
 - L'étalonnage suit le biome du joueur, pas celui de chaque pixel : sur une lisière, le biome voisin prend la couleur du biome où l'on se tient. Un étalonnage par pixel est possible pour le sol (le shader connaît le biome de chaque case), pas pour les décors sans coût.
 - Coffres, Mémoriaux, projectiles et effets ne sont pas étalonnés : ils ressortent un peu plus, ce qui sert la lisibilité.
+
+**Ajusté le même soir** (retour de Raphaël, [DECISIONS §119 ter](DECISIONS.md)) : passage d'un biome à l'autre jugé un peu fort. Tous les étalonnages sont dosés à 65 % par `grade.strength` (écart au neutre ; les réglages de chaque biome restent la référence) et le fondu passe à 2,5 s.
+
+## 9. A2 livré — 11 octobre 2026
+
+**Fait :**
+
+- `cloud_shade` dans `world_grade.gdshaderinc` : bruit de valeur à deux octaves lu en coordonnées monde, repère au sol (un nuage rond fait une ombre deux fois plus large que haute), seuil par la couverture du biome. Quatre paliers tramés au pixel (Bayer 2×2) : la lisière reste du pixel art. L'ombre baisse plus le rouge et le vert que le bleu.
+- Appliqué au sol, aux routes, aux décors, aux herbes et aux canopées, au point du pixel dessiné ; aux entités à la même part que l'étalonnage. Avant l'oubli : le blanc de l'Effacement n'est pas ombré. Aucun coût sans nuages (Hub, marais) : test sur un uniforme.
+- Réglages : sens, vitesse et taille dans `data/world/atmosphere.json` (`clouds` : 20°, 12 px/s, 420 px) ; couverture et noirceur par biome (`cloud_cover`, `cloud_opacity`, au plus 0,6) dans le bloc `atmosphere`, fondues avec l'étalonnage. Marais sans nuages (la brume les couvre).
+- `BiomeAtmosphere` cumule le défilement et publie `world_clouds` à chaque image tant que le biome a des nuages (un `Vector4`, sans allocation).
+
+| Biome | Couverture | Noirceur |
+|---|---|---|
+| Ville | 0,5 | 0,32 |
+| Forêt | 0,45 | 0,26 |
+| Marais | 0 | 0 |
+| Carrière | 0,45 | 0,28 |
+| Champs | 0,55 | 0,34 |
+
+Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
+
+**Vérifié :**
+
+- Captures `--capture-props --hide-collisions`, seed 1002, regardées : dans les champs, deux grandes ombres traversent le blé, les haies et les clôtures sans couture entre sol et décors ; plus discrètes en ville et en forêt. Premier jet trop doux (taille 560 px, bord large, noirceur 0,22–0,3) : ombres à peine visibles, resserrées.
+- `tools/test_catalogs.sh` : nouveaux refus (noirceur, couverture absente, force, taille, vitesse, section `clouds` absente) verts.
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert, aucune erreur de shader au journal de run.
+
+**Non vérifié :** le défilement en mouvement (captures fixes seulement).
