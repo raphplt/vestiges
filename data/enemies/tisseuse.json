@@ -23,7 +23,7 @@
         "shape": "triangle",
         "size": 13,
         "sprite_folder": "tisseuse",
-        "sprite_feet_offset": 19,
+        "sprite_feet_offset": 16,
         "projectile": {
             "sprite": "web",
             "family": "silk"

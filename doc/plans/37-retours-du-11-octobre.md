@@ -220,3 +220,20 @@ Raphaël a demandé d'enchaîner sans attendre la validation de la planche : la 
 - **Gameplay inchangé** : mêmes cellules de route, même emprise à un pixel près ; les décors ne bougent pas.
 - **Résultat** : [avant/après](planches/37-m3-routes.png), même graine.
 - **Vérifié** : captures regardées ; `tools/validate.sh` smoke, `loading`, `cartography`, `small_places`, `movement` 5/5 ; relecture `godot-reviewer` (points mineurs corrigés : type `RoadTiles` dans son fichier, verrou sur les caches, cellules hors grille ignorées, références libérées).
+
+## 16. Lot M4, première vague livrée : Rôdeur, Charognard, Présage, Tisseuse — 11 octobre 2026
+
+- **Constat** sur le sol réel (ville, forêt, marais), à côté du Traqueur :
+  - les trois créatures du pilote du 24 septembre se fondaient dans les sols : bruns sur terre et pavés, silhouettes molles ;
+  - le Rôdeur de profil était un bâton penché : ses bras suivaient la pente du dos ;
+  - le Présage était une gélule lilas ;
+  - la Tisseuse venait encore de l'ancien générateur en voxels, quatre directions, d'un autre style.
+- **Retenu** (pipeline commun, `tools/sprites/creatures/`) :
+  - **Rôdeur** : chair cendrée et membres noircis, tête noircie où trois yeux verts se détachent, bras plus longs qui pendent à la verticale devant le corps voûté, griffes d'os et poing de pierre agrandis ;
+  - **Charognard** : fourrure rouille, échine d'os à nu, pattes sombres d'insecte, corps un peu plus grand ;
+  - **Présage** : voile évasé en cloche, capuche pointue penchée en avant qui montre son vide et sa colonne d'yeux, franges plus longues, couronne de pierres claires écartée ;
+  - **Tisseuse** : nouveau modèle (`tisseuse.py`), petit corps sombre fendu d'un cœur vert qui pulse, huit pattes pâles inégales aux genoux relevés, filière. Huit directions, cadre 48 × 48, `sprite_feet_offset` 16. Elle se cabre à l'attaque et se replie à la mort. `scripts/generate_tisseuse.py` est retiré.
+- **Gameplay inchangé** : mêmes cadres et mêmes pieds pour les trois premiers ; la Tisseuse est plus petite à l'écran que l'ancienne (environ 30 px de large contre 40), son emprise de jeu ne change pas.
+- **Résultat** : [avant/après](planches/37-m4-ennemis.png), aperçus sur trois sols et capture en jeu.
+- **Vérifié** : aperçus regardés sur trois sols, capture du bestiaire en jeu ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs`, `ui_art` 4/4 ; régénération identique octet pour octet.
+- **Suite** : les huit autres créatures (Hurleur, Cracheur, Rampant, Sentinelle, Ombre, Rampant d'ombre, Tréant, Brute) après l'avis de Raphaël sur cette direction.

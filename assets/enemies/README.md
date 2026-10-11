@@ -18,9 +18,10 @@ Généré par `python3 tools/generate_enemy.py <id> [--sheet planche.png]` à pa
 | rodeur | 40×48 | (20, 45) | 21 |
 | charognard | 32×32 | (16, 24) | 8 |
 | presage | 32×48 | (16, 45) | 21 |
+| tisseuse | 48×48 | (24, 40) | 16 |
 
 `sprite_feet_offset` = distance du centre du cadre aux pieds. Présent dans le JSON, il ancre les pieds au sol à l'échelle 1.
 
 ## Anciens sprites
 
-Seule la Tisseuse vient encore d'un ancien générateur Pillow (`scripts/generate_tisseuse.py`, 4 directions, 64×64), à remplacer par un modèle du pipeline ; ce script sera alors retiré. Sans `sprite_feet_offset`, elle est centrée et remontée de 35 % de sa hauteur. Les anciens générateurs du Cracheur, du Rampant, de l'Ombre rampante et du Tréant sont retirés (10 octobre) : ces créatures viennent du pipeline.
+Plus aucun : la Tisseuse, dernière issue d'un ancien générateur Pillow en voxels (quatre directions, 64×64), vient du pipeline depuis le 11 octobre 2026 (plan 37 M4).

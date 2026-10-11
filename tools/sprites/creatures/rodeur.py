@@ -1,7 +1,10 @@
 """
 Le Rôdeur — ce qui pousse là où un humain a été effacé (Bible §6.2).
-Bipède voûté, bras trop longs et inégaux : le gauche traîne des griffes d'os, le droit se termine en poing de pierre.
-Chair terne et plaques minérales, mousse sur la bosse, visage creux où les yeux ne s'alignent pas.
+Bipède voûté, bras trop longs et inégaux qui pendent devant lui : le gauche traîne des griffes d'os, le droit se
+termine en poing de pierre. Chair cendrée de ce qui a été effacé, membres noircis, plaques minérales bleutées, mousse
+sur la bosse, visage creux où trois yeux ne s'alignent pas.
+Reprise du 11 octobre (plan 37 M4) : la chair brune se fondait dans les sols ; les bras suivaient la pente du torse
+et faisaient de la créature un bâton penché de profil.
 """
 from __future__ import annotations
 
@@ -17,17 +20,17 @@ from ..sdf import capsule, ellipsoid, sphere
 
 FRAME_SIZE = (40, 48)
 FRAME_PIVOT = (20.0, 45.0)
-DIMENSIONS = Proportions(ankle=2.5, shin=13.0, thigh=14.0, spine=17.0, neck=0.2, head_radius=4.1, shoulder_half=8.4,
-                         hip_half=3.8, upper_arm=15.0, forearm=15.0)
+DIMENSIONS = Proportions(ankle=2.5, shin=12.0, thigh=13.0, spine=17.0, neck=0.2, head_radius=4.4, shoulder_half=9.0,
+                         hip_half=3.8, upper_arm=16.0, forearm=17.0)
 
 HIDE, HIDE_DARK, STONE, MOSS, BONE, MAW, EYE = range(7)
 MATERIALS = [
-    make_material("hide", "#75664F"),
-    make_material("hide_dark", "#4A3F36"),
-    make_material("stone", "#86857D"),
-    make_material("moss", "#5F8A3E"),
-    make_material("bone", "#C9BFA6", contrast=0.6),
-    make_material("maw", "#2B2230", contrast=0.5),
+    make_material("hide", "#A89C8E"),
+    make_material("hide_dark", "#463A4E"),
+    make_material("stone", "#7E8899"),
+    make_material("moss", "#76A040"),
+    make_material("bone", "#E6DCC4", contrast=0.6),
+    make_material("maw", "#1E1428", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
 ]
 
@@ -57,26 +60,28 @@ def parts(pose: Pose) -> list[Part]:
         Part(lambda p: capsule(p, s.on_torso("chest", (-4.0, 2.0, -6.0)), s.on_torso("chest", (-5.5, 6.5, -8.0)), 1.6, 0.6), STONE),
         Part(lambda p: capsule(p, s.on_torso("chest", (-1.0, -3.0, -7.0)), s.on_torso("chest", (-1.5, 0.5, -10.0)), 1.4, 0.5), STONE),
         Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.5, 0)), s.on_torso("pelvis", (0, -3.5, -0.5)), 5.2, 4.6), HIDE_DARK),
-        # Tête en deux amas, visage creux : les traits n'arrivent pas à former une expression.
-        Part(lambda p: sphere(p, s.point("head"), DIMENSIONS.head_radius), HIDE),
-        Part(lambda p: sphere(p, s.on_head((2.2, 1.6, -0.8)), 2.8), HIDE),
-        Part(lambda p: ellipsoid(p, s.on_head((0.2, -0.8, 3.0)), (2.6, 2.0, 1.4), s.head), MAW),
-        Part(lambda p: sphere(p, s.on_head((1.7, 0.9, 3.4)), 1.35), EYE),
-        Part(lambda p: sphere(p, s.on_head((-1.5, -0.5, 3.5)), 1.1), EYE),
+        # Tête en deux amas, noircie sous la chair cendrée : les yeux s'y détachent, les traits n'arrivent pas à former
+        # une expression.
+        Part(lambda p: sphere(p, s.point("head"), DIMENSIONS.head_radius), HIDE_DARK),
+        Part(lambda p: sphere(p, s.on_head((2.2, 1.8, -0.8)), 2.9), HIDE_DARK),
+        Part(lambda p: ellipsoid(p, s.on_head((0.2, -1.2, 3.2)), (3.0, 2.2, 1.6), s.head), MAW),
+        Part(lambda p: ellipsoid(p, s.on_head((1.9, 1.2, 3.5)), (1.1, 1.7, 1.0), s.head), EYE),
+        Part(lambda p: ellipsoid(p, s.on_head((-1.6, 0.0, 3.7)), (0.9, 1.4, 0.9), s.head), EYE),
+        Part(lambda p: sphere(p, s.on_head((3.6, 2.6, 2.6)), 0.8), EYE),
         # Bras gauche : trop long, trois griffes d'os qui prolongent l'avant-bras.
-        Part(lambda p: capsule(p, s.point("shoulder_l"), elbow_l, 2.6, 2.2), HIDE),
-        Part(lambda p: capsule(p, elbow_l, hand_l, 2.2, 1.7), HIDE_DARK),
+        Part(lambda p: capsule(p, s.point("shoulder_l"), elbow_l, 3.0, 2.4), HIDE),
+        Part(lambda p: capsule(p, elbow_l, hand_l, 2.4, 1.9), HIDE_DARK),
     ]
     spread = np.cross(claw_dir, [0.0, 1.0, 0.0])
     spread /= max(np.linalg.norm(spread), 1e-6)
     for offset in (-1.4, 0.0, 1.5):
-        tip = hand_l + claw_dir * (6.5 - abs(offset)) + spread * offset * 1.6
-        result.append(Part(lambda p, a=hand_l + spread * offset * 0.6, b=tip: capsule(p, a, b, 1.2, 0.5), BONE))
+        tip = hand_l + claw_dir * (8.5 - abs(offset)) + spread * offset * 1.9
+        result.append(Part(lambda p, a=hand_l + spread * offset * 0.6, b=tip: capsule(p, a, b, 1.5, 0.6), BONE))
     result += [
         # Bras droit : plus court et massif, poing de pierre.
-        Part(lambda p: capsule(p, s.point("shoulder_r"), s.point("elbow_r"), 3.0, 2.6), HIDE),
-        Part(lambda p: capsule(p, s.point("elbow_r"), fist_r, 2.6, 2.4), HIDE_DARK),
-        Part(lambda p: sphere(p, fist_r, 3.4), STONE),
+        Part(lambda p: capsule(p, s.point("shoulder_r"), s.point("elbow_r"), 3.4, 2.8), HIDE),
+        Part(lambda p: capsule(p, s.point("elbow_r"), fist_r, 2.8, 2.6), HIDE_DARK),
+        Part(lambda p: sphere(p, fist_r, 4.4), STONE),
     ]
     for side in ("l", "r"):
         result += [
@@ -90,8 +95,11 @@ def parts(pose: Pose) -> list[Part]:
 def _animations() -> dict[str, list[Pose]]:
     gait = Gait(lean=0.62, arm_out=0.32, stride=0.6, arm_swing=0.45, bounce=0.5, heavy=0.8)
     base = humanoid_animations(gait)
-    # Tête enfoncée sous la bosse, portée en avant : le regard vient d'en dessous.
-    base = {name: [replace(pose, head_pitch=pose.head_pitch + 0.5) for pose in poses] for name, poses in base.items()}
+    # Tête enfoncée sous la bosse, portée en avant : le regard vient d'en dessous. Les bras pendent à la verticale,
+    # devant le corps penché, au lieu de suivre la pente du dos.
+    base = {name: [replace(pose, head_pitch=pose.head_pitch + 0.35,
+                           shoulder_l=pose.shoulder_l + gait.lean, shoulder_r=pose.shoulder_r + gait.lean)
+                   for pose in poses] for name, poses in base.items()}
     stance = base["idle"][0]
     # Coup de revers du bras long : armé loin derrière, balayage traversant, poids emporté vers l'avant.
     attack = [

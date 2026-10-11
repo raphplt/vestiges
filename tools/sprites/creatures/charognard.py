@@ -2,6 +2,8 @@
 Le Charognard — comme un chien ou un rat, mais avec trop de pattes et pas assez de tête (Bible §6.2).
 Corps bas et allongé de fourrure et de mousse, six pattes de longueurs inégales, un moignon de tête fendu
 d'une gueule, deux yeux vert-acide qui ne sont pas à la même hauteur. Meute nerveuse : il bondit (plan 07).
+Reprise du 11 octobre (plan 37 M4) : fourrure rouille et échine d'os pâle au lieu d'un brun qui disparaissait sur la
+terre et l'herbe, corps un peu plus grand.
 """
 from __future__ import annotations
 
@@ -16,18 +18,19 @@ from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, sphere
 FRAME_SIZE = (32, 32)
 FRAME_PIVOT = (16.0, 24.0)
 
-FUR, BELLY, MOSS, STONE, LEG, MAW, EYE = range(7)
+FUR, BELLY, MOSS, STONE, LEG, MAW, EYE, BONE = range(8)
 MATERIALS = [
-    make_material("fur", "#5A4330"),
-    make_material("belly", "#3E2F24"),
-    make_material("moss", "#558844"),
-    make_material("stone", "#77716A"),
-    make_material("leg", "#33281F"),
+    make_material("fur", "#88503A"),
+    make_material("belly", "#5C2C2B"),
+    make_material("moss", "#76A040"),
+    make_material("stone", "#8D93A0"),
+    make_material("leg", "#2E2333"),
     make_material("maw", "#2B1B3D", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
+    make_material("bone", "#E2D6BC", contrast=0.6),
 ]
 
-K = 1.25
+K = 1.35
 BODY_HEIGHT = 9.0 * K
 # Hanches (x côté gauche positif, z avant), longueur relative : aucune paire n'est symétrique.
 HIPS = [
@@ -67,8 +70,11 @@ def parts(b: Beast) -> list[Part]:
         Part(lambda p: ellipsoid(p, at((0.6 * K, 1.0 * K, -6.0 * K * b.stretch)), (5.4 * K, 5.0 * K, 5.4 * K), rotation), FUR),
         Part(lambda p: ellipsoid(p, at((1.4 * K, 0.4 * K, 5.0 * K * b.stretch)), (4.6 * K, 4.2 * K, 4.2 * K), rotation), FUR),
         Part(lambda p: ellipsoid(p, at((0.0, -2.2 * K, 0.0)), (3.8 * K, 2.2 * K, 8.5 * K * b.stretch), rotation), BELLY),
-        # Crête de mousse et d'éclats de pierre le long du dos.
-        Part(lambda p: ellipsoid(p, at((0.8 * K, 3.8 * K, -2.0 * K)), (2.8 * K, 1.4 * K, 6.5 * K), rotation), MOSS),
+        # Échine d'os à nu le long du dos, une touffe de mousse et des éclats de pierre.
+        *[Part(lambda p, z=z: ellipsoid(p, at((0.4 * K, 4.0 * K - abs(z) * 0.05 * K, z * K * b.stretch)),
+                                        (1.5 * K, 1.0 * K, 1.2 * K), rotation), BONE)
+          for z in (-7.5, -4.5, -1.5, 1.5, 4.5)],
+        Part(lambda p: ellipsoid(p, at((-1.6 * K, 3.4 * K, -4.0 * K)), (2.0 * K, 1.2 * K, 3.0 * K), rotation), MOSS),
         Part(lambda p: capsule(p, at((-1.2 * K, 4.0 * K, 2.5 * K)), at((-1.8 * K, 6.4 * K, 1.0 * K)), 1.1 * K, 0.4 * K), STONE),
         Part(lambda p: capsule(p, at((1.5 * K, 5.0 * K, -6.5 * K)), at((2.4 * K, 7.4 * K, -8.0 * K)), 1.2 * K, 0.4 * K), STONE),
         # Moignon de tête : une mâchoire qui s'ouvre sous un bourrelet, sans crâne.
