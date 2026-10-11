@@ -16,7 +16,7 @@ Généré par `python3 tools/generate_enemy.py <id> [--sheet planche.png]` à pa
 | Ennemi | Cadre | Pieds (px) | `sprite_feet_offset` |
 |---|---|---|---|
 | rodeur | 40×48 | (20, 45) | 21 |
-| charognard | 32×32 | (16, 24) | 8 |
+| charognard | 40×36 | (20, 27) | 9 |
 | presage | 32×48 | (16, 45) | 21 |
 | tisseuse | 48×48 | (24, 40) | 16 |
 

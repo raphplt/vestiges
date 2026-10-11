@@ -262,3 +262,20 @@ Raphaël : « ouais. essaie de revoir les autres ennemis qui ont besoin d'un upg
 - **Hors champ** : l'Indicible et la Barrière, refaits le 10 octobre (plan 07 B3–B5) sur planches validées, ne sont pas touchés.
 - **Résultat** : [avant/après](planches/37-m4-ennemis-2.png), aperçus et les douze créatures en jeu.
 - **Vérifié** : aperçus regardés sur trois sols, planches de contrôle des quatre animations en huit directions, deux captures du bestiaire en jeu ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs`, `ui_art`.
+
+## 18. Charognard repris une seconde fois — 11 octobre 2026
+
+Raphaël : « le charognard pourrait etre mieux je trouve. »
+
+- **Constat** : la couleur rouille le détachait du sol, mais la forme restait une patate sur des piquets : pas de tête lisible, échine et queue invisibles, pattes en poteaux.
+- **Retenu** (`charognard.py`, réécrit) :
+  - silhouette de hyène galeuse : garrot haut, taille creusée, croupe basse ;
+  - côtes pâles sur les flancs, échine d'os en crête, plaques de peau nue ;
+  - pas de crâne : le cou finit en museau fendu, gueule béante, mâchoire pendante, crocs d'os assez épais pour tenir un pixel ;
+  - yeux vert-acide de travers sur le cou ;
+  - six pattes plus grêles aux genoux relevés, griffes pâles ;
+  - longue queue nue couchée derrière lui ;
+  - à l'arrêt, la gueule claque et la tête se baisse.
+- **Taille** : un peu plus grand. Cadre 40 × 36, pivot (20, 27), `sprite_feet_offset` 9.
+- **Résultat** : [avant/après et une meute en jeu](planches/37-m4-charognard.png).
+- **Vérifié** : aperçus sur trois sols, planche de contrôle des quatre animations, capture en jeu d'une meute de cinq ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs` 3/3.

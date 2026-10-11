@@ -36,6 +36,6 @@
         "shape": "square",
         "size": 20,
         "sprite_folder": "charognard",
-        "sprite_feet_offset": 8
+        "sprite_feet_offset": 9
     }
 }
