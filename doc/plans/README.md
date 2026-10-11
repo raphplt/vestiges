@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 octobre — l'inventaire, lots I1 à I7 (plan 35 §11–§17) et les Poches (plan 36 M4) :** 4 Écussons qui montent au level-up et par l'usage (un fil sous chaque Écusson ; un quart des niveaux par l'usage, mesuré au bot), sac d'objets en exemplaires (10 places, 25 avec les Poches), objets lâchés par les coffres, élites, Souverains et vendus aux Ateliers, écran d'échange quand le sac est plein, surplus d'arme au niveau 50, cinq nouveaux objets (Ticket de consigne, Plan de métro, Flacon de pharmacie, Trèfle plastifié, Montre arrêtée). Points à juger dans `A-VERIFIER.md`.
+
 **11 octobre — l'inventaire, lot I0 (plan 35 §9) :** les 17 Écussons nommés (du batteur, du coureur, du pompier…) avec leur déclencheur de montée par l'usage, maquettes de la barre du bas (4 armes, 4 Écussons, sac compact) et de l'écran d'échange, migration des données et des 18 quêtes d'objets. Rien n'est codé : huit questions au plan 35 §9.5 avant I1.
 
 **11 octobre — le Campement (plan 36, M0–M3) :** progression permanente au Hub, payée en Vestiges. 13 améliorations en trois rayons (emplacements d'armes de 2 à 4, relances, bannissements, neuf stats, Essence de départ), remboursement libre, cadenas sur les cases d'armes fermées. Prix du §110 gardés : 41 runs moyennes pour tout acheter. Profil neuf à deux armes : 78 % des éliminations d'un départ à quatre armes à 10 min. Questions au plan 36 §13 ; points à vérifier dans `A-VERIFIER.md`.

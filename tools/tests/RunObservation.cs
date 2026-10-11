@@ -629,6 +629,8 @@ public partial class RunObservation : Node
             Input.ActionPress("show_map");
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
+        // Fils d'usage des Écussons (plan 35 I7) : tous les déclencheurs comptés dès le départ, portés ou non.
+        _player.MeasureBadgeUsage();
         // Objets entrés dans le sac, toutes sources (plan 35 I3).
         int itemsReceived = 0;
         EventBus.LootReceivedEventHandler onLoot = (type, _, amount) => itemsReceived += type == "object" ? amount : 0;
@@ -843,6 +845,7 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture,
             $" items_received={itemsReceived} bag={_player.BagCount}/{_player.BagCapacity} items_on_ground={GetTree().GetNodesInGroup("item_pickups").Count} elite_kills={eliteKills} sovereign_kills={sovereignKills}");
         summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
+        AppendBadgeUsage(summary);
         AppendBreakdown(summary, "hit_by", damageBySource);
         AppendBreakdown(summary, "hit_gated", gatedBySource);
         AppendBreakdown(summary, "near_by", exposureById);

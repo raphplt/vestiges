@@ -17,8 +17,9 @@ public static class ObjectDataValidator
     private static readonly string[] ObjectKeys =
     {
         "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
-        "survival", "offer_weight", "params", "enabled", "copy_levels",
+        "survival", "offer_weight", "params", "enabled", "copy_levels", "usage",
     };
+    private static readonly string[] UsageKeys = { "trigger", "threshold" };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
     private static readonly string[] MilestoneKeys = { "level", "effect", "text", "params" };
     private static readonly Regex ParameterToken = new(@"\{(\w+)%?\}");
@@ -31,6 +32,8 @@ public static class ObjectDataValidator
         /// <summary>Statistiques que le joueur applique lui-même : seules admises pour une bénédiction.</summary>
         public readonly HashSet<string> PlayerStats = new();
         public readonly Dictionary<string, string[]> Milestones = new();
+        /// <summary>Ce que le joueur fait et qui fait monter un Écusson (plan 35 I7).</summary>
+        public readonly HashSet<string> UsageTriggers = new();
     }
 
     public static bool TryParseContract(string json, out Contract contract, out string error)
@@ -49,6 +52,8 @@ public static class ObjectDataValidator
             }
             foreach (JsonElement stat in root.GetProperty("inactive_stats").EnumerateArray())
                 contract.InactiveStats.Add(stat.GetString());
+            foreach (JsonElement trigger in root.GetProperty("usage_triggers").EnumerateArray())
+                contract.UsageTriggers.Add(trigger.GetString());
             foreach (JsonElement stat in root.GetProperty("player_stats").EnumerateArray())
             {
                 // Une statistique du joueur doit aussi dire ses modificateurs : les bénédictions les y lisent.
@@ -150,6 +155,19 @@ public static class ObjectDataValidator
         }
         if (item.TryGetProperty("offer_weight", out _))
             reader.Positive(item, "offer_weight");
+        // Fil d'usage (plan 35 I7) : seulement pour un Écusson, un déclencheur du contrat et un seuil positif.
+        if (reader.Error == null && item.TryGetProperty("usage", out JsonElement usage))
+        {
+            if (Text(item, "kind") != "badge")
+                return $"{where}, usage : réservé aux Écussons";
+            if (usage.ValueKind != JsonValueKind.Object)
+                return $"{where}, usage : objet attendu";
+            reader.AllowOnly(usage, $"{where}, usage", UsageKeys);
+            string trigger = Text(usage, "trigger");
+            if (reader.Error == null && !contract.UsageTriggers.Contains(trigger ?? ""))
+                return $"{where}, usage : déclencheur « {trigger} » absent du contrat";
+            reader.Positive(usage, "threshold");
+        }
         if (reader.Error != null)
             return $"{where}, {reader.Error}";
 

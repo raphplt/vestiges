@@ -8,7 +8,8 @@ namespace Vestiges.UI;
 /// <summary>
 /// Rangée sous les armes (plan 35) : les Écussons à gauche, cadre doré et niveau, puis le sac, une petite case par place
 /// et un exemplaire par case (les doublons côte à côte). Rafraîchie sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>,
-/// jamais par image ; elle se recentre quand le sac change de taille (Poches du Campement).
+/// jamais par image ; elle se recentre quand le sac change de taille (Poches du Campement). Sous chaque Écusson, un fil se
+/// remplit avec l'usage (plan 35 I7) ; un niveau gagné ainsi fait briller l'Écusson une fois.
 /// </summary>
 public partial class HudInventoryBar : HBoxContainer
 {
@@ -18,12 +19,21 @@ public partial class HudInventoryBar : HBoxContainer
     private static readonly Color LevelColor = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     // Les Écussons se distinguent des objets par un cadre doré, en attendant leurs icônes brodées (plan 25).
     private static readonly Color BadgeFrameTint = new(1.4f, 1.1f, 0.5f);
+    private static readonly Color ThreadBackColor = new(0.04f, 0.06f, 0.09f, 0.8f);
+    private static readonly Color ThreadColor = new(0.92f, 0.78f, 0.42f);
+    private static readonly Color ShineTint = new(2.2f, 1.9f, 1.2f);
+    private const float ThreadHeight = 2f;
+    private const float ShineSeconds = 0.5f;
 
     private sealed class Slot
     {
         public NinePatchRect Frame;
         public TextureRect Icon;
         public Label Level;
+        public ColorRect Thread;
+        public string BadgeId;
+        public float Width;
+        public Tween Shine;
     }
 
     private readonly List<Slot> _badges = new();
@@ -43,7 +53,7 @@ public partial class HudInventoryBar : HBoxContainer
         _emptyTexture = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
         _filledTexture = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
         for (int i = 0; i < InventoryConfig.BadgeSlots; i++)
-            _badges.Add(AddSlot());
+            _badges.Add(AddSlot(SlotSize, true));
         AddChild(new Control { CustomMinimumSize = new Vector2(ShelfGap - 3f, 0f), MouseFilter = MouseFilterEnum.Ignore });
         for (int i = 0; i < InventoryConfig.BagSize; i++)
             _items.Add(AddSlot(BagSlotSize));
@@ -52,20 +62,24 @@ public partial class HudInventoryBar : HBoxContainer
         _groupCache = GetNodeOrNull<GroupCache>("/root/GroupCache");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.PassiveSouvenirSlotsChanged += Refresh;
+        _eventBus.BadgeThreadChanged += OnBadgeThreadChanged;
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        if (_eventBus != null)
-            _eventBus.PassiveSouvenirSlotsChanged -= Refresh;
+        if (_eventBus == null)
+            return;
+        _eventBus.PassiveSouvenirSlotsChanged -= Refresh;
+        _eventBus.BadgeThreadChanged -= OnBadgeThreadChanged;
     }
 
-    private Slot AddSlot(float size = SlotSize)
+    private Slot AddSlot(float size = SlotSize, bool threaded = false)
     {
         Control root = new() { CustomMinimumSize = new Vector2(size, size), MouseFilter = MouseFilterEnum.Ignore };
         Slot slot = new()
         {
+            Width = size,
             Frame = new NinePatchRect
             {
                 Texture = _emptyTexture,
@@ -100,6 +114,25 @@ public partial class HudInventoryBar : HBoxContainer
         slot.Level.Position = new Vector2(size - 12, size - 11);
         slot.Level.Size = new Vector2(12, 10);
         root.AddChild(slot.Level);
+        if (threaded)
+        {
+            // Le fil d'usage, juste sous l'Écusson : fond sombre, remplissage doré de gauche à droite.
+            root.AddChild(new ColorRect
+            {
+                Color = ThreadBackColor,
+                Position = new Vector2(1f, size + 1f),
+                Size = new Vector2(size - 2f, ThreadHeight),
+                MouseFilter = MouseFilterEnum.Ignore,
+            });
+            slot.Thread = new ColorRect
+            {
+                Color = ThreadColor,
+                Position = new Vector2(1f, size + 1f),
+                Size = new Vector2(0f, ThreadHeight),
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            root.AddChild(slot.Thread);
+        }
         AddChild(root);
         return slot;
     }
@@ -109,7 +142,12 @@ public partial class HudInventoryBar : HBoxContainer
         if (_groupCache?.GetPlayer() is not Player player)
             return;
         for (int i = 0; i < _badges.Count; i++)
-            Fill(_badges[i], i < player.BadgeSlots.Count ? player.BadgeSlots[i] : null, BadgeFrameTint, true);
+        {
+            ActivePassiveSouvenir badge = i < player.BadgeSlots.Count ? player.BadgeSlots[i] : null;
+            Fill(_badges[i], badge, BadgeFrameTint, true);
+            _badges[i].BadgeId = badge?.Id;
+            SetThread(_badges[i], badge != null ? player.BadgeUsage?.ProgressOf(badge.Id) ?? 0f : 0f);
+        }
         if (_items.Count != player.BagCapacity)
         {
             while (_items.Count < player.BagCapacity)
@@ -146,6 +184,34 @@ public partial class HudInventoryBar : HBoxContainer
         slot.Icon.Texture = icon;
         slot.Icon.Visible = icon != null;
         slot.Level.Text = showLevel && owned.Level > 1 ? $"{owned.Level}" : "";
+    }
+
+    private void OnBadgeThreadChanged(string badgeId, float progress, bool leveled)
+    {
+        foreach (Slot slot in _badges)
+        {
+            if (slot.BadgeId != badgeId)
+                continue;
+            SetThread(slot, progress);
+            if (leveled)
+                Shine(slot);
+            return;
+        }
+    }
+
+    private static void SetThread(Slot slot, float progress)
+    {
+        float width = slot.Width - 2f;
+        slot.Thread.Size = new Vector2(width * Mathf.Clamp(progress, 0f, 1f), ThreadHeight);
+    }
+
+    /// <summary>Un niveau gagné par l'usage : l'Écusson brille une fois, puis reprend son cadre doré.</summary>
+    private void Shine(Slot slot)
+    {
+        slot.Shine?.Kill();
+        slot.Frame.Modulate = ShineTint;
+        slot.Shine = CreateTween();
+        slot.Shine.TweenProperty(slot.Frame, "modulate", BadgeFrameTint, ShineSeconds);
     }
 
     /// <summary>Icône de la dernière case du sac qui porte cet objet, ou null : là où atterrit un objet ramassé.</summary>

@@ -17,7 +17,7 @@ namespace Vestiges.Tests;
 /// objets en exemplaires (niveau d'effet, palier au doublon), oubli qui retire effet et palier, sac plein, butin « objet ».
 /// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
 /// Lot I4 : surplus d'une arme au bout de sa progression. Lot I6 : Ticket de consigne, Plan de métro, Flacon de pharmacie,
-/// Trèfle plastifié, Montre arrêtée.
+/// Trèfle plastifié, Montre arrêtée. Lot I7 : fils d'usage des Écussons.
 /// </summary>
 public partial class InventoryRegression : Node
 {
@@ -46,6 +46,7 @@ public partial class InventoryRegression : Node
             CheckMetroMap();
             CheckPoisonAndWatch();
             CheckClover();
+            CheckBadgeUsage();
             GD.Print($"[InventoryRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
                 GD.Print("[InventoryRegression] PASS");
@@ -73,6 +74,11 @@ public partial class InventoryRegression : Node
             ("exemplaires qui ne montent pas", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 10]"),
                 "item_copy_levels[1] : 10 pas plus haut"),
             ("exemplaires absents", Config("\"bag_size\": 10", "\"item_copy_levels\": []"), "item_copy_levels"),
+            ("usage absent", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15], \"elite_item_chance\": 0.25, \"sovereign_items\": 1"),
+                "usage"),
+            ("coup large d'une seule créature", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15], \"elite_item_chance\": 0.25, "
+                + "\"sovereign_items\": 1, \"usage\": {\"wide_hit_targets\": 1, \"far_kill_distance\": 250, \"contact_radius\": 200}"),
+                "wide_hit_targets"),
         };
         foreach ((string label, string json, string expected) in cases)
         {
@@ -411,6 +417,76 @@ public partial class InventoryRegression : Node
         Check(plain == 3 && fragments.PendingChoices.Count == 4 && !_player.CanTakeItem("trefle_plastifie"),
             $"Trèfle plastifié : une carte de plus au level-up ({plain} → {fragments.PendingChoices.Count}), un seul exemplaire");
         fragments.QueueFree();
+    }
+
+    private void CheckBadgeUsage()
+    {
+        string contractText = Godot.FileAccess.GetFileAsString(ObjectDataValidator.ContractPath);
+        ObjectDataValidator.TryParseContract(contractText, out ObjectDataValidator.Contract contract, out _);
+        bool allKnown = contract.UsageTriggers.Count == 16;
+        foreach (string trigger in contract.UsageTriggers)
+            allKnown &= BadgeUsage.IsKnownTrigger(trigger);
+        bool everyBadge = true;
+        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            everyBadge &= data.IsBadge == (data.UsageThreshold > 0f) && (!data.IsBadge || BadgeUsage.IsKnownTrigger(data.UsageTrigger));
+        Check(allKnown && everyBadge, "chaque Écusson a son fil d'usage, et chaque déclencheur du contrat son lecteur");
+
+        string catalog = Godot.FileAccess.GetFileAsString("res://data/progression/passive_souvenirs.json");
+        string onItem = catalog.Replace("\"id\": \"glacon\",", "\"id\": \"glacon\", \"usage\": {\"trigger\": \"crits\", \"threshold\": 5},");
+        string unknown = catalog.Replace("\"trigger\": \"crits\"", "\"trigger\": \"jongler\"");
+        string onItemError = ObjectDataValidator.Validate(onItem, contract, _ => true);
+        string unknownError = ObjectDataValidator.Validate(unknown, contract, _ => true);
+        Check(onItemError != null && onItemError.Contains("réservé aux Écussons", StringComparison.Ordinal)
+            && unknownError != null && unknownError.Contains("absent du contrat", StringComparison.Ordinal),
+            $"fil refusé sur un objet ({onItemError}) et pour un déclencheur inconnu ({unknownError})");
+
+        Setup();
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int shines = 0;
+        float lastProgress = -1f;
+        void OnThread(string id, float progress, bool leveled)
+        {
+            lastProgress = progress;
+            shines += leveled ? 1 : 0;
+        }
+        bus.BadgeThreadChanged += OnThread;
+        _player.AddOrUpgradePassive("photo_de_classe");
+        int levels = Mathf.RoundToInt(PassiveSouvenirDataLoader.Get("photo_de_classe").UsageThreshold);
+        for (int level = 2; level < 2 + levels; level++)
+            bus.EmitSignal(EventBus.SignalName.LevelUp, level);
+        Check(_player.GetPassiveLevel("photo_de_classe") == 2 && _player.BadgeUsage.UsageLevels == 1 && shines == 1
+            && Mathf.IsZeroApprox(lastProgress), $"Écusson du bon élève : {levels} niveaux de la run remplissent son fil, un niveau, un éclat");
+        float scale = InventoryConfig.UsageLevelScale;
+        bus.EmitSignal(EventBus.SignalName.LevelUp, 99);
+        Check(Mathf.IsEqualApprox(_player.BadgeUsage.ProgressOf("photo_de_classe"), 1f / (levels * (1f + scale))),
+            "au niveau 2, le fil s'allonge d'un dixième");
+        _player.AddOrUpgradePassive("photo_de_classe", 9);
+        Check(Mathf.IsEqualApprox(_player.BadgeUsage.ProgressOf("photo_de_classe"), 1f / (levels * (1f + scale * 10f))),
+            $"une carte qui monte l'Écusson allonge son fil : au niveau 11, {1f + scale * 10f:0.#} fois le seuil");
+
+        _player.AddOrUpgradePassive("resonance");
+        _player.AddOrUpgradePassive("oeil_critique");
+        ulong owner = _player.GetInstanceId();
+        Vestiges.Combat.AttackContext attack = new(owner, null, 77, Vestiges.Combat.DamageKind.DirectWeapon);
+        // Un cône frappe la même créature à chaque image sous un même lancer : un seul coup compte.
+        for (int frame = 0; frame < 10; frame++)
+            bus.PublishEnemyDamage(new Vestiges.Combat.DamageResult(new Vestiges.Combat.EnemyLife(901, 1), attack, 10f, 5f, 0f, 5f, false, true)
+                { Critical = true });
+        float coneWide = _player.BadgeUsage.ProgressOf("resonance");
+        for (ulong target = 902; target < 904; target++)
+            bus.PublishEnemyDamage(new Vestiges.Combat.DamageResult(new Vestiges.Combat.EnemyLife(target, 1), attack, 10f, 5f, 0f, 5f, false, true));
+        float wide = _player.BadgeUsage.ProgressOf("resonance") * PassiveSouvenirDataLoader.Get("resonance").UsageThreshold;
+        float crits = _player.BadgeUsage.ProgressOf("oeil_critique") * PassiveSouvenirDataLoader.Get("oeil_critique").UsageThreshold;
+        Check(coneWide == 0f && Mathf.IsEqualApprox(wide, 1f) && Mathf.IsEqualApprox(crits, 1f),
+            $"dix tics sur une créature comptent un coup ; trois créatures du même lancer, un coup large ({wide:0.##}) ; un critique ({crits:0.##})");
+
+        _player.AddOrUpgradePassive("jeton_de_fete");
+        int before = _player.GetPassiveLevel("jeton_de_fete");
+        int chests = Mathf.RoundToInt(PassiveSouvenirDataLoader.Get("jeton_de_fete").UsageThreshold);
+        for (int chest = 0; chest < chests; chest++)
+            bus.EmitSignal(EventBus.SignalName.ChestOpened, "test", "common", Vector2.Zero);
+        Check(_player.GetPassiveLevel("jeton_de_fete") == before + 1, $"Écusson du forain : {chests} coffres, un niveau");
+        bus.BadgeThreadChanged -= OnThread;
     }
 
     private PlayerDefense Defense => (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);

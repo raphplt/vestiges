@@ -20,6 +20,11 @@ public class PassiveSouvenirData
 	/// <summary>Pour un objet, son niveau d'effet selon ses exemplaires ([0] pour un) ; vide pour un Écusson.</summary>
 	public int[] CopyLevels = System.Array.Empty<int>();
 
+	/// <summary>Écusson : ce que fait le joueur et qui remplit son fil (plan 35 I7) ; vide pour un objet.</summary>
+	public string UsageTrigger = "";
+	/// <summary>Quantité de <see cref="UsageTrigger"/> qui remplit le fil et donne un niveau.</summary>
+	public float UsageThreshold;
+
 	/// <summary>Exemplaires qu'un objet peut cumuler.</summary>
 	public int MaxCopies => CopyLevels.Length;
 
@@ -193,6 +198,12 @@ public static class PassiveSouvenirDataLoader
 				});
 			}
 			data.Milestones.Sort((a, b) => a.Level.CompareTo(b.Level));
+		}
+		if (dict.ContainsKey("usage"))
+		{
+			Godot.Collections.Dictionary usage = dict["usage"].AsGodotDictionary();
+			data.UsageTrigger = usage["trigger"].AsString();
+			data.UsageThreshold = (float)usage["threshold"].AsDouble();
 		}
 		if (!data.IsBadge)
 			data.CopyLevels = dict.ContainsKey("copy_levels")

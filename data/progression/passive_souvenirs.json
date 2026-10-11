@@ -14,6 +14,10 @@
             0.3
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "weapon_hits",
+            "threshold": 5000
+        },
         "effects": [
             {
                 "stat": "attack_speed",
@@ -47,6 +51,10 @@
             1.0
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "wide_hits",
+            "threshold": 300
+        },
         "effects": [
             {
                 "stat": "aoe_radius",
@@ -80,6 +88,10 @@
             0.9
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "far_kills",
+            "threshold": 400
+        },
         "effects": [
             {
                 "stat": "attack_range",
@@ -113,6 +125,10 @@
             0.3
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "crits",
+            "threshold": 750
+        },
         "effects": [
             {
                 "stat": "crit_chance",
@@ -150,6 +166,10 @@
             0.4
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "contact_seconds",
+            "threshold": 150
+        },
         "survival": true,
         "effects": [
             {
@@ -183,6 +203,10 @@
             0.5
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "hp_healed",
+            "threshold": 2000
+        },
         "survival": true,
         "effects": [
             {
@@ -217,6 +241,10 @@
             0.4
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "hits_taken",
+            "threshold": 250
+        },
         "survival": true,
         "effects": [
             {
@@ -251,6 +279,10 @@
             0.9
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "shield_absorbed",
+            "threshold": 20
+        },
         "survival": true,
         "effects": [
             {
@@ -285,6 +317,10 @@
             1.0
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "meters",
+            "threshold": 1500
+        },
         "effects": [
             {
                 "stat": "speed",
@@ -322,6 +358,10 @@
             0.9
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "xp_pickups",
+            "threshold": 1200
+        },
         "effects": [
             {
                 "stat": "xp_magnet_radius",
@@ -354,6 +394,10 @@
             0.6
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "levels",
+            "threshold": 6
+        },
         "effects": [
             {
                 "stat": "xp_gain",
@@ -386,6 +430,10 @@
             0.2
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "chests",
+            "threshold": 3
+        },
         "effects": [
             {
                 "stat": "luck",
@@ -418,6 +466,10 @@
             0.9
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "projectile_hits",
+            "threshold": 750
+        },
         "offer_weight": 2,
         "effects": [
             {
@@ -448,6 +500,10 @@
             0.3
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "lifesteal",
+            "threshold": 450
+        },
         "survival": true,
         "effects": [
             {
@@ -482,6 +538,10 @@
             0.55
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "statuses",
+            "threshold": 900
+        },
         "effects": [
             {
                 "stat": "status_duration",
@@ -1079,6 +1139,10 @@
             1.0
         ],
         "max_level": 99,
+        "usage": {
+            "trigger": "pierces",
+            "threshold": 300
+        },
         "effects": [
             {
                 "stat": "projectile_pierce",

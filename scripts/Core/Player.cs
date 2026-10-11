@@ -1774,7 +1774,7 @@ public partial class Player : CharacterBody2D
             return;
         float capMultiplier = _objectMilestones?.LifestealCapMultiplier(_currentHp / EffectiveMaxHp) ?? 1f;
         float cap = EffectiveMaxHp * _defense.Config.LifestealMaxHpPerSecond * capMultiplier * window;
-        HealingResult healed = Heal(Mathf.Min(_lifestealPending, cap));
+        HealingResult healed = Heal(Mathf.Min(_lifestealPending, cap), HealingKind.Lifesteal);
         _lifestealPending = 0f;
         // À vie pleine, rien n'est rendu : l'icône de la Paille ne s'élève pas pour rien (plan 27 V3c).
         if (healed.HpRestored > 0f)

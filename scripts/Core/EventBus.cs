@@ -69,6 +69,8 @@ public partial class EventBus : Node
     // --- Passive Souvenirs (level-up) ---
     [Signal] public delegate void PassiveSouvenirAddedEventHandler(string passiveId, int slotIndex);
     [Signal] public delegate void PassiveSouvenirUpgradedEventHandler(string passiveId, int newLevel);
+    /// <summary>Fil d'usage d'un Écusson (plan 35 I7) : remplissage de 0 à 1, par seizièmes ; leveled au niveau gagné.</summary>
+    [Signal] public delegate void BadgeThreadChangedEventHandler(string badgeId, float progress, bool leveled);
     [Signal] public delegate void PassiveSouvenirSlotsChangedEventHandler();
 
     // --- Fragments de Mémoire (level-up choices) ---

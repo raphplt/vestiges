@@ -179,6 +179,8 @@ Un Écusson est cousu sur la veste : une figure ou un métier, une stat, toujour
 
 Stats, réglages et paliers restent ceux de l'objet d'aujourd'hui. Seuls le nom, l'icône et la montée changent. Le nom de l'objet actuel peut rester comme sous-titre (« Écusson du batteur — le ressort de sommier »), pour ne pas perdre les quêtes ni la Collection.
 
+Seuils réglés au bot en I7 : voir le §17 (ceux ci-dessous étaient 10 à 100 fois trop bas).
+
 | Écusson | Objet d'aujourd'hui (`id`) | Stat | Monte par l'usage quand… | Fil (proposé, à mesurer) |
 |---|---|---|---|---|
 | **du batteur** | Ressort de sommier (`memoire_vive`) | Cadence | les armes frappent | 400 attaques |
@@ -518,3 +520,55 @@ Cinq objets à effet unique, chacun avec sa règle et son icône (modèles SDF d
   - la longueur du saut survit à un changement de module de mobilité ;
   - le poison attend qu'une créature terrée ressorte au lieu de s'évaporer.
 - Le résultat de dégâts publié reste « fatal » quand le Ticket relève le joueur, comme le prévoit `PlayerDamageResult` : aucune récupération de PV ne s'ajoute au relevé.
+
+## 17. Lot I7 livré : les Écussons montent aussi par l'usage — 11 octobre 2026
+
+Chaque Écusson porté a un **fil** : il se remplit quand le joueur fait ce que sa figure représente, et un fil plein donne un niveau, comme une carte commune.
+
+**Règle.**
+- Déclencheur et seuil sur chaque fiche (`usage` dans `passive_souvenirs.json`), déclencheurs listés au contrat (`usage_triggers`), contrôlés au chargement : un fil sur un objet ou un déclencheur inconnu refuse le catalogue.
+- **Le fil s'allonge avec le niveau de l'Écusson** : seuil × (1 + 0,1 × (niveau − 1)), réglage `level_scale` d'`inventory.json`. Sans cela, un Écusson qui renforce ce qui remplit son fil s'emballe : à seuil fixe, l'arpenteur (portée) a pris 52 niveaux par l'usage sur une graine, l'horloger et le batteur avaient la même boucle. Une carte qui monte l'Écusson allonge aussi son fil.
+- `BadgeUsage`, enfant du joueur, écoute l'EventBus ; une horloge d'un quart de seconde ne tourne que pour le contact et la distance. Un cône qui frappe sa cible à chaque image sous un même lancer ne compte qu'un coup par créature.
+- HUD : un fil doré sous chaque Écusson de la barre du bas ; un niveau gagné ainsi fait briller l'Écusson une fois. Rien d'autre en run.
+
+**Seuils réglés au bot** (au niveau 1 de l'Écusson) :
+
+| Écusson | Monte quand… | Seuil |
+|---|---|---:|
+| du batteur | une arme touche (une fois par créature et par attaque) | 5 000 coups |
+| du semeur | une attaque touche 3 créatures | 300 coups larges |
+| de l'arpenteur | une créature meurt de ce qu'a fait une arme à plus de 250 px | 400 |
+| de l'horloger | un coup est critique | 750 |
+| du veilleur | une créature est à moins de 200 px | 150 s |
+| de la couturière | le joueur regagne des PV, toutes sources | 2 000 PV |
+| du rugbyman | le joueur encaisse un coup | 250 coups |
+| du pompier | le bouclier absorbe des dégâts | 20 |
+| du coureur | le joueur se déplace | 1 500 m |
+| du glaneur | de l'XP est ramassée | 1 200 fois |
+| du bon élève | le joueur gagne un niveau | 6 niveaux |
+| du forain | un coffre s'ouvre | 3 coffres |
+| du jongleur | une arme à distance touche | 750 |
+| du barbier | le vol de vie rend des PV (nouveau `HealingKind.Lifesteal`) | 450 PV |
+| de l'apothicaire | un statut posé par une arme s'achève | 900 |
+| de l'archer | une attaque à distance touche une créature de plus (traversée, rebond, salve) | 300 |
+
+Les seuils du §9.1 étaient 10 à 100 fois trop bas : le bot fait 50 à 90 niveaux, 40 000 à 60 000 coups et 13 km en 30 min.
+
+**Mesure** (Vagabond en profil neuf, bot mortel qui ratisse les lieux, 4 graines, 30 min) : niveaux d'Écussons gagnés depuis le niveau 1, dont ceux du fil.
+
+| Graine | Niveaux d'Écussons | Dont l'usage | Part |
+|---|---:|---:|---:|
+| 1002 | 53 | 13 | 25 % |
+| 123 | 68 | 18 | 26 % |
+| 42 | 55 | 18 | 33 % |
+| 7 | 71 | 15 | 21 % |
+
+Un quart des niveaux vient de l'usage, comme visé (§9.1). Le détail varie avec le build : l'apothicaire ne monte que si une arme pose des statuts, l'archer et le jongleur qu'avec une arme à distance.
+
+**Vérifications.**
+- Build sans avertissement ; `inventory` : contrat et fiches cohérents, refus d'un fil sur un objet et d'un déclencheur inconnu, bon élève (un niveau, un éclat), fil qui s'allonge au niveau 2 et après une carte, coup large sur trois créatures, dix tics de cône comptés une fois, critique, forain.
+- `smoke`, `objects`, `catalogs`, `quests`, `perk_effects`, `perk_acquisition`, `choice_screen`, `ui_art`, `weapons`, `saves`, `camp` verts.
+- Capture du HUD (`--capture-pause`) regardée : les quatre fils sous les Écussons, encore vides après 20 s de combat (moins d'un seizième). Le remplissage et l'éclat sont vérifiés par la suite `inventory`, pas à l'image : à juger en jeu.
+- Mesure : nouveau rapport `badge_levels`, `badge_usage_levels`, `badges` et `usage_totals` (tous les déclencheurs comptés pendant la mesure, portés ou non) dans `RunObservation`.
+- Relecture `godot-reviewer`, corrigés : bouclier recompté dans un appel imbriqué (l'Écusson du pompier monte et rend du bouclier), tics de cône comptés comme des coups, lancers suivis un seul à la fois, statuts et éliminations dus aux objets comptés, horloge qui tournait pour rien, éclat du HUD qui pouvait se doubler.
+- Reste approximatif, assumé : le glaneur compte aussi l'XP d'un lieu ou d'un fragment de lore (quelques fois par run, contre des milliers d'orbes).

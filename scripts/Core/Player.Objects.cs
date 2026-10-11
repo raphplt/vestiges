@@ -31,6 +31,7 @@ public partial class Player
     private ObjectStances _objectStances;
     private ObjectProcs _objectProcs;
     private ObjectUtilities _objectUtilities;
+    private BadgeUsage _badgeUsage;
     private float _objectPerilFraction;
 
     /// <summary>Objets à effet portés, un par fiche ; leurs exemplaires sont dans <see cref="ActivePassiveSouvenir.Copies"/>.</summary>
@@ -74,6 +75,9 @@ public partial class Player
     public ObjectStances ObjectStances => _objectStances;
     /// <summary>Icônes des objets qui agissent (plan 21 F4) ; créé avec le premier objet.</summary>
     public ObjectProcs ObjectProcs => _objectProcs;
+
+    /// <summary>Fils d'usage des Écussons portés (plan 35 I7) ; absent tant qu'aucun Écusson n'est cousu.</summary>
+    public BadgeUsage BadgeUsage => _badgeUsage;
 
     /// <summary>Cartes de plus à chaque level-up (Trèfle plastifié).</summary>
     public int ExtraLevelUpCards => _objectUtilities?.ExtraCards ?? 0;
@@ -136,6 +140,8 @@ public partial class Player
             EnsureObjectStances().Configure(data);
         if (HasUtilityEffect(data))
             EnsureObjectUtilities().Configure(data);
+        if (data.IsBadge)
+            EnsureBadgeUsage().Track(data);
 
         for (int i = 0; i < data.Effects.Count; i++)
             _passiveValuesBefore[i] = data.Effects[i].Neutral;
@@ -341,6 +347,26 @@ public partial class Player
             if (ObjectUtilities.IsUtilityStat(effect.Stat))
                 return true;
         return false;
+    }
+
+#if TOOLS
+    /// <summary>Mesure au bot (plan 35 I7) : le module des fils existe dès le départ et compte tous les déclencheurs.</summary>
+    internal BadgeUsage MeasureBadgeUsage()
+    {
+        BadgeUsage usage = EnsureBadgeUsage();
+        usage.MeasureAll();
+        return usage;
+    }
+#endif
+
+    private BadgeUsage EnsureBadgeUsage()
+    {
+        if (_badgeUsage != null)
+            return _badgeUsage;
+        _badgeUsage = new BadgeUsage { Name = "BadgeUsage" };
+        _badgeUsage.Initialize(this);
+        AddChild(_badgeUsage);
+        return _badgeUsage;
     }
 
     private ObjectUtilities EnsureObjectUtilities() => _objectUtilities ??= new ObjectUtilities(this);

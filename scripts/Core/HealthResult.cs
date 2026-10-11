@@ -2,14 +2,15 @@ using Godot;
 
 namespace Vestiges.Core;
 
-public enum HealingKind { Normal, Regeneration, PerkRecovery }
+/// <summary>Lifesteal : le vol de vie des coups, compté à part pour l'Écusson du barbier (plan 35 I7).</summary>
+public enum HealingKind { Normal, Regeneration, PerkRecovery, Lifesteal }
 public enum PlayerDamageKind { Combat, Erasure }
 
 /// <summary>Les PV réellement rendus et l'excédent restent séparés ; une restitution ne doit pas se recharger.</summary>
 public readonly record struct HealingResult(ulong PlayerId, HealingKind Kind, float Requested,
     float HpRestored, float Excess, bool Applied)
 {
-    public bool CanStoreExcess => Applied && Kind is HealingKind.Normal or HealingKind.Regeneration;
+    public bool CanStoreExcess => Applied && Kind is HealingKind.Normal or HealingKind.Regeneration or HealingKind.Lifesteal;
     public static HealingResult Resolve(ulong playerId, HealingKind kind, float amount, float hp, float maxHp)
     {
         float restored = Mathf.Clamp(amount, 0f, Mathf.Max(0f, maxHp - hp));

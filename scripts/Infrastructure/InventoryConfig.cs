@@ -20,6 +20,10 @@ public static class InventoryConfig
     private static int[] _itemCopyLevels = { 10, 15, 19, 22, 24, 25 };
     private static float _eliteItemChance = 0.25f;
     private static int _sovereignItems = 1;
+    private static int _usageWideHitTargets = 3;
+    private static float _usageFarKillDistance = 250f;
+    private static float _usageContactRadius = 200f;
+    private static float _usageLevelScale = 0.1f;
     private static bool _loaded;
     private static string _loadError;
 
@@ -73,6 +77,46 @@ public static class InventoryConfig
         }
     }
 
+    /// <summary>Fil d'usage (plan 35 I7) : créatures qu'une même attaque doit toucher pour un « coup large ».</summary>
+    public static int UsageWideHitTargets
+    {
+        get
+        {
+            Load();
+            return _usageWideHitTargets;
+        }
+    }
+
+    /// <summary>Fil d'usage : distance en px au-delà de laquelle une élimination est « lointaine ».</summary>
+    public static float UsageFarKillDistance
+    {
+        get
+        {
+            Load();
+            return _usageFarKillDistance;
+        }
+    }
+
+    /// <summary>Fil d'usage : rayon en px où une créature met le joueur « au contact ».</summary>
+    public static float UsageContactRadius
+    {
+        get
+        {
+            Load();
+            return _usageContactRadius;
+        }
+    }
+
+    /// <summary>Fil d'usage : allongement du seuil par niveau d'Écusson au-delà du premier (0,1 : double au niveau 11).</summary>
+    public static float UsageLevelScale
+    {
+        get
+        {
+            Load();
+            return _usageLevelScale;
+        }
+    }
+
     /// <summary>Niveau d'Écusson au-delà duquel chaque niveau ne vaut plus qu'une part du pas.</summary>
     public static int BadgeSoftCapLevel
     {
@@ -105,7 +149,7 @@ public static class InventoryConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             reader.AllowOnly(reader.Root, "inventaire", "badge_slots", "badge_soft_cap_level", "badge_soft_cap_factor", "bag_size",
-                "item_copy_levels", "elite_item_chance", "sovereign_items");
+                "item_copy_levels", "elite_item_chance", "sovereign_items", "usage");
             int badgeSlots = reader.Integer(reader.Root, "badge_slots", 1, 8);
             int softCapLevel = reader.Integer(reader.Root, "badge_soft_cap_level", 1, 1000);
             float softCapFactor = reader.Ratio(reader.Root, "badge_soft_cap_factor");
@@ -113,6 +157,12 @@ public static class InventoryConfig
             int[] copyLevels = ReadCopyLevels(reader, reader.Root, "item_copy_levels");
             float eliteChance = reader.Chance(reader.Root, "elite_item_chance");
             int sovereignItems = reader.Integer(reader.Root, "sovereign_items", 0, 5);
+            JsonElement usage = reader.Section("usage");
+            reader.AllowOnly(usage, "usage", "wide_hit_targets", "far_kill_distance", "contact_radius", "level_scale");
+            int wideHitTargets = reader.Integer(usage, "wide_hit_targets", 2, 20);
+            float farKillDistance = reader.Positive(usage, "far_kill_distance");
+            float contactRadius = reader.Positive(usage, "contact_radius");
+            float levelScale = reader.Ratio(usage, "level_scale");
             if (reader.Error != null)
                 return reader.Error;
             _badgeSlots = badgeSlots;
@@ -122,6 +172,10 @@ public static class InventoryConfig
             _itemCopyLevels = copyLevels;
             _eliteItemChance = eliteChance;
             _sovereignItems = sovereignItems;
+            _usageWideHitTargets = wideHitTargets;
+            _usageFarKillDistance = farKillDistance;
+            _usageContactRadius = contactRadius;
+            _usageLevelScale = levelScale;
             return null;
         }
         catch (JsonException ex)
