@@ -96,7 +96,7 @@ Au maximum, le profil plein a environ +25 % de PV, +20 % de dégâts et +15 % de
 | **M1** | Données, sauvegarde et application en run ; emplacements en données ; rayon Stats et rayon Capacités sans le sac |
 | **M2** | Écran de l'Établi au Hub, remboursement, bilan de fin de run |
 | **M3** | Mesure à deux profils, réglage des prix |
-| M4 | Poches (sac d'objets), une fois le plan 35 I2 livré |
+| **M4** | Poches (sac d'objets), une fois le plan 35 I2 livré — livré (§14) |
 
 ## 7. Questions pour Raphaël
 
@@ -259,6 +259,14 @@ Les éliminations du plan 33 §7 (926 à 10 min) venaient d'autres graines. Rapp
 **Rien n'est appliqué.** Le profil neuf ne passe pas sous les 60 %. Deux pistes si le début paraît trop dur en jouant, ou le profil plein trop sûr :
 1. **Profil neuf** : 3ᵉ emplacement à 250 au lieu de 400, pour qu'il tombe dès la première run courte ; ou bien, en run, le deuxième emplacement s'ouvre au niveau 5 au lieu d'être là dès le départ, ce qui laisse le joueur apprendre une arme d'abord.
 2. **Profil plein** : armure +0,5 par rang (2,5 au maximum, au lieu de 5), qui reste la stat la plus forte du rayon ; ou laisser faire le Péril, que le joueur relève lui-même (§4).
+
+## 14. Lot M4 livré : Poches — 11 octobre 2026
+
+- **Poches** (`camp_pockets`, rayon Capacités, effet `bag_slots`) : +3 places dans le sac d'objets par rang, 5 rangs, de 10 à 25 places (plan 35 §3.3).
+- Prix : 300, 700, 1 400, 2 500, 4 000 Vestiges, soit 8 900 pour les cinq rangs. Le Campement plein passe de 89 550 à 98 450 Vestiges : environ 45 runs moyennes au rythme mesuré en M3, dans la cible de 30 à 50.
+- Appliqué au début de la run par `CampUpgrades.Apply` (`Player.SetBagCapacity`) ; la barre du bas ajoute ses cases et se recentre (plan 35 I1).
+- La page du Campement dit « Sac de 13 → 16 places », comme le Râtelier dit ses emplacements.
+- Vérifications : suite `camp` (14 améliorations, profil neuf à 10 places, Campement plein à 25, appliqué au joueur), `inventory`, `catalogs`, `saves`, `smoke` ; capture de la page en profil neuf regardée (ligne Poches sous le Râtelier, « Sac de 10 → 13 places »).
 
 ## 13. Questions pour Raphaël (Campement)
 

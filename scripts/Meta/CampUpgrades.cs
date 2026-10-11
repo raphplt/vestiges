@@ -8,12 +8,13 @@ namespace Vestiges.Meta;
 
 /// <summary>
 /// Le Campement en run (plan 36) : les rangs achetés au Hub s'appliquent une fois, au début de la run, après
-/// l'initialisation du personnage. Emplacements d'armes, relances, bannissements, Essence de départ et stats.
+/// l'initialisation du personnage. Emplacements d'armes, places du sac, relances, bannissements, Essence de départ et
+/// stats.
 /// </summary>
 public static class CampUpgrades
 {
     /// <summary>Ce que valent des rangs achetés, sans rien appliquer : la run, l'écran du Campement et les tests le lisent.</summary>
-    public readonly record struct Totals(int WeaponSlots, int Rerolls, int Banishes, int StartEssence);
+    public readonly record struct Totals(int WeaponSlots, int BagSlots, int Rerolls, int Banishes, int StartEssence);
 
     /// <summary>
     /// Totaux des capacités pour ces rangs. En mode dev, les emplacements d'armes restent à quatre : bancs et builds de
@@ -21,7 +22,7 @@ public static class CampUpgrades
     /// </summary>
     public static Totals Compute(IReadOnlyDictionary<string, int> ranks, bool development)
     {
-        int slots = CampUpgradeDataLoader.BaseWeaponSlots, rerolls = 0, banishes = 0, essence = 0;
+        int slots = CampUpgradeDataLoader.BaseWeaponSlots, bag = InventoryConfig.BagSize, rerolls = 0, banishes = 0, essence = 0;
         foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
         {
             int rank = RankOf(upgrade, ranks);
@@ -29,6 +30,7 @@ public static class CampUpgrades
             switch (upgrade.Effect)
             {
                 case CampEffect.WeaponSlots: slots += total; break;
+                case CampEffect.BagSlots: bag += total; break;
                 case CampEffect.Rerolls: rerolls += total; break;
                 case CampEffect.Banishes: banishes += total; break;
                 case CampEffect.StartEssence: essence += total; break;
@@ -36,7 +38,7 @@ public static class CampUpgrades
         }
         if (development)
             slots = Player.MaxWeaponSlots;
-        return new Totals(Mathf.Clamp(slots, 1, Player.MaxWeaponSlots), rerolls, banishes, essence);
+        return new Totals(Mathf.Clamp(slots, 1, Player.MaxWeaponSlots), bag, rerolls, banishes, essence);
     }
 
     /// <summary>Applique les rangs achetés au joueur et aux systèmes de la run ; rend les totaux appliqués.</summary>
@@ -45,6 +47,7 @@ public static class CampUpgrades
     {
         Totals totals = Compute(ranks, development);
         player.SetWeaponSlotLimit(totals.WeaponSlots);
+        player.SetBagCapacity(totals.BagSlots);
         fragments?.AddRerolls(totals.Rerolls);
         fragments?.AddBanishes(totals.Banishes);
         essence?.AddEssence(totals.StartEssence);
@@ -56,7 +59,7 @@ public static class CampUpgrades
             float total = upgrade.TotalAt(rank);
             player.ApplyPerkModifier(upgrade.Stat, upgrade.IsMultiplicative ? 1f + total : total, upgrade.ModifierType);
         }
-        GD.Print($"[CampUpgrades] {totals.WeaponSlots} emplacements d'armes, +{totals.Rerolls} relances, "
+        GD.Print($"[CampUpgrades] {totals.WeaponSlots} emplacements d'armes, sac de {totals.BagSlots}, +{totals.Rerolls} relances, "
             + $"+{totals.Banishes} bannissements, +{totals.StartEssence} Essence");
         return totals;
     }

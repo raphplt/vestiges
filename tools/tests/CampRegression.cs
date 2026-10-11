@@ -20,7 +20,7 @@ namespace Vestiges.Tests;
 public partial class CampRegression : Node
 {
     private const string CatalogPath = "res://data/progression/camp_upgrades.json";
-    private const int FullCampPrice = 89_550;
+    private const int FullCampPrice = 98_450;
 
     private int _checks;
     private int _failures;
@@ -65,9 +65,9 @@ public partial class CampRegression : Node
             foreach (int price in upgrade.Prices)
                 total += price;
         }
-        Check(all.Count == 13, $"13 améliorations ({all.Count})");
-        Check(branches[CampBranch.Capacities] == 3 && branches[CampBranch.Stats] == 9 && branches[CampBranch.Comfort] == 1,
-            $"3 capacités, 9 stats, 1 confort ({branches[CampBranch.Capacities]}, {branches[CampBranch.Stats]}, {branches[CampBranch.Comfort]})");
+        Check(all.Count == 14, $"14 améliorations ({all.Count})");
+        Check(branches[CampBranch.Capacities] == 4 && branches[CampBranch.Stats] == 9 && branches[CampBranch.Comfort] == 1,
+            $"4 capacités, 9 stats, 1 confort ({branches[CampBranch.Capacities]}, {branches[CampBranch.Stats]}, {branches[CampBranch.Comfort]})");
         Check(total == FullCampPrice, $"Campement plein : {FullCampPrice} Vestiges ({total})");
         Check(CampUpgradeDataLoader.BaseWeaponSlots == 2, "deux emplacements d'armes au départ");
         CampUpgradeData slots = CampUpgradeDataLoader.Get("camp_weapon_slots");
@@ -86,15 +86,15 @@ public partial class CampRegression : Node
         {
             ("effet inconnu", root => Upgrade(root, 1)["effect"] = "jetpack", "effect : « jetpack » inconnu"),
             ("rayon inconnu", root => Upgrade(root, 1)["branch"] = "cuisine", "branch : « cuisine » inconnu"),
-            ("stat non lue", root => Upgrade(root, 3)["stat"] = "peril", "n'est pas lu par le joueur"),
-            ("modificateur non lu", root => Upgrade(root, 4)["modifier_type"] = "additive", "n'est pas lu par le joueur"),
+            ("stat non lue", root => Upgrade(root, 4)["stat"] = "peril", "n'est pas lu par le joueur"),
+            ("modificateur non lu", root => Upgrade(root, 5)["modifier_type"] = "additive", "n'est pas lu par le joueur"),
             ("stat sur une capacité", root => Upgrade(root, 1)["stat"] = "damage", "ne valent que pour l'effet stat"),
             ("cinq emplacements", root => ((JsonArray)Upgrade(root, 0)["prices"]!).Add(9000), "dépasse 4"),
             ("prix décroissant", root => ((JsonArray)Upgrade(root, 1)["prices"]!)[2] = 10, "inférieur au rang précédent"),
             ("prix nul", root => ((JsonArray)Upgrade(root, 1)["prices"]!)[0] = 0, "prices[0]"),
             ("pas entier pour une capacité", root => Upgrade(root, 1)["step"] = 0.5, "step"),
             ("clé inconnue", root => Upgrade(root, 1)["cost"] = 5, "clé « cost » inconnue"),
-            ("id en double", root => Upgrade(root, 2)["id"] = "camp_rerolls", "identifiant en double"),
+            ("id en double", root => Upgrade(root, 3)["id"] = "camp_rerolls", "identifiant en double"),
             ("traduction absente", root => Upgrade(root, 2)["name_key"] = "CAMP_NOWHERE", "absente des traductions"),
             ("base hors bornes", root => root["base_weapon_slots"] = 5, "base_weapon_slots"),
         };
@@ -105,7 +105,7 @@ public partial class CampRegression : Node
             string message = CampUpgradeDataLoader.Apply(root.ToJsonString());
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Campement refusé ({label}) : {message}");
         }
-        Check(CampUpgradeDataLoader.All.Count == 13 && CampUpgradeDataLoader.Get("camp_rerolls")?.MaxRank == 3,
+        Check(CampUpgradeDataLoader.All.Count == 14 && CampUpgradeDataLoader.Get("camp_rerolls")?.MaxRank == 3,
             "un fichier refusé ne remplace pas le catalogue chargé");
     }
 
@@ -179,10 +179,10 @@ public partial class CampRegression : Node
     private void CheckApply()
     {
         CampUpgrades.Totals fresh = CampUpgrades.Compute(new Dictionary<string, int>(), false);
-        Check(fresh == new CampUpgrades.Totals(2, 0, 0, 0), $"profil neuf : 2 emplacements, rien d'autre ({fresh})");
+        Check(fresh == new CampUpgrades.Totals(2, 10, 0, 0, 0), $"profil neuf : 2 emplacements, sac de 10, rien d'autre ({fresh})");
         Dictionary<string, int> full = FullRanks();
         CampUpgrades.Totals totals = CampUpgrades.Compute(full, false);
-        Check(totals == new CampUpgrades.Totals(4, 3, 3, 100), $"Campement plein : 4 emplacements, +3, +3, +100 Essence ({totals})");
+        Check(totals == new CampUpgrades.Totals(4, 25, 3, 3, 100), $"Campement plein : 4 emplacements, sac de 25, +3, +3, +100 Essence ({totals})");
         Check(CampUpgrades.Compute(new Dictionary<string, int>(), true).WeaponSlots == 4, "mode dev : quatre emplacements");
         Check(CampUpgrades.Compute(new Dictionary<string, int> { ["camp_weapon_slots"] = 7 }, false).WeaponSlots == 4,
             "un rang trop haut ne dépasse pas quatre emplacements");
@@ -198,7 +198,7 @@ public partial class CampRegression : Node
         int rerolls = fragments.RerollsRemaining, banishes = fragments.BanishesRemaining;
         float maxHp = player.EffectiveMaxHp;
         CampUpgrades.Apply(player, fragments, essence, new Dictionary<string, int>(), false);
-        Check(player.WeaponSlotLimit == 2 && fragments.RerollsRemaining == rerolls && essence.CurrentEssence == 0
+        Check(player.WeaponSlotLimit == 2 && player.BagCapacity == 10 && fragments.RerollsRemaining == rerolls && essence.CurrentEssence == 0
             && Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp) && Mathf.IsEqualApprox(player.DamageMultiplier, 1f),
             "profil neuf appliqué : deux emplacements, rien d'autre");
         int weapons = 0;
@@ -215,7 +215,7 @@ public partial class CampRegression : Node
         maxHp = player.EffectiveMaxHp;
         float regen = player.BonusRegenRate, armor = player.Armor, luck = player.LuckBonus;
         CampUpgrades.Apply(player, fragments, essence, full, false);
-        Check(player.WeaponSlotLimit == 4, "Campement plein : quatre emplacements");
+        Check(player.WeaponSlotLimit == 4 && player.BagCapacity == 25, $"Campement plein : quatre emplacements, sac de 25 ({player.BagCapacity})");
         Check(fragments.RerollsRemaining == rerolls + 3 && fragments.BanishesRemaining == banishes + 3,
             $"relances +3, bannissements +3 ({fragments.RerollsRemaining}, {fragments.BanishesRemaining})");
         Check(essence.CurrentEssence == 100, $"100 Essence au départ ({essence.CurrentEssence})");

@@ -33,6 +33,7 @@ public static class CampUpgradeDataLoader
     private static readonly Dictionary<string, CampEffect> Effects = new()
     {
         ["weapon_slots"] = CampEffect.WeaponSlots,
+        ["bag_slots"] = CampEffect.BagSlots,
         ["rerolls"] = CampEffect.Rerolls,
         ["banishes"] = CampEffect.Banishes,
         ["start_essence"] = CampEffect.StartEssence,
@@ -162,7 +163,7 @@ public static class CampUpgradeDataLoader
         {
             if (item.Error == null && (entry.TryGetProperty("stat", out _) || entry.TryGetProperty("modifier_type", out _)))
                 item.Fail("stat et modifier_type ne valent que pour l'effet stat");
-            // Emplacements, relances, bannissements et Essence se comptent en unités entières.
+            // Emplacements, places du sac, relances, bannissements et Essence se comptent en unités entières.
             upgrade.Step = item.Integer(entry, "step", 1, 1000);
         }
 

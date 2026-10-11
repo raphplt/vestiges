@@ -427,6 +427,8 @@ BOSS_BARRIER,La Barrière,The Barrier
 BOSS_INDICIBLE,L'Indicible,The Unspeakable
 CAMP_WEAPON_SLOTS,Râtelier,Weapon Rack
 CAMP_WEAPON_SLOTS_DESC,+{0} emplacement d'arme par rang,+{0} weapon slot per rank
+CAMP_POCKETS,Poches,Pockets
+CAMP_POCKETS_DESC,+{0} places dans le sac d'objets par rang,+{0} bag spaces per rank
 CAMP_REROLLS,Jeu de cartes,Deck of Cards
 CAMP_REROLLS_DESC,+{0} relance par run et par rang,+{0} reroll per run and per rank
 CAMP_BANISHES,Boîte d'allumettes,Box of Matches
@@ -469,6 +471,8 @@ UI_CAMP_SAVE_FAILED,Achat non enregistré : {0},Purchase not saved: {0}
 UI_CAMP_DEV_SLOTS,Mode dev : quatre emplacements d'armes quels que soient les rangs.,Dev mode: four weapon slots whatever the ranks.
 UI_CAMP_SLOTS,{0} emplacements d'armes,{0} weapon slots
 UI_CAMP_SLOTS_NEXT,{0} → {1} emplacements d'armes,{0} → {1} weapon slots
+UI_CAMP_BAG,Sac de {0} places,{0}-space bag
+UI_CAMP_BAG_NEXT,Sac de {0} → {1} places,{0} → {1}-space bag
 UI_VESTIGES_HINT,Vestiges : à dépenser au Campement,Vestiges: spend them at the Camp
 UI_END_VESTIGES_BALANCE,{0} Vestiges à dépenser au Campement,{0} Vestiges to spend at the Camp
 INVENTORY_BADGES,Écussons,Badges

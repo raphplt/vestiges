@@ -12,6 +12,8 @@ public enum CampBranch
 public enum CampEffect
 {
     WeaponSlots,
+    /// <summary>Places du sac d'objets (Poches, plan 36 M4).</summary>
+    BagSlots,
     Rerolls,
     Banishes,
     StartEssence,

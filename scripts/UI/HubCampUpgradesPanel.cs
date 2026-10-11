@@ -301,6 +301,13 @@ public partial class HubCampUpgradesPanel : MarginContainer
                 ? string.Format(Tr("UI_CAMP_SLOTS"), slots)
                 : string.Format(Tr("UI_CAMP_SLOTS_NEXT"), slots, slots + Mathf.RoundToInt(upgrade.Step));
         }
+        if (upgrade.Effect == CampEffect.BagSlots)
+        {
+            int bag = CampUpgrades.Compute(MetaSaveManager.GetCampRanks(), false).BagSlots;
+            return rank >= upgrade.MaxRank
+                ? string.Format(Tr("UI_CAMP_BAG"), bag)
+                : string.Format(Tr("UI_CAMP_BAG_NEXT"), bag, bag + Mathf.RoundToInt(upgrade.Step));
+        }
         string now = "+" + FormatAmount(upgrade, upgrade.TotalAt(rank));
         return rank >= upgrade.MaxRank ? now : $"{now} → +{FormatAmount(upgrade, upgrade.TotalAt(rank + 1))}";
     }
