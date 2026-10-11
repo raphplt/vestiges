@@ -279,3 +279,18 @@ Raphaël : « le charognard pourrait etre mieux je trouve. »
 - **Taille** : un peu plus grand. Cadre 40 × 36, pivot (20, 27), `sprite_feet_offset` 9.
 - **Résultat** : [avant/après et une meute en jeu](planches/37-m4-charognard.png).
 - **Vérifié** : aperçus sur trois sols, planche de contrôle des quatre animations, capture en jeu d'une meute de cinq ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs` 3/3.
+
+## 19. Ombre repensée — 11 octobre 2026
+
+Raphaël, sur une capture de l'Ombre : « celui là est ptet un peu trop simple non ».
+
+- **Constat** : malgré les reflets ajoutés en seconde vague, ce n'était qu'une tache d'encre avec trois yeux sur tiges.
+- **Retenu** (`shade.py`, réécrit) : l'ombre d'un humain effacé qui cherche à se relever.
+  - Flaque d'encre irisée, effilochée en filaments plus longs vers l'arrière.
+  - Une silhouette en émerge à moitié : tête sur un cou, épaules inégales, un bras tendu dont la main aux doigts écartés se traîne au sol devant, l'autre bras réduit à un moignon qui fond.
+  - Deux yeux vert-acide dans la tête, un troisième resté dans la flaque.
+  - Elle se dresse pour frapper et s'enfonce à la mort, la silhouette d'abord.
+  - Le Rampant d'ombre devient sa suite logique : une ombre qui a appris à marcher.
+- **Taille** : cadre 36 × 36, pivot (18, 28), `sprite_feet_offset` 10.
+- **Résultat** : [avant/après et un groupe en jeu](planches/37-m4-ombre.png).
+- **Vérifié** : aperçus sur trois sols, planche de contrôle des quatre animations, capture en jeu d'un groupe de six ; `tools/validate.sh` smoke, `enemy_abilities`, `catalogs` 3/3.
