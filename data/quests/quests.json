@@ -716,6 +716,45 @@
                     "id": "souffle_du_neant"
                 }
             ]
+        },
+        {
+            "id": "reprieve",
+            "name": "Sursis",
+            "description": "Tuer 300 créatures sous 25 % des PV dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "low_hp_kills",
+                    "target": 300,
+                    "param": 0.25
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "ticket_de_consigne"
+                }
+            ]
+        },
+        {
+            "id": "lucky_streak",
+            "name": "Porte-bonheur",
+            "description": "Ouvrir 25 coffres dans une run.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "chests_opened",
+                    "target": 25
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "trefle_plastifie"
+                }
+            ]
         }
     ]
 }

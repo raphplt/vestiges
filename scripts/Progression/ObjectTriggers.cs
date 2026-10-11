@@ -29,6 +29,8 @@ public partial class ObjectTriggers : Node
     public const string CritFragileStat = "crit_fragile";
     public const string CritEchoStat = "crit_echo";
     public const string DashTrailStat = "dash_trail";
+    public const string PoisonStat = "poison";
+    public const string SovereignSlowStat = "sovereign_slow";
 
     public const string BurnSpreadEffect = "burn_spread";
     public const string DoubleSlowFreezeEffect = "double_slow_freeze";
@@ -117,6 +119,12 @@ public partial class ObjectTriggers : Node
     // Source des statuts posés par la traînée : le joueur, pour que la Pince à linge et la Propagation les reconnaissent.
     private AttackContext _trailSource;
     private readonly System.Collections.Generic.List<TrailPatch> _trailPatches = new();
+    // Flacon de pharmacie : part du coup rendue en poison ; Montre arrêtée : secondes de ralenti à la mort d'un Souverain.
+    private float _poison;
+    private float _poisonSeconds;
+    private float _sovereignSlow;
+    private float _sovereignSlowFactor = 1f;
+    private float _sovereignSlowRadius;
 
     /// <summary>Tirages des déclencheurs ; les bancs le graine pour rester déterministes.</summary>
     internal RandomNumberGenerator Rng { get; } = new();
@@ -128,7 +136,7 @@ public partial class ObjectTriggers : Node
     public static bool IsTriggerStat(string stat) =>
         stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat or SlowedTargetDamageStat
             or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat
-            or CritFragileStat or CritEchoStat or DashTrailStat;
+            or CritFragileStat or CritEchoStat or DashTrailStat or PoisonStat or SovereignSlowStat;
 
     public static bool IsTriggerMilestone(string effect) =>
         effect is BurnSpreadEffect or DoubleSlowFreezeEffect or BurnSlowsEffect or SlowKillExtendsEffect
@@ -223,6 +231,13 @@ public partial class ObjectTriggers : Node
                     _trailSpacing = Mathf.Max(4f, Parameter(data, "spacing"));
                     SetProcess(true);
                     break;
+                case PoisonStat:
+                    _poisonSeconds = Parameter(data, "seconds");
+                    break;
+                case SovereignSlowStat:
+                    _sovereignSlowFactor = Parameter(data, "slow_factor");
+                    _sovereignSlowRadius = Parameter(data, "radius");
+                    break;
             }
         }
     }
@@ -246,6 +261,8 @@ public partial class ObjectTriggers : Node
             case CritFragileStat: _critFragile = Settle(_critFragile + change); break;
             case CritEchoStat: _critEcho = Settle(_critEcho + change); break;
             case DashTrailStat: _dashTrail = Settle(_dashTrail + change); break;
+            case PoisonStat: _poison = Settle(_poison + change); break;
+            case SovereignSlowStat: _sovereignSlow = Settle(_sovereignSlow + change); break;
         }
         SetProcess(NeedsClock);
     }
@@ -345,6 +362,21 @@ public partial class ObjectTriggers : Node
             Burn(enemy, hitDamage * _burnDamageRatio * burnStrength, context);
         if (_chillChance > 0f && Roll(_chillChance * coefficient, hits, out float chillStrength))
             Chill(enemy, chillStrength, context);
+        // Sur le coup de base de l'arme, comme la Brûlure : un cône, qui touche par fractions d'image, empoisonne autant.
+        if (_poison > 0f)
+            Poison(enemy, hitDamage * hits * _poison * coefficient, context);
+    }
+
+    /// <summary>
+    /// Flacon de pharmacie : chaque coup ajoute au poison de la cible une part de ses dégâts, rendue sur la durée ; le
+    /// poison s'accumule sans plafond et chaque coup relance sa durée.
+    /// </summary>
+    private void Poison(Enemy enemy, float damage, AttackContext context)
+    {
+        if (damage <= 0f)
+            return;
+        enemy.ApplyPoison(damage, _poisonSeconds * _player.StatusDurationMultiplier, context.As(DamageKind.Passive));
+        _player.ObjectProcs?.Show(PoisonStat);
     }
 
     /// <summary>
@@ -371,6 +403,42 @@ public partial class ObjectTriggers : Node
         }
         if (_echoTargets.Count > 0)
             _player.ObjectProcs?.Show(CritEchoStat);
+    }
+
+    /// <summary>
+    /// Montre arrêtée : à la mort d'un Souverain, les créatures autour du joueur tournent au ralenti. Une créature qui
+    /// arrive après n'est pas prise : le temps s'est arrêté pour celles qui étaient là.
+    /// </summary>
+    private void FreezeTime(Vector2 sovereignPosition)
+    {
+        float seconds = _sovereignSlow * _player.StatusDurationMultiplier;
+        float radiusSq = _sovereignSlowRadius * _sovereignSlowRadius;
+        Vector2 center = _player.GlobalPosition;
+        AttackContext source = _player.BeginAttack(null, 0f, DamageKind.Passive);
+        using CrowdQuery crowd = CrowdIndex.Near(center, _sovereignSlowRadius);
+        foreach (Node node in crowd.Targets)
+        {
+            if (node is Enemy { IsActive: true, IsDying: false } enemy
+                && Iso.GroundDistanceSquared(enemy.GlobalPosition, center) <= radiusSq)
+                enemy.ApplySlow(_sovereignSlowFactor, seconds, source, ControlOrigin.Unknown);
+        }
+        _player.AttackFx.PlayHit(FxFamily.Glass, sovereignPosition, true, sovereignPosition);
+        _player.ObjectProcs?.Show(SovereignSlowStat);
+    }
+
+    /// <summary>
+    /// Plan de métro : le saut se fait en une image, que la traînée suivie image par image ne verrait pas. Le
+    /// Chewing-gum pose ses taches sur tout le trajet, du départ à l'arrivée.
+    /// </summary>
+    public void OnBlink(Vector2 from, Vector2 to)
+    {
+        if (_dashTrail <= 0f)
+            return;
+        _trailSource = _player.BeginAttack(null, 0f, DamageKind.Passive);
+        LayPatch(from);
+        while (_lastPatch.DistanceSquaredTo(to) >= _trailSpacing * _trailSpacing)
+            LayPatch(_lastPatch + (to - _lastPatch).Normalized() * _trailSpacing);
+        SetProcess(NeedsClock);
     }
 
     private void LayPatch(Vector2 position)
@@ -590,6 +658,8 @@ public partial class ObjectTriggers : Node
     {
         if (kill.Damage.Source.OwnerId != _playerId)
             return;
+        if (kill.Sovereign && _sovereignSlow > 0f)
+            FreezeTime(kill.Position);
         if (kill.Damage.Source.IsWeaponWork)
             RewardWeaponKill(kill);
         bool spreadBurn = _burnSpreadRadius > 0f && kill.Burn.Remaining > 0f && kill.Burn.Source.OwnerId == _playerId;

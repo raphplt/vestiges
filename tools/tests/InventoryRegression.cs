@@ -16,7 +16,8 @@ namespace Vestiges.Tests;
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
 /// objets en exemplaires (niveau d'effet, palier au doublon), oubli qui retire effet et palier, sac plein, butin « objet ».
 /// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
-/// Lot I4 : surplus d'une arme au bout de sa progression.
+/// Lot I4 : surplus d'une arme au bout de sa progression. Lot I6 : Ticket de consigne, Plan de métro, Flacon de pharmacie,
+/// Trèfle plastifié, Montre arrêtée.
 /// </summary>
 public partial class InventoryRegression : Node
 {
@@ -41,6 +42,10 @@ public partial class InventoryRegression : Node
             CheckChestItem();
             await CheckWorldItems();
             CheckWeaponSurplus();
+            CheckTicket();
+            CheckMetroMap();
+            CheckPoisonAndWatch();
+            CheckClover();
             GD.Print($"[InventoryRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
                 GD.Print("[InventoryRegression] PASS");
@@ -300,6 +305,127 @@ public partial class InventoryRegression : Node
             && !offers.Exists(option => option.Type == "weapon_upgrade" && option.Id == weapon.Id),
             $"arme au niveau maximal et ascensionnée : le surplus remplace son amélioration, +4 % de dégâts par carte ({damage:0.#} → {weapon.GetStat("damage"):0.#})");
         fragments.QueueFree();
+    }
+
+    private void CheckTicket()
+    {
+        Setup();
+        Check(_player.AddItemCopy("ticket_de_consigne") && _player.AddItemCopy("ticket_de_consigne")
+            && !_player.CanTakeItem("ticket_de_consigne"), "Ticket de consigne : deux exemplaires au plus");
+        float maxHp = _player.EffectiveMaxHp;
+        BreakShield();
+        Strike(maxHp * 10f);
+        bool revived = !_player.IsDead && Mathf.IsEqualApprox(_player.CurrentHp, maxHp * 0.5f)
+            && _player.FindObject("ticket_de_consigne")?.Copies == 1 && _player.BagCount == 1;
+        bool shielded = !_player.TakeDamage(maxHp * 10f).Applied;
+        Check(revived && shielded, $"un coup mortel consume un ticket : relevé à la moitié des PV, invulnérable un instant ({_player.CurrentHp:0.#}/{maxHp:0.#})");
+        Strike(maxHp * 10f);
+        Check(!_player.IsDead && _player.FindObject("ticket_de_consigne") == null && _player.BagCount == 0,
+            "le second ticket relève encore, puis le sac est vide");
+        _player.AddItemCopy("ticket_de_consigne");
+        _player.SurviveFatalHitsForTests = true;
+        _player.TakeErasureDamage(maxHp * 10f);
+        _player.SurviveFatalHitsForTests = false;
+        Check(_player.FindObject("ticket_de_consigne")?.Copies == 1, "le Néant ne prend pas le ticket : il n'en relève pas");
+    }
+
+    private void CheckMetroMap()
+    {
+        Setup();
+        PlayerMobility mobility = _player.Mobility;
+        const float Dt = 1f / 60f;
+        const float Speed = 200f;
+        float dashLength = Speed * mobility.Config.SpeedMultiplier * mobility.Config.DurationSeconds;
+        Check(_player.AddItemCopy("plan_de_metro") && Mathf.IsEqualApprox(mobility.BlinkDistance, 1f), "Plan de métro : le dash devient un saut");
+        mobility.Request();
+        Vector2 jump = mobility.Step(Dt, Vector2.Right, Speed, 1f, true) * Dt;
+        // L'invulnérabilité du saut est celle du dash (nulle par défaut), comptée depuis le saut.
+        bool dashInvulnerable = mobility.Config.InvulnerabilitySeconds > 0f;
+        bool instant = mobility.BlinkedThisStep && mobility.IsDashStep && Mathf.IsEqualApprox(jump.X, dashLength)
+            && mobility.IsInvulnerable == dashInvulnerable && !mobility.IsDashing && mobility.DashesStarted == 1;
+        mobility.Step(Dt, Vector2.Zero, Speed, 1f, true);
+        bool landed = !mobility.IsDashing;
+        for (float t = 0f; t < 1f; t += Dt)
+            mobility.Step(Dt, Vector2.Zero, Speed, 1f, true);
+        Check(instant && landed && !mobility.IsInvulnerable,
+            $"toute la longueur du dash en une image ({jump.X:0.#} px sur {dashLength:0.#}), puis le dash est fini");
+        // Chewing-gum : le saut se fait en une image, les taches couvrent quand même tout le trajet.
+        _player.AddItemCopy("chewing_gum");
+        _player.ObjectTriggers.OnBlink(Vector2.Zero, new Vector2(dashLength, 0f));
+        int patches = ((System.Collections.ICollection)typeof(ObjectTriggers).GetField("_trailPatches", Private).GetValue(_player.ObjectTriggers)).Count;
+        float spacing = PassiveSouvenirDataLoader.Get("chewing_gum").Parameters["spacing"];
+        Check(patches == Mathf.FloorToInt(dashLength / spacing) + 1, $"Chewing-gum et saut : {patches} taches du départ à l'arrivée");
+        _player.AddItemCopy("plan_de_metro");
+        bool longer = Mathf.IsEqualApprox(mobility.BlinkDistance, 1.5f);
+        _player.ForgetItemCopy("plan_de_metro");
+        _player.ForgetItemCopy("plan_de_metro");
+        Check(longer && mobility.BlinkDistance == 0f, "un second exemplaire allonge le saut ; oublié, le dash redevient un dash");
+    }
+
+    private void CheckPoisonAndWatch()
+    {
+        Setup();
+        AddChild(new Vestiges.Combat.CombatPools());
+        Vestiges.Combat.Enemy enemy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Vestiges.Combat.Enemy>();
+        AddChild(enemy);
+        enemy.Initialize(EnemyDataLoader.Get("shade"), 1000f, 1f);
+        enemy.SetTicking(false);
+        enemy.SetProcess(false);
+        enemy.GlobalPosition = _player.GlobalPosition + new Vector2(40f, 0f);
+        MethodInfo tick = typeof(Vestiges.Combat.Enemy).GetMethod("ProcessPoison", Private);
+        FieldInfo hp = typeof(Vestiges.Combat.Enemy).GetField("_currentHp", Private);
+        float start = (float)hp.GetValue(enemy);
+        enemy.ApplyPoison(30f, 3f);
+        enemy.ApplyPoison(30f, 3f);
+        for (int frame = 0; frame < 60; frame++)
+            tick.Invoke(enemy, new object[] { 1f / 60f });
+        float afterOne = start - (float)hp.GetValue(enemy);
+        for (int frame = 0; frame < 150; frame++)
+            tick.Invoke(enemy, new object[] { 1f / 60f });
+        float total = start - (float)hp.GetValue(enemy);
+        Check(Mathf.Abs(afterOne - 20f) < 0.5f && Mathf.Abs(total - 60f) < 0.5f && !enemy.IsPoisoned,
+            $"poison : deux coups s'accumulent, la réserve se vide sur la durée ({afterOne:0.#} en 1 s, {total:0.#} au total)");
+
+        _player.AddItemCopy("flacon_de_pharmacie");
+        _player.ObjectTriggers.OnWeaponImpact(enemy, 100f, null, 1, default, dealt: 100f);
+        float reserve = (float)typeof(Vestiges.Combat.Enemy).GetField("_poisonReserve", Private).GetValue(enemy);
+        Check(Mathf.IsEqualApprox(reserve, 20f) && enemy.IsPoisoned, $"Flacon de pharmacie : un coup de 100 empoisonne pour 20 ({reserve:0.#})");
+
+        _player.AddItemCopy("montre_arretee");
+        typeof(ObjectTriggers).GetMethod("FreezeTime", Private).Invoke(_player.ObjectTriggers, new object[] { enemy.GlobalPosition });
+        Check(enemy.IsSlowed, "Montre arrêtée : à la mort d'un Souverain, les créatures proches ralentissent");
+        enemy.QueueFree();
+    }
+
+    private void CheckClover()
+    {
+        Setup();
+        FragmentManager fragments = new();
+        AddChild(fragments);
+        typeof(FragmentManager).GetField("_player", Private).SetValue(fragments, _player);
+        MethodInfo offer = typeof(FragmentManager).GetMethod("OfferFragments", Private);
+        offer.Invoke(fragments, new object[] { 2 });
+        int plain = fragments.PendingChoices.Count;
+        _player.AddItemCopy("trefle_plastifie");
+        offer.Invoke(fragments, new object[] { 3 });
+        Check(plain == 3 && fragments.PendingChoices.Count == 4 && !_player.CanTakeItem("trefle_plastifie"),
+            $"Trèfle plastifié : une carte de plus au level-up ({plain} → {fragments.PendingChoices.Count}), un seul exemplaire");
+        fragments.QueueFree();
+    }
+
+    private PlayerDefense Defense => (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);
+
+    /// <summary>Un coup accepté : l'invulnérabilité du coup précédent est levée d'abord.</summary>
+    private void Strike(float damage)
+    {
+        typeof(PlayerDefense).GetField("_invulnerableTimer", Private).SetValue(Defense, 0f);
+        _player.TakeDamage(damage);
+    }
+
+    private void BreakShield()
+    {
+        while (_player.Shield > 0f)
+            Strike(1f);
     }
 
     private static List<FragmentOption> Offers(FragmentManager fragments) =>

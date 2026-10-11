@@ -485,3 +485,36 @@ Pause, fiche du joueur, barre du bas et bilan suivaient déjà l'inventaire depu
   - pause (`--capture-pause`, refaite pour 4 Écussons, un sac à doublons et un surplus) : arme « Surplus +8 % », section Écussons, barre du bas avec 7 exemplaires sur 10 ;
   - Collection, onglets Écussons et Objets (`HUB_EXTRA_ARGS="--collection-tab badges"`).
 - Non vérifié : l'envol de l'icône (trop bref pour la capture), à juger en jeu (A-VERIFIER).
+
+## 16. Lot I6 livré : nouveaux objets, première fournée — 11 octobre 2026
+
+Cinq objets à effet unique, chacun avec sa règle et son icône (modèles SDF dans `tools/sprites/items/gadgets.py`, `tools/generate_item_icons.py --lot i6`).
+
+| Objet | Effet | Exemplaires | Accès |
+|---|---|---|---|
+| **Ticket de consigne** | Un coup mortel ne tue pas : relevé à 50 % des PV, 2 s d'invulnérabilité ; l'exemplaire se consume. Sans effet contre le Néant. | 2 au plus (deux résurrections) | quête « Sursis » : 300 éliminations sous 25 % des PV dans une run |
+| **Plan de métro** | Le dash devient un saut instantané : toute sa longueur en une image, contre les murs et le Néant comme un dash, silhouettes laissées sur le trajet ; le Chewing-gum pose ses taches sur tout le trajet. | 2 : saut ×1, puis ×1,5 | réserve de départ |
+| **Flacon de pharmacie** | Chaque coup d'arme ajoute au poison de la cible 20 % de ses dégâts de base (30 % au doublon…), rendus sur 3 s ; le poison s'accumule sans plafond, chaque coup relance la durée, il attend quand la créature est terrée. Chiffres vert-de-gris. | 6, comme les autres objets | réserve de départ |
+| **Trèfle plastifié** | Une carte de plus à chaque level-up (4 au lieu de 3). | 1 | quête « Porte-bonheur » : 25 coffres ouverts dans une run |
+| **Montre arrêtée** | À la mort d'un Souverain tué par le joueur, les créatures à 700 px tournent à 25 % de leur vitesse pendant 2 s (3 s au doublon…). | 6 | réserve de départ |
+
+**Choix faits en codant, à confirmer.**
+- Le Ticket ne joue pas contre l'Effacement : relevé dans le Néant, le joueur y mourrait aussitôt et perdrait le ticket pour rien. « Le Néant, lui, ne rend rien » est écrit sur la fiche.
+- L'invulnérabilité du saut est celle du dash : nulle par défaut (`mobility.json`). Le saut évite les coups parce qu'il déplace d'un coup, pas parce qu'il protège.
+- Le poison est un nouveau statut (`StatusKind.Poison`, `Enemy.Poison.cs`) sans marque sur le sprite : seuls ses chiffres verts le montrent. Une marque (bulles) viendra avec le plan 27 si le retour en jeu le demande.
+- Montre arrêtée : Souverains seulement, comme prévu. Le bot en abat 0 à 4 en 30 min : l'objet risque d'être faible. À juger en jeu ; piste : l'élargir aux élites, à durée moindre.
+- Réserve de départ : Plan de métro, Flacon et Montre (18 objets et Écussons ouverts dans un profil neuf, contre 15). Ticket et Trèfle, les plus forts, passent par une quête.
+- Les cinq fiches n'ont pas de palier : la Collection dit seulement « Jusqu'à N exemplaires ».
+
+**Vérifications.**
+- Build sans avertissement.
+- Suite `inventory` : deux tickets puis deux relevés, le Néant qui ne prend pas le ticket ; saut de 72 px en une image puis fin du dash, second exemplaire ×1,5, oubli qui rend le dash ; poison qui s'accumule et se vide sur la durée (20 en 1 s, 60 au total) ; Flacon (coup de 100 → 20 de poison) ; Montre (créature proche ralentie) ; Trèfle (3 → 4 cartes).
+- Comptes mis à jour dans `objects` (38 fiches proposées) et `quests` (38 quêtes, 18 pièces de départ).
+- Capture du level-up à quatre cartes (`--capture-levelup`, nouvelle vue `levelup-clover`) regardée : les quatre cartes tiennent en 1080p.
+- Relecture `godot-reviewer`, corrigés :
+  - le saut finit dans son image (rien ne le voit « durer ») ; un compte des dashs (`DashesStarted`) le montre aux lecteurs en `_Process` (Rémanence) ; le Chewing-gum pose ses taches du départ à l'arrivée ;
+  - le poison se calcule sur le coup de base de l'arme, comme la Brûlure : un cône, qui frappe par fractions d'image, n'empoisonnait presque rien ;
+  - vitesse remise à zéro après le saut (les tirs visés lisent la vitesse du joueur) ;
+  - la longueur du saut survit à un changement de module de mobilité ;
+  - le poison attend qu'une créature terrée ressorte au lieu de s'évaporer.
+- Le résultat de dégâts publié reste « fatal » quand le Ticket relève le joueur, comme le prévoit `PlayerDamageResult` : aucune récupération de PV ne s'ajoute au relevé.

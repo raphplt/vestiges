@@ -59,9 +59,10 @@ public partial class QuestRegression
             tested++;
         }
         // Accomplies avant leur tour, et c'est voulu : Toutes les portes et Grandir (contrôles du cumul et du délai),
-        // Bien au chaud (10 minutes à PV pleins dans le contrôle du délai), Retenir (150 ralentis, en chemin vers les
-        // 300 de Sonner la récré). Les 32 autres l'ont été chacune par son propre jeu.
-        Check(tested == 32, $"32 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested})");
+        // Porte-bonheur (25 coffres dans une run, au cumul de coffres), Bien au chaud (10 minutes à PV pleins dans le
+        // contrôle du délai), Retenir (150 ralentis, en chemin vers les 300 de Sonner la récré). Les 33 autres l'ont été
+        // chacune par son propre jeu.
+        Check(tested == 33, $"33 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested})");
         CheckToastQueue();
         _bus.QuestCompleted -= OnQuestCompleted;
     }

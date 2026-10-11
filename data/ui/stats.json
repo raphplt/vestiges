@@ -47,6 +47,11 @@
         { "id": "crowd_damage", "name_key": "STAT_CROWD_DAMAGE", "display": "fraction" },
         { "id": "high_hp_damage", "name_key": "STAT_HIGH_HP_DAMAGE", "display": "fraction" },
         { "id": "low_hp_damage", "name_key": "STAT_LOW_HP_DAMAGE", "display": "fraction" },
-        { "id": "essence_damage_cap", "name_key": "STAT_ESSENCE_DAMAGE_CAP", "display": "fraction" }
+        { "id": "essence_damage_cap", "name_key": "STAT_ESSENCE_DAMAGE_CAP", "display": "fraction" },
+        { "id": "revive", "name_key": "STAT_REVIVE", "display": "count" },
+        { "id": "dash_blink", "name_key": "STAT_DASH_BLINK", "display": "percent" },
+        { "id": "poison", "name_key": "STAT_POISON", "display": "fraction" },
+        { "id": "extra_cards", "name_key": "STAT_EXTRA_CARDS", "display": "count" },
+        { "id": "sovereign_slow", "name_key": "STAT_SOVEREIGN_SLOW", "display": "value", "unit": "s" }
     ]
 }

@@ -30,6 +30,7 @@ public partial class Player
     private ObjectTriggers _objectTriggers;
     private ObjectStances _objectStances;
     private ObjectProcs _objectProcs;
+    private ObjectUtilities _objectUtilities;
     private float _objectPerilFraction;
 
     /// <summary>Objets à effet portés, un par fiche ; leurs exemplaires sont dans <see cref="ActivePassiveSouvenir.Copies"/>.</summary>
@@ -73,6 +74,10 @@ public partial class Player
     public ObjectStances ObjectStances => _objectStances;
     /// <summary>Icônes des objets qui agissent (plan 21 F4) ; créé avec le premier objet.</summary>
     public ObjectProcs ObjectProcs => _objectProcs;
+
+    /// <summary>Cartes de plus à chaque level-up (Trèfle plastifié).</summary>
+    public int ExtraLevelUpCards => _objectUtilities?.ExtraCards ?? 0;
+
     /// <summary>Repères : types de lieux déjà utilisés dans la run, et la Chance qu'ils ont donnée.</summary>
     public Waymarks Waymarks { get; private set; }
 
@@ -129,6 +134,8 @@ public partial class Player
             EnsureObjectTriggers().Configure(data);
         if (HasStanceEffect(data))
             EnsureObjectStances().Configure(data);
+        if (HasUtilityEffect(data))
+            EnsureObjectUtilities().Configure(data);
 
         for (int i = 0; i < data.Effects.Count; i++)
             _passiveValuesBefore[i] = data.Effects[i].Neutral;
@@ -237,6 +244,8 @@ public partial class Player
                 EnsureObjectTriggers().Add(effect.Stat, change);
             else if (ObjectStances.IsStanceStat(effect.Stat))
                 EnsureObjectStances().Add(effect.Stat, change);
+            else if (ObjectUtilities.IsUtilityStat(effect.Stat))
+                EnsureObjectUtilities().Add(effect.Stat, change);
             else
                 ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
         }
@@ -324,6 +333,40 @@ public partial class Player
             if (ObjectStances.IsStanceStat(effect.Stat))
                 return true;
         return false;
+    }
+
+    private static bool HasUtilityEffect(PassiveSouvenirData data)
+    {
+        foreach (PassiveEffectData effect in data.Effects)
+            if (ObjectUtilities.IsUtilityStat(effect.Stat))
+                return true;
+        return false;
+    }
+
+    private ObjectUtilities EnsureObjectUtilities() => _objectUtilities ??= new ObjectUtilities(this);
+
+    /// <summary>
+    /// Ticket de consigne (plan 35 I6) : un coup mortel consume un exemplaire, et le joueur se relève avec une part de
+    /// ses PV et un instant d'invulnérabilité. Faux sans ticket. Le Néant ne s'arrête pas au ticket : il n'est pas appelé
+    /// pour l'Effacement.
+    /// </summary>
+    private bool TryConsumeRevive()
+    {
+        if (_objectUtilities is not { CanRevive: true } utilities)
+            return false;
+        float ratio = utilities.ReviveHpRatio;
+        float invulnerability = utilities.ReviveInvulnerabilitySeconds;
+        string ticket = utilities.ReviveItemId;
+        if (!ForgetItemCopy(ticket))
+            return false;
+        _currentHp = Mathf.Max(1f, EffectiveMaxHp * ratio);
+        _defense.GrantInvulnerability(invulnerability);
+        Flash(MilestoneColor, true, 0.35f);
+        SpawnLootPopup(string.Format(Tr("ITEM_REVIVE_POPUP"), PassiveSouvenirDataLoader.Get(ticket)?.Name), MilestoneColor,
+            GlobalPosition, 0, plusSign: false);
+        AudioManager.Play("sfx_artefact_trouve", 0f, -2f);
+        GD.Print($"[Player] Revived by {ticket}");
+        return true;
     }
 
     private ObjectStances EnsureObjectStances()

@@ -31,13 +31,30 @@ public sealed class PlayerMobility
     /// <summary>Longueur du dash (1 = réglage de base) : même durée, vitesse accrue (Lacet rouge, palier 25).</summary>
     public float DistanceMultiplier { get; set; } = 1f;
 
+    /// <summary>
+    /// Plan de métro (plan 35 I6) : au-dessus de zéro, le dash devient un saut instantané, parcouru en une seule image,
+    /// de cette fraction de la longueur d'un dash. L'invulnérabilité du dash, s'il en a, est gardée et comptée depuis le
+    /// saut.
+    /// </summary>
+    public float BlinkDistance { get; set; }
+
+    /// <summary>Le dash commencé à cette image est un saut instantané.</summary>
+    public bool BlinkedThisStep { get; private set; }
+
+    /// <summary>
+    /// Dashs commencés depuis la création, sauts compris : un lecteur qui tourne en _Process voit ainsi un saut, qui
+    /// ne dure jamais jusqu'à son image.
+    /// </summary>
+    public int DashesStarted { get; private set; }
+
     /// <summary>Temps écoulé depuis la fin du dernier dash ; nul pendant un dash, infini avant le premier.</summary>
     public float SecondsSinceDash { get; private set; } = float.MaxValue;
     public float BufferRemaining { get; private set; }
     public bool StartedThisStep { get; private set; }
     public bool IsDashStep { get; private set; }
     public bool IsDashing => State == MobilityState.Mobility;
-    public bool IsInvulnerable => IsDashing && _dashElapsed < Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds);
+    public bool IsInvulnerable => IsDashing && _dashElapsed < Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds)
+        || _blinkInvulnerableRemaining > 0f;
 
     private float InvulnerabilitySeconds
     {
@@ -57,6 +74,7 @@ public sealed class PlayerMobility
     private float _dashRemaining;
     private float _dashElapsed;
     private float _hurtRemaining;
+    private float _blinkInvulnerableRemaining;
     private bool _requestPending;
 
     public PlayerMobility(MobilityConfig config)
@@ -77,6 +95,7 @@ public sealed class PlayerMobility
     {
         StartedThisStep = false;
         IsDashStep = false;
+        BlinkedThisStep = false;
         if (!allowed || State == MobilityState.Death)
         {
             Suspend();
@@ -94,6 +113,7 @@ public sealed class PlayerMobility
         if (CooldownRemaining <= 0.00001f)
             CooldownRemaining = 0f;
         _hurtRemaining = Mathf.Max(0f, _hurtRemaining - delta);
+        _blinkInvulnerableRemaining = Mathf.Max(0f, _blinkInvulnerableRemaining - delta);
         if (State == MobilityState.Hurt && _hurtRemaining == 0f)
             State = MobilityState.Locomotion;
         if (IsDashing && _dashRemaining <= 0.00001f)
@@ -108,6 +128,21 @@ public sealed class PlayerMobility
             CooldownRemaining = CooldownSeconds;
             ClearBuffer();
             StartedThisStep = true;
+            DashesStarted++;
+            if (BlinkDistance > 0f)
+            {
+                // Toute la longueur du dash en une image : le joueur la résout encore contre les murs et le Néant.
+                BlinkedThisStep = true;
+                _blinkInvulnerableRemaining = Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds);
+                SecondsSinceDash = 0f;
+                IsDashStep = true;
+                float length = speed * terrainFactor * Config.SpeedMultiplier * DistanceMultiplier * Config.DurationSeconds;
+                // Le saut est fini dès cette image : aucun lecteur ne le voit durer.
+                State = MobilityState.Locomotion;
+                _dashRemaining = 0f;
+                _dashElapsed = Config.DurationSeconds;
+                return _dashDirection * (length * BlinkDistance / delta);
+            }
         }
 
         if (_requestPending)
@@ -181,6 +216,7 @@ public sealed class PlayerMobility
 
     public void Suspend()
     {
+        _blinkInvulnerableRemaining = 0f;
         StopDash();
         ClearBuffer();
         StartedThisStep = false;

@@ -12,7 +12,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
 /// d'arme, une amélioration d'objet qui franchit son palier 15 et un objet nouveau, puis une fois avec
-/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire).
+/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire) ; ascension, puis
+/// quatre cartes avec le Trèfle plastifié.
 /// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes, quatre Écussons et un sac garni
 /// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
 /// </summary>
@@ -74,6 +75,13 @@ public partial class RunObservation
         typeof(FragmentManager).GetMethod("OfferFragments", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fragments, new object[] { 60 });
         await Frames(20);
         SaveFrame("levelup-ascension");
+        screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+        await Frames(4);
+        // Trèfle plastifié (plan 35 I6) : une quatrième carte dans la même offre.
+        _player.AddItemCopy("trefle_plastifie");
+        typeof(FragmentManager).GetMethod("OfferFragments", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fragments, new object[] { 61 });
+        await Frames(20);
+        SaveFrame("levelup-clover");
         screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
         await Frames(4);
         _player.AcquireSpecialization(PerkSpecializationDataLoader.Get("overheal_reserve"));

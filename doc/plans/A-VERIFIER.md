@@ -151,3 +151,4 @@ Livré et testé en headless (suite `inventory`), HUD, pause, échange et Collec
 - [ ] **Ramassage d'un objet** : envol de l'icône vers sa case du sac, son de trouvaille (`sfx_souvenir_trouve`, provisoire). Assez visible en combat ?
 - [ ] **Surplus d'arme** : carte « SURPLUS » au level-up d'une arme au bout de sa progression, mention « Surplus +N % » à la pause. Compréhensible ?
 - [ ] **Collection** : onglet Écussons à part, règles de montée (Écussons) et d'exemplaires (objets) sous chaque fiche.
+- [ ] **Nouveaux objets (I6)** : Ticket de consigne (relevé à mi-PV, l'icône quitte le sac, son provisoire `sfx_artefact_trouve`), Plan de métro (saut instantané : se lit-il, gêne-t-il près des murs ?), Flacon de pharmacie (chiffres de poison vert-de-gris, assez visibles sans marque sur le sprite ?), Trèfle plastifié (4 cartes : lisible en 720p ?), Montre arrêtée (assez forte avec seulement les Souverains ?).

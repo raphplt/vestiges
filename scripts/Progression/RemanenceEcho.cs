@@ -21,6 +21,7 @@ public partial class RemanenceEcho : Node
     private Sprite2D _ghost;
     private Vector2 _previousPosition;
     private bool _wasMoving;
+    private int _dashesSeen;
     private float _remaining;
     private float _fade;
 
@@ -43,6 +44,7 @@ public partial class RemanenceEcho : Node
         };
         AddChild(_ghost);
         _previousPosition = _player.GlobalPosition;
+        _dashesSeen = _player.Mobility?.DashesStarted ?? 0;
         _player.AttackEchoed += OnAttackEchoed;
     }
 
@@ -62,10 +64,14 @@ public partial class RemanenceEcho : Node
     /// <summary>Un pas du module (appelé par _Process, ou directement par un test).</summary>
     public void Advance(float dt)
     {
-        bool moving = _player.Mobility?.IsDashing ?? false;
-        if (moving && !_wasMoving && !_player.IsDead)
+        PlayerMobility mobility = _player.Mobility;
+        bool moving = mobility?.IsDashing ?? false;
+        // Un saut (Plan de métro) se termine dans son image : seul le compte des dashs le montre.
+        bool started = mobility != null && mobility.DashesStarted != _dashesSeen;
+        if ((moving && !_wasMoving || started) && !_player.IsDead)
             Arm(_previousPosition);
         _wasMoving = moving;
+        _dashesSeen = mobility?.DashesStarted ?? 0;
         if (!moving)
             _previousPosition = _player.GlobalPosition;
 

@@ -247,6 +247,44 @@
         "additive"
       ],
       "params": []
+    },
+    "revive": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "hp_ratio",
+        "invulnerability_seconds"
+      ]
+    },
+    "dash_blink": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "poison": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "seconds"
+      ]
+    },
+    "extra_cards": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "sovereign_slow": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "radius",
+        "slow_factor"
+      ]
     }
   },
   "inactive_stats": [

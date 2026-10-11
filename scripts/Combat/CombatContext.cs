@@ -58,7 +58,7 @@ public readonly record struct EnemyKillResult(EnemyLife Target, string EnemyId, 
     DamageResult Damage, ControlState Slow, ControlState Disorientation, ControlState Burn = default, bool Elite = false,
     bool Sovereign = false);
 
-public enum StatusKind { Burn, Bleed, Slow, Disorientation, Fragility }
+public enum StatusKind { Burn, Bleed, Slow, Disorientation, Fragility, Poison }
 
 /// <summary>
 /// Statut infligé par un joueur qui vient d'expirer sur une créature vivante. Strength est l'intensité (dégâts par

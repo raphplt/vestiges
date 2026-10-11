@@ -94,7 +94,7 @@ public partial class ObjectsRegression : Node2D
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 33 && badges == 16 && wellFormed && anySurvival,
+        Check(offered.Count == 38 && badges == 16 && wellFormed && anySurvival,
             $"Catalogue : {offered.Count} fiches proposées, {badges} Écussons (niveau max 99) et objets (niveau max 30), paliers au niveau 15, au moins une de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })

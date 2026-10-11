@@ -10,6 +10,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from tools.sprites.items.gadgets import GADGET_ITEMS
 from tools.sprites.items.icons import PROPERTY_ITEMS
 from tools.sprites.items.triggers import TRIGGER_ITEMS, WORLD_ITEMS, WORLD_NAMES
 from tools.sprites.ui.kit import board, export
@@ -21,7 +22,7 @@ def write_manifest(output: Path) -> None:
     names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
     names.update(WORLD_NAMES)
     entries = []
-    for factory in PROPERTY_ITEMS + TRIGGER_ITEMS + WORLD_ITEMS:
+    for factory in PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS:
         item = factory()
         stem = item.model().stem
         entries.append({"id": item.item_id, "name": names[item.item_id], "icon": stem + ".png",
@@ -32,16 +33,15 @@ def write_manifest(output: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sheet", type=Path)
-    parser.add_argument("--lot", choices=("s2", "s3", "all"), default="s2")
+    parser.add_argument("--lot", choices=("s2", "s3", "i6", "all"), default="s2")
     parser.add_argument("--export", action="store_true")
     parser.add_argument("--ids", nargs="*")
     args = parser.parse_args()
     args.sheet = args.sheet or Path(f"doc/plans/planches/25-{args.lot}-objets.png")
     names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
     names.update(WORLD_NAMES)
-    factories = PROPERTY_ITEMS if args.lot == "s2" else TRIGGER_ITEMS + WORLD_ITEMS
-    if args.lot == "all":
-        factories = PROPERTY_ITEMS + TRIGGER_ITEMS + WORLD_ITEMS
+    factories = {"s2": PROPERTY_ITEMS, "s3": TRIGGER_ITEMS + WORLD_ITEMS, "i6": GADGET_ITEMS,
+                 "all": PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS}[args.lot]
     rows, images = [], {}
     for factory in factories:
         item = factory()

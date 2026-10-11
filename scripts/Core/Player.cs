@@ -266,7 +266,7 @@ public partial class Player : CharacterBody2D
         // Mobilité propre au personnage (plan 01 E) ; un même profil garde le module et ses réglages.
         MobilityConfig mobility = MobilityConfig.Load(data.MobilityProfile);
         if (Mobility?.Config != mobility)
-            Mobility = new PlayerMobility(mobility);
+            Mobility = new PlayerMobility(mobility) { BlinkDistance = _objectUtilities?.BlinkDistance ?? 0f };
 
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
@@ -566,8 +566,14 @@ public partial class Player : CharacterBody2D
             if (!IsOnWorldGround(GlobalPosition))
                 GlobalPosition = beforeDrift;
         }
+        if (Mobility.BlinkedThisStep)
+        {
+            // Le saut a parcouru sa longueur en une image : sa vitesse ne doit pas guider les tirs visés.
+            Velocity = Vector2.Zero;
+            _objectTriggers?.OnBlink(previousPosition, GlobalPosition);
+        }
         Mobility.FinishMovement(movementVelocity);
-        _mobilityFeedback.UpdateFeedback(dt, Mobility, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
+        _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
@@ -1404,14 +1410,16 @@ public partial class Player : CharacterBody2D
                 _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
         }
 
+        // Le résultat publié reste fatal (rien ne se récupère sur ce coup) ; seul le ticket empêche la mort.
+        bool dies = result.Fatal && (kind == PlayerDamageKind.Erasure || !TryConsumeRevive());
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
 #if TOOLS
-        if (result.Fatal && SurviveFatalHitsForTests)
+        if (dies && SurviveFatalHitsForTests)
             _currentHp = EffectiveMaxHp;
         else
 #endif
-        if (result.Fatal)
+        if (dies)
         {
             _currentHp = 0;
             Die();

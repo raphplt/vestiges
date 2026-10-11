@@ -184,7 +184,9 @@ public partial class FragmentManager : Node
         }
 
         _pendingChoices.Clear();
-        List<FragmentOption> picked = PickRandom(options, Mathf.Max(0, FragmentsPerChoice - (carried != null ? 1 : 0) - ascension.Count));
+        // Trèfle plastifié : des cartes de plus, tirées comme les autres.
+        int cards = FragmentsPerChoice + _player.ExtraLevelUpCards;
+        List<FragmentOption> picked = PickRandom(options, Mathf.Max(0, cards - (carried != null ? 1 : 0) - ascension.Count));
         picked.InsertRange(0, ascension);
         if (carried != null)
             picked.Insert(0, carried);

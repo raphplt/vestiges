@@ -488,6 +488,12 @@ ITEM_BAG_FULL,"Sac plein : il faudra oublier un objet.","Bag full: you will forg
 LEVELUP_SURPLUS,SURPLUS,SURPLUS
 LEVELUP_SURPLUS_LINE,Dégâts de l'arme +{0} % → +{1} %,Weapon damage +{0}% → +{1}%
 PAUSE_WEAPON_SURPLUS,Surplus +{0} %,Surplus +{0}%
+ITEM_REVIVE_POPUP,{0} composté !,{0} punched!
+STAT_REVIVE,Résurrections,Revives
+STAT_DASH_BLINK,Saut instantané,Instant blink
+STAT_POISON,Poison,Poison
+STAT_EXTRA_CARDS,Cartes de level-up en plus,Extra level-up cards
+STAT_SOVEREIGN_SLOW,Temps arrêté,Stopped time
 COLLECTION_BADGE_RULE,"Cousu en souvenir de : {0}. Monte au level-up jusqu'au niveau {1}, à demi-pas après le niveau {2}.","Sewn in memory of: {0}. Rises on level-up up to level {1}, at half step after level {2}."
 COLLECTION_ITEM_RULE,Jusqu'à {0} exemplaires dans le sac ; palier au {1}ᵉ.,Up to {0} copies in the bag; tier at copy {1}.
 COLLECTION_ITEM_RULE_PLAIN,Jusqu'à {0} exemplaires dans le sac.,Up to {0} copies in the bag.

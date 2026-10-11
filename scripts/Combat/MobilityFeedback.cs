@@ -38,7 +38,8 @@ public partial class MobilityFeedback : Node2D
         }
     }
 
-    public void UpdateFeedback(float delta, PlayerMobility mobility, Vector2 position, bool moved)
+    /// <param name="from">Position avant le pas : un saut instantané (Plan de métro) laisse ses traînées sur le trajet.</param>
+    public void UpdateFeedback(float delta, PlayerMobility mobility, Vector2 from, Vector2 position, bool moved)
     {
         _charge = 1f - mobility.CooldownRemaining / mobility.CooldownSeconds;
         _dashVisible = mobility.IsDashStep && moved;
@@ -64,20 +65,33 @@ public partial class MobilityFeedback : Node2D
             }
         }
 
+        if (mobility.BlinkedThisStep && moved && VfxFactory.CurrentParticleLevel != ParticleLevel.Off)
+        {
+            // Le saut se lit à ses silhouettes laissées en ligne, du départ vers l'arrivée.
+            for (int i = 0; i < TrailCount; i++)
+                PlaceTrail(from.Lerp(position, (float)i / TrailCount));
+            _trailTimer = float.MaxValue;
+        }
+
         _trailTimer -= delta;
         if (_dashVisible && _trailTimer <= 0f && VfxFactory.CurrentParticleLevel != ParticleLevel.Off)
         {
-            Sprite2D trail = _trails[_nextTrail];
-            trail.GlobalPosition = position;
-            _positions[_nextTrail] = position;
-            trail.Texture = _frames[0];
-            trail.Modulate = Colors.White;
-            trail.Visible = true;
-            _remaining[_nextTrail] = TrailLifetime;
-            _nextTrail = (_nextTrail + 1) % TrailCount;
+            PlaceTrail(position);
             _trailTimer = TrailInterval * (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 2f : 1f);
         }
         QueueRedraw();
+    }
+
+    private void PlaceTrail(Vector2 position)
+    {
+        Sprite2D trail = _trails[_nextTrail];
+        trail.GlobalPosition = position;
+        _positions[_nextTrail] = position;
+        trail.Texture = _frames[0];
+        trail.Modulate = Colors.White;
+        trail.Visible = true;
+        _remaining[_nextTrail] = TrailLifetime;
+        _nextTrail = (_nextTrail + 1) % TrailCount;
     }
 
     public void Suspend()
