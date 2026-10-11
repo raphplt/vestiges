@@ -36,6 +36,7 @@ public partial class DamageNumber : Node2D
 	private static LabelSettings _carried;
 	private static LabelSettings _burn;
 	private static LabelSettings _bleed;
+	private static LabelSettings _poison;
 	private static LabelSettings _received;
 	private static Color _receivedColor;
 
@@ -78,6 +79,7 @@ public partial class DamageNumber : Node2D
 			StatusVisualConfig config = EnemyStatusVisual.Config();
 			_burn = Settings(semiBold, 12, config?.BurnNumberColor ?? normal, outline);
 			_bleed = Settings(semiBold, 12, config?.BleedNumberColor ?? normal, outline);
+			_poison = Settings(semiBold, 12, config?.PoisonNumberColor ?? normal, outline);
 		}
 		SetProcess(false);
 	}
@@ -174,6 +176,7 @@ public partial class DamageNumber : Node2D
 			_label.Text = _isCrit ? $"{shown}!" : _isCarried ? $"»{shown}" : _isReceived ? $"−{shown}" : shown.ToString();
 		}
 		LabelSettings settings = _isReceived ? _received : _tick == StatusKind.Burn ? _burn : _tick == StatusKind.Bleed ? _bleed
+			: _tick == StatusKind.Poison ? _poison
 			: _isCrit ? _crit : _isCarried ? _carried : _total > 30f ? _large : _total > 15f ? _medium : _small;
 		if (settings != _currentSettings)
 		{

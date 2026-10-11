@@ -8,14 +8,15 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Accueil entre les runs : un camp vivant où veillent les personnages débloqués.
-/// Partir ouvre la sélection du personnage ; le camp reste un décor, les catalogues sont reliés.
+/// Partir ouvre la sélection du personnage ; le camp reste un décor, les catalogues sont reliés. Le Campement dépense les
+/// Vestiges en progression permanente (plan 36).
 /// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Saira (lisibilité, retour du 24 septembre).
 /// </summary>
 public partial class HubScreen : Control
 {
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Characters, Quests, Collection }
+	private enum HubState { MainMenu, Characters, Camp, Quests, Collection }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color Night = new(0.04f, 0.04f, 0.08f);
@@ -31,6 +32,7 @@ public partial class HubScreen : Control
 	private HubCollectionPanel _collectionPanel;
 	private HubQuestsPanel _questsPanel;
 	private HubCharactersPanel _charactersPanel;
+	private HubCampUpgradesPanel _campPanel;
 	private string _collectionFocus;
 	private string _characterFocus;
 	private string _questFocus;
@@ -209,6 +211,7 @@ public partial class HubScreen : Control
 		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, () => OpenPage(HubState.Characters));
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
 		_openers[HubState.Characters] = _enterVoidButton;
+		_openers[HubState.Camp] = AddMenuButton(menu, Tr("UI_CAMP_TITLE"), TextRole.Title, _bodyFont, () => OpenPage(HubState.Camp));
 		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, _bodyFont, () => OpenPage(HubState.Quests));
 		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, () => OpenPage(HubState.Collection));
 		HBoxContainer utilities = new() { Position = new Vector2(MenuLeft - 40, 970) };
@@ -259,7 +262,7 @@ public partial class HubScreen : Control
 			});
 		}
 		_vestigesLabel = CreateLabel("0", TextRole.Title, UITheme.GoldBright, true);
-		_vestigesLabel.TooltipText = "Vestiges : monnaie des déblocages permanents";
+		_vestigesLabel.TooltipText = Tr("UI_VESTIGES_HINT");
 		_vestigesLabel.MouseFilter = MouseFilterEnum.Pass;
 		row.AddChild(_vestigesLabel);
 	}
@@ -337,6 +340,8 @@ public partial class HubScreen : Control
 		_charactersPanel.DepartRequested += StartRun;
 		_charactersPanel.QuestRequested += OpenQuest;
 		_charactersPanel.WeaponRequested += id => OpenReward((int)UnlockKind.Weapon, id);
+		_campPanel = new HubCampUpgradesPanel();
+		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 120f, -140f, -160f);
 		_questsPanel = new HubQuestsPanel();
 		AddPage(HubState.Quests, "Quêtes", _questsPanel, 120f, -140f, -160f);
 		_questsPanel.RewardRequested += OpenReward;
@@ -416,6 +421,7 @@ public partial class HubScreen : Control
 			Control first = state switch
 			{
 				HubState.Characters => _charactersPanel.Refresh(_characterFocus ?? _charactersPanel.ExaminedCharacterId ?? _selectedCharacterId),
+				HubState.Camp => _campPanel.Refresh(),
 				HubState.Quests => _questsPanel.Refresh(_questFocus),
 				HubState.Collection => _collectionPanel.Refresh(_collectionFocus, _collectionKind),
 				_ => null,
@@ -477,7 +483,12 @@ public partial class HubScreen : Control
 		else
 		{
 			_collectionFocus = id;
-			_collectionKind = (UnlockKind)kind == UnlockKind.Object ? "passives" : "weapons";
+			_collectionKind = (UnlockKind)kind switch
+			{
+				UnlockKind.Object => "passives",
+				UnlockKind.Badge => "badges",
+				_ => "weapons",
+			};
 			SetState(HubState.Collection);
 		}
 	}
@@ -631,6 +642,6 @@ public partial class HubScreen : Control
 
 	private void UpdateVestigesDisplay()
 	{
-		_vestigesLabel.Text = $"{MetaSaveManager.GetVestiges()}";
+		_vestigesLabel.Text = MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French);
 	}
 }

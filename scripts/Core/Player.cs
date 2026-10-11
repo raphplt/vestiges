@@ -53,10 +53,27 @@ public partial class Player : CharacterBody2D
 
     // Weapon inventory (max 4 weapons, all auto-attack in parallel)
     public const int MaxWeaponSlots = 4;
+
     private readonly List<WeaponInstance> _weaponSlots = new();
     private readonly List<Timer> _weaponTimers = new();
 
     private readonly WeaponLedger _weaponLedger = new();
+
+    /// <summary>
+    /// Emplacements d'armes de cette run (plan 36) : le Campement les fixe au départ, de 2 à <see cref="MaxWeaponSlots"/>.
+    /// Un joueur construit hors run, comme dans les tests, garde les quatre.
+    /// </summary>
+    public int WeaponSlotLimit { get; private set; } = MaxWeaponSlots;
+
+    public bool HasFreeWeaponSlot => _weaponSlots.Count < WeaponSlotLimit;
+
+    /// <summary>Fixe les emplacements de la run, bornés à [1 ; <see cref="MaxWeaponSlots"/>] ; les armes déjà portées restent.</summary>
+    public void SetWeaponSlotLimit(int limit)
+    {
+        WeaponSlotLimit = Mathf.Clamp(limit, 1, MaxWeaponSlots);
+        // Le HUD verrouille les cases au-delà de la limite.
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+    }
 
     private Vector2 _facingDirection = new(1f, 0f);
 
@@ -249,7 +266,7 @@ public partial class Player : CharacterBody2D
         // Mobilité propre au personnage (plan 01 E) ; un même profil garde le module et ses réglages.
         MobilityConfig mobility = MobilityConfig.Load(data.MobilityProfile);
         if (Mobility?.Config != mobility)
-            Mobility = new PlayerMobility(mobility);
+            Mobility = new PlayerMobility(mobility) { BlinkDistance = _objectUtilities?.BlinkDistance ?? 0f };
 
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
@@ -315,7 +332,7 @@ public partial class Player : CharacterBody2D
 
     public bool AddWeapon(WeaponInstance instance)
     {
-        if (instance == null || _weaponSlots.Count >= MaxWeaponSlots)
+        if (instance == null || !HasFreeWeaponSlot)
             return false;
 
         foreach (WeaponInstance existing in _weaponSlots)
@@ -549,8 +566,14 @@ public partial class Player : CharacterBody2D
             if (!IsOnWorldGround(GlobalPosition))
                 GlobalPosition = beforeDrift;
         }
+        if (Mobility.BlinkedThisStep)
+        {
+            // Le saut a parcouru sa longueur en une image : sa vitesse ne doit pas guider les tirs visés.
+            Velocity = Vector2.Zero;
+            _objectTriggers?.OnBlink(previousPosition, GlobalPosition);
+        }
         Mobility.FinishMovement(movementVelocity);
-        _mobilityFeedback.UpdateFeedback(dt, Mobility, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
+        _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
@@ -1387,14 +1410,16 @@ public partial class Player : CharacterBody2D
                 _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
         }
 
+        // Le résultat publié reste fatal (rien ne se récupère sur ce coup) ; seul le ticket empêche la mort.
+        bool dies = result.Fatal && (kind == PlayerDamageKind.Erasure || !TryConsumeRevive());
         _eventBus.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
 
 #if TOOLS
-        if (result.Fatal && SurviveFatalHitsForTests)
+        if (dies && SurviveFatalHitsForTests)
             _currentHp = EffectiveMaxHp;
         else
 #endif
-        if (result.Fatal)
+        if (dies)
         {
             _currentHp = 0;
             Die();
@@ -1749,7 +1774,7 @@ public partial class Player : CharacterBody2D
             return;
         float capMultiplier = _objectMilestones?.LifestealCapMultiplier(_currentHp / EffectiveMaxHp) ?? 1f;
         float cap = EffectiveMaxHp * _defense.Config.LifestealMaxHpPerSecond * capMultiplier * window;
-        HealingResult healed = Heal(Mathf.Min(_lifestealPending, cap));
+        HealingResult healed = Heal(Mathf.Min(_lifestealPending, cap), HealingKind.Lifesteal);
         _lifestealPending = 0f;
         // À vie pleine, rien n'est rendu : l'icône de la Paille ne s'élève pas pour rien (plan 27 V3c).
         if (healed.HpRestored > 0f)

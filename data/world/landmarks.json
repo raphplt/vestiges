@@ -52,6 +52,7 @@
 			"weapon_cost": 150,
 			"weapon_min_rarity": "rare",
 			"retemper_cost": 100,
+			"item_cost": 120,
 			"temper_upgrades": 5,
 			"cost_growth": 0.5
 		}

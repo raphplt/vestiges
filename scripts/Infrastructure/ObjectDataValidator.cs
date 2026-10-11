@@ -16,9 +16,10 @@ public static class ObjectDataValidator
 
     private static readonly string[] ObjectKeys =
     {
-        "id", "name", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
-        "survival", "offer_weight", "params", "enabled",
+        "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
+        "survival", "offer_weight", "params", "enabled", "copy_levels", "usage",
     };
+    private static readonly string[] UsageKeys = { "trigger", "threshold" };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
     private static readonly string[] MilestoneKeys = { "level", "effect", "text", "params" };
     private static readonly Regex ParameterToken = new(@"\{(\w+)%?\}");
@@ -31,6 +32,8 @@ public static class ObjectDataValidator
         /// <summary>Statistiques que le joueur applique lui-même : seules admises pour une bénédiction.</summary>
         public readonly HashSet<string> PlayerStats = new();
         public readonly Dictionary<string, string[]> Milestones = new();
+        /// <summary>Ce que le joueur fait et qui fait monter un Écusson (plan 35 I7).</summary>
+        public readonly HashSet<string> UsageTriggers = new();
     }
 
     public static bool TryParseContract(string json, out Contract contract, out string error)
@@ -49,6 +52,8 @@ public static class ObjectDataValidator
             }
             foreach (JsonElement stat in root.GetProperty("inactive_stats").EnumerateArray())
                 contract.InactiveStats.Add(stat.GetString());
+            foreach (JsonElement trigger in root.GetProperty("usage_triggers").EnumerateArray())
+                contract.UsageTriggers.Add(trigger.GetString());
             foreach (JsonElement stat in root.GetProperty("player_stats").EnumerateArray())
             {
                 // Une statistique du joueur doit aussi dire ses modificateurs : les bénédictions les y lisent.
@@ -112,6 +117,15 @@ public static class ObjectDataValidator
         bool enabled = !item.TryGetProperty("enabled", out JsonElement enabledValue) || enabledValue.ValueKind == JsonValueKind.True;
         if (string.IsNullOrEmpty(Text(item, "name")))
             return $"{where} : name absent ou vide";
+        // Écusson (une stat qui monte, plan 35) ou objet à effet.
+        if (Text(item, "kind") is not ("badge" or "item"))
+            return $"{where}, kind : « badge » ou « item » attendu";
+        // L'Écusson rappelle l'objet d'où il vient ; un objet n'a pas de sous-titre.
+        bool hasSubtitle = item.TryGetProperty("subtitle", out JsonElement subtitle);
+        if (hasSubtitle && (subtitle.ValueKind != JsonValueKind.String || subtitle.GetString().Length == 0))
+            return $"{where}, subtitle : texte non vide attendu";
+        if (hasSubtitle != (Text(item, "kind") == "badge"))
+            return $"{where}, subtitle : {(hasSubtitle ? "réservé aux Écussons" : "attendu pour un Écusson")}";
         // Un objet désactivé, gardé pour les sauvegardes, n'est jamais montré : il peut rester sans description.
         if (Text(item, "description") == null || (enabled && Text(item, "description").Length == 0))
             return $"{where} : description absente{(enabled ? " ou vide" : "")}";
@@ -130,8 +144,30 @@ public static class ObjectDataValidator
                 return $"{where}, {flag} : booléen attendu";
         }
         int maxLevel = reader.Integer(item, "max_level", 1, MaxLevelBound);
+        // Niveau d'effet d'un objet selon ses exemplaires (plan 35) : seulement pour un objet, jamais au-delà de son maximum.
+        if (reader.Error == null && item.TryGetProperty("copy_levels", out _))
+        {
+            if (Text(item, "kind") != "item")
+                return $"{where}, copy_levels : réservé aux objets";
+            int[] copyLevels = InventoryConfig.ReadCopyLevels(reader, item, "copy_levels");
+            if (reader.Error == null && copyLevels[^1] > maxLevel)
+                reader.Fail($"copy_levels : niveau {copyLevels[^1]} au-delà du maximum {maxLevel}");
+        }
         if (item.TryGetProperty("offer_weight", out _))
             reader.Positive(item, "offer_weight");
+        // Fil d'usage (plan 35 I7) : seulement pour un Écusson, un déclencheur du contrat et un seuil positif.
+        if (reader.Error == null && item.TryGetProperty("usage", out JsonElement usage))
+        {
+            if (Text(item, "kind") != "badge")
+                return $"{where}, usage : réservé aux Écussons";
+            if (usage.ValueKind != JsonValueKind.Object)
+                return $"{where}, usage : objet attendu";
+            reader.AllowOnly(usage, $"{where}, usage", UsageKeys);
+            string trigger = Text(usage, "trigger");
+            if (reader.Error == null && !contract.UsageTriggers.Contains(trigger ?? ""))
+                return $"{where}, usage : déclencheur « {trigger} » absent du contrat";
+            reader.Positive(usage, "threshold");
+        }
         if (reader.Error != null)
             return $"{where}, {reader.Error}";
 

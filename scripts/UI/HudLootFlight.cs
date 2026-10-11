@@ -5,8 +5,8 @@ using Vestiges.Core;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Butin qui vole vers le HUD (plan 02 J3) : l'icône d'une arme ramassée au sol part de sa place dans le monde et
-/// rejoint sa case de la barre d'armes, qui s'allume à l'arrivée. La case reste vide pendant le vol.
+/// Butin qui vole vers le HUD (plan 02 J3) : l'icône d'une arme ou d'un objet ramassé au sol part de sa place dans le
+/// monde et rejoint sa case (barre d'armes, sac), qui s'allume à l'arrivée. La case reste vide pendant le vol.
 /// </summary>
 public partial class HudLootFlight : Control
 {
@@ -14,11 +14,13 @@ public partial class HudLootFlight : Control
     private const float StartScale = 1.6f;
 
     private readonly Func<string, Control> _slotIconOf;
+    private readonly Func<string, Control> _itemIconOf;
     private EventBus _eventBus;
 
-    public HudLootFlight(Func<string, Control> slotIconOf)
+    public HudLootFlight(Func<string, Control> slotIconOf, Func<string, Control> itemIconOf)
     {
         _slotIconOf = slotIconOf;
+        _itemIconOf = itemIconOf;
         MouseFilter = MouseFilterEnum.Ignore;
     }
 
@@ -26,23 +28,30 @@ public partial class HudLootFlight : Control
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.WeaponPickedUp += OnWeaponPickedUp;
+        _eventBus.ItemPickedUp += OnItemPickedUp;
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.WeaponPickedUp -= OnWeaponPickedUp;
+            _eventBus.ItemPickedUp -= OnItemPickedUp;
+        }
     }
 
     private void OnWeaponPickedUp(string weaponId, Vector2 worldPosition)
     {
         // La barre se met à jour dans la même frame : on attend qu'elle ait posé l'icône dans sa case.
-        Callable.From(() => Fly(weaponId, worldPosition)).CallDeferred();
+        Callable.From(() => Fly(_slotIconOf(weaponId), worldPosition)).CallDeferred();
     }
 
-    private void Fly(string weaponId, Vector2 worldPosition)
+    private void OnItemPickedUp(string itemId, Vector2 worldPosition) =>
+        Callable.From(() => Fly(_itemIconOf(itemId), worldPosition)).CallDeferred();
+
+    private void Fly(Control target, Vector2 worldPosition)
     {
-        if (_slotIconOf(weaponId) is not TextureRect slotIcon || slotIcon.Texture == null)
+        if (target is not TextureRect slotIcon || slotIcon.Texture == null)
             return;
         // Tout en coordonnées locales : la racine du HUD est mise à l'échelle de l'écran.
         Transform2D toLocal = GetGlobalTransform().AffineInverse();

@@ -64,6 +64,7 @@ namespace Vestiges.Tests;
 /// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
+/// --capture-exchange : sac plein, un objet au sol et l'écran d'échange (RunObservation.Items.cs, plan 35 I3).
 /// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -79,6 +80,7 @@ namespace Vestiges.Tests;
 /// --choice-delay S : pendant la mesure, le bot attend S secondes avant de choisir sur un écran qui fige la run.
 /// --music-config chemin : pendant la mesure, réglages de musique lus dans ce fichier (variantes d'écoute).
 /// --crisis-at S : pendant la mesure, première Résurgence à S secondes de jeu.
+/// --camp-full : le profil (isolé) achète tout le Campement avant la run (plan 36 M3) ; en mode dev, les armes restent à 4.
 /// --mute-buses A,B : pendant la mesure, bus audio coupés (Music, SFX, Ambiance), pour écouter le reste seul.
 /// --audio-trace : pendant la mesure, trace d'écoute (signaux, musique, sons) pour tools/record_run_audio.sh (AudioTraceProbe).
 /// --audio-stems : pendant la mesure, pistes musique, ambiance et effets synchrones du mixage (AudioStemRecorder).
@@ -246,6 +248,8 @@ public partial class RunObservation : Node
                 await CapturePlayerHit();
             else if (Array.IndexOf(args, "--capture-bile") >= 0)
                 await CaptureBileLob();
+            else if (Array.IndexOf(args, "--capture-exchange") >= 0)
+                await CaptureExchange();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
@@ -280,6 +284,8 @@ public partial class RunObservation : Node
                 throw new ArgumentOutOfRangeException(nameof(howlerCooldown));
             EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.AimedShot].Numbers["cooldown_multiplier"] = multiplier;
         }
+        if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--camp-full") >= 0)
+            BuyFullCamp();
         GameManager manager = GetNode<GameManager>("/root/GameManager");
         manager.RunSeed = seed;
         manager.SelectedCharacterId = characterId;
@@ -309,6 +315,40 @@ public partial class RunObservation : Node
         _camera = _player.GetNode<Camera2D>("Camera");
         _player.IsGodMode = true;
         _player.IsAIControlled = true;
+    }
+
+    /// <summary>Objet au sol le plus proche que le sac peut recevoir, ou null.</summary>
+    private ItemPickup NearestTakeableItem(float range)
+    {
+        ItemPickup best = null;
+        float bestDistance = range;
+        foreach (Node node in GetTree().GetNodesInGroup("item_pickups"))
+        {
+            if (node is not ItemPickup pickup || !pickup.CanInteract || !_player.CanTakeItem(pickup.ItemId))
+                continue;
+            float distance = _player.GlobalPosition.DistanceTo(pickup.GlobalPosition);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = pickup;
+            }
+        }
+        return best;
+    }
+
+    /// <summary>Le profil de mesure, isolé, gagne de quoi tout acheter au Campement et l'achète par la vraie boutique.</summary>
+    private static void BuyFullCamp()
+    {
+        int total = 0;
+        foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
+            foreach (int price in upgrade.Prices)
+                total += price;
+        MetaSaveManager.AddVestiges(total);
+        foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
+            while (MetaSaveManager.BuyCampRank(upgrade.Id, out _) == CampTransaction.Done) { }
+        if (MetaSaveManager.GetVestiges() != 0)
+            throw new InvalidOperationException($"Campement plein inachevé : {MetaSaveManager.GetVestiges()} Vestiges restants.");
+        GD.Print($"[RunObservation] Campement plein acheté ({total} Vestiges)");
     }
 
     private async Task CaptureAbilities()
@@ -496,7 +536,9 @@ public partial class RunObservation : Node
             _world.GetNode<SpawnManager>("SpawnManager").ApplyScalingOverrides(overrides);
             GD.Print($"[RunObservation] Réglages surchargés : {scaling}");
         }
-        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt,essence_gained" };
+        List<string> rows = new() { "t,visible,near600,alive,spawned,killed,level,hit_damage,memory,erasure_global,xp_gained,xp_orbs,spawned_hp,damage_dealt,essence_gained,score" };
+        // Score courant : les Vestiges d'une run valent score ÷ 10 (plan 36 M0).
+        Vestiges.Score.ScoreManager score = _world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
         // Mémoire de la zone sous le joueur et Effacement global, pour mesurer le tempo de l'oubli (retour du 28 septembre).
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         // Indice de pression : dégâts que les ennemis infligent à un joueur qui n'esquive jamais (invincible ici).
@@ -608,6 +650,19 @@ public partial class RunObservation : Node
             Input.ActionPress("show_map");
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
         EventBus.EssenceChangedEventHandler onEssence = places.OnEssence;
+        // Fils d'usage des Écussons (plan 35 I7) : tous les déclencheurs comptés dès le départ, portés ou non.
+        _player.MeasureBadgeUsage();
+        // Objets entrés dans le sac, toutes sources (plan 35 I3).
+        int itemsReceived = 0;
+        EventBus.LootReceivedEventHandler onLoot = (type, _, amount) => itemsReceived += type == "object" ? amount : 0;
+        eventBus.LootReceived += onLoot;
+        int eliteKills = 0, sovereignKills = 0;
+        System.Action<Vestiges.Combat.EnemyKillResult> onKillResolved = kill =>
+        {
+            eliteKills += kill.Elite && !kill.Sovereign ? 1 : 0;
+            sovereignKills += kill.Sovereign ? 1 : 0;
+        };
+        eventBus.EnemyKillResolved += onKillResolved;
         double eventDetourUntil = 0;
         double nextBarrierLog = 0;
         EventBus.RunEventStartedEventHandler onEvent = (_, _, _, _) => places.Events++;
@@ -685,6 +740,9 @@ public partial class RunObservation : Node
                 }
             }
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
+            // Un objet au sol à portée de détour, s'il entre dans le sac : le bot va le ramasser (plan 35 I3).
+            if (_visitPlaces && !holding && NearestTakeableItem(400f) is ItemPickup nearItem)
+                waypoint = nearItem.GlobalPosition;
             // Tenir une interaction n'est pas un blocage : le cap et le point de passage restent ceux d'avant.
             if (holding)
                 lastProgressTime = t;
@@ -776,7 +834,7 @@ public partial class RunObservation : Node
             maxOrbs = Math.Max(maxOrbs, orbs);
             visibleSamples.Add(visible);
             rows.Add(string.Create(CultureInfo.InvariantCulture,
-                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0},{places.EssenceGainedSoFar}"));
+                $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0},{places.EssenceGainedSoFar},{score.CurrentScore}"));
         }
 
         eventBus.PlayerHitBy -= onHit;
@@ -785,6 +843,8 @@ public partial class RunObservation : Node
         eventBus.EnemySpawned -= onSpawned;
         eventBus.EntityDamaged -= onDamaged;
         eventBus.EssenceChanged -= onEssence;
+        eventBus.LootReceived -= onLoot;
+        eventBus.EnemyKillResolved -= onKillResolved;
         eventBus.RunEventStarted -= onEvent;
         projectiles?.Save($"{_output}/projectiles-{seed}.csv");
         frameStats?.Write(ProjectSettings.GlobalizePath($"{_output}/frames-{seed}.csv"), gameTime);
@@ -802,8 +862,11 @@ public partial class RunObservation : Node
             if (rift.IsOpen)
                 openRifts++;
         summary.Append(CultureInfo.InvariantCulture, $" rifts={Rift.All.Count} rifts_open={openRifts}");
-        summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned}");
+        summary.Append(CultureInfo.InvariantCulture, $" peril={peril} kills={tracker.TotalKilled} spawned={tracker.TotalSpawned} score={score.CurrentScore}");
+        summary.Append(CultureInfo.InvariantCulture,
+            $" items_received={itemsReceived} bag={_player.BagCount}/{_player.BagCapacity} items_on_ground={GetTree().GetNodesInGroup("item_pickups").Count} elite_kills={eliteKills} sovereign_kills={sovereignKills}");
         summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
+        AppendBadgeUsage(summary);
         AppendBreakdown(summary, "hit_by", damageBySource);
         AppendBreakdown(summary, "hit_gated", gatedBySource);
         AppendBreakdown(summary, "near_by", exposureById);

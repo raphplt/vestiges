@@ -148,14 +148,17 @@ public partial class HubCollectionPanel : MarginContainer
         if (!string.IsNullOrEmpty(focusWeaponId) && kind != null)
             _tab = kind;
         MenuSkin.Clear(_tabs);
-        Button weapons = AddTab("weapons", "Armes");
-        Button passives = AddTab("passives", "Objets");
-        Button perks = AddTab("perks", "Réminiscences");
+        Button[] tabs =
+        {
+            AddTab("weapons", "Armes"), AddTab("badges", Tr("INVENTORY_BADGES")), AddTab("passives", "Objets"),
+            AddTab("perks", "Réminiscences"),
+        };
         // Liens explicites : la recherche géométrique de Godot plongeait dans la grille au lieu de l'onglet voisin.
-        weapons.FocusNeighborRight = passives.GetPath();
-        passives.FocusNeighborLeft = weapons.GetPath();
-        passives.FocusNeighborRight = perks.GetPath();
-        perks.FocusNeighborLeft = passives.GetPath();
+        for (int i = 0; i < tabs.Length; i++)
+        {
+            tabs[i].FocusNeighborLeft = tabs[Mathf.Max(0, i - 1)].GetPath();
+            tabs[i].FocusNeighborRight = tabs[Mathf.Min(tabs.Length - 1, i + 1)].GetPath();
+        }
         return RebuildGrid(focusWeaponId ?? _examined.GetValueOrDefault(_tab));
     }
 
@@ -197,7 +200,13 @@ public partial class HubCollectionPanel : MarginContainer
     private Control RebuildGrid(string focusId = null)
     {
         MenuSkin.Clear(_grid);
-        List<Entry> entries = _tab switch { "weapons" => WeaponEntries(), "perks" => PerkEntries(), _ => PassiveEntries() };
+        List<Entry> entries = _tab switch
+        {
+            "weapons" => WeaponEntries(),
+            "perks" => PerkEntries(),
+            "badges" => PassiveEntries(true),
+            _ => PassiveEntries(false),
+        };
         int unlocked = 0;
         int index = 0;
         Control first = null;
@@ -273,11 +282,18 @@ public partial class HubCollectionPanel : MarginContainer
         return tile;
     }
 
+    private UnlockKind TabUnlockKind() => _tab switch
+    {
+        "weapons" => UnlockKind.Weapon,
+        "badges" => UnlockKind.Badge,
+        _ => UnlockKind.Object,
+    };
+
     private void ShowDetail(Entry entry)
     {
         ExaminedEntryId = entry.Id;
         _examined[_tab] = entry.Id;
-        QuestDefinition quest = _tab == "perks" ? null : QuestDataLoader.FindUnlocking(_tab == "weapons" ? UnlockKind.Weapon : UnlockKind.Object, entry.Id);
+        QuestDefinition quest = _tab == "perks" ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
         _questId = quest?.Id;
         _questLink.Visible = !entry.Unlocked && quest != null;
         _statsToggle.Visible = entry.Stats.Length > 0;
@@ -315,17 +331,30 @@ public partial class HubCollectionPanel : MarginContainer
         return $"{kind} · {pattern} · {damage:0} dég. · {speed:0.0}/s · portée {range:0}";
     }
 
-    private static List<Entry> PassiveEntries()
+    /// <summary>Écussons ou objets du sac (plan 35), chacun avec sa règle de montée.</summary>
+    private static List<Entry> PassiveEntries(bool badges)
     {
         List<Entry> entries = new();
         foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
         {
-            string stats = passive.MaxLevel > 1 ? $"Jusqu'au niveau {passive.MaxLevel}, cumulable en run" : "";
+            if (passive.IsBadge != badges)
+                continue;
+            string stats;
+            if (passive.IsBadge)
+                stats = string.Format(TranslationServer.Translate("COLLECTION_BADGE_RULE"), passive.Subtitle,
+                    passive.MaxLevel, InventoryConfig.BadgeSoftCapLevel);
+            else if (passive.Milestones.Count > 0)
+                stats = string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE"), passive.MaxCopies,
+                    passive.CopiesForLevel(passive.Milestones[0].Level));
+            else
+                stats = string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies);
             bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
-            string condition = unlocked ? "" : QuestBook.LockText(UnlockKind.Object, passive.Id);
+            string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
             entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, unlocked, condition));
         }
         entries.Sort((a, b) => b.Unlocked.CompareTo(a.Unlocked));
+        if (badges)
+            return entries;
         foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
             if (art.World)
                 entries.Add(new Entry(art.Id, art.Name, art.Icon, "Objet du monde", "", false,

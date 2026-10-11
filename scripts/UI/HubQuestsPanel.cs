@@ -410,6 +410,7 @@ public partial class HubQuestsPanel : MarginContainer
     {
         UnlockKind.Character => "Personnage",
         UnlockKind.Weapon => "Arme",
+        UnlockKind.Badge => "Écusson",
         _ => "Objet",
     };
 }

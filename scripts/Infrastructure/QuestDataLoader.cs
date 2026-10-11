@@ -7,7 +7,7 @@ namespace Vestiges.Infrastructure;
 
 public enum QuestScope { Run, Cumulative }
 
-public enum UnlockKind { Character, Weapon, Object }
+public enum UnlockKind { Character, Weapon, Object, Badge }
 
 /// <summary>Un fait de run (<see cref="QuestStat"/>) et sa cible ; <c>BeforeSec</c> ne compte que ce qui arrive avant.</summary>
 public sealed class QuestCondition
@@ -65,7 +65,8 @@ public static class QuestDataLoader
         CharacterDataLoader.Load();
         string error = FileAccess.FileExists(CatalogPath)
             ? Apply(FileAccess.GetFileAsString(CatalogPath), id => WeaponDataLoader.Get(id) != null,
-                id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id), id => CharacterDataLoader.Get(id) != null)
+                id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && !item.IsBadge),
+                id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && item.IsBadge), id => CharacterDataLoader.Get(id) != null)
             : "absent";
         if (error != null)
         {
@@ -105,7 +106,7 @@ public static class QuestDataLoader
 
     /// <summary>Contrôle un texte de quêtes et ne le publie que s'il est entièrement valide. Rend l'erreur, ou null.</summary>
     public static string Apply(string json, Func<string, bool> weaponExists, Func<string, bool> objectExists,
-        Func<string, bool> characterExists)
+        Func<string, bool> badgeExists, Func<string, bool> characterExists)
     {
         try
         {
@@ -136,7 +137,7 @@ public static class QuestDataLoader
                     quest.Conditions.Add(ReadCondition(item, condition, scope, weaponExists));
                 foreach (JsonElement unlock in item.List(entry, "unlocks", 1))
                 {
-                    QuestUnlock read = ReadUnlock(item, unlock, weaponExists, objectExists, characterExists);
+                    QuestUnlock read = ReadUnlock(item, unlock, weaponExists, objectExists, badgeExists, characterExists);
                     if (item.Error == null && !byUnlock.TryAdd((read.Kind, read.Id), quest))
                         item.Fail($"{read.Id} déjà débloqué par la quête {byUnlock[(read.Kind, read.Id)].Id}");
                     quest.Unlocks.Add(read);
@@ -202,7 +203,7 @@ public static class QuestDataLoader
     }
 
     private static QuestUnlock ReadUnlock(JsonConfigReader item, JsonElement unlock, Func<string, bool> weaponExists,
-        Func<string, bool> objectExists, Func<string, bool> characterExists)
+        Func<string, bool> objectExists, Func<string, bool> badgeExists, Func<string, bool> characterExists)
     {
         if (unlock.ValueKind != JsonValueKind.Object)
         {
@@ -210,10 +211,11 @@ public static class QuestDataLoader
             return new QuestUnlock();
         }
         item.AllowOnly(unlock, "déblocage", "type", "id", "name");
-        UnlockKind kind = item.OneOf(unlock, "type", new[] { "character", "weapon", "object" }) switch
+        UnlockKind kind = item.OneOf(unlock, "type", new[] { "character", "weapon", "object", "badge" }) switch
         {
             "weapon" => UnlockKind.Weapon,
             "object" => UnlockKind.Object,
+            "badge" => UnlockKind.Badge,
             _ => UnlockKind.Character,
         };
         string id = item.Text(unlock, "id");
@@ -225,6 +227,7 @@ public static class QuestDataLoader
         {
             UnlockKind.Weapon => weaponExists(id),
             UnlockKind.Object => objectExists(id),
+            UnlockKind.Badge => badgeExists(id),
             _ => characterExists(id),
         };
         // Un personnage à venir n'est pas encore au catalogue : son nom est alors donné ici, et seulement alors.

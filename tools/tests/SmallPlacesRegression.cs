@@ -134,14 +134,14 @@ public partial class SmallPlacesRegression : Node2D
 		// Emplacements d'armes pleins : même au tirage de l'arme, le Wagonnet ne pose rien et donne de l'Essence
 		// (DECISIONS §40). La carte de test n'a qu'un wagonnet, déjà servi : on rejoue directement la pose.
 		foreach (WeaponData data in WeaponDataLoader.GetAll())
-			if (player.WeaponSlots.Count < Player.MaxWeaponSlots)
+			if (player.HasFreeWeaponSlot)
 				player.AddWeapon(data);
 		int pickupsBefore = CountPickups(cart.GetParent());
 		bool dropped = (bool)typeof(SmallPlaceDirector).GetMethod("DropWeapon", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
 			.Invoke(director, new object[] { cart, player });
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		Check(player.WeaponSlots.Count == Player.MaxWeaponSlots && !dropped && CountPickups(cart.GetParent()) == pickupsBefore,
-			"Wagonnet, quatre armes portées : aucune arme posée, la récompense retombe sur l'Essence");
+		Check(!player.HasFreeWeaponSlot && !dropped && CountPickups(cart.GetParent()) == pickupsBefore,
+			"Wagonnet, emplacements pleins : aucune arme posée, la récompense retombe sur l'Essence");
 
 		player.TakeDamage(30f);
 		float hp = player.CurrentHp;

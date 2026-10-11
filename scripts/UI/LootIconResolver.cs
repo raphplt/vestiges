@@ -12,7 +12,7 @@ public static class LootIconResolver
 
     public static Texture2D Get(string type, string itemId = "")
     {
-        if (type == "object_level")
+        if (type is "object_level" or "object")
         {
             string path = PassiveSouvenirDataLoader.Get(itemId)?.Icon;
             return string.IsNullOrEmpty(path) ? null : GD.Load<Texture2D>(path);

@@ -52,7 +52,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 	private string SwapPrompt()
 	{
 		string prompt = string.Format(Tr("WEAPON_SWAP_PROMPT"), _weaponInstance?.Name ?? "");
-		if (_weaponInstance == null || _groupCache?.GetPlayer() is not Player { WeaponSlots.Count: >= Player.MaxWeaponSlots } player)
+		if (_weaponInstance == null || _groupCache?.GetPlayer() is not Player { HasFreeWeaponSlot: false } player)
 			return prompt;
 		string deactivated = Progression.PerkSpecializationOffers.DeactivatedBySwap(player, _weaponInstance);
 		return deactivated.Length == 0 ? prompt : string.Format(Tr("WEAPON_SWAP_PERK_WARNING"), prompt, deactivated);
@@ -152,7 +152,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 			FlashRefused();
 			return;
 		}
-		if (player.WeaponSlots.Count < Player.MaxWeaponSlots)
+		if (player.HasFreeWeaponSlot)
 		{
 			TryCollect(player);
 			return;
@@ -165,7 +165,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 		if (_collected || body is not Player player)
 			return;
 		// Ramassage automatique seulement s'il reste un emplacement ; sinon l'invite propose l'échange.
-		if (player.WeaponSlots.Count < Player.MaxWeaponSlots && !HasWeapon(player, _weaponInstance.Id))
+		if (player.HasFreeWeaponSlot && !HasWeapon(player, _weaponInstance.Id))
 			CallDeferred(MethodName.TryCollect, player);
 	}
 

@@ -1,0 +1,20 @@
+{
+	"_doc": "Le Campement (plan 36) : améliorations permanentes achetées au Hub en Vestiges, remboursables librement. Un rang par prix ; prices[i] est le prix du rang i+1. Effets : weapon_slots (emplacements d'armes, au-dessus de base_weapon_slots, jamais plus de 4), bag_slots (places du sac d'objets, au-dessus de bag_size d'inventory.json), rerolls et banishes (relances et bannissements gratuits de plus par run), start_essence (Essence au départ de la run), stat (stat du joueur, comme les bénédictions : multiplicative vaut ×(1 + step × rang), sans composer ; additive vaut + step × rang). percent : le pas s'affiche en pourcentage. name_key et desc_key dans translations.csv ; desc_key reçoit le pas affiché en {0}. Lu et contrôlé par Infrastructure/CampUpgradeDataLoader ; prix réglés par tools/camp_economy.py.",
+	"base_weapon_slots": 2,
+	"upgrades": [
+		{ "id": "camp_weapon_slots", "branch": "capacities", "effect": "weapon_slots", "step": 1, "prices": [400, 2500], "name_key": "CAMP_WEAPON_SLOTS", "desc_key": "CAMP_WEAPON_SLOTS_DESC" },
+		{ "id": "camp_pockets", "branch": "capacities", "effect": "bag_slots", "step": 3, "prices": [300, 700, 1400, 2500, 4000], "name_key": "CAMP_POCKETS", "desc_key": "CAMP_POCKETS_DESC" },
+		{ "id": "camp_rerolls", "branch": "capacities", "effect": "rerolls", "step": 1, "prices": [300, 800, 2000], "name_key": "CAMP_REROLLS", "desc_key": "CAMP_REROLLS_DESC" },
+		{ "id": "camp_banishes", "branch": "capacities", "effect": "banishes", "step": 1, "prices": [300, 800, 2000], "name_key": "CAMP_BANISHES", "desc_key": "CAMP_BANISHES_DESC" },
+		{ "id": "camp_max_hp", "branch": "stats", "effect": "stat", "stat": "max_hp", "modifier_type": "multiplicative", "step": 0.05, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_MAX_HP", "desc_key": "CAMP_MAX_HP_DESC" },
+		{ "id": "camp_damage", "branch": "stats", "effect": "stat", "stat": "damage", "modifier_type": "multiplicative", "step": 0.04, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_DAMAGE", "desc_key": "CAMP_DAMAGE_DESC" },
+		{ "id": "camp_attack_speed", "branch": "stats", "effect": "stat", "stat": "attack_speed", "modifier_type": "multiplicative", "step": 0.03, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_ATTACK_SPEED", "desc_key": "CAMP_ATTACK_SPEED_DESC" },
+		{ "id": "camp_speed", "branch": "stats", "effect": "stat", "stat": "speed", "modifier_type": "multiplicative", "step": 0.02, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_SPEED", "desc_key": "CAMP_SPEED_DESC" },
+		{ "id": "camp_regen", "branch": "stats", "effect": "stat", "stat": "regen_rate", "modifier_type": "additive", "step": 0.1, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_REGEN", "desc_key": "CAMP_REGEN_DESC" },
+		{ "id": "camp_armor", "branch": "stats", "effect": "stat", "stat": "armor", "modifier_type": "additive", "step": 1, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_ARMOR", "desc_key": "CAMP_ARMOR_DESC" },
+		{ "id": "camp_magnet", "branch": "stats", "effect": "stat", "stat": "xp_magnet_radius", "modifier_type": "multiplicative", "step": 0.1, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_MAGNET", "desc_key": "CAMP_MAGNET_DESC" },
+		{ "id": "camp_xp", "branch": "stats", "effect": "stat", "stat": "xp_gain", "modifier_type": "multiplicative", "step": 0.04, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_XP", "desc_key": "CAMP_XP_DESC" },
+		{ "id": "camp_luck", "branch": "stats", "effect": "stat", "stat": "luck", "modifier_type": "additive", "step": 0.03, "percent": true, "prices": [250, 600, 1200, 2400, 4000], "name_key": "CAMP_LUCK", "desc_key": "CAMP_LUCK_DESC" },
+		{ "id": "camp_start_essence", "branch": "comfort", "effect": "start_essence", "step": 20, "prices": [150, 350, 700, 1200, 2000], "name_key": "CAMP_START_ESSENCE", "desc_key": "CAMP_START_ESSENCE_DESC" }
+	]
+}

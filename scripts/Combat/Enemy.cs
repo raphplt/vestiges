@@ -340,6 +340,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_igniteTimer = 0f;
 		_bleedDps = 0f;
 		_bleedTimer = 0f;
+		ClearPoison();
 		_slowFactor = 1f;
 		_slowTimer = 0f;
 		_disorientTimer = 0f;
@@ -547,6 +548,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_igniteTimer = 0f;
 		_bleedDps = 0f;
 		_bleedTimer = 0f;
+		ClearPoison();
 		_slowFactor = 1f;
 		_slowTimer = 0f;
 		_disorientTimer = 0f;
@@ -631,6 +633,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		ProcessIgnite(dt);
 		if (_isDying) return;
 		ProcessBleed(dt);
+		if (_isDying) return;
+		ProcessPoison(dt);
 		if (_isDying) return;
 		_dotNumbers.Tick(dt, GlobalPosition + DamageNumberOffset);
 		ProcessSlowDecay(dt);

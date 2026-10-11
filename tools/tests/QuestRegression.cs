@@ -13,7 +13,7 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 36 quêtes et fixtures
+/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 38 quêtes et fixtures
 /// refusées, réserve de départ appliquée par l'offre de niveau et le butin, quête accomplie et avancée retenue
 /// identiques après rechargement. Lot Q2 (<c>--tracking</c>) : suivi en run, voir QuestRegression.Tracking.
 /// </summary>
@@ -30,7 +30,7 @@ public partial class QuestRegression : Node
     {
         "memoire_vive", "resonance", "portee_etendue", "persistance", "ancrage", "regeneration", "instinct",
         "siphon_essence", "photo_de_classe", "jeton_de_fete", "allumette_humide", "glacon", "de_a_coudre",
-        "semelle_usee", "chewing_gum",
+        "semelle_usee", "chewing_gum", "plan_de_metro", "flacon_de_pharmacie", "montre_arretee",
     };
 
     private int _checks;
@@ -68,7 +68,10 @@ public partial class QuestRegression : Node
         IReadOnlyList<QuestDefinition> quests = QuestDataLoader.GetAll();
         int[] difficulties = new int[4];
         int cumulative = 0;
-        Dictionary<UnlockKind, int> unlocks = new() { [UnlockKind.Character] = 0, [UnlockKind.Weapon] = 0, [UnlockKind.Object] = 0 };
+        Dictionary<UnlockKind, int> unlocks = new()
+        {
+            [UnlockKind.Character] = 0, [UnlockKind.Weapon] = 0, [UnlockKind.Object] = 0, [UnlockKind.Badge] = 0,
+        };
         foreach (QuestDefinition quest in quests)
         {
             difficulties[quest.Difficulty]++;
@@ -77,12 +80,13 @@ public partial class QuestRegression : Node
             foreach (QuestUnlock unlock in quest.Unlocks)
                 unlocks[unlock.Kind]++;
         }
-        Check(quests.Count == 36, $"36 quêtes ({quests.Count})");
-        Check(difficulties[1] == 14 && difficulties[2] == 17 && difficulties[3] == 5,
-            $"14 ★, 17 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
+        Check(quests.Count == 38, $"38 quêtes ({quests.Count})");
+        Check(difficulties[1] == 13 && difficulties[2] == 20 && difficulties[3] == 5,
+            $"13 ★, 20 ★★, 5 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
         Check(cumulative == 2, $"deux quêtes de cumul ({cumulative})");
-        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 18,
-            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 18 objets ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]})");
+        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 14
+            && unlocks[UnlockKind.Badge] == 6,
+            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 14 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow")?.Id == "lead_the_hunt",
             "l'arme de départ du Traqueur vient avec lui");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "letter_satchel")?.Id == "the_round",
@@ -106,18 +110,21 @@ public partial class QuestRegression : Node
             ("difficulté hors bornes", root => Quest(root, 0)["difficulty"] = 4, "difficulty"),
             ("clé inconnue", root => Quest(root, 0)["reward"] = "souvenir", "clé « reward » inconnue"),
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),
+            ("Écusson déclaré objet", root => Unlock(root, 20)["type"] = "object", "pièce inconnue"),
+            ("objet déclaré Écusson", root => Unlock(root, 18)["type"] = "badge", "pièce inconnue"),
         };
         Func<string, bool> weapons = id => WeaponDataLoader.Get(id) != null;
-        Func<string, bool> objects = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id);
+        Func<string, bool> objects = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && !item.IsBadge);
+        Func<string, bool> badges = id => PassiveSouvenirDataLoader.GetAll().Exists(item => item.Id == id && item.IsBadge);
         Func<string, bool> characters = id => CharacterDataLoader.Get(id) != null;
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
             JsonObject root = JsonNode.Parse(valid)!.AsObject();
             mutate(root);
-            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, characters);
+            string message = QuestDataLoader.Apply(root.ToJsonString(), weapons, objects, badges, characters);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"quêtes refusées ({label}) : {message}");
         }
-        Check(QuestDataLoader.GetAll().Count == 36, "un fichier refusé ne remplace pas le catalogue chargé");
+        Check(QuestDataLoader.GetAll().Count == 38, "un fichier refusé ne remplace pas le catalogue chargé");
     }
 
     private void CheckStartingPool()
@@ -133,7 +140,7 @@ public partial class QuestRegression : Node
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
             if (MetaSaveManager.IsObjectUnlocked(item.Id))
                 objects.Add(item.Id);
-        Check(objects.SetEquals(StartingObjects), $"profil neuf : les 15 objets de départ ({objects.Count})");
+        Check(objects.SetEquals(StartingObjects), $"profil neuf : les 18 objets de départ ({objects.Count})");
 
         List<string> characters = new();
         foreach (CharacterData character in CharacterDataLoader.GetAll())
@@ -168,7 +175,12 @@ public partial class QuestRegression : Node
         HashSet<string> expectedWeapons = new(StartingWeapons);
         expectedWeapons.Remove("chipped_blade");
         Check(offeredWeapons.SetEquals(expectedWeapons), $"offre de niveau : les 7 autres armes de départ ({offeredWeapons.Count})");
-        Check(offeredObjects.SetEquals(StartingObjects), $"offre de niveau : les 15 objets de départ ({offeredObjects.Count})");
+        HashSet<string> startingBadges = new();
+        foreach (string id in StartingObjects)
+            if (PassiveSouvenirDataLoader.Get(id).IsBadge)
+                startingBadges.Add(id);
+        Check(startingBadges.Count == 10 && offeredObjects.SetEquals(startingBadges),
+            $"offre de niveau : les 10 Écussons de départ, aucun objet (ils se trouvent dans le monde) ({offeredObjects.Count})");
         RemoveChild(fragments);
         fragments.QueueFree();
         RemoveChild(player);

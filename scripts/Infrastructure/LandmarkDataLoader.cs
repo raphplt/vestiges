@@ -41,6 +41,8 @@ public class WorkshopConfig
     public int WeaponCost;
     public string WeaponMinRarity;
     public int RetemperCost;
+    /// <summary>Prix de l'objet que chaque Atelier met en vente (plan 35 I3).</summary>
+    public int ItemCost;
     public int TemperUpgrades;
     public float CostGrowth;
 }
@@ -217,7 +219,8 @@ public static class LandmarkDataLoader
             JsonElement w = reader.Section("workshop");
             reader.AllowOnly(w, "workshop", "sprite", "placement", "min_spacing_px", "services");
             JsonElement ws = reader.Section(w, "services");
-            reader.AllowOnly(ws, "workshop.services", "weapon_cost", "weapon_min_rarity", "retemper_cost", "temper_upgrades", "cost_growth");
+            reader.AllowOnly(ws, "workshop.services", "weapon_cost", "weapon_min_rarity", "retemper_cost", "item_cost", "temper_upgrades",
+                "cost_growth");
             WorkshopConfig workshop = new()
             {
                 Sprite = reader.Resource(w, "sprite", exists),
@@ -226,6 +229,7 @@ public static class LandmarkDataLoader
                 WeaponCost = reader.Integer(ws, "weapon_cost", 0, 100_000),
                 WeaponMinRarity = reader.OneOf(ws, "weapon_min_rarity", rarityIds),
                 RetemperCost = reader.Integer(ws, "retemper_cost", 0, 100_000),
+                ItemCost = reader.Integer(ws, "item_cost", 0, 100_000),
                 TemperUpgrades = reader.Integer(ws, "temper_upgrades", 0, 100),
                 CostGrowth = reader.NonNegative(ws, "cost_growth"),
             };

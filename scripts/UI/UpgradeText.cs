@@ -50,6 +50,15 @@ public static class UpgradeText
             case FragmentOption.AscensionType:
                 lines.Add((choice.Ascension.Description, ChoiceStyle.GainColor));
                 break;
+            case FragmentOption.SurplusType:
+            {
+                WeaponInstance weapon = FindWeapon(player, choice.Id);
+                float gain = LevelUpOfferConfig.Load().WeaponSurplusDamage;
+                float now = weapon?.SurplusDamage ?? 0f;
+                lines.Add((string.Format(TranslationServer.Translate("LEVELUP_SURPLUS_LINE"), Mathf.RoundToInt(now * 100f),
+                    Mathf.RoundToInt((now + gain) * 100f)), ChoiceStyle.GainColor));
+                break;
+            }
             case "passive_new":
             {
                 PassiveSouvenirData passive = PassiveSouvenirDataLoader.Get(choice.Id);
@@ -147,13 +156,5 @@ public static class UpgradeText
         return null;
     }
 
-    private static ActivePassiveSouvenir FindPassive(Player player, string id)
-    {
-        if (player == null)
-            return null;
-        foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            if (passive.Id == id)
-                return passive;
-        return null;
-    }
+    private static ActivePassiveSouvenir FindPassive(Player player, string id) => player?.FindObject(id);
 }

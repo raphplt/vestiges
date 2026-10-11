@@ -10,26 +10,34 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Mène les Ateliers (plan 22 C2) : Trempe offerte à la première visite, niveau d'arme et Retrempe contre de
-/// l'Essence, perte dans le Néant. Réglages : section <c>workshop</c> de data/world/landmarks.json.
+/// l'Essence, un objet en vente (plan 35 I3), perte dans le Néant. Réglages : section <c>workshop</c> de
+/// data/world/landmarks.json.
 /// </summary>
 public partial class WorkshopDirector : Node
 {
     private const float LossCheckInterval = 1f;
     private const string ServiceWeapon = "weapon";
     private const string ServiceRetemper = "retemper";
+    private const string ServiceItem = "item";
 
     private readonly WorkshopConfig _config = LandmarkDataLoader.Workshop;
     private readonly RandomNumberGenerator _rng = new();
     private ChoiceScreen _choices;
+    private ItemExchange _exchange;
     private EssenceTracker _essence;
     private ErasureManager _erasure;
     private EventBus _eventBus;
     private Player _player;
     private float _lossTimer = LossCheckInterval;
+    // Objet en vente dans chaque Atelier, tiré à la première visite ; vide une fois acheté, retiré quand l'Atelier se perd.
+    private readonly Dictionary<Workshop, string> _itemOffers = new();
+    // Flux à part : l'objet proposé ne dépend que de la graine et de l'ordre des visites, pas des Trempes déjà tirées.
+    private readonly RandomNumberGenerator _itemRng = RunRandom.Create("workshop_items");
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure)
+    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, ItemExchange exchange)
     {
         _choices = choices;
+        _exchange = exchange;
         _essence = essence;
         _erasure = erasure;
     }
@@ -118,6 +126,8 @@ public partial class WorkshopDirector : Node
             actions.Add(() => Retemper(workshop, target, retemperCost));
         }
 
+        AddItemOffer(workshop, essence, cards, actions);
+
         string subtitle = string.Format(Tr("MEMORIAL_ESSENCE"), essence);
         if (_player.TemperCharges > 0)
             subtitle = $"{subtitle}   ·   {string.Format(Tr("WORKSHOP_TEMPER_LEFT"), _player.TemperCharges)}";
@@ -163,6 +173,62 @@ public partial class WorkshopDirector : Node
         OpenServices(workshop, string.Format(Tr("WORKSHOP_RETEMPERED"), weapon.Name, RarityPalette.DisplayName(rarity.Id)), false);
     }
 
+    /// <summary>L'objet de l'Atelier : un seul, débloqué, tiré à la première visite ; on le prend s'il reste une place.</summary>
+    private void AddItemOffer(Workshop workshop, int essence, List<ChoiceCard> cards, List<System.Action> actions)
+    {
+        if (!_itemOffers.TryGetValue(workshop, out string itemId))
+        {
+            itemId = LootRewards.PickUnlockedItem(_player, _itemRng)?.Id ?? "";
+            _itemOffers[workshop] = itemId;
+        }
+        PassiveSouvenirData item = PassiveSouvenirDataLoader.Get(itemId);
+        if (item == null)
+            return;
+        int cost = Price(_config.ItemCost, workshop.ServiceUses(ServiceItem));
+        // Sac plein : l'achat passe par l'écran d'échange, qui fait la place.
+        bool bagFull = !_player.HasBagRoom;
+        ChoiceCard card = new()
+        {
+            Tag = Tr("WORKSHOP_ITEM_TAG"),
+            Frame = RarityPalette.Main("workshop"),
+            Title = item.Name,
+            Price = string.Format(Tr("MEMORIAL_PRICE"), cost),
+            Enabled = essence >= cost && !_player.IsItemAtMax(item.Id) && (_player.CanTakeItem(item.Id) || bagFull),
+            Icon = LoadIcon(item.Icon),
+        };
+        card.Lines.Add((item.RuleText(), ChoiceStyle.TextColor));
+        if (bagFull)
+            card.Lines.Add((Tr("ITEM_BAG_FULL"), ChoiceStyle.TextColor));
+        cards.Add(card);
+        actions.Add(() => BuyItem(workshop, item, cost));
+    }
+
+    private void BuyItem(Workshop workshop, PassiveSouvenirData item, int cost)
+    {
+        if ((_essence?.CurrentEssence ?? 0) < cost)
+            return;
+        if (!_player.CanTakeItem(item.Id))
+        {
+            if (_exchange == null || !_exchange.Open(_player, item, () => CompletePurchase(workshop, item, cost),
+                    () => OpenServices(workshop, null, false)))
+                OpenServices(workshop, null, false);
+            return;
+        }
+        CompletePurchase(workshop, item, cost);
+    }
+
+    private bool CompletePurchase(Workshop workshop, PassiveSouvenirData item, int cost)
+    {
+        if (!_player.CanTakeItem(item.Id) || !_essence.TrySpend(cost))
+            return false;
+        _player.AddItemCopy(item.Id);
+        _itemOffers[workshop] = "";
+        workshop.RecordServiceUse(ServiceItem);
+        _eventBus.EmitSignal(EventBus.SignalName.LootReceived, "object", item.Id, 1);
+        OpenServices(workshop, string.Format(Tr("WORKSHOP_ITEM_SOLD"), item.Name), false);
+        return true;
+    }
+
     private int Price(int baseCost, int uses) => Mathf.RoundToInt(baseCost * (1f + _config.CostGrowth * uses));
 
     private void CheckLost()
@@ -174,7 +240,10 @@ public partial class WorkshopDirector : Node
         {
             Workshop workshop = all[i];
             if (!workshop.IsLost && _erasure.GetZonePhaseAt(workshop.GlobalPosition) == ErasureManager.ErasureZonePhase.Void)
+            {
                 workshop.MarkLost();
+                _itemOffers.Remove(workshop);
+            }
         }
     }
 

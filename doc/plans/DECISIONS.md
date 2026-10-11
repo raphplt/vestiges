@@ -1250,3 +1250,14 @@ Raphaël : « termine tout alors, y compris montée de niveau, butin, bilan et j
 Mandat : achever les écrans restants dans la direction pierre/Effacement de P1–P3 sur `codex/refonte-menus`, avec vérification fonctionnelle et visuelle. Lots P4–P7 au [plan 04 §9](04-interfaces-et-hub.md#9-achèvement-de-tous-les-menus--11-octobre-2026). L'accueil et le camp restent conservés. Aucune fusion dans `main` demandée.
 
 **Livré et vérifié :** P4–P7 terminés, dans la continuité de P1–P3 : montée de niveau, rencontres, butin, journal accessible depuis la pause et bilan. Build zéro warning, 15/15 suites générales puis 5/5 finales, captures réelles 720p/1080p avec texte agrandi et relance avec un autre personnage. [Preuves et limites](../audits/menus-2026-10-11/README.md). Aucun accord artistique de Raphaël ni fusion vers main présumés.
+
+## 116. Questions du Campement et de l'inventaire acceptées, refonte lancée — 11 octobre 2026
+
+Raphaël, après le compte rendu du Campement et du lot I0 : « Ok, ces points me vont. continue avec le deuxieme chantier sur la meme branche stp. »
+
+**Lecture retenue** : les propositions et recommandations des plans 36 §13 et 35 §9.5 sont acceptées. Là où deux options étaient posées sans recommandation, l'agent prend la première, et le dit ici pour que Raphaël puisse la corriger :
+- **Campement** : noms des 13 améliorations gardés ; « Quatre airs » garde quatre armes et passe en ★★ ; armure +1 par rang gardée ; 4ᵉ emplacement à 2 500 gardé.
+- **Écussons** : noms de la table 35 §9.1 gardés ; l'**arbitre redevient un objet** du sac (option A, le Péril reste un choix) ; un seul palier, au niveau 15 (première option) ; l'usage donne environ un quart des niveaux en 30 min ; un fil sous chaque Écusson au HUD, sans bandeau.
+- **Sac** : sac plein, l'objet reste au sol avec une invite à maintenir, qui ouvre l'écran d'échange en pause ; 3 à 5 nouveaux objets rejoignent la réserve de départ ; un objet sans niveaux vaut d'abord son niveau 10 d'aujourd'hui, et son palier du niveau 15 devient l'effet d'un doublon.
+
+**Suite** : refonte de l'inventaire (plan 35, lots I1 à I7, découpés au §10), puis les Poches du Campement (plan 36 M4).

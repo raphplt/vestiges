@@ -6,7 +6,7 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Poids des cartes d'une offre de level-up, lus dans data/progression/level_up_offer.json (plan 24 lot L3) et
-/// contrôlés (plan 26 Q7b) : deux poids strictement positifs, aucune autre clé.
+/// contrôlés (plan 26 Q7b) : deux poids et le gain du surplus d'arme, strictement positifs, aucune autre clé.
 /// </summary>
 public sealed class LevelUpOfferConfig
 {
@@ -14,6 +14,8 @@ public sealed class LevelUpOfferConfig
 
     public float UpgradeWeight { get; private init; }
     public float MinWeight { get; private init; }
+    /// <summary>Dégâts d'arme gagnés par une carte de surplus (plan 35 I4), additionnés sans plafond.</summary>
+    public float WeaponSurplusDamage { get; private init; }
 
     private static LevelUpOfferConfig _cached;
 
@@ -52,11 +54,12 @@ public sealed class LevelUpOfferConfig
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "offre de niveau", "upgrade_weight", "min_weight");
+            reader.AllowOnly(reader.Root, "offre de niveau", "upgrade_weight", "min_weight", "weapon_surplus_damage");
             LevelUpOfferConfig parsed = new()
             {
                 UpgradeWeight = reader.Positive(reader.Root, "upgrade_weight"),
                 MinWeight = reader.Positive(reader.Root, "min_weight"),
+                WeaponSurplusDamage = reader.Positive(reader.Root, "weapon_surplus_damage"),
             };
             error = reader.Error;
             config = error == null ? parsed : null;

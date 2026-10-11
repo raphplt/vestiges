@@ -184,7 +184,9 @@ public partial class FragmentManager : Node
         }
 
         _pendingChoices.Clear();
-        List<FragmentOption> picked = PickRandom(options, Mathf.Max(0, FragmentsPerChoice - (carried != null ? 1 : 0) - ascension.Count));
+        // Trèfle plastifié : des cartes de plus, tirées comme les autres.
+        int cards = FragmentsPerChoice + _player.ExtraLevelUpCards;
+        List<FragmentOption> picked = PickRandom(options, Mathf.Max(0, cards - (carried != null ? 1 : 0) - ascension.Count));
         picked.InsertRange(0, ascension);
         if (carried != null)
             picked.Insert(0, carried);
@@ -265,10 +267,7 @@ public partial class FragmentManager : Node
     private List<FragmentOption> BuildFragmentPool()
     {
         List<FragmentOption> pool = new();
-        int weaponCount = _player.WeaponSlots.Count;
-        int passiveCount = _player.PassiveSlots.Count;
-        bool weaponSlotsFull = weaponCount >= Player.MaxWeaponSlots;
-        bool passiveSlotsFull = passiveCount >= Player.MaxPassiveSlots;
+        bool weaponSlotsFull = !_player.HasFreeWeaponSlot;
 
         // Armes nouvelles (si slots dispo) : toutes celles qui sont débloquées, au même poids, dès le premier niveau.
         if (!weaponSlotsFull)
@@ -297,42 +296,38 @@ public partial class FragmentManager : Node
             if (_banishedIds.Contains(w.Id))
                 continue;
             if (!_player.IsWeaponFragmentMaxed(w.Id))
-            {
                 pool.Add(new FragmentOption(w.Id, "weapon_upgrade", w.Name));
-            }
+            else if (w.IsSurplusReady)
+                pool.Add(new FragmentOption(w.Id, FragmentOption.SurplusType, w.Name));
         }
 
-        // Souvenirs Passifs nouveaux (si slots dispo)
-        if (!passiveSlotsFull)
-        {
-            HashSet<string> equippedPassiveIds = new();
-            foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
-                equippedPassiveIds.Add(p.Id);
-
-            foreach (PassiveSouvenirData passive in PassiveSouvenirDataLoader.GetAll())
-            {
-                if (equippedPassiveIds.Contains(passive.Id))
-                    continue;
-                if (_banishedIds.Contains(passive.Id))
-                    continue;
-                if (!MetaSaveManager.IsObjectUnlocked(passive.Id))
-                    continue;
-                pool.Add(new FragmentOption(passive.Id, "passive_new", passive.Name));
-            }
-        }
-
-        // Upgrades de passifs existants
-        foreach (ActivePassiveSouvenir p in _player.PassiveSlots)
-        {
-            if (_banishedIds.Contains(p.Id))
-                continue;
-            if (!p.IsMaxLevel)
-            {
-                pool.Add(new FragmentOption(p.Id, "passive_upgrade", p.Data.Name));
-            }
-        }
-
+        // Écussons (plan 35) : un neuf tant qu'il reste un emplacement, puis leurs niveaux. Les objets ne s'offrent plus au
+        // level-up : ils se trouvent dans le monde.
+        AddBadgeOffers(pool);
         return pool;
+    }
+
+    private void AddBadgeOffers(List<FragmentOption> pool)
+    {
+        IReadOnlyList<ActivePassiveSouvenir> shelf = _player.BadgeSlots;
+        if (shelf.Count < InventoryConfig.BadgeSlots)
+        {
+            HashSet<string> equippedIds = new();
+            foreach (ActivePassiveSouvenir owned in shelf)
+                equippedIds.Add(owned.Id);
+            foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
+            {
+                if (!data.IsBadge || equippedIds.Contains(data.Id) || _banishedIds.Contains(data.Id)
+                    || !MetaSaveManager.IsObjectUnlocked(data.Id))
+                    continue;
+                pool.Add(new FragmentOption(data.Id, "passive_new", data.Name));
+            }
+        }
+        foreach (ActivePassiveSouvenir owned in shelf)
+        {
+            if (!_banishedIds.Contains(owned.Id) && !owned.IsMaxLevel)
+                pool.Add(new FragmentOption(owned.Id, "passive_upgrade", owned.Data.Name));
+        }
     }
 
     /// <summary>Relance les choix de fragments (consomme un reroll).</summary>
@@ -473,7 +468,7 @@ public partial class FragmentManager : Node
 
     /// <summary>
     /// Tant que le joueur n'a aucun passif de survie, une des cartes en propose un (plan 03, lot 8B) :
-    /// sans cela, trois passifs de survie sur quatorze passaient souvent toute une run sans être vus.
+    /// sans cela, les Écussons et objets de survie, peu nombreux, passaient souvent toute une run sans être vus.
     /// La dernière carte est remplacée, les deux premières gardant le mélange nouveauté / amélioration.
     /// </summary>
     private void EnsureSurvivalChoice(List<FragmentOption> picked, List<FragmentOption> pool)
@@ -482,6 +477,9 @@ public partial class FragmentManager : Node
         if (picked.Count < 3 || picked[^1].Type == FragmentOption.AscensionType)
             return;
         foreach (ActivePassiveSouvenir owned in _player.PassiveSlots)
+            if (owned.Data.Survival)
+                return;
+        foreach (ActivePassiveSouvenir owned in _player.BadgeSlots)
             if (owned.Data.Survival)
                 return;
         foreach (FragmentOption option in picked)
@@ -584,6 +582,8 @@ public partial class FragmentManager : Node
 public class FragmentOption
 {
     public const string AscensionType = "weapon_ascension";
+    /// <summary>Carte d'une arme qui n'a plus rien à gagner : des dégâts en plus, sans plafond (plan 35 I4).</summary>
+    public const string SurplusType = "weapon_surplus";
 
     public string Id { get; }
     public string Type { get; }
@@ -641,6 +641,8 @@ public class FragmentOption
                 return player.UpgradeWeapon(Id, WeaponGains, Rarity?.Id);
             case AscensionType:
                 return player.AscendWeapon(Id, Ascension.Id);
+            case SurplusType:
+                return player.AddWeaponSurplus(Id, LevelUpOfferConfig.Load().WeaponSurplusDamage);
             case "passive_new":
                 return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":

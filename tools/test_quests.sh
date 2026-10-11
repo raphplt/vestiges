@@ -9,11 +9,11 @@ trap 'validation_cleanup "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 GODOT="${GODOT_BIN:-godot-mono}"
 validation_prepare "$TEST_DIR"
-# Chaque passage part d'un profil neuf : le suivi en run accomplit les 36 quêtes une à une.
+# Chaque passage part d'un profil neuf : le suivi en run accomplit les 38 quêtes une à une.
 for stage in unlocks tracking; do
     user_dir=$(vestiges_user_dir)
     [[ "$user_dir" == "$(abs_path "$TEST_DIR")"/* ]] || { echo "Profil non isolé : $user_dir" >&2; exit 1; }
-    find "$user_dir" -mindepth 1 -delete
+    mkdir -p "$user_dir" && find "$user_dir" -mindepth 1 -delete
     args=()
     if [[ "$stage" == tracking ]]; then args+=(--tracking); fi
     validation_run "${VALIDATION_RUN_TIMEOUT:-300}" "$TEST_DIR/$stage.log" '^\[QuestRegression\] PASS$' \

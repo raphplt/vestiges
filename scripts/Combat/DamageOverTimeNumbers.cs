@@ -3,14 +3,15 @@ using Godot;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Chiffres des dégâts sur la durée d'une créature (plan 27 V2a, §72) : brûlure et saignement s'additionnent et sortent
-/// en un petit chiffre par statut toutes les 0,5 s ; la part fractionnaire attend le chiffre suivant, le reliquat sort à
-/// la mort. Classe simple possédée par la créature, sans allocation.
+/// Chiffres des dégâts sur la durée d'une créature (plan 27 V2a, §72) : brûlure, saignement et poison s'additionnent et
+/// sortent en un petit chiffre par statut toutes les 0,5 s ; la part fractionnaire attend le chiffre suivant, le
+/// reliquat sort à la mort. Classe simple possédée par la créature, sans allocation.
 /// </summary>
 public sealed class DamageOverTimeNumbers
 {
     private float _burn;
     private float _bleed;
+    private float _poison;
     private float _timer;
 
     public void Add(StatusKind kind, float damage)
@@ -19,11 +20,13 @@ public sealed class DamageOverTimeNumbers
             _burn += damage;
         else if (kind == StatusKind.Bleed)
             _bleed += damage;
+        else if (kind == StatusKind.Poison)
+            _poison += damage;
     }
 
     public void Tick(float delta, Vector2 position)
     {
-        if (_burn <= 0f && _bleed <= 0f)
+        if (_burn <= 0f && _bleed <= 0f && _poison <= 0f)
         {
             _timer = 0f;
             return;
@@ -41,11 +44,12 @@ public sealed class DamageOverTimeNumbers
     {
         _burn = Show(StatusKind.Burn, _burn, position);
         _bleed = Show(StatusKind.Bleed, _bleed, position + new Vector2(0f, -8f));
+        _poison = Show(StatusKind.Poison, _poison, position + new Vector2(0f, -16f));
     }
 
     public void Clear()
     {
-        _burn = _bleed = _timer = 0f;
+        _burn = _bleed = _poison = _timer = 0f;
     }
 
     /// <summary>Tolérance d'arrondi : trente tics de 1/6 font 5, pas 4,9999.</summary>

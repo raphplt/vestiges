@@ -93,6 +93,7 @@ public partial class GameOverScreen : CanvasLayer
     {
         public string CharacterId;
         public string CharacterName;
+        public readonly List<(string Icon, int Level)> Badges = new();
         public readonly List<(string Icon, int Level)> Passives = new();
         public readonly List<(string Icon, string Name)> Perks = new();
     }
@@ -323,8 +324,10 @@ public partial class GameOverScreen : CanvasLayer
     {
         BuildSnapshot build = new() { CharacterId = player.CharacterId };
         build.CharacterName = CharacterDataLoader.Get(player.CharacterId)?.Name ?? player.CharacterId;
+        foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+            build.Badges.Add((badge.Data.Icon, badge.Level));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            build.Passives.Add((passive.Data.Icon, passive.Level));
+            build.Passives.Add((passive.Data.Icon, passive.Copies));
         foreach (PerkSpecializationData perk in player.Specializations)
             build.Perks.Add((perk.Icon, perk.Name));
         return build;
@@ -393,14 +396,18 @@ public partial class GameOverScreen : CanvasLayer
         int totalKills = _scoreManager?.TotalKills ?? 0;
         _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills)));
         _equipment.AddChild(RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration));
-        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_OBJECTS"), TextRole.Heading, UITheme.GoldBright));
-        HFlowContainer passives = new();
-        passives.AddThemeConstantOverride("h_separation", 12);
-        passives.AddThemeConstantOverride("v_separation", 12);
+        // Les Écussons gardent leurs cases, même vides (comme au HUD).
+        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BADGES"), TextRole.Heading, UITheme.GoldBright));
+        HFlowContainer badges = MakeSlotFlow();
+        _equipment.AddChild(badges);
+        AddBuildSlots(badges, _build?.Badges, InventoryConfig.BadgeSlots, UITheme.GoldColor);
+        // Les objets du sac, un par fiche avec ses exemplaires.
+        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BAG"), TextRole.Heading, UITheme.GoldBright));
+        HFlowContainer passives = MakeSlotFlow();
         _equipment.AddChild(passives);
         if (_build != null)
-            foreach ((string icon, int level) in _build.Passives)
-                passives.AddChild(RunSummaryPanels.Slot(icon, level, UITheme.CyanEssence));
+            foreach ((string icon, int copies) in _build.Passives)
+                passives.AddChild(RunSummaryPanels.Slot(icon, copies, UITheme.CyanEssence));
         if (_build == null || _build.Passives.Count == 0)
             passives.AddChild(UITheme.MakeLabel("Aucun objet", TextRole.Subhead, UITheme.TextDim));
         _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Heading, UITheme.GoldBright));
@@ -415,6 +422,25 @@ public partial class GameOverScreen : CanvasLayer
             }
         if (_build == null || _build.Perks.Count == 0)
             _equipment.AddChild(UITheme.MakeLabel("Aucune réminiscence", TextRole.Subhead, UITheme.TextDim));
+    }
+
+    private static HFlowContainer MakeSlotFlow()
+    {
+        HFlowContainer flow = new();
+        flow.AddThemeConstantOverride("h_separation", 12);
+        flow.AddThemeConstantOverride("v_separation", 12);
+        return flow;
+    }
+
+    private static void AddBuildSlots(Container row, List<(string Icon, int Level)> carried, int slots, Color frame)
+    {
+        for (int i = 0; i < slots; i++)
+        {
+            bool filled = carried != null && i < carried.Count;
+            row.AddChild(filled
+                ? RunSummaryPanels.Slot(carried[i].Icon, carried[i].Level, frame)
+                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
+        }
     }
 
     private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)
@@ -455,7 +481,13 @@ public partial class GameOverScreen : CanvasLayer
         _gainCards.Clear();
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
+        {
             AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
+            // Le solde renvoie au Campement, où il se dépense (plan 36) ; faux si le règlement n'a pas été écrit.
+            if (string.IsNullOrEmpty(gm.LastRunSaveError))
+                AddGainCard(string.Format(Tr("UI_END_VESTIGES_BALANCE"), MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French)),
+                    UITheme.TextLight);
+        }
         foreach (string questId in _questsDone)
         {
             QuestDefinition quest = QuestDataLoader.Get(questId);

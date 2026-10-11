@@ -317,11 +317,16 @@ public partial class PauseMenu : CanvasLayer
 		GridContainer weapons = InventoryGroup("Armes", 4);
 		foreach (WeaponInstance weapon in player.WeaponSlots)
 			AddInventoryTile(weapons, weapon.Sprite, weapon.Name, $"Niv {weapon.Level}", () => AddWeaponRow(player, weapon));
-		FillEmpty(weapons, Player.MaxWeaponSlots);
-		GridContainer objects = InventoryGroup("Objets", 6);
+		FillEmpty(weapons, player.WeaponSlotLimit);
+		GridContainer badges = InventoryGroup(Tr("INVENTORY_BADGES"), 4);
+		foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
+			AddInventoryTile(badges, badge.Data.Icon, badge.Data.Name, $"Niv {badge.Level}", () => AddPassiveRow(badge));
+		FillEmpty(badges, InventoryConfig.BadgeSlots);
+		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
+		GridContainer objects = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6);
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"{passive.Level}/{passive.Data.MaxLevel}", () => AddPassiveRow(passive));
-		FillEmpty(objects, Player.MaxPassiveSlots);
+			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"×{passive.Copies}", () => AddPassiveRow(passive));
+		FillEmpty(objects, objects.Columns);
 		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)
 			AddInventoryTile(perks, perk.Icon, perk.Name, "", () => AddPerkRow(perk, player));
@@ -428,7 +433,11 @@ public partial class PauseMenu : CanvasLayer
 		text.AddThemeConstantOverride("separation", 0);
 		row.AddChild(text);
 		string title = weapon.Ascension != null ? $"{weapon.Name} · {weapon.Ascension.Name}" : weapon.Name;
-		Label name = PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}", TextRole.Body, StatValueColor);
+		// Le surplus (cartes prises arme au maximum) est déjà compté dans les dégâts : on le nomme pour qu'il se lise.
+		string surplus = weapon.SurplusCards > 0
+			? "   " + string.Format(Tr("PAUSE_WEAPON_SURPLUS"), Mathf.RoundToInt(weapon.SurplusDamage * 100f))
+			: "";
+		Label name = PlayerSheet.MakeLabel($"{title}   Niv {weapon.Level}{surplus}", TextRole.Body, StatValueColor);
 		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(name);
 
@@ -464,7 +473,10 @@ public partial class PauseMenu : CanvasLayer
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
 		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
-		Label name = PlayerSheet.MakeLabel($"{passive.Data.Name}   Niv {passive.Level}/{passive.Data.MaxLevel}", TextRole.Body, StatValueColor);
+		// Un Écusson n'a pas de plafond à annoncer ; son sous-titre rappelle l'objet d'où il vient.
+		string level = passive.Data.IsBadge ? $"Niv {passive.Level}" : $"×{passive.Copies}";
+		string title = passive.Data.Subtitle.Length > 0 ? $"{passive.Data.Name} · {passive.Data.Subtitle}" : passive.Data.Name;
+		Label name = PlayerSheet.MakeLabel($"{title}   {level}", TextRole.Body, StatValueColor);
 		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
 		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		row.AddChild(name);
@@ -491,7 +503,11 @@ public partial class PauseMenu : CanvasLayer
 				continue;
 			MarginContainer indent = new();
 			indent.AddThemeConstantOverride("margin_left", 42);
-			Label detail = PlayerSheet.MakeLabel(string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text), TextRole.Small,
+			// Un objet atteint son palier par ses exemplaires, pas par un niveau affiché.
+			string text = passive.Data.IsBadge
+				? string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text)
+				: string.Format(Tr("ITEM_MILESTONE"), passive.Data.CopiesForLevel(milestone.Level), milestone.Text);
+			Label detail = PlayerSheet.MakeLabel(text, TextRole.Small,
 				passive.Reached(milestone) ? GoldBright : TextVeryDim);
 			detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 			indent.AddChild(detail);

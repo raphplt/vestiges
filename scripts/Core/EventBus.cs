@@ -59,6 +59,8 @@ public partial class EventBus : Node
     // --- Armes ---
     [Signal] public delegate void WeaponEquippedEventHandler(string weaponId, int slotIndex);
     [Signal] public delegate void WeaponInventoryChangedEventHandler();
+    /// <summary>Objet ramassé au sol (plan 35) : son icône vole vers le sac.</summary>
+    [Signal] public delegate void ItemPickedUpEventHandler(string itemId, Vector2 worldPosition);
     [Signal] public delegate void WeaponUpgradedEventHandler(string weaponId, int slotIndex, string stat, int newLevel);
     [Signal] public delegate void WeaponDroppedEventHandler(string weaponId);
     /// <summary>Arme ramassée au sol : le HUD fait voler son icône de ce point jusqu'à sa case.</summary>
@@ -67,6 +69,8 @@ public partial class EventBus : Node
     // --- Passive Souvenirs (level-up) ---
     [Signal] public delegate void PassiveSouvenirAddedEventHandler(string passiveId, int slotIndex);
     [Signal] public delegate void PassiveSouvenirUpgradedEventHandler(string passiveId, int newLevel);
+    /// <summary>Fil d'usage d'un Écusson (plan 35 I7) : remplissage de 0 à 1, par seizièmes ; leveled au niveau gagné.</summary>
+    [Signal] public delegate void BadgeThreadChangedEventHandler(string badgeId, float progress, bool leveled);
     [Signal] public delegate void PassiveSouvenirSlotsChangedEventHandler();
 
     // --- Fragments de Mémoire (level-up choices) ---

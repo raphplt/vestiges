@@ -46,6 +46,7 @@ public sealed class StatusVisualConfig
     public float DotNumberInterval { get; private init; }
     public Color BurnNumberColor { get; private init; }
     public Color BleedNumberColor { get; private init; }
+    public Color PoisonNumberColor { get; private init; }
 
     /// <summary>Annonce d'une créature qui explose à sa mort (V4) : seuil de PV et famille de l'anneau.</summary>
     public float ExplosionWarningHpRatio { get; private init; }
@@ -111,6 +112,7 @@ public sealed class StatusVisualConfig
                 DotNumberInterval = reader.Positive(numbers, "interval_sec"),
                 BurnNumberColor = Family(reader, numbers, "burn_family").Mid,
                 BleedNumberColor = Family(reader, numbers, "bleed_family").Mid,
+                PoisonNumberColor = Family(reader, numbers, "poison_family").Mid,
                 ExplosionWarningHpRatio = reader.Ratio(explosion, "hp_ratio"),
                 ExplosionWarningFamily = FamilyId(reader, explosion, "family"),
             };

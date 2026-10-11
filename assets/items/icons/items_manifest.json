@@ -2,112 +2,112 @@
   "icons": [
     {
       "id": "memoire_vive",
-      "name": "Ressort de sommier",
+      "name": "Écusson du batteur",
       "icon": "item_memoire_vive.png",
       "icon_16": "item_memoire_vive_16.png",
       "world": false
     },
     {
       "id": "souffle_du_neant",
-      "name": "Papier carbone",
+      "name": "Écusson du jongleur",
       "icon": "item_souffle_du_neant.png",
       "icon_16": "item_souffle_du_neant_16.png",
       "world": false
     },
     {
       "id": "reflet_brise",
-      "name": "Reflet brisé",
+      "name": "Écusson de l'archer",
       "icon": "item_reflet_brise.png",
       "icon_16": "item_reflet_brise_16.png",
       "world": false
     },
     {
       "id": "resonance",
-      "name": "Rondelle de cuivre",
+      "name": "Écusson du semeur",
       "icon": "item_resonance.png",
       "icon_16": "item_resonance_16.png",
       "world": false
     },
     {
       "id": "portee_etendue",
-      "name": "Mètre pliant",
+      "name": "Écusson de l'arpenteur",
       "icon": "item_portee_etendue.png",
       "icon_16": "item_portee_etendue_16.png",
       "world": false
     },
     {
       "id": "persistance",
-      "name": "Pince à linge",
+      "name": "Écusson de l'apothicaire",
       "icon": "item_persistance.png",
       "icon_16": "item_persistance_16.png",
       "world": false
     },
     {
       "id": "oeil_critique",
-      "name": "Lunettes de lecture",
+      "name": "Écusson de l'horloger",
       "icon": "item_oeil_critique.png",
       "icon_16": "item_oeil_critique_16.png",
       "world": false
     },
     {
       "id": "ancrage",
-      "name": "Bouton de manteau",
+      "name": "Écusson du veilleur",
       "icon": "item_ancrage.png",
       "icon_16": "item_ancrage_16.png",
       "world": false
     },
     {
       "id": "regeneration",
-      "name": "Bobine de fil",
+      "name": "Écusson de la couturière",
       "icon": "item_regeneration.png",
       "icon_16": "item_regeneration_16.png",
       "world": false
     },
     {
       "id": "peau_dure",
-      "name": "Genouillère",
+      "name": "Écusson du rugbyman",
       "icon": "item_peau_dure.png",
       "icon_16": "item_peau_dure_16.png",
       "world": false
     },
     {
       "id": "carapace",
-      "name": "Écusson de pompier",
+      "name": "Écusson du pompier",
       "icon": "item_carapace.png",
       "icon_16": "item_carapace_16.png",
       "world": false
     },
     {
       "id": "instinct",
-      "name": "Lacet rouge",
+      "name": "Écusson du coureur",
       "icon": "item_instinct.png",
       "icon_16": "item_instinct_16.png",
       "world": false
     },
     {
       "id": "siphon_essence",
-      "name": "Aimant de frigo",
+      "name": "Écusson du glaneur",
       "icon": "item_siphon_essence.png",
       "icon_16": "item_siphon_essence_16.png",
       "world": false
     },
     {
       "id": "photo_de_classe",
-      "name": "Photo de classe",
+      "name": "Écusson du bon élève",
       "icon": "item_photo_de_classe.png",
       "icon_16": "item_photo_de_classe_16.png",
       "world": false
     },
     {
       "id": "jeton_de_fete",
-      "name": "Jeton de fête foraine",
+      "name": "Écusson du forain",
       "icon": "item_jeton_de_fete.png",
       "icon_16": "item_jeton_de_fete_16.png",
       "world": false
     },
     {
       "id": "paille_tordue",
-      "name": "Paille tordue",
+      "name": "Écusson du barbier",
       "icon": "item_paille_tordue.png",
       "icon_16": "item_paille_tordue_16.png",
       "world": false
@@ -229,6 +229,41 @@
       "name": "Porte-monnaie usé",
       "icon": "item_porte_monnaie_use.png",
       "icon_16": "item_porte_monnaie_use_16.png",
+      "world": false
+    },
+    {
+      "id": "ticket_de_consigne",
+      "name": "Ticket de consigne",
+      "icon": "item_ticket_de_consigne.png",
+      "icon_16": "item_ticket_de_consigne_16.png",
+      "world": false
+    },
+    {
+      "id": "plan_de_metro",
+      "name": "Plan de métro",
+      "icon": "item_plan_de_metro.png",
+      "icon_16": "item_plan_de_metro_16.png",
+      "world": false
+    },
+    {
+      "id": "flacon_de_pharmacie",
+      "name": "Flacon de pharmacie",
+      "icon": "item_flacon_de_pharmacie.png",
+      "icon_16": "item_flacon_de_pharmacie_16.png",
+      "world": false
+    },
+    {
+      "id": "trefle_plastifie",
+      "name": "Trèfle plastifié",
+      "icon": "item_trefle_plastifie.png",
+      "icon_16": "item_trefle_plastifie_16.png",
+      "world": false
+    },
+    {
+      "id": "montre_arretee",
+      "name": "Montre arrêtée",
+      "icon": "item_montre_arretee.png",
+      "icon_16": "item_montre_arretee_16.png",
       "world": false
     },
     {

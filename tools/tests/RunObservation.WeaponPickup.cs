@@ -32,7 +32,7 @@ public partial class RunObservation
         SaveFrame("pickup-3-arrived");
         int slotsAfterAuto = _player.WeaponSlots.Count;
 
-        while (_player.WeaponSlots.Count < Vestiges.Core.Player.MaxWeaponSlots)
+        while (_player.HasFreeWeaponSlot)
             _player.AddWeapon(WeaponDataLoader.Get(_player.WeaponSlots.Count % 2 == 0 ? "sling" : "throwing_axes"));
         WeaponPickup second = new();
         second.Initialize(WeaponDataLoader.Get("music_box"), _player.GlobalPosition + new Vector2(20f, 10f));

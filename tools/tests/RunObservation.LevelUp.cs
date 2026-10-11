@@ -12,8 +12,9 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
 /// d'arme, une amélioration d'objet qui franchit son palier 15 et un objet nouveau, puis une fois avec
-/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire).
-/// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes et six objets portés
+/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire) ; ascension, puis
+/// quatre cartes avec le Trèfle plastifié.
+/// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes, quatre Écussons et un sac garni
 /// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
 /// </summary>
 public partial class RunObservation
@@ -76,6 +77,13 @@ public partial class RunObservation
         SaveFrame("levelup-ascension");
         screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
         await Frames(4);
+        // Trèfle plastifié (plan 35 I6) : une quatrième carte dans la même offre.
+        _player.AddItemCopy("trefle_plastifie");
+        typeof(FragmentManager).GetMethod("OfferFragments", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fragments, new object[] { 61 });
+        await Frames(20);
+        SaveFrame("levelup-clover");
+        screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+        await Frames(4);
         _player.AcquireSpecialization(PerkSpecializationDataLoader.Get("overheal_reserve"));
         pending.Clear();
         foreach (string id in new[] { "priority_targeting", "overflow", "rally" })
@@ -116,12 +124,17 @@ public partial class RunObservation
         SaveFrame("hud-no-shield");
         foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
-        foreach (string passive in new[] { "oeil_critique", "memoire_vive", "resonance", "souffle_du_neant", "persistance", "carapace" })
-            _player.AddOrUpgradePassive(passive);
+        foreach (string badge in new[] { "oeil_critique", "memoire_vive", "souffle_du_neant", "carapace" })
+            _player.AddOrUpgradePassive(badge);
         // Niveaux à deux chiffres dans les cases du HUD, un palier atteint et un palier à venir dans la pause.
         _player.AddOrUpgradePassive("souffle_du_neant", 29);
-        _player.AddOrUpgradePassive("persistance", 11);
+        _player.AddOrUpgradePassive("memoire_vive", 11);
+        // Le sac (plan 35) : des doublons côte à côte, un palier atteint au deuxième exemplaire.
+        foreach (string item in new[] { "de_a_coudre", "de_a_coudre", "glacon", "boite_de_pansements", "boite_de_pansements", "boite_de_pansements", "thermos" })
+            _player.AddItemCopy(item);
         WeaponInstance equipped = _player.EquippedWeapon;
+        // Surplus posé à la main : l'arme n'a pas le temps d'atteindre le niveau 50 dans la capture.
+        equipped.AddSurplus(0.08f);
         _player.UpgradeWeapon(equipped.Id, UpgradeRoller.RollWeaponGains(equipped,
             UpgradeRoller.Get("rare"), new RandomNumberGenerator()));
         _player.AIInputOverride = new Vector2(0.6f, 0.2f);

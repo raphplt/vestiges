@@ -37,4 +37,15 @@ public partial class Player
         float wave = 0.5f - 0.5f * Mathf.Cos(Mathf.Tau * _orbitPulseTime / period);
         return Mathf.Lerp(ascension.Parameter("pulse_min"), ascension.Parameter("pulse_max"), wave);
     }
+
+    /// <summary>Surplus d'une arme au bout de sa progression (plan 35 I4) : des dégâts en plus ; faux si elle n'y est pas.</summary>
+    public bool AddWeaponSurplus(string weaponId, float damage)
+    {
+        WeaponInstance weapon = FindWeaponSlot(weaponId, out int slot);
+        if (weapon == null || !weapon.IsSurplusReady)
+            return false;
+        weapon.AddSurplus(damage);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponUpgraded, weaponId, slot, "damage", weapon.Level);
+        return true;
+    }
 }
