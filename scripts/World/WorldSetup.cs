@@ -17,6 +17,7 @@ public partial class WorldSetup : Node2D
 {
     private TileMapLayer _ground;
     private TileMapLayer _roadOverlay;
+    private RoadTiles _roadTiles;
     private Node2D _poiContainer;
     private HashSet<Vector2I> _usedCells = new();
     private PoiManager _poiManager;
@@ -190,6 +191,7 @@ public partial class WorldSetup : Node2D
         {
             UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius, _config.MapRadiusY);
             _urbanLayout = urbanGen.Apply(_terrain, _generator, "urban_ruins");
+            _roadTiles = RoadTileGenerator.Build(_urbanLayout);
         }
         if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
             _swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
@@ -199,7 +201,7 @@ public partial class WorldSetup : Node2D
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
         }
 
-        LoadProfiler.Span("plans de la ville, du marais et des champs (thread)", ref step);
+        LoadProfiler.Span("plans de la ville, de ses chaussées, du marais et des champs (thread)", ref step);
         // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
         _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
                                                   _config.BiomeLayout.RegionSpacing, Seed);
@@ -225,20 +227,14 @@ public partial class WorldSetup : Node2D
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
 
-        // Enregistrer les tiles directionnelles de route (bitmask de connectivité × parité du rang)
-        if (_urbanLayout != null)
+        // Chaussées de la ville : une tuile par motif de voisinage, ses variantes d'usure (plan 37 M3).
+        int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
+        if (_roadTiles != null && urbanIndex >= 0)
         {
-            int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
-            if (urbanIndex >= 0)
-            {
-                ImageTexture[] roadTextures = RoadTileGenerator.GetOrGenerate();
-                for (int variant = 0; variant < RoadTileGenerator.VariantCount; variant++)
-                {
-                    string key = RoadTileGenerator.GetRoadKey(variant);
-                    _tileMapper.RegisterRuntimeTileGroup(urbanIndex, key, new[] { roadTextures[variant] });
-                }
-            }
-            _tileMapper.SetUrbanLayout(_urbanLayout);
+            foreach (KeyValuePair<string, Image[]> group in _roadTiles.Groups)
+                _tileMapper.RegisterRuntimeTileGroup(urbanIndex, group.Key, RoadTileGenerator.TexturesOf(group.Key, group.Value));
+            _tileMapper.SetRoadTiles(_roadTiles);
+            GD.Print($"[WorldSetup] Chaussées : {_roadTiles.Groups.Count} motifs pour {_roadTiles.Cells.Count} cellules");
         }
         if (_wildFieldsLayout != null)
             _tileMapper.SetWildFieldsLayout(_wildFieldsLayout);
@@ -310,6 +306,8 @@ public partial class WorldSetup : Node2D
         // Libérer les refs temporaires
         _terrain = null;
         _urbanLayout = null;
+        _roadTiles = null;
+        _tileMapper.SetRoadTiles(null);
         _swampLayout = null;
         _wildFieldsLayout = null;
         _pathNetwork = null;
@@ -458,7 +456,7 @@ public partial class WorldSetup : Node2D
             }
         }
 
-        await ApplyRoadOverlayAsync(urbanLayout, onProgress);
+        await ApplyRoadOverlayAsync(onProgress);
     }
 
     /// <summary>Chemins dessinés sur la couche des routes, juste avant elle : une rue recouvre le chemin qui la rejoint.</summary>
@@ -647,13 +645,13 @@ public partial class WorldSetup : Node2D
         MoveChild(_roadOverlay, _ground.GetIndex() + 1);
     }
 
-    private async Task ApplyRoadOverlayAsync(UrbanLayout urbanLayout, Action<string> onProgress)
+    private async Task ApplyRoadOverlayAsync(Action<string> onProgress)
     {
         if (_roadOverlay == null)
             return;
 
         _roadOverlay.Clear();
-        if (urbanLayout == null)
+        if (_roadTiles == null)
             return;
 
         int urbanIndex = _tileMapper.GetBiomeIndex("urban_ruins");
@@ -661,10 +659,10 @@ public partial class WorldSetup : Node2D
             return;
 
         int count = 0;
-        int total = urbanLayout.RoadCells.Count;
+        int total = _roadTiles.Cells.Count;
         BeginLoadSlice();
 
-        foreach (Vector2I roadCell in urbanLayout.RoadCells)
+        foreach (Vector2I roadCell in _roadTiles.Cells.Keys)
         {
             if (_tileMapper.TryGetUrbanRoadOverlaySourceId(urbanIndex, roadCell.X, roadCell.Y, out int sourceId) && sourceId >= 0)
                 _tileMapper.SetCell(_roadOverlay, roadCell, sourceId);

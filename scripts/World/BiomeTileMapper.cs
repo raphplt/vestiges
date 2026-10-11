@@ -25,8 +25,8 @@ public class BiomeTileMapper
 	/// <summary>Nombre maximal de matières distinguées par biome pour les jonctions du sol.</summary>
 	public const int MaxMaterialsPerBiome = 8;
 
-	// Layout urbain pour la sélection directionnelle des tiles de route
-	private UrbanLayout _urbanLayout;
+	// Tuiles de chaussée de la ville, posées par cellule
+	private RoadTiles _roadTiles;
 	private WildFieldsLayout _wildFieldsLayout;
 
 	// Tiles d'eau communes (remplacement global du water générique)
@@ -57,7 +57,7 @@ public class BiomeTileMapper
 
 	/// <summary>
 	/// Enregistre un groupe de textures runtime (générées en mémoire) comme source spéciale
-	/// pour un biome donné. Utilisé par RoadTileGenerator pour les tiles de route.
+	/// pour un biome donné : les tuiles de chaussée de <see cref="RoadTileGenerator"/>.
 	/// </summary>
 	public void RegisterRuntimeTileGroup(int biomeIndex, string specialKey, ImageTexture[] textures)
 	{
@@ -72,7 +72,6 @@ public class BiomeTileMapper
 			_biomeSpecialSourceMap[biomeIndex] = new Dictionary<string, int[]>();
 
 		_biomeSpecialSourceMap[biomeIndex][specialKey] = ids.ToArray();
-		GD.Print($"[BiomeTileMapper] Runtime tiles '{specialKey}' : {ids.Count} source(s) enregistrée(s)");
 	}
 
 	/// <summary>Retourne l'index du biome par son ID, ou -1.</summary>
@@ -86,13 +85,10 @@ public class BiomeTileMapper
 		return -1;
 	}
 
-	/// <summary>
-	/// Injecte le layout urbain pour permettre la sélection directionnelle des tiles de route.
-	/// Doit être appelé après Initialize et avant ApplyTerrain.
-	/// </summary>
-	public void SetUrbanLayout(UrbanLayout layout)
+	/// <summary>Tuiles de chaussée de la carte, déjà enregistrées par <see cref="RegisterRuntimeTileGroup"/>.</summary>
+	public void SetRoadTiles(RoadTiles roadTiles)
 	{
-		_urbanLayout = layout;
+		_roadTiles = roadTiles;
 	}
 
 	public void SetWildFieldsLayout(WildFieldsLayout layout)
@@ -107,7 +103,9 @@ public class BiomeTileMapper
 			return false;
 		if (!_biomeSpecialSourceMap.TryGetValue(biomeIndex, out Dictionary<string, int[]> specialMap))
 			return false;
-		return TryGetDirectionalRoadSource(specialMap, x, y, out sourceId);
+		if (_roadTiles == null || !_roadTiles.Cells.TryGetValue(new Vector2I(x, y), out string key))
+			return false;
+		return TryPickSpecialSource(specialMap, key, x, y, out sourceId);
 	}
 
 	public void Initialize(TileSet tileSet, List<BiomeData> activeBiomes)
@@ -666,44 +664,6 @@ public class BiomeTileMapper
 
 		sourceId = PickUrbanSpecialSourceId(key, sources, x, y);
 		return true;
-	}
-
-	/// <summary>
-	/// Sélectionne la tile de route directionnelle selon la connectivité aux 4 voisins cardinaux.
-	/// Calcule un bitmask (L=8|R=4|U=2|D=1) et cherche la variante de ce bitmask pour la parité du rang.
-	/// </summary>
-	private bool TryGetDirectionalRoadSource(
-		Dictionary<string, int[]> specialMap,
-		int x,
-		int y,
-		out int sourceId)
-	{
-		sourceId = -1;
-		if (_urbanLayout == null || specialMap == null)
-			return false;
-
-		int gx = x + _urbanLayout.MapRadius;
-		int gy = y + _urbanLayout.MapRadiusY;
-
-		bool hasLeft  = IsUrbanRoad(gx - 1, gy);
-		bool hasRight = IsUrbanRoad(gx + 1, gy);
-		bool hasUp    = IsUrbanRoad(gx, gy - 1);
-		bool hasDown  = IsUrbanRoad(gx, gy + 1);
-
-		int mask = (hasLeft ? RoadTileGenerator.ConnLeft : 0)
-				 | (hasRight ? RoadTileGenerator.ConnRight : 0)
-				 | (hasUp ? RoadTileGenerator.ConnUp : 0)
-				 | (hasDown ? RoadTileGenerator.ConnDown : 0);
-
-		string key = RoadTileGenerator.GetRoadKey(RoadTileGenerator.VariantIndex(mask, y));
-		return TryPickSpecialSource(specialMap, key, x, y, out sourceId);
-	}
-
-	private bool IsUrbanRoad(int gx, int gy)
-	{
-		if (gx < 0 || gx >= _urbanLayout.CellGrid.GetLength(0) || gy < 0 || gy >= _urbanLayout.CellGrid.GetLength(1))
-			return false;
-		return _urbanLayout.CellGrid[gx, gy] == UrbanCellType.Road;
 	}
 
 	private bool TryGetSwampSourceId(

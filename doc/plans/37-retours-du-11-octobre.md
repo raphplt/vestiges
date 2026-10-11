@@ -205,3 +205,18 @@ Un lot à la fois, capture regardée avant de conclure.
 - **Résultat** : mares bordées de boue aux contours organiques, champs et prairies qui avancent par plaques, plus de pixels isolés ni de losanges francs ([avant/après](planches/37-m2-transitions.png), même graine, même instant).
 - **Coût** : seules les cellules proches d'une frontière sondent ; elles font jusqu'à 48 lectures au lieu de 24, plus cinq bruits. La capture en 4K reste au plafond de 144 FPS ; **banc A/B à faire machine calme** (une autre session tournait).
 - **Vérifié** : captures avant/après regardées ; `tools/validate.sh` smoke, `erasure_active`, `catalogs` 3/3 ; préchauffage valide.
+
+## 15. Lot M3 livré : bords de routes en perspective iso — 11 octobre 2026
+
+Raphaël a demandé d'enchaîner sans attendre la validation de la planche : la planche sert d'avant/après, à juger en jeu.
+
+- **Cause** : chaque tuile de route ne connaissait que ses quatre voisines et ne dessinait que sa tranche de 16 px. Les bords étaient des traits droits d'un pixel, la bordure nord identique à la sud, les croisements à angle droit.
+- **Retenu** (`RoadTileGenerator`, réécrit) :
+  - la géométrie de la chaussée est calculée sur le réseau autour de chaque cellule (voisinage 5 × 5 codé en clé), et non plus tuile par tuile. Les angles des croisements sont **abattus en diagonale 2:1**, la pente du sol iso, et débordent sur les tranches voisines, trottoirs compris ;
+  - vue du sud-est, comme les immeubles : la bordure au nord d'une rue et celle à l'ouest d'une rue verticale **montrent leur face** (2 px, joints tous les 8 px, pied sombre). Au sud et à l'est, seul le dessus de la bordure dépasse, au-dessus d'un trait sombre ;
+  - la ligne droite est cassée par des **tronçons de bordure effondrés** (gravats, sol qui perce), des **morsures** du bord de chaussée que la bordure suit, et de rares nids-de-poule en ellipse 2:1 ;
+  - les tuiles sont dédoublonnées par l'empreinte de leurs surfaces : **60 motifs × 4 variantes d'usure** pour 7 966 cellules sur la graine de capture. Les morsures et les tronçons restent hors des pixels que lisent les tuiles voisines, donc les raccords sont exacts.
+- **Chargement** : le calcul se fait sur le thread de génération (environ 130 ms, en parallèle du préchauffage des shaders) ; le thread principal ne crée que les textures. Pire image : 256 à 283 ms selon la passe, contre 251 avant, dans le bruit de la machine chargée.
+- **Gameplay inchangé** : mêmes cellules de route, même emprise à un pixel près ; les décors ne bougent pas.
+- **Résultat** : [avant/après](planches/37-m3-routes.png), même graine.
+- **Vérifié** : captures regardées ; `tools/validate.sh` smoke, `loading`, `cartography`, `small_places`, `movement` 5/5 ; relecture `godot-reviewer` (points mineurs corrigés : type `RoadTiles` dans son fichier, verrou sur les caches, cellules hors grille ignorées, références libérées).
