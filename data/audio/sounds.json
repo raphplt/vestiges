@@ -985,5 +985,23 @@
     "effect_id": "indicible_window_open",
     "priority": 85,
     "max_voices": 1
+  },
+  "sfx_aim_warning": {
+    "path": "res://assets/audio/sfx/selected/aim_warning.wav",
+    "volume_db": 1.5,
+    "min_interval_ms": 150,
+    "effect_id": "aim_warning",
+    "priority": 60,
+    "max_voices": 2
+  },
+  "sfx_rift_wake": {
+    "path": "res://assets/audio/sfx/selected/rift_wake.wav",
+    "volume_db": 0,
+    "min_interval_ms": 500,
+    "effect_id": "rift_wake",
+    "priority": 85,
+    "max_voices": 1,
+    "duck_music_db": -4,
+    "duck_sec": 2.0
   }
 }

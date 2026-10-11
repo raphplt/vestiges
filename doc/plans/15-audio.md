@@ -661,3 +661,11 @@ Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les q
 **Après le choix :** intégrer le son retenu au gain cible de sa famille (contrôlé par `tools/audio_bank_audit.py`), puis brancher les déclencheurs manquants : soin notable avec cadence bornée, bouclier revenu au plein, visée des créatures à distance (placée à l'écran), réveil de la Faille.
 
 **Retour du 11 octobre sur X8 ([DECISIONS §112](DECISIONS.md))** : le « son de blessure » métallique entendu en jeu était le coup de la créature, joué en même temps que la blessure. Retiré : un coup au contact ne joue plus que la blessure, et les trois sons de contact, devenus inutiles, sont supprimés. La planche ajoute un diagnostic (blessure seule, coup d'Ombre seul, les deux) ; ses scènes de combat, où la blessure était encore couverte, sont refaites sans le coup de créature.
+
+**Choix du 11 octobre ([DECISIONS §113](DECISIONS.md)), intégrés :**
+- **Blessure :** son actuel gardé.
+- **Soin et bouclier rechargé :** sans son, besoins clos. Les trois créations de soin d'après la référence de Raphaël restent archivées hors dépôt (`2026-10-11/soin/`).
+- **Tir visé :** C (`sfx_aim_warning`), lu par la capacité `aimed_shot` (`aim_audio` dans le contrat, valeur par défaut). `AudioManager.PlayAt(…, endsAfter)` le fait partir à la longueur du fichier moins la visée, pour qu'il culmine au tir (0,35 s pour la Tisseuse, 0,4 et 0,8 s pour le Hurleur). Gain visé −24 effectif, comme les autres annonces de créatures.
+- **Réveil de la Faille :** G (`sfx_rift_wake`), joué par `RiftDirector` au réveil, ducking −4 dB pendant 2 s, gain visé −20 effectif.
+- Le contrôle de la banque a refusé un premier fichier du tir visé (117 ms de silence de tête), retiré.
+- Contrôles : `smoke audio music enemy_abilities` 4/4. Nouveaux contrôles : départ calé du tir visé, et absence de son de soin, le contrôle ayant été retiré avec le soin.

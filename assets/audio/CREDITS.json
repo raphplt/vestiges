@@ -2116,5 +2116,29 @@
     "source_url": "https://opengameart.org/content/swishes-sound-pack ; https://kenney.nl/assets/rpg-audio",
     "attribution": "artisticdude — Swishes Sound Pack — CC0-1.0 ; Kenney — RPG Audio (bookPlace2.ogg) — CC0-1.0",
     "processing": "Recette letter_satchel de tools/prepare_weapon_audio.py, variante A : throw_release à ×1,2 et impact_paper à ×1,15 (poids 0,4), 0,24 s, passe-bas 11 kHz, fondus, niveau actif −23 dBFS. Provisoire : à auditionner par Raphaël."
+  },
+  {
+    "effect_id": "aim_warning",
+    "candidate_id": "aimed_shot_warning_C",
+    "file": "assets/audio/sfx/selected/aim_warning.wav",
+    "sha256": "dd8e6c7291fc82780aa1f314ec117b20d2ce3d4a5911e33c47ab481d9097df04",
+    "author": "VESTIGES",
+    "license": "original",
+    "license_url": "",
+    "source_url": "",
+    "attribution": "Synthèse originale VESTIGES (planche du 11 octobre 2026, synth.py, graine fixe).",
+    "processing": "Bois qui grince sous la tension : craquements de plus en plus serrés sur un bourdon qui monte. NumPy/SciPy, 48 kHz PCM16, crête −3 dBFS. Choix C de Raphaël (DECISIONS §113). Silence de tête retiré (117 ms)."
+  },
+  {
+    "effect_id": "rift_wake",
+    "candidate_id": "rift_wake_G",
+    "file": "assets/audio/sfx/selected/rift_wake.wav",
+    "sha256": "5908798f390f79f86d24f852c951ffb779921b7f6972cfcca3fc69cbbc80e074",
+    "author": "Joseph SARDIN / BigSoundBank",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/gong-sweet-s1482.html ; https://bigsoundbank.com/cloth-s0013.html",
+    "attribution": "Joseph SARDIN — Gong, sweet (s1482) et Cloth (s0013) — BigSoundBank — CC0-1.0.",
+    "processing": "Gong 0–2,2 s inversé, superposé à la déchirure de tissu 3,1–4,8 s ralentie à 0,8 (−6 dB) ; silence de tête retiré, fondus, sonie momentanée −20 LUFS, 48 kHz PCM16. Choix G de Raphaël (DECISIONS §113)."
   }
 ]

@@ -800,7 +800,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	}
 
 	/// <summary>Son d'une action de la créature, plus faible avec la distance et muet au loin : l'AudioManager n'est pas spatialisé.</summary>
-	internal void PlayNearbyAudio(string key)
+	internal void PlayNearbyAudio(string key, float endsAfter = 0f)
 	{
 		if (_player == null || !IsInstanceValid(_player))
 			return;
@@ -808,7 +808,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (distance >= RangedAttackAudioRadius)
 			return;
 		float far = Mathf.SmoothStep(NearbyAudioFullRadius, RangedAttackAudioRadius, distance);
-		Infrastructure.AudioManager.PlayAt(key, GlobalPosition, 0.06f, NearbyAudioBaseDb + NearbyAudioFalloffDb * far);
+		Infrastructure.AudioManager.PlayAt(key, GlobalPosition, 0.06f, NearbyAudioBaseDb + NearbyAudioFalloffDb * far, endsAfter);
 	}
 
 	/// <summary>Sentinelle : immobile, tire à distance. Pilier organique ancré.</summary>

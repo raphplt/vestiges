@@ -487,6 +487,16 @@ public partial class AudioMixRegression : Node
             Check(played.Count == 0, "armure sans réduction : pas de parade sonore");
             defense.Ignored(Vector2.Zero);
             Check(played.Count == 1 && played[0] == "sfx_armor_parry", "coup ignoré : parade choisie audible sans pool de particules");
+            played.Clear();
+            AudioManager.PlayAt("sfx_aim_warning", Vector2.Zero, 0f, 0f, 0.4f);
+            bool fitted = false;
+            foreach (Node child in audio.GetChildren())
+            {
+                if (child is AudioStreamPlayer voice && voice.Playing && voice.Stream != null
+                    && Mathf.Abs(voice.GetPlaybackPosition() - ((float)voice.Stream.GetLength() - 0.4f)) < 0.05f)
+                    fitted = true;
+            }
+            Check(played.Contains("sfx_aim_warning") && fitted, "tir visé : le grincement part en cours pour culminer au tir");
             audio.SoundRequested -= OnSound;
             bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
         }

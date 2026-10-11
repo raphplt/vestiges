@@ -1223,3 +1223,14 @@ Raphaël, après X6 : « les curseurs musique et ambiance, comme tous les autres
 Raphaël remarque que la blessure du joueur sonne très différemment en jeu (« beaucoup plus métallique et fort ») que le fichier seul. La cause : à chaque coup au contact, le jeu jouait aussi le son d'attaque de la créature. Celui de l'Ombre, du Charognard et du Rampant d'ombre est un frottement métallique écrêté, deux fois plus long que la blessure, et il la couvrait. Trois options lui sont présentées : retirer ce son, le remplacer ou le baisser. Il choisit de le retirer : « ne pas avoir de son de créature qui nous touchent ».
 
 **Acquis :** un coup au contact ne joue que la blessure du joueur. Les sons des créatures restent sur leurs actions (bond, cri, tir, terrier, crachat). Le tir de la Sentinelle garde son son. Les trois sons de contact (`sfx_ombre_attaque`, `sfx_rodeur_attaque`, `sfx_brute_charge`) et le champ `attack_audio` des sept créatures de corps à corps sont retirés.
+
+## 113. Choix de la planche du 11 octobre — 11 octobre 2026
+
+Raphaël, après écoute :
+- **Blessure du joueur :** il garde le son actuel. Il est désormais seul à jouer au contact (§112).
+- **Soin reçu :** une création d'après sa référence est d'abord demandée, puis il renonce : « aucun son pour les soins reçus, ça me va, sinon ça va être la galère à gérer ».
+- **Bouclier rechargé :** aucun son, pas nécessaire.
+- **Annonce du tir visé :** C, bois qui grince sous la tension (synthèse originale).
+- **Réveil de la Faille :** G, gong inversé et déchirure (BigSoundBank, CC0).
+
+**Acquis :** le tir visé fait partir son grincement en cours de route, pour qu'il culmine au tir quelle que soit la durée de visée de la créature. Il est placé à l'écran et s'atténue au loin. La Faille joue son réveil au moment où on la réveille, et la musique baisse brièvement. Le soin et le bouclier restent muets, besoins clos.

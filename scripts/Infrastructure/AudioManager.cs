@@ -488,9 +488,20 @@ public partial class AudioManager : Node
 		Instance?.PlaySfx(key, pitchVariance, volumeDb, basePitch);
 	}
 
-	/// <summary>Son du monde placé à gauche ou à droite selon la position de sa source à l'écran.</summary>
-	public static void PlayAt(string key, Vector2 worldPosition, float pitchVariance = 0.05f, float volumeDb = 0f) =>
-		Instance?.PlayWorld(key, pitchVariance, volumeDb, 1f, Instance.PanBusFor(worldPosition));
+	/// <summary>
+	/// Son du monde placé à gauche ou à droite selon la position de sa source à l'écran. <paramref name="endsAfter"/>
+	/// (secondes, 0 = son entier) fait partir un son plus long en cours de route pour qu'il culmine à cet instant :
+	/// une annonce finit avec ce qu'elle annonce.
+	/// </summary>
+	public static void PlayAt(string key, Vector2 worldPosition, float pitchVariance = 0.05f, float volumeDb = 0f, float endsAfter = 0f)
+	{
+		if (Instance == null)
+			return;
+		float from = 0f;
+		if (endsAfter > 0f && Instance._streams.TryGetValue(key, out AudioStream stream))
+			from = Mathf.Max(0f, (float)stream.GetLength() - endsAfter);
+		Instance.PlayWorld(key, pitchVariance, volumeDb, 1f, Instance.PanBusFor(worldPosition), from);
+	}
 
 	private string PanBusFor(Vector2 worldPosition)
 	{
@@ -507,7 +518,7 @@ public partial class AudioManager : Node
 	public void PlaySfx(string key, float pitchVariance = 0.05f, float volumeDb = 0f, float basePitch = 1f) =>
 		PlayWorld(key, pitchVariance, volumeDb, basePitch, null);
 
-	private void PlayWorld(string key, float pitchVariance, float volumeDb, float basePitch, string panBus)
+	private void PlayWorld(string key, float pitchVariance, float volumeDb, float basePitch, string panBus, float fromSeconds = 0f)
 	{
 		if (_runAudioStopped || !_streams.TryGetValue(key, out AudioStream stream))
 			return;
@@ -536,7 +547,7 @@ public partial class AudioManager : Node
 		player.VolumeDb = volumeDb + _soundVolumes.GetValueOrDefault(key);
 		if (_soundVolumeVariance.TryGetValue(key, out float variance))
 			player.VolumeDb += _rng.RandfRange(-variance, variance);
-		player.Play();
+		player.Play(fromSeconds);
 		if (_soundDucks.TryGetValue(key, out (float Db, float Sec) duck))
 			DuckMusic(duck.Db, duck.Sec);
 	}
