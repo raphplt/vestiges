@@ -1,0 +1,16 @@
+{
+  "tool": "image_gen.imagegen",
+  "date": "2026-10-12",
+  "prompt": "Use case: style-transfer. Asset type: a 16:9 pixel art loading screen backdrop for VESTIGES, a 2D isometric game. Image 1 is the existing backdrop to redesign; Image 2 is the main menu, the authoritative reference for coarse pixel grain, limited earthy palette, and painterly pixel clusters. Redraw image 1 with much LESS fine detail and clearly coarser, intentional PIXEL ART matching image 2. Keep the composition: very large empty dark indigo-charcoal central area (at least central 75% across and middle 75% vertically), ordinary ruined urban stone framing only the outer edges, a few muted olive ivy clusters in the upper left corner, restrained crumbling stone fragments on the right fading into darkness. Use large readable stepped silhouettes and broad flat clusters, just a few chipped slab edges; remove tiny leaf patterns, micro cracks, fine stippling and photographic textures. Quiet mysterious worn material, understated low contrast: dark blue-black #1A1A2E and #16213E, warm grey #3A3535 and #6B6161, muted olive, a few soft ochre edge accents. No bright white strip on right, no luminous object, no fire. The canvas must look natively hand drawn on a 480 by 270 pixel grid, scaled with nearest-neighbor; uniformly square crisp pixels, each cluster made of several native pixels. Important: simplify the art itself rather than applying a pixelation filter to busy detail. Interior center is nearly flat and clean so a walking character across y=50% and short text at y=78% read clearly. Bottom edge narrow and unobtrusive. No characters, no text, no lettering, no UI boxes, no borders that look medieval, no buttons, no runes, no gradients with tiny noise, no antialiasing. Output only the full background image, landscape 16:9.",
+  "referenced_image_paths": [
+    "assets/ui/menus/stone/interior.png",
+    "assets/bg_menu_1920x1080.png"
+  ],
+  "source": "exec-af81b092-3fb0-4bb3-b1ae-29cf099f130f.png",
+  "output": "assets/ui/menus/stone/loading.png",
+  "native_size": [
+    480,
+    270
+  ],
+  "preparation": "Mise au format natif par réduction nearest ; aucune retouche de dessin après génération."
+}

@@ -6,6 +6,8 @@ namespace Vestiges.Infrastructure;
 public sealed class DefenseConfig
 {
     public float HurtInvulnerabilitySeconds { get; private init; } = 0.25f;
+    /// <summary>Chaque perte de PV suspend la régénération passive pendant ce délai.</summary>
+    public float RegenDelayAfterDamageSeconds { get; private init; } = 2f;
     public float ShieldRechargeDelaySeconds { get; private init; } = 5f;
     public float ShieldRechargeSeconds { get; private init; } = 2f;
     public float ArmorHalfValue { get; private init; } = 15f;
@@ -38,6 +40,7 @@ public sealed class DefenseConfig
         return new DefenseConfig
         {
             HurtInvulnerabilitySeconds = Read(dict, "hurt_invulnerability_seconds", defaults.HurtInvulnerabilitySeconds),
+            RegenDelayAfterDamageSeconds = Read(dict, "regen_delay_after_damage_seconds", defaults.RegenDelayAfterDamageSeconds),
             ShieldRechargeDelaySeconds = Read(dict, "shield_recharge_delay_seconds", defaults.ShieldRechargeDelaySeconds),
             ShieldRechargeSeconds = Read(dict, "shield_recharge_seconds", defaults.ShieldRechargeSeconds),
             ArmorHalfValue = Read(dict, "armor_half_value", defaults.ArmorHalfValue),

@@ -2,6 +2,35 @@
 
 10 octobre 2026, soir. Retour de Raphaël après des parties au Vagabond (Faucille), consigné au [§101](DECISIONS.md). Diagnostic, leviers tranchés le soir même (§6), **lot Q1 livré et mesuré** (§7). À juger en jouant.
 
+## Lot R1 — Régénération après blessure (12 octobre 2026)
+
+Demande de Raphaël : réduire la régénération de base d'environ 10 % pour tous les personnages et ajouter 2 s sans régénération après un coup. Lot unique :
+
+- [x] Multiplier les cinq taux de base par 0,9 dans `characters.json` ; conserver les bonus existants.
+- [x] Définir le délai commun dans `defense.json` ; chaque perte de PV, y compris le Néant, relance ce délai. Un coup esquivé, ignoré ou absorbé entièrement par le bouclier ne le relance pas. Soins directs et vol de vie conservés.
+- [x] Vérifier la suspension, la reprise, les blessures rapprochées et les contrats de soin ; build sans avertissement, smoke et capture en run.
+
+Taux avant → après (PV/s) : Traqueur 0,6 → 0,54 ; Vagabond 1 → 0,9 ; Forgeuse 1,2 → 1,08 ; Facteur 0,8 → 0,72 ; Éveillée 0,9 → 0,81.
+
+Validation technique : `tools/validate.sh /tmp/vestiges-regen-r1-20261012 smoke perk_contracts perk_effects objects camp`, cinq suites vertes, build sans avertissement. Dix contrôles ajoutés au contrat de soin : délai depuis les données, absence de soin et d'excédent pendant la suspension, expiration exacte, reprise avec bonus, seconde blessure, soins directs et vol de vie, dépassement du délai dans une image, Néant et bouclier. Capture `--capture-player-hit --character vagabond`, graine 42, terminée sans erreur dans `/tmp/vestiges-regen-r1-capture-20261012` ; blessure et soin contrôlés visuellement. Le ressenti de difficulté reste à juger en jouant.
+
+Retour à éprouver après ce lot : les créatures du début font encore trop peu mal (10 à 15 coups pour mourir selon Raphaël). Une hausse de leurs dégâts est envisagée, sans valeur ni modification décidée ici.
+
+## Lot R2 — Mesurer la menace des coups (12 octobre 2026)
+
+Demande de Raphaël : tester les différents personnages en jeu, mesurer les dégâts ennemis et proposer des réglages à partir des résultats. Aucune hausse de dégâts autorisée dans ce lot.
+
+- [x] Compléter le banc de run avec un relevé facultatif des blessures réellement acceptées, par instant et source, et des soins par origine ; distinguer les coups annoncés des PV réellement perdus.
+- [x] Jouer les cinq personnages, profil neuf, Péril 0, bot nomade qui visite, quatre mêmes graines (42, 1002, 7, 123), 10 min par run, avec la régénération R1.
+- [x] Comparer les premières minutes et la tranche 5–10 min, les dégâts des créatures courantes et les différences entre personnages ; projeter une hausse ciblée et +20 % partout à exposition constante, sans les intégrer.
+- [x] Livrer les chiffres, les limites du bot et des propositions ; build sans avertissement et bancs terminés avec code 0.
+
+**Résultats et preuves :** [audit des dégâts](../audits/damage-opening-2026-10-12/README.md), 20 runs et 17 697 résultats de dégâts. Coups moyens pour vider la vie, hors soins, pendant 0–2 min : Vagabond 15,3 ; Traqueur 12,8 ; Forgeuse 28,9 ; Facteur 15,5 ; Éveillée 14,3. Entre 2 et 5 min : 12,1 / 8,5 / 19,3 / 11,5 / 10,3. Le nombre est calculé sur les PV max de chaque blessure, sans tronquer la moyenne par les coups fatals.
+
+**Proposition, non appliquée :** Charognard 4 → 5, Ombre 3 → 4, Rampant d'Ombre 5 → 6. Ces trois créatures causent 71 à 93 % des PV perdus pendant les deux premières minutes. Projection : Vagabond 15,3 → 13,1 coups ; Traqueur 12,8 → 10,4 ; Forgeuse 28,9 → 23,6 ; Facteur 15,5 → 12,6 ; Éveillée 14,3 → 11,8. Garder d'abord les dégâts des grosses créatures et des attaques à distance. Variante prudente : +0,5 de base sur les trois petites créatures. Le ressenti et les effets sur les élites restent à jouer après choix du dosage.
+
+**Banc réparé :** le premier passage attendait indéfiniment la confirmation du butin d'un coffre. Ces quatre runs incomplètes sont exclues. Le bot confirme désormais la révélation puis la reprise ; les 20 runs relancées couvrent chacune 600 s, avec processus réussis et CSV validés. Journaux bruts : `/tmp/vestiges-damage-r2-20261012-valid`.
+
 ## 0. En bref
 
 - **Le Cracheur pèse trop pour ce qu'il rapporte.** Il fait 15 % des apparitions, dès la première seconde et dans les cinq biomes, mais le Vagabond n'en tue que 4 %. Il cause 14 % des dégâts reçus, le Présage 9 % de plus. Il est entré dans les cinq pools d'exploration le 2 octobre (plan 21 E4), quand le retour du jour demandait « plus de tirs ».

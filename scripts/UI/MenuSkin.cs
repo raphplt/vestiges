@@ -200,7 +200,7 @@ public static class MenuSkin
         ColorRect ground = new() { Color = new Color(0.045f, 0.045f, 0.075f, 1f), MouseFilter = Control.MouseFilterEnum.Ignore };
         parent.AddChild(ground);
         ground.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _backdrop ??= GD.Load<Texture2D>("res://assets/ui/menus/stone/interior.png");
+        _backdrop ??= GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png");
         TextureRect art = new()
         {
             Texture = _backdrop, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,

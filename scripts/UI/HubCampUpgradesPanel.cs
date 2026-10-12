@@ -7,35 +7,41 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Page Campement de l'accueil (plan 36, lot M2) : les améliorations permanentes achetées en Vestiges, par rayon.
-/// Chaque ligne achète le rang suivant (Valider) ; son bouton « Rendre » rembourse le dernier rang, gratuitement. Le
-/// solde se met à jour après chaque achat. Chaque ligne dit en clair ce que fait l'amélioration, puis son effet actuel
-/// et le suivant (DECISIONS §117).
+/// Une liste d'objets garde les explications courtes et les rangs visibles. La fiche sélectionnée regroupe le gain,
+/// l'achat et le remboursement libre (plan 36 M5), pour ne pas répéter les commandes sur quatorze lignes.
 /// </summary>
 public partial class HubCampUpgradesPanel : MarginContainer
 {
-    private const float RowWidth = 640f;
-    private const float RowHeight = 60f;
-    private const float RightColumn = 420f;
-    private const float RefundWidth = 120f;
+    private const float ListWidth = 780f;
+    private const float RowHeight = 80f;
+    private const float DetailWidth = 640f;
     private static readonly Color MaxedColor = UITheme.GoldBright;
     private static readonly Color MissingColor = new(0.78f, 0.42f, 0.36f);
 
     private sealed class Row
     {
         public CampUpgradeData Upgrade;
-        public Button Buy;
-        public Button Refund;
-        public Label Effect;
+        public Button Select;
         public Label Rank;
-        public Label Price;
+        public Texture2D Icon;
     }
 
     private readonly List<Row> _rows = new();
     private Label _balance;
     private Label _status;
     private Button _refundAll;
-    private VBoxContainer _left;
-    private VBoxContainer _right;
+    private VBoxContainer _list;
+    private Row _selected;
+    private TextureRect _detailIcon;
+    private Label _detailName;
+    private Label _detailHint;
+    private Label _detailRank;
+    private Label _detailEffect;
+    private Label _detailPrice;
+    private Button _buySelected;
+    private Button _refundSelected;
+    private string _defaultStatus = "";
+    private bool _catalogFailed;
 
     public override void _Ready()
     {
@@ -78,49 +84,46 @@ public partial class HubCampUpgradesPanel : MarginContainer
             MouseFilter = MouseFilterEnum.Ignore,
         });
 
+        HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
+        body.AddThemeConstantOverride("separation", 40);
+        column.AddChild(body);
         ScrollContainer scroll = new()
         {
-            SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
+            CustomMinimumSize = new Vector2(ListWidth + 16f, 0f), SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
         };
-        column.AddChild(scroll);
-        HBoxContainer body = new();
-        body.AddThemeConstantOverride("separation", 48);
-        scroll.AddChild(body);
-        _left = new VBoxContainer();
-        _left.AddThemeConstantOverride("separation", 4);
-        body.AddChild(_left);
-        _right = new VBoxContainer();
-        _right.AddThemeConstantOverride("separation", 4);
-        body.AddChild(_right);
+        body.AddChild(scroll);
+        _list = new VBoxContainer();
+        _list.AddThemeConstantOverride("separation", 8);
+        scroll.AddChild(_list);
+        body.AddChild(MakeDetail());
     }
 
-    /// <summary>Reconstruit les rayons ; renvoie la première ligne, qui prend le focus.</summary>
+    /// <summary>Reconstruit la liste et conserve l'objet examiné lors d'une réouverture.</summary>
     public Control Refresh()
     {
-        // Retirés tout de suite : l'espaceur entre rayons se décide sur les enfants restants.
-        foreach (VBoxContainer columnBox in new[] { _left, _right })
-        {
-            foreach (Node child in columnBox.GetChildren())
-            {
-                columnBox.RemoveChild(child);
-                child.QueueFree();
-            }
-        }
+        string previous = _selected?.Upgrade.Id;
+        MenuSkin.Clear(_list);
         _rows.Clear();
-
-        // Capacités et Confort à gauche, les neuf stats à droite.
-        AddBranch(_left, CampBranch.Capacities, "UI_CAMP_BRANCH_CAPACITIES");
-        AddBranch(_left, CampBranch.Comfort, "UI_CAMP_BRANCH_COMFORT");
-        AddBranch(_right, CampBranch.Stats, "UI_CAMP_BRANCH_STATS");
-        if (!CampUpgradeDataLoader.TryLoad(out string catalogError))
-            SetStatus(catalogError, MissingColor);
-        else
-            SetStatus(DevelopmentMode.IsEnabled ? Tr("UI_CAMP_DEV_SLOTS") : "", UITheme.TextColor);
+        _selected = null;
+        AddBranch(CampBranch.Capacities, "UI_CAMP_BRANCH_CAPACITIES");
+        AddBranch(CampBranch.Comfort, "UI_CAMP_BRANCH_COMFORT");
+        AddBranch(CampBranch.Stats, "UI_CAMP_BRANCH_STATS");
+        _catalogFailed = !CampUpgradeDataLoader.TryLoad(out string catalogError);
+        _defaultStatus = _catalogFailed ? catalogError : DevelopmentMode.IsEnabled ? Tr("UI_CAMP_DEV_SLOTS") : "";
+        SetStatus(_defaultStatus, _catalogFailed ? MissingColor : UITheme.TextColor);
+        for (int i = 0; i < _rows.Count; i++)
+        {
+            if (i > 0) _rows[i].Select.FocusNeighborTop = _rows[i - 1].Select.GetPath();
+            if (i + 1 < _rows.Count) _rows[i].Select.FocusNeighborBottom = _rows[i + 1].Select.GetPath();
+        }
+        if (_rows.Count > 0)
+            SelectRow(_rows.Find(row => row.Upgrade.Id == previous) ?? _rows[0]);
         UpdateAll();
-        return _rows.Count == 0 ? _refundAll : _rows[0].Buy;
+        return _selected?.Select ?? _refundAll;
     }
 
-    private void AddBranch(VBoxContainer parent, CampBranch branch, string titleKey)
+    private void AddBranch(CampBranch branch, string titleKey)
     {
         bool any = false;
         foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
@@ -129,53 +132,104 @@ public partial class HubCampUpgradesPanel : MarginContainer
                 continue;
             if (!any)
             {
-                Label title = UITheme.MakeLabel(Tr(titleKey), TextRole.Title, UITheme.GoldColor, TextWeight.Strong, outline: 6);
-                if (parent.GetChildCount() > 0)
-                    parent.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 12f), MouseFilter = MouseFilterEnum.Ignore });
-                parent.AddChild(title);
+                if (_list.GetChildCount() > 0)
+                    _list.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 16f), MouseFilter = MouseFilterEnum.Ignore });
+                _list.AddChild(UITheme.MakeLabel(Tr(titleKey), TextRole.Subhead, UITheme.GoldColor, TextWeight.Strong));
                 any = true;
             }
-            parent.AddChild(MakeRow(upgrade));
+            _list.AddChild(MakeRow(upgrade));
         }
     }
 
-    private HBoxContainer MakeRow(CampUpgradeData upgrade)
+    private Button MakeRow(CampUpgradeData upgrade)
     {
-        Row row = new() { Upgrade = upgrade };
-        HBoxContainer line = new();
-        line.AddThemeConstantOverride("separation", 8);
-
-        row.Buy = MakeButton("", new Vector2(RowWidth, RowHeight));
-        line.AddChild(row.Buy);
-        Label name = UITheme.MakeLabel(Tr(upgrade.NameKey), TextRole.Heading, UITheme.TextLight, TextWeight.Strong, outline: 4);
-        name.Position = new Vector2(16f, 0f);
-        row.Buy.AddChild(name);
-        Label hint = UITheme.MakeLabel(Tr(upgrade.NameKey + "_HINT"), TextRole.Body, UITheme.TextColor, outline: 3);
-        hint.Position = new Vector2(16f, 31f);
-        hint.Size = new Vector2(RightColumn - 24f, 24f);
+        Row row = new() { Upgrade = upgrade, Icon = UITheme.LoadTex($"res://assets/ui/camp/{upgrade.Id}.png") };
+        row.Select = MakeButton("", new Vector2(ListWidth, RowHeight));
+        row.Select.Name = upgrade.Id;
+        row.Select.MouseDefaultCursorShape = Control.CursorShape.PointingHand;
+        TextureRect icon = MakeIcon(row.Icon, 64f);
+        icon.Position = new Vector2(12f, 8f);
+        row.Select.AddChild(icon);
+        Label name = UITheme.MakeLabel(Tr(upgrade.NameKey), TextRole.Heading, UITheme.TextLight, TextWeight.Strong);
+        name.Position = new Vector2(92f, 7f);
+        row.Select.AddChild(name);
+        Label hint = UITheme.MakeLabel(Tr(upgrade.NameKey + "_HINT"), TextRole.Body, UITheme.TextColor);
+        hint.Position = new Vector2(92f, 43f);
+        hint.Size = new Vector2(ListWidth - 110f, 26f);
         hint.ClipText = true;
         hint.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         hint.TooltipText = hint.Text;
-        row.Buy.AddChild(hint);
-        row.Rank = UITheme.MakeLabel("", TextRole.Small, UITheme.TextColor, outline: 3);
-        row.Rank.Position = new Vector2(RightColumn, 6f);
-        row.Buy.AddChild(row.Rank);
-        row.Price = UITheme.MakeLabel("", TextRole.Heading, UITheme.GoldBright, TextWeight.Strong, HorizontalAlignment.Right, 4);
-        row.Price.Position = new Vector2(RightColumn, 0f);
-        row.Price.Size = new Vector2(RowWidth - RightColumn - 16f, 32f);
-        row.Buy.AddChild(row.Price);
-        row.Effect = UITheme.MakeLabel("", TextRole.Body, UITheme.CyanEssence, TextWeight.Strong, HorizontalAlignment.Right, 3);
-        row.Effect.Position = new Vector2(RightColumn - 80f, 31f);
-        row.Effect.Size = new Vector2(RowWidth - RightColumn + 64f, 24f);
-        row.Buy.AddChild(row.Effect);
-
-        row.Refund = MakeButton(Tr("UI_CAMP_REFUND"), new Vector2(RefundWidth, RowHeight));
-        line.AddChild(row.Refund);
-
-        row.Buy.Pressed += () => OnBuy(row);
-        row.Refund.Pressed += () => OnRefund(row);
+        row.Select.AddChild(hint);
+        row.Rank = UITheme.MakeLabel("", TextRole.Lead, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Right);
+        row.Rank.Position = new Vector2(ListWidth - 92f, 10f);
+        row.Rank.Size = new Vector2(72f, 30f);
+        row.Select.AddChild(row.Rank);
+        row.Select.FocusEntered += () => SelectRow(row);
+        row.Select.Pressed += () => SelectRow(row);
         _rows.Add(row);
-        return line;
+        return row.Select;
+    }
+
+    private PanelContainer MakeDetail()
+    {
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(DetailWidth, 0f), SizeFlagsVertical = SizeFlags.ShrinkBegin };
+        panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        VBoxContainer content = new();
+        content.AddThemeConstantOverride("separation", 18);
+        panel.AddChild(content);
+        _detailIcon = MakeIcon(null, 128f);
+        _detailIcon.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
+        content.AddChild(_detailIcon);
+        _detailName = UITheme.MakeLabel("", TextRole.Title, UITheme.TextLight, TextWeight.Strong, HorizontalAlignment.Center);
+        content.AddChild(_detailName);
+        _detailRank = UITheme.MakeLabel("", TextRole.Lead, UITheme.GoldColor, align: HorizontalAlignment.Center);
+        content.AddChild(_detailRank);
+        _detailHint = UITheme.MakeLabel("", TextRole.Lead, UITheme.TextColor, align: HorizontalAlignment.Center);
+        _detailHint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _detailHint.CustomMinimumSize = new Vector2(DetailWidth - 80f, 56f);
+        content.AddChild(_detailHint);
+        content.AddChild(new HSeparator());
+        content.AddChild(UITheme.MakeLabel(Tr("UI_CAMP_EFFECT"), TextRole.Small, UITheme.TextDim, align: HorizontalAlignment.Center));
+        _detailEffect = UITheme.MakeLabel("", TextRole.Heading, UITheme.CyanEssence, TextWeight.Strong, HorizontalAlignment.Center);
+        _detailEffect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _detailEffect.CustomMinimumSize = new Vector2(DetailWidth - 80f, 56f);
+        content.AddChild(_detailEffect);
+        _detailPrice = UITheme.MakeLabel("", TextRole.Heading, UITheme.GoldBright, TextWeight.Strong, HorizontalAlignment.Center);
+        content.AddChild(_detailPrice);
+        HBoxContainer actions = new();
+        actions.AddThemeConstantOverride("separation", 16);
+        content.AddChild(actions);
+        _buySelected = MenuSkin.Button(Tr("UI_CAMP_BUY"), true);
+        _buySelected.Name = "BuyCampUpgrade";
+        _buySelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _buySelected.Pressed += () => { if (_selected != null) OnBuy(_selected); };
+        actions.AddChild(_buySelected);
+        _refundSelected = MenuSkin.Button(Tr("UI_CAMP_REFUND"));
+        _refundSelected.Name = "RefundCampUpgrade";
+        _refundSelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _refundSelected.Pressed += () => { if (_selected != null) OnRefund(_selected); };
+        actions.AddChild(_refundSelected);
+        return panel;
+    }
+
+    private static TextureRect MakeIcon(Texture2D texture, float size) => new()
+    {
+        Texture = texture, Size = new Vector2(size, size), CustomMinimumSize = new Vector2(size, size),
+        ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+        TextureFilter = TextureFilterEnum.Nearest, MouseFilter = MouseFilterEnum.Ignore,
+    };
+
+    private void SelectRow(Row row)
+    {
+        if (_selected == row) return;
+        _selected = row;
+        foreach (Row other in _rows)
+            MenuSkin.StyleRosterCard(other.Select, other == row);
+        _detailIcon.Texture = row.Icon;
+        _detailName.Text = Tr(row.Upgrade.NameKey);
+        _detailHint.Text = Tr(row.Upgrade.NameKey + "_HINT");
+        SetStatus(_defaultStatus, _catalogFailed ? MissingColor : UITheme.TextColor);
+        UpdateDetail();
     }
 
     private static Button MakeButton(string text, Vector2 size)
@@ -232,19 +286,20 @@ public partial class HubCampUpgradesPanel : MarginContainer
         int refunded = MetaSaveManager.RefundAllCamp(out SaveFile.WriteResult saved);
         AudioManager.PlayUI(refunded > 0 ? "sfx_menu_clic" : "sfx_perk_refuse");
         SetStatus(string.Format(Tr("UI_CAMP_REFUNDED_ALL"), refunded), UITheme.TextLight);
-        AfterTransaction(_rows.Count > 0 ? _rows[0] : null, saved);
+        AfterTransaction(_selected, saved);
     }
 
     private void AfterTransaction(Row row, SaveFile.WriteResult saved)
     {
         if (!saved.Succeeded)
             SetStatus(string.Format(Tr("UI_CAMP_SAVE_FAILED"), saved.Error), MissingColor);
+        Control focused = GetViewport().GuiGetFocusOwner();
         UpdateAll();
         if (row == null)
             return;
         // Un bouton « Rendre » éteint par la transaction ne garde pas le focus : la ligne le reprend.
-        if (GetViewport().GuiGetFocusOwner() is Button { Disabled: true })
-            row.Buy.GrabFocus();
+        if (focused is Button { Disabled: true })
+            row.Select.GrabFocus();
     }
 
     private void SetStatus(string text, Color color)
@@ -255,31 +310,39 @@ public partial class HubCampUpgradesPanel : MarginContainer
 
     private void UpdateAll()
     {
-        int vestiges = MetaSaveManager.GetVestiges();
-        _balance.Text = vestiges.ToString("N0", PlayerSheet.French);
+        _balance.Text = MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French);
         bool anyBought = false;
         foreach (Row row in _rows)
         {
             int rank = MetaSaveManager.GetCampRank(row.Upgrade.Id);
-            bool maxed = rank >= row.Upgrade.MaxRank;
             anyBought |= rank > 0;
             row.Rank.Text = string.Format(Tr("UI_CAMP_RANK"), rank, row.Upgrade.MaxRank);
-            row.Rank.AddThemeColorOverride("font_color", maxed ? MaxedColor : UITheme.TextColor);
-            row.Effect.Text = EffectText(row.Upgrade, rank);
-            if (maxed)
-            {
-                row.Price.Text = Tr("UI_CAMP_MAXED");
-                row.Price.AddThemeColorOverride("font_color", MaxedColor);
-            }
-            else
-            {
-                int price = row.Upgrade.PriceOfRank(rank + 1);
-                row.Price.Text = price.ToString("N0", PlayerSheet.French);
-                row.Price.AddThemeColorOverride("font_color", price <= vestiges ? UITheme.GoldBright : UITheme.TextVeryDim);
-            }
-            row.Refund.Disabled = rank == 0;
+            row.Rank.AddThemeColorOverride("font_color", rank >= row.Upgrade.MaxRank ? MaxedColor : UITheme.TextColor);
         }
         _refundAll.Disabled = !anyBought;
+        UpdateDetail();
+    }
+
+    private void UpdateDetail()
+    {
+        if (_selected == null)
+        {
+            _buySelected.Disabled = _refundSelected.Disabled = true;
+            return;
+        }
+        CampUpgradeData upgrade = _selected.Upgrade;
+        int rank = MetaSaveManager.GetCampRank(upgrade.Id);
+        bool maxed = rank >= upgrade.MaxRank;
+        _detailRank.Text = string.Format(Tr("UI_CAMP_RANK"), rank, upgrade.MaxRank);
+        _detailEffect.Text = EffectText(upgrade, rank);
+        _detailPrice.Text = maxed ? Tr("UI_CAMP_MAXED")
+            : string.Format(Tr("UI_CAMP_PRICE"), upgrade.PriceOfRank(rank + 1).ToString("N0", PlayerSheet.French));
+        _detailPrice.AddThemeColorOverride("font_color", maxed ? MaxedColor
+            : upgrade.PriceOfRank(rank + 1) <= MetaSaveManager.GetVestiges() ? UITheme.GoldBright : MissingColor);
+        _buySelected.Disabled = maxed;
+        _refundSelected.Disabled = rank == 0;
+        _buySelected.FocusNeighborLeft = _refundSelected.FocusNeighborLeft = _selected.Select.GetPath();
+        _selected.Select.FocusNeighborRight = (maxed ? _refundSelected : _buySelected).GetPath();
     }
 
     /// <summary>Effet de la ligne au rang acquis, puis au rang suivant : « +8 % → +12 % », « 3 → 4 emplacements ».</summary>

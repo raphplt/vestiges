@@ -404,14 +404,46 @@ BONUS_BLANKET,Couverture de survie · bouclier,Survival blanket · shield
 BONUS_COFFEE,Café froid · cadence,Cold coffee · attack rate
 BONUS_FIRECRACKER,Pétard,Firecracker
 STAT_LUCK_HELP,Monte la rareté des améliorations et des bénédictions.,Raises the rarity of upgrades and blessings.
-LOADING_LINE_1,Quelqu'un a laissé la lumière allumée.,Someone left the light on.
-LOADING_LINE_2,Les chemins se souviennent des pas.,The paths remember the footsteps.
-LOADING_LINE_3,Il reste un banc au bout de la rue.,There is still a bench at the end of the street.
-LOADING_LINE_4,On ne range jamais vraiment une maison.,No one ever really tidies a house away.
-LOADING_LINE_5,Les noms tiennent plus longtemps que les visages.,Names last longer than faces.
-LOADING_LINE_6,Une radio grésille quelque part.,A radio crackles somewhere.
-LOADING_LINE_7,Le linge sèche encore sur le fil.,The laundry is still drying on the line.
-LOADING_LINE_8,Personne n'a fermé la barrière.,Nobody closed the gate.
+LOADING_LINE_1,"Le dimanche sentait le fer chaud,\nles draps gonflaient jusqu'au jardin.\nNous déjeunions debout.","Sunday smelled of hot iron,\nthe sheets billowed into the garden.\nWe ate standing up."
+LOADING_LINE_2,…poste trois à la relève.\nLa lampe du quai prend l'eau.\nNe touchez pas au réglage.,…station three to the relief crew.\nThe quay lamp is leaking.\nDo not touch the setting.
+LOADING_LINE_3,Le car de six heures dix partira de la place basse.\nLe retour sera assuré par,The ten past six bus will leave from the lower square.\nThe return service will be provided by
+LOADING_LINE_4,Du savon. Deux bougies.\nDu fil assez solide pour\n\nLe pain est déjà payé.,Soap. Two candles.\nThread strong enough to\n\nThe bread is already paid for.
+LOADING_LINE_5,…et sous le linge bleu\nla petite chaleur des pierres\nà l'heure où tu rentrais.,…and beneath the blue linen\nthe faint warmth of the stones\nat the hour you came home.
+LOADING_LINE_6,Canal quatre. Le portail ferme mal.\nIl faut soulever le battant avant de—\nSoulever le battant.,Channel four. The gate won't close properly.\nLift the gate before you—\nLift the gate.
+LOADING_LINE_7,La dernière séance est avancée à dix-huit heures.\nLes billets de vendredi restent valables.,The last screening has been moved to six in the evening.\nFriday's tickets are still valid.
+LOADING_LINE_8,"…la nappe bleue, celle avec la brûlure.\nTu peux remettre des fleurs dessus.\nJe n'ai rien dit à maman.","…the blue tablecloth, the one with the burn.\nYou can put flowers over it again.\nI haven't told Mum."
+LOADING_LINE_9,Pompe n° 0—\nTrois coups avant l'amorçage.\nLe joint neuf est dans la boîte à biscuits.,Pump no. 0—\nThree knocks before priming.\nThe new seal is in the biscuit tin.
+LOADING_LINE_10,À la pointe des roseaux\non attachait nos bateaux.\nCelui qui rentrait le premier,At the edge of the reeds\nwe tied up our boats.\nWhoever came home first
+LOADING_LINE_11,Notre maison a deux fenêtres.\nTrois avec celle de la cuisine.\nLa maîtresse dit de compter aussi la porte.,Our house has two windows.\nThree with the kitchen window.\nThe teacher says to count the door as well.
+LOADING_LINE_12,NE PAS RETIRER L'ÉTAI\nMême pour laisser passer le\n\nLe contremaître,DO NOT REMOVE THE PROP\nNot even to let the\n\nThe foreman
+LOADING_LINE_13,"…trois caisses au dépôt.\nDeux, pardon. La troisième reste avec moi.\nConfirmez deux.","…three crates at the depot.\nTwo, sorry. The third stays with me.\nConfirm two."
+LOADING_LINE_14,"La rouille aux mains,\nle linge au vent.\nDimanche durait longtemps.","Rust on our hands,\nlinen in the wind.\nSunday lasted a long time."
+LOADING_LINE_15,LIGNE 7 — ALLER SIMPLE\nComposté : 06 h 14\nCorrespondance à,LINE 7 — SINGLE JOURNEY\nValidated: 06:14\nChange at
+LOADING_LINE_16,Nom du déposant :\nObjet : un manteau d'enfant\nÀ garder jusqu'à la fin de la saison.,Depositor's name:\nItem: a child's coat\nKeep until the end of the season.
+LOADING_LINE_17,"La petite clé tourne vers la gauche.\nSi elle résiste, ne\n\nJ'ai huilé les autres.","The small key turns to the left.\nIf it sticks, don't\n\nI've oiled the others."
+LOADING_LINE_18,"À CÉDER — deux chaises et une table.\nLa table passe par la fenêtre.\nS'adresser au 8, rue des","FOR SALE — two chairs and a table.\nThe table fits through the window.\nEnquire at 8,"
+LOADING_LINE_19,17 nov. — visibilité : une longueur de bras.\nCâble pris sous l'échelle.\nRemontée à deux. Vérif—,17 Nov. — visibility: one arm's length.\nCable caught under the ladder.\nTwo came back up. Check—
+LOADING_LINE_20,Compléter : « Quand je serai grand… »\n\nJe prendrai le car avec,Complete: “When I grow up…”\n\nI'll take the bus with
+LOADING_LINE_21,Les objets trouvés sont à retirer le jeudi.\nPassé le délai du\nils seront remis au dépôt.,Lost property may be collected on Thursdays.\nAfter the deadline of\nit will be sent to the depot.
+LOADING_LINE_22,"J'ai remis du bois sous la bâche.\nLe petit tas est pour vous.\nPour le reste, attendez que","I've put more wood under the tarpaulin.\nThe small pile is for you.\nFor the rest, wait until"
+LOADING_LINE_23,"Relève de cinq heures : prenez les bottes.\nL'eau atteint le — de la deuxième marche.\nLes bottes, pas les sabots.","Five o'clock relief crew: take the boots.\nThe water is at the — of the second step.\nThe boots, not the clogs."
+LOADING_LINE_24,…sur le rebord de ta tasse\nun peu de terre\net toute la place pour,…on the rim of your cup\na little soil\nand all the room for
+LOADING_LINE_25,Jeudi : fermer la grille côté jardin.\nVendredi : rentrer les bancs.\nSamedi : laisser ouvert.,Thursday: close the garden gate.\nFriday: bring in the benches.\nSaturday: leave it open.
+LOADING_LINE_26,"Un pour le sel, deux pour le pain,\ntrois pour la main\n\nun pour le sel, deux pour le pain.","One for the salt, two for the bread,\nthree for the hand\n\none for the salt, two for the bread."
+LOADING_LINE_27,Les draps propres sont sur la chaise.\nPrends ceux du dessous.\nCelui du dessus est encore humide.,The clean sheets are on the chair.\nTake the ones underneath.\nThe top one is still damp.
+LOADING_LINE_28,CAISSES ARRIVÉES STOP\nGARDER LE CHARIOT STOP\nATTENDRE À,CRATES ARRIVED STOP\nKEEP THE TROLLEY STOP\nWAIT AT
+LOADING_LINE_29,Garde un dash pour sortir de la foule.\nLes passages étroits se remplissent vite.,Keep a dash ready to get out of the crowd.\nNarrow passages fill up fast.
+LOADING_LINE_30,…les armes attaquent seules.\nOccupe-toi du chemin et des ouvertures entre les ennemis.,…the weapons attack on their own.\nWatch your path and the gaps between enemies.
+LOADING_LINE_31,Sac plein : maintenir l'interaction près d'un objet au sol.\nChoisir celui à remplacer.\nVérifier avant de repartir.,Bag full: hold interact beside an item on the ground.\nChoose which one to replace.\nCheck before leaving.
+LOADING_LINE_32,"Pour raviver un Mémorial, rassemble les éclats autour de lui.\nCommence par ceux près d'un passage libre.","To rekindle a Memorial, gather the shards around it.\nStart with those beside a clear path."
+LOADING_LINE_33,…garde un peu d'Essence pour les soins.\nUn Mémorial ravivé peut te remettre sur pied.,…keep some Essence for healing.\nA rekindled Memorial can get you back on your feet.
+LOADING_LINE_34,À la Faille : une amélioration contre un Oubli et du Péril.\nLire la contrepartie avant de,At a Rift: an upgrade in exchange for an Oblivion and Peril.\nRead the price before you
+LOADING_LINE_35,Lever un Oubli au Mémorial retire son malus.\nLe Péril gagné reste.\nÀ vérifier avant le prochain départ :,"Lifting an Oblivion at a Memorial removes its penalty.\nThe Peril gained remains.\nBefore setting off again, check:"
+LOADING_LINE_36,Un nouvel Atelier offre une Trempe.\nElle renforce tes prochaines améliorations d'armes.,A new Workshop offers Tempering.\nIt strengthens your next weapon upgrades.
+LOADING_LINE_37,"Les Écussons progressent aussi par l'usage.\nRegarde ce que les tiens demandent, puis","Badges also progress through use.\nCheck what yours require, then"
+LOADING_LINE_38,"Au Campement, tu peux ouvrir des emplacements d'armes supplémentaires.\nPrévoir les Vestiges avant le départ.","At the Camp, you can unlock extra weapon slots.\nSet aside Vestiges before you leave."
+LOADING_LINE_39,La Chance améliore la rareté des améliorations et des bénédictions proposées.\nÀ essayer lors de la prochaine,Luck improves the rarity of the upgrades and blessings offered.\nTry it on the next
+LOADING_LINE_40,"…si le sol pâlit, rejoins une zone encore ancrée.\nNe t'attarde pas pour ramasser le dernier éclat.","…if the ground fades, head for a zone that is still anchored.\nDon't linger for the last shard."
 LOADING_FAILED_TITLE,Le chargement a échoué.,Loading failed.
 LOADING_FAILED_DETAIL,Étape « {0} » : {1},Step “{0}”: {1}
 MAP_BIOME_FOREST,Forêt reconquise,Reclaimed forest
@@ -471,13 +503,16 @@ UI_CAMP_TITLE,Campement,Camp
 UI_CAMP_BRANCH_CAPACITIES,Capacités,Capacities
 UI_CAMP_BRANCH_STATS,Statistiques,Stats
 UI_CAMP_BRANCH_COMFORT,Confort,Comfort
-UI_CAMP_RANK,Rang {0}/{1},Rank {0}/{1}
+UI_CAMP_RANK,{0}/{1},{0}/{1}
+UI_CAMP_BUY,Acheter,Buy
+UI_CAMP_EFFECT,Effet actuel → suivant,Current effect → next
+UI_CAMP_PRICE,{0} Vestiges,{0} Vestiges
 UI_CAMP_MAXED,Max,Max
 UI_CAMP_MAX,Rang maximal atteint.,Maximum rank reached.
 UI_CAMP_REFUND,Rendre,Refund
 UI_CAMP_REFUND_ALL,Tout rendre,Refund all
 UI_CAMP_NOT_ENOUGH,Il manque {0} Vestiges.,{0} Vestiges short.
-UI_CAMP_BOUGHT,{0} : rang {1}/{2}.,{0}: rank {1}/{2}.
+UI_CAMP_BOUGHT,{0} : {1}/{2}.,{0}: {1}/{2}.
 UI_CAMP_REFUNDED,{0} rendu : +{1} Vestiges.,{0} refunded: +{1} Vestiges.
 UI_CAMP_REFUNDED_ALL,Campement rendu : +{0} Vestiges.,Camp refunded: +{0} Vestiges.
 UI_CAMP_SAVE_FAILED,Achat non enregistré : {0},Purchase not saved: {0}

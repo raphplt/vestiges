@@ -1,0 +1,1260 @@
+{
+  "eveillee": {
+    "runs": 4,
+    "bands": {
+      "0-120": {
+        "hits": 296,
+        "combat_hits": 296,
+        "deaths_per_run": 3.75,
+        "lost_per_min": 218.3130625,
+        "healed_per_min": 37.8316125,
+        "healing_by_kind_per_min": {
+          "Regeneration": 25.0270625,
+          "Normal": 12.804549999999999
+        },
+        "mean_nonfatal_hit": 6.077761209964413,
+        "hits_to_die_without_heal": 14.32341952496466,
+        "projection_targeted_hits": 11.791118501112566,
+        "projection_global_20_hits": 11.936182937470551,
+        "mean_max_hp": 87.97297297297297,
+        "mean_armor_reduction": 0.0147,
+        "level_end": [
+          4,
+          4,
+          5,
+          6
+        ],
+        "hits_to_die_each": [
+          11.382126439903667,
+          15.597114162520075,
+          15.760488336343148,
+          11.98288182263837
+        ],
+        "deaths_each": [
+          1.0,
+          1.0,
+          10.0,
+          3.0
+        ],
+        "lost_each": [
+          235.7318,
+          200.1954,
+          975.6912,
+          334.8861
+        ]
+      },
+      "120-300": {
+        "hits": 1186,
+        "combat_hits": 1186,
+        "deaths_per_run": 25.5,
+        "lost_per_min": 965.4757833333333,
+        "healed_per_min": 63.83841666666667,
+        "healing_by_kind_per_min": {
+          "Normal": 48.050000000000004,
+          "Regeneration": 15.788416666666668
+        },
+        "mean_nonfatal_hit": 10.065125461254613,
+        "hits_to_die_without_heal": 10.3341687395491,
+        "projection_targeted_hits": 9.397938481210963,
+        "projection_global_20_hits": 8.611807282957583,
+        "mean_max_hp": 104.92833052276559,
+        "mean_armor_reduction": 0.062270489038785834,
+        "level_end": [
+          14,
+          12,
+          13,
+          14
+        ],
+        "hits_to_die_each": [
+          8.647527434679793,
+          11.820023928499081,
+          10.283299232846598,
+          11.5210048236137
+        ],
+        "deaths_each": [
+          34.0,
+          23.0,
+          26.0,
+          19.0
+        ],
+        "lost_each": [
+          2974.6123000000002,
+          2815.7294,
+          2831.6426,
+          2963.7251
+        ]
+      },
+      "0-300": {
+        "hits": 1482,
+        "combat_hits": 1482,
+        "deaths_per_run": 29.25,
+        "lost_per_min": 666.6106950000001,
+        "healed_per_min": 53.435694999999996,
+        "healing_by_kind_per_min": {
+          "Regeneration": 19.483875,
+          "Normal": 33.95182
+        },
+        "mean_nonfatal_hit": 9.244283443223443,
+        "hits_to_die_without_heal": 10.962713729248478,
+        "projection_targeted_hits": 9.807729575109391,
+        "projection_global_20_hits": 9.135594774373732,
+        "mean_max_hp": 101.54183535762483,
+        "mean_armor_reduction": 0.05276923076923077,
+        "level_end": [
+          14,
+          12,
+          13,
+          14
+        ],
+        "hits_to_die_each": [
+          8.859743040685224,
+          12.15450196510473,
+          11.848813974139366,
+          11.594468777802438
+        ],
+        "deaths_each": [
+          35.0,
+          24.0,
+          36.0,
+          22.0
+        ],
+        "lost_each": [
+          3210.3441000000003,
+          3015.9248,
+          3807.3338,
+          3298.6112
+        ]
+      },
+      "300-600": {
+        "hits": 2004,
+        "combat_hits": 2004,
+        "deaths_per_run": 36.0,
+        "lost_per_min": 1071.925045,
+        "healed_per_min": 168.871065,
+        "healing_by_kind_per_min": {
+          "Normal": 103.17384999999999,
+          "Regeneration": 14.38889,
+          "PerkRecovery": 51.308325
+        },
+        "mean_nonfatal_hit": 10.998910483870969,
+        "hits_to_die_without_heal": 11.379088157724457,
+        "projection_targeted_hits": 10.327190537098588,
+        "projection_global_20_hits": 9.48257346477038,
+        "mean_max_hp": 137.6060379241517,
+        "mean_armor_reduction": 0.06337724550898204,
+        "level_end": [
+          25,
+          23,
+          26,
+          21
+        ],
+        "hits_to_die_each": [
+          7.72309488052575,
+          15.477371528135853,
+          11.102898416589191,
+          17.031429667630825
+        ],
+        "deaths_each": [
+          64.0,
+          28.0,
+          30.0,
+          22.0
+        ],
+        "lost_each": [
+          6160.3495,
+          4690.0876,
+          5237.8873,
+          5350.1765
+        ]
+      }
+    },
+    "sources_0_5": {
+      "rodeur": {
+        "hits": 210,
+        "lost": 3613.430300000005,
+        "mean_announced": 19.569106666666666,
+        "hits_to_die": 5.975669912988439
+      },
+      "shadow_crawler": {
+        "hits": 399,
+        "lost": 2807.925800000007,
+        "mean_announced": 7.6387072681704264,
+        "hits_to_die": 13.25473139536091
+      },
+      "charognard": {
+        "hits": 451,
+        "lost": 2542.0529999999967,
+        "mean_announced": 6.151973170731707,
+        "hits_to_die": 15.87408710722316
+      },
+      "presage": {
+        "hits": 82,
+        "lost": 982.3926999999993,
+        "mean_announced": 13.245241463414635,
+        "hits_to_die": 8.73217257615369
+      },
+      "void_brute": {
+        "hits": 58,
+        "lost": 962.6218000000002,
+        "mean_announced": 19.273056896551726,
+        "hits_to_die": 7.182981794941911
+      },
+      "rampant": {
+        "hits": 66,
+        "lost": 744.5333000000004,
+        "mean_announced": 12.430598484848485,
+        "hits_to_die": 8.543663399777026
+      },
+      "shade": {
+        "hits": 156,
+        "lost": 726.3497999999997,
+        "mean_announced": 4.900801282051282,
+        "hits_to_die": 21.329796449004647
+      },
+      "treant_corrompu": {
+        "hits": 25,
+        "lost": 573.6903,
+        "mean_announced": 29.155564,
+        "hits_to_die": 3.107826447521284
+      },
+      "fading_spitter": {
+        "hits": 33,
+        "lost": 354.4277000000001,
+        "mean_announced": 11.960630303030303,
+        "hits_to_die": 9.172461726187707
+      },
+      "event:fallen_relic": {
+        "hits": 2,
+        "lost": 24.7892,
+        "mean_announced": 18.5,
+        "hits_to_die": 5.0
+      }
+    },
+    "first_death": [
+      {
+        "seed": "seed-1002",
+        "t": 83.767,
+        "hits": 20
+      },
+      {
+        "seed": "seed-123",
+        "t": 107.633,
+        "hits": 31
+      },
+      {
+        "seed": "seed-42",
+        "t": 35.5,
+        "hits": 17
+      },
+      {
+        "seed": "seed-7",
+        "t": 72.217,
+        "hits": 18
+      }
+    ]
+  },
+  "facteur": {
+    "runs": 4,
+    "bands": {
+      "0-120": {
+        "hits": 447,
+        "combat_hits": 447,
+        "deaths_per_run": 6.0,
+        "lost_per_min": 316.771225,
+        "healed_per_min": 25.3243375,
+        "healing_by_kind_per_min": {
+          "Regeneration": 14.980587499999999,
+          "Normal": 10.34375
+        },
+        "mean_nonfatal_hit": 5.775742789598109,
+        "hits_to_die_without_heal": 15.49656717863994,
+        "projection_targeted_hits": 12.570969032605992,
+        "projection_global_20_hits": 12.91380598219995,
+        "mean_max_hp": 89.93288590604027,
+        "mean_armor_reduction": 0.01341744966442953,
+        "level_end": [
+          7,
+          5,
+          5,
+          6
+        ],
+        "hits_to_die_each": [
+          15.241700495604313,
+          17.385211960597193,
+          16.05371931231218,
+          14.338050450940285
+        ],
+        "deaths_each": [
+          8.0,
+          1.0,
+          8.0,
+          7.0
+        ],
+        "lost_each": [
+          732.3514,
+          290.9881,
+          872.9857,
+          637.8446
+        ]
+      },
+      "120-300": {
+        "hits": 1331,
+        "combat_hits": 1331,
+        "deaths_per_run": 27.25,
+        "lost_per_min": 930.8096833333334,
+        "healed_per_min": 27.827191666666664,
+        "healing_by_kind_per_min": {
+          "Regeneration": 10.686,
+          "Normal": 17.141191666666668
+        },
+        "mean_nonfatal_hit": 8.642390671031096,
+        "hits_to_die_without_heal": 11.50356521220667,
+        "projection_targeted_hits": 10.100553914457247,
+        "projection_global_20_hits": 9.586304343505558,
+        "mean_max_hp": 104.5473328324568,
+        "mean_armor_reduction": 0.05071555221637866,
+        "level_end": [
+          11,
+          11,
+          7,
+          13
+        ],
+        "hits_to_die_each": [
+          8.732860352022872,
+          16.636095945199685,
+          15.141578776481978,
+          8.60612564148448
+        ],
+        "deaths_each": [
+          34.0,
+          20.0,
+          22.0,
+          33.0
+        ],
+        "lost_each": [
+          3006.449,
+          2823.1949,
+          2479.4655000000002,
+          2860.6068
+        ]
+      },
+      "0-300": {
+        "hits": 1778,
+        "combat_hits": 1778,
+        "deaths_per_run": 33.25,
+        "lost_per_min": 685.1943,
+        "healed_per_min": 26.826050000000002,
+        "healing_by_kind_per_min": {
+          "Regeneration": 12.403835000000003,
+          "Normal": 14.422215000000003
+        },
+        "mean_nonfatal_hit": 7.905252644376899,
+        "hits_to_die_without_heal": 12.319854434266569,
+        "projection_targeted_hits": 10.638131300505778,
+        "projection_global_20_hits": 10.266545361888806,
+        "mean_max_hp": 100.87317210348706,
+        "mean_armor_reduction": 0.04133858267716535,
+        "level_end": [
+          11,
+          11,
+          7,
+          13
+        ],
+        "hits_to_die_each": [
+          10.041046872882491,
+          16.732226525541574,
+          15.401941429936553,
+          9.67406826715819
+        ],
+        "deaths_each": [
+          42.0,
+          21.0,
+          30.0,
+          40.0
+        ],
+        "lost_each": [
+          3738.8004,
+          3114.183,
+          3352.4512,
+          3498.4514
+        ]
+      },
+      "300-600": {
+        "hits": 1971,
+        "combat_hits": 1971,
+        "deaths_per_run": 38.5,
+        "lost_per_min": 873.73572,
+        "healed_per_min": 27.897699999999997,
+        "healing_by_kind_per_min": {
+          "Regeneration": 9.915199999999999,
+          "PerkRecovery": 3.87625,
+          "Normal": 14.10625
+        },
+        "mean_nonfatal_hit": 9.0848732526142,
+        "hits_to_die_without_heal": 12.160901571290994,
+        "projection_targeted_hits": 10.33095664415126,
+        "projection_global_20_hits": 10.134084642742495,
+        "mean_max_hp": 119.90994419076611,
+        "mean_armor_reduction": 0.07690837138508372,
+        "level_end": [
+          17,
+          16,
+          11,
+          23
+        ],
+        "hits_to_die_each": [
+          9.480870799122073,
+          18.535883836565493,
+          16.533787918622036,
+          9.023934070555915
+        ],
+        "deaths_each": [
+          53.0,
+          23.0,
+          30.0,
+          48.0
+        ],
+        "lost_each": [
+          4922.876,
+          4000.5233,
+          4231.6981,
+          4319.617
+        ]
+      }
+    },
+    "sources_0_5": {
+      "charognard": {
+        "hits": 721,
+        "lost": 4231.613800000002,
+        "mean_announced": 6.30177628294036,
+        "hits_to_die": 16.047069807924775
+      },
+      "shadow_crawler": {
+        "hits": 379,
+        "lost": 2741.240500000004,
+        "mean_announced": 7.824401583113456,
+        "hits_to_die": 13.042291292426517
+      },
+      "rodeur": {
+        "hits": 156,
+        "lost": 2644.9762000000005,
+        "mean_announced": 19.532567307692307,
+        "hits_to_die": 4.998860671707753
+      },
+      "shade": {
+        "hits": 328,
+        "lost": 1476.6639000000005,
+        "mean_announced": 4.742040243902439,
+        "hits_to_die": 20.90036785141248
+      },
+      "rampant": {
+        "hits": 76,
+        "lost": 824.9618,
+        "mean_announced": 12.495901315789473,
+        "hits_to_die": 9.548342193726148
+      },
+      "presage": {
+        "hits": 53,
+        "lost": 612.3807,
+        "mean_announced": 13.184241509433962,
+        "hits_to_die": 7.295633349776163
+      },
+      "treant_corrompu": {
+        "hits": 19,
+        "lost": 508.4598999999999,
+        "mean_announced": 29.43737894736842,
+        "hits_to_die": 2.886657719442765
+      },
+      "void_brute": {
+        "hits": 31,
+        "lost": 496.8549999999999,
+        "mean_announced": 19.512458064516128,
+        "hits_to_die": 7.927652358082686
+      },
+      "fading_spitter": {
+        "hits": 15,
+        "lost": 166.73419999999996,
+        "mean_announced": 13.29596,
+        "hits_to_die": 8.27726400107388
+      }
+    },
+    "first_death": [
+      {
+        "seed": "seed-1002",
+        "t": 46.933,
+        "hits": 13
+      },
+      {
+        "seed": "seed-123",
+        "t": 87.95,
+        "hits": 33
+      },
+      {
+        "seed": "seed-42",
+        "t": 72.85,
+        "hits": 21
+      },
+      {
+        "seed": "seed-7",
+        "t": 43.267,
+        "hits": 21
+      }
+    ]
+  },
+  "forgeuse": {
+    "runs": 4,
+    "bands": {
+      "0-120": {
+        "hits": 292,
+        "combat_hits": 292,
+        "deaths_per_run": 1.75,
+        "lost_per_min": 188.0114375,
+        "healed_per_min": 37.044237499999994,
+        "healing_by_kind_per_min": {
+          "Regeneration": 25.581737499999996,
+          "Normal": 11.462499999999999
+        },
+        "mean_nonfatal_hit": 5.182113684210527,
+        "hits_to_die_without_heal": 28.90861862133665,
+        "projection_targeted_hits": 23.560214254760485,
+        "projection_global_20_hits": 24.090515517780545,
+        "mean_max_hp": 150.1027397260274,
+        "mean_armor_reduction": 0.13796164383561643,
+        "level_end": [
+          4,
+          4,
+          6,
+          6
+        ],
+        "hits_to_die_each": [
+          26.879428154069174,
+          33.420046784115684,
+          29.511989116761622,
+          27.006426679272366
+        ],
+        "deaths_each": [
+          1.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "lost_each": [
+          274.0651,
+          301.7599,
+          422.9328,
+          505.3337
+        ]
+      },
+      "120-300": {
+        "hits": 1206,
+        "combat_hits": 1206,
+        "deaths_per_run": 14.25,
+        "lost_per_min": 800.9465833333334,
+        "healed_per_min": 34.21866666666667,
+        "healing_by_kind_per_min": {
+          "Regeneration": 19.0395,
+          "Normal": 15.179166666666667
+        },
+        "mean_nonfatal_hit": 8.111530809399477,
+        "hits_to_die_without_heal": 19.32042904663927,
+        "projection_targeted_hits": 17.076969366165507,
+        "projection_global_20_hits": 16.10035753886606,
+        "mean_max_hp": 156.4966832504146,
+        "mean_armor_reduction": 0.15796451077943616,
+        "level_end": [
+          12,
+          15,
+          13,
+          11
+        ],
+        "hits_to_die_each": [
+          20.315415941134866,
+          16.763904523182642,
+          20.732155092859873,
+          20.230640028762927
+        ],
+        "deaths_each": [
+          14.0,
+          18.0,
+          12.0,
+          13.0
+        ],
+        "lost_each": [
+          2310.3651,
+          2898.7451,
+          2388.4085,
+          2013.8403
+        ]
+      },
+      "0-300": {
+        "hits": 1498,
+        "combat_hits": 1498,
+        "deaths_per_run": 16.0,
+        "lost_per_min": 555.7725250000001,
+        "healed_per_min": 35.34889499999999,
+        "healing_by_kind_per_min": {
+          "Regeneration": 21.656394999999996,
+          "Normal": 13.692499999999999
+        },
+        "mean_nonfatal_hit": 7.529324476987448,
+        "hits_to_die_without_heal": 20.68387149908671,
+        "projection_targeted_hits": 18.06494333770099,
+        "projection_global_20_hits": 17.23655958257226,
+        "mean_max_hp": 155.25033377837116,
+        "mean_armor_reduction": 0.15406542056074765,
+        "level_end": [
+          12,
+          15,
+          13,
+          11
+        ],
+        "hits_to_die_each": [
+          21.04759049048505,
+          18.37399203729818,
+          22.20647335902764,
+          21.59638168284066
+        ],
+        "deaths_each": [
+          15.0,
+          19.0,
+          14.0,
+          16.0
+        ],
+        "lost_each": [
+          2584.4302,
+          3200.505,
+          2811.3413,
+          2519.174
+        ]
+      },
+      "300-600": {
+        "hits": 2082,
+        "combat_hits": 2082,
+        "deaths_per_run": 27.5,
+        "lost_per_min": 1049.16185,
+        "healed_per_min": 100.49644,
+        "healing_by_kind_per_min": {
+          "Regeneration": 15.893289999999999,
+          "Normal": 77.66868500000001,
+          "PerkRecovery": 6.934465
+        },
+        "mean_nonfatal_hit": 10.259962931034483,
+        "hits_to_die_without_heal": 16.77627539083659,
+        "projection_targeted_hits": 15.114636274778976,
+        "projection_global_20_hits": 13.980229492363828,
+        "mean_max_hp": 175.8669548511047,
+        "mean_armor_reduction": 0.16056959654178674,
+        "level_end": [
+          24,
+          29,
+          27,
+          24
+        ],
+        "hits_to_die_each": [
+          15.475742297788623,
+          15.903931349223521,
+          20.286395598243335,
+          15.87485196484537
+        ],
+        "deaths_each": [
+          30.0,
+          22.0,
+          27.0,
+          31.0
+        ],
+        "lost_each": [
+          5383.4776,
+          4345.1793,
+          6364.2954,
+          4890.2847
+        ]
+      }
+    },
+    "sources_0_5": {
+      "shadow_crawler": {
+        "hits": 421,
+        "lost": 3059.0151000000033,
+        "mean_announced": 8.586981947743467,
+        "hits_to_die": 21.59521808071995
+      },
+      "charognard": {
+        "hits": 561,
+        "lost": 2977.247100000007,
+        "mean_announced": 6.398991443850267,
+        "hits_to_die": 27.87480455016154
+      },
+      "rodeur": {
+        "hits": 106,
+        "lost": 1742.4733999999999,
+        "mean_announced": 21.505743396226414,
+        "hits_to_die": 8.85548882565083
+      },
+      "presage": {
+        "hits": 73,
+        "lost": 783.4907000000003,
+        "mean_announced": 13.219531506849314,
+        "hits_to_die": 14.204421509582534
+      },
+      "shade": {
+        "hits": 180,
+        "lost": 668.4440999999998,
+        "mean_announced": 4.469423888888889,
+        "hits_to_die": 40.9747301141209
+      },
+      "rampant": {
+        "hits": 59,
+        "lost": 638.0828999999999,
+        "mean_announced": 13.234810169491526,
+        "hits_to_die": 14.762430831639284
+      },
+      "void_brute": {
+        "hits": 35,
+        "lost": 529.0014,
+        "mean_announced": 19.237165714285712,
+        "hits_to_die": 10.431428644006187
+      },
+      "fading_spitter": {
+        "hits": 53,
+        "lost": 516.4943000000001,
+        "mean_announced": 11.848896226415095,
+        "hits_to_die": 15.552123698183784
+      },
+      "treant_corrompu": {
+        "hits": 9,
+        "lost": 175.61329999999998,
+        "mean_announced": 29.30357777777778,
+        "hits_to_die": 6.702127889571993
+      },
+      "event:fallen_relic": {
+        "hits": 1,
+        "lost": 25.5882,
+        "mean_announced": 29.0,
+        "hits_to_die": 5.666674482769401
+      }
+    },
+    "first_death": [
+      {
+        "seed": "seed-1002",
+        "t": 109.983,
+        "hits": 40
+      },
+      {
+        "seed": "seed-123",
+        "t": 79.617,
+        "hits": 50
+      },
+      {
+        "seed": "seed-42",
+        "t": 72.433,
+        "hits": 38
+      },
+      {
+        "seed": "seed-7",
+        "t": 65.417,
+        "hits": 41
+      }
+    ]
+  },
+  "traqueur": {
+    "runs": 4,
+    "bands": {
+      "0-120": {
+        "hits": 248,
+        "combat_hits": 248,
+        "deaths_per_run": 3.75,
+        "lost_per_min": 177.8791375,
+        "healed_per_min": 27.143424999999997,
+        "healing_by_kind_per_min": {
+          "Regeneration": 18.849674999999998,
+          "Normal": 8.29375
+        },
+        "mean_nonfatal_hit": 5.907519742489271,
+        "hits_to_die_without_heal": 12.763666757369982,
+        "projection_targeted_hits": 10.420517198234187,
+        "projection_global_20_hits": 10.636388964474984,
+        "mean_max_hp": 76.31048387096774,
+        "mean_armor_reduction": 0.0147,
+        "level_end": [
+          4,
+          5,
+          4,
+          7
+        ],
+        "hits_to_die_each": [
+          10.86042853256217,
+          15.41010988893111,
+          14.86558785305084,
+          10.645699103514103
+        ],
+        "deaths_each": [
+          2.0,
+          1.0,
+          6.0,
+          6.0
+        ],
+        "lost_each": [
+          232.3153,
+          172.9119,
+          558.9889,
+          458.817
+        ]
+      },
+      "120-300": {
+        "hits": 1310,
+        "combat_hits": 1310,
+        "deaths_per_run": 35.5,
+        "lost_per_min": 1114.3534666666667,
+        "healed_per_min": 36.872825,
+        "healing_by_kind_per_min": {
+          "Regeneration": 7.747825,
+          "Normal": 29.125
+        },
+        "mean_nonfatal_hit": 10.63437183219178,
+        "hits_to_die_without_heal": 8.481000352150643,
+        "projection_targeted_hits": 7.790314699846398,
+        "projection_global_20_hits": 7.0675002934588695,
+        "mean_max_hp": 93.67557251908397,
+        "mean_armor_reduction": 0.03168916030534351,
+        "level_end": [
+          15,
+          15,
+          14,
+          14
+        ],
+        "hits_to_die_each": [
+          6.618902392290671,
+          13.234838086780872,
+          8.825333354756042,
+          6.99789085627795
+        ],
+        "deaths_each": [
+          41.0,
+          24.0,
+          35.0,
+          42.0
+        ],
+        "lost_each": [
+          3384.6375,
+          3085.0233,
+          3881.2683,
+          3021.3125
+        ]
+      },
+      "0-300": {
+        "hits": 1558,
+        "combat_hits": 1558,
+        "deaths_per_run": 39.25,
+        "lost_per_min": 739.763735,
+        "healed_per_min": 32.981065,
+        "healing_by_kind_per_min": {
+          "Regeneration": 12.188564999999999,
+          "Normal": 20.7925
+        },
+        "mean_nonfatal_hit": 9.84825010706638,
+        "hits_to_die_without_heal": 8.982234883728774,
+        "projection_targeted_hits": 8.13166244572922,
+        "projection_global_20_hits": 7.485195736440645,
+        "mean_max_hp": 90.91142490372272,
+        "mean_armor_reduction": 0.028984852374839536,
+        "level_end": [
+          15,
+          15,
+          14,
+          14
+        ],
+        "hits_to_die_each": [
+          6.942801974734633,
+          13.397691536292735,
+          9.798804130314407,
+          7.506231548169271
+        ],
+        "deaths_each": [
+          43.0,
+          25.0,
+          41.0,
+          48.0
+        ],
+        "lost_each": [
+          3616.9528,
+          3257.9352,
+          4440.2572,
+          3480.1295
+        ]
+      },
+      "300-600": {
+        "hits": 1710,
+        "combat_hits": 1710,
+        "deaths_per_run": 36.75,
+        "lost_per_min": 919.0482,
+        "healed_per_min": 181.66541,
+        "healing_by_kind_per_min": {
+          "Regeneration": 8.751199999999999,
+          "Normal": 126.58884000000003,
+          "PerkRecovery": 46.32537
+        },
+        "mean_nonfatal_hit": 11.037499424184261,
+        "hits_to_die_without_heal": 9.163955315797221,
+        "projection_targeted_hits": 8.0726101591829,
+        "projection_global_20_hits": 7.636629429831018,
+        "mean_max_hp": 109.38304093567251,
+        "mean_armor_reduction": 0.025651929824561402,
+        "level_end": [
+          28,
+          25,
+          25,
+          26
+        ],
+        "hits_to_die_each": [
+          7.0356659429637185,
+          16.155206470844334,
+          10.325000706555631,
+          7.337439005794925
+        ],
+        "deaths_each": [
+          49.0,
+          15.0,
+          44.0,
+          39.0
+        ],
+        "lost_each": [
+          4781.5415,
+          3549.3002,
+          5857.6407,
+          4192.4816
+        ]
+      }
+    },
+    "sources_0_5": {
+      "rodeur": {
+        "hits": 285,
+        "lost": 4940.788799999999,
+        "mean_announced": 19.656782456140352,
+        "hits_to_die": 4.867813141705911
+      },
+      "shadow_crawler": {
+        "hits": 370,
+        "lost": 2653.997600000003,
+        "mean_announced": 7.756137297297298,
+        "hits_to_die": 12.146422742274211
+      },
+      "charognard": {
+        "hits": 438,
+        "lost": 2624.6780000000035,
+        "mean_announced": 6.359709132420091,
+        "hits_to_die": 13.30108040232196
+      },
+      "presage": {
+        "hits": 103,
+        "lost": 1220.6345,
+        "mean_announced": 13.193638834951456,
+        "hits_to_die": 6.840952765533013
+      },
+      "void_brute": {
+        "hits": 63,
+        "lost": 1085.5820000000003,
+        "mean_announced": 19.532715873015874,
+        "hits_to_die": 4.823453555634438
+      },
+      "rampant": {
+        "hits": 88,
+        "lost": 1070.0673000000006,
+        "mean_announced": 13.328922727272728,
+        "hits_to_die": 6.564796375213965
+      },
+      "shade": {
+        "hits": 172,
+        "lost": 767.3533999999992,
+        "mean_announced": 4.691466860465116,
+        "hits_to_die": 18.618415642878755
+      },
+      "fading_spitter": {
+        "hits": 38,
+        "lost": 418.1730999999999,
+        "mean_announced": 11.822276315789473,
+        "hits_to_die": 6.811281214292098
+      },
+      "event:fallen_relic": {
+        "hits": 1,
+        "lost": 14.0,
+        "mean_announced": 14.0,
+        "hits_to_die": 5.0
+      }
+    },
+    "first_death": [
+      {
+        "seed": "seed-1002",
+        "t": 55.117,
+        "hits": 15
+      },
+      {
+        "seed": "seed-123",
+        "t": 119.183,
+        "hits": 32
+      },
+      {
+        "seed": "seed-42",
+        "t": 34.633,
+        "hits": 15
+      },
+      {
+        "seed": "seed-7",
+        "t": 39.8,
+        "hits": 14
+      }
+    ]
+  },
+  "vagabond": {
+    "runs": 4,
+    "bands": {
+      "0-120": {
+        "hits": 274,
+        "combat_hits": 274,
+        "deaths_per_run": 3.0,
+        "lost_per_min": 237.254825,
+        "healed_per_min": 44.0747,
+        "healing_by_kind_per_min": {
+          "Regeneration": 29.6723,
+          "Normal": 14.4024
+        },
+        "mean_nonfatal_hit": 7.005810687022901,
+        "hits_to_die_without_heal": 15.28142973489273,
+        "projection_targeted_hits": 13.076386267998771,
+        "projection_global_20_hits": 12.734524779077278,
+        "mean_max_hp": 107.31751824817518,
+        "mean_armor_reduction": 0.017597080291970803,
+        "level_end": [
+          4,
+          5,
+          6,
+          6
+        ],
+        "hits_to_die_each": [
+          12.30471852397071,
+          19.667753469219456,
+          15.281562642848089,
+          16.098279604343553
+        ],
+        "deaths_each": [
+          3.0,
+          1.0,
+          4.0,
+          4.0
+        ],
+        "lost_each": [
+          466.0174,
+          238.1275,
+          663.8813,
+          530.0124
+        ]
+      },
+      "120-300": {
+        "hits": 1229,
+        "combat_hits": 1229,
+        "deaths_per_run": 24.0,
+        "lost_per_min": 1049.2354416666667,
+        "healed_per_min": 33.703475000000005,
+        "healing_by_kind_per_min": {
+          "Regeneration": 21.849308333333337,
+          "Normal": 11.854166666666666
+        },
+        "mean_nonfatal_hit": 10.508931421006178,
+        "hits_to_die_without_heal": 12.058701092285288,
+        "projection_targeted_hits": 11.119877534809591,
+        "projection_global_20_hits": 10.048917576904406,
+        "mean_max_hp": 127.25793327908869,
+        "mean_armor_reduction": 0.08851098454027664,
+        "level_end": [
+          13,
+          11,
+          13,
+          11
+        ],
+        "hits_to_die_each": [
+          13.3439501356092,
+          13.52704007403469,
+          13.825230319256988,
+          8.763280877135871
+        ],
+        "deaths_each": [
+          25.0,
+          23.0,
+          17.0,
+          31.0
+        ],
+        "lost_each": [
+          3458.0642,
+          3378.6683,
+          2323.8596000000002,
+          3430.2332
+        ]
+      },
+      "0-300": {
+        "hits": 1503,
+        "combat_hits": 1503,
+        "deaths_per_run": 27.0,
+        "lost_per_min": 724.4431950000001,
+        "healed_per_min": 37.851965,
+        "healing_by_kind_per_min": {
+          "Regeneration": 24.978505000000002,
+          "Normal": 12.87346
+        },
+        "mean_nonfatal_hit": 9.850997634408602,
+        "hits_to_die_without_heal": 12.556024604268684,
+        "projection_targeted_hits": 11.441391605529555,
+        "projection_global_20_hits": 10.463353836890569,
+        "mean_max_hp": 123.62275449101796,
+        "mean_armor_reduction": 0.07558323353293413,
+        "level_end": [
+          13,
+          11,
+          13,
+          11
+        ],
+        "hits_to_die_each": [
+          13.181958903647173,
+          14.02577799268274,
+          14.179959588063573,
+          9.855990603760649
+        ],
+        "deaths_each": [
+          28.0,
+          24.0,
+          21.0,
+          35.0
+        ],
+        "lost_each": [
+          3924.0816,
+          3616.7958,
+          2987.7409000000002,
+          3960.2455999999997
+        ]
+      },
+      "300-600": {
+        "hits": 1856,
+        "combat_hits": 1856,
+        "deaths_per_run": 28.75,
+        "lost_per_min": 933.01556,
+        "healed_per_min": 72.680735,
+        "healing_by_kind_per_min": {
+          "Regeneration": 20.0155,
+          "Normal": 49.133534999999995,
+          "PerkRecovery": 3.5317
+        },
+        "mean_nonfatal_hit": 10.294099885123492,
+        "hits_to_die_without_heal": 14.512818379137903,
+        "projection_targeted_hits": 12.753816241370583,
+        "projection_global_20_hits": 12.094015315948253,
+        "mean_max_hp": 156.79822198275863,
+        "mean_armor_reduction": 0.08997413793103448,
+        "level_end": [
+          21,
+          18,
+          25,
+          19
+        ],
+        "hits_to_die_each": [
+          18.887184256217346,
+          16.42872204577831,
+          14.902141051718445,
+          10.197865138195048
+        ],
+        "deaths_each": [
+          22.0,
+          28.0,
+          27.0,
+          38.0
+        ],
+        "lost_each": [
+          4381.5842,
+          5297.2407,
+          4510.579,
+          4470.9073
+        ]
+      }
+    },
+    "sources_0_5": {
+      "rodeur": {
+        "hits": 294,
+        "lost": 4855.367099999991,
+        "mean_announced": 19.253018027210885,
+        "hits_to_die": 6.991424058990088
+      },
+      "shadow_crawler": {
+        "hits": 341,
+        "lost": 2402.0372000000057,
+        "mean_announced": 7.826082697947214,
+        "hits_to_die": 16.432822924290228
+      },
+      "charognard": {
+        "hits": 390,
+        "lost": 2206.555499999999,
+        "mean_announced": 6.193586666666667,
+        "hits_to_die": 20.401663026310892
+      },
+      "presage": {
+        "hits": 100,
+        "lost": 1137.2847999999992,
+        "mean_announced": 13.176613,
+        "hits_to_die": 10.557617158457793
+      },
+      "void_brute": {
+        "hits": 58,
+        "lost": 959.7358999999997,
+        "mean_announced": 19.635231034482757,
+        "hits_to_die": 8.199862090493088
+      },
+      "treant_corrompu": {
+        "hits": 36,
+        "lost": 890.3424000000002,
+        "mean_announced": 29.545780555555556,
+        "hits_to_die": 4.89540880234812
+      },
+      "shade": {
+        "hits": 175,
+        "lost": 826.1473000000009,
+        "mean_announced": 5.242976,
+        "hits_to_die": 24.908651874052342
+      },
+      "rampant": {
+        "hits": 71,
+        "lost": 798.967,
+        "mean_announced": 12.151214084507043,
+        "hits_to_die": 10.437005555481237
+      },
+      "fading_spitter": {
+        "hits": 37,
+        "lost": 390.42670000000004,
+        "mean_announced": 12.020713513513513,
+        "hits_to_die": 12.76497250960142
+      },
+      "event:fallen_relic": {
+        "hits": 1,
+        "lost": 22.0,
+        "mean_announced": 22.0,
+        "hits_to_die": 5.0
+      }
+    },
+    "first_death": [
+      {
+        "seed": "seed-1002",
+        "t": 79.85,
+        "hits": 25
+      },
+      {
+        "seed": "seed-123",
+        "t": 90.467,
+        "hits": 39
+      },
+      {
+        "seed": "seed-42",
+        "t": 80.367,
+        "hits": 26
+      },
+      {
+        "seed": "seed-7",
+        "t": 70.333,
+        "hits": 28
+      }
+    ]
+  }
+}

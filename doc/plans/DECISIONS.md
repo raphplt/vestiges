@@ -1343,6 +1343,47 @@ Raphaël, sur les tuiles du plan 37 : « même s'il y a du mieux je reste pas 10
 
 Précision le même jour, sur des pistes proposées ensuite (récitatifs, cartouches, Effacement en dessin qu'on gomme) : « tu vas trop en mode BD, c'est pas le format BD qui m'intéressait, c'était plus l'esthétique ». **Acquis :** la direction emprunte l'ambiance et la matière de ces images (mystérieux, crade, indescriptible), jamais le support BD.
 
+## 123. Textes de l'écran de chargement — 12 octobre 2026
+
+Raphaël demande des textes plus éloignés de l'animation, « plus mystérieux et
+variés », plus nombreux, ainsi que des conseils de jeu. Le placement peut être
+plus haut ou plus bas.
+
+Après un début d'intégration prématuré, il précise : « je voulais que tu me
+fasse des propositions avant de tout écrire. » **Acquis :** présenter et
+faire choisir la direction avant de rédiger le catalogue complet et de coder.
+Les changements de code et de textes commencés ont été retirés. Aucun choix
+précis de placement, de quantité, de ton ou de rythme n'est validé.
+Propositions à discuter au [plan 24 B5b](24-retours-du-1er-octobre.md).
+
+### 123 bis. Placement accepté, textes indirects et artefacts
+
+Raphaël accepte le placement **en dessous**. Il refuse les exemples proposés,
+encore trop directs sur l'oubli, et renvoie aux règles d'écriture déjà posées
+au plan 19. Il demande des formes variées et immersives : poèmes, transmissions,
+annonces, etc. Les conseils concrets sont acceptés, mais **ne doivent pas être
+identifiables visuellement des autres textes** : aucun préfixe « Conseil ».
+
+Il souhaite des artefacts donnant l'impression de ne lire que des fragments,
+« sans que ça devienne cliché ». Le dosage et les exemples restent à discuter ;
+pas de rédaction du catalogue complet ni d'intégration avant ce retour.
+
+### 123 ter. Ton accepté et intégration autorisée
+
+Raphaël accepte les seconds exemples (poème, transmission, annonce coupée,
+note et conseil). Il demande « légèrement plus » d'artefacts, adaptés au type
+de phrase, puis : « fait le reste go et implémente le ». Lot B5b autorisé dans
+cette direction, sous l'animation, avec les conseils mêlés aux autres textes
+sans titre ni présentation distincte.
+
+### 123 quater. Fond de chargement moins détaillé
+
+Raphaël : « jaime pas l'image de fond elle est trop détaillée », puis demande
+une version plus pixellisée, jolie et dans la DA, en regardant le fond du menu
+principal. Il demande également si les fonds et bordures des différents menus
+sont des PNG ou des dessins du moteur. Lot B5c : fond dédié au chargement avec
+le grain de l'accueil ; réponse sur les techniques réellement utilisées.
+
 ## 124. Ambiances choisies, licence et voile du marais — 12 octobre 2026
 
 Choix de Raphaël sur la planche A4b ([plan 39 §11](39-atmosphere.md)) : marais B (mare), bulles A, grenouille C ; carrière gouttes B, pierre A, et pour le fond « A et C » ; champs B (soleil et chaleur), corbeau A, grillon A ; Hub B (grand feu de branches) ; ville tôle C (bâche qui claque) et, pour la chute, « 1 et 3 » (barre de fer et pierres). Fond de ville : aucun, « j'hésite entre le A et le C car le A a des bruits de fond type voiture et le C fait très "montagne" / altitude… soit l'un des deux soit chercher un nouveau ».
@@ -1357,11 +1398,46 @@ Sur l'intégration de A4c : « juste un détail sur la carrière j'aime les deux
 
 **Acquis :** la carrière a deux fonds (grotte, vent en volume clos), l'un ou l'autre ; l'agent tire celui qui joue à chaque entrée dans le biome. La ville prend le vent fort dans un village (second tour, D).
 
+## 126 bis. Régénération réduite et suspendue après blessure — 12 octobre 2026
+
+Raphaël demande environ −10 % de régénération de base pour tous les personnages et un délai de 2 s après un coup. Lot R1 au [plan 33](33-equilibrage-ouverture.md) : cinq taux multipliés par 0,9, régénération suspendue après chaque perte de PV et délai relancé par toute nouvelle blessure.
+
+Après le rééquilibrage récent de l'ouverture, les ennemis lui semblent faire trop peu mal : 10 à 15 coups pour mourir. Il envisage de relever un peu leurs dégâts en début de partie ; ce retour ne fixe pas de hausse et les dégâts ennemis restent inchangés dans ce lot.
+
+### 126 ter. Mesurer les dégâts avec les cinq personnages
+
+Raphaël : « mesure le truc des dégats ennemis et fait moi des suggestions en fonction de ce que tu trouves (teste avec les différents persos en jeu) ». Mesure demandée, sans autorisation d'appliquer les propositions.
+
+Lot R2 au [plan 33](33-equilibrage-ouverture.md), [rapport](../audits/damage-opening-2026-10-12/README.md) : cinq personnages × quatre graines × 10 min en vraie Main, profil neuf, Péril 0, bot nomade mortel qui visite. Le ressenti de 10–15 coups est cohérent avec l'ouverture ; la Forgeuse résiste à environ 29 coups moyens, grâce à ses PV et son armure. Proposition de l'agent : +1 dégât de base au Charognard, à l'Ombre et au Rampant d'Ombre, qui dominent les blessures des deux premières minutes ; garder d'abord les dégâts des autres créatures. Variante plus douce : +0,5. Projections chiffrées au rapport, aucun dégât de gameplay modifié.
+
 ## 126. Ombres portées pixelisées, réglage de qualité — 12 octobre 2026
 
 Raphaël, sur les ombres portées d'A3 : « les ombres ne me plaisent pas trop : elles ne sont pas pixellisées donc ça dénote du reste. Aussi pas besoin qu'elles soient en HD, elles peuvent être en relativement low res. Il faut un réglage pour la qualité des ombres au passage. »
 
 **Acquis :** ombres portées en gros pixels alignés sur le monde, plus basse résolution que le dessin ; réglage de qualité dans les paramètres. Valeurs proposées par l'agent : Hautes (pixel du monde), Moyennes (2 px, par défaut), Basses (4 px), Désactivées.
+
+## 127. Fonds de menus et Campement trop dense — 12 octobre 2026
+
+Raphaël signale le même fond trop détaillé dans les autres menus. Sur le
+Campement : « il est trop dense […] on peut s'y perdre rapidement », retirer
+« Rang » devant `0/X`, envisager des icônes pixel art visibles (« pas une
+bouillie de pixel ») et réadapter la largeur. Fond partagé au plan 24 B5d ;
+reprise de lisibilité au plan 36 M5. Préférence de disposition demandée : liste
+et fiche séparées, ou deux colonnes aérées.
+
+Sans réponse sur la disposition pendant le travail, l'agent retient et annonce
+l'option recommandée : liste et fiche séparées, commandes d'achat et de
+remboursement dans la fiche. Les noms et leurs explications courtes restent
+sur chaque ligne. Ce choix reste un choix de l'agent, sans validation artistique
+humaine présumée.
+
+## 128. Objets : cumul simple, déclenchements bornés et catalogue élargi — 12 octobre 2026
+
+Raphaël corrige la proposition de raretés : pansement accepté à 3 % des PV max par niveau et par copie, sans invulnérabilité ; Semelle à +20 % par exemplaire après le dash ; Montre remplacée par une chance de ralentir un élite ; Allumette, Glaçon et Flacon à faible probabilité, en évitant l’emballement des salves ; Thermomètre et Épingle à +35 % ; Tabouret en dégâts progressifs à l’immobilité jusqu’à +100 % ; Dé jugé trop fort, à limiter par critiques ou par débit. Les autres effets explicitement acceptés sont conservés hors bonus de doublon.
+
+**Règle globale acquise : aucun effet supplémentaire au doublon pour les objets du sac**, cumul du même effet seulement. Les paliers des Écussons ne sont pas visés. Raphaël demande aussi des objets pour toutes les statistiques, des effets variés et originaux à chaque rareté, davantage d’épiques/légendaires et une partie d’entre eux accessibles dès le profil neuf. Inspiration demandée : https://megabonk.fandom.com/wiki/Items, adaptée à Vestiges et à son lore.
+
+**Préparation révisée :** [plan 35 I10](35-raretes-des-objets.md) et [catalogue V2](35-catalogue-objets-v2.md). 22 objets révisés, 35 nouveautés proposées, 19 statistiques globales couvertes. Le choix de plafonner le Dé sans imposer les critiques, les taux de déclenchement, durées, plafonds, nouveaux effets et accès précis sont des propositions de l’agent, pas des valeurs validées par Raphaël. Aucun effet de gameplay implémenté pendant cette révision.
 
 ## 129. Retours de partie sur l'atmosphère et l'interface — 12 octobre 2026
 

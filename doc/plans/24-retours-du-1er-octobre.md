@@ -153,6 +153,124 @@ Corrige aussi le défaut de police : ◆, ★ et « ᵉ » ne sont pas dans Sair
 - Les étapes techniques (« Terrain… 42 % ») disparaissent de l'écran ; elles restent dans le log.
 - Raccord avec la `VoidTransition` du Hub : le noir de fin de transition devient le noir du fond.
 
+#### B5b — Messages de chargement, propositions du 12 octobre 2026
+
+Raphaël demande d'éloigner les textes de l'animation, d'en ajouter et de rendre
+l'écriture plus mystérieuse et variée, avec des conseils de jeu. Il précise
+qu'il souhaite des propositions **avant toute rédaction complète et intégration**.
+
+Direction précisée par Raphaël le 12 octobre :
+- **Placement sous la bande validé.** Largeur de lecture limitée et retour à la
+  ligne à vérifier lors de l'intégration.
+- Les premiers exemples sont refusés : ils évoquent encore l'oubli trop
+  directement. Suivre le [plan 19 §2.4](19-lore.md) et le
+  [script §10](../VESTIGES-LORE.md) : documents bruts, faits concrets, aucune
+  explication ni conclusion sur le monde.
+- Varier les formes : poèmes, transmissions, annonces, notes, etc. Leur
+  immersion prime sur une chute étrange systématique.
+- Les conseils concrets sont acceptés, **sans libellé « Conseil » ni traitement
+  visuel distinct**. Leur sens doit rester lisible.
+- Certains textes peuvent porter des artefacts de lecture : début ou fin
+  manquants, mot partiel, courte répétition de transmission, espacement local.
+  Dosage parcimonieux, selon le support ; pas de corruption décorative
+  systématique ni de conseil rendu incompréhensible. Les formes précises restent
+  proposées, à juger sur quelques exemples.
+
+Accord de Raphaël : les seconds exemples conviennent ; accentuer légèrement
+les artefacts et les adapter au type de phrase. « Fait le reste go et implémente
+le. » Les premiers changements avaient été retirés ; ce lot reprend sur la
+direction validée.
+
+Un seul lot B5b, engagé après cet accord :
+- Écrire 40 messages FR/EN : 28 fragments (poèmes, transmissions, annonces,
+  billets, formulaires, chanson, cahier et relevés) et 12 conseils sans marqueur.
+  Les conseils gardent leur information utile ; leurs marges peuvent être
+  fragmentaires. Les altérations sont écrites et traduites, pas tirées au hasard.
+- Intégrer une zone de lecture sous la bande, les lignes des documents et un
+  tirage mélangé conservé entre les départs, sans répétition avant épuisement.
+  Sept secondes par message, sans prolonger le chargement.
+- Vérifier build, smoke, chargement récupérable et captures 1080p/720p FR/EN,
+  notamment poème, transmission, annonce, conseil et texte long.
+
+État : **livré et vérifié le 12 octobre 2026**.
+
+Résultat : 40 textes FR/EN dans `translations.csv` (`LOADING_LINE_1` à `40`),
+avec leurs lignes et artefacts écrits ; aucun préfixe, couleur ou police propre
+aux conseils. La zone de lecture occupe la moitié centrale de l'écran sous la
+bande de marche. Le tirage conserve sa position entre deux départs en run et
+ne répète aucun texte avant épuisement ; la jonction de deux tirages évite aussi
+un doublon. Les fondus du texte s'arrêtent à la sortie ou à l'affichage d'une
+erreur pour ne pas concurrencer le fondu de l'écran.
+
+Vérifications :
+- Build à zéro warning ; `tools/validate.sh` : smoke et chargement **2/2 verts**,
+  22 contrôles sur huit scénarios, sources stables durant le passage final.
+- 22 captures de textes sélectionnés à 1920×1080 et 1280×720, FR/EN : poème,
+  transmission, annonce, note avec blanc, conseil et texte long lisibles ;
+  trois changements successifs du vrai tirage également capturés.
+- `LoadingCapture` accepte maintenant `--capture-size`, `--locale`,
+  `--message-keys` et `--samples` pour reproduire ces vérifications.
+
+Preuves hors dépôt : `/tmp/vestiges-loading-b5b-approved/` (captures et journaux),
+`/tmp/vestiges-loading-b5b-approved-validation/` (build, import et suites).
+Un premier passage avait réussi les deux suites mais signalé des changements
+concurrents d'un autre chantier ; le passage final n'en signale aucun.
+
+#### B5c — Fond de chargement plus simple, 12 octobre 2026
+
+Raphaël trouve le fond trop détaillé et demande une version plus pixellisée,
+jolie et dans la DA du jeu, en prenant le fond du menu principal comme référence.
+Il demande aussi comment les fonds et bordures des menus sont produits.
+
+Un seul lot :
+- Comparer la peinture de l'accueil (grain 480×270 affiché ×4) au PNG intérieur
+  actuellement partagé ; conserver la palette pierre/indigo et le centre calme.
+- Produire un fond dédié au chargement : grandes masses de pierre, végétation
+  simplifiée et bord effrité, détails réduits, asset natif 480×270 et nearest.
+- Brancher ce fond dans l'overlay ; les panneaux et menus existants servent à
+  l'explication technique demandée et ne sont pas redessinés dans ce lot.
+- Vérifier le build zéro warning, smoke, chargement récupérable et captures
+  comparables 1080p/720p.
+
+État : **livré et vérifié le 12 octobre 2026**.
+
+`assets/ui/menus/stone/loading.png` (480×270) remplace le fond du chargement :
+masses de pierre, feuilles en groupes, arêtes en escalier et centre sombre.
+Image créée avec imagegen à partir du fond intérieur et de la peinture du Hub,
+puis mise au format natif en nearest ; prompt exact dans `loading.prompt.json`.
+`PixelBackdrop` accepte une texture dédiée et conserve la teinte et le shader
+existants. Les autres écrans gardent leurs fonds et panneaux actuels.
+
+Build zéro warning ; validation finale **3/3 verte** (smoke, chargement,
+UI art), sans changement de source pendant le passage. Captures du poème et
+de la note à quatre lignes inspectées aux dimensions réelles 1920×1080 et
+1280×720. Preuves : `/tmp/vestiges-loading-b5c-captures/` et
+`/tmp/vestiges-loading-b5c-final-validation/`.
+
+Diagnostic des menus : peinture PNG pour l'accueil, PNG `interior.png` pour
+les pages intérieures et paramètres, PNG `panel.png` préparé en neuf tranches
+pour les grands panneaux. Boutons, cartes et onglets de pierre : textures de
+64×64 créées une fois en code par `MenuSkin`. En run, le fond de pause,
+journal et rencontres vient de la scène du jeu floutée et assombrie par shader.
+Les braises, poussières, lueurs et quelques repères de focus sont dessinés ou
+animés par le moteur. Le menu principal utilise du texte et une braise dessinée
+plutôt qu'une dalle derrière chaque entrée.
+
+#### B5d — Fond simplifié dans les autres menus, 12 octobre 2026
+
+Raphaël constate le même défaut dans les autres fonds de menus, dont le
+Campement. Étendre le fond natif 480×270 du chargement aux pages intérieures,
+paramètres et bilan (`MenuSkin.AddBackdrop`), ainsi qu'au choix par défaut des
+fonds de pierre (`PixelBackdrop`). La peinture du menu principal et le jeu
+flouté derrière les menus de run conservent leurs rôles.
+
+Lot unique : branchement du PNG existant, build, smoke et suites d'interface,
+puis captures comparables du Hub. **Livré le 12 octobre** : fond 480×270
+partagé via `MenuSkin` et `PixelBackdrop`, vues Campement et Collection
+inspectées à 720p/1080p ; build zéro warning, smoke, Campement, navigation et
+UI art 4/4 verts avec le plan 36 M5. Preuves :
+`/tmp/vestiges-menus-camp-m5-validation/` et captures référencées au plan 36.
+
 ## 4. Chantier C — Tenir jusqu'à la première Résurgence
 
 Ordre voulu : **corriger l'accès aux armes d'abord, mesurer, puis seulement retoucher les créatures.** Le lot R5 a monté les PV parce que le joueur était plus fort ; avec une seule arme, il ne l'est pas.

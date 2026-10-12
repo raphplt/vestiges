@@ -36,6 +36,7 @@ public partial class PerkContractsRegression : Node2D
             CheckCatalogue();
             CheckEnemyDamage();
             await CheckPersistentSources();
+            CheckRegenerationDelay();
             CheckHealth();
             GD.Print($"[PerkContractsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -180,6 +181,68 @@ public partial class PerkContractsRegression : Node2D
         }
     }
 
+    private void CheckRegenerationDelay()
+    {
+        Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(player);
+        player.InitializeCharacter(CharacterDataLoader.Get("vagabond"));
+        player.IsAIControlled = true;
+        player.IsGodMode = false;
+        player.SetPhysicsProcess(false);
+        PlayerDefense defense = (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(player);
+        MethodInfo applyRegen = typeof(Player).GetMethod("ApplyRegen", Private);
+        void Step(float seconds) => applyRegen.Invoke(player, new object[] { seconds });
+        bool Near(float expected) => Mathf.Abs(player.CurrentHp - expected) < 0.0001f;
+        float delay = defense.Config.RegenDelayAfterDamageSeconds;
+        Check(Mathf.IsEqualApprox(delay, 2f), "Délai commun après blessure : 2 s depuis les données");
+
+        player.ApplyPerkModifier("regen_rate", 0.2f, "additive");
+        float rate = player.BaseRegenRate + player.BonusRegenRate;
+        player.TakeDamage(10f);
+        float injuredHp = player.CurrentHp;
+        int heals = 0;
+        void OnHeal(HealingResult result) { if (result.PlayerId == player.GetInstanceId()) heals++; }
+        _events.PlayerHealingResolved += OnHeal;
+        Step(delay - 0.5f);
+        Check(Near(injuredHp) && heals == 0, "Blessure : ni PV régénérés ni excédent publié avant le délai");
+        PlayerDamageResult ignored = player.TakeDamage(10f);
+        Check(!ignored.Applied, "Le coup pendant l'invulnérabilité est rejeté");
+        Step(0.5f);
+        Check(Near(injuredHp) && heals == 0, "À 2 s exactes, le délai expire sans soin rétroactif");
+        Step(0.5f);
+        Check(Near(injuredHp + rate * 0.5f) && heals == 1,
+            "Reprise au taux de base et bonus ; le coup rejeté ne relance pas le délai");
+        _events.PlayerHealingResolved -= OnHeal;
+
+        defense.Step(delay);
+        player.TakeDamage(10f);
+        Step(delay - 0.5f);
+        defense.Step(delay);
+        player.TakeDamage(10f);
+        injuredHp = player.CurrentHp;
+        Step(1f);
+        Check(Near(injuredHp), "Une nouvelle blessure relance les 2 s complètes");
+        HealingResult direct = player.Heal(1f);
+        HealingResult lifesteal = player.Heal(1f, HealingKind.Lifesteal);
+        Check(direct.HpRestored == 1f && lifesteal.HpRestored == 1f,
+            "Soins directs et vol de vie disponibles pendant la suspension");
+        injuredHp = player.CurrentHp;
+        Step(delay - 1f + 0.5f);
+        Check(Near(injuredHp + rate * 0.5f), "Une image qui dépasse le délai soigne seulement sur le temps restant");
+
+        player.TakeErasureDamage(3f);
+        injuredHp = player.CurrentHp;
+        Step(delay - 0.5f);
+        Check(Near(injuredHp), "Le Néant suspend aussi la régénération après perte de PV");
+        defense.Step(delay);
+        player.ApplyPerkModifier("shield", 10f, "additive");
+        PlayerDamageResult shield = player.TakeDamage(5f);
+        Step(1f);
+        Check(shield.ShieldAbsorbed && Near(injuredHp + rate * 0.5f),
+            "Un coup entièrement absorbé par le bouclier ne relance pas le délai");
+        player.QueueFree();
+    }
+
     private void CheckHealth()
     {
         // Plus de bouclier de départ (plan 23 R1) : celui d'un objet (Écusson de pompier) encaisse le premier coup.
@@ -198,7 +261,8 @@ public partial class PerkContractsRegression : Node2D
         HealingResult regen = default;
         void OnHeal(HealingResult result) { regen = result; }
         _events.PlayerHealingResolved += OnHeal;
-        typeof(Player).GetMethod("ApplyRegen", Private).Invoke(_player, new object[] { 1f });
+        typeof(Player).GetMethod("ApplyRegen", Private).Invoke(_player,
+            new object[] { DefenseConfig.Load().RegenDelayAfterDamageSeconds + 1f });
         _events.PlayerHealingResolved -= OnHeal;
         Check(regen.Kind == HealingKind.Regeneration && regen.HpRestored == 0f && regen.Excess > 0f,
             "La régénération à pleine vie expose son excédent sans changer les PV");

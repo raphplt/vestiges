@@ -10,7 +10,7 @@
             "attack_speed": 1.2,
             "attack_range": 380,
             "max_hp": 70,
-            "regen_rate": 0.6,
+            "regen_rate": 0.54,
             "shield": 0,
             "interact_range": 55
         },
@@ -32,7 +32,7 @@
             "attack_speed": 1.0,
             "attack_range": 300,
             "max_hp": 100,
-            "regen_rate": 1.0,
+            "regen_rate": 0.9,
             "shield": 0,
             "interact_range": 60
         },
@@ -54,7 +54,7 @@
             "attack_speed": 0.9,
             "attack_range": 250,
             "max_hp": 120,
-            "regen_rate": 1.2,
+            "regen_rate": 1.08,
             "shield": 0,
             "interact_range": 70
         },
@@ -76,7 +76,7 @@
             "attack_speed": 1.1,
             "attack_range": 320,
             "max_hp": 85,
-            "regen_rate": 0.8,
+            "regen_rate": 0.72,
             "shield": 0,
             "interact_range": 60
         },
@@ -99,7 +99,7 @@
             "attack_speed": 1.0,
             "attack_range": 320,
             "max_hp": 80,
-            "regen_rate": 0.9,
+            "regen_rate": 0.81,
             "shield": 0,
             "interact_range": 60
         },

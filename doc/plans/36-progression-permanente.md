@@ -1,5 +1,55 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+## Reprise visuelle M5 — 12 octobre 2026
+
+Raphaël trouve le Campement trop dense, retire le mot « Rang » devant `0/X`
+et envisage des icônes pixel art lisibles et une largeur mieux adaptée. Il
+signale aussi le fond partagé trop détaillé (plan 24 B5d).
+
+Un seul lot M5, sans modifier l'économie :
+- Retirer « Rang » du compteur FR/EN.
+- Préparer quatorze icônes natives 32×32, silhouettes et détails francs,
+  affichées à une échelle entière (64 px dans la liste).
+- Préférer une liste à gauche et une fiche d'achat à droite : chaque ligne
+  garde le nom, l'explication courte et `0/X` ; la sélection rassemble l'effet,
+  le prix et le remboursement. Alternative proposée à Raphaël : deux colonnes
+  aérées avec le remboursement uniquement sur la sélection.
+- Garder les catégories visibles, les remboursements libres, le solde et
+  la navigation clavier/manette ; tester achats, refus et focus après remboursement.
+- Vérifier build zéro warning, smoke, camp, navigation et UI art, puis captures
+  de profils neuf/dev à 720p/1080p.
+
+La préférence de disposition a été demandée ; sans réponse durant le travail,
+l'agent retient la première option recommandée et l'annonce : liste à gauche,
+fiche à droite. C'est un choix d'implémentation de l'agent, pas une réponse de
+Raphaël.
+
+État : **livré et vérifié le 12 octobre 2026**.
+- Liste de 780 px et fiche de 640 px, séparées de 40 px ; lignes de 80 px,
+  nom, explication courte et `0/X`. La liste défile et suit le focus.
+- 14 icônes natives 32×32 dans `assets/ui/camp/`, générateur déterministe
+  `python3 -m tools.sprites.ui.camp` ; affichage ×2 dans la liste, ×4 dans la fiche.
+- La ligne sélectionne ; **Acheter** et **Rendre** dans la fiche font les
+  transactions. Plus de prix, gain et bouton de remboursement répétés sur
+  chaque ligne. Le compteur et la confirmation d'achat omettent « Rang ».
+- Effet actuel puis suivant et prix visibles avant l'achat ; solde et compteurs
+  actualisés après transaction. Dernier rang rendu ou remboursement global :
+  le focus revient à la sélection, même si Godot libère celui du bouton désactivé.
+- Achats, refus, remboursements, montants et progression restent ceux du
+  catalogue ; aucune valeur d'économie ou de gameplay modifiée.
+
+Vérifications : build zéro warning et **4/4 suites vertes** (`smoke`, `camp`,
+`menu_navigation`, `ui_art`), sources stables pendant le passage. Neuf contrôles
+d'interface ajoutés au parcours réel : sélection sans achat, accès à la fiche,
+achat et compteur, changement de fiche, remboursement, focus et remboursement
+global. Captures profils normal/dev en 1080p/720p, transaction et défilement
+jusqu'aux statistiques inspectés ; fond partagé vu en Collection.
+
+Preuves hors dépôt : `/tmp/vestiges-menus-camp-m5-validation/`,
+`/tmp/vestiges-camp-m5-normal1080/`, `/tmp/vestiges-camp-m5-normal720/`,
+`/tmp/vestiges-camp-m5-1080/`, `/tmp/vestiges-menus-m5-collection/` et
+`/tmp/vestiges-camp-icons.png`.
+
 11 octobre 2026. Parenthèse de Raphaël au [§109](DECISIONS.md) : « il y a des améliorations globales que tu peux faire, par exemple j'améliore le nombre d'armes que je peux porter, j'améliore des statistiques […] là ça manque et ça serait crucial de rajouter ça rapidement ». **Étude et proposition, tranchées le 11 octobre (§8) : l'écran s'appelle le Campement.**
 
 ## 0. En bref

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c8e8fsya7ijsu"
-path="res://.godot/imported/prop_radio_antenna_tower.png-537a9545f195c9ec173b2a11175374d1.ctex"
+uid="uid://y7edlaln3bya"
+path="res://.godot/imported/camp_start_essence.png-fe6be58abf0cd5878c7ef74c8305ca1e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://temp/prop_radio_antenna_tower.png"
-dest_files=["res://.godot/imported/prop_radio_antenna_tower.png-537a9545f195c9ec173b2a11175374d1.ctex"]
+source_file="res://assets/ui/camp/camp_start_essence.png"
+dest_files=["res://.godot/imported/camp_start_essence.png-fe6be58abf0cd5878c7ef74c8305ca1e.ctex"]
 
 [params]
 

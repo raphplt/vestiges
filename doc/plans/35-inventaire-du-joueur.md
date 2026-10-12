@@ -592,3 +592,7 @@ Le retrait des bonus de statistiques et l’augmentation du nombre d’objets ch
 ## 19. I10 — rareté fixe des objets, préparation (11 octobre 2026)
 
 Raphaël demande un rang fixe par objet, des probabilités liées au rang et un classement cohérent avec la puissance. [Proposition complète](35-raretes-des-objets.md) : 22 objets classés dans les cinq rangs existants, probabilités par source, prix d’Atelier, apparence et lots I10a–I10d. Principe acquis ; classement et taux proposés, pas encore implémentés ni mesurés. Aucun multiplicateur automatique de puissance ajouté par la rareté.
+
+## 20. Révision du 12 octobre — cumul simple et extension du catalogue
+
+Les retours de Raphaël (DECISIONS §128) remplacent les propositions de doublon et le classement du 11 octobre : aucun effet de palier sur les objets du sac ; effets révisés et budgets de déclenchement au [plan I10](35-raretes-des-objets.md). Extension préparée : [57 objets au total, dont 35 nouveaux](35-catalogue-objets-v2.md), statistiques globales et propriétés d’armes, utilitaires et hauts rangs accessibles dès le profil neuf. Les sections de livraison antérieures décrivent le code existant ; la nouvelle cible reste à implémenter, un lot à la fois.

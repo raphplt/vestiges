@@ -21,7 +21,6 @@ public partial class Player : CharacterBody2D
 #if TOOLS
     private bool _isAIControlled;
     private bool _isGodMode;
-    // Les entrées de banc ne font pas partie du contrôleur distribué.
     public bool IsAIControlled
     {
         get => _isAIControlled;
@@ -105,6 +104,7 @@ public partial class Player : CharacterBody2D
     private float _aoeMultiplier = 1f;
     private float _attackRangeMultiplier = 1f;
     private float _bonusRegenRate;
+    private float _regenDelayRemaining;
     private float _lifesteal;
     private float _lifestealPending;
     private float _lifestealTimer;
@@ -200,6 +200,7 @@ public partial class Player : CharacterBody2D
     public override void _Ready()
     {
         _currentHp = MaxHp;
+        _regenDelayRemaining = 0f;
         BodyRadius = GetNode<CollisionShape2D>("CollisionShape2D").Shape is CircleShape2D body ? body.Radius : BodyRadius;
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
@@ -962,104 +963,104 @@ public partial class Player : CharacterBody2D
         switch (se.Kind)
         {
             case SpecialEffectKind.HealEveryNHits:
-            {
-                string weaponId = source.Id;
-                _weaponHitCounters.TryGetValue(weaponId, out int count);
-                count++;
-                if (count >= (int)se.Get(SpecialEffectParam.HitsPerHeal))
                 {
-                    Heal(se.Get(SpecialEffectParam.HealAmount));
-                    count = 0;
-                }
-                _weaponHitCounters[weaponId] = count;
-                break;
-            }
-            case SpecialEffectKind.InstantDisintegrate:
-            {
-                if (enemy.IsDying)
-                {
-                    // Pas de particules, l'ennemi disparaît instantanément
-                    enemy.Scale = Vector2.Zero;
-                    enemy.Modulate = new Color(1f, 1f, 1f, 0f);
-                }
-                break;
-            }
-            case SpecialEffectKind.DelayedEcho:
-            {
-                float delay = se.Get(SpecialEffectParam.EchoDelay);
-                float echoRatio = se.Get(SpecialEffectParam.EchoDamagePercent);
-                float echoDamage = damage * echoRatio;
-                float echoRaw = rawDamage * echoRatio;
-                Vector2 echoPos = enemy.GlobalPosition;
-                float echoRadius = ZoneScale(se.Get(SpecialEffectParam.EchoRadius));
-                // Enchaînement (ascension des Gants de boxe) : l'écho repart plusieurs fois, à intervalles égaux.
-                int echoCount = (int)se.Get(SpecialEffectParam.EchoCount);
-                for (int echo = 1; echo <= echoCount; echo++)
-                {
-                    GetTree().CreateTimer(delay * echo).Timeout += () =>
+                    string weaponId = source.Id;
+                    _weaponHitCounters.TryGetValue(weaponId, out int count);
+                    count++;
+                    if (count >= (int)se.Get(SpecialEffectParam.HitsPerHeal))
                     {
-                        // Réapplique les dégâts à la position d'origine (AoE fantôme)
-                        using CrowdQuery crowd = CrowdIndex.Near(echoPos, echoRadius);
-                        foreach (Node node in crowd.Targets)
-                        {
-                            if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
-                            {
-                                if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                    SecondaryHit(e, echoRaw, source, context, echoPos);
-                            }
-                        }
-                        _attackFx.PlayEcho(source?.Base, echoPos, echoRadius);
-                        if (_objectMilestones?.HasZoneEcho == true)
-                            _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
-                    };
-                }
-                break;
-            }
-            case SpecialEffectKind.GroundFire:
-            {
-                // Géré au moment de l'impact du projectile, pas ici
-                break;
-            }
-            case SpecialEffectKind.LocalTimeSlow:
-            {
-                float radius = ZoneScale(se.Get(SpecialEffectParam.SlowRadius));
-                float factor = se.Get(SpecialEffectParam.SlowFactor);
-                float duration = StatusDuration(se.Get(SpecialEffectParam.SlowDuration));
-                // Arrêt sur image (ascension du Chronomètre) : le champ fige au lieu de ralentir.
-                float freeze = StatusDuration(se.Get(SpecialEffectParam.FreezeSeconds));
-                Vector2 impactPos = enemy.GlobalPosition;
-                // La cible frappée d'abord : elle est au centre du champ, qu'elle soit encore recensée ou non.
-                ApplyTimeField(enemy, freeze, factor, duration, context);
-                using CrowdQuery crowd = CrowdIndex.Near(impactPos, radius);
-                foreach (Node node in crowd.Targets)
-                {
-                    if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e) && e.GlobalPosition.DistanceTo(impactPos) < radius)
-                        ApplyTimeField(e, freeze, factor, duration, context);
-                }
-                SpawnTimeSlowVisual(impactPos, radius, duration);
-                break;
-            }
-            case SpecialEffectKind.RandomShape:
-            {
-                float aoeRadius = ZoneScale(se.Get(SpecialEffectParam.ShapeRadius));
-                float shapeRatio = se.Get(SpecialEffectParam.ShapeDamageRatio);
-                float shapeDamage = damage * shapeRatio;
-                float shapeRaw = rawDamage * shapeRatio;
-                Vector2 impactPos = enemy.GlobalPosition;
-                using CrowdQuery crowd = CrowdIndex.Near(impactPos, aoeRadius);
-                foreach (Node node in crowd.Targets)
-                {
-                    if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
-                    {
-                        if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                            SecondaryHit(e, shapeRaw, source, context, impactPos);
+                        Heal(se.Get(SpecialEffectParam.HealAmount));
+                        count = 0;
                     }
+                    _weaponHitCounters[weaponId] = count;
+                    break;
                 }
-                Combat.CombatPools.Instance?.ShowChalkShape(impactPos, aoeRadius);
-                if (_objectMilestones?.HasZoneEcho == true)
-                    _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, shapeDamage, source, context);
-                break;
-            }
+            case SpecialEffectKind.InstantDisintegrate:
+                {
+                    if (enemy.IsDying)
+                    {
+                        // Pas de particules, l'ennemi disparaît instantanément
+                        enemy.Scale = Vector2.Zero;
+                        enemy.Modulate = new Color(1f, 1f, 1f, 0f);
+                    }
+                    break;
+                }
+            case SpecialEffectKind.DelayedEcho:
+                {
+                    float delay = se.Get(SpecialEffectParam.EchoDelay);
+                    float echoRatio = se.Get(SpecialEffectParam.EchoDamagePercent);
+                    float echoDamage = damage * echoRatio;
+                    float echoRaw = rawDamage * echoRatio;
+                    Vector2 echoPos = enemy.GlobalPosition;
+                    float echoRadius = ZoneScale(se.Get(SpecialEffectParam.EchoRadius));
+                    // Enchaînement (ascension des Gants de boxe) : l'écho repart plusieurs fois, à intervalles égaux.
+                    int echoCount = (int)se.Get(SpecialEffectParam.EchoCount);
+                    for (int echo = 1; echo <= echoCount; echo++)
+                    {
+                        GetTree().CreateTimer(delay * echo).Timeout += () =>
+                        {
+                            // Réapplique les dégâts à la position d'origine (AoE fantôme)
+                            using CrowdQuery crowd = CrowdIndex.Near(echoPos, echoRadius);
+                            foreach (Node node in crowd.Targets)
+                            {
+                                if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
+                                {
+                                    if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
+                                        SecondaryHit(e, echoRaw, source, context, echoPos);
+                                }
+                            }
+                            _attackFx.PlayEcho(source?.Base, echoPos, echoRadius);
+                            if (_objectMilestones?.HasZoneEcho == true)
+                                _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
+                        };
+                    }
+                    break;
+                }
+            case SpecialEffectKind.GroundFire:
+                {
+                    // Géré au moment de l'impact du projectile, pas ici
+                    break;
+                }
+            case SpecialEffectKind.LocalTimeSlow:
+                {
+                    float radius = ZoneScale(se.Get(SpecialEffectParam.SlowRadius));
+                    float factor = se.Get(SpecialEffectParam.SlowFactor);
+                    float duration = StatusDuration(se.Get(SpecialEffectParam.SlowDuration));
+                    // Arrêt sur image (ascension du Chronomètre) : le champ fige au lieu de ralentir.
+                    float freeze = StatusDuration(se.Get(SpecialEffectParam.FreezeSeconds));
+                    Vector2 impactPos = enemy.GlobalPosition;
+                    // La cible frappée d'abord : elle est au centre du champ, qu'elle soit encore recensée ou non.
+                    ApplyTimeField(enemy, freeze, factor, duration, context);
+                    using CrowdQuery crowd = CrowdIndex.Near(impactPos, radius);
+                    foreach (Node node in crowd.Targets)
+                    {
+                        if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e) && e.GlobalPosition.DistanceTo(impactPos) < radius)
+                            ApplyTimeField(e, freeze, factor, duration, context);
+                    }
+                    SpawnTimeSlowVisual(impactPos, radius, duration);
+                    break;
+                }
+            case SpecialEffectKind.RandomShape:
+                {
+                    float aoeRadius = ZoneScale(se.Get(SpecialEffectParam.ShapeRadius));
+                    float shapeRatio = se.Get(SpecialEffectParam.ShapeDamageRatio);
+                    float shapeDamage = damage * shapeRatio;
+                    float shapeRaw = rawDamage * shapeRatio;
+                    Vector2 impactPos = enemy.GlobalPosition;
+                    using CrowdQuery crowd = CrowdIndex.Near(impactPos, aoeRadius);
+                    foreach (Node node in crowd.Targets)
+                    {
+                        if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
+                        {
+                            if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
+                                SecondaryHit(e, shapeRaw, source, context, impactPos);
+                        }
+                    }
+                    Combat.CombatPools.Instance?.ShowChalkShape(impactPos, aoeRadius);
+                    if (_objectMilestones?.HasZoneEcho == true)
+                        _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, shapeDamage, source, context);
+                    break;
+                }
         }
     }
 
@@ -1399,7 +1400,10 @@ public partial class Player : CharacterBody2D
         float before = _currentHp;
         _currentHp -= damage;
         PlayerDamageResult result = new(GetInstanceId(), kind, before,
-            Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true) { FromDirection = fromDirection };
+            Mathf.Clamp(damage, 0f, before), _currentHp <= 0f, false, true)
+        { FromDirection = fromDirection };
+        if (result.HpLost > 0f)
+            _regenDelayRemaining = _defense.Config.RegenDelayAfterDamageSeconds;
         // Le Néant consume par tranches (toutes les 0,5 s) : son retour est la vignette pâle (HurtVignette), pas le
         // paquet d'une blessure, qui secouait l'écran deux fois par seconde et bloquait le dash (plan 27 V3d).
         if (kind != PlayerDamageKind.Erasure)
@@ -1419,11 +1423,11 @@ public partial class Player : CharacterBody2D
             _currentHp = EffectiveMaxHp;
         else
 #endif
-        if (dies)
-        {
-            _currentHp = 0;
-            Die();
-        }
+            if (dies)
+            {
+                _currentHp = 0;
+                Die();
+            }
         _eventBus.PublishPlayerDamage(result);
         return result;
     }
@@ -1535,10 +1539,10 @@ public partial class Player : CharacterBody2D
             : null;
         string key = biomeFootstep ?? (terrain switch
         {
-            TerrainType.Water    => "sfx_pas_eau",
+            TerrainType.Water => "sfx_pas_eau",
             TerrainType.Concrete => "sfx_pas_beton",
-            TerrainType.Forest   => "sfx_pas_bois",
-            _                    => "sfx_pas_herbe",
+            TerrainType.Forest => "sfx_pas_bois",
+            _ => "sfx_pas_herbe",
         });
         Infrastructure.AudioManager.Play(key, 0.05f, -4f);
     }
@@ -1783,6 +1787,15 @@ public partial class Player : CharacterBody2D
 
     private void ApplyRegen(float delta)
     {
+        if (_regenDelayRemaining > 0f)
+        {
+            // L'image qui franchit le délai ne soigne que sur le temps restant après son expiration.
+            float blockedTime = Mathf.Min(delta, _regenDelayRemaining);
+            _regenDelayRemaining -= blockedTime;
+            delta -= blockedTime;
+            if (delta <= 0f)
+                return;
+        }
         float amount = (BaseRegenRate + _bonusRegenRate) * (_objectMilestones?.RegenMultiplier ?? 1f) * delta;
         if (_isDead || amount <= 0f)
             return;

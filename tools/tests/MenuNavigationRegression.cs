@@ -21,6 +21,7 @@ public partial class MenuNavigationRegression : Node
             GetTree().Root.AddChild(hub);
             await Frames(5);
             GameManager manager = GetNode<GameManager>("/root/GameManager");
+            await CheckCampMenu(hub);
             string selected = manager.SelectedCharacterId;
             await Press("ui_right");
             Check(manager.SelectedCharacterId == selected, "Le camp ne sélectionne plus de héros");
@@ -90,6 +91,43 @@ public partial class MenuNavigationRegression : Node
         if (!condition) throw new InvalidOperationException(description);
         GD.Print($"[MenuNavigationRegression] OK {description}");
     }
+    private async Task CheckCampMenu(HubScreen hub)
+    {
+        Type stateType = typeof(HubScreen).GetNestedType("HubState", BindingFlags.NonPublic)!;
+        typeof(HubScreen).GetMethod("OpenPage", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(hub, new[] { Enum.Parse(stateType, "Camp") });
+        await Frames(2);
+        HubCampUpgradesPanel camp = Field<HubCampUpgradesPanel>(hub, "_campPanel");
+        Button rack = (Button)camp.FindChild("camp_weapon_slots", true, false);
+        Button pockets = (Button)camp.FindChild("camp_pockets", true, false);
+        MetaSaveManager.AddVestiges(1000);
+        rack.GrabFocus();
+        await Frames(2);
+        Check(MetaSaveManager.GetCampRank("camp_weapon_slots") == 0, "Examiner le Râtelier n'achète aucun rang");
+        Button buy = Field<Button>(camp, "_buySelected");
+        await Press("ui_right");
+        Check(GetViewport().GuiGetFocusOwner() == buy, "Droite atteint l'achat dans la fiche du Campement");
+        await Press("ui_accept");
+        Check(MetaSaveManager.GetCampRank("camp_weapon_slots") == 1 && MetaSaveManager.GetVestiges() == 600,
+            "Acheter dans la fiche donne un rang et prélève son prix");
+        Check(Field<Label>(camp, "_detailRank").Text == "1/2", "Le compteur de fiche se met à jour sans « Rang »");
+        pockets.GrabFocus(); await Frames(2);
+        Check(Field<Label>(camp, "_detailName").Text == TranslationServer.Translate("CAMP_POCKETS"),
+            "Le focus sur les Poches actualise la fiche");
+        await Press("ui_right"); await Press("ui_accept");
+        Button refund = Field<Button>(camp, "_refundSelected");
+        refund.GrabFocus(); await Press("ui_accept");
+        Check(MetaSaveManager.GetCampRank("camp_pockets") == 0 && MetaSaveManager.GetVestiges() == 600,
+            "Rendre dans la fiche rembourse uniquement l'amélioration choisie");
+        Check(GetViewport().GuiGetFocusOwner() == pockets, "Dernier rang rendu : focus restitué à la ligne examinée");
+        Button all = Field<Button>(camp, "_refundAll");
+        all.GrabFocus(); await Press("ui_accept");
+        Check(MetaSaveManager.GetVestiges() == 1000 && MetaSaveManager.GetCampRank("camp_weapon_slots") == 0,
+            "Tout rendre rembourse aussi les autres améliorations");
+        Check(GetViewport().GuiGetFocusOwner() == pockets, "Tout rendre conserve la sélection et un focus utilisable");
+        await Press("ui_cancel");
+    }
+
     private static T Field<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(owner);
     private async Task Frames(int count) { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
     private async Task Press(string action)

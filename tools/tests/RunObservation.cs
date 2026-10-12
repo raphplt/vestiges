@@ -73,6 +73,7 @@ namespace Vestiges.Tests;
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
 /// micro-événements, Essence gagnée et dépensée).
 /// --mortal : mesure de survie, bot non invincible ; un coup fatal le remet à fond et se compte (RunObservation.Balance.cs).
+/// --damage-probe : avec --mortal, blessures acceptées en CSV et soins par minute/origine (plan 33 R2).
 /// --prefer id,id,… : pendant la mesure, le bot prend d'abord une carte de ces armes ou objets (plan 21 G6d : build XP/Chance).
 /// --scaling cle=valeur,… : surcharge des réglages d'apparition (spawn_flow.json) pendant la mesure de densité.
 /// --measure-erasure : cellules suivies/actives et événements de stabilisation pendant la run.
@@ -1017,6 +1018,12 @@ public partial class RunObservation : Node
 
     private void AutoPickLevelUp()
     {
+        // Le butin attend désormais une confirmation : le bot révèle, puis reprend au passage suivant.
+        if (_world.GetNodeOrNull<Vestiges.UI.ChestLootScreen>("ChestLootScreen") is { Visible: true } loot)
+        {
+            loot._Input(new InputEventAction { Action = "ui_accept", Pressed = true });
+            return;
+        }
         // Écran de choix (Mémorial, Faille) : le bot sort quand c'est permis, sinon prend la première carte.
         if (_world.GetNodeOrNull<Vestiges.UI.ChoiceScreen>("ChoiceScreen") is { IsOpen: true } choices)
         {

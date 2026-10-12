@@ -26,11 +26,13 @@ public partial class PixelBackdrop : TextureRect
     }
 
     /// <param name="overGame">Vrai pour un menu ouvert en run : le jeu se devine derrière (DECISIONS §117).</param>
-    public PixelBackdrop(Color tint, bool overGame = true)
+    /// <param name="background">Texture dédiée facultative, par exemple le fond simplifié du chargement.</param>
+    public PixelBackdrop(Color tint, bool overGame = true, Texture2D background = null)
     {
         _stoneShader ??= GD.Load<Shader>("res://assets/shaders/menu_erasure.gdshader");
         _gameShader ??= GD.Load<Shader>("res://assets/shaders/menu_game_veil.gdshader");
         Material = new ShaderMaterial { Shader = overGame ? _gameShader : _stoneShader };
+        Texture = background ?? GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png");
         _opacity = overGame ? 1f : 0.75f;
         SetTint(tint);
         TextureFilter = TextureFilterEnum.Nearest;
@@ -43,7 +45,6 @@ public partial class PixelBackdrop : TextureRect
 
     public void SetTint(Color tint)
     {
-        Texture = GD.Load<Texture2D>("res://assets/ui/menus/stone/interior.png");
         ShaderMaterial material = (ShaderMaterial)Material;
         material.SetShaderParameter("dust_color", tint);
     }

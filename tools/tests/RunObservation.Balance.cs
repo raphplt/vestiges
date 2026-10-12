@@ -21,6 +21,11 @@ public partial class RunObservation
     private readonly Dictionary<int, Dictionary<string, int>> _loot = new();
     private readonly Dictionary<int, (float MaxHp, float ArmorReduction)> _defenseAtBand = new();
     private bool _mortal;
+    private StringBuilder _damageProbe;
+    private readonly Dictionary<(int Minute, HealingKind Kind), double> _healingProbe = new();
+    private string _damageProbeSource;
+    private float _damageProbeAnnounced;
+    private double _damageProbeTime;
 
     /// <summary>
     /// --mortal : le bot n'est plus invincible ; armure, bouclier et invulnérabilité jouent, un coup fatal remet les PV
@@ -41,19 +46,47 @@ public partial class RunObservation
             return;
         _player.IsGodMode = false;
         _player.SurviveFatalHitsForTests = true;
+        if (System.Array.IndexOf(args, "--damage-probe") >= 0)
+        {
+            _damageProbe = new StringBuilder("t,kind,source,announced_damage,hp_before,max_hp,armor_reduction,hp_lost,fatal,shielded\n");
+            bus.PlayerHitBy += (source, damage) =>
+            {
+                _damageProbeSource = source;
+                _damageProbeAnnounced = damage;
+                _damageProbeTime = _balanceTime;
+            };
+        }
         bus.PlayerDamageResolved += result =>
         {
+            if (result.PlayerId != _player.GetInstanceId())
+                return;
             int band = (int)(_balanceTime / BalanceBandSeconds);
             (double lost, double healed, int hits, int fatal, int shielded) = _survival.GetValueOrDefault(band);
             _survival[band] = (lost + result.HpLost, healed, hits + (result.HpLost > 0f ? 1 : 0), fatal + (result.Fatal ? 1 : 0),
                 shielded + (result.ShieldAbsorbed ? 1 : 0));
             _defenseAtBand[band] = (_player.EffectiveMaxHp, _player.ArmorReduction);
+            if (_damageProbe != null)
+            {
+                // L'annonce précède TakeDamage ; les coups rejetés ne publient aucun résultat. Le Néant est à part.
+                bool known = result.Kind == PlayerDamageKind.Combat && _damageProbeSource != null && _damageProbeTime == _balanceTime;
+                string source = result.Kind == PlayerDamageKind.Erasure ? "erasure" : known ? _damageProbeSource : "unknown";
+                _damageProbe.Append(CultureInfo.InvariantCulture,
+                    $"{_balanceTime:F3},{result.Kind},{source},{(known ? _damageProbeAnnounced : 0f):F4},{result.HpBefore:F4},{_player.EffectiveMaxHp:F4},{_player.ArmorReduction:F4},{result.HpLost:F4},{(result.Fatal ? 1 : 0)},{(result.ShieldAbsorbed ? 1 : 0)}\n");
+                _damageProbeSource = null;
+            }
         };
         bus.PlayerHealingResolved += result =>
         {
+            if (result.PlayerId != _player.GetInstanceId())
+                return;
             int band = (int)(_balanceTime / BalanceBandSeconds);
             (double lost, double healed, int hits, int fatal, int shielded) = _survival.GetValueOrDefault(band);
             _survival[band] = (lost, healed + result.HpRestored, hits, fatal, shielded);
+            if (_damageProbe != null && result.HpRestored > 0f)
+            {
+                (int, HealingKind) key = ((int)(_balanceTime / 60.0), result.Kind);
+                _healingProbe[key] = _healingProbe.GetValueOrDefault(key) + result.HpRestored;
+            }
         };
     }
     private readonly Dictionary<int, (double Luck, double Steps, int Count)> _offerContext = new();
@@ -77,6 +110,16 @@ public partial class RunObservation
 
     private void AppendBalance(StringBuilder summary)
     {
+        if (_damageProbe != null)
+        {
+            using FileAccess damage = FileAccess.Open($"{_output}/damage.csv", FileAccess.ModeFlags.Write);
+            damage.StoreString(_damageProbe.ToString());
+            StringBuilder rows = new("minute,kind,hp_restored\n");
+            foreach (KeyValuePair<(int Minute, HealingKind Kind), double> entry in _healingProbe)
+                rows.Append(CultureInfo.InvariantCulture, $"{entry.Key.Minute},{entry.Key.Kind},{entry.Value:F4}\n");
+            using FileAccess healing = FileAccess.Open($"{_output}/healing.csv", FileAccess.ModeFlags.Write);
+            healing.StoreString(rows.ToString());
+        }
         for (int band = 0; band <= (int)(_balanceTime / BalanceBandSeconds); band++)
         {
             Dictionary<string, int> loot = _loot.GetValueOrDefault(band);
