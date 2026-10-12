@@ -153,3 +153,9 @@ Livré et testé en headless (suite `inventory`), HUD, pause, échange et Collec
 - [ ] **Collection** : onglet Écussons à part, règles de montée (Écussons) et d'exemplaires (objets) sous chaque fiche.
 - [ ] **Nouveaux objets (I6)** : Ticket de consigne (relevé à mi-PV, l'icône quitte le sac, son provisoire `sfx_artefact_trouve`), Plan de métro (saut instantané : se lit-il, gêne-t-il près des murs ?), Flacon de pharmacie (chiffres de poison vert-de-gris, assez visibles sans marque sur le sprite ?), Trèfle plastifié (4 cartes : lisible en 720p ?), Montre arrêtée (assez forte avec seulement les Souverains ?).
 - [ ] **Fil d'usage des Écussons (I7)** : fil doré de 2 px sous chaque Écusson, éclat à un niveau gagné par l'usage. Se voit-il ? Trop discret ? Un quart des niveaux par l'usage (mesure au bot) : se sent-il en jouant ?
+
+## Plan 21 G6h — tirs à la chaîne, session cloud du 12 octobre
+
+- [ ] **Cadence** : 0,08 s entre deux tirs d'une attaque (`shot_interval_s`). Assez lisible, trop lent, trop rapide ?
+- [ ] **Son** : un son par tir, les suivants −4 dB et variés en hauteur ; les 11 armes à projectiles passent à 60 ms d'intervalle minimal et trois voix (au lieu de 180 ms et une). Mitraille désagréable à haut nombre de projectiles, ou à deux armes à projectiles ensemble ?
+- [ ] **Salves** : Lance-billes, Assiettes et Polaroïd gardent leur éventail ; leurs projectiles en plus partent ensuite au lieu d'élargir l'éventail. Moins efficace contre une foule ?

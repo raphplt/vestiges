@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**12 octobre — tirs à la chaîne ([plan 21 G6h](21-systeme-de-jeu.md), §130) :** les projectiles d'une attaque partent l'un après l'autre (0,08 s, la chaîne tenant dans 60 % de la recharge), comme dans Megabonk, au lieu de partir tous dans la même image ; les salves gardent leur éventail d'un coup ; un son par tir, plus doux après le premier. Suite d'armes verte. Questions de reprise (§131) : pas de critique de base, mais des objets de critique dès le départ et plus d'armes qui en gagnent au niveau.
+
 **12 octobre — direction « crade » ([plan 40](40-direction-crade.md), §122) :** Raphaël cherche l'esthétique des BD de son enfance (Métal Hurlant, Beksiński, Rain World). Maquette hors jeu en trois dosages, dosage léger retenu. **G1 livré** : palette salie et grain au pixel du monde dans le shader commun, sans toucher aux assets ; joueur et créatures en palette seule. **G2 livré** : taches d'eau et de moisissure au sol et sur les décors, tramées au pixel. Suite : hachures dans les ombres (G3).
 
 **12 octobre — objets, révision de la préparation ([plan 35 I10](35-raretes-des-objets.md), §128) :** aucun bonus spécial au doublon, effets revus et plafonds de déclenchement ; [catalogue cible de 57 objets](35-catalogue-objets-v2.md), dont 35 nouveaux, toutes les stats globales et des mécaniques originales. Une partie des épiques/légendaires proposée dès le profil neuf. Conception uniquement ; rien de cette révision implémenté.

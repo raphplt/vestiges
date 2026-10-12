@@ -347,8 +347,7 @@ public partial class Player : CharacterBody2D
 
         int capturedIndex = _weaponSlots.Count - 1;
         Timer timer = new();
-        float weaponAtkSpd = instance.GetStat("attack_speed");
-        timer.WaitTime = 1.0f / Mathf.Max(0.05f, AttackSpeed * weaponAtkSpd * _attackSpeedMultiplier);
+        timer.WaitTime = AttackIntervalOf(instance);
         timer.Autostart = true;
         timer.Timeout += () => OnWeaponAttackTimeout(capturedIndex);
         AddChild(timer);
@@ -1982,27 +1981,26 @@ public partial class Player : CharacterBody2D
 
         if (pattern == AttackPatternKind.Burst)
         {
-            // Salve : les projectiles en plus élargissent l'éventail, ou partent chacun vers leur cible au palier.
-            SpawnBurstProjectiles(spreadExtras ? ownCount : totalProjectiles, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
-            if (spreadExtras)
-                for (int i = 0; i < extraCount; i++)
-                    SpawnAimedProjectile(targets[(ownCount + i) % targets.Count], false, 0f, baseDamage, projectileSpeed, range, totalPierce,
-                        launchDelay: VolleyDelay(ownCount + i, targets.Count, totalProjectiles));
+            // Salve : l'éventail propre de l'arme part d'un coup ; ses projectiles en plus s'enchaînent ensuite.
+            SpawnBurstProjectiles(ownCount, spreadAngle, baseDirection, baseDamage, projectileSpeed, totalPierce);
+            float burstStep = ChainedShotStep(extraCount + 1);
+            for (int i = 0; i < extraCount; i++)
+                SpawnAimedProjectile(spreadExtras ? targets[(ownCount + i) % targets.Count] : targets[0], false, 0f, baseDamage,
+                    projectileSpeed, range, totalPierce, spreadExtras ? 0f : ExtraFanOffset(i, extraCount, spreadAngle), (i + 1) * burstStep);
             return true;
         }
 
         float homingStrength = GetWeaponStat("homing_strength");
         bool isHoming = pattern == AttackPatternKind.Homing || homingStrength > 0f;
-        int aimedCount = spreadExtras ? totalProjectiles : ownCount;
+        float shotStep = ChainedShotStep(totalProjectiles);
         for (int i = 0; i < totalProjectiles; i++)
         {
             bool fanned = i >= ownCount && !spreadExtras;
             // Sans le palier du Papier carbone, un projectile en plus part en éventail autour du tir principal.
             float offset = fanned ? ExtraFanOffset(i - ownCount, extraCount, spreadAngle) : 0f;
             Node2D target = fanned ? targets[0] : targets[i % targets.Count];
-            float launchDelay = fanned ? 0f : VolleyDelay(i, targets.Count, aimedCount);
             Projectile proj = SpawnAimedProjectile(target, isHoming, homingStrength, baseDamage, projectileSpeed, range, totalPierce, offset,
-                launchDelay);
+                i * shotStep);
 
             // Rebonds : stat entière fractionnaire, tirée pour chaque lettre (plan 23 R4).
             if (proj != null && pattern == AttackPatternKind.Bounce)
@@ -2025,25 +2023,29 @@ public partial class Player : CharacterBody2D
         Vector2 direction = (target.GlobalPosition - AttackOrigin).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
         bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
         Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit, launchDelay);
-        if (proj != null && launchDelay > 0f && offsetDegrees == 0f)
-            proj.AimAtDeparture(target);
+        if (proj != null && launchDelay > 0f)
+        {
+            proj.AimAtDeparture(target, offsetDegrees);
+            // Le premier tir a sonné avec l'attaque ; ceux d'une rémanence restent muets comme elle.
+            if (!_isEchoAttack)
+                proj.SoundOnDeparture();
+        }
         if (proj != null && isHoming)
             proj.SetHoming(homingStrength > 0f ? homingStrength : 0.8f, target);
         return proj;
     }
 
     /// <summary>
-    /// Rafale (plan 21 G6g, DECISIONS §59) : les tirs visés se répartissent sur les cibles ; celui qui retombe sur une
-    /// cible déjà visée part un écart plus tard à chaque tour, pour que chaque projectile se voie au lieu de se superposer.
+    /// Tirs à la chaîne (DECISIONS §130, à la place de la rafale de G6g) : les tirs visés d'une attaque partent l'un après
+    /// l'autre, un écart fixe entre deux, resserré pour que la chaîne tienne dans une part de la recharge de l'arme.
     /// </summary>
-    private static float VolleyDelay(int shotIndex, int targetCount, int shotCount)
+    private float ChainedShotStep(int shotCount)
     {
-        int round = shotIndex / Mathf.Max(1, targetCount);
-        if (round == 0)
+        if (shotCount <= 1)
             return 0f;
-        int lastRound = (shotCount - 1) / Mathf.Max(1, targetCount);
         WeaponVisualConfig config = WeaponVisualConfig.Load();
-        return round * Mathf.Min(config.VolleyInterval, config.VolleyMaxSpan / lastRound);
+        float span = AttackIntervalOf(_equippedWeapon) * config.ShotMaxCooldownShare;
+        return Mathf.Min(config.ShotInterval, span / (shotCount - 1));
     }
 
     /// <summary>
@@ -2394,14 +2396,12 @@ public partial class Player : CharacterBody2D
 
     private void UpdateAttackSpeed()
     {
-        float mult = _attackSpeedMultiplier;
         for (int i = 0; i < _weaponSlots.Count && i < _weaponTimers.Count; i++)
-        {
-            WeaponInstance weapon = _weaponSlots[i];
-            float weaponAtkSpd = weapon.GetStat("attack_speed");
-            float attacksPerSecond = AttackSpeed * weaponAtkSpd * mult;
-            _weaponTimers[i].WaitTime = 1.0f / Mathf.Max(0.05f, attacksPerSecond);
-        }
+            _weaponTimers[i].WaitTime = AttackIntervalOf(_weaponSlots[i]);
     }
+
+    /// <summary>Temps de recharge d'une arme portée, en secondes.</summary>
+    private float AttackIntervalOf(WeaponInstance weapon) =>
+        1f / Mathf.Max(0.05f, AttackSpeed * weapon.GetStat("attack_speed") * _attackSpeedMultiplier);
 
 }

@@ -1464,3 +1464,22 @@ Raphaël, après une partie (retours dictés, extraits) :
 ### 129 ter. Traqueur de départ, Vagabond gagné par la chasse
 
 Le Traqueur et son arc étaient gardés par « Mener la chasse » (vaincre un Souverain) ; d'où un Traqueur verrouillé en tête de liste et un Vagabond sélectionné. Choix de Raphaël : **échange** — Traqueur et arc libres dès le départ, « Mener la chasse » débloque le Vagabond et sa lame.
+
+## 130. Les projectiles d'une attaque partent à la chaîne — 12 octobre 2026
+
+Raphaël : « quand on a plusieurs munitions d'une même arme […] les projectiles tirent tous en même temps. Au lieu de se tirer à la chaîne, ou les uns à la suite des autres. […] dans Megabonk, si on a deux projectiles d'une arme, ils vont se tirer l'un après l'autre et pas les deux en même temps, puis plus rien, puis les deux en même temps. »
+
+Constat dans le code : la rafale de G6g (§59) ne retardait que les tirs qui retombaient sur une cible déjà visée. Dès qu'il y a plusieurs créatures à portée, cas presque constant, tous les tirs partaient dans la même image ; les projectiles en plus de l'éventail (sans Papier carbone) aussi ; un seul son par attaque.
+
+- **Portée :** les tirs propres de l'arme et les projectiles en plus (éventail sans Papier carbone, ou une cible chacun au palier) partent l'un après l'autre. Les armes en salve (Lance-billes, Assiettes, Polaroïd) gardent leur éventail d'un coup, c'est leur personnalité ; leurs projectiles en plus s'enchaînent ensuite. Choisi après reformulation : la première question n'était pas claire.
+- **Cadence :** écart fixe (0,08 s), resserré pour que la chaîne tienne dans 60 % du temps de recharge de l'arme.
+- **Ciblage :** répartition gardée, une créature par tir quand c'est possible ; si la sienne meurt pendant l'attente, le tir prend la plus proche à son départ.
+- **Son :** un par projectile, le premier normal, les suivants plus doux et variés en hauteur.
+
+**Suite :** lot G6h au [plan 21](21-systeme-de-jeu.md), livré le même jour, à juger en jeu.
+
+## 131. Questions de reprise — 12 octobre 2026
+
+- **Critiques (plan 06 §10, quêtes de critique) :** « il faut pas qu'il y ait du critique de base par défaut pour tous les personnages. mais par contre, il faut qu'il y ait au moins un ou deux objets qui permettent d'avoir des chances de coups critiques, obtenables dès le début sans avoir de quête. il faut aussi peut-être qu'il y ait un personnage qui a un passif lié aux critiques et il faut aussi peut-être qu'il y ait des armes qui augmentent le critique […] il faut qu'il y ait plus d'armes qui intègrent des coups critiques dans leurs statistiques de level up. » **Acquis :** pas de critique de base ; un ou deux objets de critique dans la réserve de départ ; davantage d'armes avec le critique dans leurs gains de niveau. **Pistes à proposer :** un personnage au passif de critique, des armes qui augmentent le critique. Lot à découper plus tard : Raphaël demande le 12 octobre de **ne rien toucher pour l'instant** (objets, stats, critiques), seulement de le consigner. Le tirage du critique pour les armes en arc reste ouvert.
+- **Campement (plan 36 §13) et Inventaire (plan 35 §16) :** pas encore joué, questions reportées.
+- **Reste du tableau de bord :** rien de neuf.

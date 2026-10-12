@@ -343,18 +343,9 @@ public partial class PointOfInterest : StaticBody2D
         _interactionAura = new InteractableAura();
         AddChild(_interactionAura);
 
-        (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) = GetPoiAuraStyle(data);
-        _interactionAura.Configure(
-            baseColor,
-            accentColor,
-            radius: size * 0.75f,
-            height: size * 0.65f,
-            withMote,
-            pulseSpeed,
-            baseAlpha: 0.1f,
-            pulseAlpha: 0.05f,
-            crownAlpha: withMote ? 0.1f : 0.06f,
-            crownPulseAlpha: withMote ? 0.05f : 0.03f);
+        (Color baseColor, Color _, bool withMote, float pulseSpeed) = GetPoiAuraStyle(data);
+        _interactionAura.Configure(baseColor, radius: size * 0.75f, height: size * 0.65f, withMote, pulseSpeed,
+            baseAlpha: 0.1f, pulseAlpha: 0.05f);
     }
 
     private static (Color baseColor, Color accentColor, bool withMote, float pulseSpeed) GetPoiAuraStyle(PoiData data)

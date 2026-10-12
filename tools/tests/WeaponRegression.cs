@@ -1038,9 +1038,18 @@ public partial class WeaponRegression : Node2D
         }
     }
 
+    private static bool AnySfxPlaying()
+    {
+        foreach (Node child in AudioManager.Instance.GetChildren())
+            if (child is AudioStreamPlayer { Playing: true } player && player.Name.ToString().StartsWith("Sfx"))
+                return true;
+        return false;
+    }
+
     /// <summary>
-    /// Rafale (plan 21 G6g, DECISIONS §59) : trois flèches sur un ennemi seul ne se superposent plus, deux attendent
-    /// avant de partir, et toutes touchent leur cible.
+    /// Tirs à la chaîne (DECISIONS §59 et §123) : trois flèches sur un ennemi seul ne se superposent plus, deux attendent
+    /// avant de partir, et toutes touchent leur cible ; deux flèches sur deux ennemis partent aussi l'une après l'autre ;
+    /// chaque flèche sonne à son départ.
     /// </summary>
     private async Task CheckVolleyOnSingleTarget()
     {
@@ -1063,12 +1072,14 @@ public partial class WeaponRegression : Node2D
         enemy.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
         enemy.SetTicking(false);
         enemy.Position = player.Position + new Vector2(90f, 0f);
+        Enemy second = null;
         int hits = 0;
         int attackSounds = 0;
         string soundKey = WeaponDataLoader.Get("makeshift_bow").AttackAudio;
+        // Seuls les sons entendus comptent : un départ écrêté par l'intervalle minimal du son resterait muet.
         void OnSound(string key, AudioManager.SoundOutcome outcome)
         {
-            if (key == soundKey)
+            if (key == soundKey && outcome is AudioManager.SoundOutcome.Played or AudioManager.SoundOutcome.VoiceStolen)
                 attackSounds++;
         }
         AudioManager.Instance.SoundRequested += OnSound;
@@ -1077,7 +1088,12 @@ public partial class WeaponRegression : Node2D
         bus.EntityDamaged += onDamaged;
         try
         {
-            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            // Les contrôles précédents, joués en temps accéléré, laissent des voix occupées à l'horloge : attendre qu'elles se libèrent.
+            for (int frame = 0; frame < 180 && AnySfxPlaying(); frame++)
+            {
+                OS.DelayMsec(17);
+                await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            }
 
             async Task<(int Hits, int Flying, int Waiting)> Fire(int count)
             {
@@ -1096,22 +1112,37 @@ public partial class WeaponRegression : Node2D
                     flying += shot.Visible ? 1 : 0;
                     waiting += shot.Visible ? 0 : 1;
                 }
+                // Au rythme réel : l'intervalle minimal d'un son se compte à l'horloge, et le banc tourne en temps accéléré.
                 for (int frame = 0; frame < 90; frame++)
+                {
+                    OS.DelayMsec(17);
                     await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
-                Check(attackSounds == 1, $"Arc à {count} projectiles : un seul départ sonore ({attackSounds} demandes)");
+                }
+                Check(attackSounds == count, $"Arc à {count} projectiles : un départ sonore par flèche ({attackSounds} demandes)");
                 return (hits, flying, waiting);
             }
 
             (int singleHits, _, _) = await Fire(1);
             (int volleyHits, int flying, int waiting) = await Fire(3);
             Check(singleHits > 0 && flying == 1 && waiting == 2 && volleyHits == 3 * singleHits,
-                $"Rafale : 3 flèches sur un ennemi seul, {flying} part, {waiting} attendent leur tour ; {volleyHits} impacts pour {singleHits} avec une flèche");
+                $"Chaîne : 3 flèches sur un ennemi seul, {flying} part, {waiting} attendent leur tour ; {volleyHits} impacts pour {singleHits} avec une flèche");
+
+            second = EnemyScene.Instantiate<Enemy>();
+            AddChild(second);
+            second.Initialize(EnemyDataLoader.Get("rodeur"), 100000f, 1f);
+            second.SetTicking(false);
+            second.Position = player.Position + new Vector2(-90f, 0f);
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            (_, int flyingPair, int waitingPair) = await Fire(2);
+            Check(flyingPair == 1 && waitingPair == 1,
+                $"Chaîne : 2 flèches sur 2 ennemis, {flyingPair} part, {waitingPair} attend son tour au lieu de partir en même temps");
         }
         finally
         {
             AudioManager.Instance.SoundRequested -= OnSound;
             bus.EntityDamaged -= onDamaged;
             enemy.QueueFree();
+            second?.QueueFree();
             player.QueueFree();
             pools.QueueFree();
             _player.ProcessMode = ProcessModeEnum.Inherit;

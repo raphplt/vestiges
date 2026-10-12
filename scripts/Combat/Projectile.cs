@@ -24,10 +24,13 @@ public partial class Projectile : Area2D, ITicked
     private float _damage;
     private float _lifetime;
     private float _age;
-    // Rafale (plan 21 G6g) : le tir attend, caché et sans contact, avant de partir de la position du joueur.
+    // Tir à la chaîne (DECISIONS §123) : le tir attend, caché et sans contact, avant de partir de la position du joueur.
     private float _launchDelay;
     private TargetLock _departureTarget;
-    // Point de départ d'une rafale répétée par une rémanence : le tir part de là, pas du joueur.
+    // Écart du tir autour de sa cible au départ (projectile en plus en éventail), en radians.
+    private float _departureOffset;
+    private bool _departureSound;
+    // Point de départ d'une chaîne de tirs répétée par une rémanence : le tir part de là, pas du joueur.
     private Vector2? _departureOrigin;
     private int _pierceRemaining;
     // Reflet brisé, palier 15 : chaque ennemi traversé ajoute cette part des dégâts de départ.
@@ -105,6 +108,8 @@ public partial class Projectile : Area2D, ITicked
         GlobalPosition = position;
         _launchDelay = launchDelay;
         _departureTarget = default;
+        _departureOffset = 0f;
+        _departureSound = false;
         _departureOrigin = null;
         // Taille du joueur (plan 21 G6e) : la zone de contact grandit avec le visuel, remise à chaque tir du pool.
         _collision.Scale = Vector2.One * sizeScale;
@@ -152,13 +157,23 @@ public partial class Projectile : Area2D, ITicked
         Roster.Add(this);
     }
 
-    /// <summary>Tir de rafale : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf.</summary>
-    public void AimAtDeparture(Node2D target) => _departureTarget = TargetLock.On(target);
+    /// <summary>
+    /// Tir en attente : au départ, il vise de nouveau cette cible si elle vit encore, comme un tir neuf, écarté de
+    /// <paramref name="offsetDegrees"/>.
+    /// </summary>
+    public void AimAtDeparture(Node2D target, float offsetDegrees = 0f)
+    {
+        _departureTarget = TargetLock.On(target);
+        _departureOffset = Mathf.DegToRad(offsetDegrees);
+    }
 
-    /// <summary>Tir d'une rémanence (Double de l'Éveillée) : une rafale en attente part de ce point.</summary>
+    /// <summary>Tir en attente : il joue le son de son arme en partant, plus doux que le premier tir de l'attaque.</summary>
+    public void SoundOnDeparture() => _departureSound = true;
+
+    /// <summary>Tir d'une rémanence (Double de l'Éveillée) : un tir en attente part de ce point.</summary>
     public void DepartFrom(Vector2 origin) => _departureOrigin = origin;
 
-    /// <summary>Fin de l'attente d'une rafale : le tir part du joueur, là où il se trouve maintenant, ou de sa rémanence.</summary>
+    /// <summary>Fin de l'attente : le tir part du joueur, là où il se trouve maintenant, ou de sa rémanence.</summary>
     private void Depart()
     {
         if (_departureOrigin is Vector2 origin)
@@ -171,11 +186,17 @@ public partial class Projectile : Area2D, ITicked
             Node2D target = _departureTarget.TryGet(out Node2D locked) ? locked : FindNearestEnemy();
             Vector2 toTarget = target != null ? target.GlobalPosition - GlobalPosition : Vector2.Zero;
             if (toTarget.LengthSquared() > 0.0001f)
-                _direction = toTarget.Normalized();
+                _direction = toTarget.Normalized().Rotated(_departureOffset);
         }
         _departureTarget = default;
         Visible = true;
         GroundShadowLayer.Add(_shadow);
+        string attackAudio = SourceWeapon?.AttackAudio;
+        if (_departureSound && !string.IsNullOrEmpty(attackAudio))
+        {
+            WeaponVisualConfig config = WeaponVisualConfig.Load();
+            AudioManager.Play(attackAudio, config.ChainedShotPitchVariance, config.ChainedShotVolumeDb);
+        }
     }
 
     /// <summary>Retire le projectile de la boucle : un test le fait alors avancer lui-même.</summary>

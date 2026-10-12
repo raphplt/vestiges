@@ -28,6 +28,8 @@ Constat : les blocs de lumière verticaux au-dessus des coffres et de certains l
 
 Constat : autour d'un lieu à briser dans la mine, un rectangle semi-transparent au sol, hors de la direction artistique. Source non identifiée à la lecture (ni `SmallPlace`, ni le filon de cristal). À trouver par capture des lieux de la carrière, puis corriger.
 
+**Livré le 12 octobre :** trouvé par `--capture-places`. C'est le repère d'interaction des petits lieux (`World/InteractableAura`), allumé quand le joueur est à portée : deux losanges vectoriels lisses (au sol et en couronne) qui respiraient en échelle, hors de la grille des pixels. Refait en pixel art : seuls les quatre coins d'un losange iso au sol, liserés d'un pixel comme des crochets de sélection, dans la couleur du lieu, plus un éclat de 2 px qui monte par pixels entiers ; la pulsation ne joue plus que sur l'opacité ; la couronne disparaît, l'invite « [E] Briser » suffit au-dessus. Un premier essai, losange rempli d'un damier, faisait filet : retiré. Captures du filon et de la boîte aux lettres regardées ; build et smoke verts.
+
 ## R5 — Particules plus riches (≈ 1 j)
 
 Constat : « un peu trop simples » ; en ville, « juste des petits carrés qui bougent ».

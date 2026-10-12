@@ -51,8 +51,7 @@ public partial class SmallPlace : Node2D, IInteractable
 		_director = director;
 		_sign = new InteractableAura { Name = "Sign" };
 		AddChild(_sign);
-		_sign.Configure(data.Color, data.Color.Lightened(0.25f), SignRadius, SignHeight, withMote: true, pulseSpeed: 1.6f,
-			baseAlpha: 0.3f, pulseAlpha: 0.12f, crownAlpha: 0.14f, crownPulseAlpha: 0.08f);
+		_sign.Configure(data.Color, SignRadius, SignHeight, withMote: true, pulseSpeed: 1.6f, baseAlpha: 0.3f, pulseAlpha: 0.12f);
 		_sign.SetActive(false);
 	}
 
