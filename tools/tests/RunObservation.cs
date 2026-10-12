@@ -62,6 +62,7 @@ namespace Vestiges.Tests;
 /// --capture-statuses [--status-enemy id] : rangée de créatures, chacune sous un état (RunObservation.Statuses.cs).
 /// --capture-status-crowd : soixante créatures sous Cloche et Berceuse (RunObservation.Statuses.cs).
 /// --status-biome id : planches de statuts sur un terrain dégagé de ce biome.
+/// --weather <id> : météo imposée à 3 s (data/world/weather.json), avec le mode run et --capture-every.
 /// --capture-low-health : santé pleine, seuils, cœur, pause, soin et mort.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
@@ -105,6 +106,7 @@ public partial class RunObservation : Node
     private string _output;
     private double _captureEvery;
     private string _forcedEvent;
+    private string _forcedWeather;
 
     public override async void _Ready()
     {
@@ -260,6 +262,7 @@ public partial class RunObservation : Node
             else
             {
                 _forcedEvent = Argument(args, "--event", null);
+                _forcedWeather = Argument(args, "--weather", null);
                 _captureEvery = double.Parse(Argument(args, "--capture-every", "0"), CultureInfo.InvariantCulture);
                 await MeasureDensity(double.Parse(Argument(args, "--seconds", "180"), CultureInfo.InvariantCulture), seed);
             }
@@ -791,6 +794,14 @@ public partial class RunObservation : Node
                 FieldBonusConfig bonusConfig = FieldBonusDataLoader.Load();
                 for (int i = 0; i < 4; i++)
                     bonuses.Spawn(bonusConfig.Bonuses[i], _player.GlobalPosition + new Vector2(-180f + i * 90f, -110f));
+            }
+
+            // --weather <id> : météo imposée à 3 s (plan 39 A5), pour la voir s'installer puis en place.
+            if (_forcedWeather != null && t >= 3.0)
+            {
+                if (!_world.GetNode<Vestiges.World.WeatherDirector>("WeatherDirector").ForceStart(_forcedWeather))
+                    GD.PushError($"[RunObservation] météo « {_forcedWeather} » inconnue");
+                _forcedWeather = null;
             }
 
             if (_forcedEvent != null && t >= 3.0)

@@ -941,6 +941,7 @@ public partial class WorldSetup : Node2D
     {
         _biomeAtmosphere = new BiomeAtmosphere { Name = "BiomeAtmosphere" };
         AddChild(_biomeAtmosphere);
+        AddChild(new WeatherDirector { Name = "WeatherDirector" });
     }
 
 }

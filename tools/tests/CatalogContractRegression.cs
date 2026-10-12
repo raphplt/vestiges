@@ -36,6 +36,7 @@ public partial class CatalogContractRegression : Node
             CheckWaymarks();
             CheckBiomes();
             CheckAtmosphere();
+            CheckWeather();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -571,6 +572,33 @@ public partial class CatalogContractRegression : Node
             bool refused = !AtmosphereConfig.TryParse(Mutated(valid, mutate), out AtmosphereConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"atmosphère refusée ({label}) : {message}");
+        }
+    }
+
+    private void CheckWeather()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/weather.json");
+        Check(WeatherConfig.TryParse(valid, out WeatherConfig config, out string error) && config.Weathers.Count == 4,
+            $"météo du dépôt acceptée (quatre météos) {error}");
+        foreach (WeatherData weather in config?.Weathers ?? new List<WeatherData>())
+            foreach (string biome in weather.BiomeWeights.Keys)
+                Check(BiomeDataLoader.Get(biome) != null, $"météo {weather.Id} : biome « {biome} » connu");
+        Check(config?.Find("storm")?.FlashExposure > 0f && config.Find("thick_fog")?.ViewOpacity > 0f,
+            "orage avec éclairs, brouillard qui réduit la vue");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("aucune météo", root => root["weathers"] = new JsonObject(), "au moins une météo"),
+            ("brouillard aveuglant", root => root["weathers"]!["thick_fog"]!["view"]!["clear_px"] = 60, "clear_px"),
+            ("particules inconnues", root => root["weathers"]!["storm"]!["particles"]!["kind"] = "snow", "kind"),
+            ("éclair trop fort", root => root["weathers"]!["storm"]!["flashes"]!["exposure"] = 2, "flashes.exposure"),
+            ("nuit en plein jour", root => root["weathers"]!["storm"]!["grade"]!["exposure"] = 0.2, "grade"),
+            ("champ inconnu", root => root["weathers"]!["storm"]!["thunder"] = 1, "clé « thunder » inconnue"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !WeatherConfig.TryParse(Mutated(valid, mutate), out WeatherConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"météo refusée ({label}) : {message}");
         }
     }
 

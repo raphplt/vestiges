@@ -122,7 +122,7 @@ public partial class AudioManager : Node
 	private AudioEffectReverb _worldReverb;
 	private Tween _reverbTween;
 	private const float ReverbFadeSec = 2f;
-	private string _currentRandomEventId = "";
+	private string _currentWeatherId = "";
 	private Core.Player _player;
 	private World.ErasureManager _erasureManager;
 	private World.WorldSetup _worldSetup;
@@ -779,8 +779,7 @@ public partial class AudioManager : Node
 		eb.PoiExplored        += OnPoiExplored;
 		eb.WeaponEquipped += OnWeaponEquipped;
 		eb.WeaponDropped += OnWeaponDropped;
-		eb.RandomEventTriggered += OnRandomEventTriggered;
-		eb.RandomEventEnded   += OnRandomEventEnded;
+		eb.WeatherChanged     += OnWeatherChanged;
 	}
 
 	private void DisconnectEventBus(Core.EventBus eb)
@@ -803,8 +802,7 @@ public partial class AudioManager : Node
 		eb.PoiExplored        -= OnPoiExplored;
 		eb.WeaponEquipped -= OnWeaponEquipped;
 		eb.WeaponDropped -= OnWeaponDropped;
-		eb.RandomEventTriggered -= OnRandomEventTriggered;
-		eb.RandomEventEnded   -= OnRandomEventEnded;
+		eb.WeatherChanged     -= OnWeatherChanged;
 	}
 
 	private void OnRunPhaseChanged(string oldPhase, string newPhase)
@@ -955,16 +953,10 @@ public partial class AudioManager : Node
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
 	}
 
-	private void OnRandomEventTriggered(string eventId, string eventName)
+	/// <summary>Météo de la run (plan 39 A5) : sa boucle passe devant le tonnerre lointain des Résurgences.</summary>
+	private void OnWeatherChanged(string weatherId)
 	{
-		_currentRandomEventId = eventId;
-		UpdateContextAmbiance();
-	}
-
-	private void OnRandomEventEnded(string eventId)
-	{
-		if (_currentRandomEventId == eventId)
-			_currentRandomEventId = "";
+		_currentWeatherId = weatherId;
 		UpdateContextAmbiance();
 	}
 
@@ -982,7 +974,7 @@ public partial class AudioManager : Node
 			_lastKnownShield = -1f;
 			_currentPhase = "";
 			_currentBiomeId = "";
-			_currentRandomEventId = "";
+			_currentWeatherId = "";
 			// La première run d'une session commence déjà en exploration : aucun changement de phase ne
 			// l'annonce. La phase réelle est relue en fin d'image, après celui qu'émet un retour de mort.
 			Callable.From(SyncRunPhase).CallDeferred();
@@ -996,7 +988,7 @@ public partial class AudioManager : Node
 		_currentBiomeId = "";
 		_ambience = BiomeAmbience.Silent;
 		ResetWorldReverb();
-		_currentRandomEventId = "";
+		_currentWeatherId = "";
 		_ambianceFade?.Kill();
 		_ambianceFade = null;
 		_ambianceFadingOut = false;
@@ -1049,7 +1041,7 @@ public partial class AudioManager : Node
 
 	private string ResolveContextAmbianceKey()
 	{
-		return _currentRandomEventId switch
+		return _currentWeatherId switch
 		{
 			"thick_fog" => "sfx_brouillard",
 			"storm" => "sfx_orage_proche",

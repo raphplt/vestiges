@@ -221,7 +221,7 @@ public partial class AudioMixRegression : Node
         manager.ChangeState(GameManager.GameState.Run);
         await Frames(2);
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
-        bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
+        bus.EmitSignal(EventBus.SignalName.WeatherChanged, "storm");
         audio.PlaySfx("sfx_weapon_heavy_hammer", 0f);
         audio.PlaySfx("sfx_enemy_ranged_shot", 0f);
         audio.PlayLoopingSfx("sfx_level_up_loop");
@@ -257,7 +257,7 @@ public partial class AudioMixRegression : Node
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
         bus.EmitSignal(EventBus.SignalName.CrisisStarted, 2, 2);
-        bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
+        bus.EmitSignal(EventBus.SignalName.WeatherChanged, "storm");
         bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Death", "Exploration");
         audio._Process(30);
         await Frames(2);
@@ -362,7 +362,7 @@ public partial class AudioMixRegression : Node
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
         await Frames(80);
         Check(forest.Playing && Mathf.IsEqualApprox(forest.VolumeDb, -2f), "retour rapide : l'ancien fondu ne coupe pas le fond");
-        bus.EmitSignal(EventBus.SignalName.RandomEventTriggered, "storm", "Orage");
+        bus.EmitSignal(EventBus.SignalName.WeatherChanged, "storm");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "wild_fields");
         await Frames(45);
         Check(!forest.Playing && audio.GetNode<AudioStreamPlayer>("AmbianceOverlay").Playing,

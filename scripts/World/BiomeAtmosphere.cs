@@ -53,6 +53,20 @@ public partial class BiomeAtmosphere : Node2D
 	private bool _gradeStarted;
 	// Défilement des nuages en px au sol, cumulé : le bruit n'a pas de période, le décalage ne revient jamais en arrière.
 	private Vector2 _cloudOffset;
+	private float _gradeFadeSeconds = 1f;
+	private BiomeAtmosphereStyle _biomeStyle = BiomeAtmosphereStyle.Neutral;
+
+	// Météo (plan 39 A5) : elle modifie l'étalonnage du biome, les nuages et les ombres, avec son propre fondu.
+	private WeatherConfig _weatherConfig;
+	private WeatherData _weather;
+	private WeatherVisuals _weatherVisuals;
+	private RandomNumberGenerator _flashRng;
+	private float _cloudSpeedFactor = 1f;
+	private float _flash;
+	private float _flashTimer;
+	// Un sursaut a été publié et n'a pas encore été effacé par une publication sans éclair.
+	private bool _flashShown;
+	private const float FlashFadeSec = 0.35f;
 
 	// Viewport interne = 480×270
 	private const float ViewportWidth = 480f;
@@ -66,6 +80,15 @@ public partial class BiomeAtmosphere : Node2D
 			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage ni nuages");
 		else
 			PublishConstants();
+		if (WeatherConfig.TryLoad(out _weatherConfig, out _))
+		{
+			_weatherVisuals = new WeatherVisuals { Name = "WeatherVisuals" };
+			AddChild(_weatherVisuals);
+			if (_config != null)
+				_weatherVisuals.SetWind(_config.CloudDirection);
+			_flashRng = RunRandom.Create("weather_flash");
+			_eventBus.WeatherChanged += OnWeatherChanged;
+		}
 		CreateFogParticles();
 		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
@@ -96,10 +119,18 @@ public partial class BiomeAtmosphere : Node2D
 			UpdateAtmosphere(biome);
 		}
 
+		float dt = (float)delta;
+		_cloudSpeedFactor = Mathf.MoveToward(_cloudSpeedFactor, _weather?.CloudSpeedFactor ?? 1f, dt);
+		UpdateFlashes(dt);
 		if (_gradeProgress < 1f)
-			AdvanceGrade((float)delta);
+			AdvanceGrade(dt);
+		else if (_flash > 0f)
+			AdvanceFlash(dt);
+		else if (_flashShown)
+			EndFlash();
 		else if (_gradeShown.CloudOpacity > 0f)
-			AdvanceClouds((float)delta);
+			AdvanceClouds(dt);
+		_flashShown = _flash > 0f || (_flashShown && _gradeProgress < 1f);
 
 		float targetMoisture = biomeId == "swamp" ? GetLocalSwampMoisture() : 0f;
 		_swampMoistureCurrent = Mathf.MoveToward(_swampMoistureCurrent, targetMoisture, (float)delta * 0.9f);
@@ -109,8 +140,36 @@ public partial class BiomeAtmosphere : Node2D
 
 	public override void _ExitTree()
 	{
+		if (_weatherConfig != null)
+			_eventBus.WeatherChanged -= OnWeatherChanged;
 		// Le Hub et les écrans hors run partagent les shaders étalonnés : ils retrouvent le neutre.
+		_flash = 0f;
 		PublishGrade(NeutralGrade);
+	}
+
+	private void OnWeatherChanged(string weatherId)
+	{
+		WeatherData previous = _weather;
+		_weather = weatherId.Length > 0 ? _weatherConfig.Find(weatherId) : null;
+		float fade = (_weather ?? previous)?.FadeS ?? 1f;
+		_flashTimer = _weather != null && _weather.FlashExposure > 0f
+			? _flashRng.RandfRange(_weather.FlashMinS, _weather.FlashMaxS) : 0f;
+		_weatherVisuals.Apply(_weather, fade);
+		if (_config != null && _gradeStarted)
+			Retarget(fade);
+	}
+
+	/// <summary>Éclairs lointains de l'orage : un sursaut d'exposition qui retombe en FlashFadeSec.</summary>
+	private void UpdateFlashes(float delta)
+	{
+		_flash = Mathf.MoveToward(_flash, 0f, delta / FlashFadeSec);
+		if (_weather == null || _weather.FlashExposure <= 0f)
+			return;
+		_flashTimer -= delta;
+		if (_flashTimer > 0f)
+			return;
+		_flashTimer = _flashRng.RandfRange(_weather.FlashMinS, _weather.FlashMaxS);
+		_flash = 1f;
 	}
 
 	private void UpdateAtmosphere(BiomeData biome)
@@ -155,12 +214,25 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		if (_config == null)
 			return;
-		_gradeTo = Grade.Of(style, _config.GradeStrength, _config.GrimeStrength);
-		_gradeFrom = _gradeShown;
-		_gradeProgress = _gradeStarted ? 0f : 1f;
-		_gradeStarted = true;
-		if (_gradeProgress >= 1f)
+		_biomeStyle = style;
+		if (!_gradeStarted)
+		{
+			_gradeStarted = true;
+			_gradeTo = Grade.Of(style, _config.GradeStrength, _config.GrimeStrength).With(_weather);
+			_gradeProgress = 1f;
 			PublishGrade(_gradeTo);
+			return;
+		}
+		Retarget(_config.GradeFadeSeconds);
+	}
+
+	/// <summary>Nouvelle cible (biome ou météo), atteinte en <paramref name="fadeSeconds"/> depuis l'étalonnage affiché.</summary>
+	private void Retarget(float fadeSeconds)
+	{
+		_gradeTo = Grade.Of(_biomeStyle, _config.GradeStrength, _config.GrimeStrength).With(_weather);
+		_gradeFrom = _gradeShown;
+		_gradeFadeSeconds = fadeSeconds;
+		_gradeProgress = 0f;
 	}
 
 	/// <summary>Réglages communs qui ne changent pas pendant la run ; le dosage du biome, lui, suit le fondu.</summary>
@@ -176,23 +248,39 @@ public partial class BiomeAtmosphere : Node2D
 
 	private void AdvanceClouds(float delta)
 	{
-		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * delta);
+		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
 		PublishClouds(_gradeShown);
 	}
 
 	private void AdvanceGrade(float delta)
 	{
-		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * delta);
-		_gradeProgress = Mathf.Min(1f, _gradeProgress + delta / _config.GradeFadeSeconds);
+		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
+		_gradeProgress = Mathf.Min(1f, _gradeProgress + delta / _gradeFadeSeconds);
 		PublishGrade(Grade.Lerp(_gradeFrom, _gradeTo, Mathf.SmoothStep(0f, 1f, _gradeProgress)));
+	}
+
+	/// <summary>Pendant un éclair, l'étalonnage affiché est republié chaque image avec le sursaut d'exposition.</summary>
+	private void AdvanceFlash(float delta)
+	{
+		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
+		PublishGrade(_gradeShown);
+	}
+
+	/// <summary>Éclair retombé : une dernière publication sans sursaut, pour ne laisser aucun résidu d'exposition.</summary>
+	private void EndFlash()
+	{
+		_flashShown = false;
+		PublishGrade(_gradeShown);
 	}
 
 	private void PublishGrade(Grade grade)
 	{
 		_gradeShown = grade;
 		float entityShare = _config?.EntityGradeShare ?? 0f;
+		// Éclair : sursaut d'exposition qui retombe vite (courbe au carré : un éclat, pas une montée).
+		float flash = 1f + (_weather?.FlashExposure ?? 0f) * _flash * _flash;
 		RenderingServer.GlobalShaderParameterSet(GradeTintParameter,
-			new Vector4(grade.Multiplier.X, grade.Multiplier.Y, grade.Multiplier.Z, 1f));
+			new Vector4(grade.Multiplier.X * flash, grade.Multiplier.Y * flash, grade.Multiplier.Z * flash, 1f));
 		RenderingServer.GlobalShaderParameterSet(GradeToneParameter,
 			new Vector4(grade.Saturation, grade.Contrast, entityShare, 0f));
 		PublishClouds(grade);
@@ -223,6 +311,17 @@ public partial class BiomeAtmosphere : Node2D
 			Mathf.Lerp(1f, style.Saturation, strength),
 			Mathf.Lerp(1f, style.Contrast, strength),
 			style.CloudCover, style.CloudOpacity, style.ShadowOpacity, style.Grime * grimeStrength);
+
+		/// <summary>La météo multiplie l'étalonnage et les ombres, et impose un minimum de nuages.</summary>
+		public Grade With(WeatherData weather) => weather == null ? this : this with
+		{
+			Multiplier = Multiplier * weather.ExposureFactor,
+			Saturation = Saturation * weather.SaturationFactor,
+			Contrast = Contrast * weather.ContrastFactor,
+			CloudCover = Mathf.Max(CloudCover, weather.CloudCoverMin),
+			CloudOpacity = Mathf.Max(CloudOpacity, weather.CloudOpacityMin),
+			ShadowOpacity = ShadowOpacity * weather.ShadowFactor,
+		};
 
 		public static Grade Lerp(Grade from, Grade to, float t) => new(
 			from.Multiplier.Lerp(to.Multiplier, t),

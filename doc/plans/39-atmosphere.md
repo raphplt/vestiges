@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2, A3 et le socle d'A4 livrés** (§8 à §11).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2, A3, A5 et le socle d'A4 livrés** (§8 à §12).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -301,3 +301,29 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 - Niveaux : fonds à −26 dB RMS (grottes à −28 et −30, deux feux à −33 : crépitements tout en crêtes), sons ponctuels à −20 dB RMS au plus, crête ≤ −6 dBFS partout. Un doublon voulu : la même chute de pierres sert à la ville et à la carrière.
 
 **Suite :** Raphaël écoute et exporte ses choix ; A4c les intègre (banque, blocs `ambience`, fondu enchaîné entre fonds, ambiance du Hub).
+
+## 12. A5 livré — 12 octobre 2026
+
+**Fait :**
+
+- `World/WeatherDirector` : une météo à la fois, tirée selon le biome où se trouve le joueur, avec ses poids dans `data/world/weather.json` (pas de cendres en forêt, brouillard surtout au marais). Première entre 2:30 et 4:00, puis une pause de 2:30 à 4:00 après chaque fin. Flux de tirage à part (`RunRandom.Create("weather")`). Suspendue pendant un boss : l'Indicible garde sa nuit. Signal `WeatherChanged`.
+- **À part des micro-événements** (écart au plan, qui parlait d'entrées dans `run_events.json`) : la météo ne prend pas le créneau d'un événement de jeu et peut s'y superposer. Dans `run_events.json`, elle aurait raréfié les Souverains, la Harde, la Veille.
+- Effets sur les couches A1–A3, en fondu propre à chaque météo : facteurs d'étalonnage, minimum de nuages et vitesse de leur défilement, opacité des ombres portées. `BiomeAtmosphere` compose météo et biome, si bien qu'un changement de biome pendant l'orage garde l'orage.
+- `World/WeatherVisuals` :
+  - brouillard épais : un voile à l'écran (`weather_view.gdshader`, couche 4 sous le HUD), net jusqu'à 170 px au sol autour du joueur et plein à 360 px, opacité 0,82 ; lisière qui dérive, tramée au pixel. C'est la **portée de vue réduite** demandée : silhouettes devinables, créatures lointaines cachées.
+  - particules autour de la caméra, émises dans le monde : flocons de cendre, traits de débris au vent, pluie inclinée.
+- Orage : ciel assombri (exposition × 0,74), nuages lourds, pluie, éclairs lointains toutes les 6 à 14 s par sursaut d'exposition. On ne réutilise pas `IndicibleStorm` : il tient le `CanvasModulate` et sa nuit appartient au boss.
+- Son : `AudioManager` joue la boucle de la météo (`sfx_brouillard`, `sfx_pluie_legere`, `sfx_foret_rafales`, `sfx_orage_proche`, déjà dans la banque) sur `WeatherChanged`. L'ancien branchement sur `RandomEventTriggered` ne pouvait pas se déclencher : aucun micro-événement ne porte ces identifiants.
+- `RunObservation --weather <id>` : météo imposée à 3 s, pour les captures.
+
+**Vérifié :**
+
+- Captures des quatre météos (seed 1002), regardées : voile de brouillard (premier essai invisible, le rectangle restait à taille nulle ; corrigé), cendres et palette ternie, débris au vent, pluie sous un ciel sombre. Planche : `doc/plans/planches/39-A5-meteo.jpg` (non versionnée).
+- Tirage naturel (`tools/measure_run.sh`, 2 graines × 600 s) : quatre météos, chacune dans un biome qui l'autorise.
+- `tools/test_catalogs.sh` vert (biomes de la météo existants, six refus), `tools/test_audio.sh` vert (régression passée de `RandomEventTriggered` à `WeatherChanged`), `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Relecture (`godot-reviewer`), corrigée :** un émetteur de particules pouvait n'être jamais libéré quand deux météos se suivaient dans le même fondu, et l'enchaînement des fondus doublait l'arrivée des nouvelles particules (un tween par émetteur désormais) ; paramètres du voile en `StringName` en cache ; dernière publication sans sursaut quand un éclair retombe ; particules ramenées en couche 15, sous les plaques d'ennemis (20) et les chiffres de dégâts (30). Orage recapturé après correction.
+
+**Non vérifié :** les éclairs et le défilement en mouvement (captures fixes), le son des météos en jeu, le coût au banc (voile plein écran seulement pendant le brouillard, 110 à 220 particules).
+
+**Point ouvert :** le voile du marais (`BiomeAtmosphere.CreateSwampOverlay`) pose son ancrage de la même façon que le premier voile de brouillard, qui restait à taille nulle. Il est peut-être invisible depuis toujours ; à vérifier.

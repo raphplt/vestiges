@@ -36,6 +36,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/colorblind.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/hurt_vignette.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/low_health_vignette.gdshader", SampleKind.Rectangle),
+        ("res://assets/shaders/weather_view.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/indicible_tide.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/indicible_wave.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/ui_dust_twinkle.gdshader", SampleKind.Sprite),
