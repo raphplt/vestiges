@@ -38,6 +38,15 @@ Constat : « un peu trop simples » ; en ville, « juste des petits carrés qui 
 - Ville : remplacer les papiers par ce que la Bible décrit (§7.3, cendres et poussière qui flottent dans les rayons de lumière), ou retirer. À trancher.
 - Vérification : captures en mouvement (séquence courte), réglage des particules respecté.
 
+**Livré le 12 octobre :**
+
+- Poses dessinées au pixel, que la particule parcourt pendant sa vie (planche horizontale, `CanvasItemMaterial` en animation de particules, pose de départ tirée au hasard) : feuille qui virevolte (à plat, en biais, de profil, en biais inverse), papier qui se retourne, flocon de cendre, pollen qui luit. Pas de rotation libre, qui casserait la grille des pixels. Teinte des données sur deux tons (plein, ombré).
+- Nouvelle sorte `glint` : poussière qui flotte presque immobile et, une pose sur six, scintille en croix (Bible §7.3).
+- `motes` devient une liste d'émetteurs par biome.
+- **Ville, variante 1 (en place)** : 60 points de poussière qui scintillent et 8 papiers dessinés. **Variante 2** à essayer en remplaçant la liste `motes` de `data/biomes/urban_ruins.json` par `[{ "kind": "paper", "amount": 20, "color": [0.95, 0.93, 0.86], "opacity": 0.95 }]`.
+- Outils : `--capture-biome-tour <s>` (arrêt immobile au cœur des décors de chaque biome, rafale de quatre images pleine résolution à 0,2 s) et `tools/record_biome_tour.sh` (même visite filmée au Movie Maker, `tour.mp4`). La vidéo réduite et compressée perd les particules d'un pixel ; les rafales servent à vérifier.
+- Rafales regardées : feuilles qui changent de pose d'une image à l'autre en forêt, poussière pâle en ville (le scintillement est rare, comme voulu). `tools/test_catalogs.sh` vert (liste vide refusée), build et smoke verts.
+
 ## R6 — Personnage par défaut (≈ 0,2 j)
 
 « Peut-être que je ferai en sorte que ce soit le Traqueur le personnage par défaut… à voir. » Si confirmé : Traqueur sélectionné par défaut sur un profil neuf, et premier de la liste.

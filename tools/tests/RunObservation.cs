@@ -44,6 +44,7 @@ namespace Vestiges.Tests;
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-loot : écran de butin du coffre le plus proche, objets du sac uniquement (RunObservation.Chests.cs).
+/// --capture-biome-tour [secondes] : arrêt immobile au cœur des décors de chaque biome, pour un tournage (RunObservation.Map.cs).
 /// --capture-places : un petit lieu de chaque type, joueur à côté (signe), puis juste après usage (RunObservation.Places.cs).
 /// --capture-levelup : l'écran de level-up, une capture par rareté (RunObservation.LevelUp.cs).
 /// --capture-cascade : file de niveaux, cinq niveaux enchaînés puis un niveau ouvert aussitôt (RunObservation.Cascade.cs).
@@ -196,6 +197,8 @@ public partial class RunObservation : Node
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
                 await CaptureWeapons(Argument(args, "--weapons", null), Array.IndexOf(args, "--lethal") >= 0);
+            else if (Array.IndexOf(args, "--capture-biome-tour") >= 0)
+                await CaptureBiomeTour(double.Parse(Argument(args, "--capture-biome-tour", "6"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-places") >= 0)
                 await CapturePlaces();
             else if (Array.IndexOf(args, "--capture-chests") >= 0)

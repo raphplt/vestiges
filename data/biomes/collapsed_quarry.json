@@ -32,7 +32,9 @@
         "accent_volume_db": -10,
         "reverb": { "wet": 0.15, "room_size": 0.75, "damping": 0.3 }
     },
-    "motes": { "kind": "dust", "amount": 90, "color": [0.86, 0.8, 0.72], "opacity": 0.7 },
+    "motes": [
+        { "kind": "dust", "amount": 90, "color": [0.86, 0.8, 0.72], "opacity": 0.7 }
+    ],
     "map_weight": 0.5,
     "poi_pool": {
         "searchable_building": 0.6,

@@ -25,8 +25,10 @@
         "accent_volume_db": -4,
         "reverb": { "wet": 0.0, "room_size": 0.5, "damping": 0.5 }
     },
-    "_motes": "Facultatif (plan 39 B1). Particules du biome autour de la caméra, dans le sens du vent commun : kind (leaves, paper, pollen, dust, ash), amount (1 à 200), color et opacity. Sans bloc : aucune.",
-    "motes": { "kind": "leaves", "amount": 40, "color": [0.78, 0.58, 0.26], "opacity": 0.9 },
+    "_motes": "Facultatif (plan 39 B1). Émetteurs de particules du biome, ensemble, autour de la caméra et dans le sens du vent commun : kind (leaves, paper, pollen, dust, ash, glint), amount (1 à 200), color et opacity. Sans liste : aucun.",
+    "motes": [
+        { "kind": "leaves", "amount": 40, "color": [0.78, 0.58, 0.26], "opacity": 0.9 }
+    ],
     "terrain_weights": { "grass": 0.5, "forest": 0.5 },
     "exploration_enemy_pool": ["presage", "rodeur"],
     "resurgence_enemy_pool": ["presage", "shade"]

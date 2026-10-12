@@ -68,7 +68,7 @@ public partial class BiomeAtmosphere : Node2D
 	private WeatherData _weather;
 	private WeatherVisuals _weatherVisuals;
 	// Particules du biome (plan 39 B1) : remplacées en fondu au changement de biome.
-	private GpuParticles2D _motes;
+	private readonly System.Collections.Generic.List<GpuParticles2D> _motes = new();
 	private const float MotesFadeSec = 2f;
 	private RandomNumberGenerator _flashRng;
 	private float _cloudSpeedFactor = 1f;
@@ -211,10 +211,19 @@ public partial class BiomeAtmosphere : Node2D
 	private void UpdateAtmosphere(BiomeData biome)
 	{
 		SetGradeTarget(biome?.Atmosphere ?? BiomeAtmosphereStyle.Neutral);
-		BiomeMotes motes = biome?.Motes ?? BiomeMotes.None;
-		_motes = AtmosphereParticles.Swap(this, _motes,
-			AtmosphereParticles.Create(motes.Kind, motes.Amount, motes.Color, _config?.WindDirection ?? Vector2.Right, $"Motes{motes.Kind}"),
-			MotesFadeSec);
+		foreach (GpuParticles2D old in _motes)
+			AtmosphereParticles.Swap(this, old, null, MotesFadeSec);
+		_motes.Clear();
+		if (biome != null)
+		{
+			foreach (BiomeMotes motes in biome.Motes)
+			{
+				GpuParticles2D emitter = AtmosphereParticles.Create(motes.Kind, motes.Amount, motes.Color,
+					_config?.WindDirection ?? Vector2.Right, $"Motes{motes.Kind}");
+				if (emitter != null)
+					_motes.Add(AtmosphereParticles.Swap(this, null, emitter, MotesFadeSec));
+			}
+		}
 		if (biome == null)
 		{
 			_fogParticles.Emitting = false;

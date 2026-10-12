@@ -481,8 +481,9 @@ public partial class CatalogContractRegression : Node
             ("fond d'ambiance inconnu", root => root["ambience"]!["loops"]![0] = "sfx_inconnu", "son « sfx_inconnu »"),
             ("son ponctuel inconnu", root => root["ambience"]!["accents"]![0] = "sfx_inconnu", "son « sfx_inconnu »"),
             ("sons ponctuels sans intervalle", root => root["ambience"]!.AsObject().Remove("accent_interval_s"), "accent_interval_s"),
-            ("particules inconnues", root => root["motes"]!["kind"] = "snow", "kind"),
-            ("écran couvert de particules", root => root["motes"]!["amount"] = 500, "amount"),
+            ("particules inconnues", root => root["motes"]![0]!["kind"] = "snow", "kind"),
+            ("écran couvert de particules", root => root["motes"]![0]!["amount"] = 500, "amount"),
+            ("liste de particules vide", root => root["motes"] = new JsonArray(), "motes"),
             ("réverbération noyée", root => root["ambience"]!["reverb"] = new JsonObject { ["wet"] = 0.8, ["room_size"] = 0.5, ["damping"] = 0.5 }, "reverb.wet"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
@@ -528,7 +529,8 @@ public partial class CatalogContractRegression : Node
         Check(forest.Ambience.LoopKeys.Count == 1 && forest.Ambience.LoopKeys[0] == "sfx_ambiance_foret" && forest.Ambience.AccentKeys.Count == 2
             && Mathf.IsEqualApprox(forest.Ambience.AccentVolumeDb, -4f), "ambiance de la forêt lue (fond, oiseaux, −4 dB)");
         Check(BiomeDataLoader.Get("collapsed_quarry").Ambience.LoopKeys.Count == 2, "carrière : deux fonds, l'un ou l'autre");
-        Check(forest.Motes.Kind == AtmosphereParticleKind.Leaves && defaults.Motes == BiomeMotes.None, "feuilles en forêt, aucune particule sans bloc");
+        Check(forest.Motes.Count == 1 && forest.Motes[0].Kind == AtmosphereParticleKind.Leaves && defaults.Motes.Count == 0,
+            "feuilles en forêt, aucune particule sans liste");
         Check(defaults.Ambience == BiomeAmbience.Silent, "biome sans bloc d'ambiance : silence et son sec");
         Check(BiomeAtmosphereStyle.Neutral.GradeMultiplier().IsEqualApprox(Vector3.One), "atmosphère neutre sans effet sur la couleur");
         Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyExists, pois.Contains, audioExists, resourceExists,

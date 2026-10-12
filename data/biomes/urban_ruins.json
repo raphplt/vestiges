@@ -31,7 +31,10 @@
         "accent_volume_db": -10,
         "reverb": { "wet": 0.08, "room_size": 0.55, "damping": 0.5 }
     },
-    "motes": { "kind": "paper", "amount": 24, "color": [0.95, 0.93, 0.86], "opacity": 0.95 },
+    "motes": [
+        { "kind": "glint", "amount": 60, "color": [0.98, 0.95, 0.86], "opacity": 0.9 },
+        { "kind": "paper", "amount": 8, "color": [0.95, 0.93, 0.86], "opacity": 0.95 }
+    ],
     "map_weight": 1.0,
     "poi_pool": {
         "searchable_building": 1.5,

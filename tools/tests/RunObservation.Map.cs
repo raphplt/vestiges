@@ -267,6 +267,40 @@ public partial class RunObservation
         return result;
     }
 
+    /// <summary>
+    /// --capture-biome-tour [secondes] : le joueur reste immobile au cœur des décors de chaque biome pendant la durée
+    /// donnée (6 s par défaut), créatures retirées, pour juger en mouvement le vent, les particules et la météo
+    /// (tournage avec --write-movie). Rafale de quatre images par biome à la fin de chaque arrêt.
+    /// </summary>
+    private async Task CaptureBiomeTour(double seconds)
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        Node2D fog = _world.GetNodeOrNull<Node2D>("FogOfWar");
+        if (fog != null)
+            fog.Visible = false;
+        await Frames(180);
+        _player.AIInputOverride = Vector2.Zero;
+        foreach ((string biome, Vector2 best, int _, int _) in FindPropHotspots())
+        {
+            _player.GlobalPosition = best + new Vector2(0f, 24f);
+            _camera.ResetSmoothing();
+            await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);
+            // Rafale de quatre images à 0,2 s d'écart, en pleine résolution : les particules d'un pixel se perdent dans
+            // une vidéo compressée.
+            for (int shot = 0; shot < 4; shot++)
+            {
+                using Image image = GetViewport().GetTexture().GetImage();
+                image.SavePng($"{_output}/tour-{biome}-{shot}.png");
+                await ToSignal(GetTree().CreateTimer(0.2), SceneTreeTimer.SignalName.Timeout);
+            }
+            GD.Print($"[RunObservation] tour {biome} ({seconds:F0} s)");
+        }
+        GD.Print($"[RunObservation] RESULT tour output={_output}");
+    }
+
     private async Task CapturePropHotspots()
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;

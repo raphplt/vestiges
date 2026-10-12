@@ -7,9 +7,9 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Particules d'atmosphère autour de la caméra : météo (cendres, débris au vent, pluie) ou biome (feuilles, papiers,
-/// pollen, poussière).
+/// pollen, poussière qui tombe, poussière qui scintille dans la lumière).
 /// </summary>
-public enum AtmosphereParticleKind { None, Ash, Wind, Rain, Leaves, Paper, Pollen, Dust }
+public enum AtmosphereParticleKind { None, Ash, Wind, Rain, Leaves, Paper, Pollen, Dust, Glint }
 
 /// <summary>
 /// Une météo (plan 39 A5) : durée, biomes où elle peut tomber, et ce qu'elle fait aux couches d'atmosphère du biome

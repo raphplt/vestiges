@@ -33,8 +33,8 @@ public sealed class BiomeData
     public BiomeAtmosphereStyle Atmosphere { get; init; } = BiomeAtmosphereStyle.Neutral;
     /// <summary>Silencieuse si le biome n'a pas de bloc « ambience ».</summary>
     public BiomeAmbience Ambience { get; init; } = BiomeAmbience.Silent;
-    /// <summary>Aucune particule si le biome n'a pas de bloc « motes ».</summary>
-    public BiomeMotes Motes { get; init; } = BiomeMotes.None;
+    /// <summary>Émetteurs de particules du biome, ensemble ; aucun si le biome n'a pas de liste « motes ».</summary>
+    public IReadOnlyList<BiomeMotes> Motes { get; init; } = Array.Empty<BiomeMotes>();
 }
 
 public static class BiomeDataLoader
@@ -218,8 +218,12 @@ public static class BiomeDataLoader
                 ? Atmosphere(reader, reader.Section("atmosphere")) : BiomeAtmosphereStyle.Neutral;
             BiomeAmbience ambience = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("ambience", out _)
                 ? Ambience(reader, reader.Section("ambience"), audioExists) : BiomeAmbience.Silent;
-            BiomeMotes motes = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("motes", out _)
-                ? Motes(reader, reader.Section("motes")) : BiomeMotes.None;
+            List<BiomeMotes> motes = new();
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("motes", out _))
+            {
+                foreach (JsonElement emitter in reader.List(root, "motes", 1))
+                    motes.Add(Motes(reader, emitter));
+            }
             if (reader.Error != null)
             {
                 error = $"biome « {id ?? "?"} », {reader.Error}";
@@ -232,7 +236,7 @@ public static class BiomeDataLoader
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),
                 WangTileGroups = new ReadOnlySet<string>(wangSet), BlendTerrains = blend, PathStyle = style,
-                Atmosphere = atmosphere, Ambience = ambience, Motes = motes
+                Atmosphere = atmosphere, Ambience = ambience, Motes = motes.AsReadOnly()
             };
             return true;
         }
@@ -270,7 +274,7 @@ public static class BiomeDataLoader
         return style;
     }
 
-    private static readonly string[] MoteKinds = { "leaves", "paper", "pollen", "dust", "ash" };
+    private static readonly string[] MoteKinds = { "leaves", "paper", "pollen", "dust", "ash", "glint" };
 
     private static BiomeMotes Motes(JsonConfigReader reader, JsonElement section)
     {
@@ -285,6 +289,7 @@ public static class BiomeDataLoader
             "paper" => AtmosphereParticleKind.Paper,
             "pollen" => AtmosphereParticleKind.Pollen,
             "dust" => AtmosphereParticleKind.Dust,
+            "glint" => AtmosphereParticleKind.Glint,
             _ => AtmosphereParticleKind.Ash,
         };
         return new BiomeMotes(parsed, amount, color);
