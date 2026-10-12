@@ -395,3 +395,13 @@ Héron et lucioles ne sont pas faits : à ajouter si la faune plaît.
 **Vérifié :** gros plans en run regardés (grenouilles au marais, corbeau en vol, rat, pigeon ; planche `doc/plans/planches/39-B2-faune.jpg`, non versionnée), `tools/test_catalogs.sh` vert (299 contrôles : marge d'apparition, distance de disparition, espèce sans sprites, cadence, pool refusés), `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
 
 **Non vérifié :** le banc (machine chargée à 28 pendant le lot) ; la fuite en mouvement (captures fixes) ; la lecture du corbeau posé, peu lisible sur la planche.
+
+**Grenouille reprise** (retour de Raphaël : « pas assez travaillées ») : la première, une boule de 12 px aux yeux en bâtonnets, sautait pattes tendues vers le bas comme une araignée. Refaite à environ 16 px :
+- assise en coin, avant relevé, tête large et plate, bouche fendue ;
+- yeux saillants dorés à pupille noire, lisibles de face comme de profil ;
+- pattes arrière repliées en Z sur les flancs, pieds palmés ;
+- dos olive taché de brun entre deux bourrelets clairs ;
+- repos de 1,5 s (gorge qui palpite deux fois, un clignement) ;
+- saut en cinq poses, corps tendu, pattes droites derrière, puis plongeon ; elle fuit en deux bonds (`vanish_after_px` 90).
+
+Gros plans en run regardés (marais, graine 3).

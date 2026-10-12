@@ -35,7 +35,7 @@
         },
         "grenouille": {
             "rest": "idle", "flee": "jump", "fps": 8, "group": [1, 3],
-            "flee_radius_px": 70, "flee_speed_px_s": 70, "climb_px_s": 0, "vanish_after_px": 45, "wander_px": 0,
+            "flee_radius_px": 70, "flee_speed_px_s": 70, "climb_px_s": 0, "vanish_after_px": 90, "wander_px": 0,
             "biomes": { "swamp": 2.0 }
         }
     }
