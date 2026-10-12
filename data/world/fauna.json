@@ -1,0 +1,42 @@
+{
+    "_doc": "Faune qui fuit (plan 39 B2), lue par Infrastructure/FaunaConfig et jouée par World/FaunaDirector : bêtes non hostiles, sans collision, nées hors de l'écran, à spawn_margin_px au-delà du bord de la vue (en groupe, dispersées sur group_spread_px), au plus max_alive à la fois, un groupe toutes les spawn_interval_s. Aucune ne naît là où la mémoire de la zone est sous min_memory : une zone qui s'efface est vide et silencieuse. Elles fuient quand le joueur s'approche à flee_radius_px, quand une créature meurt à noise_radius_px, ou quand l'Effacement atteint leur case ; elles partent à l'opposé du joueur et vers la mémoire la plus forte (erasure_pull), chacune avec un écart tiré dans ±scatter_rad et un temps de réaction jusqu'à reaction_max_s, et s'effacent en fade_s. La mémoire de leur case est relue toutes les memory_check_s. Par espèce : sprites (assets/fauna/<id>), actions au repos et en fuite, cadence d'animation, taille des groupes, rayon et vitesse de fuite, montée en vol (0 : reste au sol), distance avant de disparaître, errance au repos (papillons), poids par biome (absent : jamais).",
+    "max_alive": 36,
+    "spawn_interval_s": 0.8,
+    "spawn_margin_px": [60, 240],
+    "despawn_distance_px": 900,
+    "group_spread_px": 28,
+    "fade_s": 0.4,
+    "reaction_max_s": 0.25,
+    "erasure_pull": 0.8,
+    "scatter_rad": 0.45,
+    "memory_check_s": 0.25,
+    "min_memory": 0.55,
+    "noise_radius_px": 180,
+    "species": {
+        "corbeau": {
+            "rest": "idle", "flee": "fly", "fps": 8, "group": [1, 3],
+            "flee_radius_px": 120, "flee_speed_px_s": 130, "climb_px_s": 45, "vanish_after_px": 420, "wander_px": 0,
+            "biomes": { "wild_fields": 1.6, "urban_ruins": 0.8, "collapsed_quarry": 0.4 }
+        },
+        "pigeon": {
+            "rest": "idle", "flee": "fly", "fps": 9, "group": [3, 6],
+            "flee_radius_px": 95, "flee_speed_px_s": 120, "climb_px_s": 40, "vanish_after_px": 380, "wander_px": 0,
+            "biomes": { "urban_ruins": 2.0 }
+        },
+        "rat": {
+            "rest": "idle", "flee": "run", "fps": 12, "group": [1, 2],
+            "flee_radius_px": 80, "flee_speed_px_s": 150, "climb_px_s": 0, "vanish_after_px": 260, "wander_px": 0,
+            "biomes": { "urban_ruins": 1.0, "collapsed_quarry": 0.6 }
+        },
+        "papillon": {
+            "rest": "fly", "flee": "fly", "fps": 10, "group": [1, 3],
+            "flee_radius_px": 55, "flee_speed_px_s": 55, "climb_px_s": 12, "vanish_after_px": 220, "wander_px": 14,
+            "biomes": { "forest_reclaimed": 2.0, "wild_fields": 0.8 }
+        },
+        "grenouille": {
+            "rest": "idle", "flee": "jump", "fps": 8, "group": [1, 3],
+            "flee_radius_px": 70, "flee_speed_px_s": 70, "climb_px_s": 0, "vanish_after_px": 45, "wander_px": 0,
+            "biomes": { "swamp": 2.0 }
+        }
+    }
+}

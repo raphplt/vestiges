@@ -646,6 +646,10 @@ public partial class RunObservation : Node
         };
         eventBus.PlayerHitBy += onHit;
         List<int> visibleSamples = new();
+        // Faune qui fuit (plan 39 B2) : bêtes en vie et à l'écran, une mesure par seconde.
+        FaunaDirector fauna = _world.GetNodeOrNull<FaunaDirector>("FaunaDirector");
+        double faunaAliveSum = 0, faunaVisibleSum = 0;
+        int faunaSamples = 0;
         Dictionary<int, double> levelTimes = new();
         int lastLevel = 1;
         double firstVisible = -1;
@@ -822,6 +826,9 @@ public partial class RunObservation : Node
                 nextCapture += _captureEvery;
                 using Image frame = GetViewport().GetTexture().GetImage();
                 frame.SavePng(string.Create(CultureInfo.InvariantCulture, $"{_output}/screen-{t:000}s.png"));
+                // Faune qui fuit (plan 39 B2) : gros plan sur la bête visible la plus proche, trop petite pour l'image entière.
+                if (fauna != null && fauna.TryGetNearestVisible(VisibleWorldRect(), _player.GlobalPosition, out Vector2 critter))
+                    SaveCrop(string.Create(CultureInfo.InvariantCulture, $"fauna-{t:000}s"), critter, new Vector2(70f, 40f));
             }
 
             if (t >= nextChestSample)
@@ -871,6 +878,12 @@ public partial class RunObservation : Node
             int orbs = CombatPools.Instance?.XpOrbsOnGround ?? 0;
             maxOrbs = Math.Max(maxOrbs, orbs);
             visibleSamples.Add(visible);
+            if (fauna != null)
+            {
+                faunaAliveSum += fauna.AliveCount;
+                faunaVisibleSum += fauna.CountVisible(view);
+                faunaSamples++;
+            }
             rows.Add(string.Create(CultureInfo.InvariantCulture,
                 $"{t:F0},{visible},{near},{alive},{tracker.TotalSpawned},{tracker.TotalKilled},{level},{hitDamage:F0},{erasure.GetMemoryAt(_player.GlobalPosition):F2},{erasure.GlobalErasurePercent:F2},{xpGained:F0},{orbs},{spawnedHp:F0},{damageDealt:F0},{places.EssenceGainedSoFar},{score.CurrentScore}"));
         }
@@ -913,6 +926,9 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture, $" xp_orbs_end={CombatPools.Instance?.XpOrbsOnGround ?? 0} xp_orbs_max={maxOrbs}");
         summary.Append(CultureInfo.InvariantCulture,
             $" chests_total={GetTree().GetNodesInGroup("chests").Count} chests_seen={seenChests.Count} chests_clear={clearChests.Count} chests_signaled={signaledChests.Count} first_chest_s={firstChestSeen:F0}");
+        if (fauna != null && faunaSamples > 0)
+            summary.Append(CultureInfo.InvariantCulture,
+                $" fauna_alive_mean={faunaAliveSum / faunaSamples:F1} fauna_visible_mean={faunaVisibleSum / faunaSamples:F1} fauna_spawned={fauna.TotalSpawned} fauna_fled={fauna.TotalFled}");
         foreach ((int from, int to) in new[] { (0, 60), (60, 120), (120, 180), (180, 300) })
         {
             if (from >= visibleSamples.Count)

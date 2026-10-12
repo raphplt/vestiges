@@ -373,3 +373,25 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 **Non vérifié :** le vent en mouvement (captures fixes : vagues, rafales), le banc (un uniforme par image, quelques opérations par sommet, 24 à 110 particules).
 
 **Piste :** le blé des champs est une tuile du sol ; il n'ondule pas. Une vague de lumière dans le shader du sol, sur les cases de blé, le ferait.
+
+## 15. B2 livré, faune qui fuit — 12 octobre 2026
+
+**Cinq espèces** dessinées par le pipeline procédural (`tools/sprites/fauna/`, `tools/generate_fauna.py`, huit directions, poses dans `assets/fauna/`, pied de chaque espèce dans `fauna_manifest.json`) :
+
+- corbeau (repos, envol) : champs, un peu en ville et à la carrière ;
+- pigeon (repos, envol), par groupes de 3 à 6 : ville ;
+- rat (repos, course), reste au sol et longe les murs : ville, carrière ;
+- papillon (vol, errance lente autour de son point) : forêt, champs ;
+- grenouille (repos, saut court qui la fait disparaître, comme un plongeon) : marais, seule espèce admise au bord de l'eau.
+
+Héron et lucioles ne sont pas faits : à ajouter si la faune plaît.
+
+**Comportement** (`World/FaunaDirector`, réglages `data/world/fauna.json`) : un seul gestionnaire et un pool de 36 sprites sans script (règle du plan 29). Un groupe naît toutes les 0,8 s à 60–240 px au-delà d'un bord de la vue réelle, jamais là où la mémoire est sous 0,55 : une zone qui s'efface reste vide. Les bêtes fuient quand le joueur approche, quand une créature meurt à moins de 180 px, ou quand l'Effacement atteint leur case ; elles partent à l'opposé du joueur et vers la mémoire la plus forte, chacune avec un écart et un temps de réaction propres, montent au-dessus des canopées passé 26 px, puis s'effacent. Flux de tirage à part (`RunRandom "fauna"`) : aucun tirage du jeu n'est décalé.
+
+**Relecture appliquée** : naissance hors de la vue même dans les coins (le premier anneau aplati en faisait naître à l'écran) ; écritures dans les sprites seulement quand une valeur change ; poses et pied résolus une fois par espèce, espèce retirée avec une erreur si une pose ou son pied manque ; mémoire relue quatre fois par seconde, décalée d'une bête à l'autre ; rats et grenouilles ne traversent plus les murs ; réglages restés en dur passés en données ; accès de mesure réservés aux outils.
+
+**Mesures** (`tools/measure_run.sh`, bot nomade, 300 s, graines 1 et 2) : 12 à 16 bêtes en vie, 1,9 à 2,8 dans la vue en moyenne, 650 à 780 naissances (beaucoup disparaissent hors de vue quand le joueur s'éloigne de leur bord) et 70 à 100 fuites. `RunObservation` donne `fauna_alive_mean`, `fauna_visible_mean`, `fauna_spawned`, `fauna_fled`, et un gros plan `fauna-XXXs.png` sur la bête visible la plus proche à chaque capture.
+
+**Vérifié :** gros plans en run regardés (grenouilles au marais, corbeau en vol, rat, pigeon ; planche `doc/plans/planches/39-B2-faune.jpg`, non versionnée), `tools/test_catalogs.sh` vert (299 contrôles : marge d'apparition, distance de disparition, espèce sans sprites, cadence, pool refusés), `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :** le banc (machine chargée à 28 pendant le lot) ; la fuite en mouvement (captures fixes) ; la lecture du corbeau posé, peu lisible sur la planche.

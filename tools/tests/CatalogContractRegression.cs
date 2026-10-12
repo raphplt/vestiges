@@ -37,6 +37,7 @@ public partial class CatalogContractRegression : Node
             CheckBiomes();
             CheckAtmosphere();
             CheckWeather();
+            CheckFauna();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -608,6 +609,37 @@ public partial class CatalogContractRegression : Node
             bool refused = !WeatherConfig.TryParse(Mutated(valid, mutate), out WeatherConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"météo refusée ({label}) : {message}");
+        }
+    }
+
+    private void CheckFauna()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/fauna.json");
+        HashSet<string> known = FaunaConfig.KnownSpecies();
+        Check(known.Count == 5, $"manifeste de la faune : cinq espèces ({known.Count})");
+        Check(FaunaConfig.TryParse(valid, known.Contains, out FaunaConfig config, out string error) && config.AllSpecies.Count == 5,
+            $"faune du dépôt acceptée (cinq espèces) {error}");
+        foreach (FaunaSpecies species in config?.AllSpecies ?? new List<FaunaSpecies>())
+        {
+            foreach (string biome in species.BiomeWeights.Keys)
+                Check(BiomeDataLoader.Get(biome) != null, $"faune {species.Id} : biome « {biome} » connu");
+            foreach (string action in new[] { species.RestAction, species.FleeAction })
+                Check(ResourceLoader.Exists($"res://assets/fauna/{species.Id}/fauna_{species.Id}_E_{action}_01.png"),
+                    $"faune {species.Id} : poses « {action} » présentes");
+        }
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("naissance au bord de l'écran", root => root["spawn_margin_px"] = new JsonArray(10, 240), "spawn_margin_px"),
+            ("disparition trop proche", root => root["despawn_distance_px"] = 600, "despawn_distance_px"),
+            ("espèce sans sprites", root => root["species"]!["heron"] = root["species"]!["rat"]!.DeepClone(), "heron"),
+            ("animation trop rapide", root => root["species"]!["rat"]!["fps"] = 40, "fps"),
+            ("foule de bêtes", root => root["max_alive"] = 500, "max_alive"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !FaunaConfig.TryParse(Mutated(valid, mutate), known.Contains, out FaunaConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"faune refusée ({label}) : {message}");
         }
     }
 

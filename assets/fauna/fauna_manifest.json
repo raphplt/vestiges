@@ -1,0 +1,52 @@
+{
+  "corbeau": {
+    "frame_size": [
+      38,
+      34
+    ],
+    "pivot": [
+      19.0,
+      28.0
+    ]
+  },
+  "pigeon": {
+    "frame_size": [
+      32,
+      28
+    ],
+    "pivot": [
+      16.0,
+      23.0
+    ]
+  },
+  "rat": {
+    "frame_size": [
+      34,
+      22
+    ],
+    "pivot": [
+      17.0,
+      17.0
+    ]
+  },
+  "papillon": {
+    "frame_size": [
+      20,
+      28
+    ],
+    "pivot": [
+      10.0,
+      24.0
+    ]
+  },
+  "grenouille": {
+    "frame_size": [
+      30,
+      28
+    ],
+    "pivot": [
+      15.0,
+      23.0
+    ]
+  }
+}
