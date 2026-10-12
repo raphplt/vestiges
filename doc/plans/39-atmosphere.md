@@ -405,3 +405,58 @@ Héron et lucioles ne sont pas faits : à ajouter si la faune plaît.
 - saut en cinq poses, corps tendu, pattes droites derrière, puis plongeon ; elle fuit en deux bonds (`vanish_after_px` 90).
 
 Gros plans en run regardés (marais, graine 3).
+
+## 16. B3 livré, les rues racontent l'exode — 12 octobre 2026
+
+**Choix de Raphaël avant le lot** ([DECISIONS §137](DECISIONS.md)), pour ne pas surcharger le monde :
+- densité égale ;
+- scènes rares et fortes ;
+- ville seulement ;
+- embouteillages, barrages et petits restes ; pas de bus renversé.
+
+**Sprites** (`tools/sprites/props/exodus.py`, `python3 tools/generate_props.py urban_exodus`, 28 décors dans `assets/props/urban_ruins/`) :
+- voitures portières ouvertes en trois peintures, avec une configuration de portes par peinture (avant et coffre ; trois portes ; arrière et avant opposée), dans les quatre sens de fuite (option `open_doors` du modèle `car`, sans effet sur les voitures déjà validées) ;
+- valise ouverte aux vêtements qui débordent, valise debout et sac, poussette, caddie chargé, cartons ;
+- barrière de police à rayures (deux axes), trois plots dont un renversé ;
+- panneau « ÉVACUATION » avec sa flèche (quatre sens). La police 3 × 5 est calée sur la grille des pixels de sortie, d'après la projection du rendu ; sinon un trait d'un pixel tombe entre deux pixels et s'efface ;
+- flèche peinte au sol, allongée sur les rues verticales que la vue écrase. Elle est assez basse pour passer en décalque (`ZIndex` −1).
+
+**Placement** (`World/ExodusScenePlacer`, réglages dans `data/world/exodus.json`, appelé par `UrbanPropPlacer` avant le semis aléatoire des rues) :
+- une scène pour 240 cellules de rue, soit environ 30 par carte, au moins 1 100 px les unes des autres, 60 % d'embouteillages par quota (un barrage se place plus facilement qu'une file : sans quota, ils prenaient toute la place) ;
+- **embouteillage** : 3 ou 4 voitures sur la chaussée, flèche peinte devant la première, 2 ou 3 bagages lâchés sur un seul trottoir (l'autre si un immeuble le bouche). Les voitures bloquent, la chaussée ne fait qu'une cellule : les trottoirs restent libres et la rue praticable ;
+- **barrage** : deux cellules après un carrefour. La barrière ferme la rue côté départ ; plots et flèche vont dans le sens de la fuite ; le panneau est sur le trottoir, face à la caméra ;
+- **sens de la fuite** : tous fuyaient vers l'extérieur de la carte, loin du départ de l'Effacement, comme le joueur. Voitures, flèches et panneaux suivent la rue dans ce sens ;
+- **densité égale** : aucun décor semé à moins de trois cellules d'une scène, qui se lit dans un vide. Le semis restant (`street_scatter`) passe à 16 % des cellules droites et 15 % de voitures (avant : 15 % et 20 %).
+
+**Relecture appliquée** :
+- un barrage qui passerait de l'autre côté de l'axe 0 est refusé, sinon son sens de fuite s'inverserait ;
+- une candidate essaie l'autre type de scène avant d'être perdue ;
+- le journal donne l'écart à la cible ;
+- les bornes de voitures et de bagages doivent être entières.
+
+**Mesures** (`tools/measure_run.sh`, 8 graines, journaux de génération) :
+
+| | Avant | Après |
+|---|---|---|
+| Décors de rue (semés) | 742 | 674 |
+| Décors de trottoir | 664 | 567 |
+| Décors de l'exode | — | 141 |
+| **Total** | **1 406** | **1 381 (−1,8 %)** |
+
+Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteillages et 12 barrages. Placement au seul chargement, aucun coût par image.
+
+**Vérifié :**
+- captures en run regardées : `--capture-exodus` montre les trois embouteillages et les trois barrages les plus proches du départ, au zoom normal et ×2 ; [planche](planches/39-B3-exode.jpg), non versionnée ;
+- embouteillages horizontal et vertical lisibles, barrage cohérent, panneau lisible ;
+- `tools/test_catalogs.sh` vert : 308 contrôles, dont exode accepté, 28 sprites présents, écart trop court, voitures qui se chevauchent, file trop longue, valeurs fractionnaires et clé inconnue refusés ;
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :**
+- les collisions affichées (`--capture-props`) ;
+- le passage du joueur le long d'une file en vraie partie.
+
+**Limites :**
+- le semis aléatoire garde des voitures isolées fermées, sans sens de fuite ;
+- les portées des bagages et du panneau autour de la chaussée restent des constantes de géométrie dans le placeur, liées à la taille des sprites.
+
+**À juger par Raphaël :** l'encombrement, la fréquence des scènes, la lisibilité du panneau, le sens de fuite commun.

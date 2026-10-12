@@ -942,6 +942,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 39 A4c : ambiances par biome choisies par Raphaël (fonds du marais, de la carrière, des champs et du Hub, sons ponctuels), fondu enchaîné entre fonds, crédits CC0 ; voile du marais réaffiché à la bonne résolution ; régressions audio vérifiées (12 octobre 2026). Fond de ville en second tour.
 - [x] Plan 39 B1 : vent commun (herbes, buissons et canopées ploient en vagues dans son sens, rafales, renforcé par la météo), particules par biome autour de la caméra ; ombres portées pixelisées et réglage Paramètres › Ombres ; captures et régressions vérifiées (12 octobre 2026).
 - [x] Plan 39 B2 : faune qui fuit (corbeaux, pigeons, rats, papillons, grenouilles) en un gestionnaire et un pool sans script, née hors de la vue selon le biome, absente des zones effacées, fuyant le joueur, les morts proches et l'Effacement ; gros plans en run, mesure de densité et contrats vérifiés (12 octobre 2026).
+- [x] Plan 39 B3 : les rues racontent l'exode (embouteillages portières ouvertes, barrages d'évacuation, bagages), scènes rares groupées le long des rues de la ville, sens de fuite commun vers l'extérieur de la carte, densité de décors égale ; captures en run, mesure sur 8 graines et contrats vérifiés (12 octobre 2026).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).

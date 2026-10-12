@@ -38,6 +38,7 @@ public partial class CatalogContractRegression : Node
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
+            CheckExodus();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -640,6 +641,38 @@ public partial class CatalogContractRegression : Node
             bool refused = !FaunaConfig.TryParse(Mutated(valid, mutate), known.Contains, out FaunaConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"faune refusée ({label}) : {message}");
+        }
+    }
+
+    private void CheckExodus()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/exodus.json");
+        Check(ExodusConfig.TryParse(valid, out ExodusConfig config, out string error) && config.ScatterChance > 0f,
+            $"exode du dépôt accepté {error}");
+        // Sprites que le placeur compose : quatre sens de fuite par peinture, panneau et flèche.
+        List<string> sprites = new() { "suitcase_open", "luggage", "stroller", "cart", "boxes", "cones", "barrier_x", "barrier_y" };
+        foreach (string direction in new[] { "e", "w", "n", "s" })
+        {
+            sprites.Add($"sign_{direction}");
+            sprites.Add($"arrow_{direction}");
+            foreach (string paint in new[] { "red", "teal", "cream" })
+                sprites.Add($"car_{paint}_{direction}");
+        }
+        int missing = sprites.FindAll(id => !ResourceLoader.Exists($"res://assets/props/urban_ruins/prop_exodus_{id}.png")).Count;
+        Check(missing == 0, $"exode : {sprites.Count} sprites présents ({missing} absents)");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("scènes dans le même écran", root => root["min_spacing_px"] = 300, "min_spacing_px"),
+            ("voitures qui se chevauchent", root => root["car_spacing_px"]!["vertical"] = 20, "car_spacing_px"),
+            ("file trop longue", root => root["jam_cars"] = new JsonArray(3, 12), "jam_cars"),
+            ("voitures fractionnaires", root => root["jam_cars"] = new JsonArray(2.5, 4), "jam_cars"),
+            ("clé inconnue", root => root["bus"] = 1, "bus"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !ExodusConfig.TryParse(Mutated(valid, mutate), out ExodusConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"exode refusé ({label}) : {message}");
         }
     }
 

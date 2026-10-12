@@ -47,8 +47,12 @@ def _patches(surface, radius_low: float, radius_high: float, w: Weathering, flus
 CAR_PAINTS = {"red": "#94503F", "teal": "#3F7379", "cream": "#BDB08A"}
 
 
-def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
-    PAINT, GLASS, TYRE, METAL, RUST, MOSS, LAMP, TAIL, GLINT, SEAM, MOSS_LIGHT = range(11)
+def car(stem: str, paint: str, yaw: float, seed: int, open_doors: tuple[str, ...] = ()) -> PropModel:
+    """
+    `open_doors` (exode, plan 39 B3) : portières laissées ouvertes, parmi "front", "rear" (côté +x), "front_far",
+    "rear_far" (côté −x) et "trunk". Vide, le modèle reste celui des voitures déjà validées.
+    """
+    PAINT, GLASS, TYRE, METAL, RUST, MOSS, LAMP, TAIL, GLINT, SEAM, MOSS_LIGHT, INTERIOR = range(12)
     materials = [
         make_material("paint", CAR_PAINTS[paint]),
         make_material("glass", "#2A3644", contrast=0.6),
@@ -62,6 +66,8 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
         make_material("seam", "#3A3236", contrast=0.5),
         make_material("moss_light", "#7E9A48", contrast=0.8),
     ]
+    if open_doors:
+        materials.append(make_material("interior", "#2B2522", contrast=0.5))
 
     def parts() -> list[Part]:
         w = Weathering(seed)
@@ -97,9 +103,51 @@ def car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
             Part(lambda p: _union(*(cylinder(p, (x * 0.94 * M, 0.32 * M, z * 1.3 * M), 0.14 * M, 0.02 * M, 0.01 * M, ROT_WHEEL)
                                     for x in (-1, 1) for z in (-1, 1))), METAL),
         ]
+        if open_doors:
+            result += _open_doors(open_doors, body, w, PAINT, GLASS, SEAM, INTERIOR)
         return result
 
-    return PropModel(stem, parts, materials, yaw, canvas=(110, 96), footprint=box_footprint(0.9 * M, 2.12 * M))
+    # Portières ouvertes : le cadre s'élargit pour qu'elles tiennent dans le rendu.
+    canvas = (130, 104) if open_doors else (110, 96)
+    return PropModel(stem, parts, materials, yaw, canvas=canvas, footprint=box_footprint(0.9 * M, 2.12 * M))
+
+
+# Portières : charnière à l'avant de l'ouverture (z), côté (signe de x).
+DOOR_HINGES = {"front": (1.4, 1.0), "rear": (0.35, 1.0), "front_far": (1.4, -1.0), "rear_far": (0.35, -1.0)}
+DOOR_LENGTH = 1.02
+
+
+def _open_doors(doors: tuple[str, ...], body, w: Weathering, paint: int, glass: int, seam: int, interior: int) -> list[Part]:
+    """Portières battantes ouvertes vers l'extérieur, habitacle sombre là où elles manquent ; coffre levé."""
+    result = []
+    for name in doors:
+        if name == "trunk":
+            hinge = np.array([0.0, 0.98 * M, -1.3 * M])
+            lift = rotation_x(-w.uniform(1.0, 1.25))
+            lid = hinge + lift @ np.array([0.0, 0.0, -0.42 * M])
+            result += [
+                Part(painted(body, lambda p: np.maximum(np.abs(p[:, 0]) - 0.72 * M, p[:, 2] + 1.32 * M), 0.02 * M), interior),
+                Part(lambda p, c=lid, r=lift: rounded_box(p, c, (0.8 * M, 0.035 * M, 0.42 * M), 0.03 * M, r), paint),
+            ]
+            continue
+        z, side = DOOR_HINGES[name]
+        swing = rotation_y(-side * w.uniform(0.85, 1.15))
+        hinge = np.array([side * 0.9 * M, 0.0, z * M])
+        half = DOOR_LENGTH * 0.5 * M
+        panel = hinge + swing @ np.array([side * 0.04 * M, 0.66 * M, -half])
+        frame = hinge + swing @ np.array([side * 0.04 * M, 1.12 * M, -half * 0.9])
+        z0, z1 = (z - DOOR_LENGTH) * M, z * M
+        opening = lambda p, s=side, a=z0, b=z1: np.maximum.reduce([
+            -s * p[:, 0], np.abs(p[:, 2] - (a + b) * 0.5) - (b - a) * 0.5 + 0.06 * M, np.abs(p[:, 1] - 0.68 * M) - 0.27 * M])
+        result += [
+            Part(painted(body, opening, 0.02 * M), interior),
+            Part(lambda p, c=panel, r=swing: rounded_box(p, c, (0.035 * M, 0.3 * M, half), 0.03 * M, r), paint),
+            # Vitre de portière, dans son cadre fin au-dessus du panneau.
+            Part(lambda p, c=frame, r=swing: rounded_box(p, c, (0.03 * M, 0.16 * M, half * 0.85), 0.03 * M, r), glass),
+            Part(painted(lambda p, c=panel, r=swing: rounded_box(p, c, (0.035 * M, 0.3 * M, half), 0.03 * M, r),
+                         lambda p: np.abs(p[:, 1] - 0.62 * M) - 0.02 * M, 0.01 * M), seam),
+        ]
+    return result
 
 
 # ---------------------------------------------------------------------------------------------------------------------

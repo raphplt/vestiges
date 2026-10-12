@@ -1496,3 +1496,29 @@ Raphaël signale une carte « Rallonge, Zone +0 % » au level-up. Cause : les ar
 ### 129 quater. Colonnes de lumière
 
 Planche de trois propositions (A faisceau effiloché, B poussière de mémoire, C rai oblique) : « là comme ça aucun me plaît. En fait le A était pas mal mais pas assez animé. » A repris en plus animé (vagues qui remontent, cœur qui respire, éclats au sommet, anneau au sol), vidéo : « parfait comme ça on laisse ainsi ». **Acquis** pour toutes les colonnes de lumière.
+
+## 137. Exode dans les rues : densité égale, scènes rares — 12 octobre 2026
+
+Raphaël, avant le [lot B3 du plan 39](39-atmosphere.md) : « sur la phase B j'ai très hâte. j'ai un peu peur que ça surcharge le monde car il y a déjà pas mal de props. il faudra y faire attention et faire des choix. »
+
+**Acquis pour B3 :**
+- **Densité égale.** Les scènes de l'exode remplacent une partie des voitures et gravats semés au hasard dans les rues. Le nombre de décors en ville ne doit pas monter : il est mesuré avant et après.
+- **Rares et fortes.** Environ 5 à 8 scènes par ville, espacées.
+- **Ville seulement.** Ni les chemins des champs ni les autres biomes, qui ont déjà leurs scènes-récits.
+- **Première vague :**
+  - embouteillage figé, qui laisse toujours un passage ;
+  - barrage d'évacuation contournable ;
+  - petits restes de fuite (valise, poussette, caddie, carton), posés uniquement dans les scènes.
+
+  Le bus renversé n'est pas retenu.
+
+Règle générale pour la suite de la phase B (B4 à B6) : vérifier ce que chaque ajout coûte en encombrement, et retirer quelque chose quand on ajoute.
+
+
+## 138. Activer les quinze quêtes d’objets — 12 octobre 2026
+
+Raphaël valide les quinze quêtes préparées et demande leur implémentation dans le jeu. Seule correction : le Pied-de-biche exige **50 coffres ouverts, toutes parties confondues**, au lieu des 12 proposés. Les quatorze autres objectifs restent validés sans modification.
+
+Lot unique au [plan des quêtes d’objets](35-quetes-objets-v2.md#5-lot-dactivation-livré--12-octobre-2026) : fusion de quinze fiches dans le catalogue actif (49 → 64), conservation des quêtes et sauvegardes historiques, suivi et notifications existants, accès Collection/Quêtes et déblocage du butin. Le verrou initial des quinze objets reste en données ; leur quête accomplie a priorité. Aucun nouveau sprite ni animation. Validation par événements réels, seuils/contre-exemples, sauvegarde, normal/dev et captures réelles ; la roadmap ne sera cochée qu’après preuves.
+
+Activation livrée le même jour : 64 fiches, dont 57 quêtes actives et les 7 Réminiscences historiquement dormantes. Les 49 fiches anciennes restent identiques. Huit suites vertes, captures Quêtes/Collection à 720p/1080p et déblocage du Pied-de-biche au cinquantième coffre vérifiés ; [preuves](35-quetes-objets-v2.md#6-preuves-dactivation). Les seuils validés restent sujets au retour de partie humaine.

@@ -72,9 +72,12 @@ public partial class WorldSetup : Node2D
     private SitePlan _quarryPlan;
     private List<CompositionSite> _quarrySites = new();
     private List<Vector2> _storyScenes = new();
+    private List<ExodusScenePlacer.Scene> _exodusScenes = new();
 
     /// <summary>Positions des scènes-récits des champs (plan 08 P4b-4).</summary>
     public IReadOnlyList<Vector2> StoryScenes => _storyScenes;
+    /// <summary>Ancrage des scènes de l'exode dans les rues (plan 39 B3).</summary>
+    public IReadOnlyList<ExodusScenePlacer.Scene> ExodusScenes => _exodusScenes;
 
     /// <summary>Centres des cours de ferme des Champs Sauvages (plan 08 P4b).</summary>
     public IEnumerable<Vector2> FarmAnchors
@@ -297,7 +300,7 @@ public partial class WorldSetup : Node2D
 
         if (_urbanLayout != null)
         {
-            UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
+            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
             LoadProfiler.Mark("décors de la ville");
             await YieldFrame();
         }

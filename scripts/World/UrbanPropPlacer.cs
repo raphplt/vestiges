@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
@@ -74,7 +75,8 @@ public static class UrbanPropPlacer
 		"prop_radio_mast.png",
 	};
 
-	public static void PlaceProps(
+	/// <summary>Pose la ville et renvoie les scènes de l'exode (plan 39 B3).</summary>
+	public static List<ExodusScenePlacer.Scene> PlaceProps(
 		UrbanLayout layout,
 		TileMapLayer ground,
 		Node2D container,
@@ -87,10 +89,22 @@ public static class UrbanPropPlacer
 		int buildingCount = UrbanBuildingPlacer.Place(layout, ground, container, usedCells, cache, seed);
 		// Décors de rue à l'échelle du personnage : au moins une cellule libre entre deux d'entre eux.
 		HashSet<Vector2I> streetProps = new();
-		int roadCount = PlaceRoadProps(layout, intersections, ground, container, usedCells, streetProps, cache, seed);
+		List<ExodusScenePlacer.Scene> exodusScenes = new();
+		int roadCount = 0;
+		// Les scènes de l'exode passent avant le semis, qui leur laisse un vide autour et compense leur nombre.
+		if (ExodusConfig.TryLoad(out ExodusConfig exodus, out string error))
+		{
+			exodusScenes = ExodusScenePlacer.Place(layout, intersections, exodus, ground, container, usedCells, streetProps, cache, seed);
+			roadCount = PlaceRoadProps(layout, intersections, exodus, ground, container, usedCells, streetProps, cache, seed);
+		}
+		else
+		{
+			GD.PushError($"[UrbanPropPlacer] {error} : rues sans exode ni décors semés");
+		}
 		int sidewalkCount = PlaceSidewalkProps(layout, intersections, ground, container, usedCells, streetProps, cache, seed);
 
 		GD.Print($"[UrbanPropPlacer] Placed {buildingCount} building masses, {roadCount} road props, {sidewalkCount} sidewalk props");
+		return exodusScenes;
 	}
 
 	// =========================================================================
@@ -100,6 +114,7 @@ public static class UrbanPropPlacer
 	private static int PlaceRoadProps(
 		UrbanLayout layout,
 		HashSet<Vector2I> intersections,
+		ExodusConfig config,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
@@ -118,12 +133,12 @@ public static class UrbanPropPlacer
 				continue;
 
 			uint hash = HashCell(roadCell, seed ^ 0x1A2B3CUL);
-			int roll = (int)(hash % 100);
-			if (roll >= 15)
+			float roll = (hash % 10000u) / 10000f;
+			if (roll >= config.ScatterChance)
 				continue;
 
 			string sprite;
-			if (roll < 3)
+			if (roll < config.ScatterChance * config.ScatterCarShare)
 			{
 				string[] cars = layout.RoadCells.Contains(roadCell + Vector2I.Right) ? CarSpritesAxisX : CarSpritesAxisY;
 				sprite = cars[(int)((hash >> 8) % (uint)cars.Length)];
@@ -135,9 +150,7 @@ public static class UrbanPropPlacer
 
 			if (IsCrowded(streetProps, roadCell))
 				continue;
-			// Une rue verticale passe au milieu de sa colonne, à ±16 px du centre de la cellule (RoadTileGenerator).
-			bool vertical = layout.RoadCells.Contains(roadCell + Vector2I.Up);
-			Vector2 offset = vertical ? new Vector2((roadCell.Y & 1) != 0 ? -16f : 16f, 0f) : Vector2.Zero;
+			Vector2 offset = StreetPoint(layout, ground, roadCell) - ground.MapToLocal(roadCell);
 			if (TryPlaceProp(sprite, roadCell, ground, container, usedCells, cache, offset))
 			{
 				streetProps.Add(roadCell);
@@ -247,6 +260,17 @@ public static class UrbanPropPlacer
 		}
 	}
 
+	/// <summary>
+	/// Milieu de la chaussée sur une cellule de rue. Une rue verticale passe au milieu de sa colonne, à ±16 px du centre de
+	/// la cellule (RoadTileGenerator).
+	/// </summary>
+	internal static Vector2 StreetPoint(UrbanLayout layout, TileMapLayer ground, Vector2I roadCell)
+	{
+		bool vertical = layout.RoadCells.Contains(roadCell + Vector2I.Up);
+		Vector2 offset = vertical ? new Vector2((roadCell.Y & 1) != 0 ? -16f : 16f, 0f) : Vector2.Zero;
+		return ground.MapToLocal(roadCell) + offset;
+	}
+
 	internal static bool TryPlaceProp(
 		string spritePath,
 		Vector2I cell,
@@ -320,7 +344,7 @@ public static class UrbanPropPlacer
 		return layout.CellGrid[gx, gy];
 	}
 
-	private static bool IsStraightRoadCell(UrbanLayout layout, Vector2I cell)
+	internal static bool IsStraightRoadCell(UrbanLayout layout, Vector2I cell)
 	{
 		bool north = layout.RoadCells.Contains(cell + Vector2I.Up);
 		bool south = layout.RoadCells.Contains(cell + Vector2I.Down);
@@ -332,7 +356,7 @@ public static class UrbanPropPlacer
 		return straightVertical || straightHorizontal;
 	}
 
-	private static bool IsNearIntersection(HashSet<Vector2I> intersections, Vector2I cell)
+	internal static bool IsNearIntersection(HashSet<Vector2I> intersections, Vector2I cell)
 	{
 		foreach (Vector2I dir in new[] {
 			Vector2I.Zero,
@@ -376,7 +400,8 @@ public static class UrbanPropPlacer
 	{
 		int slash = path.LastIndexOf('/');
 		string file = slash >= 0 ? path[(slash + 1)..] : path;
-		return file.StartsWith(UrbanBuildingPlacer.SpritePrefix) || BlockingSprites.Contains(file);
+		return file.StartsWith(UrbanBuildingPlacer.SpritePrefix) || BlockingSprites.Contains(file)
+			|| file.StartsWith("prop_exodus_car_") || file.StartsWith("prop_exodus_barrier_") || file.StartsWith("prop_exodus_sign_");
 	}
 
 	private static Texture2D LoadCached(string path, Dictionary<string, Texture2D> cache)

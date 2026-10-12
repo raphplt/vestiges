@@ -1,0 +1,12 @@
+{
+    "_doc": "Exode dans les rues de la ville (plan 39 B3, DECISIONS §137) : scènes rares, groupées le long des rues, à densité de décors égale. road_cells_per_scene fixe le nombre de scènes (cellules de rue de la carte divisées par cette valeur), min_spacing_px l'écart minimal entre deux scènes, jam_share la part d'embouteillages (le reste : barrages). quiet_radius_cells : aucun décor semé au hasard autour d'une scène, pour qu'elle se lise. street_scatter : semis aléatoire restant des rues hors scènes (chance par cellule droite, part de voitures), abaissé pour compenser les scènes.",
+    "road_cells_per_scene": 240,
+    "min_spacing_px": 1100,
+    "jam_share": 0.6,
+    "jam_cars": [3, 4],
+    "car_spacing_px": { "horizontal": 70, "vertical": 42 },
+    "leftovers_per_jam": [2, 3],
+    "leftovers_per_barricade": [0, 1],
+    "quiet_radius_cells": 3,
+    "street_scatter": { "chance": 0.16, "car_share": 0.15 }
+}
