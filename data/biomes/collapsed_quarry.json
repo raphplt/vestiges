@@ -25,6 +25,11 @@
         "grime": 1.0
     },
     "ambience": {
+        "loop": "sfx_ambiance_carriere",
+        "accents": ["sfx_ambiance_carriere_goutte", "sfx_ambiance_carriere_goutte", "sfx_ambiance_chute_pierres"],
+        "first_accent_s": [5, 15],
+        "accent_interval_s": [12, 30],
+        "accent_volume_db": -10,
         "reverb": { "wet": 0.15, "room_size": 0.75, "damping": 0.3 }
     },
     "map_weight": 0.5,

@@ -308,6 +308,98 @@
     "max_voices": 1,
     "bus": "Ambiance"
   },
+  "sfx_ambiance_marais": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_marais.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
+  "sfx_ambiance_champs": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_champs.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
+  "sfx_ambiance_carriere": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_carriere.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
+  "sfx_ambiance_hub": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_hub.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
+  "sfx_ambiance_ville_bache": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_ville_bache.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_ville_fer": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_ville_fer.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_chute_pierres": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_chute_pierres.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_marais_bulles": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_marais_bulles.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_marais_grenouille": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_marais_grenouille.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_carriere_goutte": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_carriere_goutte.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_champs_corbeau": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_champs_corbeau.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
+  "sfx_ambiance_champs_grillon": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_champs_grillon.wav",
+    "volume_db": 0,
+    "min_interval_ms": 0,
+    "priority": 5,
+    "max_voices": 1,
+    "bus": "Ambiance"
+  },
   "sfx_tonnerre_lointain": {
     "path": "res://assets/audio/sfx/ambiance/sfx_tonnerre_lointain.wav",
     "volume_db": 0,

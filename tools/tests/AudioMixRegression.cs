@@ -68,6 +68,7 @@ public partial class AudioMixRegression : Node
             await CheckSelectedEvents(audio);
             await CheckBiomeAmbiance(audio);
             await CheckWorldReverb();
+            await CheckAmbianceCrossfade(audio);
 
             EventBus bus = GetNode<EventBus>("/root/EventBus");
             bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
@@ -302,13 +303,17 @@ public partial class AudioMixRegression : Node
     {
         EventBus bus = GetNode<EventBus>("/root/EventBus");
         AudioStreamPlayer forest = audio.GetNode<AudioStreamPlayer>("Ambiance");
+        System.Reflection.FieldInfo ambianceKey = typeof(AudioManager).GetField("_ambianceKey",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        // Chaque biome a désormais son fond (plan 39 A4c) : « la forêt joue » se lit à la clé du fond principal.
+        bool ForestPlaying() => forest.Playing && (string)ambianceKey.GetValue(audio) == "sfx_ambiance_foret";
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
         bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
         Check(!forest.Playing, "biome inconnu au départ : aucun fond de forêt");
         foreach (string biome in new[] { "urban_ruins", "wild_fields", "swamp", "collapsed_quarry" })
         {
             bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, biome);
-            Check(!forest.Playing, $"{biome} : aucun démarrage du fond de forêt");
+            Check(!ForestPlaying(), $"{biome} : aucun démarrage du fond de forêt");
         }
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
         Check(forest.Playing && forest.VolumeDb < -40f, "entrée en forêt : le fond entre en fondu");
@@ -341,9 +346,9 @@ public partial class AudioMixRegression : Node
                 timer.SetValue(audio, 0f);
                 audio._Process(0.01);
                 await Frames(45);
-                Check(!forest.Playing && birds.Count == 0, $"sortie vers {biome} : fond éteint et pas de nouveaux oiseaux");
+                Check(!ForestPlaying() && birds.Count == 0, $"sortie vers {biome} : fond de forêt éteint et pas de nouveaux oiseaux");
                 bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
-                Check(forest.Playing, "retour en forêt : le fond revient");
+                Check(ForestPlaying(), "retour en forêt : le fond revient");
             }
         }
         finally
@@ -355,7 +360,7 @@ public partial class AudioMixRegression : Node
             bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, biome);
             await Frames(10);
         }
-        Check(!forest.Playing, "biomes non forestiers successifs : le fondu de sortie ne repart pas à zéro");
+        Check(!ForestPlaying(), "biomes non forestiers successifs : le fond de forêt ne revient pas");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
         await Frames(8);
@@ -365,12 +370,43 @@ public partial class AudioMixRegression : Node
         bus.EmitSignal(EventBus.SignalName.WeatherChanged, "storm");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "wild_fields");
         await Frames(45);
-        Check(!forest.Playing && audio.GetNode<AudioStreamPlayer>("AmbianceOverlay").Playing,
+        Check(!ForestPlaying() && audio.GetNode<AudioStreamPlayer>("AmbianceOverlay").Playing,
             "hors forêt : météo audible, sans réactiver le fond de forêt");
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
         bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
         Check(!forest.Playing, "nouvelle run : l'ancien biome ne suffit pas à lancer la forêt");
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
+    }
+
+    /// <summary>Fonds par biome et feu du Hub (plan 39 A4c) : un fond passe à l'autre sans coupure.</summary>
+    private async Task CheckAmbianceCrossfade(AudioManager audio)
+    {
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        AudioStreamPlayer main = audio.GetNode<AudioStreamPlayer>("Ambiance");
+        AudioStreamPlayer outgoing = audio.GetNode<AudioStreamPlayer>("AmbianceOut");
+        System.Reflection.FieldInfo key = typeof(AudioManager).GetField("_ambianceKey",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
+        bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "forest_reclaimed");
+        await Frames(80);
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "swamp");
+        Check(main.Playing && (string)key.GetValue(audio) == "sfx_ambiance_marais" && outgoing.Playing && outgoing.VolumeDb > -10f,
+            "forêt vers marais : le marais monte pendant que la forêt s'éteint, sans coupure");
+        await Frames(150);
+        Check(main.Playing && !outgoing.Playing, "fondu enchaîné terminé : seul le marais reste");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
+        await Frames(60);
+        Check(!main.Playing, "ville sans fond retenu : le marais s'éteint");
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
+        Check(!main.Playing && !outgoing.Playing, "retour au Hub : fonds de run arrêtés");
+        audio.PlayHubAmbiance();
+        await Frames(90);
+        Check(main.Playing && (string)key.GetValue(audio) == "sfx_ambiance_hub" && main.VolumeDb > -30f, "Hub : le feu du campement brûle");
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
+        await Frames(110);
+        Check(!main.Playing, "départ en run : le feu du campement s'éteint");
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
     }
 

@@ -1342,3 +1342,11 @@ Raphaël, sur les tuiles du plan 37 : « même s'il y a du mieux je reste pas 10
 **Acquis :** direction crade au dosage léger, par un traitement commun des shaders du monde, sans redessiner les assets ; lots G1 à G3 au [plan 40](40-direction-crade.md). **Non tranché :** la mise à jour des références de la Bible §4.
 
 Précision le même jour, sur des pistes proposées ensuite (récitatifs, cartouches, Effacement en dessin qu'on gomme) : « tu vas trop en mode BD, c'est pas le format BD qui m'intéressait, c'était plus l'esthétique ». **Acquis :** la direction emprunte l'ambiance et la matière de ces images (mystérieux, crade, indescriptible), jamais le support BD.
+
+## 124. Ambiances choisies, licence et voile du marais — 12 octobre 2026
+
+Choix de Raphaël sur la planche A4b ([plan 39 §11](39-atmosphere.md)) : marais B (mare), bulles A, grenouille C ; carrière gouttes B, pierre A, et pour le fond « A et C » ; champs B (soleil et chaleur), corbeau A, grillon A ; Hub B (grand feu de branches) ; ville tôle C (bâche qui claque) et, pour la chute, « 1 et 3 » (barre de fer et pierres). Fond de ville : aucun, « j'hésite entre le A et le C car le A a des bruits de fond type voiture et le C fait très "montagne" / altitude… soit l'un des deux soit chercher un nouveau ».
+
+Question de Raphaël : ces sons sont-ils utilisables en licence commerciale ? Réponse : oui, tous sont CC0 (BigSoundBank, Joseph SARDIN), usage commercial libre sans attribution obligatoire ; crédits tenus dans `assets/audio/CREDITS.json`.
+
+« Corrige le voile du marais stp » : voile réaffiché (il ne l'avait jamais été), à une force de 0,6 proposée par l'agent, à juger en jeu.

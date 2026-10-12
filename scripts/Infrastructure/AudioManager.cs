@@ -53,6 +53,10 @@ public partial class AudioManager : Node
 	private const float LoopFadeInSec = 0.35f;
 	private const float LoopFadeOutSec = 0.5f;
 	private const float AmbianceFadeInSec = 1.2f;
+	// Passage d'un fond à l'autre (biome, Hub vers run) : l'ancien s'éteint pendant que le nouveau monte.
+	private const float AmbianceCrossfadeSec = 2f;
+	private const float HubAmbianceFadeOutSec = 1.5f;
+	private const string HubAmbianceKey = "sfx_ambiance_hub";
 	private const float SilentDb = -60f;
 	private readonly Dictionary<AudioStreamPlayer, Tween> _loopFades = new();
 	private readonly Dictionary<AudioStreamPlayer, string> _loopSources = new();
@@ -70,6 +74,9 @@ public partial class AudioManager : Node
 	private bool _ambianceFadingOut;
 	private string _ambianceKey = "";
 	private AudioStreamPlayer _ambianceOverlayPlayer;
+	// Fond sortant d'un fondu enchaîné, repris là où il en était.
+	private AudioStreamPlayer _ambianceOutPlayer;
+	private Tween _ambianceOutFade;
 	private string _ambianceOverlayKey = "";
 
 	// --- Looping SFX player (for UI loops like level-up screen) ---
@@ -251,6 +258,8 @@ public partial class AudioManager : Node
 
 		_ambiancePlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "Ambiance" };
 		AddChild(_ambiancePlayer);
+		_ambianceOutPlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "AmbianceOut" };
+		AddChild(_ambianceOutPlayer);
 		_ambianceOverlayPlayer = new AudioStreamPlayer { Bus = BusAmbiance, Name = "AmbianceOverlay", VolumeDb = -10f };
 		AddChild(_ambianceOverlayPlayer);
 
@@ -708,6 +717,8 @@ public partial class AudioManager : Node
 			return;
 
 		_ambianceFade?.Kill();
+		if (_ambianceKey != key && _ambiancePlayer.Playing)
+			HandOffAmbiance();
 		if (_ambianceKey != key || !_ambiancePlayer.Playing)
 		{
 			_ambiancePlayer.Stream = CreateLoopableStream(stream);
@@ -720,6 +731,25 @@ public partial class AudioManager : Node
 		_ambianceFade = CreateTween();
 		_ambianceFade.TweenProperty(_ambiancePlayer, "volume_db", _soundVolumes.GetValueOrDefault(key), AmbianceFadeInSec);
 	}
+
+	/// <summary>
+	/// Le fond en cours passe au lecteur sortant, à sa position et à son niveau, et s'y éteint : le nouveau fond peut
+	/// monter sur le lecteur principal sans coupure.
+	/// </summary>
+	private void HandOffAmbiance()
+	{
+		_ambianceOutFade?.Kill();
+		_ambianceOutPlayer.Stream = _ambiancePlayer.Stream;
+		_ambianceOutPlayer.VolumeDb = _ambiancePlayer.VolumeDb;
+		_ambianceOutPlayer.Play(_ambiancePlayer.GetPlaybackPosition());
+		_ambiancePlayer.Stop();
+		_ambianceOutFade = CreateTween();
+		_ambianceOutFade.TweenProperty(_ambianceOutPlayer, "volume_db", SilentDb, AmbianceCrossfadeSec);
+		_ambianceOutFade.TweenCallback(Callable.From(_ambianceOutPlayer.Stop));
+	}
+
+	/// <summary>Feu du campement, sous la musique du Hub (plan 39 A4c) ; il s'éteint au départ en run.</summary>
+	public void PlayHubAmbiance() => PlayAmbiance(HubAmbianceKey);
 
 	private void FadeOutAmbiance(float duration = 2f)
 	{
@@ -969,6 +999,8 @@ public partial class AudioManager : Node
 		}
 		else if (newState == "Run")
 		{
+			if (_ambianceKey == HubAmbianceKey && _ambiancePlayer.Playing)
+				FadeOutAmbiance(HubAmbianceFadeOutSec);
 			_runAudioStopped = false;
 			_lastKnownMaxHp = 0f;
 			_lastKnownShield = -1f;
@@ -994,6 +1026,9 @@ public partial class AudioManager : Node
 		_ambianceFadingOut = false;
 		_ambiancePlayer.Stop();
 		_ambianceKey = "";
+		_ambianceOutFade?.Kill();
+		_ambianceOutFade = null;
+		_ambianceOutPlayer.Stop();
 		_sfxPool.Stop();
 		_uiSfxPool.Stop();
 		StopLoopNow(_loopingSfxPlayer, ref _loopingSfxKey);

@@ -33,6 +33,9 @@ public partial class BiomeAtmosphere : Node2D
 	private float _swampMoistureCurrent;
 	private const float SwampFadeSpeed = 0.8f;
 
+	private static readonly StringName SwampIntensityParameter = "intensity";
+	private static readonly StringName SwampMoistureParameter = "local_moisture";
+	private static readonly StringName SwampPixelSizeParameter = "pixel_size";
 	private static readonly StringName GradeTintParameter = "world_grade_tint";
 	private static readonly StringName GradeToneParameter = "world_grade_tone";
 	private static readonly StringName CloudsParameter = "world_clouds";
@@ -204,7 +207,7 @@ public partial class BiomeAtmosphere : Node2D
 			_fogParticles.Emitting = false;
 		}
 
-		_swampIntensityTarget = biome.Id == "swamp" ? 1f : 0f;
+		_swampIntensityTarget = biome.Id == "swamp" ? _config?.SwampVeilStrength ?? 0f : 0f;
 
 		GD.Print($"[BiomeAtmosphere] Biome '{biome.Id}' → fog density={fogDensity:F2}, swamp={_swampIntensityTarget:F1}");
 	}
@@ -534,10 +537,12 @@ public partial class BiomeAtmosphere : Node2D
 		_swampOverlay = new ColorRect
 		{
 			Name = "SwampOverlay",
-			AnchorsPreset = (int)Control.LayoutPreset.FullRect,
 			Material = _swampMaterial,
 			MouseFilter = Control.MouseFilterEnum.Ignore,
 		};
+		// La propriété AnchorsPreset posée à la création laissait le rectangle à taille nulle : le voile n'était jamais
+		// affiché (constat du 12 octobre, plan 39). Ancres et marges ensemble.
+		_swampOverlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 
 		_swampLayer.AddChild(_swampOverlay);
 		AddChild(_swampLayer);
@@ -614,8 +619,14 @@ public partial class BiomeAtmosphere : Node2D
 	private void UpdateSwampShader(float delta, float localMoisture)
 	{
 		_swampIntensityCurrent = Mathf.MoveToward(_swampIntensityCurrent, _swampIntensityTarget, delta * SwampFadeSpeed);
-		_swampMaterial.SetShaderParameter("intensity", _swampIntensityCurrent);
-		_swampMaterial.SetShaderParameter("local_moisture", localMoisture);
 		_swampLayer.Visible = _swampIntensityCurrent > 0.01f;
+		if (!_swampLayer.Visible)
+			return;
+		_swampMaterial.SetShaderParameter(SwampIntensityParameter, _swampIntensityCurrent);
+		_swampMaterial.SetShaderParameter(SwampMoistureParameter, localMoisture);
+		// Grille des pixels du monde à l'écran : le voile relit l'écran au pas d'un pixel du monde. L'ancienne résolution
+		// interne (480×270) le pixelisait deux fois trop gros.
+		Transform2D canvas = GetViewport().GetCanvasTransform();
+		_swampMaterial.SetShaderParameter(SwampPixelSizeParameter, GetViewport().GetVisibleRect().Size / canvas.Scale);
 	}
 }

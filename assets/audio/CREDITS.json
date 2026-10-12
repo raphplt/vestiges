@@ -2140,5 +2140,263 @@
     "source_url": "https://bigsoundbank.com/gong-sweet-s1482.html ; https://bigsoundbank.com/cloth-s0013.html",
     "attribution": "Joseph SARDIN — Gong, sweet (s1482) et Cloth (s0013) — BigSoundBank — CC0-1.0.",
     "processing": "Gong 0–2,2 s inversé, superposé à la déchirure de tissu 3,1–4,8 s ralentie à 0,8 (−6 dB) ; silence de tête retiré, fondus, sonie momentanée −20 LUFS, 48 kHz PCM16. Choix G de Raphaël (DECISIONS §113)."
+  },
+  {
+    "effect_id": "sfx_ambiance_marais",
+    "candidate_id": "ambiance_20261012_marais_fond_B",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_marais.wav",
+    "sha256": "6207614b373682c3b486eab7acc742c9509e25eadf31f095e12cffb1ef3e40b5",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/pond-in-a-field-s0691.html",
+    "attribution": "Joseph SARDIN — pond-in-a-field-s0691 — https://bigsoundbank.com/pond-in-a-field-s0691.html — CC0-1.0",
+    "processing": "Planche A4b : Respiration du marais, eau et grenouilles, Mare dans un champ. Fenêtre de 24 s prise à 105.0 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0691",
+        "url": "https://bigsoundbank.com/pond-in-a-field-s0691.html",
+        "sha256": "1edd226489db02b71156e052899b3b34cdcffe27b6cbf6b4fddbb90d72f7e14c",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_champs",
+    "candidate_id": "ambiance_20261012_champs_fond_B",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_champs.wav",
+    "sha256": "30c22612c5a532c76a1711a4949d3868abcd1e341569d8b06e4cdf9d602c008d",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/sun-and-heat-1-s1779.html",
+    "attribution": "Joseph SARDIN — sun-and-heat-1-s1779 — https://bigsoundbank.com/sun-and-heat-1-s1779.html — CC0-1.0",
+    "processing": "Planche A4b : Blé au vent, insectes, chaleur, Soleil et chaleur. Fenêtre de 24 s prise à 13.5 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "1779",
+        "url": "https://bigsoundbank.com/sun-and-heat-1-s1779.html",
+        "sha256": "d887e5c66c12097d10d696fb0ecf79b2c1e1f383dd7b35fa3f426e703559bb20",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_carriere",
+    "candidate_id": "ambiance_20261012_carriere_fond_A+carriere_fond_C",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_carriere.wav",
+    "sha256": "dd188fe39639df67f9c5ccd9cc419e44c884708efd3e50adf5b5cde43544577f",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/cave-1-s2135.html",
+    "attribution": "Joseph SARDIN — cave-1-s2135 — https://bigsoundbank.com/cave-1-s2135.html — CC0-1.0\nJoseph SARDIN — wind-from-inside-2-s1715 — https://bigsoundbank.com/wind-from-inside-2-s1715.html — CC0-1.0",
+    "processing": "Planche A4b, choix « A et C » : Grotte 1 et Vent dans un volume clos, boucles de 24 s sommées à −3 dB chacune, ramenées à −26 dB RMS, crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "2135",
+        "url": "https://bigsoundbank.com/cave-1-s2135.html",
+        "sha256": "4420e7f0a5be6a30c9eec2a80ff54833dc5d7e078c00e97da3014add10e10155",
+        "license": "CC0-1.0"
+      },
+      {
+        "id": "1715",
+        "url": "https://bigsoundbank.com/wind-from-inside-2-s1715.html",
+        "sha256": "5d38f3cbc26b7d932b3d8d8b4e7a5626097450528722bcb9e3b831c14f9fe942",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_hub",
+    "candidate_id": "ambiance_20261012_hub_fond_B",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_hub.wav",
+    "sha256": "190d6d10f495c983640e3eee7ac49101924b8aa0f2ee02cf2666c841a57ea435",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/big-branching-fire-1-s0987.html",
+    "attribution": "Joseph SARDIN — big-branching-fire-1-s0987 — https://bigsoundbank.com/big-branching-fire-1-s0987.html — CC0-1.0",
+    "processing": "Planche A4b : Feu du campement, vent léger, Grand feu de branches. Fenêtre de 24 s prise à 4.5 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0987",
+        "url": "https://bigsoundbank.com/big-branching-fire-1-s0987.html",
+        "sha256": "f8812d764b197775e10411adafa14b921d8d6af0697447b4494fd7d00654c80d",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_ville_bache",
+    "candidate_id": "ambiance_20261012_ville_metal_C",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_ville_bache.wav",
+    "sha256": "a11a4baf014540bd942358cdb7e59aae1c92ec2317f77175cd6f32ee39ae2496",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/flag-in-the-wind-1-s1632.html",
+    "attribution": "Joseph SARDIN — flag-in-the-wind-1-s1632 — https://bigsoundbank.com/flag-in-the-wind-1-s1632.html — CC0-1.0",
+    "processing": "Planche A4b : Métal qui grince ou bat (tôle, portail), Bâche ou drapeau qui claque. Événement pris à 68.87 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "1632",
+        "url": "https://bigsoundbank.com/flag-in-the-wind-1-s1632.html",
+        "sha256": "9707ea6a6c8d689bba48683091d61eac557aa43d6e2ef2aba7fa3eee383f6687",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_ville_fer",
+    "candidate_id": "ambiance_20261012_ville_chute_A",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_ville_fer.wav",
+    "sha256": "00e64132eebcfdc386a0d6f970a946d63d293d593aea89e94b5a1330fb698287",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/iron-bar-falls-2-s0235.html",
+    "attribution": "Joseph SARDIN — iron-bar-falls-2-s0235 — https://bigsoundbank.com/iron-bar-falls-2-s0235.html — CC0-1.0",
+    "processing": "Planche A4b : Chute lointaine dans les ruines, Barre de fer qui tombe. Événement pris à 0.0 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0235",
+        "url": "https://bigsoundbank.com/iron-bar-falls-2-s0235.html",
+        "sha256": "9ce86b2c5bae13b478ecbb8e02c07d9ef00db5d48eebd4ebb09b9338b10a7632",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_chute_pierres",
+    "candidate_id": "ambiance_20261012_ville_chute_C",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_chute_pierres.wav",
+    "sha256": "dc6a351692b79f877ed16049f68f89248da53a5d536363ac180664227b427eff",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/fall-of-stone-s1022.html",
+    "attribution": "Joseph SARDIN — fall-of-stone-s1022 — https://bigsoundbank.com/fall-of-stone-s1022.html — CC0-1.0",
+    "processing": "Planche A4b : Chute lointaine dans les ruines, Chute de pierres. Événement pris à 16.52 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "1022",
+        "url": "https://bigsoundbank.com/fall-of-stone-s1022.html",
+        "sha256": "f27b9cc4d8bfd2417eb474a508ae8623ddc6cb0e43f03badecf738d7bfeb3203",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_marais_bulles",
+    "candidate_id": "ambiance_20261012_marais_bulles_A",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_marais_bulles.wav",
+    "sha256": "110d3bac981fbb12c7da7ebe9073801399b7ec9852ee3d94c942fc1f7c4b1395",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/water-bubbles-s0150.html",
+    "attribution": "Joseph SARDIN — water-bubbles-s0150 — https://bigsoundbank.com/water-bubbles-s0150.html — CC0-1.0",
+    "processing": "Planche A4b : Bulles qui remontent, Bulles dans l'eau. Événement pris à 24.66 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0150",
+        "url": "https://bigsoundbank.com/water-bubbles-s0150.html",
+        "sha256": "339d8870803ceb8d83dbd4f2ad3e673c6dceb8614db412b56b89b5367b069d81",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_marais_grenouille",
+    "candidate_id": "ambiance_20261012_marais_grenouille_C",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_marais_grenouille.wav",
+    "sha256": "ac471b12008ab40964256ebf67bdb60bbb73b31221f5cc385eb3e0f488eefd5f",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/frogs-2-s0998.html",
+    "attribution": "Joseph SARDIN — frogs-2-s0998 — https://bigsoundbank.com/frogs-2-s0998.html — CC0-1.0",
+    "processing": "Planche A4b : Une grenouille ou un crapaud isolé, Grenouilles, un appel. Événement pris à 34.48 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0998",
+        "url": "https://bigsoundbank.com/frogs-2-s0998.html",
+        "sha256": "5f1e347a67442395711e2993ed6476ceaa99e6885fed2828b06c45473db04f59",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_carriere_goutte",
+    "candidate_id": "ambiance_20261012_carriere_gouttes_B",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_carriere_goutte.wav",
+    "sha256": "f77a37bd2a68cb250f29de0d592e0e6e0293ba338b1cf59e7cb47ba8622edcac",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/drops-of-water-3-s1386.html",
+    "attribution": "Joseph SARDIN — drops-of-water-3-s1386 — https://bigsoundbank.com/drops-of-water-3-s1386.html — CC0-1.0",
+    "processing": "Planche A4b : Goutte-à-goutte, Gouttes d'eau 3. Événement pris à 10.36 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "1386",
+        "url": "https://bigsoundbank.com/drops-of-water-3-s1386.html",
+        "sha256": "7a269cae051356e33c6607b5e7b6ebc2af7ca1f0b559f3d1cb9f8df2c1c01c23",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_champs_corbeau",
+    "candidate_id": "ambiance_20261012_champs_corbeaux_A",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_champs_corbeau.wav",
+    "sha256": "9d6324c41dfa59df1a10e5a3f5b42267cf5109bac4cb6ade267863e5a7083475",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/carrion-crow-1-s3461.html",
+    "attribution": "Joseph SARDIN — carrion-crow-1-s3461 — https://bigsoundbank.com/carrion-crow-1-s3461.html — CC0-1.0",
+    "processing": "Planche A4b : Corbeaux au loin, Corneille noire 1. Événement pris à 0.0 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "3461",
+        "url": "https://bigsoundbank.com/carrion-crow-1-s3461.html",
+        "sha256": "310ecd0c8b72ee097c2ad68eac9f628ee176e0eed243c0c3e90d1a31f511e869",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_champs_grillon",
+    "candidate_id": "ambiance_20261012_champs_insecte_A",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_champs_grillon.wav",
+    "sha256": "96db3ac6bbe667e2f5b94df27bc85b8b4e39e21683592d90e4ea32ed8e7fd3c0",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/field-cricket-s1020.html",
+    "attribution": "Joseph SARDIN — field-cricket-s1020 — https://bigsoundbank.com/field-cricket-s1020.html — CC0-1.0",
+    "processing": "Planche A4b : Un insecte qui passe ou chante, Grillon des champs. Événement pris à 10.07 s de la prise, ramené à −20 dB RMS au plus, crête ≤ −6 dBFS, silence de tête coupé ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "1020",
+        "url": "https://bigsoundbank.com/field-cricket-s1020.html",
+        "sha256": "1a5d7f026c9fbc3bd56d2e4d4e4accfafdc6846db8e4698d896afc02744850f6",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
   }
 ]

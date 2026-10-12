@@ -23,6 +23,13 @@
         "shadow_opacity": 0.5,
         "grime": 1.0
     },
+    "ambience": {
+        "loop": "sfx_ambiance_champs",
+        "accents": ["sfx_ambiance_champs_corbeau", "sfx_ambiance_champs_grillon"],
+        "first_accent_s": [6, 15],
+        "accent_interval_s": [20, 45],
+        "accent_volume_db": -10
+    },
     "map_weight": 1.4,
     "poi_pool": {
         "searchable_building": 0.6,

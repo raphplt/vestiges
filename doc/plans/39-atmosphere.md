@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2, A3, A5 et le socle d'A4 livrés** (§8 à §12).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), sauf le fond de ville (second tour d'écoute).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -326,4 +326,29 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 
 **Non vérifié :** les éclairs et le défilement en mouvement (captures fixes), le son des météos en jeu, le coût au banc (voile plein écran seulement pendant le brouillard, 110 à 220 particules).
 
-**Constat, à trancher par Raphaël :** le voile du marais (`BiomeAtmosphere.CreateSwampOverlay`, `swamp_atmosphere.gdshader` : brume laiteuse, reflets spectraux) pose son ancrage comme le premier voile de brouillard. Mesuré le 12 octobre : rectangle de taille (0, 0) avec une intensité de 1 en plein marais. **Il n'a jamais été visible.** Le corriger (`SetAnchorsAndOffsetsPreset`) changerait d'un coup l'allure du marais et ajouterait une passe plein écran : non fait sans son avis.
+**Constat (corrigé au §13 à la demande de Raphaël) :** le voile du marais (`BiomeAtmosphere.CreateSwampOverlay`, `swamp_atmosphere.gdshader` : brume laiteuse, reflets spectraux) pose son ancrage comme le premier voile de brouillard. Mesuré le 12 octobre : rectangle de taille (0, 0) avec une intensité de 1 en plein marais. **Il n'a jamais été visible.** Le corriger (`SetAnchorsAndOffsetsPreset`) changerait d'un coup l'allure du marais et ajouterait une passe plein écran : non fait sans son avis.
+
+## 13. A4c livré et voile du marais réaffiché — 12 octobre 2026
+
+**Choix de Raphaël** ([DECISIONS §124](DECISIONS.md)) intégrés par `~/.local/share/vestiges-audio/2026-10-12/ambiances/integrate.py` (hors dépôt, reproductible) :
+
+| Biome | Fond | Sons ponctuels |
+|---|---|---|
+| Ville | aucun (second tour) | bâche qui claque, barre de fer qui tombe, chute de pierres |
+| Marais | mare dans un champ | bulles (deux fois plus fréquentes), grenouille |
+| Carrière | « A et C » : grotte et vent en volume clos sommés en une boucle | goutte (deux fois plus fréquente), chute de pierres |
+| Champs | soleil et chaleur | corbeau, grillon |
+| Forêt | inchangée | oiseaux |
+| Hub | grand feu de branches | — |
+
+- Fichiers dans `assets/audio/sfx/ambiance/` (44,1 kHz, boucles de 24 s stéréo, ponctuels mono, silence de tête coupé pour l'audit de banque), crédits CC0 par fichier dans `assets/audio/CREDITS.json`.
+- Niveaux calés sur l'existant : fonds à −14 dB dans la banque (≈ −40 dB effectifs, comme la forêt), sons ponctuels à −10 dB dans les blocs `ambience` (≈ −30, comme les oiseaux).
+- **Fondu enchaîné** entre deux fonds : l'ancien passe à un lecteur sortant (`AmbianceOut`), à sa position et à son niveau, et s'éteint en 2 s pendant que le nouveau monte. Avant, un changement de fond coupait net.
+- **Hub** : `HubScreen` lance le feu sous la musique (`AudioManager.PlayHubAmbiance`) ; il s'éteint en 1,5 s au départ en run.
+- **Fond de ville, second tour** : `ville-r2.html` à côté de la planche. A = l'ancien A passé au passe-haut à 250 Hz (circulation retirée), B à D = trois nouvelles prises de vent (sifflement 2, vent d'intérieur 3, vent fort dans un village).
+
+**Voile du marais** : ancrage corrigé (`SetAnchorsAndOffsetsPreset`). Réaffiché, il relisait l'écran sur la grille de l'ancienne résolution interne (480 × 270) et pixelisait tout le marais deux fois trop gros ; la grille suit maintenant la vue réelle (960 × 540 px monde). Il s'ajoutait aussi à l'étalonnage d'A1 : force ramenée à 0,6 (`swamp_veil.strength`, `data/world/atmosphere.json`). Capture avant/après regardée : brume laiteuse légère, détails nets, léger reflet sur le joueur qui reste lisible.
+
+**Vérifié :** `tools/test_audio.sh` vert. La régression d'ambiance est réécrite : elle supposait qu'un fond qui joue était la forêt ; elle lit maintenant la clé du fond. S'y ajoutent les contrôles du fondu enchaîné forêt → marais, de la ville sans fond, du Hub et de son extinction au départ ; l'audit de banque passe après la coupe du silence de tête. `tools/test_catalogs.sh`, `dotnet build` 0 warning, `tools/smoke_test.sh` vert (imports des nouveaux WAV).
+
+**Non vérifié :** l'écoute en jeu (rien n'a été écouté par l'agent), le coût du voile du marais au banc (passe plein écran avec lecture de l'écran, seulement dans le marais).

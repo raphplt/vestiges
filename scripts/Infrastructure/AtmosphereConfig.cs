@@ -32,6 +32,9 @@ public sealed class AtmosphereConfig
     public float CastShadowMinHeightPx { get; private init; }
     public Color CastShadowColor { get; private init; }
 
+    /// <summary>Voile du marais (swamp_atmosphere.gdshader) : force en plein marais, l'étalonnage du biome fait déjà le reste.</summary>
+    public float SwampVeilStrength { get; private init; }
+
     /// <summary>
     /// Direction crade (plan 40) : dosage commun des biomes, puis la recette, salissure de la palette (saturation
     /// gardée, jaunissement du papier, noir relevé, part des ombres tirée vers le vert-gris) et grain au pixel du monde.
@@ -73,7 +76,7 @@ public sealed class AtmosphereConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows", "grime");
+            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows", "grime", "swamp_veil");
             JsonElement grade = reader.Section("grade");
             reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share", "strength");
             JsonElement clouds = reader.Section("clouds");
@@ -85,6 +88,8 @@ public sealed class AtmosphereConfig
                 "stains", "stain_scale_px");
             float shadowAngle = Mathf.DegToRad(reader.Number(shadows, "direction_deg"));
             float shadowLength = reader.Positive(shadows, "length");
+            JsonElement swampVeil = reader.Section("swamp_veil");
+            reader.AllowOnly(swampVeil, "swamp_veil", "strength");
             AtmosphereConfig parsed = new()
             {
                 GradeFadeSeconds = reader.Positive(grade, "fade_seconds"),
@@ -96,6 +101,7 @@ public sealed class AtmosphereConfig
                 CastShadowPerHeight = new Vector2(Mathf.Cos(shadowAngle), Mathf.Sin(shadowAngle) * 0.5f) * shadowLength,
                 CastShadowMinHeightPx = reader.Positive(shadows, "min_height_px"),
                 CastShadowColor = reader.Rgb(shadows, "color"),
+                SwampVeilStrength = reader.Chance(swampVeil, "strength"),
                 GrimeStrength = reader.Chance(grime, "strength"),
                 GrimeSaturation = reader.Chance(grime, "saturation"),
                 GrimePaper = reader.Rgb(grime, "paper"),

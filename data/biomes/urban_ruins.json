@@ -24,6 +24,10 @@
         "grime": 1.0
     },
     "ambience": {
+        "accents": ["sfx_ambiance_ville_bache", "sfx_ambiance_ville_fer", "sfx_ambiance_chute_pierres"],
+        "first_accent_s": [8, 20],
+        "accent_interval_s": [18, 40],
+        "accent_volume_db": -10,
         "reverb": { "wet": 0.08, "room_size": 0.55, "damping": 0.5 }
     },
     "map_weight": 1.0,
