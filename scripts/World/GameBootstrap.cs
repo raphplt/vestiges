@@ -258,6 +258,10 @@ public partial class GameBootstrap : Node
         AbandonedVoicesDirector abandonedVoices = new() { Name = "AbandonedVoicesDirector" };
         abandonedVoices.Setup(worldSetup, smallPlaces, erasureManager, player);
         sceneRoot.AddChild(abandonedVoices);
+        // Fausses lumières (plan 39 B4a) : sur les lampes des décors déjà posés.
+        FalseLightDirector falseLights = new() { Name = "FalseLightDirector" };
+        falseLights.Setup(GetNode("../PropContainer"), erasureManager, GetNodeOrNull<CanvasModulate>("../CanvasModulate"));
+        sceneRoot.AddChild(falseLights);
         LoadProfiler.Mark("directeurs et petits lieux");
         // Jeu toujours en pause : rendre la main ici coupe la dernière image figée du chargement en deux (plan 37 R5).
         await NextLoadingFrame();

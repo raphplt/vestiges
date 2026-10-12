@@ -191,4 +191,10 @@ public partial class EnvironmentProp : StaticBody2D
 
 	/// <summary>Texture de base : les petits lieux reconnaissent leurs décors par elle, sans chaîne par décor.</summary>
 	public Texture2D BaseTexture => _baseSprite?.Texture;
+
+	/// <summary>
+	/// Coin haut-gauche de la texture de base, en monde : un pixel du sprite s'y repère quel que soit le calage du décor
+	/// (pivot du manifeste ou pieds d'un décor dessiné). Sert aux fausses lumières (plan 39 B4a).
+	/// </summary>
+	public Vector2 TextureOrigin => _baseSprite.GlobalPosition + _baseSprite.Offset - _baseSprite.Texture.GetSize() * 0.5f;
 }

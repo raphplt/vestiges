@@ -1647,3 +1647,13 @@ Raphaël, avant le [lot C1 du plan 39](39-atmosphere.md) : « ok continue avec l
 - **Son seul.** Rien à l'écran, ni bulle ni sous-titre : on entend la radio en s'approchant.
 - **Radios dans les embouteillages.** Sur le capot d'une voiture d'environ un embouteillage sur trois (5 à 6 par carte), sans nouveau décor ailleurs.
 - **Une cabine sur deux sonne.** Parmi les cabines activables (petits lieux), elle se tait quand le joueur arrive et garde son usage (révéler les lieux proches).
+
+## 145. Fausses lumières : décors existants, fenêtres, feux de camp — 12 octobre 2026
+
+Raphaël, après C1 : « je vais écouter je te ferai les retours ultérieurement en attendant continue avec d'autres choses du plan ». Réponses aux questions du [lot B4 du plan 39](39-atmosphere.md) :
+- **Les trois sortes de lumières** : lueurs posées sur les décors qui en portent déjà (feux tricolores, lampadaires, lampes de carrière, lanternes du marais), fenêtres éclairées de loin en loin, feux de camp éteints qui fument.
+- **Une lampe sur quatre environ** reste allumée ; les autres sont mortes.
+- **Discrètes en plein jour, plus fortes dans le sombre** : orage, brouillard, nuit de l'Indicible.
+- **Avec l'oubli** : une lampe d'une zone qui s'oublie vacille de plus en plus, puis meurt pour de bon.
+
+Découpage proposé par l'agent : B4a (lueurs sur les décors existants), B4b (fenêtres), B4c (feux de camp), un lot à la fois.

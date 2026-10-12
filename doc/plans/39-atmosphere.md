@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -117,6 +117,10 @@ Le lot qui transforme le plus la capture de référence, pour un risque techniqu
   - lueurs violettes du marais.
 - Elles s'éteignent avec l'oubli de leur cellule.
 - Vérification : captures ; `/bench`.
+- **Découpage (12 octobre, [DECISIONS §145](DECISIONS.md))** :
+  - **B4a** : lueurs sur les décors qui portent déjà une lampe (feux tricolores clignotants de la ville, lampadaires de la forêt qui grésillent, lampes de carrière, lanternes du marais), une sur quatre, plus fortes dans le sombre, qui vacillent puis meurent avec l'oubli ;
+  - **B4b** : fenêtres d'immeubles éclairées de loin en loin ;
+  - **B4c** : feux de camp éteints qui fument, nouveau décor, quelques-uns par carte hors de la ville.
 
 ### B5 — Traces persistantes du combat (1 à 2 j)
 
@@ -525,3 +529,63 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 - `sonnerie-cabine.wav` dans le même dossier.
 
 À juger : la voix (synthèse acceptable ou enregistrement), le niveau, la portée, la sonnerie.
+
+## 18. B4a livré, fausses lumières sur les décors existants — 12 octobre 2026
+
+**Choix de Raphaël** ([DECISIONS §145](DECISIONS.md)) :
+- les trois sortes de lumières, découpées en B4a (décors existants), B4b (fenêtres) et B4c (feux de camp) ;
+- une lampe sur quatre ;
+- discrètes de jour, plus fortes dans le sombre ;
+- avec l'oubli, elles vacillent puis meurent.
+
+**Fait** (`World/FalseLightDirector`, réglages dans `data/world/false_lights.json`) :
+- **aucun nouveau décor** : les lueurs se posent sur les décors qui portent déjà une lampe ;
+
+| Décor | Lueur | Rythme |
+|---|---|---|
+| Feu tricolore (ville) | orange | clignote (1,4 s, à moitié allumé) |
+| Lampe de sécurité (carrière) | orange vif | clignote vite (0,9 s) |
+| Lanterne du marais | vert pâle, la couleur de son verre | respire (4,5 s) |
+| Lampadaire (forêt) | jaune chaud | grésille, avec des chutes brèves |
+
+- **une lampe sur quatre** de chaque sorte, à intervalles réguliers dans l'ordre de pose ;
+- **lueurs** (`tools/generate_light_glows.py`, `assets/vfx/lights/`) : sprites blancs à alpha en paliers tramés, teintés et dosés en jeu, en mélange additif. Un cœur sur l'ampoule et un halo autour (couche 1, au-dessus des entités, sous le brouillard et les canopées), une flaque au sol (couche −1). Sans script ni shader propre : rien à ajouter à `ShaderWarmup` ;
+- **ampoule** repérée en pixel du sprite, depuis le coin du sprite affiché (`EnvironmentProp.TextureOrigin`). Le feu tricolore n'a pas d'emprise dans le manifeste : il est calé comme un décor dessiné, et un ancrage depuis le pivot tombait 5 px à côté (vu en capture, corrigé) ;
+- **jour et sombre** : force 0,45 en temps normal, 1 dans le sombre. Obscurité par météo en JSON (orage 1, brouillard 0,6, cendres 0,5, vent 0,25) ; nuit de l'Indicible lue sur la teinte de la scène (`CanvasModulate`). Cette teinte multiplie aussi les lueurs, d'où une compensation : sans elle, les lampes s'éteindraient avec le reste au lieu de ressortir. Fondu de 3 s ;
+- **oubli** : au-dessus de 0,6 de mémoire, la lampe tient ; en dessous, elle se coupe par à-coups d'un dixième de seconde, de plus en plus souvent ; sous 0,25 ou au Néant, elle meurt pour de bon ;
+- **coût** : un seul gestionnaire, qui n'anime que les lampes des cases de 256 px autour de la vue. Une écriture vers le moteur seulement quand le niveau change d'un pas visible. Aucun rappel par lampe, aucune allocation par image.
+
+**Mesures** (`tools/measure_run.sh`, 8 graines) : 4 à 7 lampes de carrière allumées sur 16 à 30 ; 8 à 12 feux sur 31 à 51 ; 11 à 15 lanternes sur 44 à 63 ; soit environ 26 par carte. Le lampadaire de forêt n'apparaît presque jamais (0 ou 1 par carte).
+
+**Relecture appliquée** :
+- les réglages de rythme passent en JSON (`rhythm` : lampe éteinte, creux de la respiration, chutes du grésillement, coupures de l'oubli) ;
+- une lampe qui revient dans la vue relit tout de suite la mémoire de sa zone, au lieu de briller une demi-seconde avant de mourir ;
+- l'obscurité de la scène se mesure relativement à sa teinte de jour ;
+- une météo déjà installée compte dès le départ ;
+- lueurs calées sur la grille des pixels ;
+- le compteur ne compte plus les lampes mortes.
+
+**Banc A/B** (`tools/bench_ab.sh`, copie isolée du dépôt : HEAD plus le seul B4a, les autres sessions ayant des changements en cours) :
+- une passe sur deux valide côté B4a ; l'autre a échoué à l'import d'une police dans la copie neuve, sans rapport avec le lot ;
+- métriques insensibles à la charge, dans l'arène dense : +86 nœuds (les lueurs de la carte), +9 objets rendus au plus, même nombre d'appels de dessin, mêmes allocations ;
+- FPS non concluants : la charge est remontée à 5,4 pendant la mesure.
+
+**Vérifié** (`--capture-lights`, nouveau mode de `RunObservation`, seed 221092026, recapturé après la relecture) :
+- de jour, les lampes sont à peine visibles, comme voulu ;
+- sous l'orage (obscurité mesurée à 1,00), la lampe de carrière rayonne avec halo et flaque, la lanterne du marais ressort en vert ;
+- après correction de l'ancrage, le feu clignotant tombe sur le feu orange ;
+- zone ramenée à 0,4 de mémoire : la lanterne s'éteint et se rallume par à-coups ; à 0,1, elle meurt (compteur à 1) ;
+- `tools/test_catalogs.sh` vert (328 contrôles) : réglages acceptés, trois lueurs présentes ; décor inconnu ou en double, météo inconnue, rythme inconnu, part allumée hors clignotement, ampoule hors du sprite, mémoires inversées, lampes plus fortes de jour, lampe éteinte plus vive qu'allumée et clé inconnue refusés ;
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :**
+- les FPS au banc (voir plus haut) ;
+- la nuit de l'Indicible, et le brouillard ;
+- le lampadaire de forêt, faute d'en trouver un : son ancrage vient de la lecture du sprite ;
+- les lampes en mouvement : les captures sont fixes, le clignotement s'y voit seulement par ses états.
+
+**Limites :**
+- la ville n'a pas de lampadaire, seulement des feux tricolores : B4b (fenêtres) lui donnera plus de lumière ;
+- les lanternes du marais sont vertes et non violettes comme le disait le plan : la lueur suit la couleur de leur verre.
+
+**À juger par Raphaël :** la force de jour (peut-être trop discrète), le rythme des feux, le nombre de lampes allumées.

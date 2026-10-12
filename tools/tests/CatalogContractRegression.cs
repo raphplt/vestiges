@@ -40,6 +40,7 @@ public partial class CatalogContractRegression : Node
             CheckFauna();
             CheckExodus();
             CheckAbandonedVoices();
+            CheckFalseLights();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -712,6 +713,36 @@ public partial class CatalogContractRegression : Node
             bool refused = !AbandonedVoicesConfig.TryParse(Mutated(valid, mutate), exists, out AbandonedVoicesConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"radios et téléphones refusés ({label}) : {message}");
+        }
+    }
+
+    private void CheckFalseLights()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/false_lights.json");
+        string[] weathers = { "storm", "thick_fog", "ash_rain", "forgotten_wind" };
+        bool accepted = FalseLightsConfig.TryParse(valid, FalseLightsConfig.PropSpriteExists, weathers, out FalseLightsConfig config, out string error);
+        Check(accepted && config.Kinds.Count == 4 && config.WeatherDarkness["storm"] == 1f, $"fausses lumières du dépôt acceptées {error}");
+        int glows = Array.FindAll(new[] { "core", "halo", "pool" }, id => ResourceLoader.Exists($"res://assets/vfx/lights/light_{id}.png")).Length;
+        Check(glows == 3, $"fausses lumières : 3 lueurs présentes ({glows})");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("décor inconnu", root => root["kinds"]![0]!["sprite"] = "prop_lampe_inconnue", "prop_lampe_inconnue"),
+            ("décor en double", root => root["kinds"]![1]!["sprite"] = "prop_traffic_light", "en double"),
+            ("météo inconnue", root => root["weather_darkness"]!["blizzard"] = 1, "blizzard"),
+            ("rythme inconnu", root => root["kinds"]![0]!["pattern"] = "strobe", "pattern"),
+            ("part allumée hors clignotement", root => root["kinds"]![1]!["on_share"] = 0.5, "on_share"),
+            ("ampoule hors du sprite", root => root["kinds"]![0]!["anchor"] = new JsonArray(-2, 10), "anchor"),
+            ("mémoire inversée", root => root["memory_dead"] = 0.8, "memory_dead"),
+            ("plus fortes de jour", root => root["dark_strength"] = 0.3, "day_strength"),
+            ("lampe éteinte plus vive", root => root["rhythm"]!["off_level"] = 0.5, "off_level"),
+            ("clé inconnue", root => root["glow"] = 1, "glow"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !FalseLightsConfig.TryParse(Mutated(valid, mutate), FalseLightsConfig.PropSpriteExists, weathers,
+                out FalseLightsConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"fausses lumières refusées ({label}) : {message}");
         }
     }
 
