@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), sauf le fond de ville (second tour d'écoute).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -334,9 +334,9 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 
 | Biome | Fond | Sons ponctuels |
 |---|---|---|
-| Ville | aucun (second tour) | bâche qui claque, barre de fer qui tombe, chute de pierres |
+| Ville | vent fort dans un village (second tour) | bâche qui claque, barre de fer qui tombe, chute de pierres |
 | Marais | mare dans un champ | bulles (deux fois plus fréquentes), grenouille |
-| Carrière | « A et C » : grotte et vent en volume clos sommés en une boucle | goutte (deux fois plus fréquente), chute de pierres |
+| Carrière | grotte ou vent en volume clos, l'un ou l'autre (ajusté, voir plus bas) | goutte (deux fois plus fréquente), chute de pierres |
 | Champs | soleil et chaleur | corbeau, grillon |
 | Forêt | inchangée | oiseaux |
 | Hub | grand feu de branches | — |
@@ -352,3 +352,5 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 **Vérifié :** `tools/test_audio.sh` vert. La régression d'ambiance est réécrite : elle supposait qu'un fond qui joue était la forêt ; elle lit maintenant la clé du fond. S'y ajoutent les contrôles du fondu enchaîné forêt → marais, de la ville sans fond, du Hub et de son extinction au départ ; l'audit de banque passe après la coupe du silence de tête. `tools/test_catalogs.sh`, `dotnet build` 0 warning, `tools/smoke_test.sh` vert (imports des nouveaux WAV).
 
 **Non vérifié :** l'écoute en jeu (rien n'a été écouté par l'agent), le coût du voile du marais au banc (passe plein écran avec lecture de l'écran, seulement dans le marais).
+
+**Ajusté le même jour** ([DECISIONS §125](DECISIONS.md)) : la carrière ne superpose plus ses deux fonds. Le bloc `ambience` prend une liste `loops` ; un seul fond joue, tiré à chaque entrée dans le biome (grotte ou vent en volume clos). La ville prend le vent fort dans un village (second tour, D). Contrôles ajoutés : un seul fond de carrière à la fois, le vent de la ville remplace la carrière en fondu. `tools/test_audio.sh` et `tools/test_catalogs.sh` verts, smoke vert.

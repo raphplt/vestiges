@@ -25,7 +25,7 @@
         "grime": 1.0
     },
     "ambience": {
-        "loop": "sfx_ambiance_carriere",
+        "loops": ["sfx_ambiance_carriere", "sfx_ambiance_carriere_vent"],
         "accents": ["sfx_ambiance_carriere_goutte", "sfx_ambiance_carriere_goutte", "sfx_ambiance_chute_pierres"],
         "first_accent_s": [5, 15],
         "accent_interval_s": [12, 30],

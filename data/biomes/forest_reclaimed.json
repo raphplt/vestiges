@@ -24,7 +24,7 @@
         "grime": 0.8
     },
     "ambience": {
-        "loop": "sfx_ambiance_foret",
+        "loops": ["sfx_ambiance_foret"],
         "accents": ["sfx_ambiance_oiseaux_1", "sfx_ambiance_oiseaux_2"],
         "first_accent_s": [5, 15],
         "accent_interval_s": [20, 45],

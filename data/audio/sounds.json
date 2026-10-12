@@ -329,6 +329,20 @@
     "priority": 30,
     "max_voices": 2
   },
+  "sfx_ambiance_carriere_vent": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_carriere_vent.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
+  "sfx_ambiance_ville": {
+    "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_ville.wav",
+    "volume_db": -14,
+    "min_interval_ms": 0,
+    "priority": 30,
+    "max_voices": 2
+  },
   "sfx_ambiance_hub": {
     "path": "res://assets/audio/sfx/ambiance/sfx_ambiance_hub.wav",
     "volume_db": -14,

@@ -24,7 +24,7 @@
         "grime": 1.0
     },
     "ambience": {
-        "loop": "sfx_ambiance_marais",
+        "loops": ["sfx_ambiance_marais"],
         "accents": ["sfx_ambiance_marais_bulles", "sfx_ambiance_marais_bulles", "sfx_ambiance_marais_grenouille"],
         "first_accent_s": [4, 12],
         "accent_interval_s": [10, 25],

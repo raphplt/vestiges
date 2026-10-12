@@ -266,13 +266,13 @@ public static class BiomeDataLoader
         return style;
     }
 
-    /// <summary>Boucle et sons ponctuels facultatifs, mais un son ponctuel exige ses intervalles et son gain.</summary>
+    /// <summary>Fonds et sons ponctuels facultatifs, mais un son ponctuel exige ses intervalles et son gain.</summary>
     private static BiomeAmbience Ambience(JsonConfigReader reader, JsonElement section, Func<string, bool> audioExists)
     {
-        reader.AllowOnly(section, "ambience", "loop", "accents", "first_accent_s", "accent_interval_s", "accent_volume_db", "reverb");
-        string loop = OptionalText(reader, section, "loop", null);
-        if (loop != null && !audioExists(loop))
-            reader.Fail($"ambience.loop : son « {loop} » inconnu");
+        reader.AllowOnly(section, "ambience", "loops", "accents", "first_accent_s", "accent_interval_s", "accent_volume_db", "reverb");
+        // Plusieurs fonds : l'un ou l'autre, jamais ensemble (choix de Raphaël pour la carrière, DECISIONS §125).
+        List<string> loops = section.ValueKind == JsonValueKind.Object && section.TryGetProperty("loops", out _)
+            ? TextList(reader, section, "loops", audioExists, "son", 1) : new();
         List<string> accents = section.ValueKind == JsonValueKind.Object && section.TryGetProperty("accents", out _)
             ? TextList(reader, section, "accents", audioExists, "son", 1) : new();
         (float firstMin, float firstMax) = (0f, 0f);
@@ -298,7 +298,7 @@ public static class BiomeDataLoader
             if (wet > 0.5f)
                 reader.Fail("ambience.reverb.wet : au plus 0,5 attendu");
         }
-        return new BiomeAmbience(loop, accents.AsReadOnly(), firstMin, firstMax, intervalMin, intervalMax, accentDb, wet, room, damping);
+        return new BiomeAmbience(loops.AsReadOnly(), accents.AsReadOnly(), firstMin, firstMax, intervalMin, intervalMax, accentDb, wet, room, damping);
     }
 
     private static Dictionary<string, float> Weights(JsonConfigReader reader, JsonElement section, string where, Func<string, bool> known)

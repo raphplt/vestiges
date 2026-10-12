@@ -1350,3 +1350,9 @@ Choix de Raphaël sur la planche A4b ([plan 39 §11](39-atmosphere.md)) : marais
 Question de Raphaël : ces sons sont-ils utilisables en licence commerciale ? Réponse : oui, tous sont CC0 (BigSoundBank, Joseph SARDIN), usage commercial libre sans attribution obligatoire ; crédits tenus dans `assets/audio/CREDITS.json`.
 
 « Corrige le voile du marais stp » : voile réaffiché (il ne l'avait jamais été), à une force de 0,6 proposée par l'agent, à juger en jeu.
+
+## 125. Carrière à deux fonds, vent de la ville — 12 octobre 2026
+
+Sur l'intégration de A4c : « juste un détail sur la carrière j'aime les deux A et C mais ne les mets pas en même temps. Pour le vent le dernier me va bien : vent fort dans un village. »
+
+**Acquis :** la carrière a deux fonds (grotte, vent en volume clos), l'un ou l'autre ; l'agent tire celui qui joue à chaque entrée dans le biome. La ville prend le vent fort dans un village (second tour, D).

@@ -396,9 +396,17 @@ public partial class AudioMixRegression : Node
             "forêt vers marais : le marais monte pendant que la forêt s'éteint, sans coupure");
         await Frames(150);
         Check(main.Playing && !outgoing.Playing, "fondu enchaîné terminé : seul le marais reste");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "collapsed_quarry");
+        await Frames(150);
+        string quarry = (string)key.GetValue(audio);
+        Check(main.Playing && !outgoing.Playing && quarry is "sfx_ambiance_carriere" or "sfx_ambiance_carriere_vent",
+            $"carrière : un seul de ses deux fonds joue ({quarry})");
         bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "urban_ruins");
+        await Frames(150);
+        Check(main.Playing && (string)key.GetValue(audio) == "sfx_ambiance_ville" && !outgoing.Playing, "ville : le vent remplace la carrière");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "");
         await Frames(60);
-        Check(!main.Playing, "ville sans fond retenu : le marais s'éteint");
+        Check(!main.Playing, "hors biome : plus de fond");
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
         Check(!main.Playing && !outgoing.Playing, "retour au Hub : fonds de run arrêtés");
         audio.PlayHubAmbiance();

@@ -2185,26 +2185,62 @@
   },
   {
     "effect_id": "sfx_ambiance_carriere",
-    "candidate_id": "ambiance_20261012_carriere_fond_A+carriere_fond_C",
+    "candidate_id": "ambiance_20261012_carriere_fond_A",
     "file": "assets/audio/sfx/ambiance/sfx_ambiance_carriere.wav",
-    "sha256": "dd188fe39639df67f9c5ccd9cc419e44c884708efd3e50adf5b5cde43544577f",
+    "sha256": "b3badaa2ccf26cf28bbd3c6c586beb0f1c4492fb015b9cccdb8738bea3016e03",
     "author": "Joseph SARDIN",
     "license": "CC0-1.0",
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "source_url": "https://bigsoundbank.com/cave-1-s2135.html",
-    "attribution": "Joseph SARDIN — cave-1-s2135 — https://bigsoundbank.com/cave-1-s2135.html — CC0-1.0\nJoseph SARDIN — wind-from-inside-2-s1715 — https://bigsoundbank.com/wind-from-inside-2-s1715.html — CC0-1.0",
-    "processing": "Planche A4b, choix « A et C » : Grotte 1 et Vent dans un volume clos, boucles de 24 s sommées à −3 dB chacune, ramenées à −26 dB RMS, crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "attribution": "Joseph SARDIN — cave-1-s2135 — https://bigsoundbank.com/cave-1-s2135.html — CC0-1.0",
+    "processing": "Planche A4b : Cavité, écho, air qui passe, Grotte 1. Fenêtre de 24 s prise à 0.0 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
     "sources": [
       {
         "id": "2135",
         "url": "https://bigsoundbank.com/cave-1-s2135.html",
         "sha256": "4420e7f0a5be6a30c9eec2a80ff54833dc5d7e078c00e97da3014add10e10155",
         "license": "CC0-1.0"
-      },
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_carriere_vent",
+    "candidate_id": "ambiance_20261012_carriere_fond_C",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_carriere_vent.wav",
+    "sha256": "0c3f9e7c24915831341a0c50af383f43bef5bda7c623ee00bf4b1667f4837a3c",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/wind-from-inside-2-s1715.html",
+    "attribution": "Joseph SARDIN — wind-from-inside-2-s1715 — https://bigsoundbank.com/wind-from-inside-2-s1715.html — CC0-1.0",
+    "processing": "Planche A4b : Cavité, écho, air qui passe, Vent dans un volume clos. Fenêtre de 24 s prise à 86.0 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
       {
         "id": "1715",
         "url": "https://bigsoundbank.com/wind-from-inside-2-s1715.html",
         "sha256": "5d38f3cbc26b7d932b3d8d8b4e7a5626097450528722bcb9e3b831c14f9fe942",
+        "license": "CC0-1.0"
+      }
+    ],
+    "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "sfx_ambiance_ville",
+    "candidate_id": "ambiance_20261012_ville_fond_r2_D",
+    "file": "assets/audio/sfx/ambiance/sfx_ambiance_ville.wav",
+    "sha256": "8537fdd5a5357db41da347717240e07450698faad81fe323ca4dd49cb9934085",
+    "author": "Joseph SARDIN",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://bigsoundbank.com/strong-wind-in-a-village-s0625.html",
+    "attribution": "Joseph SARDIN — strong-wind-in-a-village-s0625 — https://bigsoundbank.com/strong-wind-in-a-village-s0625.html — CC0-1.0",
+    "processing": "Planche A4b : Vent entre les immeubles (second tour), Vent fort dans un village. Fenêtre de 24 s prise à 46.0 s de la prise, bouclée par un fondu enchaîné de 1,5 s, ramenée à −26 dB RMS (limiteur doux), crête ≤ −6 dBFS ; WAV PCM16 / 44,1 kHz.",
+    "sources": [
+      {
+        "id": "0625",
+        "url": "https://bigsoundbank.com/strong-wind-in-a-village-s0625.html",
+        "sha256": "fcfe75fd9eda5b678c84eeec817cadfe8a93d0848374d144bd5187599cb5fce2",
         "license": "CC0-1.0"
       }
     ],

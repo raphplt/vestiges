@@ -125,6 +125,8 @@ public partial class AudioManager : Node
 
 	// --- Ambiance du biome (plan 39 A4) : fond, sons ponctuels, réverbération du monde ---
 	private BiomeAmbience _ambience = BiomeAmbience.Silent;
+	// Fond tiré à l'entrée dans le biome, parmi les siens ; null : pas de fond.
+	private string _ambienceLoop;
 	private float _accentTimer;
 	private AudioEffectReverb _worldReverb;
 	private Tween _reverbTween;
@@ -863,6 +865,12 @@ public partial class AudioManager : Node
 			return;
 		_currentBiomeId = biomeId;
 		_ambience = (biomeId.Length > 0 ? BiomeDataLoader.Get(biomeId)?.Ambience : null) ?? BiomeAmbience.Silent;
+		_ambienceLoop = _ambience.LoopKeys.Count switch
+		{
+			0 => null,
+			1 => _ambience.LoopKeys[0],
+			_ => _ambience.LoopKeys[(int)(_rng.Randi() % (uint)_ambience.LoopKeys.Count)],
+		};
 		if (!_runAudioStopped)
 			FadeWorldReverb(_ambience);
 		UpdateBiomeAmbiance();
@@ -874,8 +882,8 @@ public partial class AudioManager : Node
 	{
 		if (_runAudioStopped)
 			return;
-		if (_currentPhase == "Exploration" && _ambience.LoopKey != null)
-			PlayAmbiance(_ambience.LoopKey);
+		if (_currentPhase == "Exploration" && _ambienceLoop != null)
+			PlayAmbiance(_ambienceLoop);
 		else if (_ambiancePlayer.Playing && !_ambianceFadingOut)
 			FadeOutAmbiance(0.5f);
 	}
@@ -1019,6 +1027,7 @@ public partial class AudioManager : Node
 		_currentPhase = "";
 		_currentBiomeId = "";
 		_ambience = BiomeAmbience.Silent;
+		_ambienceLoop = null;
 		ResetWorldReverb();
 		_currentWeatherId = "";
 		_ambianceFade?.Kill();

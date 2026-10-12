@@ -24,7 +24,7 @@
         "grime": 1.0
     },
     "ambience": {
-        "loop": "sfx_ambiance_champs",
+        "loops": ["sfx_ambiance_champs"],
         "accents": ["sfx_ambiance_champs_corbeau", "sfx_ambiance_champs_grillon"],
         "first_accent_s": [6, 15],
         "accent_interval_s": [20, 45],

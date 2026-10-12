@@ -24,6 +24,7 @@
         "grime": 1.0
     },
     "ambience": {
+        "loops": ["sfx_ambiance_ville"],
         "accents": ["sfx_ambiance_ville_bache", "sfx_ambiance_ville_fer", "sfx_ambiance_chute_pierres"],
         "first_accent_s": [8, 20],
         "accent_interval_s": [18, 40],
