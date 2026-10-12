@@ -75,3 +75,18 @@ Captures `--capture-props --hide-collisions`, graine 1002, traitées en Python a
 - Premier essai : le shader du sol ne compilait plus (variable locale `grain` homonyme de son uniforme) ; renommée.
 
 **Non mesuré :** coût GPU (un hachage et un bruit de valeur par pixel sur le sol, les décors et les canopées). Banc A/B prévu à la fin de G2.
+
+## 6. G2 livré — 12 octobre 2026
+
+**Fait :**
+
+- `world_stains_at` dans `world_grade.gdshaderinc` : auréoles d'eau ou de thé (intérieur à peine plus sombre, bord marqué, le bleu baisse plus que le rouge) et plaques de moisissure, en coordonnées monde. Sol, routes et décors seulement ; ni canopées ni entités.
+- Paliers nets tramés au pixel (Bayer 2×2, comme les nuages), auréole rompue par un bruit. Premier jet à bord lissé : un trait brun continu, net de près, qui se lisait comme un cheveu sur l'écran.
+- Réglages `stains` (0,8) et `stain_scale_px` (110) dans la section `grime` ; force multipliée par le dosage du biome. Contrôles : force hors borne, taches minuscules.
+
+**Vérifié :**
+
+- Captures à la graine 1002, avant / G1 / G2 : [planche](planches/40-G2-avant-apres.jpg), [gros plans](planches/40-G2-gros-plans.jpg). De loin, les taches restent discrètes ; de près, marques d'eau séchée sur le marais et le pavé, taches de thé dans le blé.
+- `tools/test_catalogs.sh` : 233 contrôles. `dotnet build` 0 warning, `tools/smoke_test.sh` vert, aucune erreur de shader en run.
+
+**Banc A/B (G1 + G2 contre la base `42901716`), non concluant :** deux passes alternées de 15 s, machine calme pour la première (charge 1,3 à 2,6), chargée pour la seconde (13 à 22, une compilation en parallèle), écartée. Seule mesure propre : 1080p sans dash, 2,58 ms avant, 2,62 ms après. En 720p, +0,9 ms sans dash et +0,3 ms avec, mais un coût GPU grandirait avec la résolution, ce qui n'est pas le cas : bruit probable. À recouper machine calme.

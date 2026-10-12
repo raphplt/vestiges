@@ -62,12 +62,14 @@ vec3 cloud_shade(vec3 color, vec2 p, float amount) {
 
 // Direction crade (plan 40) : palette salie comme un vieux papier imprimé, puis grain au pixel du monde. Même source et
 // mêmes fondus que l'étalonnage ; appliqué après lui et avant l'oubli, si bien que le Néant reste d'un blanc pur.
-// x : dosage du biome (0 : aucun effet) ; y : grain fin au pixel ; z : fibre lente du papier ; w : taches (G2).
+// x : dosage du biome (0 : aucun effet) ; y : grain fin au pixel ; z : fibre lente du papier ; w : force des taches.
 global uniform vec4 world_grime;
 // rgb : jaunissement (multiplie) ; a : saturation gardée.
 global uniform vec4 world_grime_paper;
 // rgb : noir relevé vers un brun-olive ; a : part des ombres tirée vers le vert-gris.
 global uniform vec4 world_grime_ink;
+// 1 / taille moyenne d'une tache, en px au sol.
+global uniform float world_stain_scale;
 
 const vec3 GRIME_SHADOW = vec3(0.2, 0.22, 0.17);
 
@@ -93,4 +95,37 @@ vec3 world_grime_at(vec3 color, vec2 p) {
 	float speckle = (cloud_hash(cell + 71.3) - 0.5) * 2.0 * world_grime.y
 		+ (cloud_noise(cell / 6.0 + 23.0) - 0.5) * 2.0 * world_grime.z;
 	return grime_palette(color, amount) * (1.0 + speckle * amount);
+}
+
+float stain_noise(vec2 q, int octaves) {
+	float total = 0.0;
+	float weight = 0.5;
+	float norm = 0.0;
+	for (int i = 0; i < octaves; i++) {
+		total += cloud_noise(q) * weight;
+		norm += weight;
+		q = q * 2.03 + 17.7;
+		weight *= 0.5;
+	}
+	return total / norm;
+}
+
+// Taches (G2) : auréoles d'eau ou de thé, l'intérieur à peine plus sombre et le bord marqué, plus quelques plaques de
+// moisissure. Sol, routes et décors seulement : sur une canopée qui bouge ou une créature, on croirait l'écran sali.
+vec3 world_stains_at(vec3 color, vec2 p) {
+	float strength = world_grime.w * world_grime.x;
+	if (strength <= 0.0)
+		return color;
+	vec2 cell = floor(p);
+	// Paliers nets tramés au pixel (Bayer 2×2, comme les nuages) : un bord lissé faisait un trait flou sur l'écran.
+	vec2 bayer = mod(cell, 2.0);
+	float dither = (mod(bayer.x * 2.0 + bayer.y * 3.0, 4.0) * 0.25 - 0.375) * 0.012;
+	float n = stain_noise(cell * world_stain_scale + 3.7, 3) + dither;
+	float inside = step(0.6, n);
+	// Auréole rompue par endroits : une ligne continue se lirait comme un trait de contour.
+	float rim = inside * (1.0 - step(0.614, n)) * step(0.35, cloud_noise(cell * 0.18 + 9.1));
+	// La tache brunit : le bleu baisse plus que le rouge.
+	color *= vec3(1.0) - (inside * 0.11 + rim * 0.14) * strength * vec3(0.48, 0.66, 0.99);
+	float mold = step(0.68, stain_noise(cell * world_stain_scale * 1.8 + 41.3, 2) + dither);
+	return mix(color, vec3(0.1, 0.12, 0.06), mold * 0.1 * strength);
 }

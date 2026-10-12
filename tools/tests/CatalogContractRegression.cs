@@ -561,6 +561,8 @@ public partial class CatalogContractRegression : Node
             ("noir trop relevé", root => root["grime"]!["ink"] = new JsonArray(0.3, 0, 0), "grime.ink"),
             ("grain trop fort", root => root["grime"]!["grain"] = 0.5, "grime.grain"),
             ("saturation hors borne", root => root["grime"]!["saturation"] = 1.5, "saturation"),
+            ("taches hors borne", root => root["grime"]!["stains"] = 1.5, "stains"),
+            ("taches minuscules", root => root["grime"]!["stain_scale_px"] = 4, "grime.stain_scale_px"),
             ("section absente", root => root.Remove("grade"), "grade"),
             ("champ inconnu", root => root["grade"]!["speed"] = 1, "clé « speed » inconnue"),
         };

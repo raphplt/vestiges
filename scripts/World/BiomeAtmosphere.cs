@@ -41,6 +41,7 @@ public partial class BiomeAtmosphere : Node2D
 	private static readonly StringName GrimeParameter = "world_grime";
 	private static readonly StringName GrimePaperParameter = "world_grime_paper";
 	private static readonly StringName GrimeInkParameter = "world_grime_ink";
+	private static readonly StringName StainScaleParameter = "world_stain_scale";
 	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f, 0f);
 
 	private AtmosphereConfig _config;
@@ -170,6 +171,7 @@ public partial class BiomeAtmosphere : Node2D
 		Color ink = _config.GrimeInk;
 		RenderingServer.GlobalShaderParameterSet(GrimePaperParameter, new Vector4(paper.R, paper.G, paper.B, _config.GrimeSaturation));
 		RenderingServer.GlobalShaderParameterSet(GrimeInkParameter, new Vector4(ink.R, ink.G, ink.B, _config.GrimeShadowTone));
+		RenderingServer.GlobalShaderParameterSet(StainScaleParameter, 1f / _config.GrimeStainScalePx);
 	}
 
 	private void AdvanceClouds(float delta)
@@ -197,7 +199,7 @@ public partial class BiomeAtmosphere : Node2D
 		Color shadow = _config?.CastShadowColor ?? Colors.Black;
 		RenderingServer.GlobalShaderParameterSet(CastShadowParameter, new Vector4(shadow.R, shadow.G, shadow.B, grade.ShadowOpacity));
 		RenderingServer.GlobalShaderParameterSet(GrimeParameter,
-			new Vector4(grade.Grime, _config?.GrimeGrain ?? 0f, _config?.GrimeFibers ?? 0f, 0f));
+			new Vector4(grade.Grime, _config?.GrimeGrain ?? 0f, _config?.GrimeFibers ?? 0f, _config?.GrimeStains ?? 0f));
 	}
 
 	/// <summary>Le nuage se déplace vers la droite : le motif lu en monde recule d'autant (décalage soustrait).</summary>

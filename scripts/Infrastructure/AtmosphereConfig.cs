@@ -43,6 +43,9 @@ public sealed class AtmosphereConfig
     public float GrimeShadowTone { get; private init; }
     public float GrimeGrain { get; private init; }
     public float GrimeFibers { get; private init; }
+    /// <summary>Taches (G2) : force, et taille moyenne d'une tache au sol.</summary>
+    public float GrimeStains { get; private init; }
+    public float GrimeStainScalePx { get; private init; }
 
     public static bool TryLoad(out AtmosphereConfig config, out string error)
     {
@@ -78,7 +81,8 @@ public sealed class AtmosphereConfig
             JsonElement shadows = reader.Section("cast_shadows");
             reader.AllowOnly(shadows, "cast_shadows", "direction_deg", "length", "min_height_px", "color");
             JsonElement grime = reader.Section("grime");
-            reader.AllowOnly(grime, "grime", "strength", "saturation", "paper", "ink", "shadow_tone", "grain", "fibers");
+            reader.AllowOnly(grime, "grime", "strength", "saturation", "paper", "ink", "shadow_tone", "grain", "fibers",
+                "stains", "stain_scale_px");
             float shadowAngle = Mathf.DegToRad(reader.Number(shadows, "direction_deg"));
             float shadowLength = reader.Positive(shadows, "length");
             AtmosphereConfig parsed = new()
@@ -99,6 +103,8 @@ public sealed class AtmosphereConfig
                 GrimeShadowTone = reader.Chance(grime, "shadow_tone"),
                 GrimeGrain = reader.NonNegative(grime, "grain"),
                 GrimeFibers = reader.NonNegative(grime, "fibers"),
+                GrimeStains = reader.Chance(grime, "stains"),
+                GrimeStainScalePx = reader.Positive(grime, "stain_scale_px"),
             };
             // Au-delà, la salissure devient un filtre : sol boueux, noirs délavés, bruit qui mange le dessin.
             if (Mathf.Min(parsed.GrimePaper.R, Mathf.Min(parsed.GrimePaper.G, parsed.GrimePaper.B)) < 0.6f)
@@ -107,6 +113,8 @@ public sealed class AtmosphereConfig
                 reader.Fail("grime.ink : au plus 0,2 par composante attendu");
             if (parsed.GrimeGrain > 0.2f || parsed.GrimeFibers > 0.2f)
                 reader.Fail("grime.grain et grime.fibers : au plus 0,2 attendu");
+            if (parsed.GrimeStainScalePx is > 0f and (< 16f or > 1024f))
+                reader.Fail("grime.stain_scale_px : de 16 à 1024 attendu");
             if (shadowLength > 2f)
                 reader.Fail("cast_shadows.length : au plus 2 attendu");
             if (parsed.GradeFadeSeconds > 10f)

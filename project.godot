@@ -180,6 +180,10 @@ world_grime_ink={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+world_stain_scale={
+"type": "float",
+"value": 0.009
+}
 trample_origin={
 "type": "vec4",
 "value": Vector4(1000000, 1000000, 0, 0)

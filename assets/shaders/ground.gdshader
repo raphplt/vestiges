@@ -156,7 +156,7 @@ void fragment() {
 	}
 
 	// Étalonné et ombragé avant l'oubli : le blanc de l'Effacement reste le même dans tous les biomes.
-	COLOR.rgb = world_grime_at(cloud_shade(world_grade(COLOR.rgb, 1.0), p, 1.0), p);
+	COLOR.rgb = world_stains_at(world_grime_at(cloud_shade(world_grade(COLOR.rgb, 1.0), p, 1.0), p), p);
 	float memory = vertex_memory;
 	if (memory < 0.8)
 		COLOR.rgb = forget(COLOR.rgb, p, memory);

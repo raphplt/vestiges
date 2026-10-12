@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**12 octobre — direction « crade » ([plan 40](40-direction-crade.md), §122) :** Raphaël cherche l'esthétique des BD de son enfance (Métal Hurlant, Beksiński, Rain World). Maquette hors jeu en trois dosages, dosage léger retenu. **G1 livré** : palette salie et grain au pixel du monde dans le shader commun, sans toucher aux assets ; joueur et créatures en palette seule. Suite : taches (G2), hachures dans les ombres (G3).
+**12 octobre — direction « crade » ([plan 40](40-direction-crade.md), §122) :** Raphaël cherche l'esthétique des BD de son enfance (Métal Hurlant, Beksiński, Rain World). Maquette hors jeu en trois dosages, dosage léger retenu. **G1 livré** : palette salie et grain au pixel du monde dans le shader commun, sans toucher aux assets ; joueur et créatures en palette seule. **G2 livré** : taches d'eau et de moisissure au sol et sur les décors, tramées au pixel. Suite : hachures dans les ombres (G3).
 
 **11 octobre — rareté fixe des objets ([plan 35 I10](35-raretes-des-objets.md), §121) :** préparation des 22 objets en cinq rangs, taux par source, prix d’Atelier et affichage cohérent. Principe demandé par Raphaël ; classement et probabilités proposés, aucun changement de gameplay implémenté.
 
