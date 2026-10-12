@@ -15,11 +15,11 @@
             "unlocks": [
                 {
                     "type": "character",
-                    "id": "traqueur"
+                    "id": "vagabond"
                 },
                 {
                     "type": "weapon",
-                    "id": "makeshift_bow"
+                    "id": "chipped_blade"
                 }
             ]
         },

@@ -39,3 +39,5 @@ Constat : « un peu trop simples » ; en ville, « juste des petits carrés qui 
 ## R6 — Personnage par défaut (≈ 0,2 j)
 
 « Peut-être que je ferai en sorte que ce soit le Traqueur le personnage par défaut… à voir. » Si confirmé : Traqueur sélectionné par défaut sur un profil neuf, et premier de la liste.
+
+**Livré le 12 octobre** ([DECISIONS §129 ter](DECISIONS.md)) : le Traqueur et l'Arc du gymnase sont libres dès un profil neuf ; « Mener la chasse » débloque désormais le Vagabond et sa Lame ébréchée. Le Traqueur, déjà premier de la liste, est le personnage sélectionné par défaut (premier débloqué). L'arc rejoint la réserve des armes de départ, la lame la quitte : 17 armes à gagner, comme avant. Personnage de repli (`GameBootstrap`, bande de marche du chargement) : le Traqueur. Régressions mises à jour : quêtes (profil neuf, réserve de départ, déblocage par la chasse), mode dev (le Vagabond sert d'exemple de verrou normal) ; quêtes, écran de choix et Campement verts.

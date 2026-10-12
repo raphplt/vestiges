@@ -34,8 +34,8 @@ public partial class LoadingWalkStrip : Control
         _grounds = ScreenArt.Grounds;
         _walker = new AnimatedSprite2D { TextureFilter = TextureFilterEnum.Nearest, Scale = Vector2.One * CharacterScale };
         AddChild(_walker);
-        string characterId = GetNodeOrNull<Vestiges.Core.GameManager>("/root/GameManager")?.SelectedCharacterId ?? "vagabond";
-        CharacterData data = CharacterDataLoader.Get(characterId) ?? CharacterDataLoader.Get("vagabond");
+        string characterId = GetNodeOrNull<Vestiges.Core.GameManager>("/root/GameManager")?.SelectedCharacterId ?? "traqueur";
+        CharacterData data = CharacterDataLoader.Get(characterId) ?? CharacterDataLoader.Get("traqueur");
         SpriteFrames frames = data != null ? CharacterSpriteLoader.LoadOrGet(data.Id, data.SpriteFolder) : null;
         if (frames != null)
         {

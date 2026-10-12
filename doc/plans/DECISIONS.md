@@ -1377,3 +1377,7 @@ Raphaël, après une partie (retours dictés, extraits) :
 - **Personnage par défaut :** « peut-être que je ferai en sorte que ce soit le Traqueur… à voir, mais je pense que ça serait bien… si c'est le Vagabond, c'est bizarre que le Traqueur apparaisse en premier dans la liste ».
 
 **Acquis :** voile du marais coupé ; ombres portées au pixel du monde par défaut. Le reste est découpé au [plan 41](41-retours-du-12-octobre.md).
+
+### 129 ter. Traqueur de départ, Vagabond gagné par la chasse
+
+Le Traqueur et son arc étaient gardés par « Mener la chasse » (vaincre un Souverain) ; d'où un Traqueur verrouillé en tête de liste et un Vagabond sélectionné. Choix de Raphaël : **échange** — Traqueur et arc libres dès le départ, « Mener la chasse » débloque le Vagabond et sa lame.

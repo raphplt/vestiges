@@ -23,7 +23,7 @@ public partial class QuestRegression : Node
 
     private static readonly string[] StartingWeapons =
     {
-        "chipped_blade", "sling", "sharpened_pipe", "crossbow", "cleaver", "whip", "throwing_axes", "compass_needle",
+        "makeshift_bow", "sling", "sharpened_pipe", "crossbow", "cleaver", "whip", "throwing_axes", "compass_needle",
     };
 
     private static readonly string[] StartingObjects =
@@ -96,8 +96,11 @@ public partial class QuestRegression : Node
         Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 14
             && unlocks[UnlockKind.Badge] == 6,
             $"5 personnages, 17 armes (13 + 4 de départ de personnage), 14 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
-        Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow")?.Id == "lead_the_hunt",
-            "l'arme de départ du Traqueur vient avec lui");
+        // Traqueur de départ, Vagabond gagné par la chasse (plan 41 R6, DECISIONS §129 ter).
+        Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow") == null,
+            "l'arc du Traqueur, personnage de départ, est libre");
+        Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "chipped_blade")?.Id == "lead_the_hunt",
+            "l'arme de départ du Vagabond vient avec lui");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "letter_satchel")?.Id == "the_round",
             "la Sacoche de lettres vient avec le Facteur");
     }
@@ -157,7 +160,7 @@ public partial class QuestRegression : Node
         foreach (CharacterData character in CharacterDataLoader.GetAll())
             if (MetaSaveManager.IsCharacterUnlocked(character.Id))
                 characters.Add(character.Id);
-        Check(characters.Count == 1 && characters[0] == "vagabond", $"profil neuf : le Vagabond seul ({string.Join(", ", characters)})");
+        Check(characters.Count == 1 && characters[0] == "traqueur", $"profil neuf : le Traqueur seul ({string.Join(", ", characters)})");
 
         HashSet<string> reminiscences = new();
         foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
@@ -173,7 +176,7 @@ public partial class QuestRegression : Node
 
         Player player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
         AddChild(player);
-        player.InitializeCharacter(CharacterDataLoader.Get("vagabond"));
+        player.InitializeCharacter(CharacterDataLoader.Get("traqueur"));
         player.IsAIControlled = true;
         player.SetPhysicsProcess(false);
         FragmentManager fragments = new() { Name = "FragmentManager" };
@@ -191,7 +194,7 @@ public partial class QuestRegression : Node
                 offeredObjects.Add(option.Id);
         }
         HashSet<string> expectedWeapons = new(StartingWeapons);
-        expectedWeapons.Remove("chipped_blade");
+        expectedWeapons.Remove("makeshift_bow");
         Check(offeredWeapons.SetEquals(expectedWeapons), $"offre de niveau : les 7 autres armes de départ ({offeredWeapons.Count})");
         HashSet<string> startingBadges = new();
         foreach (string id in StartingObjects)
@@ -211,8 +214,8 @@ public partial class QuestRegression : Node
         QuestDefinition hunt = QuestDataLoader.Get("lead_the_hunt");
         Check(MetaSaveManager.ClaimQuest(hunt, out SaveFile.WriteResult saved) && saved.Succeeded, "quête accomplie, écrite aussitôt");
         Check(File.ReadAllText(meta).Contains("\"lead_the_hunt\""), "quête accomplie sur disque");
-        Check(MetaSaveManager.IsCharacterUnlocked("traqueur") && MetaSaveManager.IsWeaponUnlocked("makeshift_bow"),
-            "Traqueur et Arc du gymnase débloqués");
+        Check(MetaSaveManager.IsCharacterUnlocked("vagabond") && MetaSaveManager.IsWeaponUnlocked("chipped_blade"),
+            "Vagabond et sa lame débloqués");
         Check(!MetaSaveManager.ClaimQuest(hunt, out _), "une quête ne s'accomplit qu'une fois");
 
         QuestDefinition voices = QuestDataLoader.Get("hear_the_voices");
@@ -235,7 +238,7 @@ public partial class QuestRegression : Node
         MetaSaveManager.ReloadProfile();
         MetaSaveManager.Load();
         Check(MetaSaveManager.Save().Succeeded && File.ReadAllText(meta) == before, "sauvegarde rechargée puis réécrite à l'identique");
-        Check(MetaSaveManager.HasCompletedQuest("lead_the_hunt") && MetaSaveManager.IsWeaponUnlocked("makeshift_bow")
+        Check(MetaSaveManager.HasCompletedQuest("lead_the_hunt") && MetaSaveManager.IsWeaponUnlocked("chipped_blade")
               && Near(MetaSaveManager.GetQuestProgress("every_door"), 55f), "déblocages et avancée retrouvés après rechargement");
         Check(QuestBook.ProgressText(doors, MetaSaveManager.GetQuestProgress("every_door")) == "55 / 60", "avancée lisible");
     }
