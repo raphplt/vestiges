@@ -23,6 +23,7 @@ public sealed class TickRoster<T> where T : Node, ITicked
 	}
 
 	public int Count => _items.Count;
+	internal IReadOnlyList<T> Items => _items;
 
 	public void Add(T item)
 	{

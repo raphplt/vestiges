@@ -120,7 +120,7 @@ public partial class RunObservation
     {
         ProcessMode = ProcessModeEnum.Always;
         await Frames(90);
-        // Sans objet de bouclier, ni liseré sur la barre de PV ni ligne dans la fiche (plan 23 R1).
+        // Sans objet de bouclier, pas de liseré sur les PV ; la fiche affiche néanmoins sa valeur nulle.
         SaveFrame("hud-no-shield");
         foreach (string weapon in new[] { "crossbow", "music_box", "nail_mace" })
             _player.AddWeapon(WeaponDataLoader.Get(weapon));
@@ -129,8 +129,12 @@ public partial class RunObservation
         // Niveaux à deux chiffres dans les cases du HUD, un palier atteint et un palier à venir dans la pause.
         _player.AddOrUpgradePassive("souffle_du_neant", 29);
         _player.AddOrUpgradePassive("memoire_vive", 11);
-        // Le sac (plan 35) : des doublons côte à côte, un palier atteint au deuxième exemplaire.
-        foreach (string item in new[] { "de_a_coudre", "de_a_coudre", "glacon", "boite_de_pansements", "boite_de_pansements", "boite_de_pansements", "thermos" })
+        // Le sac : plusieurs quantités pour lire l’effet par copie et la comparaison sans palier de doublon.
+        bool newItems = System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-new-items") >= 0;
+        string[] bag = newItems
+            ? new[] { "pastille_mentholee", "pastille_mentholee", "verre_fele", "carnet_dadresses", "boucle_cabossee", "diapositive_en_double", "tampon_annule" }
+            : new[] { "de_a_coudre", "de_a_coudre", "glacon", "boite_de_pansements", "boite_de_pansements", "boite_de_pansements", "thermos" };
+        foreach (string item in bag)
             _player.AddItemCopy(item);
         WeaponInstance equipped = _player.EquippedWeapon;
         // Surplus posé à la main : l'arme n'a pas le temps d'atteindre le niveau 50 dans la capture.
@@ -217,16 +221,19 @@ public partial class RunObservation
             throw new System.InvalidOperationException("Annuler doit retrouver Abandonner sans reprendre la run.");
         System.Collections.Generic.List<ScrollContainer> columns = (System.Collections.Generic.List<ScrollContainer>)pause.GetType()
             .GetField("_columnScrolls", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause);
-        // Les quinze statistiques tiennent sans défilement ; les neuf Oublis forcent le cas long réel.
+        // Dix-neuf statistiques exhaustives, puis les Oublis : les deux cas doivent rester accessibles au défilement.
         PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
         foreach (OubliData oubli in OubliDataLoader.All) peril.AddOubli(oubli);
         pause.GetType().GetMethod("UpdateStats", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(pause, null);
         await Frames(4);
         VBoxContainer inventory = (VBoxContainer)pause.GetType()
             .GetField("_inventoryContainer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause);
-        inventory.GetChild<GridContainer>(3).GetChild<Button>(3).GrabFocus();
+        inventory.GetChild<GridContainer>(5).GetChild<Button>(newItems ? 0 : 2).GrabFocus();
         await Frames(3);
         SaveFrame("pause-object");
+        inventory.GetChild<GridContainer>(5).GetChild<Button>(newItems ? 2 : 1).GrabFocus();
+        await Frames(3);
+        SaveFrame("pause-object-status");
         columns[1].GrabFocus();
         // Stick droit ou Page bas : seule la colonne examinée défile.
         int previousScroll = columns[1].ScrollVertical;

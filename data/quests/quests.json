@@ -967,6 +967,333 @@
                     "id": "dead_weight"
                 }
             ]
+        },
+        {
+            "id": "item_small_fortunes",
+            "name": "Petites fortunes",
+            "description": "Ouvrir 5 coffres, toutes parties confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "chests_opened",
+                    "target": 5
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "capsule_porte_bonheur"
+                }
+            ]
+        },
+        {
+            "id": "item_make_room",
+            "name": "Un peu de place",
+            "description": "Éliminer 80 créatures à moins de 120 pixels, toutes parties confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "close_kills",
+                    "target": 80,
+                    "param": 120
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "tampon_elastique"
+                }
+            ]
+        },
+        {
+            "id": "item_hold_the_thread",
+            "name": "Garder le fil",
+            "description": "Éliminer 100 créatures ralenties, toutes parties confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "slowed_kills",
+                    "target": 100
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "ficelle_ciree"
+                }
+            ]
+        },
+        {
+            "id": "item_same_tune",
+            "name": "Sur le même air",
+            "description": "Éliminer 150 créatures avec la Boîte à musique, toutes parties confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "weapon_kills",
+                    "target": 150,
+                    "weapon": "music_box"
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "roulement_lisse"
+                }
+            ]
+        },
+        {
+            "id": "item_keep_in_touch",
+            "name": "Garder le contact",
+            "description": "Pendant une même partie, porter deux armes de niveau 6 et traverser une Résurgence.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "weapons_at_level",
+                    "target": 2,
+                    "param": 6
+                },
+                {
+                    "stat": "crises_survived",
+                    "target": 1
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "cordon_spirale"
+                }
+            ]
+        },
+        {
+            "id": "item_find_north",
+            "name": "Retrouver le nord",
+            "description": "Éliminer 120 créatures avec la Boussole, toutes parties confondues.",
+            "difficulty": 1,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "weapon_kills",
+                    "target": 120,
+                    "weapon": "compass_needle"
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "fer_a_cheval_miniature"
+                }
+            ]
+        },
+        {
+            "id": "item_lost_and_found",
+            "name": "Objets trouvés",
+            "description": "Pendant une même partie, découvrir 2 500 cases et ouvrir 3 coffres.",
+            "difficulty": 1,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "zones_discovered",
+                    "target": 2500
+                },
+                {
+                    "stat": "chests_opened",
+                    "target": 3
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "ticket_de_vestiaire"
+                }
+            ]
+        },
+        {
+            "id": "item_straight_through",
+            "name": "Droit devant",
+            "description": "Éliminer 180 créatures avec la Cloueuse dans une même partie.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "weapon_kills",
+                    "target": 180,
+                    "weapon": "crossbow"
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "peigne_casse"
+                }
+            ]
+        },
+        {
+            "id": "item_returning_colour",
+            "name": "Reprendre couleur",
+            "description": "Récupérer effectivement 180 PV, toutes parties confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "hp_healed",
+                    "target": 180
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "ampoule_rouge"
+                }
+            ]
+        },
+        {
+            "id": "item_clear_splinters",
+            "name": "Éclats nets",
+            "description": "Éliminer 80 créatures par coup critique, toutes parties confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "crit_kills",
+                    "target": 80
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "bille_irisee"
+                }
+            ]
+        },
+        {
+            "id": "item_chain_reaction",
+            "name": "De proche en proche",
+            "description": "Pendant une même partie, éliminer 200 créatures à distance et au moins 12 créatures en 2 secondes.",
+            "difficulty": 2,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "ranged_kills",
+                    "target": 200
+                },
+                {
+                    "stat": "kill_burst",
+                    "target": 12,
+                    "param": 2
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "domino_ebreche"
+                }
+            ]
+        },
+        {
+            "id": "item_open_every_lock",
+            "name": "Forcer la serrure",
+            "description": "Ouvrir 50 coffres, toutes parties confondues.",
+            "difficulty": 2,
+            "scope": "cumulative",
+            "conditions": [
+                {
+                    "stat": "chests_opened",
+                    "target": 50
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "pied_de_biche"
+                }
+            ]
+        },
+        {
+            "id": "item_crossed_signatures",
+            "name": "Signatures croisées",
+            "description": "Pendant une même partie, éliminer 120 créatures en mêlée et 120 à distance, et porter deux armes de niveau 8.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "melee_kills",
+                    "target": 120
+                },
+                {
+                    "stat": "ranged_kills",
+                    "target": 120
+                },
+                {
+                    "stat": "weapons_at_level",
+                    "target": 2,
+                    "param": 8
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "registre_biffe"
+                }
+            ]
+        },
+        {
+            "id": "item_stay_together",
+            "name": "Rester ensemble",
+            "description": "Pendant une même partie, porter deux armes de niveau 12 et éliminer au moins 15 créatures en 3 secondes.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "weapons_at_level",
+                    "target": 2,
+                    "param": 12
+                },
+                {
+                    "stat": "kill_burst",
+                    "target": 15,
+                    "param": 3
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "pelote_rouge"
+                }
+            ]
+        },
+        {
+            "id": "item_one_less_trace",
+            "name": "Une trace de moins",
+            "description": "Pendant une même partie, parcourir 4 000 mètres, atteindre le Péril 3 et traverser deux Résurgences en perdant moins de 25 % des PV max à chacune.",
+            "difficulty": 3,
+            "scope": "run",
+            "conditions": [
+                {
+                    "stat": "distance_m",
+                    "target": 4000
+                },
+                {
+                    "stat": "peril",
+                    "target": 3
+                },
+                {
+                    "stat": "clean_crises",
+                    "target": 2,
+                    "param": 0.25
+                }
+            ],
+            "unlocks": [
+                {
+                    "type": "object",
+                    "id": "portrait_efface"
+                }
+            ]
         }
     ]
 }

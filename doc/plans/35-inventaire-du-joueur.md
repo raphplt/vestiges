@@ -596,3 +596,9 @@ Raphaël demande un rang fixe par objet, des probabilités liées au rang et un 
 ## 20. Révision du 12 octobre — cumul simple et extension du catalogue
 
 Les retours de Raphaël (DECISIONS §128) remplacent les propositions de doublon et le classement du 11 octobre : aucun effet de palier sur les objets du sac ; effets révisés et budgets de déclenchement au [plan I10](35-raretes-des-objets.md). Extension préparée : [57 objets au total, dont 35 nouveaux](35-catalogue-objets-v2.md), statistiques globales et propriétés d’armes, utilitaires et hauts rangs accessibles dès le profil neuf. Les sections de livraison antérieures décrivent le code existant ; la nouvelle cible reste à implémenter, un lot à la fois.
+
+## 21. Deuxième retour du 12 octobre — économie, soins et effets vérifiables
+
+DECISIONS §132 complète §128 : régénération affichée en PV/min, noms plus courts, Chance appliquée aux coffres, relèvement du plafond de vol de vie, toutes les statistiques en pause et effets réellement appliqués/visibles. Les orbitales utilisent la quantité de projectiles commune ; Anneau retiré. Étiquette conditionnant les flèches des coffres, coffres payants en Essence et Pied-de-biche pour une chance d’ouverture gratuite. Plan cadastral abandonné, Portrait effacé proposé en remplacement.
+
+Cible révisée : **56 objets dont 34 nouveaux** (14 communs, 18 inhabituels, 11 rares, 8 épiques, 5 légendaires). [Catalogue](35-catalogue-objets-v2.md) et [plan](35-raretes-des-objets.md) précisent les noms, soins, formules et lots I10d/I10e ajoutés. Les valeurs de Chance, soins, prix et nouveaux effets restent proposées. La section 20 décrit la première révision ; aucune mise en jeu de ces propositions n’est revendiquée.

@@ -40,7 +40,7 @@ public static class LootRewards
     /// Tirages concrets. Les butins sans équivalent V2 (ressources, malédictions) sont ignorés ; un Souvenir
     /// quand tous sont retrouvés, ou des niveaux d'objet sans objet à monter, deviennent de l'Essence.
     /// </summary>
-    public static List<ResolvedLoot> Resolve(List<LootResolver.LootResult> loots, Player player)
+    public static List<ResolvedLoot> Resolve(List<LootResolver.LootResult> loots, Player player, string source = "generic", float luck = 0f)
     {
         List<ResolvedLoot> resolved = new();
         // Niveaux déjà promis par ce même butin : deux tirages sur un objet ne dépassent pas son maximum.
@@ -72,13 +72,12 @@ public static class LootRewards
                         string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT_LEVEL"), owned.Data.Name, levels), ObjectColor));
                     break;
                 case "object":
-                    PassiveSouvenirData item = PickUnlockedItem(player, RunRandom.Loot, promisedItems);
+                    PassiveSouvenirData item = PickUnlockedItem(player, RunRandom.Loot, promisedItems, source, luck);
                     if (item == null)
                         break;
                     promisedItems[item.Id] = promisedItems.GetValueOrDefault(item.Id) + 1;
                     // Un exemplaire par tirage ; le sac plein sera géré au ramassage, sans remplacer l'objet.
-                    resolved.Add(new ResolvedLoot("object", item.Id, 1,
-                        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT"), item.Name), ObjectColor));
+                    resolved.Add(Object(item));
                     break;
                 case "souvenir":
                     string souvenirId = loot.ItemId == "random_souvenir" ? SouvenirManager.PickRandomUndiscovered() : loot.ItemId;
@@ -137,19 +136,11 @@ public static class LootRewards
     /// Objet débloqué au hasard que le joueur peut encore cumuler, exemplaires promis compris (plan 35) ; null si aucun.
     /// La place dans le sac n'est pas exigée : un objet au sol ou en vente se prend par l'échange.
     /// </summary>
-    public static PassiveSouvenirData PickUnlockedItem(Player player, RandomNumberGenerator rng, Dictionary<string, int> promised = null)
-    {
-        List<PassiveSouvenirData> candidates = new();
-        foreach (PassiveSouvenirData data in PassiveSouvenirDataLoader.GetAll())
-        {
-            if (data.IsBadge || !MetaSaveManager.IsObjectUnlocked(data.Id))
-                continue;
-            int copies = (player?.FindObject(data.Id)?.Copies ?? 0) + (promised?.GetValueOrDefault(data.Id) ?? 0);
-            if (copies < data.MaxCopies)
-                candidates.Add(data);
-        }
-        return candidates.Count > 0 ? candidates[(int)(rng.Randi() % candidates.Count)] : null;
-    }
+    public static PassiveSouvenirData PickUnlockedItem(Player player, RandomNumberGenerator rng, Dictionary<string, int> promised = null,
+        string source = "generic", float luck = 0f) => ItemLootPool.For(player).Pick(source, rng, luck, promised);
+
+    public static ResolvedLoot Object(PassiveSouvenirData item) => new("object", item.Id, 1,
+        string.Format(TranslationServer.Translate("CHEST_LOOT_OBJECT"), item.Name), RarityPalette.Main(item.Rarity));
 
     private static ResolvedLoot Essence(int amount) =>
         new("essence", "essence", amount, Format("CHEST_LOOT_ESSENCE", amount), EssenceColor);

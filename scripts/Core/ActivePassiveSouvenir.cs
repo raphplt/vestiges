@@ -3,9 +3,8 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Objet porté (plan 21 §4, plan 23 R3) : son niveau, de 1 à 30, et la somme des gains de chaque effet. Chaque carte
-/// donne un niveau et ajoute à chaque effet son pas multiplié par le gain de sa rareté ; l'objet neuf vaut un pas.
-/// Ses paliers s'atteignent une fois pour toutes.
+/// Écusson porté : niveaux et gains des cartes, avec rendement et paliers. Objet du sac : copies entières,
+/// effet linéaire par copie, sans palier ni gain de rareté. Les deux partagent le calcul des valeurs d’effet.
 /// </summary>
 public class ActivePassiveSouvenir
 {
@@ -14,7 +13,7 @@ public class ActivePassiveSouvenir
 	public int Level { get; private set; }
 	/// <summary>Exemplaires d'un objet dans le sac (plan 35) ; 0 pour un Écusson.</summary>
 	public int Copies { get; internal set; }
-	public bool IsMaxLevel => Level >= Data.MaxLevel;
+	public bool IsMaxLevel => Data.IsBadge ? Level >= Data.MaxLevel : Data.IsCopyLimitReached(Copies);
 
 	private readonly float[] _gains;
 
@@ -23,6 +22,7 @@ public class ActivePassiveSouvenir
 		Data = data;
 		Id = data.Id;
 		Level = 1;
+		Copies = data.IsBadge ? 0 : 1;
 		_gains = new float[data.Effects.Count];
 		for (int i = 0; i < _gains.Length; i++)
 			_gains[i] = data.Effects[i].Step;
@@ -34,12 +34,12 @@ public class ActivePassiveSouvenir
 	/// <summary>Valeur d'un effet après une carte de gain <paramref name="gain"/> (1 pour une commune).</summary>
 	public float ValueAfter(int effect, float gain) => Value(effect) + Data.Effects[effect].Step * gain * StepFactor(Level + 1);
 
-	public bool Reached(ObjectMilestoneData milestone) => Level >= milestone.Level;
+	public bool Reached(ObjectMilestoneData milestone) => Data.IsBadge && Level >= milestone.Level;
 
 	/// <summary>Une carte : un niveau de plus et le pas de chaque effet, multiplié par <paramref name="gain"/>.</summary>
 	public bool Upgrade(float gain)
 	{
-		if (IsMaxLevel)
+		if (!Data.IsBadge || IsMaxLevel)
 			return false;
 		Level++;
 		float factor = StepFactor(Level);
@@ -49,16 +49,17 @@ public class ActivePassiveSouvenir
 	}
 
 	/// <summary>
-	/// Place un objet à un niveau d'exemplaires, chaque niveau valant un pas entier (plan 35) : 0 le ramène au neutre.
+	/// Fixe le nombre réel de copies ; 0 ramène chaque effet au neutre.
 	/// L'appelant applique l'écart de valeur au joueur.
 	/// </summary>
-	public void SetItemLevel(int level)
+	public void SetItemCopies(int copies)
 	{
 		if (Data.IsBadge)
 			return;
-		Level = level;
+		Copies = System.Math.Max(0, copies);
+		Level = Copies;
 		for (int i = 0; i < _gains.Length; i++)
-			_gains[i] = Data.Effects[i].Step * level;
+			_gains[i] = Data.Effects[i].Step * Copies;
 	}
 
 	/// <summary>Rendement d'un niveau : un pas entier, sauf pour un Écusson au-delà du seuil d'inventory.json.</summary>

@@ -27,22 +27,6 @@ public static class ObjectMilestoneEffects
         ObjectMilestones.LowHpLifestealEffect,
         ObjectMilestones.LevelEssenceEffect,
         ObjectMilestones.LevelRerollEffect,
-        ObjectTriggers.BurnSpreadEffect,
-        ObjectTriggers.DoubleSlowFreezeEffect,
-        ObjectTriggers.BurnSlowsEffect,
-        ObjectTriggers.SlowKillExtendsEffect,
-        ObjectTriggers.DoubleExplosionEffect,
-        ObjectTriggers.EliteKillHealEffect,
-        ObjectTriggers.DoubleStrideEffect,
-        ObjectTriggers.CascadeInvulnerabilityEffect,
-        ObjectTriggers.LongFragileEffect,
-        ObjectTriggers.DoubleCritEchoEffect,
-        ObjectTriggers.StickyFragileEffect,
-        ObjectStances.StillArmorEffect,
-        ObjectStances.CrowdCapEffect,
-        ObjectStances.ThermosThresholdEffect,
-        ObjectStances.LowHpSpeedEffect,
-        ObjectStances.EssenceRefundEffect,
     };
 
     public static bool IsImplemented(string effect) => Implemented.Contains(effect);

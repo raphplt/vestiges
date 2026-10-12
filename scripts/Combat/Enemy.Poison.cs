@@ -1,54 +1,62 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 
 namespace Vestiges.Combat;
 
-/// <summary>
-/// Poison (Flacon de pharmacie, plan 35 I6) : une réserve de dégâts que chaque coup grossit et qui se vide sur la durée
-/// restante ; chaque coup relance la durée. Contrairement à la Brûlure et au saignement, il s'accumule sans plafond.
-/// </summary>
+/// <summary>Chaque dose conserve sa durée et sa provenance. Une nouvelle dose ne rafraîchit jamais les anciennes.</summary>
 public partial class Enemy
 {
-	private AttackContext _poisonSource;
-	private float _poisonReserve;
-	private float _poisonTimer;
+    private struct PoisonDose
+    {
+        public float DamagePerSecond;
+        public float Remaining;
+        public AttackContext Source;
+    }
 
-	internal bool IsPoisoned => _poisonTimer > 0f;
+    private readonly List<PoisonDose> _poisonDosesList = new();
+    internal bool IsPoisoned => _poisonDosesList.Count > 0;
+    public int PoisonDoseCount => _poisonDosesList.Count;
+    public void ApplyPoison(float damage, float duration, AttackContext source = default, int maxDoses = int.MaxValue)
+    {
+        if (_isDying || damage <= 0f || duration <= 0f || _poisonDosesList.Count >= maxDoses) return;
+        _poisonDosesList.Add(new PoisonDose
+        {
+            DamagePerSecond = damage / duration,
+            Remaining = duration,
+            Source = OverTime(source)
+        });
+    }
 
-	public void ApplyPoison(float damage, float duration, AttackContext source = default)
-	{
-		if (_isDying || damage <= 0f || duration <= 0f)
-			return;
-		_poisonSource = OverTime(source);
-		_poisonReserve += damage;
-		_poisonTimer = Mathf.Max(_poisonTimer, duration);
-	}
+    private void ProcessPoison(float delta)
+    {
+        if (_poisonDosesList.Count == 0 || _isBurrowed) return;
+        for (int i = _poisonDosesList.Count - 1; i >= 0; i--)
+        {
+            PoisonDose dose = _poisonDosesList[i];
+            float share = dose.DamagePerSecond * Mathf.Min(delta, dose.Remaining);
+            dose.Remaining -= delta;
+            if (dose.Remaining <= 0f)
+            {
+                _poisonDosesList[i] = _poisonDosesList[^1];
+                _poisonDosesList.RemoveAt(_poisonDosesList.Count - 1);
+            }
 
-	private void ProcessPoison(float delta)
-	{
-		// Terrée, la créature ne prend rien : le poison attend qu'elle ressorte au lieu de s'évaporer.
-		if (_poisonTimer <= 0f || _isBurrowed)
-			return;
+            else _poisonDosesList[i] = dose;
+            float damage = share * DamageOverTimeFactor(dose.Source);
+            DamageResult result = DamageResult.Resolve(Life, dose.Source, _currentHp, damage, 0f);
+            LoseHp(damage);
+            _dotNumbers.Add(StatusKind.Poison, damage);
+            _eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
+            _eventBus.PublishEnemyDamage(result);
+            if (result.Fatal && !_isDying)
+            {
+                Die(result);
+                return;
+            }
 
-		float share = _poisonReserve * Mathf.Min(1f, delta / _poisonTimer);
-		_poisonTimer -= delta;
-		_poisonReserve -= share;
-		float damage = share * DamageOverTimeFactor(_poisonSource);
-		DamageResult result = DamageResult.Resolve(Life, _poisonSource, _currentHp, damage, 0f);
-		LoseHp(damage);
-		_dotNumbers.Add(StatusKind.Poison, damage);
-		_eventBus.EmitSignal(EventBus.SignalName.EntityDamaged, this, damage);
-		_eventBus.PublishEnemyDamage(result);
-		if (_poisonTimer <= 0f)
-			ClearPoison();
-		if (result.Fatal && !_isDying)
-			Die(result);
-	}
+        }
 
-	private void ClearPoison()
-	{
-		_poisonReserve = 0f;
-		_poisonTimer = 0f;
-		_poisonSource = default;
-	}
+    }
+    private void ClearPoison() => _poisonDosesList.Clear();
 }

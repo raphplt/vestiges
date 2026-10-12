@@ -1484,6 +1484,29 @@ Constat dans le code : la rafale de G6g (§59) ne retardait que les tirs qui ret
 - **Campement (plan 36 §13) et Inventaire (plan 35 §16) :** pas encore joué, questions reportées.
 - **Reste du tableau de bord :** rien de neuf.
 
+## 132. Objets : Chance, coffres payants, soins et lisibilité — 12 octobre 2026
+
+Deuxième retour de Raphaël sur le catalogue proposé (§128) :
+
+- Pastille : compter et afficher les soins par minute ; remplacer le nom « duffle-coat », varier les noms au lieu d’accumuler « machin de quelque chose ».
+- La Chance **doit influencer les coffres**. Aujourd’hui le choix d’objet est uniforme et ne la lit pas.
+- Le plafond à 3 % des PV max/s est jugé trop bas : le relever ou le supprimer, avec une forte récupération qui reste le résultat d’un build et de bons objets, pas un acquis du début de run. Le code actuel limite le vol de vie, pas tous les soins.
+- Exigence de livraison : chaque effet réellement appliqué en jeu, **toutes les stats visibles en pause**, effets montrés en action quand cela aide à les comprendre. Une fiche ou un raccordement théorique ne suffit pas.
+- Explication demandée sur le guidage : correction de trajectoire d’un projectile autoguidé vers sa cible, pas chance de toucher.
+- Anneau refusé : **les armes orbitales suivent la même quantité de projectiles** que les autres armes.
+- Étiquette : préférer conditionner les flèches des coffres à cet objet à une simple extension de portée.
+- Clé remplacée par un **Pied-de-biche donnant une chance d’ouverture gratuite** ; les **coffres deviennent payants en Essence**, accélérer leur animation n’a pas d’intérêt puisqu’elle se saute déjà.
+- Plan cadastral refusé ; proposer une autre mécanique.
+
+**Préparation, pas livraison :** [plan](35-raretes-des-objets.md) et [catalogue](35-catalogue-objets-v2.md) révisés. Propositions de l’agent : 9 PV/min par Pastille (même débit que 0,15 PV/s), plafond du vol de vie à 8 % des PV max/s, Dé limité à n PV/s sans second plafond proportionnel ; poids de rareté multipliés par `(1 + Chance)^rang` ; prix initiaux de coffres 20/45/90 Essence à mesurer ; Pied-de-biche 15 % par copie, maximum 60 %, jet unique mémorisé ; Étiquette une flèche par copie, maximum trois ; Portrait effacé légendaire, leurre après dash. Aucune de ces valeurs n’est présumée validée par Raphaël. Catalogue à 56 objets (34 nouveaux) après suppression de l’Anneau ; noms révisés, Verre fêlé accessible dès le départ conformément au §131. Pas de changement du code de gameplay pendant cette préparation.
+
+
+## 133. Implémentation complète des objets, copies ordinaires illimitées — 12 octobre 2026
+
+Raphaël valide le plan et demande « implémente toutes ces objets. fait tout, à part les sprites et les animations ». Il retire la limite générale à six exemplaires : **aucune limite de copies sur les objets ordinaires**, seules les limites des légendaires et objets uniques restent. Les anciennes exceptions ordinaires à deux, trois, quatre ou dix copies sont donc également levées. Les places du sac et les plafonds de sécurité des effets restent des mécanismes distincts.
+
+Exécution par lots du [plan I10](35-raretes-des-objets.md) et du [catalogue V2](35-catalogue-objets-v2.md) : fondations et copies directes ; effets existants ; raretés, sources et coffres payants ; nouveaux objets et raccordements ; affichage intégral des stats et validations. Les sprites et animations nouveaux sont exclus ; les effets doivent fonctionner et être lisibles avec les moyens existants. Les valeurs de §132 sont validées comme réglages initiaux à mesurer, sans prétendre leur équilibre déjà démontré.
+
 
 ## 134. Améliorations d'arme : stat au plafond, Rallonge, Épique à deux stats — 12 octobre 2026
 
@@ -1496,6 +1519,43 @@ Raphaël signale une carte « Rallonge, Zone +0 % » au level-up. Cause : les ar
 ### 129 quater. Colonnes de lumière
 
 Planche de trois propositions (A faisceau effiloché, B poussière de mémoire, C rai oblique) : « là comme ça aucun me plaît. En fait le A était pas mal mais pas assez animé. » A repris en plus animé (vagues qui remontent, cœur qui respire, éclats au sommet, anneau au sol), vidéo : « parfait comme ça on laisse ainsi ». **Acquis** pour toutes les colonnes de lumière.
+
+## 135. Campement : cohérence des icônes et matières des menus — 12 octobre 2026
+
+Raphaël : « les icons pixel art c'est bien mais il n'y a pas la meme densité de pixel ni style qu'ailleurs (par exemple les objets ect) donc à revoir » ; « Grands panneaux et leurs bordures, fond : ca ne devrait pas etre des png mais plutot des textures. et attention à ce qu'elles soient de bonne qualité ».
+
+**Direction demandée :** reprendre la densité et le style des objets ; remplacer les grandes illustrations étirées des surfaces intérieures par des matières de qualité. **Proposition de l'agent, à juger :** même pipeline de volumes et lumière que les objets pour les icônes, petite pierre raccordable, grain discret, bordures modulaires à échelle constante. Trois icônes et une planche de matières préparées au [lot M6a](36-progression-permanente.md#reprise-visuelle-m6--étude-du-12-octobre-2026). Aucun remplacement en jeu pour l'instant ; la préparation des planches n'est pas une approbation de cette direction précise.
+
+### 135 bis. Direction M6 approuvée
+
+Après les planches des trois icônes et des matières : « Bcp mieux. ca me va fait le reste ». **Acquis :** même rendu que les objets, pierre mate raccordable, grain discret, bordures à échelle constante ; décliner toutes les icônes du Campement et intégrer les matières aux menus. L'illustration du menu principal reste la référence, les fonds intérieurs et les grands panneaux deviennent procéduraux.
+
+M6b livré et vérifié le même jour : quatorze icônes, matière raccordable créée et partagée par le jeu, neuf régions répétées ; captures aux deux résolutions et six suites vertes sur une copie isolée du lot. Build du dossier partagé également sans warning. Compte rendu au [plan 36](36-progression-permanente.md#reprise-visuelle-m6--étude-du-12-octobre-2026) ; les changements de faune et d'objets en cours ne font pas partie de cette validation isolée.
+
+### 135 ter. Fond illustré conservé, matière dans les panneaux, bordures à enrichir
+
+Raphaël : « je me suis mal exprimé le fond peut etre l'image que tu avais créé (la dernière c'était top) par contre il faut que les cards et menus aient des bordures plus travailées. et le fond que tu as créé irait bien pour ces menus je pense ».
+
+Clarification de M6 : remettre l'image simplifiée B5c/B5d derrière les menus ; employer la matière procédurale dans les cartes et panneaux. Travailler davantage leurs bordures. Proposition d'implémentation au [lot M7](36-progression-permanente.md#reprise-visuelle-m7--clarification-du-12-octobre-2026) : relief de pierre, biseaux, joints et cassures irréguliers, coins taillés, sans changer les icônes ou la disposition. Le détail de cette nouvelle bordure reste à juger sur les captures.
+
+Raphaël précise ensuite : « en fait c'est aussi que les bords rectangulaires brutaux que j'aime pas ». **Demande :** revoir la silhouette elle-même. Reprise M7 : coins largement cassés et différents selon leur position, contours avec décrochements, sans imposer une nouvelle disposition aux contenus.
+
+M7 intégré et vérifié : fond illustré restauré, matériau dans les panneaux, coins taillés et contours ébréchés ; relief teinté par la sélection. Six suites vertes sur copie isolée, build du dossier partagé zéro warning, captures aux deux résolutions et dans la pause. **Le détail du rendu reste à juger par Raphaël**, les vérifications techniques ne valent pas approbation visuelle.
+
+### 135 quater. Campement : icônes encadrées, hauteur et typographie
+
+Raphaël : « ok c'est sympa mais ptet sur le campement met les icons de la liste à gauche dans des cadres […] le menu peux prendre plus de hauteur » ; supprimer le trait sous « Tout rendre » sur toute la largeur. Il apprécie le décor mais s'interroge sur son effet sur la lecture ; « je crois que c'est surtout la font utilisée qui dénote mais négativement ».
+
+Lot [M8](36-progression-permanente.md#reprise-visuelle-m8--lisibilité-du-campement-12-octobre-2026) : cadres des icônes, hauteur disponible et suppression du trait. Proposition de l'agent pour la lecture : assombrir le décor sur le Campement et essayer Pixel Operator sur cette page, avec de plus grands textes et des marges adaptées. La police et la luminosité exactes ne sont pas présumées approuvées avant la capture du résultat ; aucune refonte typographique globale implicite.
+
+M8 intégré et vérifié : cadres, 144 px supplémentaires en hauteur de corps, trait supprimé, décor à 52 % de luminosité, Pixel Operator limitée au Campement. Captures 720p/1080p et libellés anglais inspectés, quatre suites vertes sur copie isolée et build du dossier partagé zéro warning. **Police et luminosité à juger par Raphaël** sur ces captures.
+
+
+## 136. Préparer les quêtes après les objets — 12 octobre 2026
+
+Raphaël demande de continuer l’implémentation validée, puis ajoute : « une fois fait tu préparera les quetes ». Après les raccordements des 34 nouveautés, préparation de [quinze quêtes d’objets](35-quetes-objets-v2.md), avec fiches JSON alors conservées hors données actives (intégrées et brouillon supprimé ensuite, §138). Tous les objectifs utilisent des faits déjà suivis, chaque dépendance est explicitée et aucune récompense n’est requise pour son propre objectif. Seuils proposés à mesurer ; aucune nouvelle quête activée ni modification de `data/quests/quests.json`.
+
+Les 19 nouveautés disponibles au départ le restent ; les quinze Q sont implémentés et accessibles en dev, mais `initial_unlock: false` les garde fermés en profil normal jusqu’à leur quête. Le mode dev a priorité ; une quête accomplie ouvre explicitement son objet. Les 49 quêtes existantes et les 14 anciens objets qu’elles gardent sont conservés.
 
 ## 137. Exode dans les rues : densité égale, scènes rares — 12 octobre 2026
 

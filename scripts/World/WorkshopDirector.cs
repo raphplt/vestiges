@@ -178,13 +178,13 @@ public partial class WorkshopDirector : Node
     {
         if (!_itemOffers.TryGetValue(workshop, out string itemId))
         {
-            itemId = LootRewards.PickUnlockedItem(_player, _itemRng)?.Id ?? "";
+            itemId = LootRewards.PickUnlockedItem(_player, _itemRng, source: "workshop")?.Id ?? "";
             _itemOffers[workshop] = itemId;
         }
         PassiveSouvenirData item = PassiveSouvenirDataLoader.Get(itemId);
         if (item == null)
             return;
-        int cost = Price(_config.ItemCost, workshop.ServiceUses(ServiceItem));
+        int cost = Price(ItemLootConfig.WorkshopCost(item.Rarity), workshop.ServiceUses(ServiceItem));
         // Sac plein : l'achat passe par l'écran d'échange, qui fait la place.
         bool bagFull = !_player.HasBagRoom;
         ChoiceCard card = new()
@@ -196,7 +196,8 @@ public partial class WorkshopDirector : Node
             Enabled = essence >= cost && !_player.IsItemAtMax(item.Id) && (_player.CanTakeItem(item.Id) || bagFull),
             Icon = LoadIcon(item.Icon),
         };
-        card.Lines.Add((item.RuleText(), ChoiceStyle.TextColor));
+        ItemPresentation.ConfigureCard(card, item);
+        ItemPresentation.AddComparison(card, item, _player.FindObject(item.Id)?.Copies ?? 0);
         if (bagFull)
             card.Lines.Add((Tr("ITEM_BAG_FULL"), ChoiceStyle.TextColor));
         cards.Add(card);

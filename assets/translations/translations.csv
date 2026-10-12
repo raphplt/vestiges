@@ -549,3 +549,22 @@ STAT_SOVEREIGN_SLOW,Temps arrêté,Stopped time
 COLLECTION_BADGE_RULE,"Cousu en souvenir de : {0}. Monte au level-up jusqu'au niveau {1}, à demi-pas après le niveau {2}.","Sewn in memory of: {0}. Rises on level-up up to level {1}, at half step after level {2}."
 COLLECTION_ITEM_RULE,Jusqu'à {0} exemplaires dans le sac ; palier au {1}ᵉ.,Up to {0} copies in the bag; tier at copy {1}.
 COLLECTION_ITEM_RULE_PLAIN,Jusqu'à {0} exemplaires dans le sac.,Up to {0} copies in the bag.
+COLLECTION_ITEM_UNLIMITED,Cumul sans limite dans les places disponibles du sac.,Unlimited stacking within available bag slots.
+STAT_STILL_DAMAGE,Dégâts immobile,Stationary damage
+STAT_ELITE_SLOW,Ralentissement des élites,Elite slow
+STAT_CRIT_MULTIPLIER,Multiplicateur critique,Critical multiplier
+STAT_BASE,Base,Base
+STAT_BUILD,Bonus du build,Build bonus
+STAT_CONE_START,Ouverture initiale,Initial angle
+STAT_SPREAD,Dispersion,Spread
+STAT_CHAIN_FALLOFF,Dégâts conservés par rebond,Damage retained per bounce
+STAT_CHEST_POINTERS,Directions de coffres,Chest directions
+STAT_ITEM_LIFETIME,Présence des objets au sol,Ground item lifetime
+STAT_FREE_CHEST,Gratuité des coffres,Free chest chance
+STAT_CHEST_XP_PULL,Attraction après coffre,Chest XP attraction
+STAT_CHEST_CHOICES,Candidats supplémentaires,Extra candidates
+STAT_CROSS_WEAPON_ECHO,Impact croisé,Cross-weapon impact
+STAT_DAMAGE_LINK,Transfert de dégâts,Damage transfer
+STAT_DASH_CANCEL_PROJECTILES,Projectiles effacés,Cancelled projectiles
+STAT_DASH_RECOVERY,PV récents restitués,Recent health restored
+STAT_DASH_DECOY,Durée du souvenir,Decoy duration

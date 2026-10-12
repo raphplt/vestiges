@@ -93,10 +93,10 @@ public static class UITheme
 		return null;
 	}
 
-	/// <summary>Cree un StyleBoxTexture NinePatch depuis une texture.</summary>
+	/// <summary>Neuf régions raccordables : les textures M6 gardent leur grain et leurs tranches à toutes les tailles.</summary>
 	public static StyleBoxTexture CreateNinePatch(Texture2D texture, int left, int top, int right, int bottom)
 	{
-		if (MenuSkin.IsFrame(texture)) left = top = right = bottom = 36;
+		int textureMargin = MenuStoneTextures.IsFramed(texture) ? MenuStoneTextures.CornerMargin(texture) : 0;
 		StyleBoxTexture sbt = new()
 		{
 			Texture = texture,
@@ -105,15 +105,12 @@ public static class UITheme
 			AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Tile
 		};
 
-		if (MenuSkin.IsFrame(texture))
-		{
-			sbt.AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Stretch;
-			sbt.AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch;
-		}
-		sbt.TextureMarginLeft = left;
-		sbt.TextureMarginTop = top;
-		sbt.TextureMarginRight = right;
-		sbt.TextureMarginBottom = bottom;
+		sbt.TextureMarginLeft = textureMargin > 0 ? textureMargin : left;
+		sbt.TextureMarginTop = textureMargin > 0 ? textureMargin : top;
+		sbt.TextureMarginRight = textureMargin > 0 ? textureMargin : right;
+		sbt.TextureMarginBottom = textureMargin > 0 ? textureMargin : bottom;
+		// La découpe irrégulière des coins n'impose pas davantage de vide entre les contrôles.
+		if (textureMargin > 0) left = top = right = bottom = MenuStoneTextures.BorderSize;
 
 		sbt.ContentMarginLeft = left + 2;
 		sbt.ContentMarginTop = top + 2;

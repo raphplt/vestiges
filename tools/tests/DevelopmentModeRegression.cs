@@ -56,6 +56,8 @@ public partial class DevelopmentModeRegression : Node
                     Check(MetaSaveManager.IsWeaponUnlocked(weapon.Id), $"accès arme {weapon.Id}");
                 foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
                     Check(MetaSaveManager.IsObjectUnlocked(item.Id), $"accès objet {item.Id}");
+                Check(!PassiveSouvenirDataLoader.Get("portrait_efface").InitialUnlock
+                    && MetaSaveManager.IsObjectUnlocked("portrait_efface"), "le mode dev ouvre aussi les objets à nouvelle quête active");
                 Check(!SteamManager.IsActive, "Steam inactif");
                 Check(MetaSaveManager.GetCompletedQuests().Count == 0, "quêtes non falsifiées");
                 Check(MetaSaveManager.GetVestiges() == 0, "monnaie normale non importée");
@@ -70,6 +72,8 @@ public partial class DevelopmentModeRegression : Node
                 Check(MetaSaveManager.GetDiscoveredSouvenirs().Count == 1, "lore normal conservé");
                 Check(MetaSaveManager.HasCompletedQuest("rake") && MetaSaveManager.IsWeaponUnlocked("nail_mace"), "quête normale et son arme conservées");
                 Check(!MetaSaveManager.IsWeaponUnlocked("lighthouse_shard") && !MetaSaveManager.IsObjectUnlocked("thermometre"), "verrous de quête conservés");
+                Check(!MetaSaveManager.IsObjectUnlocked("portrait_efface") && MetaSaveManager.IsObjectUnlocked("cassette_rembobinee"),
+                    "accès normal : Portrait réservé à sa quête active, Cassette disponible dès le départ");
                 Check(MetaSaveManager.GetVestiges() == (seed ? 37 : 47), "monnaie normale conservée");
             }
 

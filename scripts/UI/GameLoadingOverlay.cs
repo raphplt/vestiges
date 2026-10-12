@@ -69,9 +69,11 @@ public partial class GameLoadingOverlay : CanvasLayer
 		_background.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_background);
 
-		// Fond dédié en 480×270 : le grain de l'accueil, avec des masses de pierre simplifiées (plan 24 B5c).
-		_particleLayer = new PixelBackdrop(PixelBackdrop.NeutralTint, overGame: false,
-			background: GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png")) { Modulate = new Color(1f, 1f, 1f, 0.25f) };
+		// Dernière illustration simplifiée, partagée avec les menus intérieurs (plan 36 M7).
+		_particleLayer = new PixelBackdrop(PixelBackdrop.NeutralTint, overGame: false)
+		{
+			Modulate = new Color(1f, 1f, 1f, 0.25f)
+		};
 		_particleLayer.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		_particleLayer.MouseFilter = Control.MouseFilterEnum.Ignore;
 		_root.AddChild(_particleLayer);

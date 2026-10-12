@@ -29,6 +29,8 @@ public partial class ChestPointers : Control
     private int _placeCount;
     private bool _drawn;
     private EventBus _eventBus;
+    private GroupCache _groups;
+    private int _allowedCount;
 
     public ChestPointers()
     {
@@ -43,6 +45,7 @@ public partial class ChestPointers : Control
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
     }
 
@@ -66,7 +69,8 @@ public partial class ChestPointers : Control
         Camera2D camera = GetViewport().GetCamera2D();
         _count = 0;
         _placeCount = 0;
-        if (camera != null && _shown.Length > 0)
+        _allowedCount = Mathf.Min(_shown.Length, WorldItemEffects.ChestPointers(_groups.GetPlayer() as Player));
+        if (camera != null && _allowedCount > 0)
             CollectNearest(camera);
         if (camera != null && SmallPlace.Revealed.Count > 0)
             CollectRevealed(camera);
@@ -91,7 +95,7 @@ public partial class ChestPointers : Control
             if (distanceSq > _rangeSq)
                 continue;
             int slot;
-            if (_count < _shown.Length)
+            if (_count < _allowedCount)
                 slot = _count++;
             else if (distanceSq < _distances[_count - 1])
                 slot = _count - 1;

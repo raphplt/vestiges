@@ -13,7 +13,6 @@
     "homing_strength": { "default": 0, "min": 0 },
     "projectile_count": { "default": 1, "min": 0 },
     "projectile_pierce": { "default": 0, "min": 0 },
-    "orbital_count": { "default": 3, "min": 1 },
     "orbital_speed": { "default": 180, "min": 0 },
     "chain_targets": { "default": 2, "min": 1 },
     "chain_range": { "default": 100, "min": 0 },

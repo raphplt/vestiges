@@ -17,7 +17,7 @@ public static class ObjectDataValidator
     private static readonly string[] ObjectKeys =
     {
         "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
-        "survival", "offer_weight", "params", "enabled", "copy_levels", "usage",
+        "survival", "offer_weight", "params", "enabled", "rarity", "max_copies", "unique", "usage", "initial_unlock",
     };
     private static readonly string[] UsageKeys = { "trigger", "threshold" };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
@@ -138,20 +138,40 @@ public static class ObjectDataValidator
         if (!item.TryGetProperty("icon_color", out JsonElement color) || color.ValueKind != JsonValueKind.Array
             || color.GetArrayLength() != 3 || !AllNumbersIn(color, 0.0, 1.0))
             return $"{where}, icon_color : trois composantes de 0 à 1 attendues";
-        foreach (string flag in new[] { "enabled", "survival" })
+        foreach (string flag in new[] { "enabled", "survival", "initial_unlock" })
         {
             if (item.TryGetProperty(flag, out JsonElement value) && value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
                 return $"{where}, {flag} : booléen attendu";
         }
         int maxLevel = reader.Integer(item, "max_level", 1, MaxLevelBound);
-        // Niveau d'effet d'un objet selon ses exemplaires (plan 35) : seulement pour un objet, jamais au-delà de son maximum.
-        if (reader.Error == null && item.TryGetProperty("copy_levels", out _))
+        bool isBadge = Text(item, "kind") == "badge";
+        if (isBadge)
         {
-            if (Text(item, "kind") != "item")
-                return $"{where}, copy_levels : réservé aux objets";
-            int[] copyLevels = InventoryConfig.ReadCopyLevels(reader, item, "copy_levels");
-            if (reader.Error == null && copyLevels[^1] > maxLevel)
-                reader.Fail($"copy_levels : niveau {copyLevels[^1]} au-delà du maximum {maxLevel}");
+            foreach (string field in new[] { "rarity", "max_copies", "unique", "initial_unlock" })
+                if (item.TryGetProperty(field, out _))
+                    return $"{where}, {field} : réservé aux objets";
+        }
+        else
+        {
+            string rarity = Text(item, "rarity");
+            if (rarity is not ("common" or "uncommon" or "rare" or "epic" or "legendary"))
+                return $"{where}, rarity : rareté fixe valide attendue";
+            int maxCopies = reader.Integer(item, "max_copies", 0, int.MaxValue);
+            bool unique = false;
+            if (item.TryGetProperty("unique", out JsonElement uniqueValue))
+            {
+                if (uniqueValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                    return $"{where}, unique : booléen attendu";
+                unique = uniqueValue.GetBoolean();
+            }
+            if (reader.Error == null && maxCopies > 0 && rarity != "legendary" && !unique)
+                return $"{where}, max_copies : limite réservée aux légendaires ou objets uniques";
+            if (reader.Error == null && rarity == "legendary" && maxCopies == 0)
+                return $"{where}, max_copies : limite positive attendue pour un légendaire";
+            if (unique && maxCopies != 1)
+                return $"{where}, unique : un seul exemplaire attendu";
+            if (item.TryGetProperty("milestones", out _))
+                return $"{where}, milestones : réservés aux Écussons";
         }
         if (item.TryGetProperty("offer_weight", out _))
             reader.Positive(item, "offer_weight");
@@ -229,6 +249,8 @@ public static class ObjectDataValidator
             }
             // Un facteur nul ou négatif ferait diviser par zéro au passage d'un niveau à l'autre : vérifié au pire cas,
             // toutes les cartes au gain maximal de rareté.
+            if (modifier == "multiplicative" && Text(item, "kind") == "item" && step < 0f)
+                return $"{where}, {stat} : pas multiplicatif négatif interdit pour un objet cumulable";
             if (modifier == "multiplicative" && 1f + step * maxLevel * PassiveSouvenirDataLoader.MaxRarityGain <= 0f)
                 return $"{where}, {stat} : le facteur s'annule avant le niveau {maxLevel}";
         }

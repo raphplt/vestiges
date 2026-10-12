@@ -5,7 +5,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Fond commun aux menus, poussières et bords rongés sur une grille de 480 × 270. Par-dessus le jeu (menus ouverts en
-/// run, plan 37 R1), il montre le jeu flou et assombri derrière le panneau ; sinon, la pierre des menus (chargement).
+/// run, plan 37 R1), il montre le jeu flou et assombri derrière le panneau ; sinon, le fond illustré intérieur.
 /// Une teinte par écran ; <see cref="FadeIn"/> le fait monter à l'ouverture.
 /// </summary>
 public partial class PixelBackdrop : TextureRect
@@ -26,18 +26,17 @@ public partial class PixelBackdrop : TextureRect
     }
 
     /// <param name="overGame">Vrai pour un menu ouvert en run : le jeu se devine derrière (DECISIONS §117).</param>
-    /// <param name="background">Texture dédiée facultative, par exemple le fond simplifié du chargement.</param>
-    public PixelBackdrop(Color tint, bool overGame = true, Texture2D background = null)
+    public PixelBackdrop(Color tint, bool overGame = true)
     {
         _stoneShader ??= GD.Load<Shader>("res://assets/shaders/menu_erasure.gdshader");
         _gameShader ??= GD.Load<Shader>("res://assets/shaders/menu_game_veil.gdshader");
         Material = new ShaderMaterial { Shader = overGame ? _gameShader : _stoneShader };
-        Texture = background ?? GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png");
+        Texture = MenuSkin.InteriorBackground;
         _opacity = overGame ? 1f : 0.75f;
         SetTint(tint);
         TextureFilter = TextureFilterEnum.Nearest;
         ExpandMode = ExpandModeEnum.IgnoreSize;
-        StretchMode = StretchModeEnum.Scale;
+        StretchMode = StretchModeEnum.KeepAspectCovered;
         Modulate = new Color(1f, 1f, 1f, _opacity);
         MouseFilter = MouseFilterEnum.Ignore;
         ProcessMode = ProcessModeEnum.Always;

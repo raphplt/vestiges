@@ -325,7 +325,7 @@ public partial class PauseMenu : CanvasLayer
 		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
 		GridContainer objects = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6);
 		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"×{passive.Copies}", () => AddPassiveRow(passive));
+			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"×{passive.Copies}", () => AddPassiveRow(passive), passive.Data.Rarity);
 		FillEmpty(objects, objects.Columns);
 		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)
@@ -345,16 +345,24 @@ public partial class PauseMenu : CanvasLayer
 		return grid;
 	}
 
-	private void AddInventoryTile(GridContainer grid, string icon, string name, string level, System.Action detail)
+	private void AddInventoryTile(GridContainer grid, string icon, string name, string level, System.Action detail, string rarityId = null)
 	{
 		Button tile = MenuSkin.Button("");
-		tile.TooltipText = name;
+		tile.TooltipText = rarityId == null ? name : $"{name} · {RarityPalette.DisplayName(rarityId)}";
 		tile.AccessibilityName = name;
 		tile.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
 		TextureRect picture = new() { Texture = UITheme.LoadTex(icon), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
 			Position = new Vector2((tile.CustomMinimumSize.X - 48) / 2, 8), Size = new Vector2(48, 48), MouseFilter = Control.MouseFilterEnum.Ignore };
 		tile.AddChild(picture);
+		if (rarityId != null)
+		{
+			TextureRect rarity = new() { Texture = RarityArt.Icons(RarityArt.Rank(rarityId), 12)[0],
+				Position = new Vector2(6, 6), Size = new Vector2(12, 12), MouseFilter = Control.MouseFilterEnum.Ignore };
+			tile.AddChild(rarity);
+			tile.AddChild(new ColorRect { Color = RarityPalette.Main(rarityId), Position = new Vector2(4, 88),
+				Size = new Vector2(tile.CustomMinimumSize.X - 8, 2), MouseFilter = Control.MouseFilterEnum.Ignore });
+		}
 		Label text = UITheme.MakeLabel(level, TextRole.Body, UITheme.TextLight, align: HorizontalAlignment.Center);
 		text.Position = new Vector2(0, 62);
 		text.Size = new Vector2(tile.CustomMinimumSize.X, 24);
@@ -441,25 +449,16 @@ public partial class PauseMenu : CanvasLayer
 		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(name);
 
-		List<string> parts = new()
-		{
-			$"{StatCatalog.Name("damage")} {StatCatalog.Format("damage", player.GetWeaponStatForDisplay(weapon, "damage"))}",
-		};
-		if (weapon.GetStat("attack_speed") > 0f)
-			parts.Add($"{StatCatalog.Name("attack_speed")} {StatCatalog.Format("attack_speed", player.GetWeaponStatForDisplay(weapon, "attack_speed"))}");
-		foreach (string stat in new[] { "projectile_count", "projectile_pierce", "chain_targets", "orbital_count" })
-		{
-			if (weapon.Base.Stats.ContainsKey(stat) || weapon.Base.Growth.ContainsKey(stat))
-			{
-				float value = player.GetWeaponStatForDisplay(weapon, stat);
-				// Un seul projectile, aucun perçage : rien à signaler.
-				if (value > (stat == "projectile_count" ? 1f : 0f))
-					parts.Add($"{StatCatalog.Name(stat, weapon.Base)} {StatCatalog.Format(stat, value)}");
-			}
-		}
-		Label stats = PlayerSheet.MakeLabel(string.Join("  ·  ", parts), TextRole.Caption, StatLabelColor);
-		stats.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-		text.AddChild(stats);
+		text.AddChild(PlayerSheet.MakeLabel("Valeurs effectives · arme et bonus du build", TextRole.Caption, StatLabelColor));
+		HashSet<string> shown = new();
+		foreach (string stat in weapon.Base.Stats.Keys)
+			AddWeaponStat(text, player, weapon, stat, shown);
+		foreach (string stat in weapon.Base.Growth.Keys)
+			AddWeaponStat(text, player, weapon, stat, shown);
+		Label critical = PlayerSheet.MakeLabel($"Critiques globaux : {StatCatalog.CountText(Mathf.Clamp(player.CritChance, 0f, 1f) * 100f)} % · ×{StatCatalog.CountText(player.CritMultiplier)}",
+			TextRole.Small, StatLabelColor);
+		critical.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(critical);
 
 		VBoxContainer dealt = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
 		dealt.AddChild(PlayerSheet.MakeLabel(Mathf.RoundToInt(player.GetDamageDealt(weapon.Id)).ToString("N0", PlayerSheet.French), TextRole.Body, StatBonusColor, HorizontalAlignment.Right));
@@ -468,8 +467,58 @@ public partial class PauseMenu : CanvasLayer
 		_loadoutContainer.AddChild(row);
 	}
 
+	private static void AddWeaponStat(VBoxContainer text, Player player, WeaponInstance weapon, string stat, HashSet<string> shown)
+	{
+		if (!shown.Add(stat)) return;
+		float value = player.GetWeaponStatForDisplay(weapon, stat);
+		float initial = weapon.Base.Stats.GetValueOrDefault(stat);
+		string Format(float number) => stat switch
+		{
+			"range" or "chain_range" => StatCatalog.CountText(number) + " px",
+			"projectile_speed" => StatCatalog.CountText(number) + " px/s",
+			"arc_angle" or "cone_angle_start" or "cone_angle_end" or "spread_angle" => StatCatalog.CountText(number) + "°",
+			"chain_damage_falloff" or "crit_chance" => StatCatalog.CountText(number * 100f) + " %",
+			_ => StatCatalog.Format(stat, number),
+		};
+		Label line = PlayerSheet.MakeLabel($"{StatCatalog.Name(stat, weapon.Base)} : {Format(value)}", TextRole.Body, StatValueColor);
+		line.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(line);
+		float change = value - initial;
+		Label detail = PlayerSheet.MakeLabel($"Base de l’arme : {Format(initial)} · évolution et build : {(change >= 0f ? "+" : "")}{Format(change)}", TextRole.Caption, TextVeryDim);
+		detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		text.AddChild(detail);
+	}
+
+	private void AddItemDetail(ActivePassiveSouvenir item)
+	{
+		Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+		HBoxContainer heading = new();
+		heading.AddChild(PlayerSheet.MakeIcon(item.Data.Icon));
+		Label name = PlayerSheet.MakeLabel($"{item.Data.Name}  {ItemPresentation.CopiesText(item.Data, item.Copies)}", TextRole.Heading, ItemPresentation.Color(item.Data));
+		name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+		name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+		heading.AddChild(name);
+		_loadoutContainer.AddChild(heading);
+		_loadoutContainer.AddChild(PlayerSheet.MakeLabel(ItemPresentation.RarityText(item.Data), TextRole.Body, ItemPresentation.Color(item.Data)));
+		void Detail(string label, int copies, Color color)
+		{
+			Label line = PlayerSheet.MakeLabel(label + ItemPresentation.Describe(item.Data, copies, player), TextRole.Body, color);
+			line.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			_loadoutContainer.AddChild(line);
+		}
+		Detail("Une copie : ", 1, StatLabelColor);
+		if (item.Copies > 1) Detail($"Actuel (×{item.Copies}) : ", item.Copies, StatValueColor);
+		if (!item.Data.IsCopyLimitReached(item.Copies)) Detail("Prochaine copie : ", item.Copies + 1, StatBonusColor);
+		else _loadoutContainer.AddChild(PlayerSheet.MakeLabel("Limite de cet objet atteinte", TextRole.Small, StatLabelColor));
+	}
+
 	private void AddPassiveRow(ActivePassiveSouvenir passive)
 	{
+		if (!passive.Data.IsBadge)
+		{
+			AddItemDetail(passive);
+			return;
+		}
 		HBoxContainer row = new();
 		row.AddThemeConstantOverride("separation", 10);
 		row.AddChild(PlayerSheet.MakeIcon(passive.Data.Icon));
@@ -503,10 +552,7 @@ public partial class PauseMenu : CanvasLayer
 				continue;
 			MarginContainer indent = new();
 			indent.AddThemeConstantOverride("margin_left", 42);
-			// Un objet atteint son palier par ses exemplaires, pas par un niveau affiché.
-			string text = passive.Data.IsBadge
-				? string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text)
-				: string.Format(Tr("ITEM_MILESTONE"), passive.Data.CopiesForLevel(milestone.Level), milestone.Text);
+			string text = string.Format(Tr("LEVELUP_MILESTONE"), milestone.Level, milestone.Text);
 			Label detail = PlayerSheet.MakeLabel(text, TextRole.Small,
 				passive.Reached(milestone) ? GoldBright : TextVeryDim);
 			detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;

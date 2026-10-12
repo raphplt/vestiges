@@ -1,6 +1,37 @@
 # Menus — Pierre et Effacement
 
-Assets originaux générés le 10 octobre 2026 avec l’outil intégré **imagegen**, puis copiés dans ce dossier. Le rendu du jeu conserve le filtrage nearest ; `MenuSkin` partage les textures et prépare le panneau en 384 × 384 pour ses neuf tranches. Le shader du portrait ne modifie pas les illustrations existantes.
+## Matière actuelle — plans 36 M6/M7, 12 octobre 2026
+
+Le fond d'écran intérieur utilise **`loading.png`**, la dernière illustration
+simplifiée approuvée. La clarification M7 remet cette image derrière les
+menus et le chargement. Les **surfaces des cartes et panneaux** utilisent les
+textures procédurales de `scripts/UI/MenuStoneTextures.cs`, partagées par
+`MenuSkin`. `interior.png` et `panel.png` restent des références historiques.
+
+- Pierre native raccordable 64×64, quatre tons sombres, grain en amas et cinq
+  inclusions groupées ; bruit périodique déterministe, sans semis de pixels.
+- Agrandissement nearest ×2. Centre raccordable de 128×128 natifs, contenant
+  le grain répété ; tranches de six pixels natifs, silhouettes avec des
+  décrochements et cassures. Coins taillés asymétriques, régions dédiées de
+  6 px (boutons), 12 px (cartes), 18 px (grands panneaux). Le biseau suit les
+  coupes diagonales et la sélection teinte le relief. Les neuf régions sont
+  **répétées**, jamais étirées ; leur taille ne modifie pas les marges de lecture.
+- Chargement : poussières et Effacement par shader dans le repère de l'écran.
+  Menus ouverts en run : voile du jeu conservé ; illustration de l'accueil
+  conservée. Les textures procédurales concernent les surfaces des contrôles,
+  tandis que l'illustration approuvée reste leur décor.
+- Création au premier usage et cache partagé ; aucun calcul de texture à
+  chaque image. Les états sélection, survol, pression et indisponibilité
+  gardent leurs différences de tranche et de teinte.
+
+Icônes et matière centrale approuvées sur les [icônes](../../../../doc/plans/planches/36-M6-icones.png)
+et [matières](../../../../doc/plans/planches/36-M6-matieres.png).
+La silhouette et les tranches M7 sont une reprise à juger en jeu, conformément
+au retour sur les bords rectangulaires trop brutaux.
+
+## Illustrations historiques — 10 octobre 2026
+
+Assets originaux générés avec l’outil intégré **imagegen**, puis copiés dans ce dossier. L'ancienne version de `MenuSkin` préparait le panneau en 384 × 384 pour ses neuf tranches. Le shader du portrait ne modifie pas les illustrations existantes.
 
 | Fichier final | Source générée |
 |---|---|
@@ -15,7 +46,7 @@ Les originaux sont conservés sous `~/.codex/generated_images/01a12780-1d08-7001
 
 **Panneau.** Surface de lecture carrée et opaque en charbon, bord de pierre ordinaire irrégulier, ébréché, avec ombre et tranche éclairée. Centre presque uni pour le texte, quelques grains près des bords. Extérieur transparent. Aucun texte, icône, bouton, symbole magique ou effet de verre. Prévu pour être découpé en neuf tranches dans Godot.
 
-Les boutons, onglets et curseurs restent des textures déterministes créées une seule fois par `MenuSkin.cs` ; ils ne sont pas des images générées. Les deux PNG de ce dossier sont des assets de production ; la planche `doc/plans/planches/04-menus-personnages-pierre-v2.png` reste une étude.
+Les boutons, onglets et curseurs étaient des textures déterministes créées une seule fois par `MenuSkin.cs`. Les deux PNG étaient les assets de production de cette version ; la planche `doc/plans/planches/04-menus-personnages-pierre-v2.png` reste une étude.
 
 ## Fond de chargement — 12 octobre 2026, plan 24 B5c
 
@@ -32,6 +63,8 @@ l'affiche en nearest (×4 à 1080p). L'original généré reste conservé dans
 Le prompt exact, les deux références et la préparation sont enregistrés dans
 [loading.prompt.json](loading.prompt.json).
 
-L'overlay choisit cette texture dans `PixelBackdrop` ; les effets d'Effacement
-et de poussière restent ceux du shader `menu_erasure.gdshader`. Les fonds des
-autres menus et les panneaux restent sur leurs textures actuelles.
+L'overlay utilise cette texture dans `PixelBackdrop`, et les pages intérieures
+la partagent via `MenuSkin`. Les effets d'Effacement et de poussière restent
+ceux du shader `menu_erasure.gdshader`. La matière M6 l'avait temporairement
+remplacée ; la clarification M7 rétablit cette illustration en fond d'écran
+et réserve la matière aux cartes et panneaux.

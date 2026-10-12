@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using Godot;
 
@@ -17,7 +16,6 @@ public static class InventoryConfig
     private static int _badgeSoftCapLevel = 30;
     private static float _badgeSoftCapFactor = 0.5f;
     private static int _bagSize = 10;
-    private static int[] _itemCopyLevels = { 10, 15, 19, 22, 24, 25 };
     private static float _eliteItemChance = 0.25f;
     private static int _sovereignItems = 1;
     private static int _usageWideHitTargets = 3;
@@ -44,16 +42,6 @@ public static class InventoryConfig
         {
             Load();
             return _bagSize;
-        }
-    }
-
-    /// <summary>Niveau d'effet d'un objet selon ses exemplaires : [0] pour un, [1] pour deux…</summary>
-    public static IReadOnlyList<int> ItemCopyLevels
-    {
-        get
-        {
-            Load();
-            return _itemCopyLevels;
         }
     }
 
@@ -149,12 +137,11 @@ public static class InventoryConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             reader.AllowOnly(reader.Root, "inventaire", "badge_slots", "badge_soft_cap_level", "badge_soft_cap_factor", "bag_size",
-                "item_copy_levels", "elite_item_chance", "sovereign_items", "usage");
+                "elite_item_chance", "sovereign_items", "usage");
             int badgeSlots = reader.Integer(reader.Root, "badge_slots", 1, 8);
             int softCapLevel = reader.Integer(reader.Root, "badge_soft_cap_level", 1, 1000);
             float softCapFactor = reader.Ratio(reader.Root, "badge_soft_cap_factor");
             int bagSize = reader.Integer(reader.Root, "bag_size", 1, 50);
-            int[] copyLevels = ReadCopyLevels(reader, reader.Root, "item_copy_levels");
             float eliteChance = reader.Chance(reader.Root, "elite_item_chance");
             int sovereignItems = reader.Integer(reader.Root, "sovereign_items", 0, 5);
             JsonElement usage = reader.Section("usage");
@@ -169,7 +156,6 @@ public static class InventoryConfig
             _badgeSoftCapLevel = softCapLevel;
             _badgeSoftCapFactor = softCapFactor;
             _bagSize = bagSize;
-            _itemCopyLevels = copyLevels;
             _eliteItemChance = eliteChance;
             _sovereignItems = sovereignItems;
             _usageWideHitTargets = wideHitTargets;
@@ -182,23 +168,6 @@ public static class InventoryConfig
         {
             return $"JSON illisible : {ex.Message}";
         }
-    }
-
-    /// <summary>Niveaux d'exemplaires : entiers strictement croissants, de 1 à 100 ; lus aussi pour un objet qui a les siens.</summary>
-    public static int[] ReadCopyLevels(JsonConfigReader reader, JsonElement owner, string key)
-    {
-        List<JsonElement> values = reader.List(owner, key, 1);
-        int[] levels = new int[values.Count];
-        for (int i = 0; i < values.Count && reader.Error == null; i++)
-        {
-            if (values[i].ValueKind != JsonValueKind.Number || !values[i].TryGetInt32(out int level) || level < 1 || level > 100)
-                reader.Fail($"{key}[{i}] : entier de 1 à 100 attendu");
-            else if (i > 0 && level <= levels[i - 1])
-                reader.Fail($"{key}[{i}] : {level} pas plus haut que l'exemplaire précédent ({levels[i - 1]})");
-            else
-                levels[i] = level;
-        }
-        return levels;
     }
 
     private static void Load()

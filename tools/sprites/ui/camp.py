@@ -1,145 +1,185 @@
-"""Icônes du Campement (plan 36 M5) : objets en 32 px, volumes francs, contour commun et palette courte.
+"""Campement M6 : même rendu, lumière et contours que les objets du jeu.
 
-Usage : python3 -m tools.sprites.ui.camp. Les silhouettes priment sur la texture : aucun bruit ni antialiasing.
+Usage : python3 -m tools.sprites.ui.camp ; modèles 32×32, sans agrandissement lissé.
 """
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+import numpy as np
+from PIL import Image
 
+from ..items.kit import Item, box, cut, disk, line, oval, polygon, ring, union
+from ..weapons.icons import render_icon
 from .kit import board, export
 
-INK = '#1A1A2E'
-LINEN = '#E8E0D4'
-GREY = '#9E9494'
-STONE = '#6B6161'
-SHADOW = '#3A3535'
-WOOD = '#A68B6B'
-BROWN = '#5A4A38'
-GOLD = '#D4A843'
-OLIVE = '#6B7950'
-MOSS = '#3A4A38'
-CYAN = '#5EC4C4'
-RED = '#C4432B'
+
+def satchel() -> Item:
+    item = Item('camp_pockets')
+    body = box((0, -2, 0), (10, 11, 4), 2)
+    item.add('green', body, box((0, 7, 1), (10.5, 3, 4.5), 1))
+    item.add('leather', line([(-6, 10, 0), (-6, 16, 0), (6, 16, 0), (6, 10, 0)], 1.4),
+             box((-5, -5, 4), (1.2, 9, 1), .4), box((5, -5, 4), (1.2, 9, 1), .4))
+    item.add('yellow', box((-5, 0, 5.2), (1.8, 1.5, .7)),
+             box((5, 0, 5.2), (1.8, 1.5, .7)))
+    item.add('patina', box((0, -8, 4.2), (3, 3, 1.2), .6))
+    return item
 
 
-def icon(commands: list[tuple]) -> Image.Image:
-    image = Image.new('RGBA', (32, 32))
-    draw = ImageDraw.Draw(image)
-    for shape, coordinates, color, *width in commands:
-        if shape == 'line':
-            draw.line(coordinates, fill=color, width=width[0] if width else 1)
-        else:
-            getattr(draw, shape)(coordinates, fill=color)
-    # Un contour extérieur d'un pixel détache les objets sans manger leurs détails.
-    alpha = image.getchannel('A')
-    outline = Image.new('RGBA', image.size, INK)
-    outline.putalpha(alpha.filter(ImageFilter.MaxFilter(3)))
-    outline.alpha_composite(image)
-    return outline
+def matchbox() -> Item:
+    item = Item('camp_banishes', yaw=.5)
+    item.add('paper', box((0, -2, 0), (8, 11, 4), .6))
+    sleeve = cut(box((0, -1, 0), (8.7, 10, 4.6), .4),
+                 box((0, -1, 0), (7.9, 12, 3.9), .2))
+    item.add('red', sleeve)
+    item.add('wood', box((8.8, -1, 0), (.5, 8, 3.5)))
+    item.add('paper', box((0, -1, 4.8), (5, 6.5, .25), .3))
+    item.add('dark', line([(-2, -4, 5.2), (2, 2, 5.2)], .7))
+    item.add('wood', line([(-7, 9, 0), (-7, 19, 0)], .9))
+    item.add('red', oval((-7, 19, 0), (1.5, 2, 1.5)))
+    return item
+
+
+def essence_jar() -> Item:
+    item = Item('camp_start_essence')
+    item.add('glass', union(box((0, -3, 0), (7.5, 9, 5), 3),
+                            box((0, 7, 0), (4.5, 3, 3.5), 1)))
+    item.add('patina', box((0, -7, .2), (7.6, 4, 5.2), 2.5))
+    item.add('wood', box((0, 11, 0), (5.5, 2, 4.2), .6))
+    item.add('paper', box((0, -2, 5), (4, 2.5, .45), .4))
+    item.add('copper', ring((0, 7, 0), 4.9, .7))
+    return item
+
+
+def weapon_rack() -> Item:
+    item = Item('camp_weapon_slots', yaw=.2)
+    item.add('wood', box((-9, 0, 0), (1.5, 14, 2)),
+             box((9, 0, 0), (1.5, 14, 2)), box((0, -10, 0), (12, 1.5, 2)),
+             box((0, 6, 0), (12, 1.5, 2)))
+    item.add('steel', box((-4, 9, 3), (1.4, 9, 1)), box((4, 8, 3), (1.7, 10, 1)))
+    item.add('copper', box((-4, -1, 3), (3.2, .8, 1.3)), box((4, -3, 3), (3.3, .8, 1.3)))
+    item.add('leather', line([(-4, -2, 3), (-4, -8, 3)], 1.2),
+             line([(4, -4, 3), (4, -10, 3)], 1.2))
+    return item
+
+
+def cards() -> Item:
+    item = Item('camp_rerolls', yaw=.15)
+    item.add('paper', box((-4, 2, -2), (8, 11, .7), .5),
+             box((4, -2, 1), (8, 11, .7), .5))
+    item.add('red', polygon([(4, -6), (7, -2), (4, 2), (1, -2)], 2, .3),
+             box((-1, 6, 2), (1, 1.3, .3)))
+    item.add('navy', line([(-9, -4, -.9), (-9, 8, -.9)], .7),
+             box((-4, 2, -.9), (2, 2, .3)))
+    return item
+
+
+def bedroll() -> Item:
+    item = Item('camp_max_hp')
+    item.add('green', box((0, 0, 0), (10, 8, 6), 4))
+    item.add('paper', oval((-10, 0, 0), (1.5, 8, 6)))
+    item.add('leather', ring((-10, 0, 1), 4, 1), box((4, 0, 0), (1, 8.2, 6.2), 3))
+    item.add('yellow', box((4, 3, 6), (1.5, 1.6, .8)))
+    return item
+
+
+def whetstone() -> Item:
+    item = Item('camp_damage')
+    item.add('dark', box((0, -5, 0), (12, 4, 6), 1))
+    item.add('steel', box((0, -2, 0), (12, 1.5, 6), .8))
+    item.add('light', line([(-7, 1, 5), (7, 9, 5)], 1.2))
+    item.add('leather', line([(-7, 1, 5), (-13, -2, 5)], 1.6))
+    item.add('dark', line([(-5, -1, 6.1), (5, -1, 6.1)], .5))
+    return item
+
+
+def metronome() -> Item:
+    item = Item('camp_attack_speed', yaw=.2)
+    item.add('wood', polygon([(-10, -13), (10, -13), (4, 14), (-4, 14)], 0, 4))
+    item.add('dark', polygon([(-7, -10), (7, -10), (2, 11), (-2, 11)], 4.2, .4))
+    item.add('paper', line([(0, -8, 5), (0, 10, 5)], .8))
+    item.add('steel', line([(0, -9, 5.8), (8, 9, 5.8)], .8))
+    item.add('copper', box((6, 5, 6), (2, 1.8, .8)))
+    item.add('leather', box((0, -14, 0), (11, 1.2, 4.5)))
+    return item
+
+
+def boots() -> Item:
+    item = Item('camp_speed')
+    for x, y, z in [(-6, 2, -3), (5, -2, 3)]:
+        item.add('leather', box((x, y + 3, z), (4, 9, 3), 1),
+                 box((x + 2, y - 6, z + 1), (6, 3, 4), 1.5))
+        item.add('dark', box((x + 2, y - 9, z + 1), (6, 1, 4.2), .5))
+        item.add('wood', box((x, y + 10, z), (4.1, 1.5, 3.2), .4))
+        item.add('paper', line([(x - 2, y + 2, z + 3.2), (x + 2, y + 2, z + 3.2)], .5),
+                 line([(x - 2, y - 1, z + 3.2), (x + 2, y - 1, z + 3.2)], .5))
+    return item
+
+
+def pot() -> Item:
+    item = Item('camp_regen')
+    item.add('steel', union(box((0, -3, 0), (9, 7, 6), 4),
+                           line([(-9, 1, 0), (-13, 1, 0), (-13, -3, 0), (-9, -3, 0)], 1.2),
+                           line([(9, 1, 0), (13, 1, 0), (13, -3, 0), (9, -3, 0)], 1.2)))
+    item.add('dark', oval((0, 4, 0), (9, 1.3, 6)))
+    item.add('light', oval((0, 5, 0), (9, 1, 6)))
+    item.add('leather', box((0, 7, 0), (2.5, 1.5, 2)))
+    return item
+
+
+def padding() -> Item:
+    item = Item('camp_armor')
+    vest = polygon([(-10, -13), (10, -13), (10, 9), (5, 13), (0, 8), (-5, 13), (-10, 9)], 0, 3)
+    item.add('paper', vest)
+    item.add('leather', line([(0, 7, 3.5), (0, -13, 3.5)], .8))
+    for y in [-8, -2, 4]:
+        item.add('wood', line([(-8, y, 3.4), (-2, y, 3.4)], .7),
+                 line([(2, y, 3.4), (8, y, 3.4)], .7))
+    return item
+
+
+def net() -> Item:
+    item = Item('camp_magnet', yaw=.12)
+    item.add('wood', line([(-9, -15, 0), (1, 2, 0)], 1.3))
+    item.add('steel', ring((5, 8, 0), 8, 1))
+    for offset in [-3, 0, 3]:
+        reach = np.sqrt(49 - offset * offset)
+        item.add('paper', line([(5 + offset, 8 - reach, 0), (5 + offset, 8 + reach, 0)], .5),
+                 line([(5 - reach, 8 + offset, 0), (5 + reach, 8 + offset, 0)], .5))
+    return item
+
+
+def notebook() -> Item:
+    item = Item('camp_xp')
+    item.add('red', box((0, 0, 0), (9, 13, 2), .7))
+    item.add('paper', box((1, 0, 2), (7, 11.5, .8), .2))
+    item.add('leather', box((-8, 0, 2), (1, 13, 1), .3))
+    for y in [-5, 0, 5]:
+        item.add('steel', line([(-3, y, 3), (5, y, 3)], .4))
+    item.add('yellow', box((5, -13, 0), (1.1, 3, .4)))
+    return item
+
+
+def rabbit_foot() -> Item:
+    item = Item('camp_luck')
+    item.add('paper', union(oval((0, -2, 0), (6, 10, 4)), oval((-2, -10, 0), (6, 4, 4))))
+    item.add('wood', box((0, 8, 0), (4, 1.3, 3)))
+    item.add('copper', ring((0, 13, 0), 3.5, .9))
+    item.add('leather', line([(-5, -10, 3), (-2, -10, 4)], .5),
+             line([(-5, -12, 2), (-2, -12, 3)], .5))
+    return item
+
+
+FACTORIES = [weapon_rack, satchel, cards, matchbox, bedroll, whetstone,
+             metronome, boots, pot, padding, net, notebook, rabbit_foot, essence_jar]
 
 
 def catalogue() -> dict[str, Image.Image]:
-    return {
-        'camp_weapon_slots': icon([
-            ('rectangle', (4, 23, 28, 26), WOOD), ('rectangle', (6, 8, 8, 28), BROWN),
-            ('rectangle', (24, 8, 26, 28), BROWN), ('rectangle', (5, 12, 27, 15), WOOD),
-            ('rectangle', (11, 4, 13, 21), GREY), ('rectangle', (10, 17, 15, 19), GOLD),
-            ('rectangle', (18, 2, 20, 22), LINEN), ('rectangle', (16, 18, 22, 20), GOLD),
-            ('rectangle', (12, 21, 13, 27), BROWN), ('rectangle', (19, 22, 20, 27), BROWN),
-        ]),
-        'camp_pockets': icon([
-            ('polygon', [(7, 7), (24, 7), (27, 13), (27, 28), (4, 28), (4, 13)], OLIVE),
-            ('rectangle', (10, 3, 21, 6), BROWN), ('rectangle', (12, 4, 19, 6), LINEN),
-            ('rectangle', (5, 10, 25, 13), WOOD), ('rectangle', (6, 17, 13, 26), MOSS),
-            ('rectangle', (17, 17, 24, 26), MOSS), ('rectangle', (6, 17, 13, 19), LINEN),
-            ('rectangle', (17, 17, 24, 19), LINEN), ('rectangle', (24, 14, 26, 27), SHADOW),
-        ]),
-        'camp_rerolls': icon([
-            ('polygon', [(3, 7), (13, 3), (22, 22), (11, 27)], STONE),
-            ('polygon', [(7, 4), (19, 4), (23, 25), (11, 27)], WOOD),
-            ('rectangle', (13, 6, 27, 28), LINEN), ('rectangle', (25, 7, 27, 28), GREY),
-            ('polygon', [(20, 13), (24, 18), (20, 23), (16, 18)], RED),
-            ('rectangle', (15, 8, 17, 10), RED),
-        ]),
-        'camp_banishes': icon([
-            ('polygon', [(4, 12), (12, 8), (27, 8), (27, 25), (20, 29), (4, 29)], BROWN),
-            ('rectangle', (4, 12, 20, 28), RED), ('rectangle', (6, 14, 18, 25), WOOD),
-            ('rectangle', (9, 16, 15, 23), LINEN), ('rectangle', (23, 9, 26, 24), SHADOW),
-            ('line', (8, 3, 13, 10), LINEN, 2), ('rectangle', (7, 2, 10, 4), RED),
-            ('line', (17, 2, 19, 9), WOOD, 2), ('rectangle', (16, 2, 19, 4), RED),
-        ]),
-        'camp_max_hp': icon([
-            ('rectangle', (6, 10, 26, 24), OLIVE), ('rectangle', (6, 10, 26, 13), WOOD),
-            ('rectangle', (6, 22, 26, 26), MOSS), ('ellipse', (3, 7, 16, 27), LINEN),
-            ('ellipse', (5, 10, 13, 24), WOOD), ('ellipse', (7, 13, 11, 22), BROWN),
-            ('rectangle', (19, 10, 21, 26), BROWN), ('rectangle', (19, 13, 21, 17), GOLD),
-        ]),
-        'camp_damage': icon([
-            ('polygon', [(4, 17), (10, 10), (28, 10), (23, 22), (4, 22)], GREY),
-            ('polygon', [(4, 22), (23, 22), (28, 10), (28, 17), (23, 27), (4, 27)], STONE),
-            ('line', (9, 18, 23, 14), LINEN, 2), ('line', (12, 20, 21, 18), SHADOW, 1),
-            ('polygon', [(8, 6), (24, 3), (26, 5), (11, 9)], LINEN),
-            ('rectangle', (4, 7, 10, 10), BROWN),
-        ]),
-        'camp_attack_speed': icon([
-            ('polygon', [(14, 3), (19, 3), (27, 27), (5, 27)], WOOD),
-            ('polygon', [(16, 7), (19, 10), (24, 25), (9, 25)], BROWN),
-            ('rectangle', (15, 8, 18, 23), LINEN), ('line', (16, 22, 23, 9), GREY, 2),
-            ('rectangle', (21, 8, 25, 11), GOLD), ('rectangle', (5, 26, 27, 29), SHADOW),
-        ]),
-        'camp_speed': icon([
-            ('polygon', [(5, 4), (13, 4), (13, 18), (18, 21), (18, 25), (4, 25)], BROWN),
-            ('rectangle', (5, 5, 12, 9), WOOD), ('rectangle', (5, 24, 18, 27), GREY),
-            ('polygon', [(17, 7), (25, 7), (25, 20), (29, 23), (29, 27), (16, 27)], WOOD),
-            ('rectangle', (17, 8, 24, 11), LINEN), ('rectangle', (16, 27, 29, 29), STONE),
-            ('line', (18, 15, 23, 15), SHADOW, 1), ('line', (18, 18, 23, 18), SHADOW, 1),
-        ]),
-        'camp_regen': icon([
-            ('rectangle', (7, 12, 25, 23), STONE), ('ellipse', (7, 16, 25, 28), STONE),
-            ('rectangle', (4, 14, 7, 20), GREY), ('rectangle', (25, 14, 28, 20), GREY),
-            ('ellipse', (6, 9, 26, 16), GREY), ('rectangle', (13, 6, 19, 9), SHADOW),
-            ('line', (10, 16, 10, 23), LINEN, 2), ('rectangle', (17, 25, 23, 27), SHADOW),
-            ('line', (11, 4, 11, 6), LINEN, 1), ('line', (23, 3, 23, 6), GREY, 1),
-        ]),
-        'camp_armor': icon([
-            ('polygon', [(7, 7), (12, 4), (20, 4), (25, 7), (26, 28), (6, 28)], WOOD),
-            ('polygon', [(12, 4), (16, 11), (20, 4)], SHADOW),
-            ('rectangle', (8, 12, 24, 25), LINEN), ('rectangle', (15, 11, 17, 27), BROWN),
-            ('line', (8, 17, 24, 17), WOOD, 2), ('line', (8, 22, 24, 22), WOOD, 2),
-            ('rectangle', (23, 12, 25, 27), GREY),
-        ]),
-        'camp_magnet': icon([
-            ('line', (6, 28, 19, 13), WOOD, 3), ('ellipse', (11, 2, 29, 20), LINEN),
-            ('ellipse', (14, 5, 26, 17), CYAN), ('line', (16, 7, 24, 15), LINEN, 1),
-            ('line', (23, 6, 16, 15), LINEN, 1), ('line', (5, 27, 7, 29), BROWN, 2),
-        ]),
-        'camp_xp': icon([
-            ('polygon', [(5, 6), (23, 3), (27, 6), (27, 27), (9, 29), (5, 26)], SHADOW),
-            ('polygon', [(8, 7), (25, 5), (25, 26), (8, 28)], LINEN),
-            ('rectangle', (5, 6, 8, 27), RED), ('line', (12, 11, 21, 10), STONE, 1),
-            ('line', (12, 15, 22, 14), STONE, 1), ('line', (12, 19, 20, 18), STONE, 1),
-            ('rectangle', (21, 24, 23, 30), GOLD),
-        ]),
-        'camp_luck': icon([
-            ('ellipse', (13, 2, 21, 10), GOLD), ('ellipse', (15, 4, 19, 8), SHADOW),
-            ('polygon', [(12, 9), (21, 9), (24, 16), (23, 25), (19, 29), (9, 27), (8, 21)], LINEN),
-            ('polygon', [(19, 11), (22, 13), (24, 19), (22, 26), (18, 28), (18, 20)], GREY),
-            ('line', (10, 24, 15, 24), WOOD, 1), ('line', (10, 26, 14, 26), WOOD, 1),
-            ('rectangle', (12, 10, 21, 12), BROWN),
-        ]),
-        'camp_start_essence': icon([
-            ('rectangle', (10, 3, 22, 7), WOOD), ('rectangle', (11, 7, 21, 9), GREY),
-            ('polygon', [(11, 9), (21, 9), (25, 13), (25, 26), (22, 29), (9, 29), (6, 26), (6, 13)], GREY),
-            ('polygon', [(9, 15), (22, 15), (23, 25), (21, 27), (10, 27), (8, 25)], CYAN),
-            ('rectangle', (9, 11, 11, 20), LINEN), ('rectangle', (19, 22, 23, 25), '#397979'),
-            ('rectangle', (12, 3, 20, 4), LINEN),
-        ]),
-    }
+    return {item.model().stem.removeprefix('item_'): render_icon(item.model())
+            for item in (factory() for factory in FACTORIES)}
 
 
 if __name__ == '__main__':
     icons = catalogue()
     export(icons, Path('assets/ui/camp'), 'camp')
     board([(name.removeprefix('camp_'), [image]) for name, image in icons.items()],
-          Path('/tmp/vestiges-camp-icons.png'), columns=4)
-    print('14 icônes natives 32×32 exportées ; planche : /tmp/vestiges-camp-icons.png')
+          Path('/tmp/vestiges-camp-icons-m6.png'), columns=4)
+    print(f'{len(icons)} icônes générées')

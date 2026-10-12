@@ -7,9 +7,10 @@ namespace Vestiges.UI;
 public static class MenuSkin
 {
     private static readonly Dictionary<string, Texture2D> Textures = new();
-    private static Texture2D _backdrop;
     private static Texture2D _frame;
-    public static bool IsFrame(Texture2D texture) => _frame != null && texture == _frame;
+    private static Texture2D _interiorBackground;
+    public static Texture2D InteriorBackground => _interiorBackground ??=
+        GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png");
 
     public static Texture2D TextureFor(string name)
     {
@@ -21,10 +22,7 @@ public static class MenuSkin
         if (name == "ui_panel_frame.png")
         {
             if (_frame != null) return _frame;
-            using Image sourceImage = GD.Load<Texture2D>("res://assets/ui/menus/stone/panel.png").GetImage();
-            if (sourceImage.IsCompressed()) sourceImage.Decompress();
-            sourceImage.Resize(384, 384, Image.Interpolation.Nearest);
-            _frame = ImageTexture.CreateFromImage(sourceImage);
+            _frame = Stone(new Color("24212d"), new Color("6b6161"), new Color("3a3535"), false, 18);
             return _frame;
         }
         if (Textures.TryGetValue(name, out Texture2D cached))
@@ -32,37 +30,14 @@ public static class MenuSkin
         bool active = name.Contains("hover") || name.Contains("selected") || name.Contains("active");
         bool pressed = name.Contains("pressed");
         bool disabled = name.Contains("disabled") || name.Contains("locked");
-        Texture2D texture = Stone(disabled ? new Color("20202a") : new Color("302e35"), active ? new Color("b69a62") : new Color("69616a"),
-            new Color("131321"), pressed);
+        Texture2D texture = Stone(disabled ? new Color("201e2a") : new Color("24212d"), active ? new Color("a68b6b") : new Color("6b6161"),
+            new Color("3a3535"), pressed, name.StartsWith("ui_card", System.StringComparison.Ordinal) ? 12 : 6);
         Textures[name] = texture;
         return texture;
     }
 
-    /// <summary>Dalle de 64 px : surface grenue, arête claire en haut à gauche, ombre en bas à droite, coins et tranche ébréchés.</summary>
-    private static Texture2D Stone(Color body, Color rim, Color shadow, bool pressed)
-    {
-        const int size = 64;
-        using Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
-        for (int y = 0; y < size; y++)
-        for (int x = 0; x < size; x++)
-        {
-            int corner = Mathf.Min(x, size - 1 - x) + Mathf.Min(y, size - 1 - y);
-            if (corner < 3 || (x < 2 && y is >= 17 and <= 21) || (x > 61 && y is >= 40 and <= 44))
-                continue;
-            int edge = Mathf.Min(Mathf.Min(x, size - 1 - x), Mathf.Min(y, size - 1 - y));
-            int grain = (x * 73 + y * 137 + x * y * 7) % 53;
-            Color color = body.Lightened(grain < 3 ? 0.028f : 0f);
-            if (edge < 2) color = y < 3 || x < 2 ? rim : shadow;
-            else if (edge < 4) color = y < 4 ? rim.Darkened(0.3f) : shadow.Lightened(0.035f);
-            else if (edge == 5 && x > 6 && y < 8) color = body.Lightened(0.08f);
-            if (pressed) color = color.Darkened(0.18f);
-            image.SetPixel(x, y, color);
-        }
-        // Petites cassures dans la tranche, loin de la surface de lecture.
-        foreach (Vector2I chip in new[] { new Vector2I(11, 1), new Vector2I(42, 2), new Vector2I(2, 48), new Vector2I(53, 61) })
-            image.FillRect(new Rect2I(chip, new Vector2I(3, 2)), shadow);
-        return ImageTexture.CreateFromImage(image);
-    }
+    private static Texture2D Stone(Color body, Color rim, Color shadow, bool pressed, int cornerSize = 6) =>
+        MenuStoneTextures.Create(body, rim, shadow, pressed, cornerSize);
 
     private static Texture2D Cached(string key, System.Func<Texture2D> create)
     {
@@ -101,7 +76,7 @@ public static class MenuSkin
 
     /// <summary>Dalle d'une chose acquise (quête accomplie) : pierre chaude à arête dorée, lisible d'un coup d'œil dans une liste.</summary>
     public static StyleBoxTexture AcquiredCard() =>
-        UITheme.CreateNinePatch(Cached("acquired", () => Stone(new Color("3d3527"), new Color("a88a4c"), new Color("1a150c"), false)), 8, 8, 8, 8);
+        UITheme.CreateNinePatch(Cached("acquired", () => Stone(new Color("3d3527"), new Color("a88a4c"), new Color("1a150c"), false, 12)), 8, 8, 8, 8);
 
     /// <summary>
     /// Carte d'une liste à choisir (personnages) : dalle de pierre au repos, dalle à tranche dorée quand elle est examinée.
@@ -122,17 +97,11 @@ public static class MenuSkin
         string key = $"choice-{accent.ToHtml()}-{focused}-{rank}";
         if (!Textures.TryGetValue(key, out Texture2D texture))
         {
-            using Image image = TextureFor(focused ? "ui_card_selected.png" : "ui_card_normal.png").GetImage();
             Color edge = focused ? accent.Lightened(0.22f) : accent.Darkened(0.18f);
-            image.FillRect(new Rect2I(2, 7, focused ? 5 : 2 + Mathf.Max(0, rank) / 2, 50), edge);
-            image.FillRect(new Rect2I(7, 2, 50, 2), edge.Darkened(0.25f));
-            if (focused)
-                image.FillRect(new Rect2I(8, 29, 3, 6), UITheme.TextLight);
-            texture = ImageTexture.CreateFromImage(image);
+            texture = Stone(new Color("24212d"), edge, new Color("3a3535"), false, 12);
             Textures[key] = texture;
         }
         StyleBoxTexture style = UITheme.CreateNinePatch(texture, 12, 8, 8, 8);
-        style.AxisStretchHorizontal = style.AxisStretchVertical = StyleBoxTexture.AxisStretchMode.Stretch;
         style.ContentMarginLeft = 16;
         style.ContentMarginRight = 12;
         style.ContentMarginTop = style.ContentMarginBottom = 10;
@@ -195,17 +164,17 @@ public static class MenuSkin
         UITheme.WireButtonAudio(button);
     }
 
-    public static void AddBackdrop(Control parent, bool subdued = false)
+    public static void AddBackdrop(Control parent, bool subdued = false, float brightness = 1f)
     {
         ColorRect ground = new() { Color = new Color(0.045f, 0.045f, 0.075f, 1f), MouseFilter = Control.MouseFilterEnum.Ignore };
         parent.AddChild(ground);
         ground.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _backdrop ??= GD.Load<Texture2D>("res://assets/ui/menus/stone/loading.png");
         TextureRect art = new()
         {
-            Texture = _backdrop, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            Texture = InteriorBackground, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered, MouseFilter = Control.MouseFilterEnum.Ignore,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest, Modulate = new Color(1, 1, 1, subdued ? 0.3f : 1f)
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            Modulate = new Color(brightness, brightness, brightness, subdued ? 0.3f : 1f)
         };
         parent.AddChild(art);
         art.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);

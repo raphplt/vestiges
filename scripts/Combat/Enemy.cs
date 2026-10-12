@@ -708,6 +708,14 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			return;
 		}
 
+        // Le souvenir détourne la poursuite ordinaire, jamais une attaque déjà annoncée ni une élite.
+        if (ProcessRememberedTarget(dt))
+        {
+            UpdateSpriteAnimation(dt);
+            MoveWithKnockback(dt);
+            return;
+        }
+
 		if (lostTrack)
 		{
 			// Une capacité n'est plus traitée pendant l'errance : son annonce ou sa goutte en vol tombe, sinon elle resterait figée.
@@ -756,6 +764,28 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		UpdateSpriteAnimation(dt);
 		MoveWithKnockback(dt);
 	}
+
+    internal bool ProcessRememberedTarget(float delta)
+    {
+        if (IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss
+            || _boss != null || _disorientTimer > 0f || _player.ObjectCombatEffects == null
+            || !_player.ObjectCombatEffects.TryGetDecoyTarget(GlobalPosition, out Vector2 target)) return false;
+        foreach (IEnemyAbility ability in _abilities)
+            if (ability.IsActive) return false;
+        Vector2 offset = target - GlobalPosition;
+        float distance = offset.Length();
+        // Le leurre ne prend pas de dégâts ; le geste vise le souvenir, pas le joueur à côté.
+        float reach = _enemyType == EnemyCombatType.Ranged ? _attackRange : MeleeRange;
+        Velocity = distance <= reach ? Vector2.Zero : offset / distance * _speed * MoveFactor;
+        _attackTimer -= delta;
+        if (distance <= reach && _attackTimer <= 0f)
+        {
+            if (_enemyType == EnemyCombatType.Ranged && distance > 0f) ShootProjectile(offset / distance);
+            TriggerAttackAnim();
+            _attackTimer = _enemyType == EnemyCombatType.Ranged ? _rangedAttackCooldown : _meleeAttackCooldown;
+        }
+        return true;
+    }
 
 	/// <summary>
 	/// Déplacement du tick, recul compris. Le recul s'ajoute à la vitesse choisie par le comportement au lieu d'être

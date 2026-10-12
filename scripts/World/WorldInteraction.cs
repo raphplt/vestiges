@@ -16,6 +16,10 @@ public partial class WorldInteraction : Node
     private Player _player;
     private EventBus _eventBus;
     private ChestLootScreen _lootScreen;
+    private ChoiceScreen _choices;
+    private EssenceTracker _essence;
+    private float _elapsed;
+    private readonly RandomNumberGenerator _chestRng = RunRandom.Create("chest_items");
     private InteractionPrompt _prompt;
     private InteractionGauge _gauge;
     private IInteractable _target;
@@ -33,11 +37,13 @@ public partial class WorldInteraction : Node
         AddChild(_gauge);
     }
 
-    public void Configure(ChestLootScreen lootScreen) => _lootScreen = lootScreen;
+    public void Configure(ChestLootScreen lootScreen, EssenceTracker essence, ChoiceScreen choices)
+    { _lootScreen = lootScreen; _essence = essence; _choices = choices; }
 
     /// <summary>Appelé à chaque pas physique du joueur : jauge et invite.</summary>
     public void Step(float delta, bool canInteract)
     {
+        _elapsed += delta;
         if (_target != null)
         {
             if (!IsValid(_target) || !_target.CanInteract
@@ -56,7 +62,8 @@ public partial class WorldInteraction : Node
 
         IInteractable nearest = _target == null && canInteract ? FindNearest() : null;
         if (nearest != null)
-            _prompt.ShowAt(nearest.PromptPosition, nearest.PromptVerbKey);
+            _prompt.ShowAt(nearest.PromptPosition, nearest is Chest chest
+                ? chest.PricePrompt(_player, _essence, _elapsed) : nearest.PromptVerbKey);
         else
             _prompt.HidePrompt();
     }
@@ -66,6 +73,12 @@ public partial class WorldInteraction : Node
         IInteractable nearest = FindNearest();
         if (nearest == null)
             return false;
+
+        if (nearest is Chest chest && !chest.CanPurchase(_player, _essence, _elapsed, _chestRng, out string failure))
+        {
+            _player.ShowPopup(failure, new Color("D4A843"));
+            return true;
+        }
 
         _target = nearest;
         _progress = 0f;
@@ -100,17 +113,57 @@ public partial class WorldInteraction : Node
 
     private void OpenChest(Chest chest)
     {
-        List<ResolvedLoot> loots = LootRewards.Resolve(chest.Open(), _player);
-        if (_lootScreen != null && loots.Count > 0)
-            _lootScreen.ShowLoot(loots, chest.Rarity, () => ApplyAll(loots, chest.GlobalPosition));
-        else
-            ApplyAll(loots, chest.GlobalPosition);
+        if (!chest.TryPurchase(_player, _essence, _elapsed, _chestRng, out string failure))
+        { _player.ShowPopup(failure, new Color("D4A843")); return; }
+        if (chest.FreeOpening) _player.ShowPopup("Ouverture gratuite", new Color("6ACA5A"));
+        ChooseNext(chest);
     }
 
-    private void ApplyAll(List<ResolvedLoot> loots, Vector2 position)
+    private void ChooseNext(Chest chest)
     {
-        for (int i = 0; i < loots.Count; i++)
-            LootRewards.Apply(loots[i], _player, _eventBus, position + new Vector2(18f * i, 24f));
+        ChestRewardSession session = chest.Rewards;
+        if (session.Complete)
+        {
+            List<ResolvedLoot> rewards = new(session.Rewards);
+            if (_lootScreen != null)
+                _lootScreen.ShowLoot(rewards, chest.Rarity, () => ApplyAll(chest), session.Eligible,
+                    FormatProbabilities(session.Probabilities), chest.FreeOpening ? "Ouverture gratuite" : $"{chest.QuotedCost} Essence dépensée");
+            else ApplyAll(chest);
+            return;
+        }
+        IReadOnlyList<Infrastructure.PassiveSouvenirData> candidates = session.Propose();
+        if (candidates.Count == 1 || _choices == null)
+        {
+            if (session.Choose(0)) ChooseNext(chest);
+            return;
+        }
+        List<ChoiceCard> cards = new();
+        foreach (Infrastructure.PassiveSouvenirData candidate in candidates)
+        {
+            ChoiceCard card = new() { Title = candidate.Name };
+            ItemPresentation.ConfigureCard(card, candidate);
+            ItemPresentation.AddComparison(card, candidate, _player.FindObject(candidate.Id)?.Copies ?? 0);
+            cards.Add(card);
+        }
+        _choices.Open("Carnet d’adresses", "Choisissez un seul objet · " + FormatProbabilities(session.Probabilities), cards, null,
+            index => { if (session.Choose(index)) ChooseNext(chest); });
+    }
+
+    private void ApplyAll(Chest chest)
+    {
+        ChestRewardSession session = chest.Rewards;
+        if (!session.MarkApplied()) return;
+        for (int i = 0; i < session.Rewards.Count; i++)
+            LootRewards.Apply(session.Rewards[i], _player, _eventBus, chest.GlobalPosition + new Vector2(18f * i, 24f));
+        WorldItemEffects.AttractChestXp(_player, chest.GlobalPosition);
+    }
+
+    internal static string FormatProbabilities(double[] probabilities)
+    {
+        List<string> values = new();
+        for (int i = 0; i < probabilities.Length; i++)
+            if (probabilities[i] > 0d) values.Add($"{Infrastructure.RarityPalette.DisplayName(Infrastructure.ItemLootConfig.Rarities[i])} {probabilities[i] * 100d:0.#} %");
+        return string.Join(" · ", values);
     }
 
     private static bool IsValid(IInteractable interactable) =>

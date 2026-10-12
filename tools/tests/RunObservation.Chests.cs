@@ -107,6 +107,7 @@ public partial class RunObservation
             _player.GlobalPosition = target.GlobalPosition + new Vector2(-30f, 4f);
             _camera.ResetSmoothing();
             await Frames(10);
+            _world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker").AddEssence(target.Quote(0));
             _player.AITriggerInteract();
             await Frames(20);
             SaveCrop("chest-opening", target.GlobalPosition + new Vector2(0f, -30f), new Vector2(160f, 90f));
@@ -166,19 +167,71 @@ public partial class RunObservation
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         ProcessMode = ProcessModeEnum.Always;
         await ToSignal(GetTree().CreateTimer(3.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        string[] options = OS.GetCmdlineUserArgs();
+        bool epicOnly = System.Array.IndexOf(options, "--capture-loot-epic") >= 0;
+        bool captureFree = System.Array.IndexOf(options, "--capture-loot-free") >= 0;
         Chest nearest = null;
         foreach (Chest chest in Chest.Closed)
-            if (nearest == null || chest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < nearest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition))
+            if ((!epicOnly || chest.Rarity == "epic") && (nearest == null
+                || chest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition) < nearest.GlobalPosition.DistanceSquaredTo(_player.GlobalPosition)))
                 nearest = chest;
         if (nearest == null)
         {
             GD.PushError("[RunObservation] Aucun coffre fermé");
             return;
         }
-        _player.GlobalPosition = nearest.GlobalPosition + new Vector2(0f, 40f);
+        _player.SetBagCapacity(20);
+        if (System.Array.IndexOf(options, "--capture-loot-pointers") >= 0)
+        {
+            _player.AIInputOverride = Vector2.Zero;
+            _player.GlobalPosition = nearest.GlobalPosition + new Vector2(-760f, 0f);
+            _camera.ResetSmoothing();
+            await Frames(30);
+            SaveFrame("loot-pointer-without-label");
+            if (!_player.AddItemCopy("etiquette_perdue"))
+                throw new System.InvalidOperationException("Étiquette indisponible pour la capture.");
+            await Frames(30);
+            SaveFrame("loot-pointer-with-label");
+        }
+        _player.GlobalPosition = nearest.GlobalPosition + new Vector2(-30f, 4f);
+        _player.AIInputOverride = Vector2.Zero;
+        _camera.ResetSmoothing();
+        Vestiges.Progression.EssenceTracker essence = _world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker");
+        essence.TrySpend(essence.CurrentEssence);
+        await Frames(30);
+        SaveFrame("loot-price-insufficient");
+        if (!captureFree) essence.AddEssence(nearest.Quote(0));
         await Frames(10);
+        SaveFrame("loot-price-affordable");
+        bool captureChoices = System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-choices") >= 0;
+        if (captureChoices && !_player.AddItemCopy("carnet_dadresses"))
+            throw new System.InvalidOperationException("La capture de choix exige le Carnet d’adresses disponible.");
         Node interaction = _player.GetNode("WorldInteraction");
+        if (captureFree)
+        {
+            for (int copy = 0; copy < 4; copy++)
+                if (!_player.AddItemCopy("pied_de_biche"))
+                    throw new System.InvalidOperationException("Pied-de-biche indisponible pour la capture.");
+            RandomNumberGenerator stream = (RandomNumberGenerator)interaction.GetType().GetField("_chestRng", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(interaction);
+            RandomNumberGenerator probe = new();
+            for (ulong seed = 1; seed < 10000; seed++)
+            {
+                probe.Seed = seed;
+                if (probe.Randf() >= WorldItemEffects.FreeChestChance(_player)) continue;
+                stream.Seed = seed; break;
+            }
+        }
         interaction.GetType().GetMethod("OpenChest", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(interaction, new object[] { nearest });
+        Vestiges.UI.ChoiceScreen choices = _world.GetNode<Vestiges.UI.ChoiceScreen>("ChoiceScreen");
+        int decision = 0;
+        while (choices.IsOpen)
+        {
+            await Frames(40);
+            SaveFrame($"loot-choices-{decision++}");
+            choices.Activate(choices.FirstEnabled());
+        }
+        if (captureChoices && decision == 0)
+            throw new System.InvalidOperationException("Le tirage ne proposait aucune alternative pour capturer le Carnet.");
         if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--capture-loot-motion") >= 0)
         {
             // Après le fondu : vérifier le déplacement continu des rayons, horodaté au rendu.

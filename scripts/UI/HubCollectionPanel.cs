@@ -273,6 +273,14 @@ public partial class HubCollectionPanel : MarginContainer
             };
             tile.AddChild(icon);
         }
+        PassiveSouvenirData item = _tab == "passives" ? PassiveSouvenirDataLoader.Get(entry.Id) : null;
+        if (item != null && !item.IsBadge)
+        {
+            TextureRect rarity = new() { Texture = RarityArt.Icons(RarityArt.Rank(item.Rarity), 12)[0],
+                Position = new Vector2(6, 6), Size = new Vector2(12, 12), MouseFilter = MouseFilterEnum.Ignore };
+            tile.AddChild(rarity);
+            tile.TooltipText = entry.Name + " · " + ItemPresentation.RarityText(item);
+        }
         tile.FocusEntered += () => ShowDetail(entry);
         tile.MouseEntered += () => ShowDetail(entry);
         tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); };
@@ -299,6 +307,8 @@ public partial class HubCollectionPanel : MarginContainer
         _detailIcon.Texture = !string.IsNullOrEmpty(entry.Icon) && ResourceLoader.Exists(entry.Icon) ? GD.Load<Texture2D>(entry.Icon) : null;
         _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;
         _detailName.Text = entry.Name;
+        PassiveSouvenirData item = _tab == "passives" ? PassiveSouvenirDataLoader.Get(entry.Id) : null;
+        _detailName.AddThemeColorOverride("font_color", item != null && !item.IsBadge ? ItemPresentation.Color(item) : UITheme.TextLight);
         _detailState.Text = entry.Unlocked ? "Disponible en run" : entry.Preview ? "À venir" : "Pas encore disponible";
         _detailText.Text = entry.Description;
         _detailStats.Text = entry.Stats;
@@ -341,14 +351,15 @@ public partial class HubCollectionPanel : MarginContainer
             if (passive.IsBadge)
                 stats = string.Format(TranslationServer.Translate("COLLECTION_BADGE_RULE"), passive.Subtitle,
                     passive.MaxLevel, InventoryConfig.BadgeSoftCapLevel);
-            else if (passive.Milestones.Count > 0)
-                stats = string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE"), passive.MaxCopies,
-                    passive.CopiesForLevel(passive.Milestones[0].Level));
             else
-                stats = string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies);
+                stats = RarityPalette.DisplayName(passive.Rarity) + " · " + (passive.HasCopyLimit
+                    ? string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies)
+                    : TranslationServer.Translate("COLLECTION_ITEM_UNLIMITED").ToString());
             bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
             string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
-            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.RuleText(), stats, unlocked, condition));
+            if (!unlocked && condition.Length == 0 && !passive.InitialUnlock)
+                condition = "Déblocage à venir.";
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.IsBadge ? passive.RuleText() : ItemPresentation.Describe(passive), stats, unlocked, condition));
         }
         entries = entries.OrderByDescending(entry => entry.Unlocked).ToList();
         if (badges)

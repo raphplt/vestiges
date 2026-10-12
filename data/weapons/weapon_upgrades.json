@@ -14,7 +14,6 @@
 		"homing_strength": { "step": 0.15, "mode": "multiplicative" },
 		"projectile_count": { "mode": "additive", "integer": true },
 		"projectile_pierce": { "mode": "additive", "integer": true },
-		"chain_targets": { "mode": "additive", "integer": true },
-		"orbital_count": { "mode": "additive", "integer": true }
+		"chain_targets": { "mode": "additive", "integer": true }
 	}
 }

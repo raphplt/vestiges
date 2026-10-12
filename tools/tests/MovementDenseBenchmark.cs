@@ -37,6 +37,7 @@ public partial class MovementDenseBenchmark : Node
     private bool _dash;
     // --churn : PV normaux, chaque créature morte est remplacée ; mesure morts, XP, effets et recyclage du pool.
     private bool _churn;
+    private bool _items;
     private int _respawns;
     private EnemyPool _pool;
     private Node _container;
@@ -94,6 +95,7 @@ public partial class MovementDenseBenchmark : Node
             string[] args = OS.GetCmdlineUserArgs();
             _dash = Array.IndexOf(args, "--dash") >= 0;
             _churn = Array.IndexOf(args, "--churn") >= 0;
+            _items = Array.IndexOf(args, "--items") >= 0;
             _output = Argument(args, "--output", "/tmp/vestiges-dense");
             _duration = double.Parse(Argument(args, "--seconds", "20"), CultureInfo.InvariantCulture);
             _warmup = double.Parse(Argument(args, "--warmup", "5"), CultureInfo.InvariantCulture);
@@ -168,6 +170,15 @@ public partial class MovementDenseBenchmark : Node
             // --weapons a,b : armes ajoutées au personnage (builds à effets de zone, morts en rafale avec --churn).
             foreach (string weapon in Argument(args, "--weapons", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
                 _player.AddWeapon(WeaponDataLoader.Get(weapon));
+            // --items : build dense reproductible, trois copies de huit objets (aucune limite artificielle de six).
+            if (_items)
+            {
+                _player.SetBagCapacity(24);
+                foreach (string id in new[] { "allumette_humide", "glacon", "flacon_de_pharmacie", "registre_biffe",
+                    "pelote_rouge", "tampon_annule", "diapositive_en_double", "roulement_lisse" })
+                    for (int copy = 0; copy < 3; copy++)
+                        if (!_player.AddItemCopy(id)) throw new InvalidOperationException("Objet du banc refusé : " + id);
+            }
             // --ascend arme:ascension,… : arme portée au niveau max puis montée (statuts d'ascension, plan 27 V1c).
             foreach (string entry in Argument(args, "--ascend", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
             {
@@ -477,7 +488,7 @@ public partial class MovementDenseBenchmark : Node
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
-                enemies = _enemyCount, churn = _churn, xp_orbs = CountXpOrbs(), respawns = _respawns,
+                enemies = _enemyCount, churn = _churn, items = _items, item_copies = _player.BagCount, xp_orbs = CountXpOrbs(), respawns = _respawns,
                 respawns_per_second = _respawns / (_frames.Take(_samples).Sum() / 1000),
                 render_cpu_mean_ms = _renderCpuSum / _samples, render_gpu_mean_ms = _renderGpuSum / _samples,
                 draw_calls_mean = _drawCallsSum / _samples, rendered_objects_mean = _objectsSum / _samples,
@@ -495,7 +506,7 @@ public partial class MovementDenseBenchmark : Node
                 },
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
-                fixture = "Main réelle ; profil dev temporaire sans souvenir équipé, Steam désactivé ; combat centré sur le premier terrain sans décor bloquant dans 420 px (arena ; --arena origin pour l'ancien point (0,0)) ; Ombres et Cracheurs à 5 pour 1 (120 par défaut, --enemies), HP x10000 ; traqueur invincible, arme initiale active ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
+                fixture = $"Main réelle ; profil dev temporaire, Steam désactivé ; combat centré sur terrain ouvert (arena) ; Ombres et Cracheurs à 5 pour 1 ({_enemyCount}), PV {(_churn ? "normaux" : "×10000")} ; traqueur invincible, {_player.WeaponSlots.Count} armes, {_player.BagCount} copies d’objets ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
             };
             Directory.CreateDirectory(Path.GetDirectoryName(_output)!);
             File.WriteAllText(_output + ".json", JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));

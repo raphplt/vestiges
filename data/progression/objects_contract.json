@@ -114,8 +114,10 @@
         "additive"
       ],
       "params": [
+        "chance",
         "burn_damage_ratio",
-        "burn_seconds"
+        "burn_seconds",
+        "applications_per_second"
       ]
     },
     "chill_chance": {
@@ -123,8 +125,12 @@
         "additive"
       ],
       "params": [
+        "chance",
         "slow_factor",
-        "slow_seconds"
+        "slow_seconds",
+        "applications_per_second",
+        "reprieve_seconds",
+        "elite_reprieve_seconds"
       ]
     },
     "burning_target_damage": {
@@ -151,14 +157,16 @@
       "modifiers": [
         "additive"
       ],
-      "params": []
+      "params": [
+        "heal_per_kill"
+      ]
     },
     "stride_damage": {
       "modifiers": [
         "additive"
       ],
       "params": [
-        "move_seconds"
+        "charge_seconds"
       ]
     },
     "level_heal": {
@@ -183,22 +191,15 @@
         "radius"
       ]
     },
-    "still_attack_speed": {
-      "modifiers": [
-        "additive"
-      ],
-      "params": [
-        "still_seconds"
-      ]
-    },
     "dash_trail": {
       "modifiers": [
         "additive"
       ],
       "params": [
         "base_seconds",
-        "radius",
+        "max_seconds",
         "slow_factor",
+        "radius",
         "spacing"
       ]
     },
@@ -261,14 +262,21 @@
       "modifiers": [
         "additive"
       ],
-      "params": []
+      "params": [
+        "base_distance",
+        "distance_per_copy"
+      ]
     },
     "poison": {
       "modifiers": [
         "additive"
       ],
       "params": [
-        "seconds"
+        "chance",
+        "damage_ratio",
+        "seconds",
+        "applications_per_second",
+        "doses_per_copy"
       ]
     },
     "extra_cards": {
@@ -277,13 +285,148 @@
       ],
       "params": []
     },
-    "sovereign_slow": {
+    "elite_slow": {
       "modifiers": [
         "additive"
       ],
       "params": [
+        "chance",
+        "slow_factor",
+        "seconds",
+        "max_seconds",
+        "window_seconds",
+        "target_cooldown_seconds"
+      ]
+    },
+    "still_damage": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "damage_cap"
+      ]
+    },
+    "knockback": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "projectile_speed": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "orbital_speed": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "chain_range": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "homing_strength": {
+      "modifiers": [
+        "multiplicative"
+      ],
+      "params": []
+    },
+    "chain_targets": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "chest_pointers": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "pointers_per_copy",
+        "max_pointers"
+      ]
+    },
+    "item_lifetime": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "extra_seconds_per_copy"
+      ]
+    },
+    "free_chest": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "chance_per_copy",
+        "max_chance"
+      ]
+    },
+    "chest_xp_pull": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "radius_per_copy"
+      ]
+    },
+    "cross_weapon_echo": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "window_seconds",
+        "cooldown_seconds"
+      ]
+    },
+    "damage_link": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "duration_seconds",
         "radius",
-        "slow_factor"
+        "cooldown_seconds",
+        "max_ratio"
+      ]
+    },
+    "dash_cancel_projectiles": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": []
+    },
+    "chest_choices": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "extra_choices_per_copy"
+      ]
+    },
+    "dash_recovery": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "history_seconds",
+        "cooldown_seconds"
+      ]
+    },
+    "dash_decoy": {
+      "modifiers": [
+        "additive"
+      ],
+      "params": [
+        "seconds_per_copy",
+        "cooldown_seconds",
+        "radius"
       ]
     }
   },
@@ -291,43 +434,12 @@
     "cooldown_reduction"
   ],
   "milestones": {
-    "burn_slows": [
-      "slow_factor"
-    ],
-    "burn_spread": [
-      "radius"
-    ],
-    "cascade_invulnerability": [
-      "levels",
-      "seconds"
-    ],
-    "crowd_cap": [
-      "max_enemies"
-    ],
     "dash_armor": [
       "multiplier",
       "seconds_after"
     ],
     "dash_distance": [
       "bonus"
-    ],
-    "double_crit_echo": [
-      "targets"
-    ],
-    "double_explosion": [
-      "delay_seconds"
-    ],
-    "double_slow_freeze": [
-      "freeze_seconds"
-    ],
-    "double_stride": [
-      "charges"
-    ],
-    "elite_kill_heal": [
-      "max_hp_ratio"
-    ],
-    "essence_refund": [
-      "ratio"
     ],
     "full_hp_crit": [
       "multiplier"
@@ -341,15 +453,9 @@
     "level_reroll": [
       "every_levels"
     ],
-    "long_fragile": [
-      "seconds"
-    ],
     "low_hp_lifesteal": [
       "multiplier",
       "threshold"
-    ],
-    "low_hp_speed": [
-      "speed"
     ],
     "orb_heal": [
       "heal"
@@ -369,23 +475,9 @@
       "knockback",
       "radius"
     ],
-    "slow_kill_extends": [
-      "max_remaining_seconds",
-      "radius",
-      "seconds"
-    ],
     "spread_targets": [],
     "status_renew": [
       "chance"
-    ],
-    "sticky_fragile": [
-      "bonus"
-    ],
-    "still_armor": [
-      "armor"
-    ],
-    "thermos_threshold": [
-      "threshold"
     ],
     "wound_regen": [
       "multiplier",

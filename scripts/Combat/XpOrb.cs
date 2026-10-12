@@ -7,6 +7,22 @@ namespace Vestiges.Combat;
 
 public partial class XpOrb : Area2D, ITicked
 {
+    private static readonly System.Collections.Generic.HashSet<XpOrb> _onGround = new();
+
+    /// <summary>Sonnette : appelle uniquement les orbes présentes autour du coffre, y compris endormies, sans créer d’XP.</summary>
+    public static int AttractExisting(Vector2 center, float radius, Player player)
+    {
+        int count = 0;
+        foreach (XpOrb orb in _onGround)
+        {
+            if (orb._collected || center.DistanceSquaredTo(orb.GlobalPosition) > radius * radius) continue;
+            orb._player = player;
+            if (orb.IsAsleep) orb.Wake(trailBound: true);
+            else orb._trailBound = true;
+            count++;
+        }
+        return count;
+    }
     // Les orbes éveillées sont avancées par une seule boucle C#, pas par un rappel moteur chacune (plan 29).
     private static readonly TickRoster<XpOrb> Roster = new("XpOrbs");
     public int TickSlot { get; set; } = -1;
@@ -129,6 +145,7 @@ public partial class XpOrb : Area2D, ITicked
         _xpValue = xpValue;
         _currentSpeed = 0f;
         _collected = false;
+        _onGround.Add(this);
         _trailBound = false;
         _trailCheckTimer = (float)GD.RandRange(0.0, TrailCheckInterval);
         IsAsleep = false;
@@ -146,6 +163,7 @@ public partial class XpOrb : Area2D, ITicked
 
     public override void _ExitTree()
     {
+        _onGround.Remove(this);
         Roster.Remove(this);
     }
 
@@ -225,6 +243,7 @@ public partial class XpOrb : Area2D, ITicked
         if (body is Player player)
         {
             _collected = true;
+            _onGround.Remove(this);
             // Ramassée en dormant (le joueur marche dessus) : CombatPools l'oubliera à sa prochaine ronde.
             IsAsleep = false;
 

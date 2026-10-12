@@ -140,9 +140,15 @@ public partial class EnemyProjectile : Node2D, ITicked
 			CallDeferred(MethodName.Release);
 			return;
 		}
+		Vector2 previous = GlobalPosition;
 		Position += _direction * Speed * (float)delta;
 		if (_groups.GetPlayer() is Player player)
 		{
+			if (player.ObjectCombatEffects?.TryCancelIncoming(previous, GlobalPosition, HitRadius) == true)
+			{
+				CancelByDash();
+				return;
+			}
 			float reach = HitRadius + player.BodyRadius;
 			if (GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= reach * reach)
 			{
@@ -153,6 +159,39 @@ public partial class EnemyProjectile : Node2D, ITicked
 		UpdateSprite();
 		EmitTrail();
 	}
+
+    /// <summary>Le saut instantané balaie son trajet ; les rencontres sont consommées du départ vers l'arrivée.</summary>
+    internal static int CancelAlongSweep(Vector2 from, Vector2 to, float playerRadius, int budget)
+    {
+        int cancelled = 0;
+        while (cancelled < budget)
+        {
+            EnemyProjectile nearest = null;
+            float nearestAlong = float.MaxValue;
+            foreach (EnemyProjectile projectile in Roster.Items)
+            {
+                if (projectile._isDespawning) continue;
+                Vector2 onPath = Geometry2D.GetClosestPointToSegment(projectile.GlobalPosition, from, to);
+                float reach = projectile.HitRadius + playerRadius;
+                if (projectile.GlobalPosition.DistanceSquaredTo(onPath) > reach * reach) continue;
+                float along = from.DistanceSquaredTo(onPath);
+                if (along < nearestAlong) { nearestAlong = along; nearest = projectile; }
+            }
+            if (nearest == null) break;
+            nearest.CancelByDash();
+            cancelled++;
+        }
+        return cancelled;
+    }
+
+    private void CancelByDash()
+    {
+        if (_isDespawning) return;
+        _isDespawning = true;
+        Visible = false;
+        GroundShadowLayer.Remove(_shadow);
+        CallDeferred(MethodName.Release);
+    }
 
 	private void HitPlayer(Player player)
 	{

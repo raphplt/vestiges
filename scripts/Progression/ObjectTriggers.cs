@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -5,17 +6,7 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Progression;
 
-/// <summary>
-/// Objets de déclencheur d'un joueur (plan 21 §4) : ce qui se passe à l'impact d'une arme, contre une cible déjà
-/// touchée par un statut, à l'élimination, après une marche, au niveau gagné. Créé au premier objet de ce type ; il ne
-/// tourne par frame que pour la Semelle usée ou une explosion en attente. Règles communes (§7) :
-/// <list type="bullet">
-/// <item>seul ce qu'une arme a fait déclenche (coup direct, écho, forme, effet sur la durée qu'elle a posé), jamais
-/// ce qu'un objet a produit (DECISIONS §70) ;</item>
-/// <item>une chance est multipliée par le coefficient de déclenchement de l'arme ;</item>
-/// <item>une chance plafonne à 100 %, l'excédent renforce l'effet.</item>
-/// </list>
-/// </summary>
+/// <summary>Effets d’impact du sac. Chaque copie renforce un seul axe ; les budgets et délais survivent aux échanges.</summary>
 public partial class ObjectTriggers : Node
 {
     public const string BurnChanceStat = "burn_chance";
@@ -30,119 +21,73 @@ public partial class ObjectTriggers : Node
     public const string CritEchoStat = "crit_echo";
     public const string DashTrailStat = "dash_trail";
     public const string PoisonStat = "poison";
-    public const string SovereignSlowStat = "sovereign_slow";
-
-    public const string BurnSpreadEffect = "burn_spread";
-    public const string DoubleSlowFreezeEffect = "double_slow_freeze";
-    public const string BurnSlowsEffect = "burn_slows";
-    public const string SlowKillExtendsEffect = "slow_kill_extends";
-    public const string DoubleExplosionEffect = "double_explosion";
-    public const string EliteKillHealEffect = "elite_kill_heal";
-    public const string DoubleStrideEffect = "double_stride";
-    public const string CascadeInvulnerabilityEffect = "cascade_invulnerability";
-    public const string LongFragileEffect = "long_fragile";
-    public const string DoubleCritEchoEffect = "double_crit_echo";
-    public const string StickyFragileEffect = "sticky_fragile";
-    private const float TrailTickSeconds = 0.25f;
-
+    public const string EliteSlowStat = "elite_slow";
+    private const float TrailTickSeconds = .25f;
     private const float SparkHeight = 12f;
-    private const float MovingSpeedSq = 25f;
-
     private struct TrailPatch
     {
         public Vector2 Position;
         public float Remaining;
     }
 
-    private struct PendingExplosion
+    private sealed class AttemptHistory
     {
-        public Vector2 Position;
-        public float Damage;
-        public float Remaining;
-        public AttackContext Source;
+        public Enemy Target;
+        public readonly HashSet<ulong> Launches = new();
     }
 
+    private readonly record struct TimedAmount(float Time, float Amount);
+    private sealed class Budget
+    {
+        private readonly Queue<TimedAmount> _spent = new();
+        private float _total;
+        public float Take(float now, float window, float capacity, float wanted)
+        {
+            while (_spent.TryPeek(out TimedAmount first) && first.Time <= now - window + .00001f)
+                _total -= _spent.Dequeue().Amount;
+            float taken = Mathf.Min(wanted, Mathf.Max(0f, capacity - _total));
+            if (taken > 0f)
+            {
+                _spent.Enqueue(new(now, taken));
+                _total += taken;
+            }
+
+            return taken;
+        }
+
+    }
+    private readonly Budget _burnBudget = new(), _chillBudget = new(), _poisonBudget = new(), _eliteBudget = new(), _healBudget = new();
+    private readonly Dictionary<EnemyLife, AttemptHistory> _attempts = new();
+    private readonly Stack<AttemptHistory> _attemptPool = new();
+    private readonly Dictionary<EnemyLife, float> _chillReady = new(), _eliteReady = new();
+    private readonly List<EnemyLife> _expiredLives = new();
+    private readonly List<Enemy> _echoTargets = new();
+    private readonly List<TrailPatch> _trailPatches = new();
     private Player _player;
     private ulong _playerId;
     private EventBus _eventBus;
-
-    private float _burnChance;
-    private float _burnDamageRatio;
-    private float _burnSeconds;
-    private float _chillChance;
-    private float _chillFactor = 1f;
-    private float _chillSeconds;
-    private float _burningTargetDamage;
-    private float _slowedTargetDamage;
-
-    private float _burnSpreadRadius;
-    private float _freezeSeconds;
-    private float _burnSlowFactor = 1f;
-    private float _slowKillRadius;
-    private float _slowKillSeconds;
-    private float _slowKillMaxSeconds;
-
-    private float _killExplosion;
-    private float _explosionRadius;
-    private float _secondExplosionDelay = -1f;
-    private readonly System.Collections.Generic.List<PendingExplosion> _pendingExplosions = new();
-    private float _killHeal;
-    private float _eliteHealRatio;
-    private float _strideDamage;
-    private float _strideSeconds;
-    private int _strideMaxCharges = 1;
-    private float _strideElapsed;
+    private float _clock, _cleanupAt;
+    private float _burnCopies, _chillCopies, _poisonCopies, _eliteCopies;
+    private float _burnChance, _burnDamageRatio, _burnSeconds, _burnRate;
+    private float _chillChance, _chillFactor = 1f, _chillSeconds, _chillRate, _chillRest, _eliteChillRest;
+    private float _poisonChance, _poisonRatio, _poisonSeconds, _poisonRate, _poisonDoses;
+    private float _eliteChance, _eliteFactor, _eliteSeconds, _eliteMaxSeconds, _eliteWindow, _eliteRest;
+    private float _burningTargetDamage, _slowedTargetDamage, _killExplosion, _explosionRadius, _killHeal;
+    private float _strideDamage, _strideSeconds, _strideExpires;
     private int _strideCharges;
-    private float _levelHeal;
-    private int _cascadeLevels;
-    private float _cascadeSeconds;
-    private ulong _levelFrame;
-    private int _levelsThisFrame;
-
-    // Loupe de philatéliste, Stylo à quatre couleurs : ce qu'un coup critique déclenche.
-    private float _critFragile;
-    private float _critFragileSeconds;
-    private float _critEcho;
-    private float _critEchoRadius;
-    private int _critEchoTargets = 1;
-    private readonly System.Collections.Generic.List<Enemy> _echoTargets = new();
-    // Chewing-gum : traînée collante du dash, taches au sol qui ralentissent.
-    private float _dashTrail;
-    private float _trailBaseSeconds;
-    private float _trailSlowFactor = 1f;
-    private float _trailRadius;
-    private float _trailSpacing;
-    private float _trailFragile;
-    private float _trailTick;
+    private float _healPerKill;
+    private float _levelHeal, _critFragile, _critFragileSeconds, _critEcho, _critEchoRadius;
+    private float _dashTrail, _trailBaseSeconds, _trailMaxSeconds, _trailSlowFactor, _trailRadius, _trailSpacing, _trailTick;
     private Vector2 _lastPatch;
-    private bool _trailDashing;
-    // Source des statuts posés par la traînée : le joueur, pour que la Pince à linge et la Propagation les reconnaissent.
+    private bool _trailDashActive;
     private AttackContext _trailSource;
-    private readonly System.Collections.Generic.List<TrailPatch> _trailPatches = new();
-    // Flacon de pharmacie : part du coup rendue en poison ; Montre arrêtée : secondes de ralenti à la mort d'un Souverain.
-    private float _poison;
-    private float _poisonSeconds;
-    private float _sovereignSlow;
-    private float _sovereignSlowFactor = 1f;
-    private float _sovereignSlowRadius;
-
-    /// <summary>Tirages des déclencheurs ; les bancs le graine pour rester déterministes.</summary>
     internal RandomNumberGenerator Rng { get; } = new();
-
-    public float BurnChance => _burnChance;
-    public float ChillChance => _chillChance;
+    public float BurnChance => _burnCopies > 0f ? _burnChance : 0f;
+    public float ChillChance => _chillCopies > 0f ? _chillChance : 0f;
     public int StrideCharges => _strideCharges;
-
-    public static bool IsTriggerStat(string stat) =>
-        stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat or SlowedTargetDamageStat
-            or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat
-            or CritFragileStat or CritEchoStat or DashTrailStat or PoisonStat or SovereignSlowStat;
-
-    public static bool IsTriggerMilestone(string effect) =>
-        effect is BurnSpreadEffect or DoubleSlowFreezeEffect or BurnSlowsEffect or SlowKillExtendsEffect
-            or DoubleExplosionEffect or EliteKillHealEffect or DoubleStrideEffect or CascadeInvulnerabilityEffect
-            or LongFragileEffect or DoubleCritEchoEffect or StickyFragileEffect;
-
+    public static bool IsTriggerStat(string stat) => stat is BurnChanceStat or ChillChanceStat or BurningTargetDamageStat
+        or SlowedTargetDamageStat or KillExplosionStat or KillHealStat or StrideDamageStat or LevelHealStat
+        or CritFragileStat or CritEchoStat or DashTrailStat or PoisonStat or EliteSlowStat;
     public void Initialize(Player player)
     {
         _player = player;
@@ -155,47 +100,55 @@ public partial class ObjectTriggers : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKillResolved += OnEnemyKill;
         _eventBus.LevelUp += OnLevelUp;
-        SetProcess(NeedsClock);
+        _eventBus.PlayerDashStarted += OnDashStarted;
+        _eventBus.PlayerDashMoved += OnDashMoved;
+        _eventBus.PlayerDashFinished += OnDashFinished;
     }
 
     public override void _ExitTree()
     {
-        if (_eventBus == null)
-            return;
+        if (_eventBus == null) return;
         _eventBus.EnemyKillResolved -= OnEnemyKill;
         _eventBus.LevelUp -= OnLevelUp;
+        _eventBus.PlayerDashStarted -= OnDashStarted;
+        _eventBus.PlayerDashMoved -= OnDashMoved;
+        _eventBus.PlayerDashFinished -= OnDashFinished;
     }
 
-    private bool NeedsClock => _strideDamage > 0f || _pendingExplosions.Count > 0 || _dashTrail > 0f;
-
-    public override void _Process(double delta)
+    public override void _Process(double delta) => AdvanceClock((float)delta);
+    /// <summary>Horloge de jeu (la pause la suspend), jamais l’horloge réelle. Ne repart pas à zéro au rééquipement.</summary>
+    internal void AdvanceClock(float delta)
     {
-        float dt = (float)delta;
+        _clock += delta;
+        if (_strideCharges > 0 && _clock >= _strideExpires) _strideCharges = 0;
         if (_player.IsDead)
         {
-            _pendingExplosions.Clear();
-            SetProcess(false);
+            _strideCharges = 0;
+            _trailPatches.Clear();
             return;
         }
-        AdvanceStride(dt);
-        AdvanceTrail(dt);
-        for (int i = _pendingExplosions.Count - 1; i >= 0; i--)
-        {
-            PendingExplosion explosion = _pendingExplosions[i];
-            explosion.Remaining -= dt;
-            if (explosion.Remaining > 0f)
-            {
-                _pendingExplosions[i] = explosion;
-                continue;
-            }
-            _pendingExplosions[i] = _pendingExplosions[^1];
-            _pendingExplosions.RemoveAt(_pendingExplosions.Count - 1);
-            Explode(explosion.Position, explosion.Damage, explosion.Source);
-        }
-        SetProcess(NeedsClock);
+
+        AdvanceTrail(delta);
+        if (_clock < _cleanupAt) return;
+        _cleanupAt = _clock + 1f;
+        _expiredLives.Clear();
+        foreach (KeyValuePair<EnemyLife, AttemptHistory> pair in _attempts)
+            if (!GodotObject.IsInstanceValid(pair.Value.Target) || !pair.Value.Target.IsActive
+                || pair.Value.Target.IsDying || pair.Value.Target.Life != pair.Key)
+                _expiredLives.Add(pair.Key);
+        foreach (EnemyLife life in _expiredLives) ForgetAttempts(life);
+        CleanReady(_chillReady);
+        CleanReady(_eliteReady);
     }
 
-    /// <summary>Réglages d'un objet de déclencheur, lus à son arrivée.</summary>
+    private void CleanReady(Dictionary<EnemyLife, float> ready)
+    {
+        _expiredLives.Clear();
+        foreach (KeyValuePair<EnemyLife, float> pair in ready)
+            if (pair.Value <= _clock) _expiredLives.Add(pair.Key);
+        foreach (EnemyLife key in _expiredLives) ready.Remove(key);
+    }
+
     public void Configure(PassiveSouvenirData data)
     {
         foreach (PassiveEffectData effect in data.Effects)
@@ -203,19 +156,42 @@ public partial class ObjectTriggers : Node
             switch (effect.Stat)
             {
                 case BurnChanceStat:
+                    _burnChance = Parameter(data, "chance");
                     _burnDamageRatio = Parameter(data, "burn_damage_ratio");
                     _burnSeconds = Parameter(data, "burn_seconds");
+                    _burnRate = Parameter(data, "applications_per_second");
                     break;
                 case ChillChanceStat:
+                    _chillChance = Parameter(data, "chance");
                     _chillFactor = Parameter(data, "slow_factor");
                     _chillSeconds = Parameter(data, "slow_seconds");
+                    _chillRate = Parameter(data, "applications_per_second");
+                    _chillRest = Parameter(data, "reprieve_seconds");
+                    _eliteChillRest = Parameter(data, "elite_reprieve_seconds");
+                    break;
+                case PoisonStat:
+                    _poisonChance = Parameter(data, "chance");
+                    _poisonRatio = Parameter(data, "damage_ratio");
+                    _poisonSeconds = Parameter(data, "seconds");
+                    _poisonRate = Parameter(data, "applications_per_second");
+                    _poisonDoses = Parameter(data, "doses_per_copy");
+                    break;
+                case EliteSlowStat:
+                    _eliteChance = Parameter(data, "chance");
+                    _eliteFactor = Parameter(data, "slow_factor");
+                    _eliteSeconds = Parameter(data, "seconds");
+                    _eliteMaxSeconds = Parameter(data, "max_seconds");
+                    _eliteWindow = Parameter(data, "window_seconds");
+                    _eliteRest = Parameter(data, "target_cooldown_seconds");
+                    break;
+                case KillHealStat:
+                    _healPerKill = Parameter(data, "heal_per_kill");
                     break;
                 case KillExplosionStat:
                     _explosionRadius = Parameter(data, "radius");
                     break;
                 case StrideDamageStat:
-                    _strideSeconds = Parameter(data, "move_seconds");
-                    SetProcess(true);
+                    _strideSeconds = Parameter(data, "charge_seconds");
                     break;
                 case CritFragileStat:
                     _critFragileSeconds = Parameter(data, "fragile_seconds");
@@ -225,110 +201,70 @@ public partial class ObjectTriggers : Node
                     break;
                 case DashTrailStat:
                     _trailBaseSeconds = Parameter(data, "base_seconds");
+                    _trailMaxSeconds = Parameter(data, "max_seconds");
                     _trailSlowFactor = Parameter(data, "slow_factor");
                     _trailRadius = Parameter(data, "radius");
-                    // Un écart nul ferait poser des taches sans fin.
                     _trailSpacing = Mathf.Max(4f, Parameter(data, "spacing"));
-                    SetProcess(true);
-                    break;
-                case PoisonStat:
-                    _poisonSeconds = Parameter(data, "seconds");
-                    break;
-                case SovereignSlowStat:
-                    _sovereignSlowFactor = Parameter(data, "slow_factor");
-                    _sovereignSlowRadius = Parameter(data, "radius");
                     break;
             }
-        }
-    }
 
-    /// <summary>
-    /// Écart de valeur d'un effet d'objet de déclencheur (formule additive du niveau). Un objet oublié retire sa valeur
-    /// par écart : le résidu d'arrondi est ramené à zéro, sinon un effet éteint continuerait de se déclencher.
-    /// </summary>
+        }
+
+    }
     public void Add(string stat, float change)
     {
         switch (stat)
         {
-            case BurnChanceStat: _burnChance = Settle(_burnChance + change); break;
-            case ChillChanceStat: _chillChance = Settle(_chillChance + change); break;
-            case BurningTargetDamageStat: _burningTargetDamage = Settle(_burningTargetDamage + change); break;
-            case SlowedTargetDamageStat: _slowedTargetDamage = Settle(_slowedTargetDamage + change); break;
-            case KillExplosionStat: _killExplosion = Settle(_killExplosion + change); break;
-            case KillHealStat: _killHeal = Settle(_killHeal + change); break;
-            case StrideDamageStat: _strideDamage = Settle(_strideDamage + change); break;
-            case LevelHealStat: _levelHeal = Settle(_levelHeal + change); break;
-            case CritFragileStat: _critFragile = Settle(_critFragile + change); break;
-            case CritEchoStat: _critEcho = Settle(_critEcho + change); break;
-            case DashTrailStat: _dashTrail = Settle(_dashTrail + change); break;
-            case PoisonStat: _poison = Settle(_poison + change); break;
-            case SovereignSlowStat: _sovereignSlow = Settle(_sovereignSlow + change); break;
-        }
-        SetProcess(NeedsClock);
-    }
+            case BurnChanceStat:
+                _burnCopies = Settle(_burnCopies + change);
+                break;
+            case ChillChanceStat:
+                _chillCopies = Settle(_chillCopies + change);
+                break;
+            case PoisonStat:
+                _poisonCopies = Settle(_poisonCopies + change);
+                break;
+            case EliteSlowStat:
+                _eliteCopies = Settle(_eliteCopies + change);
+                break;
+            case BurningTargetDamageStat:
+                _burningTargetDamage = Settle(_burningTargetDamage + change);
+                break;
+            case SlowedTargetDamageStat:
+                _slowedTargetDamage = Settle(_slowedTargetDamage + change);
+                break;
+            case KillExplosionStat:
+                _killExplosion = Settle(_killExplosion + change);
+                break;
+            case KillHealStat:
+                _killHeal = Settle(_killHeal + change);
+                break;
+            case StrideDamageStat:
+                _strideDamage = Settle(_strideDamage + change);
+                if (_strideDamage <= 0f) _strideCharges = 0;
+                break;
+            case LevelHealStat:
+                _levelHeal = Settle(_levelHeal + change);
+                break;
+            case CritFragileStat:
+                _critFragile = Settle(_critFragile + change);
+                break;
+            case CritEchoStat:
+                _critEcho = Settle(_critEcho + change);
+                break;
+            case DashTrailStat:
+                _dashTrail = Settle(_dashTrail + change);
+                if (_dashTrail <= 0f)
+                {
+                    _trailPatches.Clear();
+                    _trailDashActive = false;
+                }
 
-    /// <summary>Une valeur d'effet plus petite que le plus petit pas d'objet est un reste d'arrondi : zéro.</summary>
-    internal static float Settle(float value) => Mathf.Abs(value) < 1e-5f ? 0f : value;
-
-    /// <summary>Branche le palier d'un objet de déclencheur.</summary>
-    public void Activate(ObjectMilestoneData milestone)
-    {
-        switch (milestone.Effect)
-        {
-            case BurnSpreadEffect: _burnSpreadRadius = milestone.Parameter("radius"); break;
-            case DoubleSlowFreezeEffect: _freezeSeconds = milestone.Parameter("freeze_seconds"); break;
-            case BurnSlowsEffect: _burnSlowFactor = milestone.Parameter("slow_factor"); break;
-            case SlowKillExtendsEffect:
-                _slowKillRadius = milestone.Parameter("radius");
-                _slowKillSeconds = milestone.Parameter("seconds");
-                _slowKillMaxSeconds = milestone.Parameter("max_remaining_seconds");
-                break;
-            case DoubleExplosionEffect: _secondExplosionDelay = milestone.Parameter("delay_seconds"); break;
-            case EliteKillHealEffect: _eliteHealRatio = milestone.Parameter("max_hp_ratio"); break;
-            case DoubleStrideEffect: _strideMaxCharges = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("charges"))); break;
-            case LongFragileEffect: _critFragileSeconds = milestone.Parameter("seconds"); break;
-            case DoubleCritEchoEffect: _critEchoTargets = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("targets"))); break;
-            case StickyFragileEffect: _trailFragile = milestone.Parameter("bonus"); break;
-            case CascadeInvulnerabilityEffect:
-                _cascadeLevels = Mathf.Max(1, Mathf.RoundToInt(milestone.Parameter("levels")));
-                _cascadeSeconds = milestone.Parameter("seconds");
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Retire le palier d'un objet oublié ou revenu sous son niveau (plan 35, sac) : chaque réglage reprend sa valeur sans
-    /// palier, celle de l'objet (<paramref name="data"/>) quand le palier la remplaçait.
-    /// </summary>
-    public void Deactivate(ObjectMilestoneData milestone, PassiveSouvenirData data)
-    {
-        switch (milestone.Effect)
-        {
-            case BurnSpreadEffect: _burnSpreadRadius = 0f; break;
-            case DoubleSlowFreezeEffect: _freezeSeconds = 0f; break;
-            case BurnSlowsEffect: _burnSlowFactor = 1f; break;
-            case SlowKillExtendsEffect:
-                _slowKillRadius = 0f;
-                _slowKillSeconds = 0f;
-                _slowKillMaxSeconds = 0f;
-                break;
-            case DoubleExplosionEffect: _secondExplosionDelay = -1f; break;
-            case EliteKillHealEffect: _eliteHealRatio = 0f; break;
-            case DoubleStrideEffect:
-                _strideMaxCharges = 1;
-                _strideCharges = Mathf.Min(_strideCharges, _strideMaxCharges);
-                break;
-            case LongFragileEffect: _critFragileSeconds = Parameter(data, "fragile_seconds"); break;
-            case DoubleCritEchoEffect: _critEchoTargets = 1; break;
-            case StickyFragileEffect: _trailFragile = 0f; break;
-            case CascadeInvulnerabilityEffect:
-                _cascadeLevels = 0;
-                _cascadeSeconds = 0f;
                 break;
         }
-    }
 
-    /// <summary>Thermomètre, Épingle à nourrice : dégâts d'un coup d'arme contre une cible brûlée ou entravée.</summary>
+    }
+    internal static float Settle(float value) => Mathf.Abs(value) < .00001f ? 0f : value;
     public float AgainstTarget(Enemy enemy, float damage)
     {
         float bonus = 0f;
@@ -337,120 +273,201 @@ public partial class ObjectTriggers : Node
             bonus += _burningTargetDamage;
             _player.ObjectProcs?.Show(BurningTargetDamageStat);
         }
+
         if (_slowedTargetDamage > 0f && enemy.IsHindered)
         {
             bonus += _slowedTargetDamage;
             _player.ObjectProcs?.Show(SlowedTargetDamageStat);
         }
+
         return damage * (1f + bonus);
     }
 
-    /// <summary>
-    /// Impact d'une arme, direct ou secondaire : Allumette humide et Glaçon tirent leur chance, pondérée par l'arme et
-    /// par le nombre de frappes qui ont touché ensemble. <paramref name="hitDamage"/> est le coup de base de l'arme : un
-    /// cône continu, qui touche par fractions de frame, brûle comme les autres armes.
-    /// </summary>
     public void OnWeaponImpact(Enemy enemy, float hitDamage, WeaponInstance weapon, int hits, AttackContext context,
         bool isCrit = false, float dealt = 0f)
     {
-        if (isCrit)
-            OnCrit(enemy, dealt, context);
-        if (enemy.IsDying)
-            return;
-        float coefficient = weapon?.Base.TriggerCoefficient ?? 1f;
-        if (_burnChance > 0f && Roll(_burnChance * coefficient, hits, out float burnStrength))
-            Burn(enemy, hitDamage * _burnDamageRatio * burnStrength, context);
-        if (_chillChance > 0f && Roll(_chillChance * coefficient, hits, out float chillStrength))
-            Chill(enemy, chillStrength, context);
-        // Sur le coup de base de l'arme, comme la Brûlure : un cône, qui touche par fractions d'image, empoisonne autant.
-        if (_poison > 0f)
-            Poison(enemy, hitDamage * hits * _poison * coefficient, context);
-    }
+        if (!context.IsDirectWeapon || context.OwnerId != _playerId || !GodotObject.IsInstanceValid(enemy)) return;
+        if (isCrit) OnCrit(enemy, dealt, context);
+        if (enemy.IsDying || (_burnCopies <= 0f && _chillCopies <= 0f && _poisonCopies <= 0f && _eliteCopies <= 0f)) return;
+        if (!_attempts.TryGetValue(enemy.Life, out AttemptHistory history))
+        {
+            history = _attemptPool.TryPop(out AttemptHistory reused) ? reused : new AttemptHistory();
+            history.Target = enemy;
+            _attempts.Add(enemy.Life, history);
+        }
 
-    /// <summary>
-    /// Flacon de pharmacie : chaque coup ajoute au poison de la cible une part de ses dégâts, rendue sur la durée ; le
-    /// poison s'accumule sans plafond et chaque coup relance sa durée.
-    /// </summary>
-    private void Poison(Enemy enemy, float damage, AttackContext context)
-    {
-        if (damage <= 0f)
-            return;
-        enemy.ApplyPoison(damage, _poisonSeconds * _player.StatusDurationMultiplier, context.As(DamageKind.Passive));
-        _player.ObjectProcs?.Show(PoisonStat);
-    }
+        if (!history.Launches.Add(context.LaunchId)) return;
+        float coefficient = Mathf.Clamp(weapon?.Base.TriggerCoefficient ?? 1f, 0f, 1f);
+        if (_burnCopies > 0f && Roll(_burnChance * coefficient) && _burnBudget.Take(_clock, 1f, _burnRate * _burnCopies, 1f) >= 1f)
+        {
+            enemy.ApplyIgnite(hitDamage * _burnDamageRatio, _burnSeconds * _player.StatusDurationMultiplier, context.As(DamageKind.Passive));
+            Spark(enemy, FxFamily.Fire);
+            _player.ObjectProcs?.Show(BurnChanceStat);
+        }
 
-    /// <summary>
-    /// Coup critique direct : la Loupe rend la cible Fragile ; le Stylo fait repartir une part des dégâts vers la
-    /// ou les cibles les plus proches. Ce qui repart ne déclenche rien (plan 21 §7).
-    /// </summary>
+        bool elite = enemy.IsPriorityTarget || enemy.Tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss;
+        if (_chillCopies > 0f && (!_chillReady.TryGetValue(enemy.Life, out float chillReady) || chillReady <= _clock) && Roll(_chillChance * coefficient)
+            && _chillBudget.Take(_clock, 1f, _chillRate * _chillCopies, 1f) >= 1f)
+        {
+            float seconds = _chillSeconds * _player.StatusDurationMultiplier;
+            enemy.ApplySlow(_chillFactor, seconds, context.As(DamageKind.Passive), ControlOrigin.Unknown);
+            _chillReady[enemy.Life] = _clock + seconds + (elite ? _eliteChillRest : _chillRest);
+            Spark(enemy, FxFamily.Pale);
+            _player.ObjectProcs?.Show(ChillChanceStat);
+        }
+
+        int doses = Mathf.Max(0, Mathf.FloorToInt(_poisonDoses * _poisonCopies));
+        if (_poisonCopies > 0f && enemy.PoisonDoseCount < doses && Roll(_poisonChance * coefficient)
+            && _poisonBudget.Take(_clock, 1f, _poisonRate * _poisonCopies, 1f) >= 1f)
+        {
+            enemy.ApplyPoison(hitDamage * _poisonRatio, _poisonSeconds * _player.StatusDurationMultiplier, context.As(DamageKind.Passive), doses);
+            _player.ObjectProcs?.Show(PoisonStat);
+        }
+
+        if (_eliteCopies > 0f && elite && (!_eliteReady.TryGetValue(enemy.Life, out float eliteReady) || eliteReady <= _clock) && Roll(_eliteChance * coefficient)
+            && _eliteBudget.Take(_clock, _eliteWindow, _eliteCopies, 1f) >= 1f)
+        {
+            enemy.ApplySlow(_eliteFactor, Mathf.Min(_eliteMaxSeconds, _eliteSeconds * _player.StatusDurationMultiplier), context.As(DamageKind.Passive), ControlOrigin.Unknown);
+            _eliteReady[enemy.Life] = _clock + _eliteRest;
+            Spark(enemy, FxFamily.Glass);
+            _player.ObjectProcs?.Show(EliteSlowStat);
+        }
+
+    }
+    private bool Roll(float chance) => Rng.Randf() < chance;
     private void OnCrit(Enemy enemy, float dealt, AttackContext context)
     {
         if (_critFragile > 0f && !enemy.IsDying)
         {
-            enemy.ApplyFragile(_critFragile, _critFragileSeconds * _player.StatusDurationMultiplier, context);
+            enemy.ApplyFragile(_critFragile, _critFragileSeconds * _player.StatusDurationMultiplier, context.As(DamageKind.Passive));
             Spark(enemy, FxFamily.Glass);
             _player.ObjectProcs?.Show(CritFragileStat);
         }
-        if (_critEcho <= 0f || dealt <= 0f)
-            return;
-        NearestOthers(enemy, _critEchoRadius, _critEchoTargets, _echoTargets);
-        AttackContext echo = context.As(DamageKind.Passive);
+
+        if (_critEcho <= 0f || dealt <= 0f) return;
+        NearestOthers(enemy, _critEchoRadius, 1, _echoTargets);
         foreach (Enemy target in _echoTargets)
         {
-            target.TakeDamage(dealt * _critEcho, source: echo);
+            target.TakeDamage(dealt * _critEcho, source: context.As(DamageKind.Passive));
             _player.AttackFx.PlayBeam(enemy.GlobalPosition, target.GlobalPosition, FxFamily.Crit);
-            _player.AttackFx.PlayHit(FxFamily.Crit, target.GlobalPosition, false, enemy.GlobalPosition);
         }
-        if (_echoTargets.Count > 0)
-            _player.ObjectProcs?.Show(CritEchoStat);
+
+        if (_echoTargets.Count > 0) _player.ObjectProcs?.Show(CritEchoStat);
     }
 
-    /// <summary>
-    /// Montre arrêtée : à la mort d'un Souverain, les créatures autour du joueur tournent au ralenti. Une créature qui
-    /// arrive après n'est pas prise : le temps s'est arrêté pour celles qui étaient là.
-    /// </summary>
-    private void FreezeTime(Vector2 sovereignPosition)
+    private void OnDashStarted(PlayerDashEvent dash)
     {
-        float seconds = _sovereignSlow * _player.StatusDurationMultiplier;
-        float radiusSq = _sovereignSlowRadius * _sovereignSlowRadius;
-        Vector2 center = _player.GlobalPosition;
-        AttackContext source = _player.BeginAttack(null, 0f, DamageKind.Passive);
-        using CrowdQuery crowd = CrowdIndex.Near(center, _sovereignSlowRadius);
-        foreach (Node node in crowd.Targets)
-        {
-            if (node is Enemy { IsActive: true, IsDying: false } enemy
-                && Iso.GroundDistanceSquared(enemy.GlobalPosition, center) <= radiusSq)
-                enemy.ApplySlow(_sovereignSlowFactor, seconds, source, ControlOrigin.Unknown);
-        }
-        _player.AttackFx.PlayHit(FxFamily.Glass, sovereignPosition, true, sovereignPosition);
-        _player.ObjectProcs?.Show(SovereignSlowStat);
+        if (dash.PlayerId != _playerId) return;
+        _trailDashActive = _dashTrail > 0f;
+        if (!_trailDashActive) return;
+        _trailSource = _player.BeginAttack(null, 0f, DamageKind.Passive);
+        LayPatch(dash.From);
     }
 
-    /// <summary>
-    /// Plan de métro : le saut se fait en une image, que la traînée suivie image par image ne verrait pas. Le
-    /// Chewing-gum pose ses taches sur tout le trajet, du départ à l'arrivée.
-    /// </summary>
+    private void OnDashMoved(PlayerDashEvent dash)
+    {
+        if (dash.PlayerId != _playerId || !_trailDashActive || _dashTrail <= 0f) return;
+        while (_lastPatch.DistanceSquaredTo(dash.To) >= _trailSpacing * _trailSpacing)
+            LayPatch(_lastPatch + (dash.To - _lastPatch).Normalized() * _trailSpacing);
+    }
+
+    private void OnDashFinished(PlayerDashEvent dash)
+    {
+        if (dash.PlayerId != _playerId) return;
+        _trailDashActive = false;
+        if (_strideDamage <= 0f || _player.IsDead) return;
+        _strideCharges = 1;
+        _strideExpires = _clock + _strideSeconds;
+    }
+
+    /// <summary>Trajet instantané public pour les bancs ; en jeu le même chemin vient des événements communs du dash.</summary>
     public void OnBlink(Vector2 from, Vector2 to)
     {
-        if (_dashTrail <= 0f)
-            return;
-        _trailSource = _player.BeginAttack(null, 0f, DamageKind.Passive);
-        LayPatch(from);
-        while (_lastPatch.DistanceSquaredTo(to) >= _trailSpacing * _trailSpacing)
-            LayPatch(_lastPatch + (to - _lastPatch).Normalized() * _trailSpacing);
-        SetProcess(NeedsClock);
+        PlayerDashEvent dash = new(_playerId, from, to, true);
+        OnDashStarted(dash);
+        OnDashMoved(dash);
     }
 
     private void LayPatch(Vector2 position)
     {
-        float seconds = (_trailBaseSeconds + _dashTrail) * _player.StatusDurationMultiplier;
-        _trailPatches.Add(new TrailPatch { Position = position, Remaining = seconds });
+        float seconds = Mathf.Min(_trailMaxSeconds, _trailBaseSeconds * _dashTrail * _player.StatusDurationMultiplier);
+        _trailPatches.Add(new TrailPatch
+        {
+            Position = position,
+            Remaining = seconds
+        });
         _lastPatch = position;
         _player.AttackFx.PlayTrail(position, _trailRadius, seconds);
         _player.ObjectProcs?.Show(DashTrailStat);
     }
 
-    /// <summary>Les <paramref name="count"/> ennemis actifs les plus proches de <paramref name="from"/>, à moins de <paramref name="radius"/>.</summary>
+    private void AdvanceTrail(float delta)
+    {
+        _trailTick -= delta;
+        bool tick = _trailTick <= 0f;
+        if (tick) _trailTick = TrailTickSeconds;
+        for (int i = _trailPatches.Count - 1; i >= 0; i--)
+        {
+            TrailPatch patch = _trailPatches[i];
+            patch.Remaining -= delta;
+            if (patch.Remaining <= 0f)
+            {
+                _trailPatches[i] = _trailPatches[^1];
+                _trailPatches.RemoveAt(_trailPatches.Count - 1);
+                continue;
+            }
+
+            _trailPatches[i] = patch;
+            if (!tick) continue;
+            using CrowdQuery crowd = CrowdIndex.Near(patch.Position, _trailRadius);
+            foreach (Node node in crowd.Targets)
+                if (node is Enemy { IsActive: true, IsDying: false } enemy && Iso.GroundDistanceSquared(enemy.GlobalPosition, patch.Position) <= _trailRadius * _trailRadius)
+                    enemy.ApplySlow(_trailSlowFactor, Mathf.Min(patch.Remaining, TrailTickSeconds * 2f), _trailSource, ControlOrigin.Unknown);
+        }
+
+    }
+    public float ConsumeStride()
+    {
+        if (_strideCharges <= 0) return 1f;
+        _strideCharges = 0;
+        _player.ObjectProcs?.Show(StrideDamageStat);
+        return 1f + _strideDamage;
+    }
+
+    private void OnLevelUp(int level)
+    {
+        if (_levelHeal <= 0f || _player.IsDead) return;
+        _player.Heal(_player.EffectiveMaxHp * _levelHeal);
+        _player.ObjectProcs?.Show(LevelHealStat);
+    }
+
+    private void ForgetAttempts(EnemyLife life)
+    {
+        if (!_attempts.Remove(life, out AttemptHistory history)) return;
+        history.Target = null;
+        history.Launches.Clear();
+        _attemptPool.Push(history);
+    }
+
+    private void OnEnemyKill(EnemyKillResult kill)
+    {
+        ForgetAttempts(kill.Target);
+        if (kill.Damage.Source.OwnerId != _playerId || !kill.Damage.Source.IsWeaponWork || _player.IsDead) return;
+        if (_killExplosion > 0f) Explode(kill.Position, FatalBlow(kill.Damage) * _killExplosion, kill.Damage.Source.As(DamageKind.Passive));
+        if (_killHeal > 0f && _player.CurrentHp < _player.EffectiveMaxHp)
+        {
+            float heal = _healBudget.Take(_clock, 1f, _killHeal, Mathf.Min(_healPerKill, _player.EffectiveMaxHp - _player.CurrentHp));
+            if (heal > 0f)
+            {
+                _player.Heal(heal);
+                _player.ObjectProcs?.Show(KillHealStat);
+            }
+
+        }
+
+    }
+    private static float FatalBlow(in DamageResult damage) => damage.Source.Kind == DamageKind.DamageOverTime
+        ? Mathf.Max(damage.NativeDamage, damage.Source.ReferenceDamage) : damage.NativeDamage;
     private void NearestOthers(Enemy from, float radius, int count, System.Collections.Generic.List<Enemy> result)
     {
         result.Clear();
@@ -472,166 +489,8 @@ public partial class ObjectTriggers : Node
             if (result.Count > count)
                 result.RemoveAt(result.Count - 1);
         }
-    }
 
-    /// <summary>
-    /// Chewing-gum : pendant le dash, une tache collante tous les quelques pixels ; chaque tache ralentit (et rend
-    /// Fragile au palier) les ennemis qui s'y trouvent, quatre fois par seconde, le temps qu'elle dure.
-    /// </summary>
-    private void AdvanceTrail(float delta)
-    {
-        if (_dashTrail <= 0f)
-            return;
-        bool dashing = _player.Mobility?.IsDashing == true;
-        Vector2 position = _player.GlobalPosition;
-        if (dashing && !_trailDashing)
-        {
-            _trailSource = _player.BeginAttack(null, 0f, DamageKind.Passive);
-            LayPatch(position);
-        }
-        // Le long du trajet depuis la dernière tache, quelle que soit la cadence d'image : à faible fréquence, une
-        // seule frame peut couvrir tout le dash.
-        if (dashing || _trailDashing)
-        {
-            while (_lastPatch.DistanceSquaredTo(position) >= _trailSpacing * _trailSpacing)
-                LayPatch(_lastPatch + (position - _lastPatch).Normalized() * _trailSpacing);
-        }
-        _trailDashing = dashing;
-        if (_trailPatches.Count == 0)
-            return;
-        _trailTick -= delta;
-        bool tick = _trailTick <= 0f;
-        if (tick)
-            _trailTick = TrailTickSeconds;
-        float radiusSq = _trailRadius * _trailRadius;
-        for (int i = _trailPatches.Count - 1; i >= 0; i--)
-        {
-            TrailPatch patch = _trailPatches[i];
-            patch.Remaining -= delta;
-            if (patch.Remaining <= 0f)
-            {
-                _trailPatches[i] = _trailPatches[^1];
-                _trailPatches.RemoveAt(_trailPatches.Count - 1);
-                continue;
-            }
-            _trailPatches[i] = patch;
-            if (!tick)
-                continue;
-            using CrowdQuery crowd = CrowdIndex.Near(patch.Position, _trailRadius);
-            foreach (Node node in crowd.Targets)
-            {
-                if (node is not Enemy { IsActive: true, IsDying: false } enemy
-                    || Iso.GroundDistanceSquared(enemy.GlobalPosition, patch.Position) > radiusSq)
-                    continue;
-                enemy.ApplySlow(_trailSlowFactor, TrailTickSeconds * 2f, _trailSource, ControlOrigin.Unknown);
-                if (_trailFragile > 0f)
-                    enemy.ApplyFragile(_trailFragile, TrailTickSeconds * 2f, _trailSource);
-            }
-        }
     }
-
-    /// <summary>
-    /// Tirage d'une chance sur <paramref name="hits"/> frappes. Au-delà de 100 %, l'effet part toujours et
-    /// <paramref name="strength"/> porte l'excédent.
-    /// </summary>
-    private bool Roll(float chance, int hits, out float strength)
-    {
-        float combined = chance >= 1f ? 1f : 1f - Mathf.Pow(1f - chance, Mathf.Max(1, hits));
-        strength = Mathf.Max(1f, chance);
-        return Rng.Randf() < combined;
-    }
-
-    /// <summary>Allumette humide : la Brûlure est celle d'un objet ; ce qu'elle fait ne déclenche aucun objet.</summary>
-    private void Burn(Enemy enemy, float dps, AttackContext context)
-    {
-        float seconds = _burnSeconds * _player.StatusDurationMultiplier;
-        AttackContext burn = context.As(DamageKind.Passive);
-        enemy.ApplyIgnite(dps, seconds, burn);
-        SlowBurning(enemy, seconds, burn);
-        Spark(enemy, FxFamily.Fire);
-        _player.ObjectProcs?.Show(BurnChanceStat);
-    }
-
-    /// <summary>Thermomètre, palier 25 : les Brûlures du joueur ralentissent aussi, le temps qu'elles durent.</summary>
-    private void SlowBurning(Enemy enemy, float seconds, AttackContext context)
-    {
-        if (_burnSlowFactor < 1f)
-            enemy.ApplySlow(_burnSlowFactor, seconds, context, ControlOrigin.Unknown);
-    }
-
-    /// <summary>
-    /// Glaçon : ralentit ; au palier, une cible déjà ralentie est figée un instant. Ce ralentissement compte comme
-    /// celui de l'arme qui a frappé : la Propagation le transmet, la Pince à linge le renouvelle.
-    /// </summary>
-    private void Chill(Enemy enemy, float strength, AttackContext context)
-    {
-        if (_freezeSeconds > 0f && enemy.IsSlowed)
-            enemy.Freeze(_freezeSeconds * _player.StatusDurationMultiplier);
-        else
-            enemy.ApplySlow(Mathf.Pow(_chillFactor, strength), _chillSeconds * _player.StatusDurationMultiplier, context);
-        Spark(enemy, FxFamily.Pale);
-        _player.ObjectProcs?.Show(ChillChanceStat);
-    }
-
-    /// <summary>
-    /// Semelle usée : <paramref name="seconds"/> de marche sans arrêt chargent les prochaines attaques. Appelé par
-    /// l'attaque elle-même : rend le multiplicateur de dégâts et consomme une charge.
-    /// </summary>
-    public float ConsumeStride()
-    {
-        if (_strideCharges <= 0)
-            return 1f;
-        _strideCharges--;
-        _player.ObjectProcs?.Show(StrideDamageStat);
-        // La marche suivante repart de zéro : une charge se regagne, elle ne se reprend pas en continu.
-        _strideElapsed = 0f;
-        return 1f + _strideDamage;
-    }
-
-    private void AdvanceStride(float delta)
-    {
-        if (_strideDamage <= 0f)
-            return;
-        if (_player.Velocity.LengthSquared() < MovingSpeedSq || _strideCharges >= _strideMaxCharges)
-        {
-            _strideElapsed = 0f;
-            return;
-        }
-        _strideElapsed += delta;
-        if (_strideElapsed < _strideSeconds)
-            return;
-        _strideElapsed = 0f;
-        _strideCharges = _strideMaxCharges;
-        CombatPools.Instance?.EmitSparks(_player.GlobalPosition, new SparkBurst
-        {
-            Family = FxFamily.Brass,
-            Owner = FxOwner.Player,
-            Count = 6,
-            Direction = Vector2.Up,
-            Spread = 2.5f,
-            SpeedMin = 20f,
-            SpeedMax = 45f,
-            LifeMin = 0.2f,
-            LifeMax = 0.35f,
-            Size = 1,
-        });
-    }
-
-    /// <summary>Boîte de pansements : chaque niveau soigne ; au palier, une cascade rend invulnérable un instant.</summary>
-    private void OnLevelUp(int newLevel)
-    {
-        if (_levelHeal <= 0f || _player.IsDead)
-            return;
-        _player.Heal(_player.EffectiveMaxHp * _levelHeal);
-        _player.ObjectProcs?.Show(LevelHealStat);
-        ulong frame = Engine.GetProcessFrames();
-        _levelsThisFrame = frame == _levelFrame ? _levelsThisFrame + 1 : 1;
-        _levelFrame = frame;
-        if (_cascadeLevels > 0 && _levelsThisFrame == _cascadeLevels)
-            _player.GrantInvulnerability(_cascadeSeconds);
-    }
-
-    /// <summary>Pétard mouillé : la victime explose ; l'explosion ne déclenche aucun objet (plan 21 §7).</summary>
     private void Explode(Vector2 position, float damage, AttackContext source)
     {
         float radius = _explosionRadius * _player.AoeMultiplier;
@@ -645,90 +504,12 @@ public partial class ObjectTriggers : Node
                 enemy.TakeDamage(damage, source: source);
                 _player.AttackFx.PlayHit(FxFamily.Fire, enemy.GlobalPosition, false, position);
             }
+
         }
+
         _player.AttackFx.PlayBurst(position, FxFamily.Fire, radius);
         _player.ObjectProcs?.Show(KillExplosionStat);
     }
-
-    /// <summary>
-    /// Élimination par ce qu'une arme a fait : Pétard mouillé, Dé à coudre. Paliers de l'Allumette et de l'Épingle :
-    /// ce que la victime transmet à ses voisins, quel que soit le coup qui l'a tuée.
-    /// </summary>
-    private void OnEnemyKill(EnemyKillResult kill)
-    {
-        if (kill.Damage.Source.OwnerId != _playerId)
-            return;
-        if (kill.Sovereign && _sovereignSlow > 0f)
-            FreezeTime(kill.Position);
-        if (kill.Damage.Source.IsWeaponWork)
-            RewardWeaponKill(kill);
-        bool spreadBurn = _burnSpreadRadius > 0f && kill.Burn.Remaining > 0f && kill.Burn.Source.OwnerId == _playerId;
-        bool extendSlows = _slowKillRadius > 0f && kill.Slow.Remaining > 0f;
-        if (!spreadBurn && !extendSlows)
-            return;
-
-        Enemy nearest = null;
-        bool extended = false;
-        float nearestSq = _burnSpreadRadius * _burnSpreadRadius;
-        float slowRadiusSq = _slowKillRadius * _slowKillRadius;
-        using CrowdQuery crowd = CrowdIndex.Near(kill.Position, Mathf.Max(_burnSpreadRadius, _slowKillRadius));
-        foreach (Node node in crowd.Targets)
-        {
-            if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.Life == kill.Target)
-                continue;
-            float distanceSq = Iso.GroundDistanceSquared(enemy.GlobalPosition, kill.Position);
-            if (extendSlows && distanceSq <= slowRadiusSq && enemy.IsSlowed)
-            {
-                enemy.ExtendSlow(_slowKillSeconds, _slowKillMaxSeconds);
-                extended = true;
-            }
-            if (spreadBurn && distanceSq <= nearestSq)
-            {
-                nearestSq = distanceSq;
-                nearest = enemy;
-            }
-        }
-        // Paliers de l'Épingle et de l'Allumette : leur icône s'élève quand ils agissent (plan 27 V2d).
-        if (extended)
-            _player.ObjectProcs?.Show(SlowedTargetDamageStat);
-        if (nearest == null)
-            return;
-        nearest.ApplyIgnite(kill.Burn.Strength, kill.Burn.Remaining, kill.Burn.Source);
-        SlowBurning(nearest, kill.Burn.Remaining, kill.Burn.Source);
-        Spark(nearest, FxFamily.Fire);
-        // La brûlure passe de la victime à sa voisine : un trait de feu le montre.
-        _player.AttackFx.PlayBeam(kill.Position, nearest.GlobalPosition, FxFamily.Fire);
-        _player.ObjectProcs?.Show(BurnChanceStat);
-    }
-
-    private void RewardWeaponKill(in EnemyKillResult kill)
-    {
-        if (_killExplosion > 0f)
-        {
-            float damage = FatalBlow(kill.Damage) * _killExplosion;
-            AttackContext source = kill.Damage.Source.As(DamageKind.Passive);
-            Explode(kill.Position, damage, source);
-            if (_secondExplosionDelay >= 0f)
-            {
-                _pendingExplosions.Add(new PendingExplosion { Position = kill.Position, Damage = damage, Remaining = _secondExplosionDelay, Source = source });
-                SetProcess(true);
-            }
-        }
-        if (_killHeal > 0f)
-        {
-            _player.Heal(_killHeal + (kill.Elite ? _player.EffectiveMaxHp * _eliteHealRatio : 0f));
-            _player.ObjectProcs?.Show(KillHealStat);
-        }
-    }
-
-    /// <summary>
-    /// Coup fatal lu par le Pétard. Une mort par saignement ou dans le feu vient du coup d'arme qui a posé l'effet :
-    /// le dernier tic, de quelques dixièmes de PV, n'en est qu'une fraction.
-    /// </summary>
-    private static float FatalBlow(in DamageResult damage) =>
-        damage.Source.Kind == DamageKind.DamageOverTime
-            ? Mathf.Max(damage.NativeDamage, damage.Source.ReferenceDamage)
-            : damage.NativeDamage;
 
     private static void Spark(Enemy enemy, FxFamily family)
     {

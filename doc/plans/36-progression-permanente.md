@@ -1,5 +1,154 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+## Reprise visuelle M8 — lisibilité du Campement, 12 octobre 2026
+
+Raphaël apprécie la direction M7, mais demande des cadres autour des icônes
+de la liste, davantage de hauteur et la suppression du trait sous « Tout
+rendre ». Le décor peut gêner la lecture ; la police lui paraît surtout
+dénoter négativement.
+
+Lot unique limité au Campement :
+- Icônes natives ×2 dans des cadres de pierre, avec une assise sombre.
+- Utiliser la hauteur disponible : en-tête plus haut, liste plus longue,
+  fiche sur la hauteur du corps et commandes au bas de la fiche.
+- Supprimer le séparateur horizontal de toute la largeur.
+- Garder l'illustration, mais réduire sa luminosité sur cette page.
+- Essayer Pixel Operator déjà disponible, tailles et graisses adaptées ;
+  conserver une zone de lecture assez large pour les descriptions. Le rendu
+  complet du Campement sert à juger la typo avant de l'étendre aux autres pages.
+- Vérifier achats, remboursements, focus et défilement ; build, smoke,
+  Campement/navigation et captures 720p/1080p, y compris un texte anglais long.
+
+**M8 livré et vérifié le 12 octobre 2026 ; nouvelle typo à juger par Raphaël.**
+- Icônes natives 32×32 affichées en 64×64 dans des cadres de 88×88 ; lignes
+  de 104 px, cadre et sprite ignorent les événements pour garder la ligne
+  entièrement sélectionnable. Noms et descriptions décalés à 120 px du bord.
+- Corps du Campement de `y=108` à `y=992` en base 1080p, contre `180…920` :
+  144 px supplémentaires. Titre remonté, retour à 1012 px ; fiche sur la
+  hauteur du corps, boutons au bas. Séparateur sous « Tout rendre » supprimé.
+- Illustration conservée à 52 % de luminosité sur cette page seulement.
+- `CampTypography` : Pixel Operator Regular/Bold, fontes copiées au premier
+  usage avec lissage désactivé ; textes 32 px, titres 48 px, légende 24 px,
+  contour 2 px. Les autres pages conservent leur typographie. Les messages
+  longs en tête ne déforment plus la largeur ; texte complet en infobulle.
+- Build du dossier partagé zéro warning ; **4/4 suites vertes et sources
+  stables** sur copie isolée (`smoke`, `camp`, `menu_navigation`, `ui_art`),
+  `/tmp/vestiges-m8-validation/`. Achats, refus, remboursements et restitution
+  du focus restent couverts par les contrôles de navigation existants.
+- Captures inspectées : `/tmp/vestiges-m8-camp1080/`, sélection des Poches ;
+  `/tmp/vestiges-m8-camp720/`, liste jusqu'à la Patte de lapin ;
+  `/tmp/vestiges-m8-en720/`, descriptions anglaises. `HubCapture --locale`
+  impose la langue dans le profil isolé. Le réglage de luminosité et la police
+  sont des choix d'implémentation à juger, sans approbation visuelle présumée.
+
+[Campement M8 en 1080p](planches/36-M8-campement-1080.png) et
+[Campement M8 en 720p](planches/36-M8-campement-720.png).
+
+## Reprise visuelle M7 — clarification du 12 octobre 2026
+
+Raphaël précise que la dernière image du fond intérieur (B5c/B5d) convenait.
+La matière M6 convient au **centre des panneaux**, tandis que les bordures
+des cartes et menus doivent être davantage travaillées.
+
+Lot unique, sans changer les icônes ni la disposition :
+- Remettre `stone/loading.png` derrière les pages intérieures et le chargement.
+- Garder la matière raccordable pour les surfaces de lecture.
+- Reprendre les tranches : face, biseaux et creux distincts, cassures et joints
+  irréguliers, coins taillés ; éclairage haut-gauche. Éviter les simples traits
+  uniformes, les ornements étrangers au monde et les détails trop fins.
+- Retour supplémentaire pendant le travail : « les bords rectangulaires
+  brutaux que j'aime pas ». Modifier aussi la silhouette : coins largement
+  coupés et différents, décrochements sur les contours, tranches irrégulières.
+  Les coins sont conservés dans des régions dédiées plus grandes que la tranche,
+  avec les marges et le centre de lecture inchangés.
+- Garder les régions répétées à échelle constante et le cache ; les états
+  sélection et rareté doivent teinter le relief sans le remplacer par un trait.
+- Examiner le résultat en jeu, à 720p/1080p ; build, smoke, Campement,
+  navigation, habillage, choix et chargement.
+
+**M7 livré et vérifié le 12 octobre 2026 ; rendu à juger par Raphaël.**
+- Dernière illustration native 480×270 restaurée via `MenuSkin.InteriorBackground`
+  sur les pages intérieures et le chargement ; matière M6 gardée dans les panneaux.
+- Silhouettes découpées : coins asymétriques largement taillés, décrochements
+  et cassures. Tranches avec face, biseau haut-gauche et creux intérieur ;
+  sélection et rareté teintent ce relief, sans bande uniforme plaquée dessus.
+- Régions de coins conservées en 6/12/18 px natifs selon bouton/carte/panneau ;
+  centres raccordables de 128 px natifs, grain 64 px répété. Tranches de six
+  pixels natifs et génération nearest ×2. Les marges de lecture restent
+  distinctes des dimensions des coins ; disposition et icônes inchangées.
+- Build du dossier partagé zéro warning ; copie isolée du lot : **6/6 suites
+  vertes et sources stables** (`smoke`, `camp`, `menu_navigation`, `ui_art`,
+  `choice_screen`, `loading`), `/tmp/vestiges-m7-validation/`. Vérifications
+  du fond illustré partagé et des coins transparents ajoutées à UI art.
+- Captures inspectées : Campement 1080p dans le dossier partagé
+  (`/tmp/vestiges-m7-camp1080-v2/`) et 720p, défilement jusqu'au Rembourrage
+  (`/tmp/vestiges-m7-camp720/`) ; Collection et Paramètres
+  (`/tmp/vestiges-m7-other720/`) ; pause en vraie run, équipements et stats
+  (`/tmp/vestiges-m7-pause720/`). Contenus conservés à l'intérieur des coupes.
+  Sources UI identiques à celles vérifiées, journal `applied-files.json`.
+
+[Campement 1080p](planches/36-M7-campement-1080.png) et
+[Campement 720p](planches/36-M7-campement-720.png).
+
+## Reprise visuelle M6 — étude du 12 octobre 2026
+
+Retour de Raphaël : les icônes M5 ne partagent pas la densité ni le style des
+objets ; les grands panneaux, leurs bordures et le fond doivent être des
+matières de qualité plutôt que de grandes illustrations étirées.
+
+Découpage proposé, sans changement d'économie ni de disposition :
+- **M6a, proposition visuelle** : trois icônes témoins via le rendu commun des
+  objets (volumes, lumière, contours colorés), pierre raccordable et bordures
+  modulaires à échelle constante. Planche reproductible, sans remplacer les
+  ressources du jeu ; juger le résultat avant de décliner le catalogue.
+- **M6b, après choix de direction** : quatorze icônes cohérentes, surfaces et
+  bordures produites par le jeu et mises en cache ; supprimer la dépendance
+  des grands panneaux et fonds intérieurs aux grandes illustrations. Garder
+  le fond peint du menu principal. Build, smoke, navigation et captures aux
+  deux résolutions.
+
+M6a préparé : [comparaison des icônes](planches/36-M6-icones.png) et
+[étude des matières](planches/36-M6-matieres.png), générées par
+`python3 -m tools.sprites.ui.camp_material_study`. Trois modèles natifs 32×32
+utilisent le rendu des objets ; pierre raccordable 64×64, grain peu contrasté,
+arêtes de six pixels natifs indépendantes de la taille des panneaux. Les
+planches sont des PNG de revue, sans export ni raccordement au jeu. Génération
+et inspection des icônes, surfaces et raccords ; build zéro warning.
+
+Raphaël valide les planches : « Bcp mieux. ca me va fait le reste ».
+**M6b livré et vérifié le 12 octobre 2026.**
+- Quatorze modèles 32×32 via le même rendu que les objets ; les trois témoins
+  approuvés sont conservés pixel pour pixel. Générateur :
+  `python3 -m tools.sprites.ui.camp`.
+- `MenuStoneTextures` crée le grain périodique 64×64, partagé entre les fonds
+  et les panneaux. Agrandissement nearest ×2 ; centre raccordable de 128 px,
+  tranches de 12 px, toutes les régions répétées. Teintes de sélection,
+  rareté, survol, pression et indisponibilité conservées.
+- Fonds intérieurs et chargement procéduraux, cache au premier usage ; aucun
+  chargement des grandes illustrations de pierre. Illustration de l'accueil
+  et voile du jeu en run conservés. Panneaux, cartes, boutons et onglets
+  partagent la matière ; marges de lecture et disposition du Campement gardées.
+- Build zéro warning dans le dossier partagé et dans la copie de vérification.
+  **6/6 suites vertes**, sources stables (`smoke`, `camp`, `menu_navigation`,
+  `ui_art`, `choice_screen`, `loading`) : `/tmp/vestiges-m6-validation/`.
+  Régression UI art enrichie : matières générées partagées, tranches et centres
+  répétés, icônes natives du catalogue et fond de chargement raccordable.
+- Vérification isolée à partir de `26bc8f44` et des seuls fichiers du lot :
+  les modifications de faune/objets en cours dans le dossier partagé ne sont
+  pas incluses. Les 24 fichiers du lot, UID compris, sont identiques à ceux
+  vérifiés (`applied-files.json`). Le premier import d'un checkout neuf a
+  journalisé ses polices/autoloads non encore importés ; le passage complet
+  suivant est vert, sans masquer ces erreurs de préparation.
+- Captures inspectées : Campement 1080p, achat et sélection
+  (`/tmp/vestiges-m6-camp1080/`) ; 720p, toute la liste jusqu'à la Patte de lapin
+  (`/tmp/vestiges-m6-camp720/`) ; Collection et Paramètres
+  (`/tmp/vestiges-m6-other720/`) ; Mémorial en vraie run
+  (`/tmp/vestiges-m6-choices1080/`) ; chargement, poème et fragment à quatre
+  lignes (`/tmp/vestiges-m6-loading720/`).
+
+Captures de revue conservées : [Campement 1080p](planches/36-M6-campement-1080.png)
+et [Campement 720p](planches/36-M6-campement-720.png).
+
 ## Reprise visuelle M5 — 12 octobre 2026
 
 Raphaël trouve le Campement trop dense, retire le mot « Rang » devant `0/X`

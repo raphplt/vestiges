@@ -253,6 +253,8 @@ public partial class RunObservation : Node
                 await CaptureEndgame(double.Parse(Argument(args, "--seconds", "40"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--loot-draws") >= 0)
                 MeasureLootDraws(int.Parse(Argument(args, "--loot-draws", "1000"), CultureInfo.InvariantCulture));
+            else if (Array.IndexOf(args, "--capture-item-combat") >= 0)
+                await CaptureItemCombat();
             else if (Array.IndexOf(args, "--capture-statuses") >= 0)
                 await CaptureStatuses();
             else if (Array.IndexOf(args, "--capture-status-crowd") >= 0)

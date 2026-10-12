@@ -3,6 +3,7 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.World;
 
@@ -17,6 +18,15 @@ public partial class Chest : StaticBody2D, IInteractable
 
     private ChestData _chestData;
     private bool _isOpened;
+    private int? _quotedCost;
+    private bool _freeAttempted;
+    private bool _freeOpening;
+    private bool _purchasing;
+    private string _pricePrompt;
+    private bool _promptAffordable, _promptFree;
+    public int QuotedCost => _quotedCost ?? 0;
+    public bool FreeOpening => _freeOpening;
+    public ChestRewardSession Rewards { get; private set; }
     private Sprite2D _sprite;
     private LightColumn _column;
     private Texture2D _openTexture;
@@ -60,6 +70,72 @@ public partial class Chest : StaticBody2D, IInteractable
 
     /// <summary>Le butin passe par l'écran de butin : <see cref="WorldInteraction"/> ouvre le coffre lui-même.</summary>
     public void Interact(Player player) { }
+
+    /// <summary>Devis annoncé une fois ; s’approcher ne tire rien et ne débite rien.</summary>
+    public int Quote(float elapsedSeconds) => _quotedCost ??= ItemLootConfig.ChestCost(Rarity, elapsedSeconds);
+
+    public string PricePrompt(Player player, EssenceTracker essence, float elapsedSeconds)
+    {
+        int cost = Quote(elapsedSeconds);
+        bool affordable = (essence?.CurrentEssence ?? 0) >= cost;
+        if (_pricePrompt == null || affordable != _promptAffordable || _promptFree != _freeOpening)
+        {
+            _promptAffordable = affordable;
+            _promptFree = _freeOpening;
+            _pricePrompt = _freeOpening ? "Ouvrir — gratuit" : $"Ouvrir — {cost} Essence" + (!affordable ? " · fonds insuffisants" : "");
+        }
+        return _pricePrompt;
+    }
+
+    /// <summary>Première intention explicite : jet unique mémorisé, même si les fonds manquent. Aucun paiement avant la fin de l’interaction.</summary>
+    public bool CanPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, out string failure)
+        => CanPurchase(player, essence, elapsedSeconds, rng, ItemLootPool.For(player), out failure);
+
+    private bool CanPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
+    {
+        failure = "";
+        if (!CanOpen) { failure = "Coffre déjà ouvert"; return false; }
+        if (!pool.CanSupply(LootRolls)) { failure = "Aucun objet disponible"; return false; }
+        Quote(elapsedSeconds);
+        if (!_freeAttempted)
+        {
+            _freeAttempted = true;
+            float chance = WorldItemEffects.FreeChestChance(player);
+            _freeOpening = chance > 0f && rng.Randf() < chance;
+        }
+        if (!_freeOpening && (essence?.CurrentEssence ?? 0) < QuotedCost)
+        { failure = $"Il manque {QuotedCost - (essence?.CurrentEssence ?? 0)} Essence"; return false; }
+        return true;
+    }
+
+    /// <summary>Une seule transaction. Les choix éventuels appartiennent désormais au coffre payé, jamais à un écran éphémère.</summary>
+    public bool TryPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, out string failure)
+        => TryPurchase(player, essence, elapsedSeconds, rng, ItemLootPool.For(player), out failure);
+
+    internal bool TryPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
+    {
+        if (_purchasing) { failure = "Ouverture déjà en cours"; return false; }
+        if (!CanPurchase(player, essence, elapsedSeconds, rng, pool, out failure)) return false;
+        _purchasing = true;
+        int paid = _freeOpening ? 0 : QuotedCost;
+        bool debited = false;
+        try
+        {
+            ChestRewardSession session = new(pool, "chest_" + Rarity, player.LuckBonus, LootRolls, WorldItemEffects.ExtraChoices(player), rng);
+            if (session.Propose().Count == 0) { failure = "Aucun objet disponible"; return false; }
+            if (paid > 0 && (essence == null || !essence.TrySpend(paid))) { failure = "Essence insuffisante"; return false; }
+            debited = paid > 0;
+            Rewards = session;
+            CommitOpen();
+            return true;
+        }
+        catch
+        {
+            if (debited && !_isOpened) essence.AddEssence(paid);
+            throw;
+        }
+        finally { _purchasing = false; }
+    }
 
     public override void _EnterTree()
     {
@@ -175,10 +251,10 @@ public partial class Chest : StaticBody2D, IInteractable
     }
 
     /// <summary>Ouvre le coffre : sprite ouvert, colonne éteinte, gerbe d'éclats. Retourne le butin tiré.</summary>
-    public List<LootResolver.LootResult> Open()
+    private void CommitOpen()
     {
         if (_isOpened)
-            return new();
+            return;
 
         _isOpened = true;
         _sprite.Rotation = 0f;
@@ -205,7 +281,6 @@ public partial class Chest : StaticBody2D, IInteractable
         });
 
         _eventBus?.EmitSignal(EventBus.SignalName.ChestOpened, _chestData.Id, _chestData.Rarity, GlobalPosition);
-        return LootResolver.Roll(LootTableId, LootRolls);
     }
 
     /// <summary>Pose le sprite à son point au sol (manifeste), sinon au bas de l'image.</summary>

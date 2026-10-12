@@ -13,7 +13,7 @@ namespace Vestiges.UI;
 public partial class HubCampUpgradesPanel : MarginContainer
 {
     private const float ListWidth = 780f;
-    private const float RowHeight = 80f;
+    private const float RowHeight = 104f;
     private const float DetailWidth = 640f;
     private static readonly Color MaxedColor = UITheme.GoldBright;
     private static readonly Color MissingColor = new(0.78f, 0.42f, 0.36f);
@@ -66,23 +66,19 @@ public partial class HubCampUpgradesPanel : MarginContainer
                 MouseFilter = MouseFilterEnum.Ignore,
             });
         }
-        _balance = UITheme.MakeLabel("", TextRole.Title, UITheme.GoldBright, TextWeight.Strong, outline: 6);
+        _balance = CampTypography.Label("", TextRole.Title, UITheme.GoldBright, TextWeight.Strong);
         top.AddChild(_balance);
-        _status = UITheme.MakeLabel("", TextRole.Lead, UITheme.TextColor, outline: 4);
+        _status = CampTypography.Label("", TextRole.Lead, UITheme.TextColor);
         _status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _status.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         _status.HorizontalAlignment = HorizontalAlignment.Right;
+        _status.ClipText = true;
+        _status.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        _status.MouseFilter = MouseFilterEnum.Pass;
         top.AddChild(_status);
-        _refundAll = MakeButton(Tr("UI_CAMP_REFUND_ALL"), new Vector2(200f, 44f));
+        _refundAll = MakeButton(Tr("UI_CAMP_REFUND_ALL"), new Vector2(240f, 56f));
         _refundAll.Pressed += OnRefundAll;
         top.AddChild(_refundAll);
-
-        column.AddChild(new ColorRect
-        {
-            Color = new Color(UITheme.GoldDim, 0.45f),
-            CustomMinimumSize = new Vector2(0f, 4f),
-            MouseFilter = MouseFilterEnum.Ignore,
-        });
 
         HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
         body.AddThemeConstantOverride("separation", 40);
@@ -134,7 +130,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
             {
                 if (_list.GetChildCount() > 0)
                     _list.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 16f), MouseFilter = MouseFilterEnum.Ignore });
-                _list.AddChild(UITheme.MakeLabel(Tr(titleKey), TextRole.Subhead, UITheme.GoldColor, TextWeight.Strong));
+                _list.AddChild(CampTypography.Label(Tr(titleKey), TextRole.Subhead, UITheme.GoldColor, TextWeight.Strong));
                 any = true;
             }
             _list.AddChild(MakeRow(upgrade));
@@ -147,21 +143,28 @@ public partial class HubCampUpgradesPanel : MarginContainer
         row.Select = MakeButton("", new Vector2(ListWidth, RowHeight));
         row.Select.Name = upgrade.Id;
         row.Select.MouseDefaultCursorShape = Control.CursorShape.PointingHand;
+        Panel iconFrame = new()
+        {
+            Name = "CampIconFrame", Position = new Vector2(12f, 8f), Size = new Vector2(88f, 88f),
+            MouseFilter = MouseFilterEnum.Ignore, TextureFilter = TextureFilterEnum.Nearest,
+        };
+        iconFrame.AddThemeStyleboxOverride("panel", UITheme.CreateNinePatch(MenuSkin.TextureFor("ui_card_locked.png"), 4, 4, 4, 4));
+        row.Select.AddChild(iconFrame);
         TextureRect icon = MakeIcon(row.Icon, 64f);
-        icon.Position = new Vector2(12f, 8f);
-        row.Select.AddChild(icon);
-        Label name = UITheme.MakeLabel(Tr(upgrade.NameKey), TextRole.Heading, UITheme.TextLight, TextWeight.Strong);
-        name.Position = new Vector2(92f, 7f);
+        icon.Position = new Vector2(12f, 12f);
+        iconFrame.AddChild(icon);
+        Label name = CampTypography.Label(Tr(upgrade.NameKey), TextRole.Heading, UITheme.TextLight, TextWeight.Strong);
+        name.Position = new Vector2(120f, 12f);
         row.Select.AddChild(name);
-        Label hint = UITheme.MakeLabel(Tr(upgrade.NameKey + "_HINT"), TextRole.Body, UITheme.TextColor);
-        hint.Position = new Vector2(92f, 43f);
-        hint.Size = new Vector2(ListWidth - 110f, 26f);
+        Label hint = CampTypography.Label(Tr(upgrade.NameKey + "_HINT"), TextRole.Body, UITheme.TextColor);
+        hint.Position = new Vector2(120f, 52f);
+        hint.Size = new Vector2(ListWidth - 144f, 40f);
         hint.ClipText = true;
         hint.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         hint.TooltipText = hint.Text;
         row.Select.AddChild(hint);
-        row.Rank = UITheme.MakeLabel("", TextRole.Lead, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Right);
-        row.Rank.Position = new Vector2(ListWidth - 92f, 10f);
+        row.Rank = CampTypography.Label("", TextRole.Lead, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Right);
+        row.Rank.Position = new Vector2(ListWidth - 92f, 14f);
         row.Rank.Size = new Vector2(72f, 30f);
         row.Select.AddChild(row.Rank);
         row.Select.FocusEntered += () => SelectRow(row);
@@ -172,40 +175,43 @@ public partial class HubCampUpgradesPanel : MarginContainer
 
     private PanelContainer MakeDetail()
     {
-        PanelContainer panel = new() { CustomMinimumSize = new Vector2(DetailWidth, 0f), SizeFlagsVertical = SizeFlags.ShrinkBegin };
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(DetailWidth, 0f), SizeFlagsVertical = SizeFlags.ExpandFill };
         panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
         VBoxContainer content = new();
-        content.AddThemeConstantOverride("separation", 18);
+        content.AddThemeConstantOverride("separation", 12);
         panel.AddChild(content);
         _detailIcon = MakeIcon(null, 128f);
         _detailIcon.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
         content.AddChild(_detailIcon);
-        _detailName = UITheme.MakeLabel("", TextRole.Title, UITheme.TextLight, TextWeight.Strong, HorizontalAlignment.Center);
+        _detailName = CampTypography.Label("", TextRole.Title, UITheme.TextLight, TextWeight.Strong, HorizontalAlignment.Center);
         content.AddChild(_detailName);
-        _detailRank = UITheme.MakeLabel("", TextRole.Lead, UITheme.GoldColor, align: HorizontalAlignment.Center);
+        _detailRank = CampTypography.Label("", TextRole.Lead, UITheme.GoldColor, align: HorizontalAlignment.Center);
         content.AddChild(_detailRank);
-        _detailHint = UITheme.MakeLabel("", TextRole.Lead, UITheme.TextColor, align: HorizontalAlignment.Center);
+        _detailHint = CampTypography.Label("", TextRole.Lead, UITheme.TextColor, align: HorizontalAlignment.Center);
         _detailHint.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _detailHint.CustomMinimumSize = new Vector2(DetailWidth - 80f, 56f);
         content.AddChild(_detailHint);
         content.AddChild(new HSeparator());
-        content.AddChild(UITheme.MakeLabel(Tr("UI_CAMP_EFFECT"), TextRole.Small, UITheme.TextDim, align: HorizontalAlignment.Center));
-        _detailEffect = UITheme.MakeLabel("", TextRole.Heading, UITheme.CyanEssence, TextWeight.Strong, HorizontalAlignment.Center);
+        content.AddChild(CampTypography.Label(Tr("UI_CAMP_EFFECT"), TextRole.Small, UITheme.TextDim, align: HorizontalAlignment.Center));
+        _detailEffect = CampTypography.Label("", TextRole.Heading, UITheme.CyanEssence, TextWeight.Strong, HorizontalAlignment.Center);
         _detailEffect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _detailEffect.CustomMinimumSize = new Vector2(DetailWidth - 80f, 56f);
         content.AddChild(_detailEffect);
-        _detailPrice = UITheme.MakeLabel("", TextRole.Heading, UITheme.GoldBright, TextWeight.Strong, HorizontalAlignment.Center);
+        _detailPrice = CampTypography.Label("", TextRole.Heading, UITheme.GoldBright, TextWeight.Strong, HorizontalAlignment.Center);
         content.AddChild(_detailPrice);
+        content.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore });
         HBoxContainer actions = new();
         actions.AddThemeConstantOverride("separation", 16);
         content.AddChild(actions);
         _buySelected = MenuSkin.Button(Tr("UI_CAMP_BUY"), true);
         _buySelected.Name = "BuyCampUpgrade";
+        CampTypography.Apply(_buySelected, TextRole.Heading, true);
         _buySelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _buySelected.Pressed += () => { if (_selected != null) OnBuy(_selected); };
         actions.AddChild(_buySelected);
         _refundSelected = MenuSkin.Button(Tr("UI_CAMP_REFUND"));
         _refundSelected.Name = "RefundCampUpgrade";
+        CampTypography.Apply(_refundSelected, TextRole.Heading, true);
         _refundSelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _refundSelected.Pressed += () => { if (_selected != null) OnRefund(_selected); };
         actions.AddChild(_refundSelected);
@@ -235,8 +241,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
     private static Button MakeButton(string text, Vector2 size)
     {
         Button button = new() { Text = text, CustomMinimumSize = size, FocusMode = FocusModeEnum.All };
-        button.AddThemeFontOverride("font", UITheme.StrongFont);
-        UITheme.SetTextRole(button, TextRole.Lead);
+        CampTypography.Apply(button, TextRole.Lead, true);
         UITheme.ApplyButtonStyle(button, UITheme.LoadTex(UITheme.MenusPath + "ui_card_normal.png"),
             UITheme.LoadTex(UITheme.MenusPath + "ui_card_selected.png"), UITheme.LoadTex(UITheme.MenusPath + "ui_card_selected.png"),
             UITheme.LoadTex(UITheme.MenusPath + "ui_card_locked.png"));
@@ -305,6 +310,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
     private void SetStatus(string text, Color color)
     {
         _status.Text = text;
+        _status.TooltipText = text;
         _status.AddThemeColorOverride("font_color", color);
     }
 

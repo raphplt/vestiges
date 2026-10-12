@@ -10,9 +10,11 @@ namespace Vestiges.Tests;
 /// Captures de l'écran d'accueil rendu : état initial, puis une capture par action rejouée.
 /// --output DIR, --actions ui_right,ui_accept (actions d'input envoyées une à une, capture après chacune).
 /// --capture-size WxH : taille réelle de la fenêtre et des images, également contrôlée dans les logs.
+/// --locale fr|en : langue imposée au profil isolé de la capture.
 /// --record N : après la dernière action, enregistre N frames d'affilée en vignettes (départ en run, chargement),
 /// avec le temps écoulé et la scène courante de chaque frame.
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
+/// --quest-focus ID : ouvre la quête précise ; les actions suivantes exercent ses liens réels vers la Collection.
 /// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
 /// </summary>
 public partial class HubCapture : Node
@@ -25,6 +27,13 @@ public partial class HubCapture : Node
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             string[] args = OS.GetCmdlineUserArgs();
+            string locale = Argument(args, "--locale", "");
+            if (locale.Length > 0)
+            {
+                if (!Vestiges.Infrastructure.LocaleManager.SupportedLocales.ContainsKey(locale))
+                    throw new ArgumentException($"Langue de capture inconnue : {locale}");
+                Vestiges.Infrastructure.LocaleManager.Instance.SetLocale(locale);
+            }
             _output = Argument(args, "--output", "/tmp/vestiges-hub");
             DirAccess.MakeDirRecursiveAbsolute(_output);
             string focus = Argument(args, "--collection-focus", "");
@@ -77,6 +86,13 @@ public partial class HubCapture : Node
                 int index = int.Parse(Argument(args, "--collection-index", "0"), CultureInfo.InvariantCulture);
                 ((Control)grid.GetChild(Mathf.Clamp(index, 0, grid.GetChildCount() - 1))).GrabFocus();
                 await Frames(20);
+            }
+            string questFocus = Argument(args, "--quest-focus", "");
+            if (questFocus.Length > 0)
+            {
+                typeof(Vestiges.UI.HubScreen).GetMethod("OpenQuest", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Invoke(hub, new object[] { questFocus });
+                await Frames(30);
             }
             Capture("hub-00");
 

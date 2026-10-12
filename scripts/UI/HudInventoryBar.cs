@@ -42,6 +42,7 @@ public partial class HudInventoryBar : Control
         public Control Root;
         public TextureRect Icon;
         public Label Copies;
+        public TextureRect Rarity;
     }
 
     /// <summary>Bas de la rangée d'Écussons, en unités HUD depuis le bas de l'écran : le haut de la barre d'armes.</summary>
@@ -157,7 +158,10 @@ public partial class HudInventoryBar : Control
     {
         HBoxContainer root = new() { MouseFilter = MouseFilterEnum.Ignore };
         root.AddThemeConstantOverride("separation", 2);
-        ItemRow row = new() { Root = root, Icon = Icon(), Copies = Text(9, CountColor) };
+        ItemRow row = new() { Root = root, Icon = Icon(), Copies = Text(9, CountColor), Rarity = new TextureRect
+        { CustomMinimumSize = new Vector2(12, 12), StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+            MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ShrinkCenter } };
+        root.AddChild(row.Rarity);
         row.Icon.CustomMinimumSize = new Vector2(ItemIconSize, ItemIconSize);
         root.AddChild(row.Icon);
         row.Copies.CustomMinimumSize = new Vector2(14f, 0f);
@@ -236,6 +240,9 @@ public partial class HudInventoryBar : Control
     private static void FillItem(ItemRow row, ActivePassiveSouvenir owned)
     {
         row.Root.Visible = true;
+        row.Rarity.Texture = RarityArt.Icons(RarityArt.Rank(owned.Data.Rarity), 12)[0];
+        row.Copies.AddThemeColorOverride("font_color", ItemPresentation.Color(owned.Data));
+        row.Root.TooltipText = $"{owned.Data.Name} · {ItemPresentation.RarityText(owned.Data)} · ×{owned.Copies}";
         row.Icon.Texture = LoadIcon(owned);
         row.Icon.Visible = row.Icon.Texture != null;
         row.Copies.Text = owned.Copies > 1 ? $"×{owned.Copies}" : "";

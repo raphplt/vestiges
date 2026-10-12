@@ -14,7 +14,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// Inventaire du joueur (plan 35), dans un profil neuf et isolé. Lot I1 : réglages contrôlés, Écussons à part des objets,
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
-/// objets en exemplaires (niveau d'effet, palier au doublon), oubli qui retire effet et palier, sac plein, butin « objet ».
+/// objets en exemplaires directs sans palier, oubli qui retire exactement un exemplaire, sac plein, butin « objet ».
 /// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
 /// Lot I4 : surplus d'une arme au bout de sa progression. Lot I6 : Ticket de consigne, Plan de métro, Flacon de pharmacie,
 /// Trèfle plastifié, Montre arrêtée. Lot I7 : fils d'usage des Écussons.
@@ -70,13 +70,11 @@ public partial class InventoryRegression : Node
             ("facteur au-delà de 1", "{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 1.5}", "badge_soft_cap_factor"),
             ("clé inconnue", "{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5, \"tomes\": 4}", "clé « tomes » inconnue"),
             ("seuil absent", "{\"badge_slots\": 4, \"badge_soft_cap_factor\": 0.5}", "badge_soft_cap_level absent"),
-            ("sac vide", Config("\"bag_size\": 0", "\"item_copy_levels\": [10, 15]"), "bag_size"),
-            ("exemplaires qui ne montent pas", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 10]"),
-                "item_copy_levels[1] : 10 pas plus haut"),
-            ("exemplaires absents", Config("\"bag_size\": 10", "\"item_copy_levels\": []"), "item_copy_levels"),
-            ("usage absent", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15], \"elite_item_chance\": 0.25, \"sovereign_items\": 1"),
+            ("sac vide", Config("\"bag_size\": 0", "\"elite_item_chance\": 0.25"), "bag_size"),
+            ("ancienne courbe refusée", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15]"), "clé « item_copy_levels » inconnue"),
+            ("usage absent", Config("\"bag_size\": 10", "\"elite_item_chance\": 0.25, \"sovereign_items\": 1"),
                 "usage"),
-            ("coup large d'une seule créature", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15], \"elite_item_chance\": 0.25, "
+            ("coup large d'une seule créature", Config("\"bag_size\": 10", "\"elite_item_chance\": 0.25, "
                 + "\"sovereign_items\": 1, \"usage\": {\"wide_hit_targets\": 1, \"far_kill_distance\": 250, \"contact_radius\": 200}"),
                 "wide_hit_targets"),
         };
@@ -112,8 +110,9 @@ public partial class InventoryRegression : Node
             $"niveau 31 : un demi-pas, même valeur annoncée et obtenue ({before:0.###} → {badge.Value(0):0.###})");
 
         ActivePassiveSouvenir item = _player.FindObject("glacon");
+        _player.SetBagCapacity(45);
         _player.AddOrUpgradePassive("glacon", 40);
-        Check(item.Level == 30 && item.IsMaxLevel, "un objet reste plafonné au niveau 30");
+        Check(item.Copies == 41 && item.Level == 41 && !item.IsMaxLevel, "les objets dépassent six copies et trente anciens niveaux ; seul le sac compte");
     }
 
     private void CheckBadgeUnlock()
@@ -133,21 +132,26 @@ public partial class InventoryRegression : Node
     {
         Setup();
         PassiveSouvenirData chill = PassiveSouvenirDataLoader.Get("glacon");
-        Check(InventoryConfig.BagSize == 10 && chill.CopyLevels.Length == 6 && chill.CopyLevels[0] == 10 && chill.CopyLevels[1] == 15,
-            "sac de dix ; un objet vaut son niveau 10, son doublon le niveau 15");
-        Check(PassiveSouvenirDataLoader.Get("sifflet_d_arbitre").CopyLevels[2] == 3, "le Sifflet garde ses propres exemplaires : un Péril chacun");
+        Check(InventoryConfig.BagSize == 10 && !chill.HasCopyLimit && chill.Rarity == "uncommon" && chill.Milestones.Count == 0,
+            "sac de dix ; objets ordinaires sans limite de copies, rareté fixe et aucun palier");
+        Check(PassiveSouvenirDataLoader.Get("sifflet_d_arbitre").Effects[0].Step == 1f, "le Sifflet donne un Péril par copie");
         _player.AddItemCopy("glacon");
         ActivePassiveSouvenir item = _player.FindObject("glacon");
         float step = chill.Effects[0].Step;
-        Check(item.Copies == 1 && item.Level == 10 && _player.BagCount == 1 && Mathf.IsEqualApprox(_player.ObjectTriggers.ChillChance, step * 10f),
-            $"un exemplaire : niveau 10, une place ({_player.ObjectTriggers.ChillChance:0.###} de chance)");
+        Check(item.Copies == 1 && item.Level == 1 && _player.BagCount == 1 && Mathf.IsEqualApprox(_player.ObjectTriggers.ChillChance, 0.08f),
+            "un exemplaire : un pas d’effet et une place");
         _player.AddItemCopy("glacon");
-        Check(item.Copies == 2 && item.Level == 15 && _player.BagCount == 2 && FreezeSeconds() > 0f,
-            "deux exemplaires : niveau 15 et le palier (le double ralentissement fige)");
+        Check(item.Copies == 2 && item.Level == 2 && Mathf.IsEqualApprox(item.Value(0), step * 2f) && item.Data.Milestones.Count == 0,
+            "deux exemplaires : deux pas, aucun gel de doublon");
         for (int i = 0; i < 6; i++)
             _player.AddItemCopy("glacon");
-        Check(item.Copies == 6 && item.Level == 25 && _player.BagCount == 6 && !_player.CanTakeItem("glacon"),
-            "six exemplaires au plus, niveau 25 ; le septième est refusé");
+        Check(item.Copies == 8 && _player.BagCount == 8 && _player.CanTakeItem("glacon"),
+            "huit exemplaires ordinaires acceptés, sans seuil artificiel à six");
+        _player.AddItemCopy("ticket_de_consigne");
+        _player.AddItemCopy("ticket_de_consigne");
+        _player.SetBagCapacity(12);
+        Check(!_player.AddItemCopy("ticket_de_consigne") && _player.IsItemAtMax("ticket_de_consigne"),
+            "limite légendaire conservée à deux tickets malgré une place disponible");
     }
 
     private void CheckForgetting()
@@ -157,8 +161,8 @@ public partial class InventoryRegression : Node
         _player.AddItemCopy("glacon");
         _player.ForgetItemCopy("glacon");
         ActivePassiveSouvenir item = _player.FindObject("glacon");
-        Check(item.Copies == 1 && item.Level == 10 && FreezeSeconds() == 0f && _player.BagCount == 1,
-            "oublier le doublon : retour au niveau 10, palier retiré");
+        Check(item.Copies == 1 && item.Level == 1 && item.Data.Milestones.Count == 0 && _player.BagCount == 1,
+            "oublier le doublon retire un pas, sans palier");
         _player.ForgetItemCopy("glacon");
         Check(_player.FindObject("glacon") == null && Mathf.IsZeroApprox(_player.ObjectTriggers.ChillChance) && _player.BagCount == 0,
             "oublier le dernier exemplaire : l'objet quitte le sac, son effet aussi");
@@ -175,17 +179,17 @@ public partial class InventoryRegression : Node
         bool clean = true;
         foreach (string field in new[] { "_dashTrail", "_killExplosion", "_strideDamage" })
             clean &= (float)typeof(ObjectTriggers).GetField(field, Private).GetValue(_player.ObjectTriggers) == 0f;
-        Check(clean && !_player.ObjectTriggers.IsProcessing() && _player.BagCount == 0,
-            "six exemplaires pris puis oubliés : effets exactement à zéro, plus d'horloge par image");
+        Check(clean && _player.ObjectTriggers.StrideCharges == 0 && _player.BagCount == 0,
+            "six exemplaires pris puis oubliés : effets et charges exactement à zéro ; horloge conservée pour les délais");
 
         float speed = _player.AttackSpeedMultiplier;
         _player.AddItemCopy("tabouret_de_camping");
         _player.AddItemCopy("tabouret_de_camping");
-        float stillArmor = (float)typeof(ObjectStances).GetField("_stillArmor", Private).GetValue(_player.ObjectStances);
+        float armor = _player.Armor;
         _player.ForgetItemCopy("tabouret_de_camping");
         _player.ForgetItemCopy("tabouret_de_camping");
-        Check(stillArmor > 0f && (float)typeof(ObjectStances).GetField("_stillArmor", Private).GetValue(_player.ObjectStances) == 0f
-            && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier, speed), "un objet d'état oublié rend son palier et sa cadence");
+        Check(Mathf.IsEqualApprox(_player.Armor, armor)
+            && Mathf.IsEqualApprox(_player.AttackSpeedMultiplier, speed), "un objet d’état oublié ne laisse ni armure ni cadence parasite");
     }
 
     private void CheckBag()
@@ -246,11 +250,17 @@ public partial class InventoryRegression : Node
             WorldInteraction interaction = new();
             AddChild(interaction);
             interaction.Setup(_player);
+            EssenceTracker chestEssence = new();
+            AddChild(chestEssence);
+            chestEssence.AddEssence(90);
+            interaction.Configure(null, chestEssence, null);
             Chest chest = new();
             AddChild(chest);
             chest.Initialize(ChestDataLoader.Get("chest_epic"));
             chest.GlobalPosition = new Vector2(600f, 0f);
             typeof(WorldInteraction).GetMethod("OpenChest", Private).Invoke(interaction, new object[] { chest });
+            Check(chestEssence.CurrentEssence == 0, "coffre épique : paiement de 90 Essence avant les deux objets");
+            chestEssence.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             ItemPickup overflow = ground.GetChildCount() == 1 ? ground.GetChild<ItemPickup>(0) : null;
             Check(chest.IsOpened && _player.BagCount == 1 && overflow != null && otherLoot == 0,
@@ -335,18 +345,19 @@ public partial class InventoryRegression : Node
         Check((_player.FindObject(first)?.Copies ?? 0) == expectedFirst && (_player.FindObject(incoming.Id)?.Copies ?? 0) == incomingBefore + (first == incoming.Id ? 0 : 1)
             && _player.BagCount == 10 && !IsInstanceValid(full) && !GetTree().Paused,
             $"échange : un exemplaire de {first} oublié, {incoming.Id} pris, la run reprend");
-        // Objet déjà au maximum (six Glaçons) : rien ne s'ouvre, aucun exemplaire n'est perdu.
-        while (_player.FindObject("glacon")?.Copies < 6)
+        // Seuls les objets légendaires/uniques saturés refusent un échange.
+        while ((_player.FindObject("ticket_de_consigne")?.Copies ?? 0) < 2)
         {
-            _player.ForgetItemCopy(_player.PassiveSlots[^1].Id);
-            _player.AddItemCopy("glacon");
+            _player.ForgetItemCopy(_player.PassiveSlots[0].Id);
+            _player.AddItemCopy("ticket_de_consigne");
         }
         int bag = _player.BagCount;
-        ItemPickup maxed = drops.Drop(new Vector2(600f, 0f), PassiveSouvenirDataLoader.Get("glacon"));
+        ItemPickup maxed = drops.Drop(new Vector2(600f, 0f), PassiveSouvenirDataLoader.Get("ticket_de_consigne"));
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         maxed.Interact(_player);
-        Check(!choices.IsOpen && _player.BagCount == bag && IsInstanceValid(maxed) && !exchange.Open(_player, PassiveSouvenirDataLoader.Get("glacon"), () => true),
-            "objet déjà au maximum : l'échange ne s'ouvre pas, rien n'est oublié");
+        Check(!choices.IsOpen && _player.BagCount == bag && IsInstanceValid(maxed)
+            && !exchange.Open(_player, PassiveSouvenirDataLoader.Get("ticket_de_consigne"), () => true),
+            "légendaire déjà au maximum : aucun échange ni oubli");
         choices.QueueFree();
     }
 
@@ -453,13 +464,25 @@ public partial class InventoryRegression : Node
             $"poison : deux coups s'accumulent, la réserve se vide sur la durée ({afterOne:0.#} en 1 s, {total:0.#} au total)");
 
         _player.AddItemCopy("flacon_de_pharmacie");
-        _player.ObjectTriggers.OnWeaponImpact(enemy, 100f, null, 1, default, dealt: 100f);
-        float reserve = (float)typeof(Vestiges.Combat.Enemy).GetField("_poisonReserve", Private).GetValue(enemy);
-        Check(Mathf.IsEqualApprox(reserve, 20f) && enemy.IsPoisoned, $"Flacon de pharmacie : un coup de 100 empoisonne pour 20 ({reserve:0.#})");
+        Vestiges.Combat.WeaponInstance weapon = _player.WeaponSlots[0];
+        _player.ObjectTriggers.Rng.Seed = 123;
+        int doses = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 100f, weapon, 1, _player.BeginAttack(weapon, 100f), dealt: 100f);
+            doses = enemy.PoisonDoseCount;
+        }
+        Check(doses == 2, $"Flacon : cent coups n’imposent pas cent poisons ; budget partagé de deux doses/s ({doses})");
+        float beforePoison = (float)hp.GetValue(enemy);
+        tick.Invoke(enemy, new object[] { 3.1f });
+        Check(Mathf.Abs(beforePoison - (float)hp.GetValue(enemy) - 40f) < 0.1f && !enemy.IsPoisoned,
+            "Deux doses issues de coups de référence 100 infligent au total 40, puis expirent");
 
         _player.AddItemCopy("montre_arretee");
-        typeof(ObjectTriggers).GetMethod("FreezeTime", Private).Invoke(_player.ObjectTriggers, new object[] { enemy.GlobalPosition });
-        Check(enemy.IsSlowed, "Montre arrêtée : à la mort d'un Souverain, les créatures proches ralentissent");
+        enemy.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), System.Array.Empty<EnemyAffixData>());
+        for (int i = 0; i < 1000 && !enemy.IsSlowed; i++)
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 100f, weapon, 1, _player.BeginAttack(weapon, 100f), dealt: 100f);
+        Check(enemy.IsSlowed, "Montre arrêtée : un impact d’arme peut ralentir une élite");
         enemy.QueueFree();
     }
 
@@ -566,9 +589,6 @@ public partial class InventoryRegression : Node
 
     private static List<FragmentOption> Offers(FragmentManager fragments) =>
         (List<FragmentOption>)typeof(FragmentManager).GetMethod("BuildFragmentPool", Private).Invoke(fragments, null);
-
-    private float FreezeSeconds() =>
-        (float)typeof(ObjectTriggers).GetField("_freezeSeconds", Private).GetValue(_player.ObjectTriggers);
 
     private void Setup()
     {

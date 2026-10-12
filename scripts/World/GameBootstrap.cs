@@ -138,6 +138,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(BiomeDataLoader.TryLoad(out string biomesError), biomesError);
         RequireCatalog(CampUpgradeDataLoader.TryLoad(out string campError), campError);
         RequireCatalog(InventoryConfig.TryLoad(out string inventoryError), inventoryError);
+        RequireCatalog(ItemLootConfig.TryLoad(out string itemLootError), itemLootError);
 
         // FragmentManager DOIT exister avant tout LevelUp —
         // certains nodes émettent XpGained/LevelUp pendant leur _Ready(),
@@ -199,9 +200,6 @@ public partial class GameBootstrap : Node
         pauseMenu.JournalRequested += journal.Show;
         journal.Closed += pauseMenu.RestoreAfterJournal;
 
-        if (chestLootScreen != null)
-            player.ConfigureLoot(chestLootScreen);
-
         Node sceneRoot = GetNode("..");
         ErasureManager erasureManager = new() { Name = "ErasureManager" };
         sceneRoot.AddChild(erasureManager);
@@ -225,6 +223,7 @@ public partial class GameBootstrap : Node
 
         ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
         sceneRoot.AddChild(choiceScreen);
+        player.ConfigureLoot(chestLootScreen, essenceTracker, choiceScreen);
 
         // Objets du monde (plan 35 I3) : échange quand le sac est plein, objets lâchés par les élites et les Souverains.
         ItemExchange itemExchange = new() { Name = "ItemExchange" };

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -12,8 +13,8 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Objets du joueur (plan 21 §4, lots G2a et G2a-2, plan 23 R3) sur un vrai joueur : six emplacements, trente
-/// niveaux, valeur égale à la somme des gains, gain selon la rareté, objets retirés des offres, paliers au niveau 15,
+/// Écussons et objets sur un vrai joueur : progression des Écussons, copies directes, raretés fixes,
+/// déclencheurs probabilistes et budgets communs aux armes, sans bonus caché au doublon ;
 /// projectiles en plus fractionnaires, Durée et renouvellement des statuts.
 /// </summary>
 public partial class ObjectsRegression : Node2D
@@ -22,7 +23,7 @@ public partial class ObjectsRegression : Node2D
     private int _failures;
     private Player _player;
 
-    public override void _Ready()
+    public override async void _Ready()
     {
         try
         {
@@ -47,6 +48,11 @@ public partial class ObjectsRegression : Node2D
             CheckMilestoneProcIcons();
             CheckRewardMilestones();
             CheckImpactTriggers();
+            CheckSharedItemBudgets();
+            CheckChillAndEliteBudgets();
+            CheckPoisonDoses();
+            CheckStatItemExchange();
+            CheckCatalogueStatItems();
             CheckTargetBonuses();
             CheckKillTransmissions();
             CheckFragility();
@@ -64,15 +70,19 @@ public partial class ObjectsRegression : Node2D
             CheckScalpelCounterReset();
             CheckSteadyDisorientation();
             CheckStrideAndLevels();
+            CheckOrbitalStride();
             CheckNamedProperties();
             CheckCritTriggers();
             CheckDashTrail();
             CheckStances();
+            CheckItemPresentation();
+            await CheckItemPause();
             GD.Print($"[ObjectsRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }
         catch (Exception exception)
         {
+            GetTree().Paused = false;
             GD.PushError(exception.ToString());
             GetTree().Quit(2);
         }
@@ -93,7 +103,7 @@ public partial class ObjectsRegression : Node2D
             foreach (ObjectMilestoneData milestone in data.Milestones)
                 wellFormed &= milestone.Level == 15;
         }
-        Check(offered.Count == 38 && badges == 16 && wellFormed && anySurvival,
+        Check(offered.Count == 72 && badges == 16 && wellFormed && anySurvival,
             $"Catalogue : {offered.Count} fiches proposées, {badges} Écussons (niveau max 99) et objets (niveau max 30), paliers au niveau 15, au moins une de survie");
         bool retired = true;
         foreach (string id in new[] { "flamme_interieure", "fragment_deternite" })
@@ -122,8 +132,8 @@ public partial class ObjectsRegression : Node2D
             items += _player.AddOrUpgradePassive(id) ? 1 : 0;
         Check(_player.BagCapacity == 10 && items == 10 && _player.BagCount == 10, "Sac de dix places ; le onzième objet est refusé");
         Check(_player.AddOrUpgradePassive("memoire_vive") && _player.GetPassiveLevel("memoire_vive") == 2
-            && _player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 2,
-            "Emplacements pleins : un Écusson ou un objet porté monte encore de niveau");
+            && !_player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 1,
+            "Sac plein : une carte améliore un Écusson, mais une copie exige une place libre");
     }
 
     private void CheckLevels()
@@ -198,8 +208,8 @@ public partial class ObjectsRegression : Node2D
         int half = peril.Peril;
         _player.AddOrUpgradePassive("sifflet_d_arbitre", 1, 1.5f);
         int whole = peril.Peril;
-        Check(first == 1 && third == 3 && half == 4 && whole == 6,
-            $"Sifflet d'arbitre : Péril {first}, {third} au niveau 3, {half} puis {whole} après deux cartes à × 1,5");
+        Check(first == 1 && third == 3 && half == 4 && whole == 5,
+            $"Sifflet d'arbitre : Péril {first}, {third} après trois copies, puis {half} et {whole} : aucun gain de rareté appliqué aux copies");
         RemoveChild(peril);
         peril.QueueFree();
     }
@@ -560,42 +570,47 @@ public partial class ObjectsRegression : Node2D
         _player.DisableDefenseForTests();
         Raise("paille_tordue", 1);
         Enemy enemy = SpawnEnemy();
-        MethodInfo step = typeof(Player).GetMethod("StepLifesteal", BindingFlags.NonPublic | BindingFlags.Instance);
+        CurrentHp.SetValue(enemy, 100000f);
+        MethodInfo step = typeof(Player).GetMethod("StepLifesteal", Private);
         float maxHp = _player.EffectiveMaxHp;
         _player.TakeDamage(maxHp * 0.6f);
-
         float hp = _player.CurrentHp;
-        _player.OnProjectileHit(enemy, 20f, false, _player.EquippedWeapon);
+        AttackContext attack = _player.BeginAttack(_player.EquippedWeapon, 20f);
+        enemy.TakeDamage(20f, source: attack);
         step.Invoke(_player, new object[] { 0.25f });
         float small = _player.CurrentHp - hp;
-
         hp = _player.CurrentHp;
-        _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
+        enemy.TakeDamage(5000f, source: _player.BeginAttack(_player.EquippedWeapon, 5000f));
         step.Invoke(_player, new object[] { 0.25f });
         float capped = _player.CurrentHp - hp;
-        float capPerSecond = DefenseConfig.Load().LifestealMaxHpPerSecond;
-        Check(Near(_player.Lifesteal, 0.005f) && Near(small, 0.1f) && Near(capped, maxHp * capPerSecond * 0.25f),
-            $"Paille tordue : 20 dégâts rendent {small:0.00} PV ; 5 000 dégâts plafonnés à {capped:0.00} PV en 0,25 s ({capPerSecond:P0} des PV max par seconde)");
-
-        Raise("paille_tordue", 14);
+        float cap = DefenseConfig.Load().LifestealMaxHpPerSecond;
+        Check(Near(_player.Lifesteal, 0.005f) && Near(small, 0.1f) && Near(cap, 0.08f)
+            && Near(capped, maxHp * cap * 0.25f),
+            $"Vol de vie réel : 20 PV perdus rendent {small:0.00} ; plafond relevé à 8 % des PV max/s ({capped:0.00} en 0,25 s)");
+        _player.AddOrUpgradePassive("paille_tordue", 14);
         hp = _player.CurrentHp;
-        _player.OnProjectileHit(enemy, 5000f, false, _player.EquippedWeapon);
+        enemy.TakeDamage(5000f, source: _player.BeginAttack(_player.EquippedWeapon, 5000f));
         step.Invoke(_player, new object[] { 0.25f });
-        float low = _player.CurrentHp - hp;
-        Check(_player.CurrentHp < maxHp * 0.5f && Near(low, maxHp * capPerSecond * 2f * 0.25f),
-            $"Paille tordue palier 15 : sous la moitié des PV, plafond doublé ({low:0.00} PV en 0,25 s)");
-
-        // Plan 27 V3c : à vie pleine, rien n'est rendu, l'icône ne s'élève pas.
-        _player.Heal(maxHp);
-        ObjectProcs procs = _player.ObjectProcs;
-        int icons = procs.ActiveCount;
-        // Délai d'une seconde par objet levé : sans lui, l'icône pourrait se taire pour une autre raison.
-        ((System.Collections.IDictionary)typeof(ObjectProcs).GetField("_nextAllowedMsec", BindingFlags.NonPublic | BindingFlags.Instance)
-            .GetValue(procs)).Clear();
-        _player.OnProjectileHit(enemy, 20f, false, _player.EquippedWeapon);
-        step.Invoke(_player, new object[] { 0.25f });
-        Check(procs.ActiveCount == icons, $"Paille tordue : à vie pleine, pas d'icône ({procs.ActiveCount - icons})");
+        Check(hp < maxHp * 0.5f && Near(_player.CurrentHp - hp, maxHp * cap * 2f * 0.25f),
+            "Palier de l’Écusson du barbier conservé : plafond de vol de vie doublé sous la moitié des PV");
+        // Aucun crédit supplémentaire provenant de la notification visuelle ou du surplus au-delà des PV.
+        step.Invoke(_player, new object[] { 100f });
+        _player.DisableDefenseForTests();
+        _player.TakeDamage(maxHp * 0.4f);
+        Enemy almostDead = SpawnAt(new Vector2(-70000f, 10000f));
+        CurrentHp.SetValue(almostDead, 1f);
+        hp = _player.CurrentHp;
+        almostDead.TakeDamage(5000f, source: _player.BeginAttack(_player.EquippedWeapon, 5000f));
+        _player.OnProjectileHit(almostDead, 5000f, false, _player.EquippedWeapon);
+        step.Invoke(_player, new object[] { 1f });
+        Check(Near(_player.CurrentHp - hp, _player.Lifesteal), "Vol de vie : un surkill de 5 000 sur 1 PV ne crédite que 1 PV infligé, sans double crédit");
+        hp = _player.CurrentHp;
+        enemy.TakeDamage(20f, source: attack.As(DamageKind.Passive));
+        enemy.TakeDamage(20f, source: attack.As(DamageKind.DamageOverTime));
+        step.Invoke(_player, new object[] { 1f });
+        Check(Near(_player.CurrentHp, hp), "Dégâts passifs et tics : aucun vol de vie récursif");
         enemy.QueueFree();
+        almostDead.QueueFree();
     }
 
     /// <summary>Plan 21 F4 : l'icône d'un objet porté s'élève quand il agit, une fois par seconde au plus ; jamais celle d'un objet absent.</summary>
@@ -670,8 +685,9 @@ public partial class ObjectsRegression : Node2D
         int burns = 0;
         for (int i = 0; i < trials; i++)
         {
+            _player.ObjectTriggers.AdvanceClock(1f);
             ClearStatuses(enemy);
-            _player.OnProjectileHit(enemy, 10f, false, weapon, _player.BeginAttack(weapon, 10f, kind));
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f, kind), dealt: 10f);
             burns += enemy.IsBurning ? 1 : 0;
         }
         return burns / (float)trials;
@@ -680,42 +696,44 @@ public partial class ObjectsRegression : Node2D
     private void CheckImpactTriggers()
     {
         Setup();
-        Raise("allumette_humide", 30);
+        Raise("allumette_humide", 1);
         _player.ObjectTriggers.Rng.Seed = 11;
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
         _player.AddWeapon(WeaponDataLoader.Get("sling"));
         WeaponInstance hammer = _player.WeaponSlots[1];
         WeaponInstance sling = _player.WeaponSlots[2];
         Enemy enemy = SpawnEnemy();
-        float heavy = BurnShare(enemy, hammer, 2000);
-        float light = BurnShare(enemy, sling, 2000);
+        float heavy = BurnShare(enemy, hammer, 4000);
+        float light = BurnShare(enemy, sling, 4000);
         float passive = BurnShare(enemy, hammer, 300, DamageKind.Passive);
-        Check(Near(_player.ObjectTriggers.BurnChance, 0.9f) && heavy > 0.87f && heavy < 0.93f && light > 0.37f && light < 0.44f && passive == 0f,
-            $"Allumette humide niveau 30 : 90 % d'enflammer ; Marteau (coefficient 1) {heavy:P0}, Fronde (0,45) {light:P0}, effet déclenché 0 %");
-
+        float secondary = BurnShare(enemy, hammer, 300, DamageKind.SecondaryWeapon);
+        Check(Near(_player.ObjectTriggers.BurnChance, 0.08f) && heavy > 0.06f && heavy < 0.10f
+            && light > 0.02f && light < 0.05f && passive == 0f && secondary == 0f,
+            $"Allumette : 8 % × coefficient ; Marteau {heavy:P1}, Fronde {light:P1}, aucun impact passif ou secondaire");
         ClearStatuses(enemy);
-        while (!enemy.IsBurning)
-            _player.OnProjectileHit(enemy, 10f, false, hammer, _player.BeginAttack(hammer, 10f));
-        float hammerHit = (float)typeof(Player).GetMethod("ComputeBaseAttackDamage", Private, new[] { typeof(WeaponInstance) }).Invoke(_player, new object[] { hammer });
-        Check(Near((float)IgniteDps.GetValue(enemy), hammerHit * 0.25f) && Near((float)IgniteTimer.GetValue(enemy), 3f),
-            $"Brûlure : 25 % du coup de base de l'arme par seconde ({hammerHit * 0.25f:0.0}), pendant 3 s");
+        for (int i = 0; i < 500 && !enemy.IsBurning; i++)
+        {
+            _player.ObjectTriggers.AdvanceClock(1f);
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 40f, hammer, 1, _player.BeginAttack(hammer, 40f), dealt: 40f);
+        }
+        Check(enemy.IsBurning && Near((float)IgniteDps.GetValue(enemy), 10f) && Near((float)IgniteTimer.GetValue(enemy), 3f),
+            "Brûlure : 25 % du coup de référence par seconde pendant 3 s");
         enemy.QueueFree();
 
         Setup();
-        Raise("glacon", 15);
+        Raise("glacon", 2);
         _player.ObjectTriggers.Rng.Seed = 5;
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
-        hammer = _player.WeaponSlots[1];
+        WeaponInstance weapon = _player.WeaponSlots[0];
         enemy = SpawnEnemy();
-        ClearStatuses(enemy);
-        while (!enemy.IsSlowed)
-            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
-        bool chilled = Near((float)SlowFactor.GetValue(enemy), 0.6f) && Near((float)SlowTimer.GetValue(enemy), 1.5f);
-        FieldInfo freeze = typeof(Enemy).GetField("_freezeTimer", Private);
-        while ((float)freeze.GetValue(enemy) <= 0f)
-            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
-        Check(chilled && Near((float)freeze.GetValue(enemy), 0.5f) && Near((float)SlowFactor.GetValue(enemy), 0.6f),
-            "Glaçon : ralentit de 40 % pendant 1,5 s ; au palier 15, un ennemi ralenti deux fois est figé 0,5 s, sans toucher au ralentissement");
+        for (int i = 0; i < 500 && !enemy.IsSlowed; i++)
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        float initial = (float)SlowTimer.GetValue(enemy);
+        bool chilled = Near((float)SlowFactor.GetValue(enemy), 0.6f) && Near(initial, 1.5f);
+        SlowTimer.SetValue(enemy, 0.5f);
+        for (int i = 0; i < 500; i++)
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(chilled && Near((float)SlowTimer.GetValue(enemy), 0.5f) && Near((float)FreezeTimer.GetValue(enemy), 0f),
+            "Glaçon : ralentit de 40 % pendant 1,5 s ; aucun gel ni renouvellement au doublon");
         enemy.QueueFree();
     }
 
@@ -730,48 +748,35 @@ public partial class ObjectsRegression : Node2D
         float burning = _player.ResolveHitDamage(enemy, 10f, false);
         enemy.ApplySlow(0.5f, 5f);
         float both = _player.ResolveHitDamage(enemy, 10f, false);
-        Check(Near(plain, 10f) && Near(burning, 10.4f) && Near(both, 10.8f),
-            "Thermomètre et Épingle à nourrice niveau 1 : +4 % contre une cible brûlée, autant contre une cible ralentie");
-
-        Raise("allumette_humide", 1);
-        _player.AddOrUpgradePassive("thermometre", 14);
-        _player.ObjectTriggers.Rng.Seed = 2;
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
-        WeaponInstance hammer = _player.WeaponSlots[1];
+        Check(Near(plain, 10f) && Near(burning, 13.5f) && Near(both, 17f),
+            "Thermomètre et Épingle : chacun +35 % par copie, selon le statut de la cible");
+        _player.AddItemCopy("thermometre");
+        _player.AddItemCopy("epingle_a_nourrice");
+        Check(Near(_player.ResolveHitDamage(enemy, 10f, false), 24f), "Copies des bonus de cible : cumul additif, sans palier");
         ClearStatuses(enemy);
-        while (!enemy.IsBurning)
-            _player.OnProjectileHit(enemy, 1f, false, hammer, _player.BeginAttack(hammer, 1f));
-        Check(Near((float)SlowFactor.GetValue(enemy), 0.85f), "Thermomètre palier 15 : un ennemi enflammé est aussi ralenti de 15 %");
+        Raise("allumette_humide", 1);
+        WeaponInstance weapon = _player.WeaponSlots[0];
+        for (int i = 0; i < 500 && !enemy.IsBurning; i++)
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(enemy.IsBurning && !enemy.IsSlowed, "Thermomètre doublonné : aucune lenteur ajoutée à la Brûlure");
         enemy.QueueFree();
     }
 
     private void CheckKillTransmissions()
     {
         Setup();
-        // Loin des ennemis des contrôles précédents, encore dans l'arbre jusqu'à la fin de la frame.
-        Enemy victim = SpawnEnemy();
-        victim.Position = new Vector2(3000f, 3000f);
-        Enemy neighbour = SpawnEnemy();
-        neighbour.Position = victim.Position + new Vector2(40f, 0f);
-        Enemy slowedNeighbour = SpawnEnemy();
-        slowedNeighbour.Position = victim.Position + new Vector2(0f, 30f);
-        CrowdIndex.MarkMoved();
-        Raise("allumette_humide", 15);
-        Raise("epingle_a_nourrice", 15);
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
-        WeaponInstance hammer = _player.WeaponSlots[1];
-        AttackContext attack = _player.BeginAttack(hammer, 1f);
+        Enemy victim = SpawnAt(new Vector2(3000f, 3000f));
+        Enemy neighbour = SpawnAt(victim.Position + new Vector2(40f, 0f));
+        Enemy slowedNeighbour = SpawnAt(victim.Position + new Vector2(0f, 30f));
+        Raise("allumette_humide", 2);
+        Raise("epingle_a_nourrice", 2);
+        AttackContext attack = _player.BeginAttack(_player.WeaponSlots[0], 10f);
         victim.ApplyIgnite(3f, 2f, attack);
         victim.ApplySlow(0.5f, 2f, attack);
         slowedNeighbour.ApplySlow(0.5f, 1f, attack);
         victim.TakeDamage(100000f, source: attack);
-        Check(neighbour.IsBurning && Near((float)IgniteDps.GetValue(neighbour), 3f),
-            "Allumette humide palier 15 : la Brûlure d'un ennemi tué passe à son plus proche voisin");
-        bool extended = Near((float)SlowTimer.GetValue(slowedNeighbour), 2f);
-        for (int i = 0; i < 5; i++)
-            slowedNeighbour.ExtendSlow(1f, 4f);
-        Check(extended && Near((float)SlowTimer.GetValue(slowedNeighbour), 4f),
-            "Épingle à nourrice palier 15 : un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins, 4 s restantes au plus");
+        Check(!neighbour.IsBurning && Near((float)SlowTimer.GetValue(slowedNeighbour), 1f),
+            "Copies ordinaires : aucune propagation de brûlure ni extension des ralentissements à la mort");
         foreach (Enemy enemy in new[] { victim, neighbour, slowedNeighbour })
             enemy.QueueFree();
     }
@@ -801,87 +806,70 @@ public partial class ObjectsRegression : Node2D
     private void CheckKillRewards()
     {
         Setup();
-        Enemy victim = SpawnEnemy();
-        victim.Position = new Vector2(5000f, 5000f);
-        Enemy neighbour = SpawnEnemy();
-        neighbour.Position = victim.Position + new Vector2(30f, 0f);
-        Enemy elite = SpawnEnemy();
-        elite.Position = new Vector2(-5000f, 5000f);
-        elite.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), System.Array.Empty<EnemyAffixData>());
-        CrowdIndex.MarkMoved();
-        Raise("petard_mouille", 15);
-        Raise("de_a_coudre", 15);
         _player.DisableDefenseForTests();
-        _player.TakeDamage(40f);
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
-        WeaponInstance hammer = _player.WeaponSlots[1];
-
-        // Le voisin encaisse les deux explosions sans mourir.
-        typeof(Enemy).GetField("_currentHp", Private).SetValue(neighbour, 1e7f);
-        float neighbourHp = Hp(neighbour);
-        float playerHp = _player.CurrentHp;
-        DamageResult fatal = victim.TakeDamage(100000f, source: _player.BeginAttack(hammer, 100000f));
-        float firstBlast = neighbourHp - Hp(neighbour);
-        float healed = _player.CurrentHp - playerHp;
-        typeof(ObjectTriggers).GetMethod("_Process").Invoke(_player.ObjectTriggers, new object[] { 0.3 });
-        float secondBlast = neighbourHp - Hp(neighbour) - firstBlast;
-        Check(firstBlast > 0f && Mathf.Abs(firstBlast - secondBlast) < 1f && Mathf.Abs(firstBlast - fatal.NativeDamage * 1.5f) < 1f,
-            $"Pétard mouillé : la victime explose ({firstBlast:0} PV au voisin, 150 % du coup fatal au niveau 15), deux fois au palier 15");
-        Check(Near(healed, 1.5f), $"Dé à coudre niveau 15 : une élimination rend 1,5 PV ({healed:0.00})");
-
-        playerHp = _player.CurrentHp;
-        elite.TakeDamage(100000f, source: _player.BeginAttack(hammer, 100000f));
-        Check(Near(_player.CurrentHp - playerHp, 1.5f + _player.EffectiveMaxHp * 0.05f), "Dé à coudre palier 15 : une élite tuée rend en plus 5 % des PV max");
-
-        playerHp = _player.CurrentHp;
-        Enemy byEffect = SpawnEnemy();
-        byEffect.TakeDamage(100000f, source: _player.BeginAttack(hammer, 1f, DamageKind.Passive));
-        Check(Near(_player.CurrentHp, playerHp), "Une élimination par un effet déclenché ne déclenche rien");
-        foreach (Enemy enemy in new[] { victim, neighbour, elite, byEffect })
+        _player.TakeDamage(50f);
+        Raise("petard_mouille", 2);
+        Raise("de_a_coudre", 2);
+        Enemy victim = SpawnAt(new Vector2(5000f, 5000f));
+        Enemy neighbour = SpawnAt(victim.Position + new Vector2(30f, 0f));
+        CurrentHp.SetValue(victim, 1f);
+        CurrentHp.SetValue(neighbour, 1000f);
+        float hp = _player.CurrentHp;
+        DamageResult fatal = victim.TakeDamage(10f, source: _player.BeginAttack(_player.WeaponSlots[0], 10f));
+        float blast = 1000f - Hp(neighbour);
+        _player.ObjectTriggers.AdvanceClock(0.3f);
+        Check(Near(blast, fatal.NativeDamage * 2f) && Near(1000f - Hp(neighbour), blast),
+            "Deux Pétards : une explosion à 200 % du coup fatal, aucune seconde explosion retardée");
+        Check(Near(_player.CurrentHp - hp, 1f), "Dé : une élimination soigne 1 PV, les copies renforcent le débit seulement");
+        float before = _player.CurrentHp;
+        for (int i = 0; i < 100; i++)
+        {
+            Enemy killed = SpawnAt(new Vector2(-10000f - i * 500f, 5000f));
+            killed.TakeDamage(100000f, source: _player.BeginAttack(_player.WeaponSlots[0], 1f));
+            killed.QueueFree();
+        }
+        Check(_player.CurrentHp - before <= 2.001f, "Cent morts simultanées : soin limité au budget commun de deux copies");
+        before = _player.CurrentHp;
+        Enemy passive = SpawnEnemy();
+        passive.TakeDamage(100000f, source: _player.BeginAttack(_player.WeaponSlots[0], 1f, DamageKind.Passive));
+        Check(Near(_player.CurrentHp, before), "Mort passive : aucun soin du Dé");
+        foreach (Enemy enemy in new[] { victim, neighbour, passive })
             enemy.QueueFree();
     }
 
     private void CheckStrideAndLevels()
     {
         Setup();
-        Raise("semelle_usee", 1);
+        Raise("semelle_usee", 2);
         ObjectTriggers triggers = _player.ObjectTriggers;
-        MethodInfo process = typeof(ObjectTriggers).GetMethod("_Process");
         _player.Velocity = new Vector2(150f, 0f);
-        process.Invoke(triggers, new object[] { 1.0 });
-        bool notYet = triggers.StrideCharges == 0;
-        process.Invoke(triggers, new object[] { 1.1 });
-        process.Invoke(triggers, new object[] { 3.0 });
+        triggers.AdvanceClock(10f);
+        Check(triggers.StrideCharges == 0, "Semelle : marcher ne charge aucune attaque");
+        PublishTestDash();
         float charged = triggers.ConsumeStride();
-        float spent = triggers.ConsumeStride();
-        process.Invoke(triggers, new object[] { 0.5 });
-        bool noRefill = triggers.StrideCharges == 0;
-        Check(notYet && Near(charged, 1.06f) && Near(spent, 1f) && noRefill,
-            "Semelle usée niveau 1 : après 2 s de marche, la prochaine attaque fait +6 %, une seule fois ; la marche repart de zéro");
-        _player.Velocity = Vector2.Zero;
-        process.Invoke(triggers, new object[] { 1.5 });
-        _player.Velocity = new Vector2(150f, 0f);
-        process.Invoke(triggers, new object[] { 1.5 });
-        bool reset = triggers.StrideCharges == 0;
-        _player.AddOrUpgradePassive("semelle_usee", 14);
-        process.Invoke(triggers, new object[] { 2.1 });
-        Check(reset && triggers.StrideCharges == 2, "Semelle usée : un arrêt remet la marche à zéro ; au palier 15, deux attaques chargées");
-        _player.Velocity = Vector2.Zero;
+        Check(Near(charged, 1.4f) && Near(triggers.ConsumeStride(), 1f),
+            "Deux Semelles : une seule attaque +40 % après dash, pas deux charges");
+        PublishTestDash();
+        PublishTestDash();
+        Check(triggers.StrideCharges == 1, "Dashes répétés : la Semelle garde au plus une charge");
+        triggers.AdvanceClock(3.1f);
+        Check(Near(triggers.ConsumeStride(), 1f), "Charge de Semelle expirée après trois secondes");
+        PublishTestDash();
+        _player.ForgetItemCopy("semelle_usee");
+        _player.ForgetItemCopy("semelle_usee");
+        Check(Near(triggers.ConsumeStride(), 1f), "Dernière Semelle oubliée : aucune charge résiduelle");
 
         Setup();
         _player.DisableDefenseForTests();
-        Raise("boite_de_pansements", 15);
+        Raise("boite_de_pansements", 2);
         _player.TakeDamage(50f);
         float hp = _player.CurrentHp;
-        MethodInfo levelUp = typeof(ObjectTriggers).GetMethod("OnLevelUp", Private);
-        levelUp.Invoke(_player.ObjectTriggers, new object[] { 30 });
-        float heal = _player.CurrentHp - hp;
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        for (int level = 2; level <= 4; level++)
+            events.EmitSignal(EventBus.SignalName.LevelUp, level);
         PlayerDefense defense = (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);
-        bool notYetInvulnerable = !defense.IsInvulnerable;
-        levelUp.Invoke(_player.ObjectTriggers, new object[] { 31 });
-        levelUp.Invoke(_player.ObjectTriggers, new object[] { 32 });
-        Check(Near(heal, _player.EffectiveMaxHp * 0.045f) && notYetInvulnerable && defense.IsInvulnerable,
-            "Boîte de pansements niveau 15 : un niveau soigne 4,5 % des PV max ; trois niveaux d'un coup rendent invulnérable");
+        Check(Near(_player.CurrentHp - hp, _player.EffectiveMaxHp * 0.18f) && !defense.IsInvulnerable,
+            "Deux Pansements : 6 % des PV max à chacun des trois niveaux, sans invulnérabilité");
     }
 
     private void CheckNamedProperties()
@@ -937,122 +925,402 @@ public partial class ObjectsRegression : Node2D
     private void CheckCritTriggers()
     {
         Setup();
-        Vector2 origin = new(9000f, 9000f);
-        Raise("loupe_de_philateliste", 5);
-        Raise("stylo_quatre_couleurs", 10);
-        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
-        WeaponInstance hammer = _player.WeaponSlots[1];
-        Enemy target = SpawnAt(origin);
-        Enemy near = SpawnAt(origin + new Vector2(50f, 0f));
-        Enemy second = SpawnAt(origin + new Vector2(0f, 60f));
-        Enemy far = SpawnAt(origin + new Vector2(600f, 0f));
-        float nearHp = Hp(near), secondHp = Hp(second), farHp = Hp(far);
-        _player.OnProjectileHit(target, 10f, false, hammer, _player.BeginAttack(hammer, 10f));
-        bool noCrit = (float)FragileTimer.GetValue(target) <= 0f && Near(Hp(near), nearHp);
-        _player.OnProjectileHit(target, 10f, true, hammer, _player.BeginAttack(hammer, 10f));
-        bool fragile = Near((float)FragileBonus.GetValue(target), 0.25f) && Near((float)FragileTimer.GetValue(target), 2f);
-        bool echoed = Near(nearHp - Hp(near), 6f) && Near(Hp(second), secondHp) && Near(Hp(far), farHp);
-        Check(noCrit && fragile, "Loupe de philatéliste niveau 5 : un critique rend la cible Fragile (+25 %) 2 s ; un coup normal, rien");
-        Check(echoed, $"Stylo à quatre couleurs niveau 10 : 60 % d'un critique repartent sur la cible la plus proche ({nearHp - Hp(near):0.0} PV), pas au-delà de 180 px");
-
-        _player.AddOrUpgradePassive("loupe_de_philateliste", 10);
-        _player.AddOrUpgradePassive("stylo_quatre_couleurs", 5);
-        nearHp = Hp(near);
-        secondHp = Hp(second);
-        _player.OnProjectileHit(target, 10f, true, hammer, _player.BeginAttack(hammer, 10f));
-        Check(Near((float)FragileTimer.GetValue(target), 4f) && nearHp > Hp(near) && secondHp > Hp(second),
-            "Paliers 15 : Fragile dure 4 s ; le critique repart sur deux cibles");
-        foreach (Enemy enemy in new[] { target, near, second, far })
+        Raise("loupe_de_philateliste", 1);
+        Raise("stylo_quatre_couleurs", 1);
+        Enemy target = SpawnAt(new Vector2(9000f, 9000f));
+        Enemy near = SpawnAt(target.Position + new Vector2(40f, 0f));
+        Enemy second = SpawnAt(target.Position + new Vector2(0f, 80f));
+        CurrentHp.SetValue(near, 1000f);
+        CurrentHp.SetValue(second, 1000f);
+        WeaponInstance weapon = _player.WeaponSlots[0];
+        _player.OnProjectileHit(target, 10f, false, weapon, _player.BeginAttack(weapon, 10f));
+        bool ordinary = Near((float)FragileTimer.GetValue(target), 0f) && Near(Hp(near), 1000f);
+        _player.OnProjectileHit(target, 10f, true, weapon, _player.BeginAttack(weapon, 10f));
+        Check(ordinary && Near((float)FragileBonus.GetValue(target), 0.5f) && Near((float)FragileTimer.GetValue(target), 2f)
+            && Near(1000f - Hp(near), 6f) && Near(Hp(second), 1000f),
+            "Critique : Fragile +50 % pendant 2 s ; écho de 60 % vers une seule cible");
+        _player.AddItemCopy("loupe_de_philateliste");
+        _player.AddItemCopy("stylo_quatre_couleurs");
+        float before = Hp(near);
+        _player.OnProjectileHit(target, 10f, true, weapon, _player.BeginAttack(weapon, 10f));
+        Check(Near((float)FragileBonus.GetValue(target), 1f) && Near((float)FragileTimer.GetValue(target), 2f)
+            && Near(before - Hp(near), 12f) && Near(Hp(second), 1000f),
+            "Copies Loupe/Stylo : puissance doublée, durée et nombre de cibles inchangés");
+        foreach (Enemy enemy in new[] { target, near, second })
             enemy.QueueFree();
     }
 
     private void CheckDashTrail()
     {
         Setup();
-        Vector2 origin = new(12000f, 12000f);
-        _player.GlobalPosition = origin;
-        Raise("chewing_gum", 10);
+        _player.GlobalPosition = new Vector2(12000f, 12000f);
+        Raise("chewing_gum", 1);
         ObjectTriggers triggers = _player.ObjectTriggers;
-        MethodInfo process = typeof(ObjectTriggers).GetMethod("_Process");
+        Enemy stuck = SpawnAt(_player.Position + new Vector2(10f, 0f));
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        events.PublishDashMoved(new(_player.GetInstanceId(), _player.Position, _player.Position + new Vector2(100f, 0f), false));
+        System.Collections.IList initialPatches = (System.Collections.IList)typeof(ObjectTriggers).GetField("_trailPatches", Private).GetValue(triggers);
+        Check(initialPatches.Count == 0, "Chewing-gum acquis en cours de dash : aucun trajet inventé depuis l’origine du monde");
+        PublishTestDash();
+        triggers.AdvanceClock(0.1f);
+        bool slowed = Near((float)SlowFactor.GetValue(stuck), 0.6f);
         System.Collections.IList patches = (System.Collections.IList)typeof(ObjectTriggers).GetField("_trailPatches", Private).GetValue(triggers);
-        Enemy stuck = SpawnAt(origin + new Vector2(10f, 0f));
-        PlayerMobility mobility = _player.Mobility;
-        mobility.Request();
-        mobility.Step(1f / 60f, Vector2.Right, 200f, 1f, true);
-        bool dashing = mobility.IsDashing;
-        process.Invoke(triggers, new object[] { 0.3 });
-        bool laid = patches.Count >= 1;
-        float slow = (float)SlowFactor.GetValue(stuck);
-        for (int i = 0; i < 40; i++)
-            mobility.Step(1f / 60f, Vector2.Zero, 200f, 1f, true);
-        process.Invoke(triggers, new object[] { 2.1 });
-        Check(dashing && laid && slow < 1f && patches.Count == 0,
-            $"Chewing-gum niveau 10 : le dash pose une tache qui ralentit ({slow:0.00}), elle s'efface après 1 + 1 s");
+        bool laid = patches.Count > 0;
+        triggers.AdvanceClock(2.1f);
+        Check(laid && slowed && patches.Count == 0 && Near((float)FragileBonus.GetValue(stuck), 0f),
+            "Chewing-gum : traînée de deux secondes, ralentissement de 40 %, sans Fragilité");
+        for (int i = 0; i < 7; i++)
+            _player.AddItemCopy("chewing_gum");
+        PublishTestDash();
+        triggers.AdvanceClock(6.1f);
+        Check(_player.FindObject("chewing_gum").Copies == 8 && patches.Count == 0,
+            "Chewing-gum : huit copies acceptées ; la durée garde son plafond de sécurité à six secondes");
         stuck.QueueFree();
     }
 
     private void CheckStances()
     {
         Setup();
-        Vector2 origin = new(15000f, 15000f);
-        _player.GlobalPosition = origin;
+        _player.GlobalPosition = new Vector2(15000f, 15000f);
         _player.DisableDefenseForTests();
-        foreach (string id in new[] { "tabouret_de_camping", "gilet_reflechissant", "thermos", "medaille_cabossee", "porte_monnaie_use" })
-            Raise(id, 10);
+        Raise("tabouret_de_camping", 1);
         ObjectStances stances = _player.ObjectStances;
-        MethodInfo process = typeof(ObjectStances).GetMethod("_Process");
         float speed = _player.AttackSpeedMultiplier;
+        float armor = _player.Armor;
         _player.Velocity = Vector2.Zero;
-        process.Invoke(stances, new object[] { 0.5 });
-        bool notYet = !stances.IsStill;
-        process.Invoke(stances, new object[] { 0.6 });
-        bool still = stances.IsStill && Near(_player.AttackSpeedMultiplier / speed, 1.3f);
+        stances._Process(1.0);
+        float first = stances.DamageMultiplier;
+        stances._Process(1.5);
+        float half = stances.DamageMultiplier;
+        stances._Process(2.5);
+        Check(Near(first, 1.2f) && Near(half, 1.5f) && Near(stances.DamageMultiplier, 2f)
+            && Near(_player.AttackSpeedMultiplier, speed) && Near(_player.Armor, armor),
+            "Tabouret : dégâts +20/+50/+100 % après 1/2,5/5 s, cadence et armure inchangées");
         _player.Velocity = new Vector2(150f, 0f);
-        process.Invoke(stances, new object[] { 0.1 });
-        Check(notYet && still && Near(_player.AttackSpeedMultiplier, speed),
-            "Tabouret de camping niveau 10 : immobile 1 s, cadence +30 % ; en mouvement, rien");
+        stances._Process(0.1);
+        bool reset = Near(stances.DamageMultiplier, 1f);
         _player.Velocity = Vector2.Zero;
-
-        // Pleine forme (Thermos +20 %), trois ennemis proches (Gilet +2 % chacun), pas d'Essence.
-        Enemy[] crowd = { SpawnAt(origin + new Vector2(30f, 0f)), SpawnAt(origin + new Vector2(-40f, 0f)), SpawnAt(origin + new Vector2(0f, 20f)) };
-        Enemy distant = SpawnAt(origin + new Vector2(400f, 0f));
-        process.Invoke(stances, new object[] { 0.2 });
-        Check(stances.CrowdCount == 3 && Near(stances.DamageMultiplier, 1f + 0.2f + 0.06f),
-            $"Gilet réfléchissant et Thermos niveau 10 : trois ennemis à moins de 120 px, PV pleins : dégâts ×{stances.DamageMultiplier:0.00}");
-
+        _player.AddItemCopy("tabouret_de_camping");
+        stances._Process(2.5);
+        Check(reset && Near(stances.DamageMultiplier, 2f), "Deux Tabourets : plafond +100 % atteint en 2,5 s, mouvement remet à zéro");
+        PublishTestDash();
+        Check(Near(stances.DamageMultiplier, 1f), "Le dash remet le Tabouret à zéro, saut instantané compris");
+        _player.ForgetItemCopy("tabouret_de_camping");
+        _player.ForgetItemCopy("tabouret_de_camping");
+        foreach (string id in new[] { "gilet_reflechissant", "thermos", "medaille_cabossee", "porte_monnaie_use" })
+            Raise(id, 1);
+        Enemy[] crowd = { SpawnAt(_player.Position + new Vector2(30f, 0f)), SpawnAt(_player.Position + new Vector2(-40f, 0f)), SpawnAt(_player.Position + new Vector2(0f, 20f)) };
+        stances._Process(0.2);
+        Check(stances.CrowdCount == 3 && Near(stances.DamageMultiplier, 1.26f), "Gilet et Thermos : +6 % pour trois voisins, +20 % au-dessus de 90 % PV");
         _player.TakeDamage(_player.EffectiveMaxHp * 0.7f);
-        process.Invoke(stances, new object[] { 0.2 });
-        Check(Near(stances.DamageMultiplier, 1f + 0.06f + 0.3f), $"Médaille cabossée niveau 10 : sous 35 % des PV, dégâts +30 % et plus de Thermos (×{stances.DamageMultiplier:0.00})");
-
-        EventBus events = GetNode<EventBus>("/root/EventBus");
+        stances._Process(0.2);
+        Check(Near(stances.DamageMultiplier, 1.36f), "Médaille : +30 % sous 35 % PV ; Thermos éteint");
         EssenceTracker wallet = new() { Name = "EssenceTracker" };
         AddChild(wallet);
         wallet.AddEssence(200);
-        float withEssence = stances.DamageMultiplier;
+        float twoHundred = stances.DamageMultiplier;
         wallet.AddEssence(4800);
-        Check(Near(withEssence, 1.36f + 0.2f) && Near(stances.DamageMultiplier, 1.36f + 0.3f),
-            "Porte-monnaie usé niveau 10 : +1 % par 10 Essence gardées, plafond 30 %");
-
-        float armor = _player.Armor;
-        Raise("porte_monnaie_use", 15);
-        _player.AddOrUpgradePassive("tabouret_de_camping", 5);
-        _player.AddOrUpgradePassive("medaille_cabossee", 5);
-        int refunded = 0;
-        EventBus.LootReceivedEventHandler onLoot = (type, source, amount) => refunded += source == ObjectStances.EssenceRefundEffect ? amount : 0;
-        events.LootReceived += onLoot;
+        Check(Near(twoHundred, 1.56f) && Near(stances.DamageMultiplier, 1.66f), "Porte-monnaie : +1 %/10 Essence, plafond +30 % par copie");
+        _player.AddItemCopy("porte_monnaie_use");
+        _player.AddItemCopy("medaille_cabossee");
         wallet.TrySpend(1000);
-        // Le remboursement part en différé, après la dépense : le banc le déclenche lui-même.
-        typeof(ObjectStances).GetMethod("FlushRefund", Private).Invoke(stances, null);
-        events.LootReceived -= onLoot;
-        bool refundedToWallet = wallet.CurrentEssence == 4200;
+        stances._Process(1.1);
+        Check(wallet.CurrentEssence == 4000 && Near(_player.Armor, armor) && Near(_player.SpeedMultiplier, 1f),
+            "Doublons : aucun remboursement d’Essence, aucune armure ou vitesse supplémentaire");
         RemoveChild(wallet);
         wallet.QueueFree();
-        process.Invoke(stances, new object[] { 1.1 });
-        Check(refunded == 200 && refundedToWallet && _player.Armor - armor >= 9.99f && Near(_player.SpeedMultiplier, 1.15f),
-            $"Paliers 15 : 20 % de l'Essence dépensée rendue ({refunded}), armure +10 immobile, vitesse +15 % sous le seuil");
         foreach (Enemy enemy in crowd)
             enemy.QueueFree();
-        distant.QueueFree();
+    }
+
+    private void CheckOrbitalStride()
+    {
+        Setup();
+        Raise("semelle_usee", 2);
+        _player.AddWeapon(WeaponDataLoader.Get("music_box"));
+        typeof(Player).GetField("_orbitalWeapon", Private).SetValue(_player, _player.WeaponSlots[1]);
+        Enemy enemy = SpawnAt(new Vector2(-101000f, 15000f));
+        CurrentHp.SetValue(enemy, 1000f);
+        MethodInfo hit = typeof(Player).GetMethod("OrbitalHit", Private);
+        hit.Invoke(_player, new object[] { enemy });
+        float ordinary = 1000f - Hp(enemy);
+        float before = Hp(enemy);
+        PublishTestDash(blink: true);
+        hit.Invoke(_player, new object[] { enemy });
+        float boosted = before - Hp(enemy);
+        before = Hp(enemy);
+        hit.Invoke(_player, new object[] { enemy });
+        Check(ordinary > 0f && Mathf.Abs(boosted - ordinary * 1.4f) < 0.01f && Near(before - Hp(enemy), ordinary),
+            "Semelle et orbitale : le premier contact après dash reçoit +40 %, le contact suivant redevient normal");
+        enemy.QueueFree();
+    }
+
+    private void PublishTestDash(bool blink = false)
+    {
+        EventBus events = GetNode<EventBus>("/root/EventBus");
+        PlayerDashEvent dash = new(_player.GetInstanceId(), _player.GlobalPosition, _player.GlobalPosition + new Vector2(100f, 0f), blink);
+        events.PublishDashStarted(dash);
+        events.PublishDashMoved(dash);
+        events.PublishDashFinished(dash);
+    }
+
+    private void CheckSharedItemBudgets()
+    {
+        Setup();
+        Raise("allumette_humide", 1);
+        _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
+        ObjectTriggers triggers = _player.ObjectTriggers;
+        triggers.Rng.Seed = 17;
+        Enemy enemy = SpawnEnemy();
+        int burns = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            ClearStatuses(enemy);
+            WeaponInstance weapon = _player.WeaponSlots[i % 2];
+            triggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+            burns += enemy.IsBurning ? 1 : 0;
+        }
+        Check(burns == 2, $"Budget Allumette partagé entre deux armes : {burns}/2 brûlures dans la même fenêtre");
+        _player.ForgetItemCopy("allumette_humide");
+        _player.AddItemCopy("allumette_humide");
+        int afterExchange = 0;
+        for (int i = 0; i < 500; i++)
+        {
+            ClearStatuses(enemy);
+            WeaponInstance weapon = _player.WeaponSlots[0];
+            triggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+            afterExchange += enemy.IsBurning ? 1 : 0;
+        }
+        Check(afterExchange == 0, "Oubli puis reprise : aucun rechargement du budget de déclenchement");
+        triggers.AdvanceClock(1.01f);
+        _player.AddItemCopy("allumette_humide");
+        burns = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            ClearStatuses(enemy);
+            WeaponInstance weapon = _player.WeaponSlots[i % 2];
+            triggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+            burns += enemy.IsBurning ? 1 : 0;
+        }
+        Check(burns == 4 && Near(triggers.BurnChance, 0.08f), "Deux Allumettes : débit 4/s, probabilité toujours 8 %");
+        triggers.AdvanceClock(1.01f);
+        AttackContext sameAttack = _player.BeginAttack(_player.WeaponSlots[0], 10f);
+        burns = 0;
+        for (int i = 0; i < 1000; i++)
+        {
+            ClearStatuses(enemy);
+            triggers.OnWeaponImpact(enemy, 10f, _player.WeaponSlots[0], 1, sameAttack, dealt: 10f);
+            burns += enemy.IsBurning ? 1 : 0;
+        }
+        Check(burns <= 1, "Même attaque et même cible : un seul jet, même après mille notifications");
+        AttackContext[] longLived = new AttackContext[200];
+        for (int i = 0; i < longLived.Length; i++)
+        {
+            longLived[i] = _player.BeginAttack(_player.WeaponSlots[0], 10f);
+            triggers.OnWeaponImpact(enemy, 10f, _player.WeaponSlots[0], 1, longLived[i], dealt: 10f);
+        }
+        triggers.AdvanceClock(121f);
+        burns = 0;
+        foreach (AttackContext attack in longLived)
+        {
+            ClearStatuses(enemy);
+            triggers.OnWeaponImpact(enemy, 10f, _player.WeaponSlots[0], 1, attack, dealt: 10f);
+            burns += enemy.IsBurning ? 1 : 0;
+        }
+        Check(burns == 0, "Attaques persistantes : un jet par vie de cible, même après deux minutes");
+        enemy.QueueFree();
+    }
+
+    private void CheckChillAndEliteBudgets()
+    {
+        Setup();
+        Raise("glacon", 1);
+        _player.ObjectTriggers.Rng.Seed = 203;
+        Enemy[] targets = new Enemy[20];
+        for (int i = 0; i < targets.Length; i++)
+            targets[i] = SpawnAt(new Vector2(-90000f + i * 100f, 13000f));
+        WeaponInstance weapon = _player.WeaponSlots[0];
+        for (int i = 0; i < 2000; i++)
+            _player.ObjectTriggers.OnWeaponImpact(targets[i % targets.Length], 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        int chilled = 0;
+        Enemy first = null;
+        foreach (Enemy target in targets)
+            if (target.IsSlowed) { chilled++; first = target; }
+        Check(chilled == 1, "Glaçon : une seule application/s même avec vingt cibles et deux mille impacts");
+        _player.ObjectTriggers.AdvanceClock(1.6f);
+        typeof(Enemy).GetMethod("ProcessSlowDecay", Private).Invoke(first, new object[] { 1.6f });
+        for (int i = 0; i < 1000; i++)
+            _player.ObjectTriggers.OnWeaponImpact(first, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(!first.IsSlowed, "Glaçon : une cible libérée bénéficie d’une seconde de répit malgré les impacts");
+        _player.ObjectTriggers.AdvanceClock(1.0f);
+        for (int i = 0; i < 1000 && !first.IsSlowed; i++)
+            _player.ObjectTriggers.OnWeaponImpact(first, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(first.IsSlowed, "Glaçon : la cible redevient éligible après son répit");
+        foreach (Enemy target in targets) target.QueueFree();
+
+        Setup();
+        Raise("montre_arretee", 1);
+        _player.ObjectTriggers.Rng.Seed = 204;
+        Enemy ordinary = SpawnAt(new Vector2(-96000f, 13000f));
+        Enemy elite = SpawnAt(ordinary.Position + new Vector2(150f, 0f));
+        elite.ApplyVariant(EnemyVariantDataLoader.GetVariant("elite"), Array.Empty<EnemyAffixData>());
+        weapon = _player.WeaponSlots[0];
+        for (int i = 0; i < 1000; i++)
+        {
+            _player.ObjectTriggers.OnWeaponImpact(ordinary, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+            _player.ObjectTriggers.OnWeaponImpact(elite, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        }
+        Check(!ordinary.IsSlowed && elite.IsSlowed && Near((float)SlowFactor.GetValue(elite), 0.65f),
+            "Montre : ralentissement de 35 % sur une élite, jamais sur une créature ordinaire");
+        _player.ObjectTriggers.AdvanceClock(3f);
+        typeof(Enemy).GetMethod("ProcessSlowDecay", Private).Invoke(elite, new object[] { 3f });
+        _player.ForgetItemCopy("montre_arretee");
+        _player.AddItemCopy("montre_arretee");
+        for (int i = 0; i < 1000; i++)
+            _player.ObjectTriggers.OnWeaponImpact(elite, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(!elite.IsSlowed, "Montre : rééquiper ne contourne pas les huit secondes entre deux ralentissements d’une élite");
+        _player.ObjectTriggers.AdvanceClock(5.1f);
+        for (int i = 0; i < 1000 && !elite.IsSlowed; i++)
+            _player.ObjectTriggers.OnWeaponImpact(elite, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+        Check(elite.IsSlowed, "Montre : nouvelle activation possible après huit secondes");
+        ordinary.QueueFree(); elite.QueueFree();
+    }
+
+    private void CheckPoisonDoses()
+    {
+        Setup();
+        Enemy enemy = SpawnAt(new Vector2(-98000f, 15000f));
+        CurrentHp.SetValue(enemy, 1000f);
+        MethodInfo process = typeof(Enemy).GetMethod("ProcessPoison", Private);
+        enemy.ApplyPoison(30f, 3f, maxDoses: 2);
+        process.Invoke(enemy, new object[] { 2f });
+        enemy.ApplyPoison(30f, 3f, maxDoses: 2);
+        enemy.ApplyPoison(300f, 3f, maxDoses: 2);
+        Check(enemy.PoisonDoseCount == 2, "Poison : une dose de plus que le plafond est refusée");
+        process.Invoke(enemy, new object[] { 1f });
+        Check(enemy.PoisonDoseCount == 1 && Near(Hp(enemy), 960f),
+            "Poison : la première dose expire sans être prolongée par la deuxième (40 dégâts après trois secondes)");
+        process.Invoke(enemy, new object[] { 2.1f });
+        Check(!enemy.IsPoisoned && Near(Hp(enemy), 940f), "Poison : chaque dose inflige son budget exact, sans réserve relancée");
+        Raise("flacon_de_pharmacie", 1);
+        _player.ObjectTriggers.Rng.Seed = 205;
+        WeaponInstance weapon = _player.WeaponSlots[0];
+        MethodInfo clear = typeof(Enemy).GetMethod("ClearPoison", Private);
+        int poisoned = 0;
+        const int trials = 4000;
+        for (int i = 0; i < trials; i++)
+        {
+            _player.ObjectTriggers.AdvanceClock(1.01f);
+            clear.Invoke(enemy, null);
+            _player.ObjectTriggers.OnWeaponImpact(enemy, 10f, weapon, 1, _player.BeginAttack(weapon, 10f), dealt: 10f);
+            if (enemy.IsPoisoned) poisoned++;
+        }
+        float expected = 0.10f * Mathf.Clamp(weapon.Base.TriggerCoefficient, 0f, 1f);
+        Check(Mathf.Abs(poisoned / (float)trials - expected) < 0.025f,
+            $"Flacon : probabilité mesurée {poisoned / (float)trials:P1}, cible {expected:P1} (aucun poison garanti)");
+        enemy.QueueFree();
+    }
+
+    private void CheckStatItemExchange()
+    {
+        Setup();
+        _player.DisableDefenseForTests();
+        _player.TakeDamage(30f);
+        float hp = _player.CurrentHp, max = _player.EffectiveMaxHp;
+        // Un objet factice reprend le circuit réel du sac, avant livraison des nouvelles fiches de stats en I11.
+        PassiveSouvenirData data = PassiveSouvenirDataLoader.Get("semelle_usee");
+        List<PassiveEffectData> original = data.Effects;
+        try
+        {
+            data.Effects = new() { new() { Stat = "max_hp", ModifierType = "additive", Step = 12f } };
+            _player.SetBagCapacity(20);
+            for (int i = 0; i < 8; i++) _player.AddItemCopy(data.Id);
+            bool eight = Near(_player.EffectiveMaxHp, max + 96f) && Near(_player.CurrentHp, hp);
+            for (int i = 0; i < 8; i++) _player.ForgetItemCopy(data.Id);
+            _player.AddItemCopy(data.Id);
+            Check(eight && Near(_player.EffectiveMaxHp, max + 12f) && Near(_player.CurrentHp, hp),
+                "PV max : huit copies linéaires, oubli puis reprise sans rendre de PV");
+            _player.ForgetItemCopy(data.Id);
+            data.Effects = new() { new() { Stat = "shield", ModifierType = "additive", Step = 15f } };
+            _player.AddItemCopy(data.Id);
+            _player.AddItemCopy(data.Id);
+            bool empty = Near(_player.MaxShield, 30f) && Near(_player.Shield, 0f);
+            PlayerDefense defense = (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);
+            defense.Step(100f);
+            defense.Absorb(10f, 0f);
+            _player.ForgetItemCopy(data.Id);
+            _player.AddItemCopy(data.Id);
+            Check(empty && Near(_player.MaxShield, 30f) && Near(_player.Shield, 15f),
+                "Bouclier : agrandir ne recharge pas ; une copie retirée puis reprise ne rend pas la charge perdue");
+            _player.ForgetItemCopy(data.Id);
+            _player.ForgetItemCopy(data.Id);
+            Check(Near(_player.MaxShield, 0f) && Near(_player.Shield, 0f), "Dernier objet de bouclier retiré : aucun point résiduel");
+        }
+        finally { data.Effects = original; }
+    }
+
+    private void CheckItemPresentation()
+    {
+        Setup();
+        List<PlayerSheet.StatLine> rows = PlayerSheet.StatLines(_player);
+        ObjectDataValidator.TryParseContract(Godot.FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _);
+        HashSet<string> shown = new();
+        foreach (PlayerSheet.StatLine row in rows)
+            shown.Add(row.Id);
+        Check(rows.Count == 19 && shown.SetEquals(contract.PlayerStats), "Pause : les dix-neuf statistiques globales du contrat sont présentes, même à zéro");
+        Check(rows.Find(row => row.Id == "lifesteal").Value == "0 %"
+            && rows.Find(row => row.Id == "shield").Value == "0 / 0"
+            && rows.Find(row => row.Id == "xp_gain").Value == "100 %"
+            && rows.Find(row => row.Id == "dash_recharge").Value.EndsWith(" s", StringComparison.Ordinal),
+            "Pause : vol de vie, bouclier, XP et recharge du dash visibles sans objet");
+        Check(StatCatalog.FormatBonus("regen_rate", 0.15f, false).Contains("9 PV/min", StringComparison.Ordinal)
+            && rows.Find(row => row.Id == "regen_rate").Value.Contains("PV/min", StringComparison.Ordinal),
+            "Régénération : 0,15 PV/s internes sont annoncés +9 PV/min partout");
+        PassiveSouvenirData match = PassiveSouvenirDataLoader.Get("allumette_humide");
+        string one = ItemPresentation.Describe(match, 1), eight = ItemPresentation.Describe(match, 8);
+        Check(one.Contains("8 %", StringComparison.Ordinal) && eight.Contains("8 %", StringComparison.Ordinal)
+            && one.Contains("2 applications/s", StringComparison.Ordinal) && eight.Contains("16 applications/s", StringComparison.Ordinal),
+            "Fiche Allumette : la chance reste 8 %, les copies augmentent seulement le budget montré");
+        ChoiceCard card = new();
+        ItemPresentation.ConfigureCard(card, match);
+        Check(card.Rank == 1 && card.Frame == RarityPalette.Main("uncommon") && card.Tag == RarityPalette.DisplayName("uncommon"),
+            "Cartes d’objet : rang, couleur et nom viennent de sa rareté fixe");
+        _player.AddOrUpgradePassive("souffle_du_neant", 5);
+        WeaponInstance bow = _player.WeaponSlots[0];
+        Check(Near(_player.GetWeaponStatForDisplay(bow, "projectile_count"), bow.GetStat("projectile_count") + _player.BonusProjectiles),
+            "Fiche d’arme : les projectiles du build sont inclus dans la quantité finale");
+        WeaponInstance volley = new(WeaponDataLoader.Get("makeshift_bow"));
+        WeaponInstance piercing = new(WeaponDataLoader.Get("makeshift_bow"));
+        foreach (WeaponInstance variant in new[] { volley, piercing })
+            while (variant.CanLevelUp) variant.ApplyUpgrade(Array.Empty<StatGain>());
+        volley.Ascend("volley");
+        piercing.Ascend("pierce_through");
+        Check(Near(_player.GetWeaponStatForDisplay(volley, "projectile_count"), volley.GetStat("projectile_count") + 2f * _player.BonusProjectiles)
+            && Near(_player.GetWeaponStatForDisplay(piercing, "projectile_count"), 1f),
+            "Fiches d’ascension : Volée double le bonus de projectiles, Transpercer reste à un tir");
+        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("plan_de_metro"), 8).Contains("×4,5", StringComparison.Ordinal)
+            && ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("chewing_gum"), 8).Contains("durée 6 s", StringComparison.Ordinal),
+            "Fiches à huit copies : distance réelle du Métro et plafond de traînée respectés");
+    }
+
+    private async Task CheckItemPause()
+    {
+        Setup();
+        Raise("semelle_usee", 1);
+        Raise("tabouret_de_camping", 1);
+        _player.Velocity = Vector2.Zero;
+        PublishTestDash(blink: true);
+        FieldInfo clock = typeof(ObjectTriggers).GetField("_clock", Private);
+        GetTree().Paused = true;
+        float before = (float)clock.GetValue(_player.ObjectTriggers);
+        float still = _player.ObjectStances.StillDamageBonus;
+        for (int i = 0; i < 5; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        bool paused = Near((float)clock.GetValue(_player.ObjectTriggers), before)
+            && Near(_player.ObjectStances.StillDamageBonus, still) && _player.ObjectTriggers.StrideCharges == 1;
+        GetTree().Paused = false;
+        for (int i = 0; i < 5; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(paused && (float)clock.GetValue(_player.ObjectTriggers) > before && _player.ObjectStances.StillDamageBonus > still,
+            "Pause moteur réelle : budgets, charge et immobilité suspendus ; horloges reprises après fermeture");
     }
 
     private static float Hp(Enemy enemy) => (float)typeof(Enemy).GetField("_currentHp", Private).GetValue(enemy);

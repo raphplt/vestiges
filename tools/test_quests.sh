@@ -9,7 +9,7 @@ trap 'validation_cleanup "$TEST_DIR"' EXIT
 isolate_godot_profile "$TEST_DIR"
 GODOT="${GODOT_BIN:-godot-mono}"
 validation_prepare "$TEST_DIR"
-# Chaque passage part d'un profil neuf : le suivi en run accomplit les 38 quêtes une à une.
+# Chaque passage part d'un profil neuf : conditions historiques et nouvelles quêtes d'objets sont rejouées séparément.
 for stage in unlocks tracking; do
     user_dir=$(vestiges_user_dir)
     [[ "$user_dir" == "$(abs_path "$TEST_DIR")"/* ]] || { echo "Profil non isolé : $user_dir" >&2; exit 1; }

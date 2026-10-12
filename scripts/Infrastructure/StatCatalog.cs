@@ -53,6 +53,7 @@ public static class StatCatalog
     public static string Format(string stat, float value)
     {
         (string _, StatDisplay display, string unit) = Entry(stat);
+        if (stat == "regen_rate") value *= 60f;
         // Une perforation « illimitée » (Transpercer, Lentille de phare) vaut 999 dans les données.
         string number = display == StatDisplay.Count
             ? value >= UnlimitedCount ? "∞" : CountText(value)
@@ -62,10 +63,12 @@ public static class StatCatalog
 
     /// <summary>
     /// Effet d'un bonus du joueur (passif, perk) : multiplicatif en pourcentage (« +12 % »), additif selon la stat
-    /// (« +20 », « +5 % », « +0,5 PV/s »).
+    /// (« +20 », « +5 % », « +9 PV/min »).
     /// </summary>
     public static string FormatBonus(string stat, float modifier, bool multiplicative)
     {
+        if (stat == "regen_rate" && !multiplicative)
+            return (modifier >= 0f ? "+" : "") + CountText(modifier * 60f) + " PV/min";
         if (multiplicative)
             return SignedPercent((modifier - 1f) * 100f);
         (string _, StatDisplay display, string unit) = Entry(stat);

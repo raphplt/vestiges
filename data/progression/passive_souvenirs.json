@@ -1,1331 +1,2087 @@
 [
-    {
-        "_comment": "Objets du joueur (plan 21 §4, référence unique ; plan 23 R3 ; plan 35). kind : badge (Écusson, 4 emplacements, une stat, niveau 1 à 99, demi-pas au-delà du niveau de inventory.json ; subtitle : l'objet d'où il vient) ou item (objet à effet). Les objets : 6 emplacements, niveau 1 à 30. Chaque carte donne un niveau et ajoute à chaque effet son step multiplié par le gain de la rareté (passive_gain de upgrade_rarities.json : commune 1 à légendaire 3) ; un objet neuf vaut un step. La valeur d'un effet est la somme de ses gains : 1 + somme (multiplicative) ou somme (additive). params : réglages propres à l'objet (objets de déclencheur). milestones : paliers de l'objet (niveau, effet, texte montré au joueur, paramètres) ; description : la règle montrée sur la carte d'un objet neuf ; {param} y affiche un paramètre de params, {param%} en pourcentage (DECISIONS §53) ; un palier dont l'effet n'est pas codé n'est ni annoncé ni activé (ObjectMilestoneEffects). survival : objet de survie, garanti dans une offre tant que le joueur n'en a aucun. enabled false : identifiant gardé pour les sauvegardes, retiré des offres. offer_weight : poids de l'objet dans les offres de niveau, 1 par défaut (plan 21 G6a). Le nom du fichier et les identifiants viennent des anciens passifs.",
-        "id": "memoire_vive",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_memoire_vive.png",
-        "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
-        "name": "Écusson du batteur",
-        "subtitle": "Ressort de sommier",
-        "description": "Tes armes attaquent plus vite.",
-        "icon_color": [
-            0.9,
-            0.9,
-            0.3
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "weapon_hits",
-            "threshold": 5000
-        },
-        "effects": [
-            {
-                "stat": "attack_speed",
-                "modifier_type": "multiplicative",
-                "step": 0.08
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "repeat_attack",
-                "text": "Chaque 10ᵉ attaque d'une arme part deux fois",
-                "params": {
-                    "every": 10,
-                    "delay_seconds": 0.12
-                }
-            }
-        ]
+  {
+    "_comment": "Catalogue du joueur : badge = niveaux, gains de cartes et paliers ; item = rareté fixe, step par copie, sans palier. max_copies 0 signifie illimité ; seuls légendaires/uniques ont une limite. Les IDs désactivés restent pour les sauvegardes. params alimente les règles affichées et les effets.",
+    "id": "memoire_vive",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_memoire_vive.png",
+    "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
+    "name": "Écusson du batteur",
+    "subtitle": "Ressort de sommier",
+    "description": "Tes armes attaquent plus vite.",
+    "icon_color": [
+      0.9,
+      0.9,
+      0.3
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "weapon_hits",
+      "threshold": 5000
     },
-    {
-        "id": "resonance",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_resonance.png",
-        "icon_small": "res://assets/items/icons/item_resonance_16.png",
-        "name": "Écusson du semeur",
-        "subtitle": "Rondelle de cuivre",
-        "description": "Tes zones, arcs et ondes sont plus grands.",
-        "icon_color": [
-            0.6,
-            0.4,
-            1.0
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "wide_hits",
-            "threshold": 300
-        },
-        "effects": [
-            {
-                "stat": "aoe_radius",
-                "modifier_type": "multiplicative",
-                "step": 0.08
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "zone_echo",
-                "text": "Les zones frappent une seconde fois, à 30 %",
-                "params": {
-                    "ratio": 0.3,
-                    "delay_seconds": 0.25
-                }
-            }
-        ]
-    },
-    {
-        "id": "portee_etendue",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_portee_etendue.png",
-        "icon_small": "res://assets/items/icons/item_portee_etendue_16.png",
-        "name": "Écusson de l'arpenteur",
-        "subtitle": "Mètre pliant",
-        "description": "Tes armes portent plus loin.",
-        "icon_color": [
-            0.5,
-            0.8,
-            0.9
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "far_kills",
-            "threshold": 400
-        },
-        "effects": [
-            {
-                "stat": "attack_range",
-                "modifier_type": "multiplicative",
-                "step": 0.06
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "range_end_burst",
-                "text": "Un projectile qui va au bout de sa portée sans toucher éclate en petite zone",
-                "params": {
-                    "damage_ratio": 0.5,
-                    "radius": 36
-                }
-            }
-        ]
-    },
-    {
-        "id": "oeil_critique",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_oeil_critique.png",
-        "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
-        "name": "Écusson de l'horloger",
-        "subtitle": "Lunettes de lecture",
-        "description": "Tes coups critiques sont plus fréquents et plus forts.",
-        "icon_color": [
-            1.0,
-            0.3,
-            0.3
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "crits",
-            "threshold": 750
-        },
-        "effects": [
-            {
-                "stat": "crit_chance",
-                "modifier_type": "additive",
-                "step": 0.02
-            },
-            {
-                "stat": "crit_multiplier",
-                "modifier_type": "additive",
-                "step": 0.1
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "full_hp_crit",
-                "text": "Un critique sur une cible à PV pleins compte double",
-                "params": {
-                    "multiplier": 2
-                }
-            }
-        ]
-    },
-    {
-        "id": "ancrage",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_ancrage.png",
-        "icon_small": "res://assets/items/icons/item_ancrage_16.png",
-        "name": "Écusson du veilleur",
-        "subtitle": "Bouton de manteau",
-        "description": "Tes PV maximum augmentent.",
-        "icon_color": [
-            0.3,
-            0.8,
-            0.4
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "contact_seconds",
-            "threshold": 150
-        },
-        "survival": true,
-        "effects": [
-            {
-                "stat": "max_hp",
-                "modifier_type": "additive",
-                "step": 15
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "ignore_small_hits",
-                "text": "Les coups inférieurs à 3 % des PV max sont ignorés",
-                "params": {
-                    "max_hp_ratio": 0.03
-                }
-            }
-        ]
-    },
-    {
-        "id": "regeneration",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_regeneration.png",
-        "icon_small": "res://assets/items/icons/item_regeneration_16.png",
-        "name": "Écusson de la couturière",
-        "subtitle": "Bobine de fil",
-        "description": "Tu récupères des PV en continu.",
-        "icon_color": [
-            0.4,
-            1.0,
-            0.5
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "hp_healed",
-            "threshold": 2000
-        },
-        "survival": true,
-        "effects": [
-            {
-                "stat": "regen_rate",
-                "modifier_type": "additive",
-                "step": 0.6
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "wound_regen",
-                "text": "La régénération double pendant 3 s après une blessure",
-                "params": {
-                    "multiplier": 2,
-                    "seconds": 3
-                }
-            }
-        ]
-    },
-    {
-        "id": "peau_dure",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_peau_dure.png",
-        "icon_small": "res://assets/items/icons/item_peau_dure_16.png",
-        "name": "Écusson du rugbyman",
-        "subtitle": "Genouillère",
-        "description": "Ton armure réduit les coups reçus.",
-        "icon_color": [
-            0.6,
-            0.5,
-            0.4
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "hits_taken",
-            "threshold": 250
-        },
-        "survival": true,
-        "effects": [
-            {
-                "stat": "armor",
-                "modifier_type": "additive",
-                "step": 2
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "dash_armor",
-                "text": "L'armure compte double pendant le dash et 1 s après",
-                "params": {
-                    "multiplier": 2,
-                    "seconds_after": 1
-                }
-            }
-        ]
-    },
-    {
-        "id": "carapace",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_carapace.png",
-        "icon_small": "res://assets/items/icons/item_carapace_16.png",
-        "name": "Écusson du pompier",
-        "subtitle": "Écusson de pompier",
-        "description": "Ton bouclier encaisse un coup entier, puis se recharge quand on ne te touche plus.",
-        "icon_color": [
-            0.4,
-            0.6,
-            0.9
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "shield_absorbed",
-            "threshold": 20
-        },
-        "survival": true,
-        "effects": [
-            {
-                "stat": "shield",
-                "modifier_type": "additive",
-                "step": 5
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "shield_break_wave",
-                "text": "Quand le bouclier casse, une onde repousse les ennemis proches",
-                "params": {
-                    "radius": 110,
-                    "knockback": 90
-                }
-            }
-        ]
-    },
-    {
-        "id": "instinct",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_instinct.png",
-        "icon_small": "res://assets/items/icons/item_instinct_16.png",
-        "name": "Écusson du coureur",
-        "subtitle": "Lacet rouge",
-        "description": "Tu te déplaces plus vite et ton dash se recharge plus vite.",
-        "icon_color": [
-            0.3,
-            0.7,
-            1.0
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "meters",
-            "threshold": 1500
-        },
-        "effects": [
-            {
-                "stat": "speed",
-                "modifier_type": "multiplicative",
-                "step": 0.03
-            },
-            {
-                "stat": "dash_recharge",
-                "modifier_type": "multiplicative",
-                "step": 0.05
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "dash_distance",
-                "text": "Le dash va 30 % plus loin",
-                "params": {
-                    "bonus": 0.3
-                }
-            }
-        ]
-    },
-    {
-        "id": "siphon_essence",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_siphon_essence.png",
-        "icon_small": "res://assets/items/icons/item_siphon_essence_16.png",
-        "name": "Écusson du glaneur",
-        "subtitle": "Aimant de frigo",
-        "description": "Tu attires l'XP de plus loin.",
-        "icon_color": [
-            0.3,
-            0.9,
-            0.9
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "xp_pickups",
-            "threshold": 1200
-        },
-        "effects": [
-            {
-                "stat": "xp_magnet_radius",
-                "modifier_type": "multiplicative",
-                "step": 0.15
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "orb_heal",
-                "text": "Chaque orbe ramassée rend 0,2 PV",
-                "params": {
-                    "heal": 0.2
-                }
-            }
-        ]
-    },
-    {
-        "id": "photo_de_classe",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_photo_de_classe.png",
-        "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
-        "name": "Écusson du bon élève",
-        "subtitle": "Photo de classe",
-        "description": "Tu gagnes plus d'XP.",
-        "icon_color": [
-            0.95,
-            0.85,
-            0.6
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "levels",
-            "threshold": 6
-        },
-        "effects": [
-            {
-                "stat": "xp_gain",
-                "modifier_type": "multiplicative",
-                "step": 0.05
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "level_essence",
-                "text": "Chaque niveau gagné donne 3 Essence",
-                "params": {
-                    "essence": 3
-                }
-            }
-        ]
-    },
-    {
-        "id": "jeton_de_fete",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_jeton_de_fete.png",
-        "icon_small": "res://assets/items/icons/item_jeton_de_fete_16.png",
-        "name": "Écusson du forain",
-        "subtitle": "Jeton de fête foraine",
-        "description": "Ta Chance monte : les améliorations rares sortent plus souvent.",
-        "icon_color": [
-            1.0,
-            0.75,
-            0.2
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "chests",
-            "threshold": 3
-        },
-        "effects": [
-            {
-                "stat": "luck",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "level_reroll",
-                "text": "+1 relance tous les 15 niveaux du joueur",
-                "params": {
-                    "every_levels": 15
-                }
-            }
-        ]
-    },
-    {
-        "id": "souffle_du_neant",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_souffle_du_neant.png",
-        "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
-        "name": "Écusson du jongleur",
-        "subtitle": "Papier carbone",
-        "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts. Une fraction est une chance d'en avoir un de plus.",
-        "icon_color": [
-            0.7,
-            0.3,
-            0.9
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "projectile_hits",
-            "threshold": 750
-        },
-        "offer_weight": 2,
-        "effects": [
-            {
-                "stat": "projectile_bonus",
-                "modifier_type": "additive",
-                "step": 0.5
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "spread_targets",
-                "text": "Les projectiles en plus visent chacun une cible différente"
-            }
-        ]
-    },
-    {
-        "id": "paille_tordue",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_paille_tordue.png",
-        "icon_small": "res://assets/items/icons/item_paille_tordue_16.png",
-        "name": "Écusson du barbier",
-        "subtitle": "Paille tordue",
-        "description": "Une part des dégâts de tes armes te revient en PV, dans la limite d'un soin par seconde.",
-        "icon_color": [
-            0.85,
-            0.3,
-            0.3
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "lifesteal",
-            "threshold": 450
-        },
-        "survival": true,
-        "effects": [
-            {
-                "stat": "lifesteal",
-                "modifier_type": "additive",
-                "step": 0.005
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "low_hp_lifesteal",
-                "text": "Sous la moitié des PV, le vol de vie rend deux fois plus vite",
-                "params": {
-                    "threshold": 0.5,
-                    "multiplier": 2
-                }
-            }
-        ]
-    },
-    {
-        "id": "persistance",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_persistance.png",
-        "icon_small": "res://assets/items/icons/item_persistance_16.png",
-        "name": "Écusson de l'apothicaire",
-        "subtitle": "Pince à linge",
-        "description": "Tes statuts et tes zones au sol durent plus longtemps.",
-        "icon_color": [
-            0.85,
-            0.75,
-            0.55
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "statuses",
-            "threshold": 900
-        },
-        "effects": [
-            {
-                "stat": "status_duration",
-                "modifier_type": "multiplicative",
-                "step": 0.08
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "status_renew",
-                "text": "Un statut qui expire a 25 % de chance de se renouveler",
-                "params": {
-                    "chance": 0.25
-                }
-            }
-        ]
-    },
-    {
-        "id": "allumette_humide",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_allumette_humide.png",
-        "icon_small": "res://assets/items/icons/item_allumette_humide_16.png",
-        "name": "Allumette humide",
-        "description": "Chaque coup d'arme a une chance d'enflammer la cible : elle brûle {burn_seconds} s.",
-        "icon_color": [
-            1.0,
-            0.55,
-            0.2
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "attack_speed",
+        "modifier_type": "multiplicative",
+        "step": 0.08
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "repeat_attack",
+        "text": "Chaque 10ᵉ attaque d'une arme part deux fois",
         "params": {
-            "burn_damage_ratio": 0.25,
-            "burn_seconds": 3
-        },
-        "effects": [
-            {
-                "stat": "burn_chance",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "burn_spread",
-                "text": "La Brûlure passe au voisin quand la cible meurt",
-                "params": {
-                    "radius": 120
-                }
-            }
-        ]
+          "every": 10,
+          "delay_seconds": 0.12
+        }
+      }
+    ]
+  },
+  {
+    "id": "resonance",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_resonance.png",
+    "icon_small": "res://assets/items/icons/item_resonance_16.png",
+    "name": "Écusson du semeur",
+    "subtitle": "Rondelle de cuivre",
+    "description": "Tes zones, arcs et ondes sont plus grands.",
+    "icon_color": [
+      0.6,
+      0.4,
+      1.0
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "wide_hits",
+      "threshold": 300
     },
-    {
-        "id": "glacon",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_glacon.png",
-        "icon_small": "res://assets/items/icons/item_glacon_16.png",
-        "name": "Glaçon dans un mouchoir",
-        "description": "Chaque coup d'arme a une chance de ralentir la cible pendant {slow_seconds} s.",
-        "icon_color": [
-            0.6,
-            0.85,
-            1.0
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "aoe_radius",
+        "modifier_type": "multiplicative",
+        "step": 0.08
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "zone_echo",
+        "text": "Les zones frappent une seconde fois, à 30 %",
         "params": {
-            "slow_factor": 0.6,
-            "slow_seconds": 1.5
-        },
-        "effects": [
-            {
-                "stat": "chill_chance",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "double_slow_freeze",
-                "text": "Un ennemi ralenti deux fois est figé 0,5 s",
-                "params": {
-                    "freeze_seconds": 0.5
-                }
-            }
-        ]
+          "ratio": 0.3,
+          "delay_seconds": 0.25
+        }
+      }
+    ]
+  },
+  {
+    "id": "portee_etendue",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_portee_etendue.png",
+    "icon_small": "res://assets/items/icons/item_portee_etendue_16.png",
+    "name": "Écusson de l'arpenteur",
+    "subtitle": "Mètre pliant",
+    "description": "Tes armes portent plus loin.",
+    "icon_color": [
+      0.5,
+      0.8,
+      0.9
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "far_kills",
+      "threshold": 400
     },
-    {
-        "id": "thermometre",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_thermometre.png",
-        "icon_small": "res://assets/items/icons/item_thermometre_16.png",
-        "name": "Thermomètre",
-        "description": "Tes coups font plus de dégâts aux ennemis qui brûlent.",
-        "icon_color": [
-            0.95,
-            0.35,
-            0.3
-        ],
-        "max_level": 30,
-        "effects": [
-            {
-                "stat": "burning_target_damage",
-                "modifier_type": "additive",
-                "step": 0.04
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "burn_slows",
-                "text": "Tes Brûlures ralentissent aussi de 15 %",
-                "params": {
-                    "slow_factor": 0.85
-                }
-            }
-        ]
-    },
-    {
-        "id": "epingle_a_nourrice",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
-        "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
-        "name": "Épingle à nourrice",
-        "description": "Tes coups font plus de dégâts aux ennemis entravés.",
-        "icon_color": [
-            0.75,
-            0.8,
-            0.85
-        ],
-        "max_level": 30,
-        "effects": [
-            {
-                "stat": "slowed_target_damage",
-                "modifier_type": "additive",
-                "step": 0.04
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "slow_kill_extends",
-                "text": "Un ennemi ralenti tué prolonge de 1 s le ralentissement de ses voisins",
-                "params": {
-                    "radius": 120,
-                    "seconds": 1,
-                    "max_remaining_seconds": 4
-                }
-            }
-        ]
-    },
-    {
-        "id": "petard_mouille",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_petard_mouille.png",
-        "icon_small": "res://assets/items/icons/item_petard_mouille_16.png",
-        "name": "Pétard mouillé",
-        "description": "Un ennemi tué par une arme explose : ses voisins proches subissent une part du coup fatal.",
-        "icon_color": [
-            0.95,
-            0.45,
-            0.3
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "attack_range",
+        "modifier_type": "multiplicative",
+        "step": 0.06
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "range_end_burst",
+        "text": "Un projectile qui va au bout de sa portée sans toucher éclate en petite zone",
         "params": {
-            "radius": 50
-        },
-        "effects": [
-            {
-                "stat": "kill_explosion",
-                "modifier_type": "additive",
-                "step": 0.1
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "double_explosion",
-                "text": "L'explosion se produit deux fois",
-                "params": {
-                    "delay_seconds": 0.25
-                }
-            }
-        ]
+          "damage_ratio": 0.5,
+          "radius": 36
+        }
+      }
+    ]
+  },
+  {
+    "id": "oeil_critique",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_oeil_critique.png",
+    "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
+    "name": "Écusson de l'horloger",
+    "subtitle": "Lunettes de lecture",
+    "description": "Tes coups critiques sont plus fréquents et plus forts.",
+    "icon_color": [
+      1.0,
+      0.3,
+      0.3
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "crits",
+      "threshold": 750
     },
-    {
-        "id": "de_a_coudre",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_de_a_coudre.png",
-        "icon_small": "res://assets/items/icons/item_de_a_coudre_16.png",
-        "name": "Dé à coudre",
-        "description": "Chaque ennemi tué par une arme te rend des PV.",
-        "icon_color": [
-            0.8,
-            0.8,
-            0.75
-        ],
-        "max_level": 30,
-        "survival": true,
-        "effects": [
-            {
-                "stat": "kill_heal",
-                "modifier_type": "additive",
-                "step": 0.1
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "elite_kill_heal",
-                "text": "Une élite tuée rend 5 % des PV max",
-                "params": {
-                    "max_hp_ratio": 0.05
-                }
-            }
-        ]
-    },
-    {
-        "id": "semelle_usee",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_semelle_usee.png",
-        "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
-        "name": "Semelle usée",
-        "description": "Après {move_seconds} s de marche sans t'arrêter, ta prochaine attaque fait plus de dégâts.",
-        "icon_color": [
-            0.6,
-            0.45,
-            0.3
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "crit_chance",
+        "modifier_type": "additive",
+        "step": 0.02
+      },
+      {
+        "stat": "crit_multiplier",
+        "modifier_type": "additive",
+        "step": 0.1
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "full_hp_crit",
+        "text": "Un critique sur une cible à PV pleins compte double",
         "params": {
-            "move_seconds": 2
-        },
-        "effects": [
-            {
-                "stat": "stride_damage",
-                "modifier_type": "additive",
-                "step": 0.06
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "double_stride",
-                "text": "Vaut pour les deux prochaines attaques",
-                "params": {
-                    "charges": 2
-                }
-            }
-        ]
+          "multiplier": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "ancrage",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_ancrage.png",
+    "icon_small": "res://assets/items/icons/item_ancrage_16.png",
+    "name": "Écusson du veilleur",
+    "subtitle": "Bouton de manteau",
+    "description": "Tes PV maximum augmentent.",
+    "icon_color": [
+      0.3,
+      0.8,
+      0.4
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "contact_seconds",
+      "threshold": 150
     },
-    {
-        "id": "boite_de_pansements",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_boite_de_pansements.png",
-        "icon_small": "res://assets/items/icons/item_boite_de_pansements_16.png",
-        "name": "Boîte de pansements",
-        "description": "Chaque niveau gagné te soigne d'une part de tes PV max.",
-        "icon_color": [
-            0.95,
-            0.9,
-            0.85
-        ],
-        "max_level": 30,
-        "survival": true,
-        "effects": [
-            {
-                "stat": "level_heal",
-                "modifier_type": "additive",
-                "step": 0.003
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "cascade_invulnerability",
-                "text": "Une cascade de 3 niveaux ou plus donne 1 s d'invulnérabilité",
-                "params": {
-                    "levels": 3,
-                    "seconds": 1
-                }
-            }
-        ]
-    },
-    {
-        "id": "loupe_de_philateliste",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_loupe_de_philateliste.png",
-        "icon_small": "res://assets/items/icons/item_loupe_de_philateliste_16.png",
-        "name": "Loupe de philatéliste",
-        "description": "Un coup critique rend sa cible Fragile pendant {fragile_seconds} s : elle subit plus de dégâts de toutes tes armes.",
-        "icon_color": [
-            0.85,
-            0.8,
-            0.5
-        ],
-        "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "max_hp",
+        "modifier_type": "additive",
+        "step": 15
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "ignore_small_hits",
+        "text": "Les coups inférieurs à 3 % des PV max sont ignorés",
         "params": {
-            "fragile_seconds": 2
-        },
-        "effects": [
-            {
-                "stat": "crit_fragile",
-                "modifier_type": "additive",
-                "step": 0.05
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "long_fragile",
-                "text": "Fragile dure 4 s",
-                "params": {
-                    "seconds": 4
-                }
-            }
-        ]
+          "max_hp_ratio": 0.03
+        }
+      }
+    ]
+  },
+  {
+    "id": "regeneration",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_regeneration.png",
+    "icon_small": "res://assets/items/icons/item_regeneration_16.png",
+    "name": "Écusson de la couturière",
+    "subtitle": "Bobine de fil",
+    "description": "Tu récupères des PV en continu.",
+    "icon_color": [
+      0.4,
+      1.0,
+      0.5
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "hp_healed",
+      "threshold": 2000
     },
-    {
-        "id": "stylo_quatre_couleurs",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_stylo_quatre_couleurs.png",
-        "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
-        "name": "Stylo à quatre couleurs",
-        "description": "Un coup critique repart sur une autre cible proche, avec une part de ses dégâts.",
-        "icon_color": [
-            0.4,
-            0.55,
-            0.95
-        ],
-        "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "regen_rate",
+        "modifier_type": "additive",
+        "step": 0.6
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "wound_regen",
+        "text": "La régénération double pendant 3 s après une blessure",
         "params": {
-            "radius": 180
-        },
-        "effects": [
-            {
-                "stat": "crit_echo",
-                "modifier_type": "additive",
-                "step": 0.06
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "double_crit_echo",
-                "text": "Le coup repart sur deux cibles",
-                "params": {
-                    "targets": 2
-                }
-            }
-        ]
+          "multiplier": 2,
+          "seconds": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": "peau_dure",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_peau_dure.png",
+    "icon_small": "res://assets/items/icons/item_peau_dure_16.png",
+    "name": "Écusson du rugbyman",
+    "subtitle": "Genouillère",
+    "description": "Ton armure réduit les coups reçus.",
+    "icon_color": [
+      0.6,
+      0.5,
+      0.4
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "hits_taken",
+      "threshold": 250
     },
-    {
-        "id": "tabouret_de_camping",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_tabouret_de_camping.png",
-        "icon_small": "res://assets/items/icons/item_tabouret_de_camping_16.png",
-        "name": "Tabouret de camping",
-        "description": "Immobile depuis {still_seconds} s, tu attaques plus vite.",
-        "icon_color": [
-            0.6,
-            0.45,
-            0.3
-        ],
-        "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "armor",
+        "modifier_type": "additive",
+        "step": 2
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "dash_armor",
+        "text": "L'armure compte double pendant le dash et 1 s après",
         "params": {
-            "still_seconds": 1
-        },
-        "effects": [
-            {
-                "stat": "still_attack_speed",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "still_armor",
-                "text": "Immobile, tu gagnes aussi 10 d'armure",
-                "params": {
-                    "armor": 10
-                }
-            }
-        ]
+          "multiplier": 2,
+          "seconds_after": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "carapace",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_carapace.png",
+    "icon_small": "res://assets/items/icons/item_carapace_16.png",
+    "name": "Écusson du pompier",
+    "subtitle": "Écusson de pompier",
+    "description": "Ton bouclier encaisse un coup entier, puis se recharge quand on ne te touche plus.",
+    "icon_color": [
+      0.4,
+      0.6,
+      0.9
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "shield_absorbed",
+      "threshold": 20
     },
-    {
-        "id": "chewing_gum",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_chewing_gum.png",
-        "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
-        "name": "Chewing-gum",
-        "description": "Ton dash laisse une traînée collante : les ennemis qui la traversent sont ralentis.",
-        "icon_color": [
-            0.95,
-            0.55,
-            0.75
-        ],
-        "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "shield",
+        "modifier_type": "additive",
+        "step": 5
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "shield_break_wave",
+        "text": "Quand le bouclier casse, une onde repousse les ennemis proches",
         "params": {
-            "base_seconds": 1,
-            "slow_factor": 0.6,
-            "radius": 30,
-            "spacing": 22
-        },
-        "effects": [
-            {
-                "stat": "dash_trail",
-                "modifier_type": "additive",
-                "step": 0.1
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "sticky_fragile",
-                "text": "La traînée rend aussi Fragile",
-                "params": {
-                    "bonus": 0.2
-                }
-            }
-        ]
+          "radius": 110,
+          "knockback": 90
+        }
+      }
+    ]
+  },
+  {
+    "id": "instinct",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_instinct.png",
+    "icon_small": "res://assets/items/icons/item_instinct_16.png",
+    "name": "Écusson du coureur",
+    "subtitle": "Lacet rouge",
+    "description": "Tu te déplaces plus vite et ton dash se recharge plus vite.",
+    "icon_color": [
+      0.3,
+      0.7,
+      1.0
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "meters",
+      "threshold": 1500
     },
-    {
-        "id": "gilet_reflechissant",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
-        "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
-        "name": "Gilet réfléchissant",
-        "description": "Chaque ennemi tout près de toi augmente tes dégâts, jusqu'à {max_enemies} ennemis.",
-        "icon_color": [
-            0.95,
-            0.85,
-            0.2
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "speed",
+        "modifier_type": "multiplicative",
+        "step": 0.03
+      },
+      {
+        "stat": "dash_recharge",
+        "modifier_type": "multiplicative",
+        "step": 0.05
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "dash_distance",
+        "text": "Le dash va 30 % plus loin",
         "params": {
-            "radius": 120,
-            "max_enemies": 10
-        },
-        "effects": [
-            {
-                "stat": "crowd_damage",
-                "modifier_type": "additive",
-                "step": 0.002
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "crowd_cap",
-                "text": "Compte jusqu'à 20 ennemis",
-                "params": {
-                    "max_enemies": 20
-                }
-            }
-        ]
+          "bonus": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "id": "siphon_essence",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_siphon_essence.png",
+    "icon_small": "res://assets/items/icons/item_siphon_essence_16.png",
+    "name": "Écusson du glaneur",
+    "subtitle": "Aimant de frigo",
+    "description": "Tu attires l'XP de plus loin.",
+    "icon_color": [
+      0.3,
+      0.9,
+      0.9
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "xp_pickups",
+      "threshold": 1200
     },
-    {
-        "id": "thermos",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_thermos.png",
-        "icon_small": "res://assets/items/icons/item_thermos_16.png",
-        "name": "Thermos",
-        "description": "Tant que tu as plus de {threshold%} de tes PV, tes coups font plus de dégâts.",
-        "icon_color": [
-            0.6,
-            0.7,
-            0.75
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "xp_magnet_radius",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "orb_heal",
+        "text": "Chaque orbe ramassée rend 0,2 PV",
         "params": {
-            "threshold": 0.9
-        },
-        "effects": [
-            {
-                "stat": "high_hp_damage",
-                "modifier_type": "additive",
-                "step": 0.02
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "thermos_threshold",
-                "text": "Le seuil descend à 75 % des PV",
-                "params": {
-                    "threshold": 0.75
-                }
-            }
-        ]
+          "heal": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "id": "photo_de_classe",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_photo_de_classe.png",
+    "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
+    "name": "Écusson du bon élève",
+    "subtitle": "Photo de classe",
+    "description": "Tu gagnes plus d'XP.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.6
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "levels",
+      "threshold": 6
     },
-    {
-        "id": "medaille_cabossee",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_medaille_cabossee.png",
-        "icon_small": "res://assets/items/icons/item_medaille_cabossee_16.png",
-        "name": "Médaille cabossée",
-        "description": "Sous {threshold%} de tes PV, tes coups font plus de dégâts.",
-        "icon_color": [
-            0.8,
-            0.6,
-            0.3
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "xp_gain",
+        "modifier_type": "multiplicative",
+        "step": 0.05
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "level_essence",
+        "text": "Chaque niveau gagné donne 3 Essence",
         "params": {
-            "threshold": 0.35
-        },
-        "effects": [
-            {
-                "stat": "low_hp_damage",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "low_hp_speed",
-                "text": "Sous le seuil de PV, tu cours aussi 15 % plus vite",
-                "params": {
-                    "speed": 0.15
-                }
-            }
-        ]
+          "essence": 3
+        }
+      }
+    ]
+  },
+  {
+    "id": "jeton_de_fete",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_jeton_de_fete.png",
+    "icon_small": "res://assets/items/icons/item_jeton_de_fete_16.png",
+    "name": "Écusson du forain",
+    "subtitle": "Jeton de fête foraine",
+    "description": "Ta Chance monte : les améliorations rares sortent plus souvent.",
+    "icon_color": [
+      1.0,
+      0.75,
+      0.2
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "chests",
+      "threshold": 3
     },
-    {
-        "id": "porte_monnaie_use",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_porte_monnaie_use.png",
-        "icon_small": "res://assets/items/icons/item_porte_monnaie_use_16.png",
-        "name": "Porte-monnaie usé",
-        "description": "Chaque tranche de {essence_per_step} Essence que tu gardes augmente tes dégâts, jusqu'au plafond indiqué.",
-        "icon_color": [
-            0.45,
-            0.8,
-            0.75
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "luck",
+        "modifier_type": "additive",
+        "step": 0.03
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "level_reroll",
+        "text": "+1 relance tous les 15 niveaux du joueur",
         "params": {
-            "essence_per_step": 10,
-            "damage_per_step": 0.01
-        },
-        "effects": [
-            {
-                "stat": "essence_damage_cap",
-                "modifier_type": "additive",
-                "step": 0.03
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "essence_refund",
-                "text": "20 % de l'Essence dépensée est rendue",
-                "params": {
-                    "ratio": 0.2
-                }
-            }
-        ]
+          "every_levels": 15
+        }
+      }
+    ]
+  },
+  {
+    "id": "souffle_du_neant",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_souffle_du_neant.png",
+    "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
+    "name": "Écusson du jongleur",
+    "subtitle": "Papier carbone",
+    "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts. Une fraction est une chance d'en avoir un de plus.",
+    "icon_color": [
+      0.7,
+      0.3,
+      0.9
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "projectile_hits",
+      "threshold": 750
     },
-    {
-        "_comment": "Retiré des offres : un +dégâts universel vaut autant pour tous les builds (plan 21 §4).",
-        "id": "flamme_interieure",
-        "kind": "item",
-        "name": "Flamme Intérieure",
-        "description": "",
-        "icon_color": [
-            1.0,
-            0.5,
-            0.2
-        ],
-        "max_level": 30,
-        "enabled": false,
-        "effects": [
-            {
-                "stat": "damage",
-                "modifier_type": "multiplicative",
-                "step": 0
-            }
-        ]
+    "offer_weight": 2,
+    "effects": [
+      {
+        "stat": "projectile_bonus",
+        "modifier_type": "additive",
+        "step": 0.5
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "spread_targets",
+        "text": "Les projectiles en plus visent chacun une cible différente"
+      }
+    ]
+  },
+  {
+    "id": "paille_tordue",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_paille_tordue.png",
+    "icon_small": "res://assets/items/icons/item_paille_tordue_16.png",
+    "name": "Écusson du barbier",
+    "subtitle": "Paille tordue",
+    "description": "Une part des dégâts de tes armes te revient en PV, dans la limite d'un soin par seconde.",
+    "icon_color": [
+      0.85,
+      0.3,
+      0.3
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "lifesteal",
+      "threshold": 450
     },
-    {
-        "id": "reflet_brise",
-        "kind": "badge",
-        "icon": "res://assets/items/icons/item_reflet_brise.png",
-        "icon_small": "res://assets/items/icons/item_reflet_brise_16.png",
-        "name": "Écusson de l'archer",
-        "subtitle": "Reflet brisé",
-        "description": "Tes projectiles traversent plus d'ennemis.",
-        "icon_color": [
-            0.8,
-            0.8,
-            1.0
-        ],
-        "max_level": 99,
-        "usage": {
-            "trigger": "pierces",
-            "threshold": 300
-        },
-        "effects": [
-            {
-                "stat": "projectile_pierce",
-                "modifier_type": "additive",
-                "step": 0.5
-            }
-        ],
-        "milestones": [
-            {
-                "level": 15,
-                "effect": "pierce_damage_ramp",
-                "text": "Un projectile qui perfore gagne +10 % de dégâts par ennemi traversé",
-                "params": {
-                    "per_enemy": 0.1
-                }
-            }
-        ]
-    },
-    {
-        "id": "sifflet_d_arbitre",
-        "kind": "item",
-        "copy_levels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
-        "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
-        "name": "Sifflet d'arbitre",
-        "description": "Les créatures t'entendent de loin : chaque niveau monte le Péril d'un point. Plus d'ennemis, plus forts, plus d'XP et d'Essence à prendre.",
-        "icon_color": [
-            0.85,
-            0.38,
-            0.42
-        ],
-        "max_level": 30,
-        "effects": [
-            {
-                "stat": "peril",
-                "modifier_type": "additive",
-                "step": 1
-            }
-        ],
-        "milestones": []
-    },
-    {
-        "id": "ticket_de_consigne",
-        "kind": "item",
-        "copy_levels": [1, 2],
-        "icon": "res://assets/items/icons/item_ticket_de_consigne.png",
-        "icon_small": "res://assets/items/icons/item_ticket_de_consigne_16.png",
-        "name": "Ticket de consigne",
-        "description": "Un coup mortel ne te tue pas : tu te relèves avec {hp_ratio%} de tes PV et {invulnerability_seconds} s d'invulnérabilité. Le ticket se consume. Le Néant, lui, ne rend rien.",
-        "icon_color": [
-            0.85,
-            0.78,
-            0.6
-        ],
-        "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "lifesteal",
+        "modifier_type": "additive",
+        "step": 0.005
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "low_hp_lifesteal",
+        "text": "Sous la moitié des PV, le vol de vie rend deux fois plus vite",
         "params": {
-            "hp_ratio": 0.5,
-            "invulnerability_seconds": 2
-        },
-        "effects": [
-            {
-                "stat": "revive",
-                "modifier_type": "additive",
-                "step": 1
-            }
-        ],
-        "milestones": []
+          "threshold": 0.5,
+          "multiplier": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "persistance",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_persistance.png",
+    "icon_small": "res://assets/items/icons/item_persistance_16.png",
+    "name": "Écusson de l'apothicaire",
+    "subtitle": "Pince à linge",
+    "description": "Tes statuts et tes zones au sol durent plus longtemps.",
+    "icon_color": [
+      0.85,
+      0.75,
+      0.55
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "statuses",
+      "threshold": 900
     },
-    {
-        "id": "plan_de_metro",
-        "kind": "item",
-        "copy_levels": [2, 3],
-        "icon": "res://assets/items/icons/item_plan_de_metro.png",
-        "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
-        "name": "Plan de métro",
-        "description": "Ton dash devient un saut instantané : tu disparais et réapparais plus loin, sans traverser les murs.",
-        "icon_color": [
-            0.45,
-            0.6,
-            0.85
-        ],
-        "max_level": 30,
-        "effects": [
-            {
-                "stat": "dash_blink",
-                "modifier_type": "additive",
-                "step": 0.5
-            }
-        ],
-        "milestones": []
-    },
-    {
-        "id": "flacon_de_pharmacie",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_flacon_de_pharmacie.png",
-        "icon_small": "res://assets/items/icons/item_flacon_de_pharmacie_16.png",
-        "name": "Flacon de pharmacie",
-        "description": "Tes coups d'arme empoisonnent : une part des dégâts revient sur {seconds} s. Le poison s'accumule à chaque coup.",
-        "icon_color": [
-            0.4,
-            0.75,
-            0.4
-        ],
-        "max_level": 30,
+    "effects": [
+      {
+        "stat": "status_duration",
+        "modifier_type": "multiplicative",
+        "step": 0.08
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "status_renew",
+        "text": "Un statut qui expire a 25 % de chance de se renouveler",
         "params": {
-            "seconds": 3
-        },
-        "effects": [
-            {
-                "stat": "poison",
-                "modifier_type": "additive",
-                "step": 0.02
-            }
-        ],
-        "milestones": []
+          "chance": 0.25
+        }
+      }
+    ]
+  },
+  {
+    "id": "allumette_humide",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_allumette_humide.png",
+    "icon_small": "res://assets/items/icons/item_allumette_humide_16.png",
+    "name": "Allumette humide",
+    "description": "Les impacts directs ont {chance%} de chance de brûler pendant {burn_seconds} s ({burn_damage_ratio%} du coup par seconde). Chaque copie autorise {applications_per_second} applications/s, toutes armes confondues.",
+    "icon_color": [
+      1.0,
+      0.55,
+      0.2
+    ],
+    "max_level": 30,
+    "params": {
+      "chance": 0.08,
+      "burn_damage_ratio": 0.25,
+      "burn_seconds": 3,
+      "applications_per_second": 2
     },
-    {
-        "id": "trefle_plastifie",
-        "kind": "item",
-        "copy_levels": [1],
-        "icon": "res://assets/items/icons/item_trefle_plastifie.png",
-        "icon_small": "res://assets/items/icons/item_trefle_plastifie_16.png",
-        "name": "Trèfle plastifié",
-        "description": "Chaque level-up te propose une carte de plus.",
-        "icon_color": [
-            0.45,
-            0.8,
-            0.45
-        ],
-        "max_level": 30,
-        "effects": [
-            {
-                "stat": "extra_cards",
-                "modifier_type": "additive",
-                "step": 1
-            }
-        ],
-        "milestones": []
+    "effects": [
+      {
+        "stat": "burn_chance",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "glacon",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_glacon.png",
+    "icon_small": "res://assets/items/icons/item_glacon_16.png",
+    "name": "Glaçon dans un mouchoir",
+    "description": "Les impacts directs ont {chance%} de chance de ralentir de 40 % pendant {slow_seconds} s. Chaque copie autorise {applications_per_second} application/s. Répit de {reprieve_seconds} s ({elite_reprieve_seconds} s sur élite), sans rafraîchissement.",
+    "icon_color": [
+      0.6,
+      0.85,
+      1.0
+    ],
+    "max_level": 30,
+    "params": {
+      "chance": 0.08,
+      "slow_factor": 0.6,
+      "slow_seconds": 1.5,
+      "applications_per_second": 1,
+      "reprieve_seconds": 1,
+      "elite_reprieve_seconds": 2
     },
-    {
-        "id": "montre_arretee",
-        "kind": "item",
-        "icon": "res://assets/items/icons/item_montre_arretee.png",
-        "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
-        "name": "Montre arrêtée",
-        "description": "À la mort d'un Souverain, le temps se fige autour de toi : les créatures proches tournent au ralenti quelques secondes.",
-        "icon_color": [
-            0.8,
-            0.65,
-            0.4
-        ],
-        "max_level": 30,
-        "params": {
-            "slow_factor": 0.25,
-            "radius": 700
-        },
-        "effects": [
-            {
-                "stat": "sovereign_slow",
-                "modifier_type": "additive",
-                "step": 0.2
-            }
-        ],
-        "milestones": []
+    "effects": [
+      {
+        "stat": "chill_chance",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "thermometre",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_thermometre.png",
+    "icon_small": "res://assets/items/icons/item_thermometre_16.png",
+    "name": "Thermomètre",
+    "description": "+35 % de dégâts par copie contre les cibles en feu.",
+    "icon_color": [
+      0.95,
+      0.35,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "burning_target_damage",
+        "modifier_type": "additive",
+        "step": 0.35
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "epingle_a_nourrice",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
+    "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
+    "name": "Épingle à nourrice",
+    "description": "+35 % de dégâts par copie contre les cibles entravées.",
+    "icon_color": [
+      0.75,
+      0.8,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "slowed_target_damage",
+        "modifier_type": "additive",
+        "step": 0.35
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "petard_mouille",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_petard_mouille.png",
+    "icon_small": "res://assets/items/icons/item_petard_mouille_16.png",
+    "name": "Pétard mouillé",
+    "description": "Une élimination d’arme produit une explosion infligeant 100 % du coup fatal par copie. Les explosions d’objets ne déclenchent pas d’autres explosions.",
+    "icon_color": [
+      0.95,
+      0.45,
+      0.3
+    ],
+    "max_level": 30,
+    "params": {
+      "radius": 50
     },
-    {
-        "id": "fragment_deternite",
-        "kind": "item",
-        "name": "Fragment d'Éternité",
-        "description": "",
-        "icon_color": [
-            0.9,
-            0.7,
-            1.0
-        ],
-        "max_level": 30,
-        "enabled": false,
-        "effects": [
-            {
-                "stat": "cooldown_reduction",
-                "modifier_type": "multiplicative",
-                "step": 0
-            }
-        ]
+    "effects": [
+      {
+        "stat": "kill_explosion",
+        "modifier_type": "additive",
+        "step": 1.0
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0
+  },
+  {
+    "id": "de_a_coudre",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_de_a_coudre.png",
+    "icon_small": "res://assets/items/icons/item_de_a_coudre_16.png",
+    "name": "Dé à coudre",
+    "description": "Une élimination d’arme soigne au plus 1 PV. Chaque copie augmente le plafond partagé de 1 PV/s, sans réserve de soins.",
+    "icon_color": [
+      0.8,
+      0.8,
+      0.75
+    ],
+    "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "kill_heal",
+        "modifier_type": "additive",
+        "step": 1.0
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "params": {
+      "heal_per_kill": 1
     }
+  },
+  {
+    "id": "semelle_usee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_semelle_usee.png",
+    "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
+    "name": "Semelle usée",
+    "description": "Après un dash, la prochaine attaque gagne +20 % de dégâts par copie. Une seule charge, valable {charge_seconds} s, pour toute la salve.",
+    "icon_color": [
+      0.6,
+      0.45,
+      0.3
+    ],
+    "max_level": 30,
+    "params": {
+      "charge_seconds": 3
+    },
+    "effects": [
+      {
+        "stat": "stride_damage",
+        "modifier_type": "additive",
+        "step": 0.2
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "boite_de_pansements",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_boite_de_pansements.png",
+    "icon_small": "res://assets/items/icons/item_boite_de_pansements_16.png",
+    "name": "Boîte de pansements",
+    "description": "Chaque niveau gagné soigne 3 % des PV max par copie, sans dépasser les PV manquants.",
+    "icon_color": [
+      0.95,
+      0.9,
+      0.85
+    ],
+    "max_level": 30,
+    "survival": true,
+    "effects": [
+      {
+        "stat": "level_heal",
+        "modifier_type": "additive",
+        "step": 0.03
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "loupe_de_philateliste",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_loupe_de_philateliste.png",
+    "icon_small": "res://assets/items/icons/item_loupe_de_philateliste_16.png",
+    "name": "Loupe de philatéliste",
+    "description": "Un critique rend sa cible Fragile pendant {fragile_seconds} s : +50 % de dégâts reçus par copie.",
+    "icon_color": [
+      0.85,
+      0.8,
+      0.5
+    ],
+    "max_level": 30,
+    "params": {
+      "fragile_seconds": 2
+    },
+    "effects": [
+      {
+        "stat": "crit_fragile",
+        "modifier_type": "additive",
+        "step": 0.5
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0
+  },
+  {
+    "id": "stylo_quatre_couleurs",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_stylo_quatre_couleurs.png",
+    "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
+    "name": "Stylo à quatre couleurs",
+    "description": "Un critique transmet 60 % de ses dégâts par copie à une seule autre cible proche.",
+    "icon_color": [
+      0.4,
+      0.55,
+      0.95
+    ],
+    "max_level": 30,
+    "params": {
+      "radius": 180
+    },
+    "effects": [
+      {
+        "stat": "crit_echo",
+        "modifier_type": "additive",
+        "step": 0.6
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0
+  },
+  {
+    "id": "tabouret_de_camping",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_tabouret_de_camping.png",
+    "icon_small": "res://assets/items/icons/item_tabouret_de_camping_16.png",
+    "name": "Tabouret de camping",
+    "description": "Immobile : +20 points de dégâts par seconde et par copie, jusqu’à +100 %. Bouger ou dasher remet le bonus à zéro.",
+    "icon_color": [
+      0.6,
+      0.45,
+      0.3
+    ],
+    "max_level": 30,
+    "params": {
+      "damage_cap": 1
+    },
+    "effects": [
+      {
+        "stat": "still_damage",
+        "modifier_type": "additive",
+        "step": 0.2
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0
+  },
+  {
+    "id": "chewing_gum",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_chewing_gum.png",
+    "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
+    "name": "Chewing-gum",
+    "description": "Le dash laisse une traînée qui ralentit de 40 %. Elle dure {base_seconds} s par copie, au plus {max_seconds} s.",
+    "icon_color": [
+      0.95,
+      0.55,
+      0.75
+    ],
+    "max_level": 30,
+    "params": {
+      "base_seconds": 2,
+      "max_seconds": 6,
+      "slow_factor": 0.6,
+      "radius": 30,
+      "spacing": 22
+    },
+    "effects": [
+      {
+        "stat": "dash_trail",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "gilet_reflechissant",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
+    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "name": "Gilet réfléchissant",
+    "description": "Chaque ennemi proche donne +2 % de dégâts par copie, jusqu’à {max_enemies} ennemis.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.2
+    ],
+    "max_level": 30,
+    "params": {
+      "radius": 120,
+      "max_enemies": 10
+    },
+    "effects": [
+      {
+        "stat": "crowd_damage",
+        "modifier_type": "additive",
+        "step": 0.02
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "thermos",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_thermos.png",
+    "icon_small": "res://assets/items/icons/item_thermos_16.png",
+    "name": "Thermos",
+    "description": "Au-dessus de {threshold%} des PV, +20 % de dégâts par copie.",
+    "icon_color": [
+      0.6,
+      0.7,
+      0.75
+    ],
+    "max_level": 30,
+    "params": {
+      "threshold": 0.9
+    },
+    "effects": [
+      {
+        "stat": "high_hp_damage",
+        "modifier_type": "additive",
+        "step": 0.2
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "medaille_cabossee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_medaille_cabossee.png",
+    "icon_small": "res://assets/items/icons/item_medaille_cabossee_16.png",
+    "name": "Médaille cabossée",
+    "description": "Sous {threshold%} des PV, +30 % de dégâts par copie.",
+    "icon_color": [
+      0.8,
+      0.6,
+      0.3
+    ],
+    "max_level": 30,
+    "params": {
+      "threshold": 0.35
+    },
+    "effects": [
+      {
+        "stat": "low_hp_damage",
+        "modifier_type": "additive",
+        "step": 0.3
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "porte_monnaie_use",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_porte_monnaie_use.png",
+    "icon_small": "res://assets/items/icons/item_porte_monnaie_use_16.png",
+    "name": "Porte-monnaie usé",
+    "description": "Chaque tranche de {essence_per_step} Essence gardée donne +1 % de dégâts, jusqu’à +30 % par copie.",
+    "icon_color": [
+      0.45,
+      0.8,
+      0.75
+    ],
+    "max_level": 30,
+    "params": {
+      "essence_per_step": 10,
+      "damage_per_step": 0.01
+    },
+    "effects": [
+      {
+        "stat": "essence_damage_cap",
+        "modifier_type": "additive",
+        "step": 0.3
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0
+  },
+  {
+    "_comment": "Retiré des offres : un +dégâts universel vaut autant pour tous les builds (plan 21 §4).",
+    "id": "flamme_interieure",
+    "kind": "item",
+    "name": "Flamme Intérieure",
+    "description": "",
+    "icon_color": [
+      1.0,
+      0.5,
+      0.2
+    ],
+    "max_level": 30,
+    "enabled": false,
+    "effects": [
+      {
+        "stat": "damage",
+        "modifier_type": "multiplicative",
+        "step": 0
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "reflet_brise",
+    "kind": "badge",
+    "icon": "res://assets/items/icons/item_reflet_brise.png",
+    "icon_small": "res://assets/items/icons/item_reflet_brise_16.png",
+    "name": "Écusson de l'archer",
+    "subtitle": "Reflet brisé",
+    "description": "Tes projectiles traversent plus d'ennemis.",
+    "icon_color": [
+      0.8,
+      0.8,
+      1.0
+    ],
+    "max_level": 99,
+    "usage": {
+      "trigger": "pierces",
+      "threshold": 300
+    },
+    "effects": [
+      {
+        "stat": "projectile_pierce",
+        "modifier_type": "additive",
+        "step": 0.5
+      }
+    ],
+    "milestones": [
+      {
+        "level": 15,
+        "effect": "pierce_damage_ramp",
+        "text": "Un projectile qui perfore gagne +10 % de dégâts par ennemi traversé",
+        "params": {
+          "per_enemy": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "id": "sifflet_d_arbitre",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
+    "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
+    "name": "Sifflet d'arbitre",
+    "description": "Chaque exemplaire pris ajoute 1 Péril. Le Péril acquis reste après oubli.",
+    "icon_color": [
+      0.85,
+      0.38,
+      0.42
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "peril",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "ticket_de_consigne",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_ticket_de_consigne.png",
+    "icon_small": "res://assets/items/icons/item_ticket_de_consigne_16.png",
+    "name": "Ticket de consigne",
+    "description": "Un coup mortel ne te tue pas : tu te relèves avec {hp_ratio%} de tes PV et {invulnerability_seconds} s d'invulnérabilité. Le ticket se consume. Le Néant, lui, ne rend rien.",
+    "icon_color": [
+      0.85,
+      0.78,
+      0.6
+    ],
+    "max_level": 30,
+    "params": {
+      "hp_ratio": 0.5,
+      "invulnerability_seconds": 2
+    },
+    "effects": [
+      {
+        "stat": "revive",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "legendary",
+    "max_copies": 2
+  },
+  {
+    "id": "plan_de_metro",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_plan_de_metro.png",
+    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "name": "Plan de métro",
+    "description": "Le dash devient instantané, sans traverser les murs. Première copie : distance normale ; chaque copie suivante ajoute 50 % de distance.",
+    "icon_color": [
+      0.45,
+      0.6,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "dash_blink",
+        "modifier_type": "additive",
+        "step": 1.0
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "params": {
+      "base_distance": 1,
+      "distance_per_copy": 0.5
+    }
+  },
+  {
+    "id": "flacon_de_pharmacie",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_flacon_de_pharmacie.png",
+    "icon_small": "res://assets/items/icons/item_flacon_de_pharmacie_16.png",
+    "name": "Flacon de pharmacie",
+    "description": "Les impacts directs ont {chance%} de chance de poser une dose : {damage_ratio%} du coup sur {seconds} s. Par copie : {applications_per_second} doses/s, {doses_per_copy} doses actives par cible. Durées indépendantes.",
+    "icon_color": [
+      0.4,
+      0.75,
+      0.4
+    ],
+    "max_level": 30,
+    "params": {
+      "chance": 0.1,
+      "damage_ratio": 0.2,
+      "seconds": 3,
+      "applications_per_second": 2,
+      "doses_per_copy": 3
+    },
+    "effects": [
+      {
+        "stat": "poison",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0
+  },
+  {
+    "id": "trefle_plastifie",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_trefle_plastifie.png",
+    "icon_small": "res://assets/items/icons/item_trefle_plastifie_16.png",
+    "name": "Trèfle plastifié",
+    "description": "Chaque level-up te propose une carte de plus.",
+    "icon_color": [
+      0.45,
+      0.8,
+      0.45
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "extra_cards",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "legendary",
+    "max_copies": 1,
+    "unique": true
+  },
+  {
+    "id": "montre_arretee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_montre_arretee.png",
+    "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
+    "name": "Montre arrêtée",
+    "description": "Les impacts directs ont {chance%} de chance de ralentir un élite de 35 % pendant {seconds} s. Une application par copie toutes les {window_seconds} s ; même cible toutes les {target_cooldown_seconds} s.",
+    "icon_color": [
+      0.8,
+      0.65,
+      0.4
+    ],
+    "max_level": 30,
+    "params": {
+      "chance": 0.12,
+      "slow_factor": 0.65,
+      "seconds": 2,
+      "max_seconds": 3,
+      "window_seconds": 2,
+      "target_cooldown_seconds": 8
+    },
+    "effects": [
+      {
+        "stat": "elite_slow",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0
+  },
+  {
+    "id": "fragment_deternite",
+    "kind": "item",
+    "name": "Fragment d'Éternité",
+    "description": "",
+    "icon_color": [
+      0.9,
+      0.7,
+      1.0
+    ],
+    "max_level": 30,
+    "enabled": false,
+    "effects": [
+      {
+        "stat": "cooldown_reduction",
+        "modifier_type": "multiplicative",
+        "step": 0
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0
+  },
+  {
+    "id": "lacets_noues",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_semelle_usee.png",
+    "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
+    "name": "Lacets noués",
+    "description": "Vitesse de déplacement accrue. Les lacets tiennent encore.",
+    "icon_color": [
+      0.6,
+      0.45,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "speed",
+        "modifier_type": "multiplicative",
+        "step": 0.08
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "pastille_mentholee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_boite_de_pansements.png",
+    "icon_small": "res://assets/items/icons/item_boite_de_pansements_16.png",
+    "name": "Pastille mentholée",
+    "description": "Soin progressif, suspendu pendant 2 s après une blessure.",
+    "icon_color": [
+      0.95,
+      0.9,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "regen_rate",
+        "modifier_type": "additive",
+        "step": 0.15
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "survival": true
+  },
+  {
+    "id": "gros_bouton",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_ancrage.png",
+    "icon_small": "res://assets/items/icons/item_ancrage_16.png",
+    "name": "Gros bouton",
+    "description": "Augmente les PV maximum sans rendre les PV manquants.",
+    "icon_color": [
+      0.3,
+      0.8,
+      0.4
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "max_hp",
+        "modifier_type": "additive",
+        "step": 12
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "survival": true
+  },
+  {
+    "id": "agrafe_rouillee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
+    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "name": "Agrafe rouillée",
+    "description": "Réduit les dégâts selon la formule et le plafond d’armure.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.2
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "armor",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "survival": true
+  },
+  {
+    "id": "bons_points",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_photo_de_classe.png",
+    "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
+    "name": "Bons points",
+    "description": "Augmente l’expérience gagnée.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.6
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "xp_gain",
+        "modifier_type": "multiplicative",
+        "step": 0.06
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "capsule_porte_bonheur",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_jeton_de_fete.png",
+    "icon_small": "res://assets/items/icons/item_jeton_de_fete_16.png",
+    "name": "Capsule porte-bonheur",
+    "description": "Favorise les améliorations et les raretés élevées des coffres. Ne change pas la rareté propre d’un objet.",
+    "icon_color": [
+      1.0,
+      0.75,
+      0.2
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "luck",
+        "modifier_type": "additive",
+        "step": 0.03
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "bande_magnetique",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_siphon_essence.png",
+    "icon_small": "res://assets/items/icons/item_siphon_essence_16.png",
+    "name": "Bande magnétique",
+    "description": "Attire les fragments d’expérience de plus loin.",
+    "icon_color": [
+      0.3,
+      0.9,
+      0.9
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "xp_magnet_radius",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "petite_cle",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_memoire_vive.png",
+    "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
+    "name": "Petite clé",
+    "description": "Les armes attaquent plus fréquemment.",
+    "icon_color": [
+      0.9,
+      0.9,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "attack_speed",
+        "modifier_type": "multiplicative",
+        "step": 0.06
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "compas",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_resonance.png",
+    "icon_small": "res://assets/items/icons/item_resonance_16.png",
+    "name": "Compas",
+    "description": "Agrandit les zones et angles des attaques compatibles.",
+    "icon_color": [
+      0.6,
+      0.4,
+      1.0
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "aoe_radius",
+        "modifier_type": "multiplicative",
+        "step": 0.1
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "ruban_gradue",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_portee_etendue.png",
+    "icon_small": "res://assets/items/icons/item_portee_etendue_16.png",
+    "name": "Ruban gradué",
+    "description": "Allonge la portée des attaques compatibles.",
+    "icon_color": [
+      0.5,
+      0.8,
+      0.9
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "attack_range",
+        "modifier_type": "multiplicative",
+        "step": 0.1
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "verre_fele",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_oeil_critique.png",
+    "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
+    "name": "Verre fêlé",
+    "description": "Augmente la probabilité d’un coup critique, jusqu’à 100 %.",
+    "icon_color": [
+      1.0,
+      0.3,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "crit_chance",
+        "modifier_type": "additive",
+        "step": 0.03
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "ressort",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_instinct.png",
+    "icon_small": "res://assets/items/icons/item_instinct_16.png",
+    "name": "Ressort",
+    "description": "Divise la recharge du dash par 1 + 8 % par copie. Aucun dash ni invulnérabilité supplémentaire.",
+    "icon_color": [
+      0.3,
+      0.7,
+      1.0
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "dash_recharge",
+        "modifier_type": "multiplicative",
+        "step": 0.08
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "ficelle_ciree",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_persistance.png",
+    "icon_small": "res://assets/items/icons/item_persistance_16.png",
+    "name": "Ficelle cirée",
+    "description": "Prolonge les statuts dans leurs plafonds de contrôle.",
+    "icon_color": [
+      0.85,
+      0.75,
+      0.55
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "status_duration",
+        "modifier_type": "multiplicative",
+        "step": 0.12
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "peigne_casse",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
+    "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
+    "name": "Peigne cassé",
+    "description": "Les attaques compatibles traversent une créature supplémentaire par copie.",
+    "icon_color": [
+      0.75,
+      0.8,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "projectile_pierce",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "ampoule_rouge",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_flacon_de_pharmacie.png",
+    "icon_small": "res://assets/items/icons/item_flacon_de_pharmacie_16.png",
+    "name": "Ampoule rouge",
+    "description": "Soin proportionnel aux dégâts éligibles réellement infligés ; plafond partagé de 8 % des PV max/s.",
+    "icon_color": [
+      0.4,
+      0.75,
+      0.4
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "lifesteal",
+        "modifier_type": "additive",
+        "step": 0.005
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": false,
+    "survival": true
+  },
+  {
+    "id": "bille_irisee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_oeil_critique.png",
+    "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
+    "name": "Bille irisée",
+    "description": "Augmente le multiplicateur des dégâts critiques de 0,25 par copie.",
+    "icon_color": [
+      1.0,
+      0.3,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "crit_multiplier",
+        "modifier_type": "additive",
+        "step": 0.25
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "boucle_cabossee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_carapace.png",
+    "icon_small": "res://assets/items/icons/item_carapace_16.png",
+    "name": "Boucle cabossée",
+    "description": "Augmente les points de bouclier maximum. L’acquisition ne recharge pas le bouclier.",
+    "icon_color": [
+      0.4,
+      0.6,
+      0.9
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "shield",
+        "modifier_type": "additive",
+        "step": 15
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "survival": true
+  },
+  {
+    "id": "diapositive_en_double",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_souffle_du_neant.png",
+    "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
+    "name": "Diapositive en double",
+    "description": "Une quantité supplémentaire par attaque compatible, satellites orbitaux compris.",
+    "icon_color": [
+      0.7,
+      0.3,
+      0.9
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "projectile_bonus",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "tampon_elastique",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
+    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "name": "Tampon élastique",
+    "description": "Augmente la poussée des attaques compatibles, dans les résistances des créatures.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.2
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "knockback",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "flechette_mousse",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_semelle_usee.png",
+    "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
+    "name": "Fléchette mousse",
+    "description": "Accélère les projectiles des armes compatibles ; ni cadence ni quantité supplémentaire.",
+    "icon_color": [
+      0.6,
+      0.45,
+      0.3
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "projectile_speed",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "roulement_lisse",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_montre_arretee.png",
+    "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
+    "name": "Roulement lisse",
+    "description": "Accélère la rotation des armes orbitales ; leur limite de touches par cible reste inchangée.",
+    "icon_color": [
+      0.8,
+      0.65,
+      0.4
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "orbital_speed",
+        "modifier_type": "multiplicative",
+        "step": 0.12
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "cordon_spirale",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_persistance.png",
+    "icon_small": "res://assets/items/icons/item_persistance_16.png",
+    "name": "Cordon spiralé",
+    "description": "Allonge les liaisons et rebonds des armes à chaîne.",
+    "icon_color": [
+      0.85,
+      0.75,
+      0.55
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "chain_range",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "fer_a_cheval_miniature",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_trefle_plastifie.png",
+    "icon_small": "res://assets/items/icons/item_trefle_plastifie_16.png",
+    "name": "Fer à cheval miniature",
+    "description": "Les projectiles déjà autoguidés corrigent leur trajectoire plus vite. Aucun guidage ajouté à un projectile droit.",
+    "icon_color": [
+      0.45,
+      0.8,
+      0.45
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "homing_strength",
+        "modifier_type": "multiplicative",
+        "step": 0.15
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "domino_ebreche",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_stylo_quatre_couleurs.png",
+    "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
+    "name": "Domino ébréché",
+    "description": "Une cible supplémentaire dans les chaînes des armes compatibles.",
+    "icon_color": [
+      0.4,
+      0.55,
+      0.95
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "chain_targets",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": false
+  },
+  {
+    "id": "etiquette_perdue",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_plan_de_metro.png",
+    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "name": "Étiquette perdue",
+    "description": "Indique les coffres fermés hors écran les plus proches ; une direction par copie, jusqu’à {max_pointers}. L’Oubli des repères garde priorité.",
+    "icon_color": [
+      0.45,
+      0.6,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "chest_pointers",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "common",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "params": {
+      "pointers_per_copy": 1,
+      "max_pointers": 3
+    }
+  },
+  {
+    "id": "ticket_de_vestiaire",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_ticket_de_consigne.png",
+    "icon_small": "res://assets/items/icons/item_ticket_de_consigne_16.png",
+    "name": "Ticket de vestiaire",
+    "description": "Prolonge la présence des objets au sol de {extra_seconds_per_copy} s par copie. Ne protège pas de l’Effacement.",
+    "icon_color": [
+      0.85,
+      0.78,
+      0.6
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "item_lifetime",
+        "modifier_type": "additive",
+        "step": 45
+      }
+    ],
+    "rarity": "uncommon",
+    "max_copies": 0,
+    "initial_unlock": false,
+    "params": {
+      "extra_seconds_per_copy": 45
+    }
+  },
+  {
+    "id": "pied_de_biche",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
+    "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
+    "name": "Pied-de-biche",
+    "description": "{chance_per_copy%} de gratuité par copie, plafond {max_chance%}. Un seul jet par coffre, même en annulant ou sans Essence.",
+    "icon_color": [
+      0.75,
+      0.8,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "free_chest",
+        "modifier_type": "additive",
+        "step": 0.15
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": false,
+    "params": {
+      "chance_per_copy": 0.15,
+      "max_chance": 0.6
+    }
+  },
+  {
+    "id": "sonnette",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
+    "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
+    "name": "Sonnette",
+    "description": "À la fermeture d’un nouveau coffre, attire l’XP déjà présente dans {radius_per_copy} px par copie. Ne crée aucune XP.",
+    "icon_color": [
+      0.85,
+      0.38,
+      0.42
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "chest_xp_pull",
+        "modifier_type": "additive",
+        "step": 150
+      }
+    ],
+    "rarity": "rare",
+    "max_copies": 0,
+    "initial_unlock": true,
+    "params": {
+      "radius_per_copy": 150
+    }
+  },
+  {
+    "id": "registre_biffe",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_plan_de_metro.png",
+    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "name": "Registre biffé",
+    "description": "Deux armes différentes touchant une même cible en {window_seconds} s déclenchent un impact additionnel. Recharge globale : {cooldown_seconds} s.",
+    "icon_color": [
+      0.45,
+      0.6,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "cross_weapon_echo",
+        "modifier_type": "additive",
+        "step": 0.25
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0,
+    "initial_unlock": false,
+    "params": {
+      "window_seconds": 4,
+      "cooldown_seconds": 2
+    }
+  },
+  {
+    "id": "pelote_rouge",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_chewing_gum.png",
+    "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
+    "name": "Pelote rouge",
+    "description": "Après dash, lie les deux dernières cibles distinctes touchées à moins de {radius} px pendant {duration_seconds} s. Transfert plafonné à {max_ratio%}, recharge {cooldown_seconds} s ; sans récursion.",
+    "icon_color": [
+      0.95,
+      0.55,
+      0.75
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "damage_link",
+        "modifier_type": "additive",
+        "step": 0.15
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0,
+    "initial_unlock": false,
+    "params": {
+      "duration_seconds": 3,
+      "radius": 250,
+      "cooldown_seconds": 6,
+      "max_ratio": 0.6
+    }
+  },
+  {
+    "id": "tampon_annule",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
+    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "name": "Tampon ANNULÉ",
+    "description": "Chaque dash efface un projectile ennemi rencontré par copie. Ne protège ni du contact, ni des rayons, ni des zones au sol.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.2
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "dash_cancel_projectiles",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "epic",
+    "max_copies": 0,
+    "initial_unlock": true
+  },
+  {
+    "id": "carnet_dadresses",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_plan_de_metro.png",
+    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "name": "Carnet d’adresses",
+    "description": "Chaque récompense de coffre propose un candidat supplémentaire par copie, de la rareté déjà tirée. Un seul objet reçu.",
+    "icon_color": [
+      0.45,
+      0.6,
+      0.85
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "chest_choices",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "legendary",
+    "max_copies": 3,
+    "initial_unlock": true,
+    "params": {
+      "extra_choices_per_copy": 1
+    }
+  },
+  {
+    "id": "cassette_rembobinee",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_montre_arretee.png",
+    "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
+    "name": "Cassette rembobinée",
+    "description": "À la fin du dash, restitue une partie des PV de combat perdus dans les {history_seconds} dernières secondes. Recharge {cooldown_seconds} s ; aucune perte remboursée deux fois, ni résurrection.",
+    "icon_color": [
+      0.8,
+      0.65,
+      0.4
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "dash_recovery",
+        "modifier_type": "additive",
+        "step": 0.25
+      }
+    ],
+    "rarity": "legendary",
+    "max_copies": 3,
+    "initial_unlock": true,
+    "params": {
+      "history_seconds": 3,
+      "cooldown_seconds": 12
+    },
+    "survival": true
+  },
+  {
+    "id": "portrait_efface",
+    "kind": "item",
+    "icon": "res://assets/items/icons/item_photo_de_classe.png",
+    "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
+    "name": "Portrait effacé",
+    "description": "Après dash, un souvenir attire les créatures ordinaires à moins de {radius} px pendant {seconds_per_copy} s par copie. Recharge {cooldown_seconds} s. Les élites, boss et attaques déjà engagées l’ignorent.",
+    "icon_color": [
+      0.95,
+      0.85,
+      0.6
+    ],
+    "max_level": 30,
+    "effects": [
+      {
+        "stat": "dash_decoy",
+        "modifier_type": "additive",
+        "step": 1
+      }
+    ],
+    "rarity": "legendary",
+    "max_copies": 3,
+    "initial_unlock": false,
+    "params": {
+      "seconds_per_copy": 2,
+      "cooldown_seconds": 12,
+      "radius": 220
+    }
+  }
 ]

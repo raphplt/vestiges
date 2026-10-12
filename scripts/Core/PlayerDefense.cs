@@ -43,10 +43,10 @@ public sealed class PlayerDefense
     /// Bouclier gagné, ou rendu (valeur négative, fin d'une couverture de survie) : un bouclier rendu ne fait que
     /// rabattre la charge au nouveau maximum, sans entamer ce qui reste du bouclier de base.
     /// </summary>
-    public void AddShield(float value)
+    public void AddShield(float value, bool refill = true)
     {
         _bonusShield += value;
-        Shield = value >= 0f ? Mathf.Clamp(Shield + value, 0f, MaxShield) : Mathf.Min(Shield, MaxShield);
+        Shield = value >= 0f && refill ? Mathf.Clamp(Shield + value, 0f, MaxShield) : Mathf.Min(Shield, MaxShield);
     }
 
 #if TOOLS

@@ -48,8 +48,8 @@ public partial class ObjectsRegression
         before = Hp(neighbour);
         _player.OnProjectileHit(primary, _player.ResolveHitDamage(primary, 10f, false), false, chalk, _player.BeginAttack(chalk, 10f), 10f);
         float slowedPrimary = before - Hp(neighbour);
-        Check(Near(slowedNeighbour, 5.2f) && Near(slowedPrimary, 5f),
-            $"Forme des Craies : un coup de l'arme résolu sur sa cible ; Épingle +4 % si elle est ralentie ({slowedNeighbour:0.00}), rien de la cible principale ({slowedPrimary:0.00})");
+        Check(Near(slowedNeighbour, 6.75f) && Near(slowedPrimary, 5f),
+            $"Forme des Craies : un coup de l'arme résolu sur sa cible ; Épingle +35 % si elle est ralentie ({slowedNeighbour:0.00}), rien de la cible principale ({slowedPrimary:0.00})");
 
         FieldInfo pending = typeof(Player).GetField("_lifestealPending", Private);
         Raise("paille_tordue", 1);
@@ -59,7 +59,7 @@ public partial class ObjectsRegression
         Check(Near((float)pending.GetValue(_player), 5f * _player.Lifesteal),
             $"Forme des Craies : ses dégâts nourrissent le vol de vie de la Paille tordue ({(float)pending.GetValue(_player):0.000})");
 
-        Raise("allumette_humide", 30);
+        Raise("allumette_humide", 1);
         _player.ObjectTriggers.Rng.Seed = 21;
         int burns = 0;
         const int trials = 2000;
@@ -70,9 +70,8 @@ public partial class ObjectsRegression
             burns += neighbour.IsBurning ? 1 : 0;
         }
         float share = burns / (float)trials;
-        AttackContext burnSource = (AttackContext)IgniteSource.GetValue(neighbour);
-        Check(share > 0.78f && share < 0.84f && burnSource.Kind == DamageKind.Passive,
-            $"Forme des Craies : l'Allumette niveau 30 enflamme la cible de la forme ({share:P0}, 90 % × coefficient 0,9) ; la Brûlure reste celle d'un objet");
+        Check(share == 0f,
+            "Forme secondaire des Craies : aucun déclenchement de l’Allumette sur le voisin");
         primary.QueueFree();
         neighbour.QueueFree();
     }
@@ -80,8 +79,8 @@ public partial class ObjectsRegression
     private void CheckWeaponKills()
     {
         Setup();
-        Raise("petard_mouille", 15);
-        Raise("de_a_coudre", 15);
+        Raise("petard_mouille", 2);
+        Raise("de_a_coudre", 2);
         _player.DisableDefenseForTests();
         _player.TakeDamage(60f);
         _player.AddWeapon(WeaponDataLoader.Get("heavy_hammer"));
@@ -103,23 +102,24 @@ public partial class ObjectsRegression
 
         (float heal, float blast) Kill(int scene, System.Action killer)
         {
+            _player.ObjectTriggers.AdvanceClock(1.01f);
             float playerHp = _player.CurrentHp;
             float neighbourHp = Hp(neighbours[scene]);
             killer();
             float result = neighbourHp - Hp(neighbours[scene]);
-            // Vide la seconde explosion du palier avant la scène suivante.
+            // Avance l’horloge sans déclencher une seconde explosion.
             process.Invoke(_player.ObjectTriggers, new object[] { 0.3 });
             return (_player.CurrentHp - playerHp, result);
         }
 
         (float heal, float blast) echo = Kill(0, () => victims[0].TakeDamage(2f, source: hit.As(DamageKind.SecondaryWeapon)));
-        Check(Near(echo.heal, 1.5f) && Near(echo.blast, 3f),
-            $"Élimination par un écho d'arme : le Dé à coudre soigne ({echo.heal:0.00}), le Pétard explose à 150 % du coup ({echo.blast:0.00})");
+        Check(Near(echo.heal, 1f) && Near(echo.blast, 4f),
+            $"Élimination par un écho d'arme : le Dé à coudre soigne ({echo.heal:0.00}), le Pétard explose à 200 % du coup ({echo.blast:0.00})");
 
         victims[1].ApplyBleed(30f, 1f, hit);
         (float heal, float blast) bleed = Kill(1, () => typeof(Enemy).GetMethod("ProcessBleed", Private).Invoke(victims[1], new object[] { 0.05f }));
-        Check(victims[1].IsDying && Near(bleed.heal, 1.5f) && Near(bleed.blast, 30f),
-            $"Élimination par un saignement d'arme : soin ({bleed.heal:0.00}) et explosion à 150 % du coup d'arme qui l'a posé, pas du dernier tic ({bleed.blast:0.0})");
+        Check(victims[1].IsDying && Near(bleed.heal, 1f) && Near(bleed.blast, 40f),
+            $"Élimination par un saignement d'arme : soin ({bleed.heal:0.00}) et explosion à 200 % du coup d'arme qui l'a posé, pas du dernier tic ({bleed.blast:0.0})");
 
         GroundFire fire = new();
         fire.Add(victims[2].GlobalPosition, 5f, 2f, 10f, 0.5f, hit.As(DamageKind.DamageOverTime));
@@ -128,7 +128,7 @@ public partial class ObjectsRegression
             fire.Process(0.5f);
             typeof(Enemy).GetMethod("ProcessIgnite", Private).Invoke(victims[2], new object[] { 0.2f });
         });
-        Check(victims[2].IsDying && Near(flame.heal, 1.5f) && Near(flame.blast, 30f),
+        Check(victims[2].IsDying && Near(flame.heal, 1f) && Near(flame.blast, 40f),
             $"Élimination dans le feu de la Lampe : une élimination par l'arme ({flame.heal:0.00} PV, explosion {flame.blast:0.0})");
 
         victims[3].ApplyIgnite(30f, 1f, hit.As(DamageKind.Passive));
@@ -142,7 +142,7 @@ public partial class ObjectsRegression
         RefreshEnemyCache();
         float thirdHp = Hp(third);
         (float heal, float blast) chain = Kill(4, () => victims[4].TakeDamage(20f, source: hit));
-        Check(neighbours[4].IsDying && Near(chain.heal, 1.5f) && Near(Hp(third), thirdHp),
+        Check(neighbours[4].IsDying && Near(chain.heal, 1f) && Near(Hp(third), thirdHp),
             $"Une mort par l'explosion du Pétard ne soigne pas et ne réexplose pas ({chain.heal:0.00} PV rendus, voisin suivant intact)");
 
         foreach (Enemy enemy in victims)

@@ -18,6 +18,9 @@ public sealed class ObjectUtilities
     private readonly Player _player;
     private float _revives;
     private float _extraCards;
+    private float _blinkCopies;
+    private float _blinkBaseDistance;
+    private float _blinkDistancePerCopy;
 
     public ObjectUtilities(Player player) => _player = player;
 
@@ -39,6 +42,11 @@ public sealed class ObjectUtilities
     {
         foreach (PassiveEffectData effect in data.Effects)
         {
+            if (effect.Stat == DashBlinkStat)
+            {
+                _blinkBaseDistance = data.Parameters["base_distance"];
+                _blinkDistancePerCopy = data.Parameters["distance_per_copy"];
+            }
             if (effect.Stat != ReviveStat)
                 continue;
             ReviveItemId = data.Id;
@@ -55,7 +63,8 @@ public sealed class ObjectUtilities
             case ReviveStat: _revives = ObjectTriggers.Settle(_revives + change); break;
             case ExtraCardsStat: _extraCards = ObjectTriggers.Settle(_extraCards + change); break;
             case DashBlinkStat:
-                BlinkDistance = ObjectTriggers.Settle(BlinkDistance + change);
+                _blinkCopies = ObjectTriggers.Settle(_blinkCopies + change);
+                BlinkDistance = _blinkCopies > 0f ? _blinkBaseDistance + _blinkDistancePerCopy * (_blinkCopies - 1f) : 0f;
                 _player.Mobility.BlinkDistance = BlinkDistance;
                 break;
         }

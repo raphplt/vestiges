@@ -100,8 +100,8 @@ public partial class ObjectsRegression
         ProcessDisorientMethod(enemy, 3f);
         enemy.Freeze(1f);
         float frozen = _player.ResolveHitDamage(enemy, 10f, false);
-        Check(Near(plain, 10f) && Near(disoriented, 10.4f) && Near(frozen, 10.4f),
-            $"Épingle à nourrice niveau 1 : +4 % contre une cible désorientée ({disoriented:0.00}) ou figée ({frozen:0.00}), rien sinon ({plain:0.00})");
+        Check(Near(plain, 10f) && Near(disoriented, 13.5f) && Near(frozen, 13.5f),
+            $"Épingle à nourrice : +35 % contre une cible désorientée ({disoriented:0.00}) ou figée ({frozen:0.00}), rien sinon ({plain:0.00})");
 
         FreezeTimer.SetValue(enemy, 0.5f);
         enemy.ExtendSlow(1f, 4f);
@@ -109,7 +109,7 @@ public partial class ObjectsRegression
         for (int i = 0; i < 5; i++)
             enemy.ExtendSlow(1f, 4f);
         Check(extended && Near((float)FreezeTimer.GetValue(enemy), 4f),
-            "Épingle à nourrice palier 15 : un voisin seulement figé voit sa pause prolongée de 1 s, 4 s au plus");
+            "Statut figé : extension explicite de 1 s, plafonnée à 4 s (aucune activation par l’Épingle)");
         enemy.QueueFree();
     }
 

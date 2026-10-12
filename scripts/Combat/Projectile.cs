@@ -262,7 +262,7 @@ public partial class Projectile : Area2D, ITicked
         else if (_homingStrength > 0f && _homingTarget.TryGet(out Node2D homingTarget))
         {
             Vector2 toTarget = (homingTarget.GlobalPosition - GlobalPosition).Normalized();
-            _direction = _direction.Lerp(toTarget, _homingStrength * dt * 5f).Normalized();
+            _direction = _direction.Lerp(toTarget, Mathf.Min(1f, _homingStrength * dt * 5f)).Normalized();
         }
         else if (_homingStrength > 0f)
         {

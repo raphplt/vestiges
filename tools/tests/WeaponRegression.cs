@@ -638,10 +638,10 @@ public partial class WeaponRegression : Node2D
         WeaponInstance box = FindSlot("music_box") ?? AddAndFind("music_box");
         MethodInfo setup = typeof(Player).GetMethod("SetupOrbitalWeapon", Private);
         List<Node2D> orbs = (List<Node2D>)typeof(Player).GetField("_orbitalProjectiles", Private).GetValue(_player);
-        box.ApplyUpgrade(new[] { new StatGain("orbital_count", 0.5f) });
+        box.ApplyUpgrade(new[] { new StatGain("projectile_count", 0.5f) });
         setup.Invoke(_player, new object[] { box });
         int half = orbs.Count;
-        box.ApplyUpgrade(new[] { new StatGain("orbital_count", 0.5f) });
+        box.ApplyUpgrade(new[] { new StatGain("projectile_count", 0.5f) });
         setup.Invoke(_player, new object[] { box });
         int whole = orbs.Count;
         HashSet<Node2D> distinct = new(orbs);
@@ -1171,7 +1171,7 @@ public partial class WeaponRegression : Node2D
         {
             string count = data.AttackPattern switch
             {
-                AttackPatternKind.Orbital => "orbital_count",
+                AttackPatternKind.Orbital => "projectile_count",
                 AttackPatternKind.Chain or AttackPatternKind.Bounce => "chain_targets",
                 _ => "projectile_count",
             };

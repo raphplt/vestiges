@@ -21,6 +21,13 @@ public partial class EventBus : Node
     public event System.Action<Combat.EnemyKillResult> EnemyKillResolved;
     public event System.Action<HealingResult> PlayerHealingResolved;
     public event System.Action<PlayerDamageResult> PlayerDamageResolved;
+    public event System.Action<PlayerDashEvent> PlayerDashStarted;
+    public event System.Action<PlayerDashEvent> PlayerDashMoved;
+    public event System.Action<PlayerDashEvent> PlayerDashFinished;
+    public void PublishDashStarted(PlayerDashEvent dash) => PlayerDashStarted?.Invoke(dash);
+    public void PublishDashMoved(PlayerDashEvent dash) => PlayerDashMoved?.Invoke(dash);
+    public void PublishDashFinished(PlayerDashEvent dash) => PlayerDashFinished?.Invoke(dash);
+
 
     public void PublishEnemyDamage(Combat.DamageResult result) => EnemyDamageResolved?.Invoke(result);
     public void PublishEnemyKill(Combat.EnemyKillResult result) => EnemyKillResolved?.Invoke(result);

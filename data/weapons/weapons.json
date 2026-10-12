@@ -704,7 +704,7 @@
       "family": "hybrid"
     },
     "summary": "Des notes tournent autour de toi.",
-    "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5, "orbital_count": 1.25 },
+    "growth": { "damage": 3, "range": 1.5, "orbital_speed": 1.5, "projectile_count": 1.25 },
     "ascensions": [
       {
         "id": "round",
@@ -736,7 +736,7 @@
       "damage": 7,
       "attack_speed": 0.0,
       "range": 90,
-      "orbital_count": 3,
+      "projectile_count": 3,
       "orbital_speed": 180
     },
     "source": "loot_epic",

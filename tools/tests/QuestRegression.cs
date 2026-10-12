@@ -13,7 +13,7 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 49 quêtes et fixtures
+/// Quêtes de déblocage (plan 06 §9) dans un profil neuf et isolé. Lot Q1 : catalogue des 64 quêtes et fixtures
 /// refusées, réserve de départ appliquée par l'offre de niveau et le butin, quête accomplie et avancée retenue
 /// identiques après rechargement. Lot Q2 (<c>--tracking</c>) : suivi en run, voir QuestRegression.Tracking.
 /// </summary>
@@ -31,6 +31,9 @@ public partial class QuestRegression : Node
         "memoire_vive", "resonance", "portee_etendue", "persistance", "ancrage", "regeneration", "instinct",
         "siphon_essence", "photo_de_classe", "jeton_de_fete", "allumette_humide", "glacon", "de_a_coudre",
         "semelle_usee", "chewing_gum", "plan_de_metro", "flacon_de_pharmacie", "montre_arretee",
+        "lacets_noues", "pastille_mentholee", "gros_bouton", "agrafe_rouillee", "bons_points", "bande_magnetique",
+        "petite_cle", "compas", "ruban_gradue", "verre_fele", "ressort", "boucle_cabossee", "diapositive_en_double",
+        "flechette_mousse", "etiquette_perdue", "sonnette", "tampon_annule", "carnet_dadresses", "cassette_rembobinee",
     };
 
     /// <summary>Réserve de départ des Réminiscences (plan 37 H4) : une par famille de la première offre.</summary>
@@ -87,15 +90,15 @@ public partial class QuestRegression : Node
             if (QuestBook.IsDormant(quest))
                 dormant++;
         }
-        Check(quests.Count == 49, $"49 quêtes ({quests.Count})");
-        Check(difficulties[1] == 15 && difficulties[2] == 27 && difficulties[3] == 7,
-            $"15 ★, 27 ★★, 7 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
-        Check(cumulative == 10, $"dix quêtes de cumul ({cumulative})");
+        Check(quests.Count == 64, $"64 quêtes ({quests.Count})");
+        Check(difficulties[1] == 20 && difficulties[2] == 34 && difficulties[3] == 10,
+            $"20 ★, 34 ★★, 10 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
+        Check(cumulative == 18, $"dix-huit quêtes de cumul ({cumulative})");
         Check(unlocks[UnlockKind.Reminiscence] == 11 && dormant == 7,
             $"11 Réminiscences par quête, dont 7 en attente de leur effet ({unlocks[UnlockKind.Reminiscence]}, {dormant})");
-        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 14
+        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 29
             && unlocks[UnlockKind.Badge] == 6,
-            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 14 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
+            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 29 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
         // Traqueur de départ, Vagabond gagné par la chasse (plan 41 R6, DECISIONS §129 ter).
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow") == null,
             "l'arc du Traqueur, personnage de départ, est libre");
@@ -138,7 +141,7 @@ public partial class QuestRegression : Node
                 QuestDataLoader.ReminiscenceExists);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"quêtes refusées ({label}) : {message}");
         }
-        Check(QuestDataLoader.GetAll().Count == 49, "un fichier refusé ne remplace pas le catalogue chargé");
+        Check(QuestDataLoader.GetAll().Count == 64, "un fichier refusé ne remplace pas le catalogue chargé");
     }
 
     private void CheckStartingPool()
@@ -154,7 +157,22 @@ public partial class QuestRegression : Node
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
             if (MetaSaveManager.IsObjectUnlocked(item.Id))
                 objects.Add(item.Id);
-        Check(objects.SetEquals(StartingObjects), $"profil neuf : les 18 objets de départ ({objects.Count})");
+        Check(objects.SetEquals(StartingObjects), $"profil neuf : 27 objets et 10 Écussons de départ ({objects.Count})");
+        int pending = 0, epics = 0, legendaries = 0;
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+        {
+            if (item.IsBadge) continue;
+            if (!item.InitialUnlock)
+            {
+                pending++;
+                Check(QuestDataLoader.FindUnlocking(UnlockKind.Object, item.Id) != null
+                    && !MetaSaveManager.IsObjectUnlocked(item.Id), $"{item.Id} : quête active requise au profil neuf");
+            }
+            if (objects.Contains(item.Id) && item.Rarity == "epic") epics++;
+            if (objects.Contains(item.Id) && item.Rarity == "legendary") legendaries++;
+        }
+        Check(pending == 15 && epics >= 3 && legendaries >= 2 && objects.Contains("verre_fele"),
+            "quinze nouveaux accès réservés ; trois épiques, deux légendaires et le critique accessibles au profil neuf");
 
         List<string> characters = new();
         foreach (CharacterData character in CharacterDataLoader.GetAll())
@@ -210,6 +228,18 @@ public partial class QuestRegression : Node
 
     private void CheckClaimAndReload()
     {
+        PassiveSouvenirData reserved = PassiveSouvenirDataLoader.Get("thermometre");
+        bool initialUnlock = reserved.InitialUnlock;
+        reserved.InitialUnlock = false;
+        try
+        {
+            QuestDefinition itemQuest = QuestDataLoader.FindUnlocking(UnlockKind.Object, reserved.Id);
+            bool closed = !MetaSaveManager.IsObjectUnlocked(reserved.Id);
+            MetaSaveManager.ClaimQuest(itemQuest, out _);
+            Check(closed && MetaSaveManager.IsObjectUnlocked(reserved.Id),
+                "une quête accomplie ouvre un objet même avec initial_unlock=false");
+        }
+        finally { reserved.InitialUnlock = initialUnlock; }
         string meta = ProjectSettings.GlobalizePath(DevelopmentMode.GetSavePath("meta_save.json"));
         QuestDefinition hunt = QuestDataLoader.Get("lead_the_hunt");
         Check(MetaSaveManager.ClaimQuest(hunt, out SaveFile.WriteResult saved) && saved.Succeeded, "quête accomplie, écrite aussitôt");

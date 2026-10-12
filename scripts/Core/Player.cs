@@ -80,6 +80,10 @@ public partial class Player : CharacterBody2D
     private AnimatedSprite2D _sprite;
     private PlayerAttackFx _attackFx;
     private bool _hasSprite;
+    private bool _itemDashActive;
+    private Vector2 _itemDashStart;
+    private bool _itemDashBlink;
+
     private enum SpriteAction { Idle, Walk, Hurt, Death, Dash }
     private static readonly string[] SpriteActionNames = { "idle", "walk", "hurt", "death", "dash" };
     private readonly CharacterFacing _facing = new();
@@ -227,6 +231,7 @@ public partial class Player : CharacterBody2D
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.GameStateChanged += OnMovementGameStateChanged;
+        _eventBus.EnemyDamageResolved += CollectLifesteal;
         _eventBus.PlayerErasurePhaseChanged += OnErasurePhaseChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
     }
@@ -237,6 +242,7 @@ public partial class Player : CharacterBody2D
         {
             _eventBus.PlayerErasurePhaseChanged -= OnErasurePhaseChanged;
             _eventBus.GameStateChanged -= OnMovementGameStateChanged;
+            _eventBus.EnemyDamageResolved -= CollectLifesteal;
         }
     }
 
@@ -570,9 +576,11 @@ public partial class Player : CharacterBody2D
         {
             // Le saut a parcouru sa longueur en une image : sa vitesse ne doit pas guider les tirs visés.
             Velocity = Vector2.Zero;
-            _objectTriggers?.OnBlink(previousPosition, GlobalPosition);
+
         }
         Mobility.FinishMovement(movementVelocity);
+        PublishItemDash(previousPosition, dashMovement);
+
         _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
@@ -754,6 +762,51 @@ public partial class Player : CharacterBody2D
 
     public bool IsOnWater() => GetCurrentTerrain() == TerrainType.Water;
 
+
+    /// <summary>Un seul flux de dash, partagé par tous les objets ; aucun consommateur ne reconstitue un saut depuis la vitesse.</summary>
+    private void PublishItemDash(Vector2 previous, bool moved)
+    {
+        if (Mobility.StartedThisStep)
+        {
+            _itemDashActive = true;
+            _itemDashStart = previous;
+            _itemDashBlink = Mobility.BlinkedThisStep;
+            _eventBus.PublishDashStarted(new(GetInstanceId(),previous,previous,_itemDashBlink));
+        }
+        if (_itemDashActive && moved)
+            _eventBus.PublishDashMoved(new(GetInstanceId(),previous,GlobalPosition,_itemDashBlink));
+        if (_itemDashActive && !Mobility.IsDashing)
+        {
+            _itemDashActive = false;
+            _eventBus.PublishDashFinished(new(GetInstanceId(),_itemDashStart,GlobalPosition,_itemDashBlink));
+        }
+    }
+
+    /// <summary>Les échanges de statistiques du sac changent les maxima, jamais les soins ou la charge déjà disponibles.</summary>
+    private void ApplyItemModifier(string stat, float value, string modifierType)
+    {
+        if (stat == "max_hp" && modifierType == "additive")
+        {
+            _bonusMaxHp += value;
+            _currentHp = Mathf.Min(_currentHp,EffectiveMaxHp);
+            _eventBus?.EmitSignal(EventBus.SignalName.PlayerDamaged,_currentHp,EffectiveMaxHp);
+        }
+        else if (stat == "shield" && modifierType == "additive")
+        {
+            _defense.AddShield(value,refill: false);
+            EmitShield();
+        }
+        else if (!ApplyWeaponItemModifier(stat, value, modifierType)) ApplyPerkModifier(stat,value,modifierType);
+    }
+
+    /// <summary>Les PV réellement perdus, sans surkill ni dégâts d’objets, financent le vol de vie.</summary>
+    private void CollectLifesteal(DamageResult hit)
+    {
+        if (!_isDead && hit.Applied && hit.Source.OwnerId == GetInstanceId()
+            && hit.Source.Weapon != null && hit.Source.Kind is DamageKind.DirectWeapon or DamageKind.SecondaryWeapon)
+            _lifestealPending += hit.HpLost * _lifesteal;
+    }
+
     // --- Stat Modifiers ---
 
     public void ApplyPerkModifier(string stat, float value, string modifierType)
@@ -832,7 +885,11 @@ public partial class Player : CharacterBody2D
                 if (modifierType == "multiplicative") Mobility.RechargeMultiplier *= value;
                 break;
             case "projectile_bonus":
-                if (modifierType == "additive") _bonusProjectiles += value;
+                if (modifierType == "additive")
+                {
+                    _bonusProjectiles += value;
+                    if (_orbitalWeapon != null) SetupOrbitalWeapon(_orbitalWeapon);
+                }
                 break;
             case "status_duration":
                 if (modifierType == "multiplicative") _statusDurationMultiplier *= value;
@@ -871,7 +928,6 @@ public partial class Player : CharacterBody2D
             _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
         if (source != null)
             _weaponLedger.AddDamage(source.Id, damage);
-        _lifestealPending += damage * _lifesteal;
         if (context.OwnerId == 0)
             context = BeginAttack(source, damage);
 
@@ -906,7 +962,7 @@ public partial class Player : CharacterBody2D
             _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context, isCrit, damage);
 
         // --- Weapon knockback ---
-        float knockback = source?.GetStat("knockback") ?? 0f;
+        float knockback = source == null ? 0f : GetModifiedWeaponStat(source, "knockback");
         if (knockback > 0f)
         {
             Vector2 knockDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
@@ -939,7 +995,6 @@ public partial class Player : CharacterBody2D
             if (enemy.ClaimKillCredit())
                 _weaponLedger.AddKill(source.Id);
         }
-        _lifestealPending += damage * _lifesteal;
         _objectTriggers?.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, 1, secondary, dealt: damage);
     }
 
@@ -1086,7 +1141,7 @@ public partial class Player : CharacterBody2D
     private void SetupOrbitalWeapon(WeaponInstance weapon)
     {
         // Une orbe ne peut pas apparaître une attaque sur deux : seule la partie entière compte (plan 23 R4).
-        int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(weapon.GetStat("orbital_count")));
+        int orbitalCount = Mathf.Max(1, Mathf.FloorToInt(GetWeaponStatForDisplay(weapon, "projectile_count")));
         // Recréées aussi quand la taille change : contact et note suivent la stat de taille.
         if (_orbitalWeapon == weapon && _orbitalProjectiles.Count == orbitalCount && Mathf.IsEqualApprox(_orbitalSize, _aoeMultiplier))
             return;
@@ -1121,7 +1176,7 @@ public partial class Player : CharacterBody2D
         if (_orbitalProjectiles.Count == 0 || _orbitalWeapon == null)
             return;
 
-        float orbitalSpeed = _orbitalWeapon.GetStat("orbital_speed");
+        float orbitalSpeed = GetModifiedWeaponStat(_orbitalWeapon, "orbital_speed");
         // Le rayon d'orbite est une portée : il suit les bonus de portée, comme l'allonge des coups.
         float orbitalRadius = GetEffectiveWeaponRange(_orbitalWeapon) * OrbitPulse(_orbitalWeapon, delta);
         _orbitalAngle += Mathf.DegToRad(orbitalSpeed) * delta;
@@ -1151,7 +1206,7 @@ public partial class Player : CharacterBody2D
         if (_orbitalWeapon == null || !enemy.IsActive || enemy.IsDying || enemy.IsBurrowed)
             return;
         PlayWeaponSound(_orbitalWeapon);
-        float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon);
+        float rawDamage = ComputeBaseAttackDamage(_orbitalWeapon) * (_objectTriggers?.ConsumeStride() ?? 1f);
         float damage = ResolveHitDamage(enemy, rawDamage, false);
         AttackContext context = BeginAttack(_orbitalWeapon, damage);
         enemy.TakeDamage(damage, source: context);
@@ -1670,7 +1725,8 @@ public partial class Player : CharacterBody2D
     // --- Chest Opening ---
 
     /// <summary>Écran de roulette des coffres.</summary>
-    public void ConfigureLoot(UI.ChestLootScreen lootScreen) => _interaction.Configure(lootScreen);
+    public void ConfigureLoot(UI.ChestLootScreen lootScreen, EssenceTracker essence = null, UI.ChoiceScreen choices = null)
+        => _interaction.Configure(lootScreen, essence, choices);
 
     /// <summary>
     /// Texte flottant montrant le loot obtenu, empilé verticalement, centré sur le point. Au-dessus des entités (couche
@@ -2343,12 +2399,15 @@ public partial class Player : CharacterBody2D
         "attack_speed" => AttackSpeed * weapon.GetStat("attack_speed") * _attackSpeedMultiplier,
         "range" => weapon.AttackPattern == AttackPatternKind.Circular ? ZoneScale(GetEffectiveWeaponRange(weapon)) : GetEffectiveWeaponRange(weapon),
         "arc_angle" => Mathf.Min(360f, ZoneScale(weapon.GetStat("arc_angle"))),
-        "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat("cone_angle_end"))),
+        "cone_angle_start" or "cone_angle_end" => Mathf.Min(180f, ZoneScale(weapon.GetStat(key))),
+        "projectile_count" when weapon.SpecialEffect?.Kind == SpecialEffectKind.SustainedCone
+            || weapon.AttackPattern != AttackPatternKind.Chain =>
+                Mathf.Max(1f, weapon.GetStat("projectile_count")) + _bonusProjectiles * weapon.BonusProjectileMultiplier,
         "projectile_pierce" => weapon.GetStat("projectile_pierce") + _projectilePierce,
-        _ => weapon.GetStat(key),
+        _ => GetModifiedWeaponStat(weapon, key),
     };
 
-    private float GetWeaponStat(string key) => _equippedWeapon?.GetStat(key) ?? WeaponContract.StatDefault(key);
+    private float GetWeaponStat(string key) => _equippedWeapon == null ? WeaponContract.StatDefault(key) : GetModifiedWeaponStat(_equippedWeapon, key);
 
     private void PlayAttackSound()
     {

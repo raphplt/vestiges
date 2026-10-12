@@ -342,7 +342,7 @@ public partial class HubScreen : Control
 		_charactersPanel.QuestRequested += OpenQuest;
 		_charactersPanel.WeaponRequested += id => OpenReward((int)UnlockKind.Weapon, id);
 		_campPanel = new HubCampUpgradesPanel();
-		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 120f, -140f, -160f);
+		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 120f, -140f, -88f);
 		_questsPanel = new HubQuestsPanel();
 		AddPage(HubState.Quests, "Quêtes", _questsPanel, 120f, -140f, -160f);
 		_questsPanel.RewardRequested += OpenReward;
@@ -357,16 +357,19 @@ public partial class HubScreen : Control
 		layer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		AddChild(layer);
 
-		MenuSkin.AddBackdrop(layer);
+		bool camp = state == HubState.Camp;
+		MenuSkin.AddBackdrop(layer, brightness: camp ? 0.52f : 1f);
 		// Chaque page est une destination à part : un titre, pas d'onglets vers les autres (DECISIONS §117).
 		Label heading = CreateLabel(title, TextRole.Title, UITheme.GoldBright, true);
 		heading.Name = "PageTitle";
-		heading.Position = new Vector2(MenuLeft + 36f, 96f);
+		heading.Position = new Vector2(MenuLeft + 36f, camp ? 32f : 96f);
+		if (camp) CampTypography.Apply(heading, TextRole.Title, true);
 		layer.AddChild(heading);
-		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, 970f) };
+		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, camp ? 1012f : 970f) };
 		layer.AddChild(back);
 		HubMenuButton backButton = new();
 		backButton.Setup("Retour", TextRole.Title, _bodyFont);
+		if (camp) CampTypography.Apply(backButton, TextRole.Heading);
 		backButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
@@ -377,7 +380,7 @@ public partial class HubScreen : Control
 		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		panel.OffsetLeft = left;
 		panel.OffsetRight = right;
-		panel.OffsetTop = 180f;
+		panel.OffsetTop = camp ? 108f : 180f;
 		panel.OffsetBottom = bottom;
 		layer.AddChild(panel);
 		_pages[state] = (layer, backButton, _openers.GetValueOrDefault(state));

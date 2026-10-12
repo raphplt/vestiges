@@ -40,6 +40,7 @@ public class PounceAbility : IEnemyAbility
     private bool _hasHit;
 
     public bool ReplacesBaseAttack => false;
+    public bool IsActive => _phase != Phase.Ready;
 
     public PounceAbility(Enemy owner, string markerName)
     {

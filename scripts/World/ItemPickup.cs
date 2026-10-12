@@ -27,6 +27,10 @@ public partial class ItemPickup : Area2D, IInteractable
     private bool _collected;
     private ItemExchange _exchange;
     private string _prompt;
+    private GroupCache _groups;
+    private ErasureManager _erasure;
+    private float _age;
+    private float _lifetimeCheck;
 
     public string ItemId => _item?.Id;
     public bool CanInteract => !_collected;
@@ -35,7 +39,7 @@ public partial class ItemPickup : Area2D, IInteractable
     // Lu à chaque pas physique tant que le joueur est à portée : composé une fois, l'objet ne change pas.
     public string PromptVerbKey => _prompt ??= string.Format(Tr("ITEM_EXCHANGE_PROMPT"), _item?.Name ?? "");
     public float HoldTime => ExchangeHoldSec;
-    public Color GaugeColor => UITheme.CyanEssence;
+    public Color GaugeColor => RarityPalette.Main(_item?.Rarity ?? "common");
 
     public void Initialize(PassiveSouvenirData item, Vector2 position, ItemExchange exchange)
     {
@@ -56,7 +60,7 @@ public partial class ItemPickup : Area2D, IInteractable
         AddChild(shape);
         PixelGroundRing ring = new() { Name = "Ring" };
         AddChild(ring);
-        ring.Show(UITheme.CyanEssence, RingRadius);
+        ring.Show(GaugeColor, RingRadius);
         _visualRoot = new Node2D();
         AddChild(_visualRoot);
         _visual = new Sprite2D
@@ -67,16 +71,24 @@ public partial class ItemPickup : Area2D, IInteractable
         };
         _visualRoot.AddChild(_visual);
         BodyEntered += OnBodyEntered;
-        GetTree().CreateTimer(DespawnTime, false).Timeout += () =>
-        {
-            if (!_collected && IsInstanceValid(this))
-                Despawn();
-        };
+        _groups = GetNodeOrNull<GroupCache>("/root/GroupCache");
+        _erasure = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager");
         AddToGroup("item_pickups");
     }
 
     public override void _Process(double delta)
     {
+        if (_collected) return;
+        _age += (float)delta;
+        _lifetimeCheck -= (float)delta;
+        if (_lifetimeCheck <= 0f)
+        {
+            _lifetimeCheck = .25f;
+            bool erased = _erasure != null && GodotObject.IsInstanceValid(_erasure)
+                && _erasure.GetZonePhaseAt(GlobalPosition) == ErasureManager.ErasureZonePhase.Void;
+            if (erased || _age >= DespawnTime + WorldItemEffects.ExtraItemSeconds(_groups?.GetPlayer() as Player))
+            { Despawn(); return; }
+        }
         _bobTimer += (float)delta * BobSpeed;
         _visualRoot.Position = new Vector2(0, Mathf.Round(Mathf.Sin(_bobTimer) * BobAmplitude));
     }

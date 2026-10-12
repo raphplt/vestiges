@@ -40,11 +40,14 @@ public partial class ItemExchange : Node
                 Title = $"{item.Data.Name}  ×{item.Copies}",
                 Icon = LoadIcon(item.Data.Icon),
             };
-            card.Lines.Add((item.Data.RuleText(), ChoiceStyle.TextColor));
+            ItemPresentation.ConfigureCard(card, item.Data);
+            card.Tag = Tr("ITEM_EXCHANGE_FORGET") + " · " + ItemPresentation.RarityText(item.Data);
+            card.Lines.Add(($"Actuel : {ItemPresentation.Describe(item.Data, item.Copies)}", ChoiceStyle.TextColor));
+            card.Lines.Add(($"Après oubli : {ItemPresentation.Describe(item.Data, item.Copies - 1)}", ChoiceStyle.TextDim));
             cards.Add(card);
             forgettable.Add(item.Id);
         }
-        string subtitle = string.Format(Tr("ITEM_EXCHANGE_SUBTITLE"), incoming.Name, incoming.RuleText());
+        string subtitle = string.Format(Tr("ITEM_EXCHANGE_SUBTITLE"), incoming.Name + " · " + ItemPresentation.RarityText(incoming), ItemPresentation.Describe(incoming, (player.FindObject(incoming.Id)?.Copies ?? 0) + 1));
         _choices.Open(string.Format(Tr("ITEM_EXCHANGE_TITLE"), player.BagCount, player.BagCapacity), subtitle, cards,
             Tr("ITEM_EXCHANGE_LEAVE"), choice =>
             {

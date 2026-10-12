@@ -43,6 +43,8 @@ public partial class QuestRegression
         List<string> enRoute = new();
         foreach (QuestDefinition quest in QuestDataLoader.GetAll())
         {
+            if (quest.Id.StartsWith("item_", StringComparison.Ordinal))
+                continue;
             if (MetaSaveManager.HasCompletedQuest(quest.Id))
             {
                 enRoute.Add(quest.Id);
@@ -79,6 +81,7 @@ public partial class QuestRegression
         // run, en chemin vers Compter les Résurgences). Les 35 autres l'ont été chacune par son propre jeu.
         Check(tested == 35, $"35 quêtes contrôlées une à une, aucune autre accomplie en chemin ({tested} ; en chemin : {string.Join(", ", enRoute)})");
         CheckToastQueue();
+        CheckObjectQuestsV2();
         _bus.QuestCompleted -= OnQuestCompleted;
     }
 

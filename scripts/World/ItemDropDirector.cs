@@ -49,7 +49,8 @@ public partial class ItemDropDirector : Node
         int count = kill.Sovereign ? InventoryConfig.SovereignItems
             : kill.Elite && _rng.Randf() < InventoryConfig.EliteItemChance ? 1 : 0;
         for (int i = 0; i < count; i++)
-            Drop(kill.Position + new Vector2(18f * i, 0f));
+            Drop(kill.Position + new Vector2(18f * i, 0f), LootRewards.PickUnlockedItem(_groupCache?.GetPlayer() as Player,
+                _rng, source: kill.Sovereign ? "sovereign" : "elite"));
     }
 
     /// <summary>Pose un objet débloqué que le joueur peut encore cumuler, au hasard ; rien si aucun ne l'est.</summary>

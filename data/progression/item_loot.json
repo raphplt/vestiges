@@ -1,0 +1,17 @@
+{
+  "_comment": "Poids en pourcent par source, à Chance zéro. La Chance ne modifie que les coffres. Prix initiaux du plan 35, à éprouver en partie.",
+  "sources": {
+    "generic": {"common":60,"uncommon":25,"rare":11,"epic":3.5,"legendary":0.5},
+    "chest_common": {"common":60,"uncommon":25,"rare":11,"epic":3.5,"legendary":0.5},
+    "chest_rare": {"common":0,"uncommon":55,"rare":32,"epic":11,"legendary":2},
+    "chest_epic": {"common":0,"uncommon":0,"rare":70,"epic":25,"legendary":5},
+    "chest_lore": {"common":0,"uncommon":55,"rare":32,"epic":11,"legendary":2},
+    "elite": {"common":35,"uncommon":35,"rare":22,"epic":7,"legendary":1},
+    "sovereign": {"common":0,"uncommon":0,"rare":65,"epic":30,"legendary":5},
+    "workshop": {"common":30,"uncommon":40,"rare":20,"epic":9,"legendary":1}
+  },
+  "chest_costs": {"common":20,"rare":45,"epic":90,"lore":45},
+  "chest_cost_growth_per_minute":0.08,
+  "chest_luck_exponent_per_rank":1,
+  "workshop_costs":{"common":120,"uncommon":150,"rare":210,"epic":360,"legendary":600}
+}

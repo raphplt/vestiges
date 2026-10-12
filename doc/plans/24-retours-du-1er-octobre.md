@@ -271,6 +271,17 @@ inspectées à 720p/1080p ; build zéro warning, smoke, Campement, navigation et
 UI art 4/4 verts avec le plan 36 M5. Preuves :
 `/tmp/vestiges-menus-camp-m5-validation/` et captures référencées au plan 36.
 
+**Suite approuvée et livrée le même jour :** [plan 36 M6](36-progression-permanente.md#reprise-visuelle-m6--étude-du-12-octobre-2026).
+Raphaël demande ensuite des matières plutôt que ces illustrations : fonds
+intérieurs et chargement deviennent raccordables et procéduraux, tout comme
+les grands cadres. B5c/B5d décrivent l'étape précédente ; la matière M6 est
+le rendu courant, vérifié avec les captures et les six suites d'interface.
+
+**Clarification suivante :** [plan 36 M7](36-progression-permanente.md#reprise-visuelle-m7--clarification-du-12-octobre-2026).
+La dernière illustration convenait en fond d'écran : elle est rétablie. La
+matière M6 reste à l'intérieur des cartes et panneaux ; leurs silhouettes et
+tranches sont reprises après le retour sur les rectangles trop brutaux.
+
 ## 4. Chantier C — Tenir jusqu'à la première Résurgence
 
 Ordre voulu : **corriger l'accès aux armes d'abord, mesurer, puis seulement retoucher les créatures.** Le lot R5 a monté les PV parce que le joueur était plus fort ; avec une seule arme, il ne l'est pas.

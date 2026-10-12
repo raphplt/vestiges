@@ -17,25 +17,22 @@ public class PassiveSouvenirData
 	public string Name;
 	/// <summary>Pour un Écusson, l'objet d'où il vient (« Ressort de sommier ») ; vide sinon.</summary>
 	public string Subtitle = "";
-	/// <summary>Pour un objet, son niveau d'effet selon ses exemplaires ([0] pour un) ; vide pour un Écusson.</summary>
-	public int[] CopyLevels = System.Array.Empty<int>();
+	/// <summary>Rareté fixe de l’objet ; les Écussons suivent la rareté de leurs cartes.</summary>
+	public string Rarity = "common";
+	/// <summary>Maximum d’exemplaires ; 0 signifie illimité, la place du sac reste nécessaire.</summary>
+	public int MaxCopies;
+	/// <summary>Capacité unique explicitement limitée, même sans rareté légendaire.</summary>
+	public bool Unique;
+	/// <summary>Accès sans quête ; faux garde un nouvel objet verrouillé jusqu’à la livraison de sa quête.</summary>
+	public bool InitialUnlock = true;
+	public bool HasCopyLimit => MaxCopies > 0;
+	public bool IsCopyLimitReached(int copies) => HasCopyLimit && copies >= MaxCopies;
 
 	/// <summary>Écusson : ce que fait le joueur et qui remplit son fil (plan 35 I7) ; vide pour un objet.</summary>
 	public string UsageTrigger = "";
 	/// <summary>Quantité de <see cref="UsageTrigger"/> qui remplit le fil et donne un niveau.</summary>
 	public float UsageThreshold;
 
-	/// <summary>Exemplaires qu'un objet peut cumuler.</summary>
-	public int MaxCopies => CopyLevels.Length;
-
-	/// <summary>Exemplaires qu'il faut à un objet pour atteindre ce niveau d'effet (un palier), 0 s'il ne l'atteint jamais.</summary>
-	public int CopiesForLevel(int level)
-	{
-		for (int i = 0; i < CopyLevels.Length; i++)
-			if (CopyLevels[i] >= level)
-				return i + 1;
-		return 0;
-	}
 	public string Description;
 	public string Icon;
 	public string IconSmall;
@@ -131,13 +128,6 @@ public static class PassiveSouvenirDataLoader
 		{
 			Godot.Collections.Dictionary dict = item.AsGodotDictionary();
 			PassiveSouvenirData data = ParseEntry(dict);
-			// Les exemplaires par défaut viennent d'inventory.json : ils ne doivent pas dépasser le niveau de l'objet.
-			if (!data.IsBadge && data.CopyLevels[^1] > data.MaxLevel)
-			{
-				_loadError = $"{CatalogPath} : objet {data.Id}, exemplaires jusqu'au niveau {data.CopyLevels[^1]}, au-delà de son maximum {data.MaxLevel}";
-				GD.PushError($"[PassiveSouvenirDataLoader] {_loadError}");
-				return;
-			}
 			// Passif sans effet branché : gardé pour les sauvegardes, retiré des tirages (plan 18).
 			parsed.Add((data, !dict.ContainsKey("enabled") || dict["enabled"].AsBool()));
 		}
@@ -167,6 +157,7 @@ public static class PassiveSouvenirDataLoader
 			IconColor = new Color((float)color[0].AsDouble(), (float)color[1].AsDouble(), (float)color[2].AsDouble()),
 			MaxLevel = (int)dict["max_level"].AsDouble(),
 			Survival = dict.ContainsKey("survival") && dict["survival"].AsBool(),
+			InitialUnlock = !dict.ContainsKey("initial_unlock") || dict["initial_unlock"].AsBool(),
 			OfferWeight = dict.ContainsKey("offer_weight") ? (float)dict["offer_weight"].AsDouble() : 1f,
 		};
 		foreach (Variant entry in dict["effects"].AsGodotArray())
@@ -206,20 +197,14 @@ public static class PassiveSouvenirDataLoader
 			data.UsageThreshold = (float)usage["threshold"].AsDouble();
 		}
 		if (!data.IsBadge)
-			data.CopyLevels = dict.ContainsKey("copy_levels")
-				? ReadLevels(dict["copy_levels"].AsGodotArray())
-				: new List<int>(InventoryConfig.ItemCopyLevels).ToArray();
+		{
+			data.Rarity = dict["rarity"].AsString();
+			data.MaxCopies = dict["max_copies"].AsInt32();
+			data.Unique = dict.ContainsKey("unique") && dict["unique"].AsBool();
+		}
 		data.Stat = data.Effects[0].Stat;
 		data.ModifierType = data.Effects[0].ModifierType;
 		return data;
-	}
-
-	private static int[] ReadLevels(Godot.Collections.Array values)
-	{
-		int[] levels = new int[values.Count];
-		for (int i = 0; i < levels.Length; i++)
-			levels[i] = (int)values[i].AsDouble();
-		return levels;
 	}
 
 	private static void ReadParameters(Godot.Collections.Dictionary values, Dictionary<string, float> target)

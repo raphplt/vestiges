@@ -13,8 +13,9 @@ float grain(vec2 p) {
 }
 
 void fragment() {
-    vec2 cell = floor(UV * vec2(480.0, 270.0));
-    float edge = max(abs(UV.x - 0.5) * 2.0, abs(UV.y - 0.5) * 2.0);
+    // UV parcourt plusieurs motifs : les effets de bord restent dans le repère de l'écran.
+    vec2 cell = floor(SCREEN_UV * vec2(480.0, 270.0));
+    float edge = max(abs(SCREEN_UV.x - 0.5) * 2.0, abs(SCREEN_UV.y - 0.5) * 2.0);
     float noise = grain(cell);
     float pulse = 0.5 + 0.5 * sin(TIME * 0.65 + noise * 40.0);
     float erased = step(0.84 + pulse * 0.12, edge) * step(0.55, noise);

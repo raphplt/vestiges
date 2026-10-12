@@ -10,7 +10,7 @@ namespace Vestiges.Core;
 /// <summary>
 /// Objets du joueur (plan 21 §4, plan 23 R3, plan 35). Les Écussons, quatre au plus, montent de niveau carte après carte,
 /// avec des gains selon la rareté et des paliers. Les objets vont dans un sac, un exemplaire par place : chaque
-/// exemplaire porte l'objet à un niveau d'effet fixé (10, puis 15 et son palier…), et l'oubli d'un exemplaire le retire.
+/// exemplaire ajoute son effet de base, sans palier ; l’oubli retire exactement cet apport.
 /// </summary>
 public partial class Player
 {
@@ -28,6 +28,7 @@ public partial class Player
     private readonly float[] _passiveValuesBefore = new float[PassiveSouvenirDataLoader.MaxEffects];
     private ObjectMilestones _objectMilestones;
     private ObjectTriggers _objectTriggers;
+    private ObjectCombatEffects _objectCombatEffects;
     private ObjectStances _objectStances;
     private ObjectProcs _objectProcs;
     private ObjectUtilities _objectUtilities;
@@ -71,6 +72,7 @@ public partial class Player
     public ObjectMilestones ObjectMilestones => _objectMilestones;
     /// <summary>Objets de déclencheur portés ; absent tant qu'aucun ne l'est.</summary>
     public ObjectTriggers ObjectTriggers => _objectTriggers;
+    public ObjectCombatEffects ObjectCombatEffects => _objectCombatEffects;
     /// <summary>Objets d'état portés (Tabouret, Gilet, Thermos, Médaille, Porte-monnaie) ; absent tant qu'aucun ne l'est.</summary>
     public ObjectStances ObjectStances => _objectStances;
     /// <summary>Icônes des objets qui agissent (plan 21 F4) ; créé avec le premier objet.</summary>
@@ -90,14 +92,21 @@ public partial class Player
 
     /// <summary>
     /// Ajoute un Écusson au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
-    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Faux si rien n'a changé. Pour un objet, c'est le
-    /// mécanisme brut des niveaux d'effet, sans compter d'exemplaire en plus : le jeu passe par <see cref="AddItemCopy"/>.
+    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Pour un objet, ajoute des copies entières,
+    /// sans gain de rareté ni niveau caché. Faux si rien n’a changé.
     /// </summary>
     public bool AddOrUpgradePassive(string passiveId, int cards = 1, float gain = 1f)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
-        if (data == null)
+        if (data == null || cards < 1)
             return false;
+        if (!data.IsBadge)
+        {
+            bool changed = false;
+            for (int copy = 0; copy < cards && AddItemCopy(passiveId); copy++)
+                changed = true;
+            return changed;
+        }
         if (_objectProcs == null)
         {
             _objectProcs = new ObjectProcs { Name = "ObjectProcs" };
@@ -134,6 +143,8 @@ public partial class Player
 
         ActivePassiveSouvenir passive = new(data) { Copies = data.IsBadge ? 0 : 1 };
         shelf.Add(passive);
+        if (HasCombatEffect(data))
+            EnsureObjectCombatEffects().Configure(data);
         if (HasTriggerEffect(data))
             EnsureObjectTriggers().Configure(data);
         if (HasStanceEffect(data))
@@ -164,53 +175,67 @@ public partial class Player
         if (data == null || data.IsBadge || !HasBagRoom)
             return false;
         ActivePassiveSouvenir owned = FindObject(id);
-        return owned == null || owned.Copies < data.MaxCopies;
+        return !data.IsCopyLimitReached(owned?.Copies ?? 0);
     }
 
     /// <summary>Objet déjà à son maximum d'exemplaires : aucun échange ne peut le faire entrer.</summary>
     public bool IsItemAtMax(string id)
     {
         ActivePassiveSouvenir owned = FindObject(id);
-        return owned != null && !owned.Data.IsBadge && owned.Copies >= owned.Data.MaxCopies;
+        return owned != null && !owned.Data.IsBadge && owned.Data.IsCopyLimitReached(owned.Copies);
     }
 
-    /// <summary>
-    /// Met un exemplaire d'objet dans le sac : un objet neuf vaut son premier niveau d'exemplaire, un doublon le porte au
-    /// suivant (palier compris). Faux si le sac est plein ou l'objet à son maximum.
-    /// </summary>
+    /// <summary>Ajoute une copie et son effet linéaire, sans niveau intermédiaire ni palier.</summary>
     public bool AddItemCopy(string id)
     {
         if (!CanTakeItem(id))
             return false;
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(id);
         ActivePassiveSouvenir owned = FindObject(id);
-        if (owned == null)
-            return AddOrUpgradePassive(id, data.CopyLevels[0]);
-        int target = data.CopyLevels[owned.Copies];
-        owned.Copies++;
-        if (target > owned.Level)
-            AddOrUpgradePassive(id, target - owned.Level);
+        bool added = owned == null;
+        if (added)
+        {
+            owned = new ActivePassiveSouvenir(data);
+            owned.SetItemCopies(0);
+            _passiveSlots.Add(owned);
+            if (_objectProcs == null)
+            {
+                _objectProcs = new ObjectProcs { Name = "ObjectProcs" };
+                AddChild(_objectProcs);
+            }
+            if (HasCombatEffect(data))
+                EnsureObjectCombatEffects().Configure(data);
+            if (HasTriggerEffect(data))
+                EnsureObjectTriggers().Configure(data);
+            if (HasStanceEffect(data))
+                EnsureObjectStances().Configure(data);
+            if (HasUtilityEffect(data))
+                EnsureObjectUtilities().Configure(data);
+        }
+        for (int i = 0; i < data.Effects.Count; i++)
+            _passiveValuesBefore[i] = owned.Value(i);
+        owned.SetItemCopies(owned.Copies + 1);
+        ApplyPassiveEffects(owned, _passiveValuesBefore);
+        if (added)
+            _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirAdded, id, _passiveSlots.Count - 1);
         else
-            _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
+            _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirUpgraded, id, owned.Copies);
+        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
         return true;
     }
 
     /// <summary>
-    /// Oublie un exemplaire d'objet (sac plein, plan 35) : l'objet revient au niveau de ses exemplaires restants, ou
-    /// quitte le sac ; ses effets et les paliers qu'il n'atteint plus sont retirés. Faux s'il n'est pas porté.
+    /// Oublie un exemplaire et son apport exact ; la dernière copie retire l’objet du sac.
     /// </summary>
     public bool ForgetItemCopy(string id)
     {
         ActivePassiveSouvenir owned = FindObject(id);
         if (owned == null || owned.Data.IsBadge)
             return false;
-        int previousLevel = owned.Level;
         for (int i = 0; i < owned.Data.Effects.Count; i++)
             _passiveValuesBefore[i] = owned.Value(i);
-        owned.Copies--;
-        owned.SetItemLevel(owned.Copies > 0 ? owned.Data.CopyLevels[owned.Copies - 1] : 0);
+        owned.SetItemCopies(owned.Copies - 1);
         ApplyPassiveEffects(owned, _passiveValuesBefore);
-        LeaveMilestones(owned, previousLevel);
         if (owned.Copies <= 0)
             _passiveSlots.Remove(owned);
         _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
@@ -246,57 +271,40 @@ public partial class Player
             float after = passive.Value(i);
             // Multiplicatif : on retire l'ancien facteur en appliquant le rapport ; additif : seulement l'écart.
             float change = effect.Multiplicative ? after / before : after - before;
-            if (ObjectTriggers.IsTriggerStat(effect.Stat))
+            if (ObjectCombatEffects.IsCombatStat(effect.Stat))
+                EnsureObjectCombatEffects().Add(effect.Stat, change);
+            else if (ObjectTriggers.IsTriggerStat(effect.Stat))
                 EnsureObjectTriggers().Add(effect.Stat, change);
             else if (ObjectStances.IsStanceStat(effect.Stat))
                 EnsureObjectStances().Add(effect.Stat, change);
             else if (ObjectUtilities.IsUtilityStat(effect.Stat))
                 EnsureObjectUtilities().Add(effect.Stat, change);
-            else
+            else if (passive.Data.IsBadge)
                 ApplyPerkModifier(effect.Stat, change, effect.ModifierType);
+            else
+                ApplyItemModifier(effect.Stat, change, effect.ModifierType);
         }
     }
 
     /// <summary>Active les paliers codés que l'amélioration vient de franchir ; une cascade peut en franchir plusieurs.</summary>
     private void ReachMilestones(ActivePassiveSouvenir passive, int fromLevel)
     {
+        if (!passive.Data.IsBadge)
+            return;
         int reached = 0;
         foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
         {
             if (milestone.Level <= fromLevel || !passive.Reached(milestone) || !ObjectMilestoneEffects.IsImplemented(milestone.Effect))
                 continue;
-            if (ObjectTriggers.IsTriggerMilestone(milestone.Effect))
-                EnsureObjectTriggers().Activate(milestone);
-            else if (ObjectStances.IsStanceMilestone(milestone.Effect))
-                EnsureObjectStances().Activate(milestone);
-            else
+            if (_objectMilestones == null)
             {
-                if (_objectMilestones == null)
-                {
-                    _objectMilestones = new ObjectMilestones { Name = "ObjectMilestones" };
-                    _objectMilestones.Initialize(this);
-                    AddChild(_objectMilestones);
-                }
-                _objectMilestones.Activate(milestone);
+                _objectMilestones = new ObjectMilestones { Name = "ObjectMilestones" };
+                _objectMilestones.Initialize(this);
+                AddChild(_objectMilestones);
             }
+            _objectMilestones.Activate(milestone);
             SpawnLootPopup(string.Format(Tr("OBJECT_MILESTONE_REACHED"), passive.Data.Name, milestone.Level), MilestoneColor, GlobalPosition, reached++);
             GD.Print($"[Player] Milestone reached: {passive.Data.Name} level {milestone.Level} ({milestone.Effect})");
-        }
-    }
-
-    /// <summary>Retire les paliers qu'un objet oublié n'atteint plus ; seuls les objets de déclencheur et d'état en ont.</summary>
-    private void LeaveMilestones(ActivePassiveSouvenir item, int fromLevel)
-    {
-        foreach (ObjectMilestoneData milestone in item.Data.Milestones)
-        {
-            if (milestone.Level > fromLevel || item.Reached(milestone) || !ObjectMilestoneEffects.IsImplemented(milestone.Effect))
-                continue;
-            if (ObjectTriggers.IsTriggerMilestone(milestone.Effect))
-                _objectTriggers?.Deactivate(milestone, item.Data);
-            else if (ObjectStances.IsStanceMilestone(milestone.Effect))
-                _objectStances?.Deactivate(milestone, item.Data);
-            else
-                GD.PushError($"[Player] Palier {milestone.Effect} de {item.Id} impossible à retirer : réservé aux Écussons.");
         }
     }
 
@@ -403,6 +411,22 @@ public partial class Player
         _objectStances.Initialize(this);
         AddChild(_objectStances);
         return _objectStances;
+    }
+
+    private static bool HasCombatEffect(PassiveSouvenirData data)
+    {
+        foreach (PassiveEffectData effect in data.Effects)
+            if (ObjectCombatEffects.IsCombatStat(effect.Stat)) return true;
+        return false;
+    }
+
+    private ObjectCombatEffects EnsureObjectCombatEffects()
+    {
+        if (_objectCombatEffects != null) return _objectCombatEffects;
+        _objectCombatEffects = new ObjectCombatEffects { Name = "ObjectCombatEffects" };
+        _objectCombatEffects.Initialize(this);
+        AddChild(_objectCombatEffects);
+        return _objectCombatEffects;
     }
 
     private ObjectTriggers EnsureObjectTriggers()

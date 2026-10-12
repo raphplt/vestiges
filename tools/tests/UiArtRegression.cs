@@ -36,9 +36,14 @@ public partial class UiArtRegression : Node
             Check(itemArtIds.SetEquals(CollectionArtDataLoader.Items.Select(entry => entry.Id))
                 && perkArtIds.SetEquals(CollectionArtDataLoader.Perks.Select(entry => entry.Id)),
                 "Collection : les ensembles d'identifiants des manifestes sont conservés");
-            Check(declaredItems.SetEquals(ReadIds(itemArt, "world", true))
+            HashSet<string> gameplayArtIds = ReadIds(itemArt, "world", true);
+            HashSet<string> gameplayIcons = CollectionArtDataLoader.Items.Where(entry => !entry.World)
+                .Select(entry => entry.Icon).ToHashSet();
+            // Le lot d’objets V2 réemploie des images existantes : une image n’impose plus un unique ID de gameplay.
+            Check(gameplayArtIds.IsSubsetOf(declaredItems)
+                && PassiveSouvenirDataLoader.GetAll().All(item => gameplayIcons.Contains(item.Icon))
                 && declaredPerks.SetEquals(ReadIds(perkArt, "proposed_id", true)),
-                "Collection : contenus de gameplay et images de contenus futurs restent distincts");
+                "Collection : images de gameplay existantes réutilisables, illustrations de contenus futurs toujours séparées");
             foreach (CollectionArtDataLoader.Entry entry in CollectionArtDataLoader.Items)
                 Check(Icon(entry.Icon, 32), $"Collection objet {entry.Id}");
             foreach (CollectionArtDataLoader.Entry entry in CollectionArtDataLoader.Perks)
@@ -71,7 +76,26 @@ public partial class UiArtRegression : Node
                     && pixels.GetPixel(pixels.GetWidth() / 2, pixels.GetHeight() / 2).A > 0.95f,
                     $"Thème : {skin}, surface de lecture opaque");
                 Check(texture == UITheme.LoadTex(UITheme.MenusPath + $"ui_{skin}.png"), $"Thème : {skin}, texture partagée");
+                StyleBoxTexture style = UITheme.CreateNinePatch(texture, 4, 4, 4, 4);
+                Check(texture is ImageTexture && style.AxisStretchHorizontal == StyleBoxTexture.AxisStretchMode.Tile
+                    && style.AxisStretchVertical == StyleBoxTexture.AxisStretchMode.Tile
+                    && style.TextureMarginLeft == MenuStoneTextures.CornerMargin(texture)
+                    && style.TextureMarginTop == MenuStoneTextures.CornerMargin(texture),
+                    $"Thème : {skin}, matière générée et tranches à échelle constante");
+                Check(pixels.GetPixel(0, 0).A < 0.01f && pixels.GetPixel(2, 2).A < 0.01f,
+                    $"Thème : {skin}, silhouette coupée aux coins");
             }
+
+            foreach (CampUpgradeData upgrade in CampUpgradeDataLoader.All)
+                Check(Icon($"res://assets/ui/camp/{upgrade.Id}.png", 32), $"Campement : {upgrade.Id}, icône native");
+            Check(MenuSkin.InteriorBackground == MenuSkin.InteriorBackground
+                && MenuSkin.InteriorBackground.ResourcePath == "res://assets/ui/menus/stone/loading.png"
+                && MenuSkin.InteriorBackground.GetSize() == new Vector2(480, 270),
+                "Fond intérieur : dernière illustration native, partagée");
+            StyleBoxTexture choice = MenuSkin.Choice(UITheme.GoldBright, true, 3);
+            Check(choice.AxisStretchHorizontal == StyleBoxTexture.AxisStretchMode.Tile
+                && choice.AxisStretchVertical == StyleBoxTexture.AxisStretchMode.Tile,
+                "Choix : les repères de rareté conservent le grain raccordable");
 
             foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
                 if (!item.IsBadge)
@@ -101,6 +125,9 @@ public partial class UiArtRegression : Node
             AddChild(stone);
             Check(stone.Material is ShaderMaterial stoneMaterial && stoneMaterial.Shader.ResourcePath.EndsWith("menu_erasure.gdshader"),
                 "Chargement : la pierre et l'Effacement, sans le jeu derrière");
+            Check(stone.Texture == MenuSkin.InteriorBackground
+                && stone.StretchMode == TextureRect.StretchModeEnum.KeepAspectCovered,
+                "Chargement : dernière illustration commune, proportions conservées");
             GD.Print($"[UiArtRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
         }

@@ -94,7 +94,7 @@ public partial class GameOverScreen : CanvasLayer
         public string CharacterId;
         public string CharacterName;
         public readonly List<(string Icon, int Level)> Badges = new();
-        public readonly List<(string Icon, int Level)> Passives = new();
+        public readonly List<(string Icon, string Name, int Copies, string Rarity)> Passives = new();
         public readonly List<(string Icon, string Name)> Perks = new();
     }
 
@@ -327,7 +327,7 @@ public partial class GameOverScreen : CanvasLayer
         foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
             build.Badges.Add((badge.Data.Icon, badge.Level));
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-            build.Passives.Add((passive.Data.Icon, passive.Copies));
+            build.Passives.Add((passive.Data.Icon, passive.Data.Name, passive.Copies, passive.Data.Rarity));
         foreach (PerkSpecializationData perk in player.Specializations)
             build.Perks.Add((perk.Icon, perk.Name));
         return build;
@@ -406,8 +406,16 @@ public partial class GameOverScreen : CanvasLayer
         HFlowContainer passives = MakeSlotFlow();
         _equipment.AddChild(passives);
         if (_build != null)
-            foreach ((string icon, int copies) in _build.Passives)
-                passives.AddChild(RunSummaryPanels.Slot(icon, copies, UITheme.CyanEssence));
+            foreach ((string icon, string name, int copies, string rarity) in _build.Passives)
+            {
+                Control slot = RunSummaryPanels.Slot(icon, copies, RarityPalette.Main(rarity));
+                slot.MouseFilter = Control.MouseFilterEnum.Stop;
+                slot.TooltipText = $"{name} · {RarityPalette.DisplayName(rarity)} · ×{copies}";
+                slot.AddChild(new TextureRect { Texture = RarityArt.Icons(RarityArt.Rank(rarity), 12)[0],
+                    CustomMinimumSize = new Vector2(12, 12), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+                    SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, MouseFilter = Control.MouseFilterEnum.Ignore });
+                passives.AddChild(slot);
+            }
         if (_build == null || _build.Passives.Count == 0)
             passives.AddChild(UITheme.MakeLabel("Aucun objet", TextRole.Subhead, UITheme.TextDim));
         _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Heading, UITheme.GoldBright));

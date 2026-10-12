@@ -453,7 +453,8 @@ public static class MetaSaveManager
 
     /// <summary>
     /// Règle unique d'accès (plan 06 §9) : une pièce qu'aucune quête ne garde est disponible dès le départ, les autres
-    /// une fois leur quête accomplie. Le mode dev ouvre tout. Loot, offres de niveau, Collection et accueil la partagent.
+    /// une fois leur quête accomplie. Les objets explicitement réservés restent fermés si leur quête est absente.
+    /// Le mode dev ouvre tout. Loot, offres de niveau, Collection et accueil la partagent.
     /// </summary>
     public static bool IsUnlocked(UnlockKind kind, string id)
     {
@@ -461,7 +462,9 @@ public static class MetaSaveManager
         if (DevelopmentMode.IsEnabled)
             return true;
         QuestDefinition quest = QuestDataLoader.FindUnlocking(kind, id);
-        return quest == null || _data.CompletedQuests.Contains(quest.Id);
+        if (quest != null)
+            return _data.CompletedQuests.Contains(quest.Id);
+        return kind != UnlockKind.Object || PassiveSouvenirDataLoader.Get(id)?.InitialUnlock != false;
     }
 
     public static bool IsCharacterUnlocked(string characterId) => IsUnlocked(UnlockKind.Character, characterId);
