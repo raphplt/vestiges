@@ -6,7 +6,7 @@ namespace Vestiges.Infrastructure;
 
 /// <summary>
 /// Visuels des armes du joueur (data/weapons/weapon_visuals.json) : échelle selon la stat de taille (plan 21 G6e) et
-/// étalement du nombre à l'écran, rafales et ondes successives (plan 21 G6g).
+/// étalement du nombre à l'écran, tirs à la chaîne et ondes successives (plan 21 G6g, DECISIONS §123).
 /// </summary>
 public sealed class WeaponVisualConfig
 {
@@ -17,10 +17,13 @@ public sealed class WeaponVisualConfig
 
     public float SizeResponse { get; private init; }
     public float MaxScale { get; private init; }
-    /// <summary>Écart entre deux projectiles d'une rafale sur une même cible, en secondes.</summary>
-    public float VolleyInterval { get; private init; }
-    /// <summary>Durée maximale d'une rafale : au-delà, l'écart se resserre.</summary>
-    public float VolleyMaxSpan { get; private init; }
+    /// <summary>Écart entre deux tirs visés d'une même attaque, en secondes.</summary>
+    public float ShotInterval { get; private init; }
+    /// <summary>Part du temps de recharge de l'arme que la chaîne de tirs peut occuper : au-delà, l'écart se resserre.</summary>
+    public float ShotMaxCooldownShare { get; private init; }
+    /// <summary>Son d'un tir qui part après le premier : atténuation en dB et variation de hauteur.</summary>
+    public float ChainedShotVolumeDb { get; private init; }
+    public float ChainedShotPitchVariance { get; private init; }
     /// <summary>Écart entre deux ondes successives d'une frappe circulaire, en secondes.</summary>
     public float WaveInterval { get; private init; }
     /// <summary>Fronts d'onde dessinés au plus dans le cône du Transistor.</summary>
@@ -49,8 +52,10 @@ public sealed class WeaponVisualConfig
         {
             SizeResponse = (float)data["size_response"].AsDouble(),
             MaxScale = (float)data["max_scale"].AsDouble(),
-            VolleyInterval = (float)data["volley_interval_s"].AsDouble(),
-            VolleyMaxSpan = (float)data["volley_max_s"].AsDouble(),
+            ShotInterval = (float)data["shot_interval_s"].AsDouble(),
+            ShotMaxCooldownShare = (float)data["shot_max_cooldown_share"].AsDouble(),
+            ChainedShotVolumeDb = (float)data["chained_shot_volume_db"].AsDouble(),
+            ChainedShotPitchVariance = (float)data["chained_shot_pitch_variance"].AsDouble(),
             WaveInterval = (float)data["wave_interval_s"].AsDouble(),
             ConeMaxFronts = (int)data["cone_max_fronts"].AsDouble(),
         };
