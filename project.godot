@@ -168,6 +168,18 @@ world_cast_shadow={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+world_grime={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
+world_grime_paper={
+"type": "vec4",
+"value": Vector4(1, 1, 1, 1)
+}
+world_grime_ink={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
+}
 trample_origin={
 "type": "vec4",
 "value": Vector4(1000000, 1000000, 0, 0)

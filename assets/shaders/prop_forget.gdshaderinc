@@ -49,7 +49,7 @@ void vertex() {
 }
 
 void fragment() {
-	COLOR.rgb = cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0);
+	COLOR.rgb = world_grime_at(cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0), prop_world);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

@@ -117,10 +117,11 @@ void fragment() {
 	// --- Normal rendering (aberration + flash) ---
 	if (!done) {
 		vec3 result = tex.rgb;
-		// Étalonnage du biome, atténué pour rester lisible ; les yeux gardent leur vert acide.
+		// Étalonnage du biome et palette salie (plan 40), atténués pour rester lisibles ; les yeux gardent leur vert acide.
 		// Hors run (part nulle), pas de test des yeux.
 		if (world_grade_tone.z > 0.0 && distance(tex.rgb, EYE_COLOR) > 0.2) {
 			result = cloud_shade(world_grade(result, world_grade_tone.z), floor(entity_world), world_grade_tone.z);
+			result = grime_palette(result, world_grime.x * world_grade_tone.z);
 		}
 		if (aberration_amount > 0.0) {
 			result = mix(result, aberration_color.rgb, aberration_amount * 0.3);

@@ -21,7 +21,8 @@
         "fog_color": [0.45, 0.4, 0.35],
         "cloud_cover": 0.45,
         "cloud_opacity": 0.28,
-        "shadow_opacity": 0.48
+        "shadow_opacity": 0.48,
+        "grime": 1.0
     },
     "ambience": {
         "reverb": { "wet": 0.15, "room_size": 0.75, "damping": 0.3 }

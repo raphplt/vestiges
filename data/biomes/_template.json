@@ -13,7 +13,8 @@
         "fog_color": [0.5, 0.5, 0.5],
         "cloud_cover": 0.0,
         "cloud_opacity": 0.0,
-        "shadow_opacity": 0.0
+        "shadow_opacity": 0.0,
+        "grime": 0.0
     },
     "_ambience": "Facultatif (plan 39 A4). Ambiance sonore du biome où se trouve le joueur, pendant l'exploration : loop, boucle de fond (clé de data/audio/sounds.json) ; accents, sons ponctuels tirés au hasard, le premier après first_accent_s puis tous les accent_interval_s (secondes, [min, max]), joués à accent_volume_db ; reverb du bus des sons du monde (wet 0–0,5, room_size et damping 0–1), en fondu au changement de biome. Sans bloc : silence et son sec.",
     "ambience": {

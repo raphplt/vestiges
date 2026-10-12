@@ -19,6 +19,8 @@ uniform vec2 pixel_size = vec2(1.0, 1.0); // Définir la taille du sprite ou 1.0
 
 varying float prop_memory;
 varying vec2 prop_world;
+// Point monde du pixel au repos : le grain (plan 40) suit la feuille au lieu de glisser sous elle.
+varying vec2 grime_anchor;
 
 // Hash et Noise pour un vent organique
 float get_wind(vec2 vertex, vec2 uv, float timer){
@@ -34,6 +36,7 @@ void vertex() {
 	// UV.y inversé pour appliquer plus de force en haut
 	float weight = clamp((1.0 - UV.y) - height_offset, 0.0, 1.0);
 	
+	grime_anchor = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	float wind = get_wind(VERTEX, UV, TIME);
 	
 	// Appliquer le décalage, limité au sommet
@@ -50,7 +53,7 @@ void vertex() {
 
 // Canopées dans les zones oubliées : même effritement que les décors (plan 16 O2).
 void fragment() {
-	COLOR.rgb = cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0);
+	COLOR.rgb = world_grime_at(cloud_shade(world_grade(COLOR.rgb, 1.0), floor(prop_world), 1.0), grime_anchor);
 	if (prop_memory < 0.8) {
 		ivec2 size = textureSize(TEXTURE, 0);
 		ivec2 texel = ivec2(floor(UV * vec2(size)));

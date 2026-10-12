@@ -38,7 +38,10 @@ public partial class BiomeAtmosphere : Node2D
 	private static readonly StringName CloudsParameter = "world_clouds";
 	private static readonly StringName CloudScaleParameter = "world_cloud_scale";
 	private static readonly StringName CastShadowParameter = "world_cast_shadow";
-	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f);
+	private static readonly StringName GrimeParameter = "world_grime";
+	private static readonly StringName GrimePaperParameter = "world_grime_paper";
+	private static readonly StringName GrimeInkParameter = "world_grime_ink";
+	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f, 0f);
 
 	private AtmosphereConfig _config;
 	private Grade _gradeFrom = NeutralGrade;
@@ -61,7 +64,7 @@ public partial class BiomeAtmosphere : Node2D
 		if (!AtmosphereConfig.TryLoad(out _config, out string error))
 			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage ni nuages");
 		else
-			RenderingServer.GlobalShaderParameterSet(CloudScaleParameter, 1f / _config.CloudScalePx);
+			PublishConstants();
 		CreateFogParticles();
 		CreateSwampAmbientParticles();
 		CreateSwampOverlay();
@@ -151,12 +154,22 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		if (_config == null)
 			return;
-		_gradeTo = Grade.Of(style, _config.GradeStrength);
+		_gradeTo = Grade.Of(style, _config.GradeStrength, _config.GrimeStrength);
 		_gradeFrom = _gradeShown;
 		_gradeProgress = _gradeStarted ? 0f : 1f;
 		_gradeStarted = true;
 		if (_gradeProgress >= 1f)
 			PublishGrade(_gradeTo);
+	}
+
+	/// <summary>Réglages communs qui ne changent pas pendant la run ; le dosage du biome, lui, suit le fondu.</summary>
+	private void PublishConstants()
+	{
+		RenderingServer.GlobalShaderParameterSet(CloudScaleParameter, 1f / _config.CloudScalePx);
+		Color paper = _config.GrimePaper;
+		Color ink = _config.GrimeInk;
+		RenderingServer.GlobalShaderParameterSet(GrimePaperParameter, new Vector4(paper.R, paper.G, paper.B, _config.GrimeSaturation));
+		RenderingServer.GlobalShaderParameterSet(GrimeInkParameter, new Vector4(ink.R, ink.G, ink.B, _config.GrimeShadowTone));
 	}
 
 	private void AdvanceClouds(float delta)
@@ -183,6 +196,8 @@ public partial class BiomeAtmosphere : Node2D
 		PublishClouds(grade);
 		Color shadow = _config?.CastShadowColor ?? Colors.Black;
 		RenderingServer.GlobalShaderParameterSet(CastShadowParameter, new Vector4(shadow.R, shadow.G, shadow.B, grade.ShadowOpacity));
+		RenderingServer.GlobalShaderParameterSet(GrimeParameter,
+			new Vector4(grade.Grime, _config?.GrimeGrain ?? 0f, _config?.GrimeFibers ?? 0f, 0f));
 	}
 
 	/// <summary>Le nuage se déplace vers la droite : le motif lu en monde recule d'autant (décalage soustrait).</summary>
@@ -194,14 +209,18 @@ public partial class BiomeAtmosphere : Node2D
 
 	/// <summary>Étalonnage tel que le shader le lit : les fondus interpolent ces valeurs, pas les réglages JSON.</summary>
 	private readonly record struct Grade(
-		Vector3 Multiplier, float Saturation, float Contrast, float CloudCover, float CloudOpacity, float ShadowOpacity)
+		Vector3 Multiplier, float Saturation, float Contrast, float CloudCover, float CloudOpacity, float ShadowOpacity,
+		float Grime)
 	{
-		/// <summary>La force commune dose l'écart au neutre de l'étalonnage, pas les nuages ni les ombres.</summary>
-		public static Grade Of(BiomeAtmosphereStyle style, float strength) => new(
+		/// <summary>
+		/// La force commune dose l'écart au neutre de l'étalonnage, pas les nuages ni les ombres ; celle de la salissure
+		/// dose le réglage de chaque biome.
+		/// </summary>
+		public static Grade Of(BiomeAtmosphereStyle style, float strength, float grimeStrength) => new(
 			Vector3.One.Lerp(style.GradeMultiplier(), strength),
 			Mathf.Lerp(1f, style.Saturation, strength),
 			Mathf.Lerp(1f, style.Contrast, strength),
-			style.CloudCover, style.CloudOpacity, style.ShadowOpacity);
+			style.CloudCover, style.CloudOpacity, style.ShadowOpacity, style.Grime * grimeStrength);
 
 		public static Grade Lerp(Grade from, Grade to, float t) => new(
 			from.Multiplier.Lerp(to.Multiplier, t),
@@ -209,7 +228,8 @@ public partial class BiomeAtmosphere : Node2D
 			Mathf.Lerp(from.Contrast, to.Contrast, t),
 			Mathf.Lerp(from.CloudCover, to.CloudCover, t),
 			Mathf.Lerp(from.CloudOpacity, to.CloudOpacity, t),
-			Mathf.Lerp(from.ShadowOpacity, to.ShadowOpacity, t));
+			Mathf.Lerp(from.ShadowOpacity, to.ShadowOpacity, t),
+			Mathf.Lerp(from.Grime, to.Grime, t));
 	}
 
 	private void CreateFogParticles()

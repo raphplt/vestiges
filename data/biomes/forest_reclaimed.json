@@ -20,7 +20,8 @@
         "fog_color": [0.3, 0.4, 0.28],
         "cloud_cover": 0.45,
         "cloud_opacity": 0.26,
-        "shadow_opacity": 0.45
+        "shadow_opacity": 0.45,
+        "grime": 0.8
     },
     "ambience": {
         "loop": "sfx_ambiance_foret",

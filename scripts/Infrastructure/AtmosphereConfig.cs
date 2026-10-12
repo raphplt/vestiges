@@ -32,6 +32,18 @@ public sealed class AtmosphereConfig
     public float CastShadowMinHeightPx { get; private init; }
     public Color CastShadowColor { get; private init; }
 
+    /// <summary>
+    /// Direction crade (plan 40) : dosage commun des biomes, puis la recette, salissure de la palette (saturation
+    /// gardée, jaunissement du papier, noir relevé, part des ombres tirée vers le vert-gris) et grain au pixel du monde.
+    /// </summary>
+    public float GrimeStrength { get; private init; }
+    public float GrimeSaturation { get; private init; }
+    public Color GrimePaper { get; private init; }
+    public Color GrimeInk { get; private init; }
+    public float GrimeShadowTone { get; private init; }
+    public float GrimeGrain { get; private init; }
+    public float GrimeFibers { get; private init; }
+
     public static bool TryLoad(out AtmosphereConfig config, out string error)
     {
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
@@ -58,13 +70,15 @@ public sealed class AtmosphereConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows");
+            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows", "grime");
             JsonElement grade = reader.Section("grade");
             reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share", "strength");
             JsonElement clouds = reader.Section("clouds");
             reader.AllowOnly(clouds, "clouds", "direction_deg", "speed_px_s", "scale_px");
             JsonElement shadows = reader.Section("cast_shadows");
             reader.AllowOnly(shadows, "cast_shadows", "direction_deg", "length", "min_height_px", "color");
+            JsonElement grime = reader.Section("grime");
+            reader.AllowOnly(grime, "grime", "strength", "saturation", "paper", "ink", "shadow_tone", "grain", "fibers");
             float shadowAngle = Mathf.DegToRad(reader.Number(shadows, "direction_deg"));
             float shadowLength = reader.Positive(shadows, "length");
             AtmosphereConfig parsed = new()
@@ -78,7 +92,21 @@ public sealed class AtmosphereConfig
                 CastShadowPerHeight = new Vector2(Mathf.Cos(shadowAngle), Mathf.Sin(shadowAngle) * 0.5f) * shadowLength,
                 CastShadowMinHeightPx = reader.Positive(shadows, "min_height_px"),
                 CastShadowColor = reader.Rgb(shadows, "color"),
+                GrimeStrength = reader.Chance(grime, "strength"),
+                GrimeSaturation = reader.Chance(grime, "saturation"),
+                GrimePaper = reader.Rgb(grime, "paper"),
+                GrimeInk = reader.Rgb(grime, "ink"),
+                GrimeShadowTone = reader.Chance(grime, "shadow_tone"),
+                GrimeGrain = reader.NonNegative(grime, "grain"),
+                GrimeFibers = reader.NonNegative(grime, "fibers"),
             };
+            // Au-delà, la salissure devient un filtre : sol boueux, noirs délavés, bruit qui mange le dessin.
+            if (Mathf.Min(parsed.GrimePaper.R, Mathf.Min(parsed.GrimePaper.G, parsed.GrimePaper.B)) < 0.6f)
+                reader.Fail("grime.paper : chaque composante de 0,6 à 1 attendue");
+            if (Mathf.Max(parsed.GrimeInk.R, Mathf.Max(parsed.GrimeInk.G, parsed.GrimeInk.B)) > 0.2f)
+                reader.Fail("grime.ink : au plus 0,2 par composante attendu");
+            if (parsed.GrimeGrain > 0.2f || parsed.GrimeFibers > 0.2f)
+                reader.Fail("grime.grain et grime.fibers : au plus 0,2 attendu");
             if (shadowLength > 2f)
                 reader.Fail("cast_shadows.length : au plus 2 attendu");
             if (parsed.GradeFadeSeconds > 10f)

@@ -1334,3 +1334,9 @@ Acquis : tous les coffres donnent seulement des objets du sac, y compris l’anc
 Raphaël : « il faudrait que les objets aient des raretés par défaut. Rareté fixe par objet. proba de l’avoir game lié à sa rareté. Puissance de l’objet liée à sa rareté aussi (les classer dans les bonnes raretés). prépare ca. »
 
 **Acquis :** chaque objet a une rareté de catalogue fixe ; sa fréquence dépend de cette rareté ; classer les effets existants selon leur force réelle. **Préparation livrée :** [plan 35 I10](35-raretes-des-objets.md), 22 objets, cinq rangs, tables par source et lots d’implémentation. Le classement précis et les taux sont proposés, pas encore mesurés. La puissance justifie le rang, sans multiplicateur automatique ajouté. Aucune modification du gameplay dans cette préparation.
+
+## 122. Direction « crade » — 12 octobre 2026
+
+Raphaël, sur les tuiles du plan 37 : « même s'il y a du mieux je reste pas 100 % convaincu […] ça rend mieux sur le marais que la forêt et la forêt rend mieux que la mine », puis : « je suis à la recherche d'une certaine esthétique qui va au-delà du pixel art […] ça vient des BD / images que j'ai pu lire plus jeune. Un truc un peu mystérieux, crade, indescriptible. » Après les pistes proposées : « en JV Rain World est très sympa et en BD tout le Métal Hurlant […] Beksiński aussi top. Je suis d'avis qu'il faudrait rendre la DA un peu "crade" » par une palette salie, du grain, des hachures dans les ombres et des taches. Mises en garde : « ça peut vite devenir grossier ou forcé dans le trait », « le jeu a déjà beaucoup d'assets ». Sur la maquette hors jeu : « ça me va avec un dosage léger pour l'instant ».
+
+**Acquis :** direction crade au dosage léger, par un traitement commun des shaders du monde, sans redessiner les assets ; lots G1 à G3 au [plan 40](40-direction-crade.md). **Non tranché :** la mise à jour des références de la Bible §4.

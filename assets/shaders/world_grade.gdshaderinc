@@ -59,3 +59,38 @@ vec3 cloud_shade(vec3 color, vec2 p, float amount) {
 		return color;
 	return color * (vec3(1.0) - cloud_shadow(p) * amount * CLOUD_SHADOW_TINT);
 }
+
+// Direction crade (plan 40) : palette salie comme un vieux papier imprimé, puis grain au pixel du monde. Même source et
+// mêmes fondus que l'étalonnage ; appliqué après lui et avant l'oubli, si bien que le Néant reste d'un blanc pur.
+// x : dosage du biome (0 : aucun effet) ; y : grain fin au pixel ; z : fibre lente du papier ; w : taches (G2).
+global uniform vec4 world_grime;
+// rgb : jaunissement (multiplie) ; a : saturation gardée.
+global uniform vec4 world_grime_paper;
+// rgb : noir relevé vers un brun-olive ; a : part des ombres tirée vers le vert-gris.
+global uniform vec4 world_grime_ink;
+
+const vec3 GRIME_SHADOW = vec3(0.2, 0.22, 0.17);
+
+// Palette seule : c'est tout ce que reçoivent les entités, sur qui un grain accroché au monde glisserait.
+vec3 grime_palette(vec3 color, float amount) {
+	if (amount <= 0.0)
+		return color;
+	float luma = dot(color, GRADE_LUMA);
+	vec3 dirty = mix(vec3(luma), color, world_grime_paper.a) * world_grime_paper.rgb;
+	float shade = 1.0 - clamp(luma, 0.0, 1.0);
+	dirty = mix(dirty, GRIME_SHADOW * luma, shade * shade * world_grime_ink.a);
+	dirty = world_grime_ink.rgb + dirty * (1.0 - world_grime_ink.rgb);
+	return mix(color, dirty, amount);
+}
+
+// Sol, routes et décors : palette, puis grain lu au pixel monde p (fixe quand la caméra bouge).
+vec3 world_grime_at(vec3 color, vec2 p) {
+	float amount = world_grime.x;
+	if (amount <= 0.0)
+		return color;
+	vec2 cell = floor(p);
+	// Nom local distinct de l'uniforme « grain » du sol, qui inclut ce fichier.
+	float speckle = (cloud_hash(cell + 71.3) - 0.5) * 2.0 * world_grime.y
+		+ (cloud_noise(cell / 6.0 + 23.0) - 0.5) * 2.0 * world_grime.z;
+	return grime_palette(color, amount) * (1.0 + speckle * amount);
+}
