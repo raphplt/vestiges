@@ -1,9 +1,11 @@
 {
-	"_doc": "Échelle visuelle des armes du joueur (plan 21 G6e). La stat de taille (aoe_radius, multiplicateur du joueur) grandit les projectiles, leur zone de contact, les notes de la Boîte à musique et l'allonge dessinée des coups de mêlée : échelle = 1 + (taille − 1) × size_response, bornée entre 1 et max_scale pour rester lisible dans la foule. projectile_base_scale : échelle de base des sprites de projectiles trop petits pour se lire en foule (notes, billes, orbes ; DECISIONS §53), multipliée par l'échelle de taille ; la zone de contact n'en dépend pas. Nombre visible (plan 21 G6g, DECISIONS §59) : les projectiles qui retombent sur une cible déjà visée partent en rafale, volley_interval_s secondes l'un après l'autre, toute la rafale tenant en volley_max_s au plus ; une frappe en plus d'une onde circulaire rejoue son onde wave_interval_s plus tard ; chaque onde en plus du Transistor ajoute un front qui parcourt le cône, cone_max_fronts au plus.",
+	"_doc": "Échelle visuelle des armes du joueur (plan 21 G6e). La stat de taille (aoe_radius, multiplicateur du joueur) grandit les projectiles, leur zone de contact, les notes de la Boîte à musique et l'allonge dessinée des coups de mêlée : échelle = 1 + (taille − 1) × size_response, bornée entre 1 et max_scale pour rester lisible dans la foule. projectile_base_scale : échelle de base des sprites de projectiles trop petits pour se lire en foule (notes, billes, orbes ; DECISIONS §53), multipliée par l'échelle de taille ; la zone de contact n'en dépend pas. Nombre visible (plan 21 G6g, DECISIONS §59 et §123) : les tirs visés d'une attaque partent à la chaîne, shot_interval_s secondes l'un après l'autre, toute la chaîne tenant au plus en shot_max_cooldown_share du temps de recharge de l'arme ; chaque tir en attente joue le son de l'arme à son départ, chained_shot_volume_db plus bas et varié de chained_shot_pitch_variance en hauteur ; une frappe en plus d'une onde circulaire rejoue son onde wave_interval_s plus tard ; chaque onde en plus du Transistor ajoute un front qui parcourt le cône, cone_max_fronts au plus.",
 	"size_response": 1.0,
 	"max_scale": 2.0,
-	"volley_interval_s": 0.06,
-	"volley_max_s": 0.3,
+	"shot_interval_s": 0.08,
+	"shot_max_cooldown_share": 0.6,
+	"chained_shot_volume_db": -4,
+	"chained_shot_pitch_variance": 0.08,
 	"wave_interval_s": 0.09,
 	"cone_max_fronts": 4,
 	"projectile_base_scale": {
