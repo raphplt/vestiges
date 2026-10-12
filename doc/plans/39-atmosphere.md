@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1 et A2 livrés** (§8, §9).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2 et A3 livrés** (§8 à §10).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -246,3 +246,28 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 - `dotnet build` 0 warning, `tools/smoke_test.sh` vert, aucune erreur de shader au journal de run.
 
 **Non vérifié :** le défilement en mouvement (captures fixes seulement).
+
+**Banc du 12 octobre** (`tools/bench_ab.sh`, base = HEAD sans A2, 2 passes valides) : 1080p 439 → 424 FPS (−0,08 ms), 720p 470 → 479 FPS. Les passes varient de ±10 % entre elles : pas de coût mesurable.
+
+## 10. A3 livré — 12 octobre 2026
+
+**Fait :**
+
+- `PropShadow.CreateCast` : un second sprite par grand décor (et un par canopée), même texture, retourné et cisaillé par sa transformation. Un point à `h` px au-dessus du pied du décor tombe au sol à `h × (dx, dy)`. Le découpage à l'écran suit l'ombre réelle, sans shader de sommet ni nouvel asset.
+- `prop_cast_shadow.gdshader`, un seul matériau partagé : couleur d'ombre unie, opacité du biome (fondue avec l'étalonnage), effacée sous un nuage (lumière diffuse) et dans les zones oubliées. Ajouté à `ShaderWarmup`.
+- Réglages : `cast_shadows` dans `data/world/atmosphere.json` (direction au sol −35°, longueur 1,1 px par px de hauteur, hauteur minimale 40 px, couleur bleu nuit) ; `shadow_opacity` par biome (0,2 au marais, 0,45 à 0,5 ailleurs). Les petits décors gardent leur ombre de contact.
+
+**Écart au plan :** l'ombre ne tombe pas « de côté » sous un soleil rasant. Un sprite vu de face, projeté de côté, ne donne qu'un trait (premier essai à 25° : liserés de 5 px au pied des décors). L'ombre part donc vers l'arrière et la droite, comme dans la plupart des jeux 2D en vue de dessus.
+
+**Vérifié :**
+
+- Captures `--capture-props --hide-collisions`, seed 1002, regardées : longues ombres d'arbres vers la droite en forêt, poteau, tracteur et clôtures dans les champs, réverbères de la carrière, immeubles et panneaux en ville. Sous un nuage, les ombres s'effacent. Planche : `doc/plans/planches/39-A3-ombres.jpg` (non versionnée).
+- `tools/test_catalogs.sh` vert (opacité, longueur, hauteur, couleur refusées hors bornes), `dotnet build` 0 warning, `tools/smoke_test.sh` vert, aucune erreur de shader en run.
+
+**Coût** (`tools/bench_ab.sh`, base HEAD, 3 passes, 1080p) : 4 943 sprites d'ombre sur la carte du banc (72 961 → 77 904 nœuds). Appels de dessin 304 → 306 : les ombres partagent le matériau et suivent les décors en lots. Passe 1, machine calme : 2,33 → 2,40 ms par image (+0,07 ms, +3 %), rendu CPU 1,05 → 1,11 ms, GPU inchangé (1,11 ms). La charge est montée à 8,5 pendant les passes 2 et 3 : médianes faussées (−14 %), non retenues. À remesurer machine calme.
+
+**Points ouverts :**
+
+- Un décor rendu transparent par `PropOcclusion` laisse voir son ombre au travers.
+- Deux ombres qui se chevauchent foncent un peu plus (tronc sous canopée, immeubles voisins).
+- 5 000 nœuds de plus : si le banc calme confirme un coût, regrouper les ombres par îlot ou les cuire dans une couche au sol.

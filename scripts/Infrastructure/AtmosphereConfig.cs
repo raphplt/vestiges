@@ -24,6 +24,14 @@ public sealed class AtmosphereConfig
     public float CloudSpeedPxPerSecond { get; private init; }
     public float CloudScalePx { get; private init; }
 
+    /// <summary>
+    /// Ombres portées des grands décors (A3) : décalage à l'écran d'un pixel de hauteur (soleil bas, direction au sol
+    /// projetée en 2:1), hauteur visible minimale d'un décor qui projette, couleur de l'ombre.
+    /// </summary>
+    public Vector2 CastShadowPerHeight { get; private init; }
+    public float CastShadowMinHeightPx { get; private init; }
+    public Color CastShadowColor { get; private init; }
+
     public static bool TryLoad(out AtmosphereConfig config, out string error)
     {
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
@@ -50,11 +58,15 @@ public sealed class AtmosphereConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "racine", "grade", "clouds");
+            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows");
             JsonElement grade = reader.Section("grade");
             reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share", "strength");
             JsonElement clouds = reader.Section("clouds");
             reader.AllowOnly(clouds, "clouds", "direction_deg", "speed_px_s", "scale_px");
+            JsonElement shadows = reader.Section("cast_shadows");
+            reader.AllowOnly(shadows, "cast_shadows", "direction_deg", "length", "min_height_px", "color");
+            float shadowAngle = Mathf.DegToRad(reader.Number(shadows, "direction_deg"));
+            float shadowLength = reader.Positive(shadows, "length");
             AtmosphereConfig parsed = new()
             {
                 GradeFadeSeconds = reader.Positive(grade, "fade_seconds"),
@@ -63,7 +75,12 @@ public sealed class AtmosphereConfig
                 CloudDirection = Vector2.Right.Rotated(Mathf.DegToRad(reader.Number(clouds, "direction_deg"))),
                 CloudSpeedPxPerSecond = reader.NonNegative(clouds, "speed_px_s"),
                 CloudScalePx = reader.Positive(clouds, "scale_px"),
+                CastShadowPerHeight = new Vector2(Mathf.Cos(shadowAngle), Mathf.Sin(shadowAngle) * 0.5f) * shadowLength,
+                CastShadowMinHeightPx = reader.Positive(shadows, "min_height_px"),
+                CastShadowColor = reader.Rgb(shadows, "color"),
             };
+            if (shadowLength > 2f)
+                reader.Fail("cast_shadows.length : au plus 2 attendu");
             if (parsed.GradeFadeSeconds > 10f)
                 reader.Fail("grade.fade_seconds : au plus 10 s attendu");
             if (parsed.CloudSpeedPxPerSecond > 200f)

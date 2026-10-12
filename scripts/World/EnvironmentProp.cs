@@ -124,7 +124,8 @@ public partial class EnvironmentProp : StaticBody2D
 		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.TrampleMaxHeight && rules.Tramples(baseTexture.ResourcePath))
 			_baseSprite.Material = _trampleMaterial;
 
-		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight)
+		bool decal = !blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight;
+		if (decal)
 			ZIndex = -1;
 		else if (_footprint.OpaquePixels > 0)
 			AddChild(PropShadow.Create(ground));
@@ -146,6 +147,15 @@ public partial class EnvironmentProp : StaticBody2D
 			if (_swayMaterial != null)
 				_canopySprite.Material = _swayMaterial;
 			AddChild(_canopySprite);
+		}
+
+		// Ombres portées (plan 39 A3) : arbres et grands décors seulement, les petits gardent leur ombre de contact.
+		if (!decal && PropShadow.CastPerHeight != Vector2.Zero
+			&& (_canopySprite != null || _footprint.VisibleHeight >= PropShadow.CastMinHeightPx))
+		{
+			AddChild(PropShadow.CreateCast(baseTexture, _baseSprite.Offset, _baseSprite.Position));
+			if (_canopySprite != null)
+				AddChild(PropShadow.CreateCast(canopyTexture, _canopySprite.Offset, _canopySprite.Position));
 		}
 	}
 

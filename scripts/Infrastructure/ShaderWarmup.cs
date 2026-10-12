@@ -20,6 +20,7 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/sway.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/prop_forget.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/prop_trample.gdshader", SampleKind.Sprite),
+        ("res://assets/shaders/prop_cast_shadow.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/ground.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/path.gdshader", SampleKind.Mesh),
         ("res://assets/shaders/echo.gdshader", SampleKind.Sprite),

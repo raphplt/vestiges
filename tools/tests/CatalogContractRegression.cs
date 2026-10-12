@@ -475,6 +475,7 @@ public partial class CatalogContractRegression : Node
             ("champ d'atmosphère inconnu", root => root["atmosphere"]!["fog"] = 0.2, "clé « fog » inconnue"),
             ("ombre de nuage trop noire", root => root["atmosphere"]!["cloud_opacity"] = 0.9, "cloud_opacity"),
             ("couverture absente", root => root["atmosphere"]!.AsObject().Remove("cloud_cover"), "cloud_cover"),
+            ("ombre portée trop noire", root => root["atmosphere"]!["shadow_opacity"] = 0.9, "shadow_opacity"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
@@ -544,6 +545,9 @@ public partial class CatalogContractRegression : Node
             ("nuages trop petits", root => root["clouds"]!["scale_px"] = 10, "scale_px"),
             ("nuages trop rapides", root => root["clouds"]!["speed_px_s"] = 500, "speed_px_s"),
             ("nuages absents", root => root.Remove("clouds"), "clouds"),
+            ("ombre portée trop longue", root => root["cast_shadows"]!["length"] = 3, "cast_shadows.length"),
+            ("hauteur minimale nulle", root => root["cast_shadows"]!["min_height_px"] = 0, "min_height_px"),
+            ("couleur d'ombre invalide", root => root["cast_shadows"]!["color"] = new JsonArray(0, 0), "color"),
             ("section absente", root => root.Remove("grade"), "grade"),
             ("champ inconnu", root => root["grade"]!["speed"] = 1, "clé « speed » inconnue"),
         };

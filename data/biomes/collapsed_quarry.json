@@ -20,7 +20,8 @@
         "fog_density": 0.3,
         "fog_color": [0.45, 0.4, 0.35],
         "cloud_cover": 0.45,
-        "cloud_opacity": 0.28
+        "cloud_opacity": 0.28,
+        "shadow_opacity": 0.48
     },
     "map_weight": 0.5,
     "poi_pool": {

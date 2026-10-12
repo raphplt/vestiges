@@ -19,7 +19,8 @@
         "fog_density": 0.72,
         "fog_color": [0.48, 0.54, 0.6],
         "cloud_cover": 0.0,
-        "cloud_opacity": 0.0
+        "cloud_opacity": 0.0,
+        "shadow_opacity": 0.2
     },
     "poi_pool": {
         "searchable_building": 0.5,

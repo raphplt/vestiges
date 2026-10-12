@@ -37,6 +37,7 @@ public partial class BiomeAtmosphere : Node2D
 	private static readonly StringName GradeToneParameter = "world_grade_tone";
 	private static readonly StringName CloudsParameter = "world_clouds";
 	private static readonly StringName CloudScaleParameter = "world_cloud_scale";
+	private static readonly StringName CastShadowParameter = "world_cast_shadow";
 	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f);
 
 	private AtmosphereConfig _config;
@@ -180,6 +181,8 @@ public partial class BiomeAtmosphere : Node2D
 		RenderingServer.GlobalShaderParameterSet(GradeToneParameter,
 			new Vector4(grade.Saturation, grade.Contrast, entityShare, 0f));
 		PublishClouds(grade);
+		Color shadow = _config?.CastShadowColor ?? Colors.Black;
+		RenderingServer.GlobalShaderParameterSet(CastShadowParameter, new Vector4(shadow.R, shadow.G, shadow.B, grade.ShadowOpacity));
 	}
 
 	/// <summary>Le nuage se déplace vers la droite : le motif lu en monde recule d'autant (décalage soustrait).</summary>
@@ -190,21 +193,23 @@ public partial class BiomeAtmosphere : Node2D
 	}
 
 	/// <summary>Étalonnage tel que le shader le lit : les fondus interpolent ces valeurs, pas les réglages JSON.</summary>
-	private readonly record struct Grade(Vector3 Multiplier, float Saturation, float Contrast, float CloudCover, float CloudOpacity)
+	private readonly record struct Grade(
+		Vector3 Multiplier, float Saturation, float Contrast, float CloudCover, float CloudOpacity, float ShadowOpacity)
 	{
-		/// <summary>La force commune dose l'écart au neutre de l'étalonnage, pas les nuages.</summary>
+		/// <summary>La force commune dose l'écart au neutre de l'étalonnage, pas les nuages ni les ombres.</summary>
 		public static Grade Of(BiomeAtmosphereStyle style, float strength) => new(
 			Vector3.One.Lerp(style.GradeMultiplier(), strength),
 			Mathf.Lerp(1f, style.Saturation, strength),
 			Mathf.Lerp(1f, style.Contrast, strength),
-			style.CloudCover, style.CloudOpacity);
+			style.CloudCover, style.CloudOpacity, style.ShadowOpacity);
 
 		public static Grade Lerp(Grade from, Grade to, float t) => new(
 			from.Multiplier.Lerp(to.Multiplier, t),
 			Mathf.Lerp(from.Saturation, to.Saturation, t),
 			Mathf.Lerp(from.Contrast, to.Contrast, t),
 			Mathf.Lerp(from.CloudCover, to.CloudCover, t),
-			Mathf.Lerp(from.CloudOpacity, to.CloudOpacity, t));
+			Mathf.Lerp(from.CloudOpacity, to.CloudOpacity, t),
+			Mathf.Lerp(from.ShadowOpacity, to.ShadowOpacity, t));
 	}
 
 	private void CreateFogParticles()

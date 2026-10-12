@@ -5,13 +5,13 @@ namespace Vestiges.Infrastructure;
 /// <summary>
 /// Étalonnage et brume d'un biome (plan 39 A1), bloc « atmosphere » de <c>data/biomes/*.json</c>. L'étalonnage est
 /// publié dans <c>world_grade.gdshaderinc</c> par <c>World/BiomeAtmosphere</c>, avec les ombres de nuages (A2) :
-/// part du ciel couverte et noirceur de leur ombre.
+/// part du ciel couverte et noirceur de leur ombre, et l'opacité des ombres portées des grands décors (A3).
 /// </summary>
 public readonly record struct BiomeAtmosphereStyle(
     Color Tint, float TintStrength, float Exposure, float Saturation, float Contrast, float FogDensity, Color FogColor,
-    float CloudCover, float CloudOpacity)
+    float CloudCover, float CloudOpacity, float ShadowOpacity)
 {
-    public static readonly BiomeAtmosphereStyle Neutral = new(Colors.White, 0f, 1f, 1f, 1f, 0f, new Color(0.5f, 0.5f, 0.5f), 0f, 0f);
+    public static readonly BiomeAtmosphereStyle Neutral = new(Colors.White, 0f, 1f, 1f, 1f, 0f, new Color(0.5f, 0.5f, 0.5f), 0f, 0f, 0f);
 
     /// <summary>
     /// Multiplicateur de couleur du shader : la teinte est ramenée à une luminance de 1 pour colorer sans assombrir,

@@ -145,6 +145,16 @@ public partial class WorldSetup : Node2D
 
         _config = WorldGenConfig.Load();
         PropRules.Current = _config.PropRules;
+        // Ombres portées des décors (plan 39 A3) : réglées avant leur création. Fichier invalide : ombres de contact seules.
+        if (AtmosphereConfig.TryLoad(out AtmosphereConfig atmosphere, out _))
+        {
+            PropShadow.CastPerHeight = atmosphere.CastShadowPerHeight;
+            PropShadow.CastMinHeightPx = atmosphere.CastShadowMinHeightPx;
+        }
+        else
+        {
+            PropShadow.CastPerHeight = Vector2.Zero;
+        }
 
 
         // Génération du monde (calcul pur) sur un thread : l'écran de chargement s'affiche et s'anime pendant ce temps.

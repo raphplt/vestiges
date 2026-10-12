@@ -931,6 +931,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Plan 27 V4 : anneau de détonation de l'Instable blessé, cause de mort juste pour une explosion ou un événement, couloirs de tir allongés et épaissis ; planches et 4 contrôles vérifiés (7 octobre 2026).
 - [x] Plan 39 A1 : étalonnage des couleurs par biome (teinte, saturation, contraste) en uniformes globaux sur sol, routes, décors, canopées et à moitié sur les entités, fondu de 1,5 s, réglages et brume en JSON ; captures des cinq biomes et 213 contrôles de catalogues vérifiés (11 octobre 2026).
 - [x] Plan 39 A2 : ombres de nuages tramées au pixel qui défilent sur le sol, les routes, les décors et à moitié sur les entités, couverture et noirceur par biome en JSON ; captures des cinq biomes et contrôles de catalogues vérifiés (11 octobre 2026).
+- [x] Plan 39 A3 : ombres portées des arbres et grands décors (sprite retourné et cisaillé, matériau partagé), opacité par biome, effacées sous les nuages et dans l'oubli ; captures, contrôles de catalogues et banc vérifiés (12 octobre 2026).
 
 - [ ] Scope final : 3-4 biomes, 4+ personnages, 8+ types d'ennemis, 30+ perks, 10+ armes, 15+ Souvenirs, quêtes.
 - [ ] Bug fix et performance (60 FPS, 100+ ennemis en endgame).
