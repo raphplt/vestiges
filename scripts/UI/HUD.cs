@@ -36,6 +36,8 @@ public partial class HUD : CanvasLayer
     private static readonly Vector2 ReferenceResolution = new(960, 540);
 
     private const float PlateMargin = 8f;
+    // Case des chiffres de la colonne du haut droit : les icônes restent alignées quand un nombre s'allonge.
+    private const float TallyValueWidth = 32f;
     private const float ScoreAreaWidth = 260f;
     // Icônes 32×32 à ×2 (HUD dessiné à ×2, icône de 32 unités) : 2 unités de cadre autour.
     private const float WeaponSlotSize = 36f;
@@ -111,7 +113,6 @@ public partial class HUD : CanvasLayer
     private static readonly Color PalWhiteOff = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     private static readonly Color PalGold = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
     private static readonly Color PalOrangeFlame = new(0xE0 / 255f, 0x7B / 255f, 0x39 / 255f);
-    private static readonly Color PalCyanEssence = new(0x5E / 255f, 0xC4 / 255f, 0xC4 / 255f);
     private static readonly Color ResurgenceViolet = new(0.70f, 0.55f, 0.95f);
     // Réserve de Débordement prête : la case de l'arme s'éclaire en bleu pâle, comme le chiffre du coup renforcé.
     private static readonly Color OverflowSlotTint = new(0.75f, 1.05f, 1.45f);
@@ -337,13 +338,13 @@ public partial class HUD : CanvasLayer
 
     private void OnPerilChanged(int peril)
     {
-        _perilLabel.Text = string.Format(Tr("UI_HUD_PERIL"), peril);
+        _perilLabel.Text = peril.ToString(System.Globalization.CultureInfo.InvariantCulture);
         _perilPulse = 1f;
     }
 
     /// <summary>
-    /// Haut droit, sans plaque (plan 37 R2) : le score en grand, puis éliminations, Essence et Péril sur une ligne. Le
-    /// Péril y reste toujours, 0 compris (plan 34 G0 : il se lit sans pause). Chaque texte porte son contour sombre.
+    /// Haut droit, sans plaque (plan 37 R2) : le score en grand, puis une colonne éliminations, Essence, Péril (plan 41
+    /// R2). Le Péril y reste toujours, 0 compris (plan 34 G0 : il se lit sans pause). Chaque texte porte son contour sombre.
     /// </summary>
     private void BuildScoreArea()
     {
@@ -368,19 +369,28 @@ public partial class HUD : CanvasLayer
         _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
         anchor.AddChild(_gainLabel);
 
-        HBoxContainer tallyRow = RightAlignedRow(anchor, PlateMargin + 25f, 4);
-        PixelSkull skull = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-        tallyRow.AddChild(skull);
-        _killsLabel = MakeLabel("0", 14, PalWhiteOff, 4);
-        tallyRow.AddChild(_killsLabel);
-        tallyRow.AddChild(new Control { CustomMinimumSize = new Vector2(8f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
-        _essenceLabel = MakeLabel("", 11, PalCyanEssence, 3);
-        _essenceLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        tallyRow.AddChild(_essenceLabel);
-        tallyRow.AddChild(new Control { CustomMinimumSize = new Vector2(8f, 0f), MouseFilter = Control.MouseFilterEnum.Ignore });
-        _perilLabel = MakeLabel(string.Format(Tr("UI_HUD_PERIL"), 0), 11, PlayerSheet.PerilColor, 3);
-        _perilLabel.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        tallyRow.AddChild(_perilLabel);
+        // Une colonne sous le score (plan 41 R2) : une valeur par ligne, même taille, chiffres alignés sur le bord droit.
+        // Seules les icônes portent une couleur ; le score reste la seule valeur dorée.
+        _killsLabel = AddTallyRow(anchor, PlateMargin + 26f, "res://assets/ui/hud/plan25/kill_skull.png");
+        _essenceLabel = AddTallyRow(anchor, PlateMargin + 46f, "res://assets/ui/hud/plan25/essence_crystal.png");
+        _perilLabel = AddTallyRow(anchor, PlateMargin + 66f, "res://assets/ui/hud/plan25/peril_stele.png");
+    }
+
+    /// <summary>Ligne de la colonne : icône de 10 px puis chiffre, le chiffre dans une case de largeur fixe.</summary>
+    private static Label AddTallyRow(Control anchor, float top, string iconPath)
+    {
+        HBoxContainer row = RightAlignedRow(anchor, top, 6);
+        row.AddChild(new TextureRect
+        {
+            Texture = GD.Load<Texture2D>(iconPath), TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            StretchMode = TextureRect.StretchModeEnum.KeepCentered, CustomMinimumSize = new Vector2(10f, 10f),
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter, MouseFilter = Control.MouseFilterEnum.Ignore,
+        });
+        Label value = MakeLabel("0", 15, PalWhiteOff, 4);
+        value.HorizontalAlignment = HorizontalAlignment.Right;
+        value.CustomMinimumSize = new Vector2(TallyValueWidth, 0f);
+        row.AddChild(value);
+        return value;
     }
 
     /// <summary>Rangée collée au bord droit : ses éléments poussent vers la gauche quand un nombre s'allonge.</summary>
@@ -587,7 +597,7 @@ public partial class HUD : CanvasLayer
         _essence = amount;
         if (_essenceLabel == null)
             return;
-        string text = string.Format(Tr("UI_HUD_ESSENCE"), amount);
+        string text = amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
         _essenceLabel.Text = _essenceMultiplier > 1f ? $"×{_essenceMultiplier:0.#}  {text}" : text;
     }
 

@@ -15,6 +15,8 @@ Constat : mal aligné, éliminations trop petites, quatre couleurs qui se batten
 - Une seule couleur d'accent (le score), le reste dans la teinte du texte ; le Péril ne prend sa couleur qu'en montant.
 - Vérification : captures du HUD en run (`/capture`), avant/après.
 
+**Livré le 12 octobre :** sous le score (seule valeur dorée, légende « SCORE » grise), une colonne de trois lignes, éliminations, Essence, Péril : icône de 10 px puis chiffre, tous à 15 px dans la teinte du texte, dans une case de 32 px alignée sur le bord droit du score. Les icônes restent en colonne quand un nombre s'allonge. Deux icônes ajoutées au générateur du HUD (`tools/sprites/ui/hud.py`, `tools/generate_hud_sprites.py`) : cristal d'Essence et stèle du Péril, sur le modèle du crâne ; les autres textures ressortent identiques à l'octet. Les mots « Essence » et « Péril » ne sont plus écrits (les clés `UI_HUD_ESSENCE` et `UI_HUD_PERIL` ne servent plus au HUD) ; le multiplicateur d'Essence (× 1,5) reste devant le chiffre. `PixelSkull` retiré (le crâne passe par la même ligne que les deux autres). Captures avant/après regardées ; build et smoke verts.
+
 ## R3 — Colonnes de lumière (≈ 1 j)
 
 Constat : les blocs de lumière verticaux au-dessus des coffres et de certains lieux (Failles, Mémoriaux, Ateliers, fragments ; `World/LightColumn`, `light_column.gdshader`) datent d'avant les reprises visuelles et détonnent.

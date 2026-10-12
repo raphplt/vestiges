@@ -21,6 +21,20 @@
       10
     ]
   },
+  "essence": {
+    "file": "essence_crystal.png",
+    "size": [
+      10,
+      10
+    ]
+  },
+  "peril": {
+    "file": "peril_stele.png",
+    "size": [
+      10,
+      10
+    ]
+  },
   "minimap": {
     "size": [
       5,

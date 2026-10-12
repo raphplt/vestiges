@@ -24,13 +24,16 @@ def main() -> None:
     bar.alpha_composite(images["xp_tip_00"], (80, 0))
     rows = [("XP : métal patiné et mémoire dorée", [bar]),
             ("XP : 4 poses de remplissage, pointe, éclat", [images[f"xp_fill_{f:02}"] for f in range(4)] + [images["xp_tip_00"], images["xp_burst_01"]]),
-            ("Éliminations 10 px / minimap 5 px", [images["kill_skull"]] + [images[f"minimap_{name}"] for name in ("chest", "memorial", "rift", "place", "player")])]
+            ("Éliminations 10 px / minimap 5 px", [images["kill_skull"]] + [images[f"minimap_{name}"] for name in ("chest", "memorial", "rift", "place", "player")]),
+            ("Essence et Péril 10 px (plan 41 R2)", [images["essence_crystal"], images["peril_stele"]])]
     board(rows, args.sheet)
     if not args.dry_run:
         output = Path("assets/ui/hud/plan25")
         export(images, output, "generate_hud_sprites")
         manifest = {"xp": {"frame": "xp_frame.png", "margins": [4, 2, 4, 1], "fill_size": [16, 6], "frames": 4, "fps": 8},
                     "kills": {"file": "kill_skull.png", "size": [10, 10]},
+                    "essence": {"file": "essence_crystal.png", "size": [10, 10]},
+                    "peril": {"file": "peril_stele.png", "size": [10, 10]},
                     "minimap": {"size": [5, 5], "ids": ["chest", "memorial", "rift", "place", "player", "workshop", "peril_stele"]}}
         (output / "hud_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     print(f"[generate_hud_sprites] {len(images)} textures ; planche : {args.sheet}")

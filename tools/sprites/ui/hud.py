@@ -78,6 +78,13 @@ def assets() -> dict[str, Image.Image]:
     images["kill_skull"] = pattern(("  ssssss  ", " slllllls ", "slllllllls", "slddlddlls", "slddlddlos",
                                     "sllldlllos", " slllllos ", "  sososs  ", "  s s s   ", "          "),
                                    {"s": "#3A3535", "l": "#E8E0D4", "o": "#A68B6B", "d": "#1A1A2E"})
+    # Colonne du haut droit (plan 41 R2) : seules les icônes portent la couleur, les chiffres restent dans la teinte du texte.
+    images["essence_crystal"] = pattern(("    ss    ", "   swcs   ", "  swccds  ", " swcccdds ", "swccccddds",
+                                         " scccdds  ", "  sccds   ", "   scs    ", "    s     ", "          "),
+                                        {"s": "#1E4A52", "w": "#D8F4F0", "c": "#5EC4C4", "d": "#3A8A90"})
+    images["peril_stele"] = pattern(("   ssss   ", "  swrrrs  ", " swrrrdds ", " srrsrdds ", " srrsrdds ",
+                                     " srsrrdds ", " srrrrdds ", " srrrrdds ", "ssssssssss", "          "),
+                                    {"s": "#3A2228", "w": "#F2A5AA", "r": "#D9616B", "d": "#8E3540"})
     patterns = {"chest": (" sss ", "sllls", "ssoss", "sllls", " sss "),
                 "memorial": ("  l  ", " sls ", " sls ", " sls ", "sllls"),
                 "rift": ("  l s", " sll ", " ll  ", " lls ", "s l  "),
