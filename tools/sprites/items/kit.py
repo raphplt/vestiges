@@ -16,6 +16,7 @@ COLORS = {
     "rust": "#A85C30", "copper": "#B47A48", "patina": "#5A9A8A", "red": "#C4432B",
     "blue": "#5A7A9A", "navy": "#16213E", "paper": "#C8B898", "yellow": "#C4A830",
     "green": "#4A7A3A", "glass": "#8AB8C4", "violet": "#6B4FA0", "leather": "#7A5C42",
+    "mint": "#B8C8BE", "brass": "#C49B3E", "orange": "#E07B39", "tape": "#4A3728", "comb": "#8A5A42", "rubber": "#6B6161", "kraft": "#B4A080",
 }
 
 

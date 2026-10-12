@@ -17,19 +17,19 @@ public partial class ObjectsRegression
     {
         (string Id, Func<Player, float> Read, float Gain)[] items =
         {
-            ("lacets_noues", p => p.SpeedMultiplier, 0.08f),
+            ("dossard_froisse", p => p.SpeedMultiplier, 0.08f),
             ("pastille_mentholee", p => p.BonusRegenRate, 0.15f),
-            ("gros_bouton", p => p.EffectiveMaxHp, 12f),
+            ("bouillotte", p => p.EffectiveMaxHp, 12f),
             ("agrafe_rouillee", p => p.Armor, 1f),
             ("bons_points", p => p.XpGainMultiplier, 0.06f),
             ("capsule_porte_bonheur", p => p.LuckBonus, 0.03f),
             ("bande_magnetique", p => p.XpMagnetMultiplier, 0.15f),
             ("petite_cle", p => p.AttackSpeedMultiplier, 0.06f),
             ("compas", p => p.AoeMultiplier, 0.10f),
-            ("ruban_gradue", p => p.AttackRangeMultiplier, 0.10f),
+            ("longue_vue", p => p.AttackRangeMultiplier, 0.10f),
             ("verre_fele", p => p.CritChance, 0.03f),
-            ("ressort", p => p.Mobility.RechargeMultiplier, 0.08f),
-            ("ficelle_ciree", p => p.StatusDurationMultiplier, 0.12f),
+            ("yoyo", p => p.Mobility.RechargeMultiplier, 0.08f),
+            ("bocal_de_conserve", p => p.StatusDurationMultiplier, 0.12f),
             ("peigne_casse", p => p.ProjectilePierce, 1f),
             ("ampoule_rouge", p => p.Lifesteal, 0.005f),
             ("bille_irisee", p => p.CritMultiplier, 0.25f),
@@ -58,18 +58,18 @@ public partial class ObjectsRegression
         Setup();
         float Velocity() => _player.Mobility.Step(0.1f, Vector2.Right, _player.Speed * _player.SpeedMultiplier, 1f, true).Length();
         float baseVelocity = Velocity();
-        _player.AddItemCopy("lacets_noues");
-        _player.AddItemCopy("lacets_noues");
-        Check(Near(Velocity(), baseVelocity * 1.16f), "Lacets : la mobilité produit une vitesse réellement augmentée de 16 % avec deux copies");
-        _player.AddItemCopy("ressort");
-        _player.AddItemCopy("ressort");
+        _player.AddItemCopy("dossard_froisse");
+        _player.AddItemCopy("dossard_froisse");
+        Check(Near(Velocity(), baseVelocity * 1.16f), "Dossard : la mobilité produit une vitesse réellement augmentée de 16 % avec deux copies");
+        _player.AddItemCopy("yoyo");
+        _player.AddItemCopy("yoyo");
         _player.Mobility.Request();
         _player.Mobility.Step(0.01f, Vector2.Right, _player.Speed, 1f, true);
         Check(_player.Mobility.StartedThisStep && Near(_player.Mobility.CooldownRemaining, _player.Mobility.Config.CooldownSeconds / 1.16f),
-            "Ressort : démarrer un dash consomme la recharge réellement divisée par 1,16");
-        _player.ForgetItemCopy("ressort");
-        _player.ForgetItemCopy("ressort");
-        Check(Near(_player.Mobility.CooldownSeconds, _player.Mobility.Config.CooldownSeconds), "Ressort retiré : les prochains dashs reprennent la recharge de base");
+            "Yo-yo : démarrer un dash consomme la recharge réellement divisée par 1,16");
+        _player.ForgetItemCopy("yoyo");
+        _player.ForgetItemCopy("yoyo");
+        Check(Near(_player.Mobility.CooldownSeconds, _player.Mobility.Config.CooldownSeconds), "Yo-yo retiré : les prochains dashs reprennent la recharge de base");
 
         Setup();
         PlayerProgression progression = new() { Name = "PlayerProgression" };
@@ -93,19 +93,19 @@ public partial class ObjectsRegression
         float cadence = _player.GetWeaponStatForDisplay(bow, "attack_speed");
         float range = _player.GetWeaponStatForDisplay(bow, "range");
         _player.AddItemCopy("petite_cle");
-        _player.AddItemCopy("ruban_gradue");
+        _player.AddItemCopy("longue_vue");
         List<Timer> timers = (List<Timer>)typeof(Player).GetField("_weaponTimers", Private).GetValue(_player);
         Check(Near(_player.GetWeaponStatForDisplay(bow, "attack_speed"), cadence * 1.06f)
             && Near((float)timers[0].WaitTime, 1f / (cadence * 1.06f))
-            && Near(_player.GetWeaponStatForDisplay(bow, "range"), range * 1.1f), "Petite clé et Ruban : cadence et portée effectives de l’arme modifiées");
+            && Near(_player.GetWeaponStatForDisplay(bow, "range"), range * 1.1f), "Petite clé et Longue-vue : cadence et portée effectives de l’arme modifiées");
         _player.AddWeapon(WeaponDataLoader.Get("teachers_bell"));
         WeaponInstance bell = _player.WeaponSlots[1];
-        _player.AddItemCopy("ficelle_ciree");
-        _player.AddItemCopy("ficelle_ciree");
+        _player.AddItemCopy("bocal_de_conserve");
+        _player.AddItemCopy("bocal_de_conserve");
         Enemy target = SpawnEnemy();
         _player.OnProjectileHit(target, 1f, false, bell);
         Check(Near((float)typeof(Enemy).GetField("_slowTimer", Private).GetValue(target), 2f * 1.24f),
-            "Ficelle : la Cloche ralentit réellement pendant 2,48 s au lieu de 2 s");
+            "Bocal : la Cloche ralentit réellement pendant 2,48 s au lieu de 2 s");
         target.QueueFree();
         _player.AddItemCopy("bille_irisee");
         float critical = (float)typeof(Player).GetMethod("ProjectileDamage", Private).Invoke(_player, new object[] { 10f, true });
@@ -127,11 +127,11 @@ public partial class ObjectsRegression
         Check(blocked && Near(_player.CurrentHp - hp, (_player.BaseRegenRate + 0.3f) * 10f),
             "Pastilles : aucun soin pendant les deux secondes après blessure ; puis 18 PV/min ajoutés au soin réel");
         hp = _player.CurrentHp;
-        _player.AddItemCopy("gros_bouton");
+        _player.AddItemCopy("bouillotte");
         bool noHeal = Near(_player.CurrentHp, hp);
-        _player.ForgetItemCopy("gros_bouton");
-        _player.AddItemCopy("gros_bouton");
-        Check(noHeal && Near(_player.CurrentHp, hp), "Gros bouton : acquisition et échange ne rendent aucun PV");
+        _player.ForgetItemCopy("bouillotte");
+        _player.AddItemCopy("bouillotte");
+        Check(noHeal && Near(_player.CurrentHp, hp), "Bouillotte : acquisition et échange ne rendent aucun PV");
 
         Setup();
         _player.AddItemCopy("agrafe_rouillee");

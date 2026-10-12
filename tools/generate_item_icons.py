@@ -10,6 +10,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from tools.sprites.items.catalog_v2 import PLAY_ITEMS, STAT_ITEMS
 from tools.sprites.items.gadgets import GADGET_ITEMS
 from tools.sprites.items.icons import PROPERTY_ITEMS
 from tools.sprites.items.triggers import TRIGGER_ITEMS, WORLD_ITEMS, WORLD_NAMES
@@ -22,7 +23,7 @@ def write_manifest(output: Path) -> None:
     names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
     names.update(WORLD_NAMES)
     entries = []
-    for factory in PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS:
+    for factory in PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS + STAT_ITEMS + PLAY_ITEMS:
         item = factory()
         stem = item.model().stem
         entries.append({"id": item.item_id, "name": names[item.item_id], "icon": stem + ".png",
@@ -33,7 +34,7 @@ def write_manifest(output: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sheet", type=Path)
-    parser.add_argument("--lot", choices=("s2", "s3", "i6", "all"), default="s2")
+    parser.add_argument("--lot", choices=("s2", "s3", "i6", "all", "v2a", "v2b"), default="s2")
     parser.add_argument("--export", action="store_true")
     parser.add_argument("--ids", nargs="*")
     args = parser.parse_args()
@@ -41,7 +42,7 @@ def main() -> None:
     names = {entry["id"]: entry["name"] for entry in json.loads(Path("data/progression/passive_souvenirs.json").read_text())}
     names.update(WORLD_NAMES)
     factories = {"s2": PROPERTY_ITEMS, "s3": TRIGGER_ITEMS + WORLD_ITEMS, "i6": GADGET_ITEMS,
-                 "all": PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS}[args.lot]
+                 "all": PROPERTY_ITEMS + TRIGGER_ITEMS + GADGET_ITEMS + WORLD_ITEMS + STAT_ITEMS + PLAY_ITEMS, "v2a": STAT_ITEMS, "v2b": PLAY_ITEMS}[args.lot]
     rows, images = [], {}
     for factory in factories:
         item = factory()
@@ -58,6 +59,12 @@ def main() -> None:
     # Armes réellement utilisées en jeu, pour comparer densité et lumière dans la même planche.
     refs = [Image.open(Path("assets/weapons/icons") / f"weapon_icon_{name}.png").convert("RGBA") for name in ("sickle", "nail_gun", "music_box")]
     rows.append(("Référence : armes validées", refs))
+    if args.lot == "v2a":
+        # Écussons et objets dont un nouvel objet pourrait se confondre à 16 px.
+        for label, stems in (("Référence : Écussons repris", ("instinct", "ancrage", "memoire_vive")),
+                             ("Référence : Écussons repris", ("portee_etendue", "regeneration", "oeil_critique")),
+                             ("Référence : objets voisins", ("jeton_de_fete", "thermos", "flacon_de_pharmacie"))):
+            rows.append((label, [Image.open(Path("assets/items/icons") / f"item_{stem}.png").convert("RGBA") for stem in stems]))
     board(rows, args.sheet, columns=3)
     if args.export:
         export(images, Path("assets/items/icons"), "generate_item_icons")

@@ -1227,12 +1227,12 @@
     "max_copies": 0
   },
   {
-    "id": "lacets_noues",
+    "id": "dossard_froisse",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_semelle_usee.png",
-    "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
-    "name": "Lacets noués",
-    "description": "Vitesse de déplacement accrue. Les lacets tiennent encore.",
+    "icon": "res://assets/items/icons/item_dossard_froisse.png",
+    "icon_small": "res://assets/items/icons/item_dossard_froisse_16.png",
+    "name": "Dossard froissé",
+    "description": "Vitesse de déplacement accrue. Le numéro d'une course qu'on n'a jamais finie.",
     "icon_color": [
       0.6,
       0.45,
@@ -1253,8 +1253,8 @@
   {
     "id": "pastille_mentholee",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_boite_de_pansements.png",
-    "icon_small": "res://assets/items/icons/item_boite_de_pansements_16.png",
+    "icon": "res://assets/items/icons/item_pastille_mentholee.png",
+    "icon_small": "res://assets/items/icons/item_pastille_mentholee_16.png",
     "name": "Pastille mentholée",
     "description": "Soin progressif, suspendu pendant 2 s après une blessure.",
     "icon_color": [
@@ -1276,12 +1276,12 @@
     "survival": true
   },
   {
-    "id": "gros_bouton",
+    "id": "bouillotte",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_ancrage.png",
-    "icon_small": "res://assets/items/icons/item_ancrage_16.png",
-    "name": "Gros bouton",
-    "description": "Augmente les PV maximum sans rendre les PV manquants.",
+    "icon": "res://assets/items/icons/item_bouillotte.png",
+    "icon_small": "res://assets/items/icons/item_bouillotte_16.png",
+    "name": "Bouillotte",
+    "description": "Augmente les PV maximum sans rendre les PV manquants. Encore tiède.",
     "icon_color": [
       0.3,
       0.8,
@@ -1303,8 +1303,8 @@
   {
     "id": "agrafe_rouillee",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
-    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "icon": "res://assets/items/icons/item_agrafe_rouillee.png",
+    "icon_small": "res://assets/items/icons/item_agrafe_rouillee_16.png",
     "name": "Agrafe rouillée",
     "description": "Réduit les dégâts selon la formule et le plafond d’armure.",
     "icon_color": [
@@ -1328,8 +1328,8 @@
   {
     "id": "bons_points",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_photo_de_classe.png",
-    "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
+    "icon": "res://assets/items/icons/item_bons_points.png",
+    "icon_small": "res://assets/items/icons/item_bons_points_16.png",
     "name": "Bons points",
     "description": "Augmente l’expérience gagnée.",
     "icon_color": [
@@ -1352,8 +1352,8 @@
   {
     "id": "capsule_porte_bonheur",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_jeton_de_fete.png",
-    "icon_small": "res://assets/items/icons/item_jeton_de_fete_16.png",
+    "icon": "res://assets/items/icons/item_capsule_porte_bonheur.png",
+    "icon_small": "res://assets/items/icons/item_capsule_porte_bonheur_16.png",
     "name": "Capsule porte-bonheur",
     "description": "Favorise les améliorations et les raretés élevées des coffres. Ne change pas la rareté propre d’un objet.",
     "icon_color": [
@@ -1376,8 +1376,8 @@
   {
     "id": "bande_magnetique",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_siphon_essence.png",
-    "icon_small": "res://assets/items/icons/item_siphon_essence_16.png",
+    "icon": "res://assets/items/icons/item_bande_magnetique.png",
+    "icon_small": "res://assets/items/icons/item_bande_magnetique_16.png",
     "name": "Bande magnétique",
     "description": "Attire les fragments d’expérience de plus loin.",
     "icon_color": [
@@ -1400,8 +1400,8 @@
   {
     "id": "petite_cle",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_memoire_vive.png",
-    "icon_small": "res://assets/items/icons/item_memoire_vive_16.png",
+    "icon": "res://assets/items/icons/item_petite_cle.png",
+    "icon_small": "res://assets/items/icons/item_petite_cle_16.png",
     "name": "Petite clé",
     "description": "Les armes attaquent plus fréquemment.",
     "icon_color": [
@@ -1424,8 +1424,8 @@
   {
     "id": "compas",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_resonance.png",
-    "icon_small": "res://assets/items/icons/item_resonance_16.png",
+    "icon": "res://assets/items/icons/item_compas.png",
+    "icon_small": "res://assets/items/icons/item_compas_16.png",
     "name": "Compas",
     "description": "Agrandit les zones et angles des attaques compatibles.",
     "icon_color": [
@@ -1446,12 +1446,12 @@
     "initial_unlock": true
   },
   {
-    "id": "ruban_gradue",
+    "id": "longue_vue",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_portee_etendue.png",
-    "icon_small": "res://assets/items/icons/item_portee_etendue_16.png",
-    "name": "Ruban gradué",
-    "description": "Allonge la portée des attaques compatibles.",
+    "icon": "res://assets/items/icons/item_longue_vue.png",
+    "icon_small": "res://assets/items/icons/item_longue_vue_16.png",
+    "name": "Longue-vue",
+    "description": "Allonge la portée des attaques compatibles. Ce qui était loin se rapproche.",
     "icon_color": [
       0.5,
       0.8,
@@ -1472,8 +1472,8 @@
   {
     "id": "verre_fele",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_oeil_critique.png",
-    "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
+    "icon": "res://assets/items/icons/item_verre_fele.png",
+    "icon_small": "res://assets/items/icons/item_verre_fele_16.png",
     "name": "Verre fêlé",
     "description": "Augmente la probabilité d’un coup critique, jusqu’à 100 %.",
     "icon_color": [
@@ -1494,11 +1494,11 @@
     "initial_unlock": true
   },
   {
-    "id": "ressort",
+    "id": "yoyo",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_instinct.png",
-    "icon_small": "res://assets/items/icons/item_instinct_16.png",
-    "name": "Ressort",
+    "icon": "res://assets/items/icons/item_yoyo.png",
+    "icon_small": "res://assets/items/icons/item_yoyo_16.png",
+    "name": "Yo-yo",
     "description": "Divise la recharge du dash par 1 + 8 % par copie. Aucun dash ni invulnérabilité supplémentaire.",
     "icon_color": [
       0.3,
@@ -1518,12 +1518,12 @@
     "initial_unlock": true
   },
   {
-    "id": "ficelle_ciree",
+    "id": "bocal_de_conserve",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_persistance.png",
-    "icon_small": "res://assets/items/icons/item_persistance_16.png",
-    "name": "Ficelle cirée",
-    "description": "Prolonge les statuts dans leurs plafonds de contrôle.",
+    "icon": "res://assets/items/icons/item_bocal_de_conserve.png",
+    "icon_small": "res://assets/items/icons/item_bocal_de_conserve_16.png",
+    "name": "Bocal de conserve",
+    "description": "Prolonge les statuts dans leurs plafonds de contrôle. Ce qu'on met en bocal dure.",
     "icon_color": [
       0.85,
       0.75,
@@ -1544,8 +1544,8 @@
   {
     "id": "peigne_casse",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
-    "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
+    "icon": "res://assets/items/icons/item_peigne_casse.png",
+    "icon_small": "res://assets/items/icons/item_peigne_casse_16.png",
     "name": "Peigne cassé",
     "description": "Les attaques compatibles traversent une créature supplémentaire par copie.",
     "icon_color": [
@@ -1568,8 +1568,8 @@
   {
     "id": "ampoule_rouge",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_flacon_de_pharmacie.png",
-    "icon_small": "res://assets/items/icons/item_flacon_de_pharmacie_16.png",
+    "icon": "res://assets/items/icons/item_ampoule_rouge.png",
+    "icon_small": "res://assets/items/icons/item_ampoule_rouge_16.png",
     "name": "Ampoule rouge",
     "description": "Soin proportionnel aux dégâts éligibles réellement infligés ; plafond partagé de 8 % des PV max/s.",
     "icon_color": [
@@ -1593,8 +1593,8 @@
   {
     "id": "bille_irisee",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_oeil_critique.png",
-    "icon_small": "res://assets/items/icons/item_oeil_critique_16.png",
+    "icon": "res://assets/items/icons/item_bille_irisee.png",
+    "icon_small": "res://assets/items/icons/item_bille_irisee_16.png",
     "name": "Bille irisée",
     "description": "Augmente le multiplicateur des dégâts critiques de 0,25 par copie.",
     "icon_color": [
@@ -1617,8 +1617,8 @@
   {
     "id": "boucle_cabossee",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_carapace.png",
-    "icon_small": "res://assets/items/icons/item_carapace_16.png",
+    "icon": "res://assets/items/icons/item_boucle_cabossee.png",
+    "icon_small": "res://assets/items/icons/item_boucle_cabossee_16.png",
     "name": "Boucle cabossée",
     "description": "Augmente les points de bouclier maximum. L’acquisition ne recharge pas le bouclier.",
     "icon_color": [
@@ -1642,8 +1642,8 @@
   {
     "id": "diapositive_en_double",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_souffle_du_neant.png",
-    "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
+    "icon": "res://assets/items/icons/item_diapositive_en_double.png",
+    "icon_small": "res://assets/items/icons/item_diapositive_en_double_16.png",
     "name": "Diapositive en double",
     "description": "Une quantité supplémentaire par attaque compatible, satellites orbitaux compris.",
     "icon_color": [
@@ -1666,8 +1666,8 @@
   {
     "id": "tampon_elastique",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
-    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "icon": "res://assets/items/icons/item_tampon_elastique.png",
+    "icon_small": "res://assets/items/icons/item_tampon_elastique_16.png",
     "name": "Tampon élastique",
     "description": "Augmente la poussée des attaques compatibles, dans les résistances des créatures.",
     "icon_color": [
@@ -1690,8 +1690,8 @@
   {
     "id": "flechette_mousse",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_semelle_usee.png",
-    "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
+    "icon": "res://assets/items/icons/item_flechette_mousse.png",
+    "icon_small": "res://assets/items/icons/item_flechette_mousse_16.png",
     "name": "Fléchette mousse",
     "description": "Accélère les projectiles des armes compatibles ; ni cadence ni quantité supplémentaire.",
     "icon_color": [
@@ -1714,8 +1714,8 @@
   {
     "id": "roulement_lisse",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_montre_arretee.png",
-    "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
+    "icon": "res://assets/items/icons/item_roulement_lisse.png",
+    "icon_small": "res://assets/items/icons/item_roulement_lisse_16.png",
     "name": "Roulement lisse",
     "description": "Accélère la rotation des armes orbitales ; leur limite de touches par cible reste inchangée.",
     "icon_color": [
@@ -1738,8 +1738,8 @@
   {
     "id": "cordon_spirale",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_persistance.png",
-    "icon_small": "res://assets/items/icons/item_persistance_16.png",
+    "icon": "res://assets/items/icons/item_cordon_spirale.png",
+    "icon_small": "res://assets/items/icons/item_cordon_spirale_16.png",
     "name": "Cordon spiralé",
     "description": "Allonge les liaisons et rebonds des armes à chaîne.",
     "icon_color": [
@@ -1762,8 +1762,8 @@
   {
     "id": "fer_a_cheval_miniature",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_trefle_plastifie.png",
-    "icon_small": "res://assets/items/icons/item_trefle_plastifie_16.png",
+    "icon": "res://assets/items/icons/item_fer_a_cheval_miniature.png",
+    "icon_small": "res://assets/items/icons/item_fer_a_cheval_miniature_16.png",
     "name": "Fer à cheval miniature",
     "description": "Les projectiles déjà autoguidés corrigent leur trajectoire plus vite. Aucun guidage ajouté à un projectile droit.",
     "icon_color": [
@@ -1786,8 +1786,8 @@
   {
     "id": "domino_ebreche",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_stylo_quatre_couleurs.png",
-    "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
+    "icon": "res://assets/items/icons/item_domino_ebreche.png",
+    "icon_small": "res://assets/items/icons/item_domino_ebreche_16.png",
     "name": "Domino ébréché",
     "description": "Une cible supplémentaire dans les chaînes des armes compatibles.",
     "icon_color": [
@@ -1810,8 +1810,8 @@
   {
     "id": "etiquette_perdue",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_plan_de_metro.png",
-    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "icon": "res://assets/items/icons/item_etiquette_perdue.png",
+    "icon_small": "res://assets/items/icons/item_etiquette_perdue_16.png",
     "name": "Étiquette perdue",
     "description": "Indique les coffres fermés hors écran les plus proches ; une direction par copie, jusqu’à {max_pointers}. L’Oubli des repères garde priorité.",
     "icon_color": [
@@ -1838,8 +1838,8 @@
   {
     "id": "ticket_de_vestiaire",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_ticket_de_consigne.png",
-    "icon_small": "res://assets/items/icons/item_ticket_de_consigne_16.png",
+    "icon": "res://assets/items/icons/item_ticket_de_vestiaire.png",
+    "icon_small": "res://assets/items/icons/item_ticket_de_vestiaire_16.png",
     "name": "Ticket de vestiaire",
     "description": "Prolonge la présence des objets au sol de {extra_seconds_per_copy} s par copie. Ne protège pas de l’Effacement.",
     "icon_color": [
@@ -1865,8 +1865,8 @@
   {
     "id": "pied_de_biche",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_epingle_a_nourrice.png",
-    "icon_small": "res://assets/items/icons/item_epingle_a_nourrice_16.png",
+    "icon": "res://assets/items/icons/item_pied_de_biche.png",
+    "icon_small": "res://assets/items/icons/item_pied_de_biche_16.png",
     "name": "Pied-de-biche",
     "description": "{chance_per_copy%} de gratuité par copie, plafond {max_chance%}. Un seul jet par coffre, même en annulant ou sans Essence.",
     "icon_color": [
@@ -1893,8 +1893,8 @@
   {
     "id": "sonnette",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_sifflet_d_arbitre.png",
-    "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
+    "icon": "res://assets/items/icons/item_sonnette.png",
+    "icon_small": "res://assets/items/icons/item_sonnette_16.png",
     "name": "Sonnette",
     "description": "À la fermeture d’un nouveau coffre, attire l’XP déjà présente dans {radius_per_copy} px par copie. Ne crée aucune XP.",
     "icon_color": [
@@ -1920,8 +1920,8 @@
   {
     "id": "registre_biffe",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_plan_de_metro.png",
-    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "icon": "res://assets/items/icons/item_registre_biffe.png",
+    "icon_small": "res://assets/items/icons/item_registre_biffe_16.png",
     "name": "Registre biffé",
     "description": "Deux armes différentes touchant une même cible en {window_seconds} s déclenchent un impact additionnel. Recharge globale : {cooldown_seconds} s.",
     "icon_color": [
@@ -1948,8 +1948,8 @@
   {
     "id": "pelote_rouge",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_chewing_gum.png",
-    "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
+    "icon": "res://assets/items/icons/item_pelote_rouge.png",
+    "icon_small": "res://assets/items/icons/item_pelote_rouge_16.png",
     "name": "Pelote rouge",
     "description": "Après dash, lie les deux dernières cibles distinctes touchées à moins de {radius} px pendant {duration_seconds} s. Transfert plafonné à {max_ratio%}, recharge {cooldown_seconds} s ; sans récursion.",
     "icon_color": [
@@ -1978,8 +1978,8 @@
   {
     "id": "tampon_annule",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_gilet_reflechissant.png",
-    "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
+    "icon": "res://assets/items/icons/item_tampon_annule.png",
+    "icon_small": "res://assets/items/icons/item_tampon_annule_16.png",
     "name": "Tampon ANNULÉ",
     "description": "Chaque dash efface un projectile ennemi rencontré par copie. Ne protège ni du contact, ni des rayons, ni des zones au sol.",
     "icon_color": [
@@ -2002,8 +2002,8 @@
   {
     "id": "carnet_dadresses",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_plan_de_metro.png",
-    "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
+    "icon": "res://assets/items/icons/item_carnet_dadresses.png",
+    "icon_small": "res://assets/items/icons/item_carnet_dadresses_16.png",
     "name": "Carnet d’adresses",
     "description": "Chaque récompense de coffre propose un candidat supplémentaire par copie, de la rareté déjà tirée. Un seul objet reçu.",
     "icon_color": [
@@ -2029,8 +2029,8 @@
   {
     "id": "cassette_rembobinee",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_montre_arretee.png",
-    "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
+    "icon": "res://assets/items/icons/item_cassette_rembobinee.png",
+    "icon_small": "res://assets/items/icons/item_cassette_rembobinee_16.png",
     "name": "Cassette rembobinée",
     "description": "À la fin du dash, restitue une partie des PV de combat perdus dans les {history_seconds} dernières secondes. Recharge {cooldown_seconds} s ; aucune perte remboursée deux fois, ni résurrection.",
     "icon_color": [
@@ -2058,8 +2058,8 @@
   {
     "id": "portrait_efface",
     "kind": "item",
-    "icon": "res://assets/items/icons/item_photo_de_classe.png",
-    "icon_small": "res://assets/items/icons/item_photo_de_classe_16.png",
+    "icon": "res://assets/items/icons/item_portrait_efface.png",
+    "icon_small": "res://assets/items/icons/item_portrait_efface_16.png",
     "name": "Portrait effacé",
     "description": "Après dash, un souvenir attire les créatures ordinaires à moins de {radius} px pendant {seconds_per_copy} s par copie. Recharge {cooldown_seconds} s. Les élites, boss et attaques déjà engagées l’ignorent.",
     "icon_color": [

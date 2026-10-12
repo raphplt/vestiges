@@ -18,7 +18,7 @@ Une quête par objet. « Cumul » additionne plusieurs parties après activation
 |---|---|---|---|
 | Capsule porte-bonheur · Commun | **Petites fortunes** (`item_small_fortunes`) | Ouvrir **5 coffres**. | Cumul · 1 |
 | Tampon élastique · Commun | **Un peu de place** (`item_make_room`) | **80 éliminations à moins de 120 px** du joueur. | Cumul · 1 |
-| Ficelle cirée · Inhabituel | **Garder le fil** (`item_hold_the_thread`) | Éliminer **100 créatures ralenties**. | Cumul · 1 |
+| Bocal de conserve (ex-Ficelle cirée) · Inhabituel | **Garder le fil** (`item_hold_the_thread`) | Éliminer **100 créatures ralenties**. | Cumul · 1 |
 | Roulement lisse · Inhabituel | **Sur le même air** (`item_same_tune`) | **150 éliminations à la Boîte à musique**. | Cumul · 2 |
 | Cordon spiralé · Inhabituel | **Garder le contact** (`item_keep_in_touch`) | Porter **2 armes niveau 6** et traverser **1 Résurgence**. | Run · 2 |
 | Fer à cheval miniature · Inhabituel | **Retrouver le nord** (`item_find_north`) | **120 éliminations à la Boussole**. | Cumul · 1 |

@@ -286,6 +286,244 @@
       "icon": "item_opening_locket.png",
       "icon_16": "item_opening_locket_16.png",
       "world": true
+    },
+    {
+      "id": "dossard_froisse",
+      "name": "Dossard froissé",
+      "icon": "item_dossard_froisse.png",
+      "icon_16": "item_dossard_froisse_16.png",
+      "world": false
+    },
+    {
+      "id": "pastille_mentholee",
+      "name": "Pastille mentholée",
+      "icon": "item_pastille_mentholee.png",
+      "icon_16": "item_pastille_mentholee_16.png",
+      "world": false
+    },
+    {
+      "id": "bouillotte",
+      "name": "Bouillotte",
+      "icon": "item_bouillotte.png",
+      "icon_16": "item_bouillotte_16.png",
+      "world": false
+    },
+    {
+      "id": "agrafe_rouillee",
+      "name": "Agrafe rouillée",
+      "icon": "item_agrafe_rouillee.png",
+      "icon_16": "item_agrafe_rouillee_16.png",
+      "world": false
+    },
+    {
+      "id": "bons_points",
+      "name": "Bons points",
+      "icon": "item_bons_points.png",
+      "icon_16": "item_bons_points_16.png",
+      "world": false
+    },
+    {
+      "id": "capsule_porte_bonheur",
+      "name": "Capsule porte-bonheur",
+      "icon": "item_capsule_porte_bonheur.png",
+      "icon_16": "item_capsule_porte_bonheur_16.png",
+      "world": false
+    },
+    {
+      "id": "bande_magnetique",
+      "name": "Bande magnétique",
+      "icon": "item_bande_magnetique.png",
+      "icon_16": "item_bande_magnetique_16.png",
+      "world": false
+    },
+    {
+      "id": "petite_cle",
+      "name": "Petite clé",
+      "icon": "item_petite_cle.png",
+      "icon_16": "item_petite_cle_16.png",
+      "world": false
+    },
+    {
+      "id": "compas",
+      "name": "Compas",
+      "icon": "item_compas.png",
+      "icon_16": "item_compas_16.png",
+      "world": false
+    },
+    {
+      "id": "longue_vue",
+      "name": "Longue-vue",
+      "icon": "item_longue_vue.png",
+      "icon_16": "item_longue_vue_16.png",
+      "world": false
+    },
+    {
+      "id": "verre_fele",
+      "name": "Verre fêlé",
+      "icon": "item_verre_fele.png",
+      "icon_16": "item_verre_fele_16.png",
+      "world": false
+    },
+    {
+      "id": "yoyo",
+      "name": "Yo-yo",
+      "icon": "item_yoyo.png",
+      "icon_16": "item_yoyo_16.png",
+      "world": false
+    },
+    {
+      "id": "bocal_de_conserve",
+      "name": "Bocal de conserve",
+      "icon": "item_bocal_de_conserve.png",
+      "icon_16": "item_bocal_de_conserve_16.png",
+      "world": false
+    },
+    {
+      "id": "peigne_casse",
+      "name": "Peigne cassé",
+      "icon": "item_peigne_casse.png",
+      "icon_16": "item_peigne_casse_16.png",
+      "world": false
+    },
+    {
+      "id": "ampoule_rouge",
+      "name": "Ampoule rouge",
+      "icon": "item_ampoule_rouge.png",
+      "icon_16": "item_ampoule_rouge_16.png",
+      "world": false
+    },
+    {
+      "id": "bille_irisee",
+      "name": "Bille irisée",
+      "icon": "item_bille_irisee.png",
+      "icon_16": "item_bille_irisee_16.png",
+      "world": false
+    },
+    {
+      "id": "boucle_cabossee",
+      "name": "Boucle cabossée",
+      "icon": "item_boucle_cabossee.png",
+      "icon_16": "item_boucle_cabossee_16.png",
+      "world": false
+    },
+    {
+      "id": "diapositive_en_double",
+      "name": "Diapositive en double",
+      "icon": "item_diapositive_en_double.png",
+      "icon_16": "item_diapositive_en_double_16.png",
+      "world": false
+    },
+    {
+      "id": "tampon_elastique",
+      "name": "Tampon élastique",
+      "icon": "item_tampon_elastique.png",
+      "icon_16": "item_tampon_elastique_16.png",
+      "world": false
+    },
+    {
+      "id": "flechette_mousse",
+      "name": "Fléchette mousse",
+      "icon": "item_flechette_mousse.png",
+      "icon_16": "item_flechette_mousse_16.png",
+      "world": false
+    },
+    {
+      "id": "roulement_lisse",
+      "name": "Roulement lisse",
+      "icon": "item_roulement_lisse.png",
+      "icon_16": "item_roulement_lisse_16.png",
+      "world": false
+    },
+    {
+      "id": "cordon_spirale",
+      "name": "Cordon spiralé",
+      "icon": "item_cordon_spirale.png",
+      "icon_16": "item_cordon_spirale_16.png",
+      "world": false
+    },
+    {
+      "id": "fer_a_cheval_miniature",
+      "name": "Fer à cheval miniature",
+      "icon": "item_fer_a_cheval_miniature.png",
+      "icon_16": "item_fer_a_cheval_miniature_16.png",
+      "world": false
+    },
+    {
+      "id": "domino_ebreche",
+      "name": "Domino ébréché",
+      "icon": "item_domino_ebreche.png",
+      "icon_16": "item_domino_ebreche_16.png",
+      "world": false
+    },
+    {
+      "id": "etiquette_perdue",
+      "name": "Étiquette perdue",
+      "icon": "item_etiquette_perdue.png",
+      "icon_16": "item_etiquette_perdue_16.png",
+      "world": false
+    },
+    {
+      "id": "ticket_de_vestiaire",
+      "name": "Ticket de vestiaire",
+      "icon": "item_ticket_de_vestiaire.png",
+      "icon_16": "item_ticket_de_vestiaire_16.png",
+      "world": false
+    },
+    {
+      "id": "pied_de_biche",
+      "name": "Pied-de-biche",
+      "icon": "item_pied_de_biche.png",
+      "icon_16": "item_pied_de_biche_16.png",
+      "world": false
+    },
+    {
+      "id": "sonnette",
+      "name": "Sonnette",
+      "icon": "item_sonnette.png",
+      "icon_16": "item_sonnette_16.png",
+      "world": false
+    },
+    {
+      "id": "registre_biffe",
+      "name": "Registre biffé",
+      "icon": "item_registre_biffe.png",
+      "icon_16": "item_registre_biffe_16.png",
+      "world": false
+    },
+    {
+      "id": "pelote_rouge",
+      "name": "Pelote rouge",
+      "icon": "item_pelote_rouge.png",
+      "icon_16": "item_pelote_rouge_16.png",
+      "world": false
+    },
+    {
+      "id": "tampon_annule",
+      "name": "Tampon ANNULÉ",
+      "icon": "item_tampon_annule.png",
+      "icon_16": "item_tampon_annule_16.png",
+      "world": false
+    },
+    {
+      "id": "carnet_dadresses",
+      "name": "Carnet d’adresses",
+      "icon": "item_carnet_dadresses.png",
+      "icon_16": "item_carnet_dadresses_16.png",
+      "world": false
+    },
+    {
+      "id": "cassette_rembobinee",
+      "name": "Cassette rembobinée",
+      "icon": "item_cassette_rembobinee.png",
+      "icon_16": "item_cassette_rembobinee_16.png",
+      "world": false
+    },
+    {
+      "id": "portrait_efface",
+      "name": "Portrait effacé",
+      "icon": "item_portrait_efface.png",
+      "icon_16": "item_portrait_efface_16.png",
+      "world": false
     }
   ]
 }

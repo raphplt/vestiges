@@ -1589,3 +1589,14 @@ Raphaël valide les quinze quêtes préparées et demande leur implémentation d
 Lot unique au [plan des quêtes d’objets](35-quetes-objets-v2.md#5-lot-dactivation-livré--12-octobre-2026) : fusion de quinze fiches dans le catalogue actif (49 → 64), conservation des quêtes et sauvegardes historiques, suivi et notifications existants, accès Collection/Quêtes et déblocage du butin. Le verrou initial des quinze objets reste en données ; leur quête accomplie a priorité. Aucun nouveau sprite ni animation. Validation par événements réels, seuils/contre-exemples, sauvegarde, normal/dev et captures réelles ; la roadmap ne sera cochée qu’après preuves.
 
 Activation livrée le même jour : 64 fiches, dont 57 quêtes actives et les 7 Réminiscences historiquement dormantes. Les 49 fiches anciennes restent identiques. Huit suites vertes, captures Quêtes/Collection à 720p/1080p et déblocage du Pied-de-biche au cinquantième coffre vérifiés ; [preuves](35-quetes-objets-v2.md#6-preuves-dactivation). Les seuils validés restent sujets au retour de partie humaine.
+
+## 139. Icônes des 34 nouveaux objets — 12 octobre 2026
+
+Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sprites ». Découpage au [catalogue V2 §7](35-catalogue-objets-v2.md#7-icônes-des-34-nouveaux-objets--préparation-du-12-octobre-2026) : S10a (18 stats), S10b (16 armes et jeu), S10c (export et branchement), S10d (visuels en jeu, à décider).
+
+- **Conflits avec les Écussons** (Lacets noués, Gros bouton, Ressort, Ruban gradué, Ficelle cirée reprenaient le sujet d'un Écusson) : « en effet ça c'est pas ouf. il faudrait repenser ces objets (même fonctionnement mais identité différente) ». Proposition de l'agent, à juger sur la planche S10a : Dossard froissé, Bouillotte, Yo-yo, Longue-vue (l'antenne télescopique essayée d'abord ne se lisait pas), Bocal de conserve. Noms et IDs inchangés avant validation.
+- **Rareté :** cadre seul, aucune marque de rang sur l'icône.
+- **S10a :** planche d'abord, rien d'exporté ni branché avant validation.
+- **Visuels en jeu (S10d) :** Raphaël a demandé ce que c'était ; explication donnée, décision en attente.
+
+Après la planche S10a : « je valide à 100 % ces nouvelles identités et la planche aussi. Go, fais le reste ». **Acquis :** Dossard froissé, Bouillotte, Yo-yo, Longue-vue et Bocal de conserve remplacent les cinq objets, IDs compris ; planche S10a validée. S10b et S10c livrés le même jour ([§7.6](35-catalogue-objets-v2.md#76-s10b-et-s10c--livrés-12-octobre-2026)) ; la planche S10b n'a pas été validée séparément. S10d (visuels en jeu) reste en attente de décision.

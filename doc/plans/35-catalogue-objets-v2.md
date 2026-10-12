@@ -1,6 +1,6 @@
 # Plan 35 — Catalogue d’objets V2 : 56 objets
 
-12 octobre 2026. Complément du [plan de rareté et d’équilibrage](35-raretes-des-objets.md), après les deux séries de retours de Raphaël (DECISIONS §128 et §132). **Plan validé et implémenté (DECISIONS §133), hors nouveaux sprites et animations.** Les 22 objets existants et les 34 nouveaux ont leurs raccordements et contrôles par lot ; recette globale et équilibre des builds se distinguent de ces preuves techniques. Les [quinze quêtes Q sont intégrées](35-quetes-objets-v2.md), activation vérifiée (DECISIONS §138). Le plan principal fait autorité sur les 22 effets révisés.
+12 octobre 2026. **Icônes propres des 34 nouveaux objets livrées le même jour (§7).** Complément du [plan de rareté et d’équilibrage](35-raretes-des-objets.md), après les deux séries de retours de Raphaël (DECISIONS §128 et §132). **Plan validé et implémenté (DECISIONS §133), hors nouveaux sprites et animations.** Les 22 objets existants et les 34 nouveaux ont leurs raccordements et contrôles par lot ; recette globale et équilibre des builds se distinguent de ces preuves techniques. Les [quinze quêtes Q sont intégrées](35-quetes-objets-v2.md), activation vérifiée (DECISIONS §138). Le plan principal fait autorité sur les 22 effets révisés.
 
 ## 1. Inspiration et identité
 
@@ -25,19 +25,19 @@ Pour Vestiges, la fonction du petit objet quotidien explique l’effet : une ét
 
 | Rareté | Objet proposé (`id`) | Effet par copie | Accès |
 |---|---|---|---|
-| Commun | Lacets noués (`lacets_noues`) | **+8 % vitesse de déplacement**. Le lacet qui tient encore quand tout lâche. | D |
+| Commun | Dossard froissé (`dossard_froisse`, ex-Lacets noués) | **+8 % vitesse de déplacement**. Le numéro d'une course qu'on n'a jamais finie. | D |
 | Commun | Pastille mentholée (`pastille_mentholee`) | **+9 PV/min de régénération par copie**, rendus progressivement ; respecte les 2 s sans régénération après blessure. Débit théorique : 9/18/27 PV/min avec 1/2/3 copies, pas un soin groupé toutes les minutes. | D |
-| Commun | Gros bouton (`gros_bouton`) | **+12 PV max** ; ne soigne pas les PV manquants lors d’un échange. | D |
+| Commun | Bouillotte (`bouillotte`, ex-Gros bouton) | **+12 PV max** ; ne soigne pas les PV manquants lors d’un échange. | D |
 | Commun | Agrafe rouillée (`agrafe_rouillee`) | **+1 armure**, selon la formule et le plafond du joueur. | D |
 | Commun | Bons points (`bons_points`) | **+6 % XP gagnée**. | D |
 | Commun | Capsule porte-bonheur (`capsule_porte_bonheur`) | **+3 points de Chance** (valeur interne +0,03). Améliore aussi les probabilités des raretés élevées dans les coffres, via la formule du plan principal §5.1 ; ne change jamais la rareté fixe d’un objet. | Q |
 | Commun | Bande magnétique (`bande_magnetique`) | **+15 % rayon d’attraction de l’XP**. Un morceau de cassette qui attire encore les souvenirs épars. | D |
 | Inhabituel | Petite clé (`petite_cle`) | **+6 % cadence d’attaque**. | D |
 | Inhabituel | Compas (`compas`) | **+10 % taille des zones d’attaque** selon la grammaire de chaque arme. | D |
-| Inhabituel | Ruban gradué (`ruban_gradue`) | **+10 % portée des attaques** compatibles. | D |
+| Inhabituel | Longue-vue (`longue_vue`, ex-Ruban gradué) | **+10 % portée des attaques** compatibles. | D |
 | Inhabituel | Verre fêlé (`verre_fele`) | **+3 points de chance critique**. Disponible dès le profil neuf conformément à DECISIONS §131 ; pas de critique de base ajouté. | D |
-| Inhabituel | Ressort (`ressort`) | Dash qui se **recharge 8 % plus vite** par copie : durée de recharge divisée par `1 + 0,08n`. Ne donne pas de dash gratuit ni d’invulnérabilité. | D |
-| Inhabituel | Ficelle cirée (`ficelle_ciree`) | **+12 % durée des statuts**, dans les plafonds anti-contrôle continu des objets. | Q |
+| Inhabituel | Yo-yo (`yoyo`, ex-Ressort) | Dash qui se **recharge 8 % plus vite** par copie : durée de recharge divisée par `1 + 0,08n`. Ne donne pas de dash gratuit ni d’invulnérabilité. | D |
+| Inhabituel | Bocal de conserve (`bocal_de_conserve`, ex-Ficelle cirée) | **+12 % durée des statuts**, dans les plafonds anti-contrôle continu des objets. | Q |
 | Rare | Peigne cassé (`peigne_casse`) | **+1 perforation** aux attaques compatibles. | Q |
 | Rare | Ampoule rouge (`ampoule_rouge`) | **+0,5 point de vol de vie**, sur les dégâts éligibles réellement infligés (surplus au-delà des PV restants exclu), avec plafond partagé entre les armes proposé à **8 % des PV max/s**. Pas de plafond commun avec la régénération ; une copie ne garantit jamais ce débit. | Q |
 | Rare | Bille irisée (`bille_irisee`) | **+25 points au multiplicateur critique** (×1,5 devient ×1,75 avec une copie). | Q |
@@ -85,11 +85,11 @@ Les **19 stats globales existantes** sont toutes couvertes ; aucune nouvelle sta
 | Stat réelle | Objet(s) proposé(s) |
 |---|---|
 | `damage` | Semelle, Tabouret, Thermos, Médaille, Thermomètre, Épingle, Gilet, Porte-monnaie |
-| `speed` | Lacets noués |
-| `max_hp` | Gros bouton |
+| `speed` | Dossard froissé |
+| `max_hp` | Bouillotte |
 | `attack_speed` | Petite clé |
 | `aoe_radius` | Compas |
-| `attack_range` | Ruban gradué |
+| `attack_range` | Longue-vue |
 | `regen_rate` | Pastille mentholée |
 | `lifesteal` | Ampoule rouge |
 | `armor` | Agrafe rouillée |
@@ -100,9 +100,9 @@ Les **19 stats globales existantes** sont toutes couvertes ; aucune nouvelle sta
 | `xp_magnet_radius` | Bande magnétique |
 | `luck` | Capsule porte-bonheur |
 | `xp_gain` | Bons points |
-| `dash_recharge` | Ressort |
+| `dash_recharge` | Yo-yo |
 | `projectile_bonus` | Diapositive en double |
-| `status_duration` | Ficelle cirée |
+| `status_duration` | Bocal de conserve |
 
 Propriétés d’armes supplémentaires : `knockback`, `projectile_speed`, `orbital_speed`, `chain_range`, `homing_strength`, `chain_targets` via §3.2 ; quantité commune `projectile_count` et `projectile_bonus` via Diapositive, orbitales incluses ; angles et taille via Compas. `peril` reste représenté par le Sifflet. Évasion, épines et sursoin ne sont pas ajoutés simplement parce qu’ils existent dans Megabonk.
 
@@ -134,3 +134,89 @@ Exigence explicite de Raphaël : aucun objet ne peut être déclaré livré sur 
 - **Limites lisibles :** taux de statut, plafond partagé entre armes, recharge, nombre de copies et prochain cumul dans la fiche. Vol de vie : taux prélevé et plafond en PV/s distincts du débit passif de régénération. Quantité orbitale visible dans la même famille « projectiles », pas un compteur de bonus concurrent.
 - **En jeu :** garder brûlure/ralentissement/poison lisibles ; signal bref quand le Pied-de-biche économise l’Essence, flèches uniquement avec l’Étiquette, nombre de satellites réellement augmenté, leurre qui attire vraiment. Retour visuel quand il aide à comprendre, sans ajouter une particule par bonus statistique ni un encombrement permanent.
 - **Preuves avant activation :** assertions de résultat en run/banc, captures pause et effets à 720p/1080p, clavier et manette ; aucun texte trompeur si une arme est incompatible. Les effets fréquents utilisent les pools existants. L’objet reste hors tirage tant que ces raccordements ne sont pas complets.
+
+## 7. Icônes des 34 nouveaux objets — préparation du 12 octobre 2026
+
+Demande de Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sprites ». **S10a–S10c livrés le 12 octobre (§7.6) ; S10d en attente.** Aujourd'hui chacun des 34 objets du §3 prête l'icône d'un Écusson ou d'un autre objet (`icon` de `data/progression/passive_souvenirs.json`) : Capsule et Écusson du forain partagent le jeton, Verre fêlé et Bille irisée les lunettes, quatre objets le Plan de métro. Cible : une icône 32 × 32 et sa version 16 × 16 par objet, aucune icône partagée.
+
+### 7.1 Règles de dessin
+
+- Même pipeline et même vue que les objets du plan 25 (S2/S3) et les armes validées : modèles SDF dans `tools/sprites/items/`, lumière haut-gauche, quatre tons, contour sel-out, rendu natif en 32 et en 16 px, sans tirage aléatoire. `tools/generate_item_icons.py` reçoit deux lots, `v2a` et `v2b`.
+- **Silhouette avant détail** : chaque icône se reconnaît à 16 px parmi les 56 objets et les 16 Écussons. Pas deux papiers rectangulaires de la même couleur, pas deux spirales, pas deux disques métalliques.
+- **Conflits avec les Écussons**, qui gardent les dessins des anciens objets de stats : Lacets noués / Lacet rouge, Gros bouton / Bouton de manteau, Ressort / Ressort de sommier, Ruban gradué / Mètre pliant, Ficelle cirée / Bobine de fil. Raphaël : « il faudrait repenser ces objets (même fonctionnement mais identité différente) ». Nouvelles identités proposées au §7.2, à juger sur la planche S10a ; noms et IDs renommés seulement après validation (références : fiches, `data/quests/quests.json`, traductions, `tools/tests/`).
+- Rareté : **cadre seul** (Raphaël, 12 octobre). L'icône reste neutre, pas de doré ni d'effilochure liés au rang.
+- Un dessin sert l'effet quand c'est possible : le crayon dans la cassette rembobine, la pelote laisse filer un fil, le visage du portrait s'efface.
+
+### 7.2 Sujets proposés
+
+| Objet | Sujet de l'icône | Couleur dominante | Écart à surveiller |
+|---|---|---|---|
+| Lacets noués → **Dossard froissé** | Dossard de course en tissu blanc, gros numéro, coins épinglés, un coin replié | Blanc, rouge | Photo de classe, bons points |
+| Pastille mentholée | Boîte ronde en fer entrouverte, pastilles blanches, couvercle vert menthe | Vert, acier | Jeton, rondelle |
+| Gros bouton → **Bouillotte** | Bouillotte en caoutchouc rouge striée, bouchon vissé, un peu affaissée | Rouge | Thermos |
+| Agrafe rouillée | Barrette d'agrafes entamée, une agrafe dépliée devant, rouille orangée | Rouille | Épingle à nourrice |
+| Bons points | Deux cartons « bon point » décalés, bords bleu et rouge, grosse étoile dorée (trois cartons devenaient illisibles à 16 px) | Papier, rouge, bleu | Photo de classe |
+| Capsule porte-bonheur | Capsule de bouteille dentelée, cabossée, trèfle peint dessus | Rouge, acier | Jeton de fête (Écusson du forain) |
+| Bande magnétique | Petite bobine ouverte à flasques blanches, bande brune enroulée dont la queue s'échappe (le ruban seul se lisait comme une chaîne) | Blanc, brun | Cassette rembobinée, capsule |
+| Petite clé | Petite clé de journal intime en laiton, anneau, panneton simple | Laiton | Épingle |
+| Compas | Compas d'écolier ouvert en V, pointe et mine, molette | Acier, bleu | Ruban gradué |
+| Ruban gradué → **Longue-vue** | Petite longue-vue de laiton dépliée, trois tubes, objectif de verre (l'antenne télescopique essayée d'abord se lisait comme un bâton) | Laiton | Stylo, thermomètre |
+| Verre fêlé | Verre de cantine strié, fêlure en éclair, un éclat détaché | Verre | Lunettes, presse-papier |
+| Ressort → **Yo-yo** | Yo-yo de bois peint vu de trois quarts, ficelle qui se déroule avec sa boucle | Bleu, bois | Roulement, capsule |
+| Ficelle cirée → **Bocal de conserve** | Bocal à joint orange et fermeture métallique, fruits au sirop, étiquette manuscrite | Verre, orange | Flacon de pharmacie, ampoule |
+| Peigne cassé | Peigne de poche noir cassé en deux, dents manquantes | Sombre | Domino |
+| Ampoule rouge | Ampoule à vis de chambre noire, verre rouge, filament visible | Rouge, laiton | Flacon de pharmacie |
+| Bille irisée | Grosse bille de verre, torsade colorée à l'intérieur, reflet | Verre, violet | Presse-papier |
+| Boucle cabossée | Boucle de ceinture carrée en métal, cabossée, ardillon tordu | Acier, laiton | Médaille |
+| Diapositive en double | Deux diapositives 35 mm à cadre blanc superposées et décalées, image bleutée | Papier, bleu | Photo de classe |
+| Tampon élastique | Butoir de porte conique en caoutchouc noir, vis dépassant (le « tampon » qui fait rebondir) | Sombre | Tampon ANNULÉ |
+| Fléchette mousse | Fléchette en mousse orange à ventouse | Orange, bleu | Pied-de-biche |
+| Roulement lisse | Roulement à billes vu de trois quarts, billes visibles, graisse | Acier | Rondelle de cuivre |
+| Cordon spiralé | Cordon de téléphone beige en spirale serrée, fiche au bout | Beige | Ressort |
+| Fer à cheval miniature | Petit fer à cheval porte-bonheur, clous, ruban rouge noué | Acier, rouge | Trèfle plastifié |
+| Domino ébréché | Domino ivoire debout, points noirs, coin ébréché | Ivoire | Peigne, bons points |
+| Étiquette perdue | Étiquette de bagage en kraft, œillet, ficelle, adresse griffonnée | Kraft | Ticket de consigne |
+| Ticket de vestiaire | Jeton numéroté en plastique rouge suspendu à un crochet de vestiaire | Rouge, acier | Tickets papier |
+| Pied-de-biche | Pied-de-biche rouge en diagonale, pied fendu, éclats de peinture | Rouge, acier | Fléchette |
+| Sonnette | Sonnette de vélo chromée, levier, coque bombée | Acier | Boîte de pastilles |
+| Registre biffé | Gros registre relié toile ouvert, lignes barrées à l'encre rouge | Toile verte, papier | Carnet, plan de métro |
+| Pelote rouge | Pelote de laine rouge, un fil qui part et serpente | Rouge | Bobine, gros bouton |
+| Tampon ANNULÉ | Tampon encreur à manche bois sur un papier marqué d'un rectangle rouge « ANNULÉ » | Bois, rouge | Butoir |
+| Carnet d'adresses | Petit carnet à onglets alphabétiques, cuir sombre, tranche dorée | Cuir, doré | Registre |
+| Cassette rembobinée | Cassette audio, crayon engagé dans une bobine, bande qui pend | Sombre, doré | Bande magnétique |
+| Portrait effacé | Portrait ovale dans un cadre doré, visage qui s'efface en pixels violets | Doré, violet | Photo de classe |
+
+### 7.3 Lots
+
+| Lot | Contenu | Preuves |
+|---|---|---|
+| **S10a** | 18 objets de statistiques (§3.1), module `tools/sprites/items/catalog_v2.py`, `--lot v2a` | Planche 32/16 sur fond sombre avec les 22 objets existants et les 16 Écussons en référence, inspectée ; régénération identique octet pour octet. **Validation de Raphaël avant export.** |
+| **S10b** | 16 objets d'arme et de jeu (§3.2, §3.3), `--lot v2b` | Mêmes preuves. |
+| **S10c** | Export validé : PNG + `.import` (smoke test), champs `icon`/`icon_small` des 34 fiches, `items_manifest.json`, `icon_color` relu | Build 0 warning, smoke, `tools/test_objects.sh`, captures du choix de coffre, de la pause et de la Collection à 720p et 1080p regardées. |
+| S10d (à décider) | Visuels en jeu exclus au §133 : silhouette du Portrait, fil de la Pelote, éclat du Tampon ANNULÉ, signal du Pied-de-biche, onde de la Sonnette | Lot séparé, pools existants ; non lancé sans accord. |
+
+### 7.4 Questions à Raphaël
+
+1. ~~Conflits avec les Écussons~~ : cinq objets repensés, identités validées « à 100 % » et renommées (§7.6).
+2. ~~Rareté sur l'icône~~ : cadre seul.
+3. S10d (visuels en jeu) : expliqué à Raphaël le 12 octobre, décision en attente ; non lancé.
+
+### 7.5 S10a — planche proposée, 12 octobre 2026
+
+`python3 tools/generate_item_icons.py --lot v2a --sheet doc/plans/planches/35-s10a-objets.png` produit la [planche S10a](planches/35-s10a-objets.png) : les 18 objets de statistiques, modèles dans `tools/sprites/items/catalog_v2.py`, rendu natif 32 et 16 px, sur fond sombre et sur le cadre de carte. Références sur la même planche : armes validées, les six Écussons dont un objet pouvait se rapprocher, jeton, thermos et flacon. Cinq couleurs ajoutées à `tools/sprites/items/kit.py`, toutes de la charte (menthe, laiton, orange, bande, écaille) ; les modèles existants n'en utilisent aucune, leurs PNG ne changent pas.
+
+Planche inspectée ; quatre sujets repris après une première passe (bons points, bande magnétique, antenne remplacée par la longue-vue, ampoule trop ronde qui se lisait comme un gant). Deux générations identiques : SHA-256 `b6757f7e669da804e9015913c27e89148c5e7a5f5c6c454b8201084367eac7cc`.
+
+**Soumise à Raphaël : sujets, lecture à 16 px et cinq nouvelles identités (Dossard froissé, Bouillotte, Yo-yo, Longue-vue, Bocal de conserve).** Rien n'est exporté dans `assets/`, aucune fiche ni aucun ID n'est modifié. Suite : S10b.
+
+Planche S10a validée par Raphaël, ainsi que les cinq identités (« je valide à 100 % ces nouvelles identités et la planche aussi »).
+
+### 7.6 S10b et S10c — livrés, 12 octobre 2026
+
+**S10b.** `--lot v2b` produit la [planche S10b](planches/35-s10b-objets.png) : les 16 objets d'arme et de jeu. Première passe inspectée ; repris le cordon (spirale fondue en boudin), le pied-de-biche (lu comme un sucre d'orge : acier noirci, peinture rouge sur la tige), la sonnette (de profil, un casque ; de dessus, une poêle tant que le collier faisait manche), le jeton de vestiaire (rond, lu comme une bombe : oblong), le carnet (onglets invisibles : couleurs), la cassette (noire sur fond sombre) et le butoir (tassé). Deux couleurs de la charte ajoutées au kit : caoutchouc `#6B6161`, kraft `#B4A080`. La planche S10b est passée sans validation séparée : Raphaël a demandé de « faire le reste » dans la foulée.
+
+**S10c.** Renommage des cinq identités : `lacets_noues` → `dossard_froisse`, `gros_bouton` → `bouillotte`, `ressort` → `yoyo`, `ruban_gradue` → `longue_vue`, `ficelle_ciree` → `bocal_de_conserve`, dans les fiches, la récompense de la quête « Garder le fil » (ID de quête inchangé) et trois scènes de test. Aucune migration : les déblocages se déduisent des quêtes accomplies (`MetaSaveManager.IsUnlocked`), jamais d'un ID d'objet sauvegardé. Effets, valeurs et raretés inchangés ; trois descriptions reçoivent une phrase d'identité.
+
+68 PNG exportés dans `assets/items/icons/` avec leurs `.import` (smoke test), `items_manifest.json` complété (les objets V2 n'y sont pas marqués « monde »), `icon`/`icon_small` des 34 fiches. Contrôle : 56 objets et 16 Écussons, aucune icône partagée, aucun fichier manquant. Aucun PNG existant modifié par l'export. `icon_color` laissé tel quel : il ne sert qu'en l'absence d'icône.
+
+Vérifications : smoke vert ; `test_objects.sh`, `test_quests.sh`, `test_catalogs.sh`, `test_inventory.sh`, `test_item_loot.sh` à zéro échec. Captures 4K regardées : pause avec six nouveaux objets dans le sac et HUD en 16 px (`--capture-pause --capture-new-items`), galerie de butin de tous les objets en profil dev (`--capture-loot --capture-loot-gallery`). Nouveaux noms et icônes visibles, lisibles sur les cartes de rareté. Planches S10a et S10b régénérées identiques octet pour octet.

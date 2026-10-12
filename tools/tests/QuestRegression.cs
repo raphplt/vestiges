@@ -31,8 +31,8 @@ public partial class QuestRegression : Node
         "memoire_vive", "resonance", "portee_etendue", "persistance", "ancrage", "regeneration", "instinct",
         "siphon_essence", "photo_de_classe", "jeton_de_fete", "allumette_humide", "glacon", "de_a_coudre",
         "semelle_usee", "chewing_gum", "plan_de_metro", "flacon_de_pharmacie", "montre_arretee",
-        "lacets_noues", "pastille_mentholee", "gros_bouton", "agrafe_rouillee", "bons_points", "bande_magnetique",
-        "petite_cle", "compas", "ruban_gradue", "verre_fele", "ressort", "boucle_cabossee", "diapositive_en_double",
+        "dossard_froisse", "pastille_mentholee", "bouillotte", "agrafe_rouillee", "bons_points", "bande_magnetique",
+        "petite_cle", "compas", "longue_vue", "verre_fele", "yoyo", "boucle_cabossee", "diapositive_en_double",
         "flechette_mousse", "etiquette_perdue", "sonnette", "tampon_annule", "carnet_dadresses", "cassette_rembobinee",
     };
 

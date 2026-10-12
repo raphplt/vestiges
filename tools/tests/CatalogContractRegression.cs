@@ -134,7 +134,7 @@ public partial class CatalogContractRegression : Node
         (string, Action<JsonArray>, string)[] cases =
         {
             ("statistique inconnue", items => Effect(items, "memoire_vive")["stat"] = "attack_sped", "statistique « attack_sped » inconnue"),
-            ("accès initial non booléen", items => Item(items, "lacets_noues")["initial_unlock"] = "false", "initial_unlock : booléen attendu"),
+            ("accès initial non booléen", items => Item(items, "dossard_froisse")["initial_unlock"] = "false", "initial_unlock : booléen attendu"),
             ("accès réservé sur Écusson", items => Item(items, "memoire_vive")["initial_unlock"] = false, "initial_unlock : réservé aux objets"),
             ("modificateur non admis", items => Effect(items, "memoire_vive")["modifier_type"] = "additive", "modificateur « additive » non admis"),
             ("pas nul", items => Effect(items, "memoire_vive")["step"] = 0, "step : 0 (pas non nul attendu)"),
