@@ -1,5 +1,5 @@
 {
-    "_doc": "Météo de la run (plan 39 A5), lue par Infrastructure/WeatherConfig et tirée par World/WeatherDirector, à part des micro-événements : elle ne prend pas leur créneau et peut s'y superposer. Une météo à la fois ; la première après first_sec, puis une pause de gap_sec après chaque fin (secondes, [min, max]). Tirée selon le biome où se trouve le joueur (biomes : poids, absent ou 0 = jamais), suspendue pendant un boss. Effets sur les couches d'atmosphère du biome, en fondu de fade_sec : grade multiplie saturation, contraste et exposition de l'étalonnage ; clouds impose une couverture et une noirceur minimales et multiplie la vitesse du défilement ; shadows multiplie l'opacité des ombres portées ; view réduit la vue (net jusqu'à clear_px du joueur, plein à full_px) ; particles autour de la caméra (ash, wind, rain) ; flashes : éclairs lointains, sursaut d'exposition. Son : boucle de AudioManager par identifiant (thick_fog, storm, ash_rain, forgotten_wind).",
+    "_doc": "Météo de la run (plan 39 A5), lue par Infrastructure/WeatherConfig et tirée par World/WeatherDirector, à part des micro-événements : elle ne prend pas leur créneau et peut s'y superposer. Une météo à la fois ; la première après first_sec, puis une pause de gap_sec après chaque fin (secondes, [min, max]). Tirée selon le biome où se trouve le joueur (biomes : poids, absent ou 0 = jamais), suspendue pendant un boss. Effets sur les couches d'atmosphère du biome, en fondu de fade_sec : grade multiplie saturation, contraste et exposition de l'étalonnage ; clouds impose une couverture et une noirceur minimales et multiplie la vitesse du défilement ; shadows multiplie l'opacité des ombres portées ; wind multiplie le balancement du vent commun (herbes, canopées) ; view réduit la vue (net jusqu'à clear_px du joueur, plein à full_px) ; particles autour de la caméra (ash, wind, rain) ; flashes : éclairs lointains, sursaut d'exposition. Son : boucle de AudioManager par identifiant (thick_fog, storm, ash_rain, forgotten_wind).",
     "schedule": {
         "first_sec": [150, 240],
         "gap_sec": [150, 240]
@@ -27,6 +27,7 @@
             "fade_sec": 4,
             "biomes": { "wild_fields": 1.5, "forest_reclaimed": 1.2, "urban_ruins": 1.0, "collapsed_quarry": 0.8 },
             "clouds": { "cover": 0.55, "opacity": 0.3, "speed": 5.0 },
+            "wind": 2.6,
             "particles": { "kind": "wind", "amount": 110, "color": [0.86, 0.78, 0.58], "opacity": 0.9 }
         },
         "storm": {
@@ -35,6 +36,7 @@
             "biomes": { "wild_fields": 1.3, "forest_reclaimed": 1.0, "urban_ruins": 1.0, "swamp": 1.0, "collapsed_quarry": 0.7 },
             "grade": { "saturation": 0.8, "contrast": 1.05, "exposure": 0.74 },
             "clouds": { "cover": 0.85, "opacity": 0.32, "speed": 2.5 },
+            "wind": 2.0,
             "shadows": 0.15,
             "particles": { "kind": "rain", "amount": 220, "color": [0.70, 0.78, 0.90], "opacity": 0.55 },
             "flashes": { "interval_sec": [6, 14], "exposure": 0.6 }

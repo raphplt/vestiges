@@ -5,8 +5,11 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Particules d'une météo, autour de la caméra : cendres qui tombent, débris au vent ou pluie.</summary>
-public enum WeatherParticleKind { None, Ash, Wind, Rain }
+/// <summary>
+/// Particules d'atmosphère autour de la caméra : météo (cendres, débris au vent, pluie) ou biome (feuilles, papiers,
+/// pollen, poussière).
+/// </summary>
+public enum AtmosphereParticleKind { None, Ash, Wind, Rain, Leaves, Paper, Pollen, Dust }
 
 /// <summary>
 /// Une météo (plan 39 A5) : durée, biomes où elle peut tomber, et ce qu'elle fait aux couches d'atmosphère du biome
@@ -29,12 +32,14 @@ public sealed class WeatherData
     public float CloudOpacityMin { get; init; }
     public float CloudSpeedFactor { get; init; } = 1f;
     public float ShadowFactor { get; init; } = 1f;
+    /// <summary>Balancement du vent commun multiplié (plan 39 B1) : herbes et canopées ploient plus fort.</summary>
+    public float WindFactor { get; init; } = 1f;
     /// <summary>Brouillard qui réduit la vue : rayon net autour du joueur, rayon où il devient plein, opacité, couleur.</summary>
     public float ViewClearPx { get; init; }
     public float ViewFullPx { get; init; }
     public float ViewOpacity { get; init; }
     public Color ViewColor { get; init; }
-    public WeatherParticleKind Particles { get; init; }
+    public AtmosphereParticleKind Particles { get; init; }
     public int ParticleAmount { get; init; }
     public Color ParticleColor { get; init; }
     /// <summary>Éclairs lointains : intervalle entre deux, et sursaut d'exposition (0 : aucun).</summary>
@@ -124,7 +129,7 @@ public sealed class WeatherConfig
     private static WeatherData Weather(JsonConfigReader reader, JsonElement section, string id)
     {
         string where = $"weathers.{id}";
-        reader.AllowOnly(section, where, "duration_sec", "fade_sec", "biomes", "grade", "clouds", "shadows", "view", "particles", "flashes");
+        reader.AllowOnly(section, where, "duration_sec", "fade_sec", "biomes", "grade", "clouds", "shadows", "wind", "view", "particles", "flashes");
         (float durationMin, float durationMax) = reader.Range(section, "duration_sec", 5f);
         float fade = reader.Positive(section, "fade_sec");
         JsonElement biomeSection = reader.Section(section, "biomes");
@@ -155,6 +160,9 @@ public sealed class WeatherConfig
                 reader.Fail($"{where}.clouds : opacité ≤ 0,6 et vitesse ≤ 10 attendues");
         }
         float shadows = Has(section, "shadows") ? reader.Chance(section, "shadows") : 1f;
+        float windFactor = Has(section, "wind") ? reader.Positive(section, "wind") : 1f;
+        if (windFactor > 4f)
+            reader.Fail($"{where}.wind : au plus 4 attendu");
         float clear = 0f, full = 0f, viewOpacity = 0f;
         Color viewColor = Colors.White;
         if (Has(section, "view"))
@@ -169,7 +177,7 @@ public sealed class WeatherConfig
             if (clear < 120f || full <= clear)
                 reader.Fail($"{where}.view : clear_px ≥ 120 et full_px > clear_px attendus");
         }
-        WeatherParticleKind kind = WeatherParticleKind.None;
+        AtmosphereParticleKind kind = AtmosphereParticleKind.None;
         int amount = 0;
         Color particleColor = Colors.White;
         if (Has(section, "particles"))
@@ -177,7 +185,7 @@ public sealed class WeatherConfig
             JsonElement particles = reader.Section(section, "particles");
             reader.AllowOnly(particles, $"{where}.particles", "kind", "amount", "color", "opacity");
             string name = reader.OneOf(particles, "kind", new[] { "ash", "wind", "rain" });
-            kind = name switch { "ash" => WeatherParticleKind.Ash, "wind" => WeatherParticleKind.Wind, _ => WeatherParticleKind.Rain };
+            kind = name switch { "ash" => AtmosphereParticleKind.Ash, "wind" => AtmosphereParticleKind.Wind, _ => AtmosphereParticleKind.Rain };
             amount = reader.Count(particles, "amount", MaxParticles);
             particleColor = reader.Rgb(particles, "color") with { A = reader.Ratio(particles, "opacity") };
         }
@@ -195,7 +203,7 @@ public sealed class WeatherConfig
         {
             Id = id, DurationMinS = durationMin, DurationMaxS = durationMax, FadeS = fade, BiomeWeights = biomes,
             SaturationFactor = saturation, ContrastFactor = contrast, ExposureFactor = exposure,
-            CloudCoverMin = cover, CloudOpacityMin = cloudOpacity, CloudSpeedFactor = cloudSpeed, ShadowFactor = shadows,
+            CloudCoverMin = cover, CloudOpacityMin = cloudOpacity, CloudSpeedFactor = cloudSpeed, ShadowFactor = shadows, WindFactor = windFactor,
             ViewClearPx = clear, ViewFullPx = full, ViewOpacity = viewOpacity, ViewColor = viewColor,
             Particles = kind, ParticleAmount = amount, ParticleColor = particleColor,
             FlashMinS = flashMin, FlashMaxS = flashMax, FlashExposure = flashExposure,

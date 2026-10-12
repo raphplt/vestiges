@@ -168,6 +168,18 @@ world_cast_shadow={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)
 }
+world_shadow_pixel={
+"type": "float",
+"value": 2.0
+}
+world_wind={
+"type": "vec4",
+"value": Vector4(1, 0, 0, 0)
+}
+world_wind_wave={
+"type": "float",
+"value": 0.024
+}
 world_grime={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)

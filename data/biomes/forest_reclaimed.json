@@ -30,6 +30,7 @@
         "accent_interval_s": [20, 45],
         "accent_volume_db": -4
     },
+    "motes": { "kind": "leaves", "amount": 70, "color": [0.86, 0.56, 0.2], "opacity": 0.95 },
     "poi_pool": {
         "searchable_building": 1.0,
         "resource_cache": 1.2,

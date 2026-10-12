@@ -39,8 +39,9 @@ void vertex() {
 	grime_anchor = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	float wind = get_wind(VERTEX, UV, TIME);
 	
-	// Appliquer le décalage, limité au sommet
-	vec2 offset = vec2(wind * weight, 0.0);
+	// Appliquer le décalage, limité au sommet ; le vent commun (plan 39 B1) penche toute la canopée dans son sens.
+	vec2 foot = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xy;
+	vec2 offset = vec2(wind * weight + wind_bend(foot, weight) * 1.5, 0.0);
 	
 	// Sub-pixel snapping pour le pixel art
 	// On décale le Vertex, et ensuite on snap sur une grille théorique pour éviter l'effet jelly

@@ -30,6 +30,7 @@
         "accent_interval_s": [20, 45],
         "accent_volume_db": -10
     },
+    "motes": { "kind": "pollen", "amount": 110, "color": [1.0, 0.97, 0.75], "opacity": 0.85 },
     "map_weight": 1.4,
     "poi_pool": {
         "searchable_building": 0.6,

@@ -41,6 +41,10 @@ public partial class BiomeAtmosphere : Node2D
 	private static readonly StringName CloudsParameter = "world_clouds";
 	private static readonly StringName CloudScaleParameter = "world_cloud_scale";
 	private static readonly StringName CastShadowParameter = "world_cast_shadow";
+	private static readonly StringName WindParameter = "world_wind";
+	private static readonly StringName WindWaveParameter = "world_wind_wave";
+	// Vitesse des vagues qui traversent un champ, en px au sol par seconde.
+	private const float WindWaveSpeedPx = 70f;
 	private static readonly StringName GrimeParameter = "world_grime";
 	private static readonly StringName GrimePaperParameter = "world_grime_paper";
 	private static readonly StringName GrimeInkParameter = "world_grime_ink";
@@ -63,8 +67,14 @@ public partial class BiomeAtmosphere : Node2D
 	private WeatherConfig _weatherConfig;
 	private WeatherData _weather;
 	private WeatherVisuals _weatherVisuals;
+	// Particules du biome (plan 39 B1) : remplacées en fondu au changement de biome.
+	private GpuParticles2D _motes;
+	private const float MotesFadeSec = 2f;
 	private RandomNumberGenerator _flashRng;
 	private float _cloudSpeedFactor = 1f;
+	private float _windFactor = 1f;
+	private float _windTime;
+	private float _windPhase;
 	private float _flash;
 	private float _flashTimer;
 	// Un sursaut a été publié et n'a pas encore été effacé par une publication sans éclair.
@@ -82,13 +92,16 @@ public partial class BiomeAtmosphere : Node2D
 		if (!AtmosphereConfig.TryLoad(out _config, out string error))
 			GD.PushError($"[BiomeAtmosphere] {error} : run sans étalonnage ni nuages");
 		else
+		{
 			PublishConstants();
+			RenderingServer.GlobalShaderParameterSet(WindWaveParameter, Mathf.Tau / _config.WindWavePx);
+		}
 		if (WeatherConfig.TryLoad(out _weatherConfig, out _))
 		{
 			_weatherVisuals = new WeatherVisuals { Name = "WeatherVisuals" };
 			AddChild(_weatherVisuals);
 			if (_config != null)
-				_weatherVisuals.SetWind(_config.CloudDirection);
+				_weatherVisuals.SetWind(_config.WindDirection);
 			_flashRng = RunRandom.Create("weather_flash");
 			_eventBus.WeatherChanged += OnWeatherChanged;
 		}
@@ -124,6 +137,8 @@ public partial class BiomeAtmosphere : Node2D
 
 		float dt = (float)delta;
 		_cloudSpeedFactor = Mathf.MoveToward(_cloudSpeedFactor, _weather?.CloudSpeedFactor ?? 1f, dt);
+		_windFactor = Mathf.MoveToward(_windFactor, _weather?.WindFactor ?? 1f, dt * 0.5f);
+		PublishWind(dt);
 		UpdateFlashes(dt);
 		if (_gradeProgress < 1f)
 			AdvanceGrade(dt);
@@ -145,9 +160,10 @@ public partial class BiomeAtmosphere : Node2D
 	{
 		if (_weatherConfig != null)
 			_eventBus.WeatherChanged -= OnWeatherChanged;
-		// Le Hub et les écrans hors run partagent les shaders étalonnés : ils retrouvent le neutre.
+		// Le Hub et les écrans hors run partagent les shaders étalonnés : ils retrouvent le neutre, et le vent tombe.
 		_flash = 0f;
 		PublishGrade(NeutralGrade);
+		RenderingServer.GlobalShaderParameterSet(WindParameter, new Vector4(1f, 0f, 0f, 0f));
 	}
 
 	private void OnWeatherChanged(string weatherId)
@@ -160,6 +176,23 @@ public partial class BiomeAtmosphere : Node2D
 		_weatherVisuals.Apply(_weather, fade);
 		if (_config != null && _gradeStarted)
 			Retarget(fade);
+	}
+
+	/// <summary>
+	/// Vent commun (plan 39 B1) : balancement de base, rafales irrégulières (deux sinus de périodes premières entre elles),
+	/// facteur de la météo, et phase des vagues qui avance dans le sens du vent.
+	/// </summary>
+	private void PublishWind(float delta)
+	{
+		if (_config == null)
+			return;
+		_windTime += delta;
+		float t = _windTime / _config.WindGustPeriodS * Mathf.Tau;
+		float gust = Mathf.Max(0f, Mathf.Sin(t) * Mathf.Sin(t * 0.37f + 1.3f));
+		float sway = _config.WindSwayPx * (1f + _config.WindGust * gust) * _windFactor;
+		_windPhase = Mathf.PosMod(_windPhase + delta * WindWaveSpeedPx * Mathf.Tau / _config.WindWavePx, Mathf.Tau);
+		Vector2 direction = _config.WindDirection;
+		RenderingServer.GlobalShaderParameterSet(WindParameter, new Vector4(direction.X, direction.Y, sway, _windPhase));
 	}
 
 	/// <summary>Éclairs lointains de l'orage : un sursaut d'exposition qui retombe en FlashFadeSec.</summary>
@@ -178,6 +211,10 @@ public partial class BiomeAtmosphere : Node2D
 	private void UpdateAtmosphere(BiomeData biome)
 	{
 		SetGradeTarget(biome?.Atmosphere ?? BiomeAtmosphereStyle.Neutral);
+		BiomeMotes motes = biome?.Motes ?? BiomeMotes.None;
+		_motes = AtmosphereParticles.Swap(this, _motes,
+			AtmosphereParticles.Create(motes.Kind, motes.Amount, motes.Color, _config?.WindDirection ?? Vector2.Right, $"Motes{motes.Kind}"),
+			MotesFadeSec);
 		if (biome == null)
 		{
 			_fogParticles.Emitting = false;
@@ -251,13 +288,13 @@ public partial class BiomeAtmosphere : Node2D
 
 	private void AdvanceClouds(float delta)
 	{
-		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
+		_cloudOffset += _config.WindDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
 		PublishClouds(_gradeShown);
 	}
 
 	private void AdvanceGrade(float delta)
 	{
-		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
+		_cloudOffset += _config.WindDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
 		_gradeProgress = Mathf.Min(1f, _gradeProgress + delta / _gradeFadeSeconds);
 		PublishGrade(Grade.Lerp(_gradeFrom, _gradeTo, Mathf.SmoothStep(0f, 1f, _gradeProgress)));
 	}
@@ -265,7 +302,7 @@ public partial class BiomeAtmosphere : Node2D
 	/// <summary>Pendant un éclair, l'étalonnage affiché est republié chaque image avec le sursaut d'exposition.</summary>
 	private void AdvanceFlash(float delta)
 	{
-		_cloudOffset += _config.CloudDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
+		_cloudOffset += _config.WindDirection * (_config.CloudSpeedPxPerSecond * _cloudSpeedFactor * delta);
 		PublishGrade(_gradeShown);
 	}
 

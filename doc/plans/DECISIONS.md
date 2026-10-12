@@ -1356,3 +1356,9 @@ Question de Raphaël : ces sons sont-ils utilisables en licence commerciale ? R�
 Sur l'intégration de A4c : « juste un détail sur la carrière j'aime les deux A et C mais ne les mets pas en même temps. Pour le vent le dernier me va bien : vent fort dans un village. »
 
 **Acquis :** la carrière a deux fonds (grotte, vent en volume clos), l'un ou l'autre ; l'agent tire celui qui joue à chaque entrée dans le biome. La ville prend le vent fort dans un village (second tour, D).
+
+## 126. Ombres portées pixelisées, réglage de qualité — 12 octobre 2026
+
+Raphaël, sur les ombres portées d'A3 : « les ombres ne me plaisent pas trop : elles ne sont pas pixellisées donc ça dénote du reste. Aussi pas besoin qu'elles soient en HD, elles peuvent être en relativement low res. Il faut un réglage pour la qualité des ombres au passage. »
+
+**Acquis :** ombres portées en gros pixels alignés sur le monde, plus basse résolution que le dessin ; réglage de qualité dans les paramètres. Valeurs proposées par l'agent : Hautes (pixel du monde), Moyennes (2 px, par défaut), Basses (4 px), Désactivées.

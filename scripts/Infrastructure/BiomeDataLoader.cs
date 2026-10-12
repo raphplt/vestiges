@@ -33,6 +33,8 @@ public sealed class BiomeData
     public BiomeAtmosphereStyle Atmosphere { get; init; } = BiomeAtmosphereStyle.Neutral;
     /// <summary>Silencieuse si le biome n'a pas de bloc « ambience ».</summary>
     public BiomeAmbience Ambience { get; init; } = BiomeAmbience.Silent;
+    /// <summary>Aucune particule si le biome n'a pas de bloc « motes ».</summary>
+    public BiomeMotes Motes { get; init; } = BiomeMotes.None;
 }
 
 public static class BiomeDataLoader
@@ -156,7 +158,7 @@ public static class BiomeDataLoader
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "biome", "id", "name", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
                 "resurgence_enemy_pool", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "map_weight",
-                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience");
+                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience", "motes");
             string id = reader.Text(root, "id");
             string name = OptionalText(reader, root, "name", "");
             string audio = OptionalText(reader, root, "footstep_audio", null);
@@ -216,6 +218,8 @@ public static class BiomeDataLoader
                 ? Atmosphere(reader, reader.Section("atmosphere")) : BiomeAtmosphereStyle.Neutral;
             BiomeAmbience ambience = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("ambience", out _)
                 ? Ambience(reader, reader.Section("ambience"), audioExists) : BiomeAmbience.Silent;
+            BiomeMotes motes = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("motes", out _)
+                ? Motes(reader, reader.Section("motes")) : BiomeMotes.None;
             if (reader.Error != null)
             {
                 error = $"biome « {id ?? "?"} », {reader.Error}";
@@ -228,7 +232,7 @@ public static class BiomeDataLoader
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),
                 WangTileGroups = new ReadOnlySet<string>(wangSet), BlendTerrains = blend, PathStyle = style,
-                Atmosphere = atmosphere, Ambience = ambience
+                Atmosphere = atmosphere, Ambience = ambience, Motes = motes
             };
             return true;
         }
@@ -264,6 +268,26 @@ public static class BiomeDataLoader
         if (style.Contrast is < 0.6f or > 1.4f)
             reader.Fail("atmosphere.contrast : de 0,6 à 1,4 attendu");
         return style;
+    }
+
+    private static readonly string[] MoteKinds = { "leaves", "paper", "pollen", "dust", "ash" };
+
+    private static BiomeMotes Motes(JsonConfigReader reader, JsonElement section)
+    {
+        reader.AllowOnly(section, "motes", "kind", "amount", "color", "opacity");
+        string kind = reader.OneOf(section, "kind", MoteKinds);
+        // Au-delà, l'écran se couvre de points : le décor se lit mal et les créatures se cachent dedans.
+        int amount = reader.Count(section, "amount", 200);
+        Color color = reader.Rgb(section, "color") with { A = reader.Ratio(section, "opacity") };
+        AtmosphereParticleKind parsed = kind switch
+        {
+            "leaves" => AtmosphereParticleKind.Leaves,
+            "paper" => AtmosphereParticleKind.Paper,
+            "pollen" => AtmosphereParticleKind.Pollen,
+            "dust" => AtmosphereParticleKind.Dust,
+            _ => AtmosphereParticleKind.Ash,
+        };
+        return new BiomeMotes(parsed, amount, color);
     }
 
     /// <summary>Fonds et sons ponctuels facultatifs, mais un son ponctuel exige ses intervalles et son gain.</summary>

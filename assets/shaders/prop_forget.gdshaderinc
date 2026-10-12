@@ -45,6 +45,8 @@ void vertex() {
 	float side = away.x >= 0.0 ? 1.0 : -1.0;
 	float lift = clamp(-VERTEX.y / TRAMPLE_HEIGHT, 0.0, 1.0);
 	VERTEX += vec2(side * TRAMPLE_BEND, TRAMPLE_SINK) * push * lift;
+	// Vent commun (plan 39 B1) : une touffe couchée par un passage ne le prend plus.
+	VERTEX.x += wind_bend(ground, lift) * (1.0 - push);
 #endif
 }
 

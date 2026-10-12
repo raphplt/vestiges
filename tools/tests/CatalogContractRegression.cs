@@ -481,6 +481,8 @@ public partial class CatalogContractRegression : Node
             ("fond d'ambiance inconnu", root => root["ambience"]!["loops"]![0] = "sfx_inconnu", "son « sfx_inconnu »"),
             ("son ponctuel inconnu", root => root["ambience"]!["accents"]![0] = "sfx_inconnu", "son « sfx_inconnu »"),
             ("sons ponctuels sans intervalle", root => root["ambience"]!.AsObject().Remove("accent_interval_s"), "accent_interval_s"),
+            ("particules inconnues", root => root["motes"]!["kind"] = "snow", "kind"),
+            ("écran couvert de particules", root => root["motes"]!["amount"] = 500, "amount"),
             ("réverbération noyée", root => root["ambience"]!["reverb"] = new JsonObject { ["wet"] = 0.8, ["room_size"] = 0.5, ["damping"] = 0.5 }, "reverb.wet"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
@@ -514,7 +516,7 @@ public partial class CatalogContractRegression : Node
             "catalogue de biomes vide refusé");
         string optional = Mutated(valid, root =>
         {
-            foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains", "atmosphere", "ambience" })
+            foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains", "atmosphere", "ambience", "motes" })
                 root.Remove(key);
         });
         Check(BiomeDataLoader.TryParse(optional, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData defaults, out _)
@@ -526,6 +528,7 @@ public partial class CatalogContractRegression : Node
         Check(forest.Ambience.LoopKeys.Count == 1 && forest.Ambience.LoopKeys[0] == "sfx_ambiance_foret" && forest.Ambience.AccentKeys.Count == 2
             && Mathf.IsEqualApprox(forest.Ambience.AccentVolumeDb, -4f), "ambiance de la forêt lue (fond, oiseaux, −4 dB)");
         Check(BiomeDataLoader.Get("collapsed_quarry").Ambience.LoopKeys.Count == 2, "carrière : deux fonds, l'un ou l'autre");
+        Check(forest.Motes.Kind == AtmosphereParticleKind.Leaves && defaults.Motes == BiomeMotes.None, "feuilles en forêt, aucune particule sans bloc");
         Check(defaults.Ambience == BiomeAmbience.Silent, "biome sans bloc d'ambiance : silence et son sec");
         Check(BiomeAtmosphereStyle.Neutral.GradeMultiplier().IsEqualApprox(Vector3.One), "atmosphère neutre sans effet sur la couleur");
         Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyExists, pois.Contains, audioExists, resourceExists,
@@ -555,6 +558,8 @@ public partial class CatalogContractRegression : Node
             ("nuages trop petits", root => root["clouds"]!["scale_px"] = 10, "scale_px"),
             ("nuages trop rapides", root => root["clouds"]!["speed_px_s"] = 500, "speed_px_s"),
             ("nuages absents", root => root.Remove("clouds"), "clouds"),
+            ("vent qui couche les herbes", root => root["wind"]!["sway_px"] = 12, "sway_px"),
+            ("vent absent", root => root.Remove("wind"), "wind"),
             ("ombre portée trop longue", root => root["cast_shadows"]!["length"] = 3, "cast_shadows.length"),
             ("hauteur minimale nulle", root => root["cast_shadows"]!["min_height_px"] = 0, "min_height_px"),
             ("couleur d'ombre invalide", root => root["cast_shadows"]!["color"] = new JsonArray(0, 0), "color"),
@@ -594,6 +599,7 @@ public partial class CatalogContractRegression : Node
             ("éclair trop fort", root => root["weathers"]!["storm"]!["flashes"]!["exposure"] = 2, "flashes.exposure"),
             ("nuit en plein jour", root => root["weathers"]!["storm"]!["grade"]!["exposure"] = 0.2, "grade"),
             ("champ inconnu", root => root["weathers"]!["storm"]!["thunder"] = 1, "clé « thunder » inconnue"),
+            ("vent démesuré", root => root["weathers"]!["storm"]!["wind"] = 6, "storm.wind"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {

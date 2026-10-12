@@ -2,6 +2,9 @@ using Godot;
 
 namespace Vestiges.Combat;
 
+/// <summary>Ombres portées des décors (plan 39 A3) : taille de leurs pixels, ou aucune.</summary>
+public enum ShadowQuality { High, Medium, Low, Off }
+
 /// <summary>
 /// Réglages d'affichage des effets de combat (Paramètres › Graphismes), persistés dans
 /// user://display_settings.cfg. Chargés au premier accès, donc valables dès le Hub.
@@ -22,6 +25,8 @@ public static class CombatFxSettings
     private static float _playerOpacity = 1f;
     private static float _enemyOpacity = 1f;
     private static float _screenShake = 1f;
+    private static ShadowQuality _shadowQuality = ShadowQuality.Medium;
+    private static readonly StringName ShadowPixelParameter = "world_shadow_pixel";
 
     public static ParticleLevel ParticleLevel
     {
@@ -62,6 +67,28 @@ public static class CombatFxSettings
         set { EnsureLoaded(); _screenShake = Mathf.Clamp(value, 0f, 1f); }
     }
 
+    /// <summary>
+    /// Ombres portées : Hautes au pixel du monde, Moyennes à 2 px, Basses à 4 px, ou désactivées (les décors ne créent plus
+    /// leur ombre à la run suivante, et celles en place disparaissent aussitôt).
+    /// </summary>
+    public static ShadowQuality ShadowQuality
+    {
+        get { EnsureLoaded(); return _shadowQuality; }
+        set { EnsureLoaded(); _shadowQuality = value; PublishShadowQuality(); }
+    }
+
+    /// <summary>Taille des pixels de l'ombre en px monde ; 0 : désactivées.</summary>
+    public static float ShadowPixelSize => ShadowQuality switch
+    {
+        ShadowQuality.High => 1f,
+        ShadowQuality.Medium => 2f,
+        ShadowQuality.Low => 4f,
+        _ => 0f,
+    };
+
+    public static void PublishShadowQuality() =>
+        RenderingServer.GlobalShaderParameterSet(ShadowPixelParameter, ShadowPixelSize);
+
     public static void Load()
     {
         _loaded = true;
@@ -74,6 +101,7 @@ public static class CombatFxSettings
         _playerOpacity = Mathf.Clamp(cfg.GetValue(Section, "player_fx_opacity", 1f).AsSingle(), MinPlayerOpacity, 1f);
         _enemyOpacity = Mathf.Clamp(cfg.GetValue(Section, "enemy_fx_opacity", 1f).AsSingle(), MinEnemyOpacity, 1f);
         _screenShake = Mathf.Clamp(cfg.GetValue(Section, "screen_shake", 1f).AsSingle(), 0f, 1f);
+        _shadowQuality = (ShadowQuality)Mathf.Clamp(cfg.GetValue(Section, "shadow_quality", (int)ShadowQuality.Medium).AsInt32(), 0, 3);
     }
 
     public static void Save()
@@ -87,6 +115,7 @@ public static class CombatFxSettings
         cfg.SetValue(Section, "player_fx_opacity", _playerOpacity);
         cfg.SetValue(Section, "enemy_fx_opacity", _enemyOpacity);
         cfg.SetValue(Section, "screen_shake", _screenShake);
+        cfg.SetValue(Section, "shadow_quality", (int)_shadowQuality);
         cfg.Save(SettingsPath);
     }
 

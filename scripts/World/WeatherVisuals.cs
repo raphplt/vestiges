@@ -10,9 +10,6 @@ namespace Vestiges.World;
 /// </summary>
 public partial class WeatherVisuals : Node2D
 {
-	// Vue en px monde autour du joueur (caméra de run) : boîte d'émission un peu plus large.
-	private static readonly Vector2 EmissionHalfExtents = new(560f, 340f);
-
 	private static readonly StringName ViewWorldParameter = "view_world";
 	private static readonly StringName ViewOriginParameter = "view_origin";
 	private static readonly StringName CenterUvParameter = "center_uv";
@@ -66,22 +63,9 @@ public partial class WeatherVisuals : Node2D
 			_viewTween.TweenMethod(Callable.From<float>(SetViewOpacity), _viewOpacity, viewTarget, fadeSec);
 		}
 
-		if (_particles != null)
-		{
-			// Le tween appartient à l'émetteur : il meurt avec lui, et rien ne l'interrompt avant sa libération.
-			GpuParticles2D old = _particles;
-			_particles = null;
-			Tween fadeOut = old.CreateTween();
-			fadeOut.TweenProperty(old, "modulate:a", 0f, fadeSec);
-			fadeOut.TweenCallback(Callable.From(old.QueueFree));
-		}
-		if (weather != null && weather.Particles != WeatherParticleKind.None)
-		{
-			_particles = CreateParticles(weather);
-			_particles.Modulate = new Color(1f, 1f, 1f, 0f);
-			AddChild(_particles);
-			_particles.CreateTween().TweenProperty(_particles, "modulate:a", 1f, fadeSec);
-		}
+		GpuParticles2D next = weather == null ? null
+			: AtmosphereParticles.Create(weather.Particles, weather.ParticleAmount, weather.ParticleColor, _wind, $"Weather{weather.Particles}");
+		_particles = AtmosphereParticles.Swap(this, _particles, next, fadeSec);
 	}
 
 	public override void _Process(double delta)
@@ -105,54 +89,5 @@ public partial class WeatherVisuals : Node2D
 	{
 		_viewOpacity = value;
 		_viewMaterial.SetShaderParameter(OpacityParameter, value);
-	}
-
-	private GpuParticles2D CreateParticles(WeatherData weather)
-	{
-		(Vector2I size, Vector3 direction, float spread, float speedMin, float speedMax, float lifetime, float gravity) = weather.Particles switch
-		{
-			// Cendres : flocons de 2 px qui tombent lentement et dérivent.
-			WeatherParticleKind.Ash => (new Vector2I(2, 2), new Vector3(_wind.X * 0.4f, 1f, 0f), 35f, 12f, 28f, 9f, 2f),
-			// Débris au vent : traits pâles qui filent dans le sens du vent.
-			WeatherParticleKind.Wind => (new Vector2I(7, 1), new Vector3(_wind.X, _wind.Y * 0.5f, 0f), 12f, 160f, 260f, 3.5f, 0f),
-			// Pluie : traits de 6 px, rapides, inclinés par le vent.
-			_ => (new Vector2I(1, 6), new Vector3(_wind.X * 0.25f, 1f, 0f), 4f, 420f, 520f, 1.1f, 0f),
-		};
-		Image image = Image.CreateEmpty(size.X, size.Y, false, Image.Format.Rgba8);
-		image.Fill(Colors.White);
-		ParticleProcessMaterial material = new()
-		{
-			EmissionShape = ParticleProcessMaterial.EmissionShapeEnum.Box,
-			EmissionBoxExtents = new Vector3(EmissionHalfExtents.X, EmissionHalfExtents.Y, 0f),
-			Direction = direction,
-			Spread = spread,
-			InitialVelocityMin = speedMin,
-			InitialVelocityMax = speedMax,
-			Gravity = new Vector3(0f, gravity, 0f),
-			Color = weather.ParticleColor,
-			// Les traits suivent leur trajectoire (pluie inclinée, débris qui filent).
-			ParticleFlagAlignY = weather.Particles == WeatherParticleKind.Rain,
-		};
-		Curve alpha = new();
-		alpha.AddPoint(new Vector2(0f, 0f));
-		alpha.AddPoint(new Vector2(0.1f, 1f));
-		alpha.AddPoint(new Vector2(0.85f, 1f));
-		alpha.AddPoint(new Vector2(1f, 0f));
-		material.AlphaCurve = new CurveTexture { Curve = alpha };
-		return new GpuParticles2D
-		{
-			Name = $"Weather{weather.Particles}",
-			Amount = weather.ParticleAmount,
-			Lifetime = lifetime,
-			Preprocess = lifetime,
-			Randomness = 1f,
-			Texture = ImageTexture.CreateFromImage(image),
-			ProcessMaterial = material,
-			LocalCoords = false,
-			TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			// Devant les entités (0), derrière les plaques d'ennemis (20) et les chiffres de dégâts (30) qui restent lisibles.
-			ZIndex = 15,
-			ZAsRelative = false,
-		};
 	}
 }

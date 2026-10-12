@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.World.Lore;
@@ -146,7 +147,9 @@ public partial class WorldSetup : Node2D
         _config = WorldGenConfig.Load();
         PropRules.Current = _config.PropRules;
         // Ombres portées des décors (plan 39 A3) : réglées avant leur création. Fichier invalide : ombres de contact seules.
-        if (AtmosphereConfig.TryLoad(out AtmosphereConfig atmosphere, out _))
+        // Paramètres › Ombres : désactivées, les décors ne créent même pas leur ombre (aucun coût).
+        CombatFxSettings.PublishShadowQuality();
+        if (CombatFxSettings.ShadowQuality != ShadowQuality.Off && AtmosphereConfig.TryLoad(out AtmosphereConfig atmosphere, out _))
         {
             PropShadow.CastPerHeight = atmosphere.CastShadowPerHeight;
             PropShadow.CastMinHeightPx = atmosphere.CastShadowMinHeightPx;

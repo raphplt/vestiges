@@ -129,3 +129,16 @@ vec3 world_stains_at(vec3 color, vec2 p) {
 	float mold = step(0.68, stain_noise(cell * world_stain_scale * 1.8 + 41.3, 2) + dither);
 	return mix(color, vec3(0.1, 0.12, 0.06), mold * 0.1 * strength);
 }
+
+// Vent commun (plan 39 B1), publié par BiomeAtmosphere : xy sens à l'écran (unitaire), z balancement au sommet en px
+// (rafales et météo comprises), w phase des vagues. Nul hors run : rien ne bouge au Hub.
+global uniform vec4 world_wind;
+// 2π / longueur des vagues qui traversent un champ, en px au sol.
+global uniform float world_wind_wave;
+
+// Décalage horizontal du haut d'une plante plantée en `ground`, `lift` de 0 (pied) à 1 (sommet). Les plantes voisines
+// dans le sens du vent ploient l'une après l'autre : une vague parcourt le champ.
+float wind_bend(vec2 ground, float lift) {
+	float phase = dot(vec2(ground.x, ground.y * 2.0), world_wind.xy) * world_wind_wave - world_wind.w;
+	return world_wind.x * world_wind.z * (0.55 + 0.45 * sin(phase)) * lift;
+}

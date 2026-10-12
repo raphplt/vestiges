@@ -563,6 +563,39 @@ public partial class SettingsScreen : CanvasLayer
 		particleRow.AddChild(particleBtn);
 		vbox.AddChild(particleRow);
 
+		// Ombres portées des décors (plan 39 A3) : taille de leurs pixels, ou aucune.
+		HBoxContainer shadowRow = new();
+		shadowRow.AddThemeConstantOverride("separation", 0);
+		Label shadowLbl = new()
+		{
+			Text = "Ombres",
+			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+		};
+		UITheme.SetTextRole(shadowLbl, TextRole.Subhead);
+		shadowLbl.AddThemeColorOverride("font_color", UITheme.TextColor);
+		shadowRow.AddChild(shadowLbl);
+		Button shadowBtn = new()
+		{
+			Text = ShadowQualityLabel(CombatFxSettings.ShadowQuality),
+			CustomMinimumSize = new Vector2(160, 36),
+			FocusMode = Control.FocusModeEnum.All
+		};
+		UITheme.SetTextRole(shadowBtn, TextRole.Subhead);
+		UITheme.ApplyButtonStyle(shadowBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		shadowBtn.Pressed += () =>
+		{
+			CombatFxSettings.ShadowQuality = CombatFxSettings.ShadowQuality switch
+			{
+				ShadowQuality.High => ShadowQuality.Medium,
+				ShadowQuality.Medium => ShadowQuality.Low,
+				ShadowQuality.Low => ShadowQuality.Off,
+				_ => ShadowQuality.High,
+			};
+			shadowBtn.Text = ShadowQualityLabel(CombatFxSettings.ShadowQuality);
+		};
+		shadowRow.AddChild(shadowBtn);
+		vbox.AddChild(shadowRow);
+
 		vbox.AddChild(BuildToggleRow("Effets d'attaque",
 			CombatFxSettings.PlayerAttackFx, toggled => CombatFxSettings.PlayerAttackFx = toggled));
 		vbox.AddChild(BuildToggleRow("Projectiles visibles",
@@ -811,6 +844,17 @@ public partial class SettingsScreen : CanvasLayer
 		margin.AddChild(hint);
 
 		return margin;
+	}
+
+	private static string ShadowQualityLabel(ShadowQuality quality)
+	{
+		return quality switch
+		{
+			ShadowQuality.High => "Hautes",
+			ShadowQuality.Medium => "Moyennes",
+			ShadowQuality.Low => "Basses",
+			_ => "Désactivées",
+		};
 	}
 
 	private static string ParticleLevelLabel(ParticleLevel level)

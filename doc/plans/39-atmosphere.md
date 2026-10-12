@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -354,3 +354,22 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 **Non vérifié :** l'écoute en jeu (rien n'a été écouté par l'agent), le coût du voile du marais au banc (passe plein écran avec lecture de l'écran, seulement dans le marais).
 
 **Ajusté le même jour** ([DECISIONS §125](DECISIONS.md)) : la carrière ne superpose plus ses deux fonds. Le bloc `ambience` prend une liste `loops` ; un seul fond joue, tiré à chaque entrée dans le biome (grotte ou vent en volume clos). La ville prend le vent fort dans un village (second tour, D). Contrôles ajoutés : un seul fond de carrière à la fois, le vent de la ville remplace la carrière en fondu. `tools/test_audio.sh` et `tools/test_catalogs.sh` verts, smoke vert.
+
+## 14. B1 livré, ombres portées pixelisées — 12 octobre 2026
+
+**Vent commun :**
+
+- Section `wind` de `data/world/atmosphere.json` : direction (20°, la même pour les nuages, qui y perdent la leur, les particules et la végétation), balancement de 2,5 px au sommet, rafales (part 0,6, toutes les 7 s environ, deux sinus de périodes premières entre elles), vagues de 260 px.
+- Uniformes globaux `world_wind` (sens, balancement rafales comprises, phase des vagues) et `world_wind_wave`, publiés chaque image par `BiomeAtmosphere`, remis au calme hors run.
+- Herbes, fleurs, roseaux, fougères, buissons (matériau `prop_trample`) : ils ploient dans le sens du vent, une vague parcourt le champ à 70 px/s. Une touffe couchée par un passage ne prend plus le vent. Canopées (`sway`) : penchées dans le même sens, 1,5 fois plus.
+- Météo : `wind` multiplie le balancement (vent de l'oubli × 2,6, orage × 2), en fondu.
+
+**Particules par biome** : bloc `motes` (`leaves`, `paper`, `pollen`, `dust`, `ash`), émis autour de la caméra dans le sens du vent, remplacés en fondu de 2 s au changement de biome. Feuilles orangées en forêt (70), papiers en ville (24), pollen aux champs (110), poussière à la carrière (90), rien au marais (il a ses spores). Création commune avec la météo dans `World/AtmosphereParticles`, qui respecte désormais le réglage des particules (réduites de moitié, ou aucune). La météo d'A5 l'ignorait : corrigé au passage. Premier jet trop discret (2 px pâles sur un sol chargé), grossi et coloré.
+
+**Ombres portées** ([DECISIONS §126](DECISIONS.md)) : lues sur une grille du monde. Le shader prend la texture au centre de la case du monde qui contient le fragment, via le jacobien UV/monde tiré des dérivées écran : bord en marches de gros pixels, au lieu du bord lisse du sprite cisaillé. Réglage **Paramètres › Graphismes › Ombres** (`display_settings.cfg`) : Hautes (pixel du monde), Moyennes (2 px, par défaut), Basses (4 px), Désactivées. Désactivées, les ombres en place disparaissent aussitôt et la run suivante ne les crée plus (aucun coût). Capture avant/après regardée : marches nettes alignées sur le dessin ; le fin trait d'ombre d'un tronc se perd à 2 px.
+
+**Vérifié :** captures des quatre biomes regardées (planche `doc/plans/planches/39-B1-vent-particules.jpg`, non versionnée), `tools/test_catalogs.sh` vert (vent, particules de biome, vent de la météo : refus ajoutés), `tools/test_audio.sh` vert, `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :** le vent en mouvement (captures fixes : vagues, rafales), le banc (un uniforme par image, quelques opérations par sommet, 24 à 110 particules).
+
+**Piste :** le blé des champs est une tuile du sol ; il n'ondule pas. Une vague de lumière dans le shader du sol, sur les cases de blé, le ferait.

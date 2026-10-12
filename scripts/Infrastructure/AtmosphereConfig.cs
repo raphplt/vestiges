@@ -18,9 +18,16 @@ public sealed class AtmosphereConfig
     public float EntityGradeShare { get; private init; }
     /// <summary>Dosage commun des étalonnages de biome (1 : réglages des biomes tels quels).</summary>
     public float GradeStrength { get; private init; }
-
-    /// <summary>Ombres de nuages (A2) : sens de défilement à l'écran (unitaire), vitesse et taille d'un nuage au sol.</summary>
-    public Vector2 CloudDirection { get; private init; }
+    /// <summary>
+    /// Vent commun (plan 39 B1) : sens à l'écran (unitaire), suivi par les nuages, les particules et la végétation ;
+    /// balancement au sommet des herbes et des canopées, part de rafale, période des rafales, longueur des vagues qui
+    /// traversent un champ.
+    /// </summary>
+    public Vector2 WindDirection { get; private init; }
+    public float WindSwayPx { get; private init; }
+    public float WindGust { get; private init; }
+    public float WindGustPeriodS { get; private init; }
+    public float WindWavePx { get; private init; }
     public float CloudSpeedPxPerSecond { get; private init; }
     public float CloudScalePx { get; private init; }
 
@@ -76,11 +83,13 @@ public sealed class AtmosphereConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "racine", "grade", "clouds", "cast_shadows", "grime", "swamp_veil");
+            reader.AllowOnly(root, "racine", "grade", "wind", "clouds", "cast_shadows", "grime", "swamp_veil");
             JsonElement grade = reader.Section("grade");
             reader.AllowOnly(grade, "grade", "fade_seconds", "entity_share", "strength");
             JsonElement clouds = reader.Section("clouds");
-            reader.AllowOnly(clouds, "clouds", "direction_deg", "speed_px_s", "scale_px");
+            reader.AllowOnly(clouds, "clouds", "speed_px_s", "scale_px");
+            JsonElement wind = reader.Section("wind");
+            reader.AllowOnly(wind, "wind", "direction_deg", "sway_px", "gust", "gust_period_s", "wave_px");
             JsonElement shadows = reader.Section("cast_shadows");
             reader.AllowOnly(shadows, "cast_shadows", "direction_deg", "length", "min_height_px", "color");
             JsonElement grime = reader.Section("grime");
@@ -95,7 +104,11 @@ public sealed class AtmosphereConfig
                 GradeFadeSeconds = reader.Positive(grade, "fade_seconds"),
                 EntityGradeShare = reader.Chance(grade, "entity_share"),
                 GradeStrength = reader.Chance(grade, "strength"),
-                CloudDirection = Vector2.Right.Rotated(Mathf.DegToRad(reader.Number(clouds, "direction_deg"))),
+                WindDirection = Vector2.Right.Rotated(Mathf.DegToRad(reader.Number(wind, "direction_deg"))),
+                WindSwayPx = reader.NonNegative(wind, "sway_px"),
+                WindGust = reader.Chance(wind, "gust"),
+                WindGustPeriodS = reader.Positive(wind, "gust_period_s"),
+                WindWavePx = reader.Positive(wind, "wave_px"),
                 CloudSpeedPxPerSecond = reader.NonNegative(clouds, "speed_px_s"),
                 CloudScalePx = reader.Positive(clouds, "scale_px"),
                 CastShadowPerHeight = new Vector2(Mathf.Cos(shadowAngle), Mathf.Sin(shadowAngle) * 0.5f) * shadowLength,
@@ -125,6 +138,8 @@ public sealed class AtmosphereConfig
                 reader.Fail("cast_shadows.length : au plus 2 attendu");
             if (parsed.GradeFadeSeconds > 10f)
                 reader.Fail("grade.fade_seconds : au plus 10 s attendu");
+            if (parsed.WindSwayPx > 8f)
+                reader.Fail("wind.sway_px : au plus 8 attendu (au-delà, les herbes se couchent)");
             if (parsed.CloudSpeedPxPerSecond > 200f)
                 reader.Fail("clouds.speed_px_s : au plus 200 attendu");
             if (parsed.CloudScalePx is > 0f and (< 64f or > 4096f))
