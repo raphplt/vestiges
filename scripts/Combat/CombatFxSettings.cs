@@ -25,7 +25,7 @@ public static class CombatFxSettings
     private static float _playerOpacity = 1f;
     private static float _enemyOpacity = 1f;
     private static float _screenShake = 1f;
-    private static ShadowQuality _shadowQuality = ShadowQuality.Medium;
+    private static ShadowQuality _shadowQuality = ShadowQuality.High;
     private static readonly StringName ShadowPixelParameter = "world_shadow_pixel";
 
     public static ParticleLevel ParticleLevel
@@ -68,7 +68,7 @@ public static class CombatFxSettings
     }
 
     /// <summary>
-    /// Ombres portées : Hautes au pixel du monde, Moyennes à 2 px, Basses à 4 px, ou désactivées (les décors ne créent plus
+    /// Ombres portées : Hautes au pixel du monde (par défaut, DECISIONS §129), Moyennes à 2 px, Basses à 4 px, ou désactivées (les décors ne créent plus
     /// leur ombre à la run suivante, et celles en place disparaissent aussitôt).
     /// </summary>
     public static ShadowQuality ShadowQuality
@@ -101,7 +101,7 @@ public static class CombatFxSettings
         _playerOpacity = Mathf.Clamp(cfg.GetValue(Section, "player_fx_opacity", 1f).AsSingle(), MinPlayerOpacity, 1f);
         _enemyOpacity = Mathf.Clamp(cfg.GetValue(Section, "enemy_fx_opacity", 1f).AsSingle(), MinEnemyOpacity, 1f);
         _screenShake = Mathf.Clamp(cfg.GetValue(Section, "screen_shake", 1f).AsSingle(), 0f, 1f);
-        _shadowQuality = (ShadowQuality)Mathf.Clamp(cfg.GetValue(Section, "shadow_quality", (int)ShadowQuality.Medium).AsInt32(), 0, 3);
+        _shadowQuality = (ShadowQuality)Mathf.Clamp(cfg.GetValue(Section, "cast_shadow_quality", (int)ShadowQuality.High).AsInt32(), 0, 3);
     }
 
     public static void Save()
@@ -115,7 +115,7 @@ public static class CombatFxSettings
         cfg.SetValue(Section, "player_fx_opacity", _playerOpacity);
         cfg.SetValue(Section, "enemy_fx_opacity", _enemyOpacity);
         cfg.SetValue(Section, "screen_shake", _screenShake);
-        cfg.SetValue(Section, "shadow_quality", (int)_shadowQuality);
+        cfg.SetValue(Section, "cast_shadow_quality", (int)_shadowQuality);
         cfg.Save(SettingsPath);
     }
 

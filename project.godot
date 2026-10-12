@@ -170,7 +170,7 @@ world_cast_shadow={
 }
 world_shadow_pixel={
 "type": "float",
-"value": 2.0
+"value": 1.0
 }
 world_wind={
 "type": "vec4",

@@ -1362,3 +1362,18 @@ Sur l'intégration de A4c : « juste un détail sur la carrière j'aime les deux
 Raphaël, sur les ombres portées d'A3 : « les ombres ne me plaisent pas trop : elles ne sont pas pixellisées donc ça dénote du reste. Aussi pas besoin qu'elles soient en HD, elles peuvent être en relativement low res. Il faut un réglage pour la qualité des ombres au passage. »
 
 **Acquis :** ombres portées en gros pixels alignés sur le monde, plus basse résolution que le dessin ; réglage de qualité dans les paramètres. Valeurs proposées par l'agent : Hautes (pixel du monde), Moyennes (2 px, par défaut), Basses (4 px), Désactivées.
+
+## 129. Retours de partie sur l'atmosphère et l'interface — 12 octobre 2026
+
+Raphaël, après une partie (retours dictés, extraits) :
+
+- **Marais :** « un effet qui donne envie de vomir. Il faudrait vraiment l'enlever, immédiatement… tout l'écran qui bouge ». C'est le voile du marais réaffiché le matin même (§124) : coupé aussitôt.
+- **Ombres :** « bien réussi » ; ombres des nuages dans les champs « bien gérées » ; mais les ombres des arbres « trop pixelisées par défaut ». Défaut repassé au pixel du monde.
+- **Particules :** « cool, mais peut-être un peu trop simples » ; en ville « juste des petits carrés qui bougent… je vois pas trop l'effet qui est censé y avoir pour la ville ».
+- **Taches de la direction crade** (plan 40) : « bien ».
+- **Colonnes de lumière** au-dessus des coffres et de certains lieux : « pas ouf… ça se voit qu'elle n'a pas été refaite récemment », à améliorer.
+- **Carrière :** autour d'un lieu à briser, « un espèce de rectangle semi-transparent au sol, pas du tout dans la DA du jeu », à revoir.
+- **HUD** (niveau, PV, score, éliminations, Essence, Péril), refait la veille : mieux sans fond, mais « mal aligné », éliminations trop petites, « trop de couleurs différentes » en haut à droite (score jaune, Essence bleue, Péril rouge, morts en blanc) ; « essaye de faire un truc différent ».
+- **Personnage par défaut :** « peut-être que je ferai en sorte que ce soit le Traqueur… à voir, mais je pense que ça serait bien… si c'est le Vagabond, c'est bizarre que le Traqueur apparaisse en premier dans la liste ».
+
+**Acquis :** voile du marais coupé ; ombres portées au pixel du monde par défaut. Le reste est découpé au [plan 41](41-retours-du-12-octobre.md).
