@@ -15,6 +15,15 @@
         "cloud_opacity": 0.0,
         "shadow_opacity": 0.0
     },
+    "_ambience": "Facultatif (plan 39 A4). Ambiance sonore du biome où se trouve le joueur, pendant l'exploration : loop, boucle de fond (clé de data/audio/sounds.json) ; accents, sons ponctuels tirés au hasard, le premier après first_accent_s puis tous les accent_interval_s (secondes, [min, max]), joués à accent_volume_db ; reverb du bus des sons du monde (wet 0–0,5, room_size et damping 0–1), en fondu au changement de biome. Sans bloc : silence et son sec.",
+    "ambience": {
+        "loop": "sfx_ambiance_foret",
+        "accents": ["sfx_ambiance_oiseaux_1"],
+        "first_accent_s": [5, 15],
+        "accent_interval_s": [20, 45],
+        "accent_volume_db": -4,
+        "reverb": { "wet": 0.0, "room_size": 0.5, "damping": 0.5 }
+    },
     "terrain_weights": { "grass": 0.5, "forest": 0.5 },
     "exploration_enemy_pool": ["presage", "rodeur"],
     "resurgence_enemy_pool": ["presage", "shade"]

@@ -31,6 +31,8 @@ public sealed class BiomeData
     public float MapWeight { get; init; }
     /// <summary>Neutre (aucun étalonnage, pas de brume) si le biome n'a pas de bloc « atmosphere ».</summary>
     public BiomeAtmosphereStyle Atmosphere { get; init; } = BiomeAtmosphereStyle.Neutral;
+    /// <summary>Silencieuse si le biome n'a pas de bloc « ambience ».</summary>
+    public BiomeAmbience Ambience { get; init; } = BiomeAmbience.Silent;
 }
 
 public static class BiomeDataLoader
@@ -154,7 +156,7 @@ public static class BiomeDataLoader
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "biome", "id", "name", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
                 "resurgence_enemy_pool", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "map_weight",
-                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere");
+                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience");
             string id = reader.Text(root, "id");
             string name = OptionalText(reader, root, "name", "");
             string audio = OptionalText(reader, root, "footstep_audio", null);
@@ -212,6 +214,8 @@ public static class BiomeDataLoader
             }
             BiomeAtmosphereStyle atmosphere = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("atmosphere", out _)
                 ? Atmosphere(reader, reader.Section("atmosphere")) : BiomeAtmosphereStyle.Neutral;
+            BiomeAmbience ambience = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("ambience", out _)
+                ? Ambience(reader, reader.Section("ambience"), audioExists) : BiomeAmbience.Silent;
             if (reader.Error != null)
             {
                 error = $"biome « {id ?? "?"} », {reader.Error}";
@@ -224,7 +228,7 @@ public static class BiomeDataLoader
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),
                 WangTileGroups = new ReadOnlySet<string>(wangSet), BlendTerrains = blend, PathStyle = style,
-                Atmosphere = atmosphere
+                Atmosphere = atmosphere, Ambience = ambience
             };
             return true;
         }
@@ -259,6 +263,41 @@ public static class BiomeDataLoader
         if (style.Contrast is < 0.6f or > 1.4f)
             reader.Fail("atmosphere.contrast : de 0,6 à 1,4 attendu");
         return style;
+    }
+
+    /// <summary>Boucle et sons ponctuels facultatifs, mais un son ponctuel exige ses intervalles et son gain.</summary>
+    private static BiomeAmbience Ambience(JsonConfigReader reader, JsonElement section, Func<string, bool> audioExists)
+    {
+        reader.AllowOnly(section, "ambience", "loop", "accents", "first_accent_s", "accent_interval_s", "accent_volume_db", "reverb");
+        string loop = OptionalText(reader, section, "loop", null);
+        if (loop != null && !audioExists(loop))
+            reader.Fail($"ambience.loop : son « {loop} » inconnu");
+        List<string> accents = section.ValueKind == JsonValueKind.Object && section.TryGetProperty("accents", out _)
+            ? TextList(reader, section, "accents", audioExists, "son", 1) : new();
+        (float firstMin, float firstMax) = (0f, 0f);
+        (float intervalMin, float intervalMax) = (0f, 0f);
+        float accentDb = 0f;
+        if (accents.Count > 0)
+        {
+            (firstMin, firstMax) = reader.Range(section, "first_accent_s", 0f, 600f);
+            (intervalMin, intervalMax) = reader.Range(section, "accent_interval_s", 1f, 600f);
+            accentDb = reader.Number(section, "accent_volume_db");
+            if (accentDb is < -40f or > 6f)
+                reader.Fail("ambience.accent_volume_db : de −40 à +6 dB attendu");
+        }
+        (float wet, float room, float damping) = (0f, 0.5f, 0.5f);
+        if (section.ValueKind == JsonValueKind.Object && section.TryGetProperty("reverb", out _))
+        {
+            JsonElement reverb = reader.Section(section, "reverb");
+            reader.AllowOnly(reverb, "ambience.reverb", "wet", "room_size", "damping");
+            wet = reader.Chance(reverb, "wet");
+            room = reader.Chance(reverb, "room_size");
+            damping = reader.Chance(reverb, "damping");
+            // Au-delà, les coups et les cris se noient : la réverbération colore, elle ne doit pas couvrir.
+            if (wet > 0.5f)
+                reader.Fail("ambience.reverb.wet : au plus 0,5 attendu");
+        }
+        return new BiomeAmbience(loop, accents.AsReadOnly(), firstMin, firstMax, intervalMin, intervalMax, accentDb, wet, room, damping);
     }
 
     private static Dictionary<string, float> Weights(JsonConfigReader reader, JsonElement section, string where, Func<string, bool> known)

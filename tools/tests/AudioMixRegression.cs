@@ -67,6 +67,7 @@ public partial class AudioMixRegression : Node
 
             await CheckSelectedEvents(audio);
             await CheckBiomeAmbiance(audio);
+            await CheckWorldReverb();
 
             EventBus bus = GetNode<EventBus>("/root/EventBus");
             bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
@@ -329,7 +330,7 @@ public partial class AudioMixRegression : Node
         audio.SoundRequested += OnSound;
         try
         {
-            System.Reflection.FieldInfo timer = typeof(AudioManager).GetField("_birdTimer", flags);
+            System.Reflection.FieldInfo timer = typeof(AudioManager).GetField("_accentTimer", flags);
             timer.SetValue(audio, 0f);
             audio._Process(0.01);
             Check(birds.Count == 1, "forêt : les oiseaux accompagnent le fond");
@@ -371,6 +372,36 @@ public partial class AudioMixRegression : Node
         bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
         Check(!forest.Playing, "nouvelle run : l'ancien biome ne suffit pas à lancer la forêt");
         bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
+    }
+
+    /// <summary>Réverbération du biome (plan 39 A4) : en fondu à l'entrée, coupée au retour au sec et en fin de run.</summary>
+    private async Task CheckWorldReverb()
+    {
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int index = AudioServer.GetBusIndex("World");
+        int slot = -1;
+        for (int i = 0; i < AudioServer.GetBusEffectCount(index); i++)
+            if (AudioServer.GetBusEffect(index, i) is AudioEffectReverb)
+                slot = i;
+        Check(slot >= 0 && !AudioServer.IsBusEffectEnabled(index, slot), "réverbération du monde présente et coupée hors run");
+        if (slot < 0)
+            return;
+        AudioEffectReverb reverb = (AudioEffectReverb)AudioServer.GetBusEffect(index, slot);
+        float quarryWet = BiomeDataLoader.Get("collapsed_quarry").Ambience.ReverbWet;
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Hub", "Run");
+        bus.EmitSignal(EventBus.SignalName.RunPhaseChanged, "Crisis", "Exploration");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "collapsed_quarry");
+        Check(AudioServer.IsBusEffectEnabled(index, slot) && reverb.Wet < quarryWet, "carrière : la réverbération entre en fondu");
+        await Frames(150);
+        Check(Mathf.IsEqualApprox(reverb.Wet, quarryWet), $"carrière : réverbération complète ({reverb.Wet:F2})");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "wild_fields");
+        await Frames(150);
+        Check(reverb.Wet <= 0.001f && !AudioServer.IsBusEffectEnabled(index, slot), "champs : retour au son sec, effet coupé");
+        bus.EmitSignal(EventBus.SignalName.PlayerBiomeChanged, "collapsed_quarry");
+        await Frames(30);
+        bus.EmitSignal(EventBus.SignalName.GameStateChanged, "Run", "Hub");
+        await Frames(2);
+        Check(reverb.Wet <= 0.001f && !AudioServer.IsBusEffectEnabled(index, slot), "retour au Hub : aucune réverbération ne reste");
     }
 
     private void CheckFullLoopDuration()

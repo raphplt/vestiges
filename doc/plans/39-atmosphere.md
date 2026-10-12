@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2 et A3 livrés** (§8 à §10).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **A1, A2, A3 et le socle d'A4 livrés** (§8 à §11).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -271,3 +271,21 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 - Un décor rendu transparent par `PropOcclusion` laisse voir son ombre au travers.
 - Deux ombres qui se chevauchent foncent un peu plus (tronc sous canopée, immeubles voisins).
 - 5 000 nœuds de plus : si le banc calme confirme un coût, regrouper les ombres par îlot ou les cuire dans une couche au sol.
+
+## 11. A4 — découpage et A4a livré — 12 octobre 2026
+
+**Découpage :**
+
+- **A4a — socle (livré).** Ambiance par biome en données, réverbération du bus des sons du monde. Ne dépend pas du choix des sons.
+- **A4b — planche d'écoute.** Candidats CC0 (Kenney, BigSoundBank, comme au plan 15 M3) pour chaque biome : fond de ville, marais, carrière, champs, Hub ; sons ponctuels (tôle, craquements, clapotis, bulles, pierre qui roule, goutte, insectes, corbeaux). Page d'écoute hors dépôt, export des choix. Rien n'est intégré avant le choix de Raphaël.
+- **A4c — intégration.** Sons retenus dans la banque et les blocs `ambience`, fondu enchaîné entre deux fonds (aujourd'hui, un changement de fond coupe net : un seul fond existait), enregistrement audible en traversant les cinq biomes.
+
+**A4a fait :**
+
+- Bloc `ambience` dans `data/biomes/*.json`, lu par `BiomeDataLoader` (`BiomeAmbience`) : `loop`, `accents`, `first_accent_s`, `accent_interval_s`, `accent_volume_db`, `reverb` (`wet` ≤ 0,5, `room_size`, `damping`). Clés de son contrôlées dans la banque au chargement. Sans bloc : silence et son sec.
+- `AudioManager` ne connaît plus la forêt : le fond et les sons ponctuels viennent du biome courant. La forêt garde exactement ses réglages (fond à −2 dB, oiseaux à −4 dB, premier entre 5 et 15 s puis toutes les 20 à 45 s). Le champ `biome` de `sounds.json`, seul lien précédent, est retiré.
+- `AudioEffectReverb` sur le bus World, en fondu de 2 s au changement de biome, coupée une fois revenue au sec et remise à zéro en fin de run. Réglages initiaux, **non écoutés par l'agent** : carrière `wet` 0,15, ville 0,08, autres biomes secs. Le battement de cœur de santé basse et l'alerte de bord passent aussi par ce bus : ils prennent la même réverbération.
+
+**Vérifié :** `tools/test_audio.sh` vert, avec 4 nouveaux contrôles de réverbération (entrée en fondu, niveau complet, retour au sec et effet coupé, rien au Hub) ; les contrôles existants de la forêt passent sans changement de comportement (`_birdTimer` renommé `_accentTimer`, régression mise à jour). `tools/test_catalogs.sh` vert (4 refus du bloc `ambience`), `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**À écouter :** la réverbération de la carrière et de la ville, sur les coups et les cris.

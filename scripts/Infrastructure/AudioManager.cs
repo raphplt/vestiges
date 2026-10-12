@@ -100,7 +100,6 @@ public partial class AudioManager : Node
 	private readonly Dictionary<string, int> _soundPriorities = new();
 	private readonly Dictionary<string, int> _soundMaxVoices = new();
 	private readonly Dictionary<string, string> _soundBuses = new();
-	private readonly Dictionary<string, string> _soundBiomes = new();
 
 	// --- Horloge sonore sous Movie Maker (enregistrements d'écoute, plan 15 A0) ---
 	private static ulong _movieFps;
@@ -117,8 +116,12 @@ public partial class AudioManager : Node
 	// Tirages propres à l'audio : ils ne décalent pas ceux du gameplay (seed des bancs, avant/après d'écoute).
 	private readonly RandomNumberGenerator _rng = new();
 
-	// --- Ambiance oiseaux ---
-	private float _birdTimer;
+	// --- Ambiance du biome (plan 39 A4) : fond, sons ponctuels, réverbération du monde ---
+	private BiomeAmbience _ambience = BiomeAmbience.Silent;
+	private float _accentTimer;
+	private AudioEffectReverb _worldReverb;
+	private Tween _reverbTween;
+	private const float ReverbFadeSec = 2f;
 	private string _currentRandomEventId = "";
 	private Core.Player _player;
 	private World.ErasureManager _erasureManager;
@@ -178,8 +181,6 @@ public partial class AudioManager : Node
 				_soundVolumeVariance[key] = (float)settings["volume_variance_db"].AsDouble();
 			if (settings.ContainsKey("duck_music_db"))
 				_soundDucks[key] = ((float)settings["duck_music_db"].AsDouble(), (float)settings["duck_sec"].AsDouble());
-			if (settings.ContainsKey("biome"))
-				_soundBiomes[key] = settings["biome"].AsString();
 			if (settings.ContainsKey("variants"))
 			{
 				Godot.Collections.Array paths = settings["variants"].AsGodotArray();
@@ -270,7 +271,7 @@ public partial class AudioManager : Node
 		if (eventBus != null)
 			ConnectEventBus(eventBus);
 
-		_birdTimer = _rng.RandfRange(15f, 35f);
+		_accentTimer = _rng.RandfRange(15f, 35f);
 
 	}
 
@@ -353,6 +354,9 @@ public partial class AudioManager : Node
 		_musicDuck = EnsureBusEffect(BusMusic, () => new AudioEffectAmplify());
 		_musicDuck.VolumeDb = MusicMixDb;
 		EnsureBusEffect(BusAmbiance, () => new AudioEffectAmplify()).VolumeDb = AmbianceMixDb;
+		// Réverbération du biome (plan 39 A4), coupée tant qu'elle est sèche.
+		_worldReverb = EnsureBusEffect(BusWorld, () => new AudioEffectReverb { Wet = 0f, Dry = 1f });
+		SetWorldReverbEnabled(false);
 		// Compression douce du monde : une salve d'impacts et de coups ne saute pas au-dessus du reste.
 		EnsureBusEffect(BusWorld, () => new AudioEffectCompressor { Threshold = -18f, Ratio = 3f, AttackUs = 5000f, ReleaseMs = 150f });
 		// Plafond de sortie : la somme des voix ne sature jamais.
@@ -381,6 +385,39 @@ public partial class AudioManager : Node
 		T effect = create();
 		AudioServer.AddBusEffect(index, effect);
 		return effect;
+	}
+
+	private static void SetWorldReverbEnabled(bool enabled)
+	{
+		int index = AudioServer.GetBusIndex(BusWorld);
+		for (int i = 0; i < AudioServer.GetBusEffectCount(index); i++)
+		{
+			if (AudioServer.GetBusEffect(index, i) is AudioEffectReverb)
+				AudioServer.SetBusEffectEnabled(index, i, enabled);
+		}
+	}
+
+	/// <summary>Fondu de la réverbération vers celle du biome ; l'effet est coupé une fois revenu au sec.</summary>
+	private void FadeWorldReverb(BiomeAmbience ambience)
+	{
+		_reverbTween?.Kill();
+		if (ambience.ReverbWet <= 0f && _worldReverb.Wet <= 0f)
+			return;
+		SetWorldReverbEnabled(true);
+		_reverbTween = CreateTween().SetParallel();
+		_reverbTween.TweenProperty(_worldReverb, "wet", ambience.ReverbWet, ReverbFadeSec);
+		_reverbTween.TweenProperty(_worldReverb, "room_size", ambience.ReverbRoomSize, ReverbFadeSec);
+		_reverbTween.TweenProperty(_worldReverb, "damping", ambience.ReverbDamping, ReverbFadeSec);
+		if (ambience.ReverbWet <= 0f)
+			_reverbTween.Chain().TweenCallback(Callable.From(() => SetWorldReverbEnabled(false)));
+	}
+
+	private void ResetWorldReverb()
+	{
+		_reverbTween?.Kill();
+		_reverbTween = null;
+		_worldReverb.Wet = 0f;
+		SetWorldReverbEnabled(false);
 	}
 
 	/// <summary>Baisse la musique le temps d'un grand moment ; un second moment prolonge la baisse sans la creuser.</summary>
@@ -703,14 +740,14 @@ public partial class AudioManager : Node
 			return;
 		float dt = (float)delta;
 
-		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
+		if (_currentPhase == "Exploration" && _ambience.HasAccents)
 		{
-			_birdTimer -= dt;
-			if (_birdTimer <= 0f)
+			_accentTimer -= dt;
+			if (_accentTimer <= 0f)
 			{
-				_birdTimer = _rng.RandfRange(20f, 45f);
-				string birdKey = _rng.Randi() % 2 == 0 ? "sfx_ambiance_oiseaux_1" : "sfx_ambiance_oiseaux_2";
-				PlaySfx(birdKey, 0.05f, -4f);
+				_accentTimer = _rng.RandfRange(_ambience.AccentIntervalMinS, _ambience.AccentIntervalMaxS);
+				string accent = _ambience.AccentKeys[(int)(_rng.Randi() % (uint)_ambience.AccentKeys.Count)];
+				PlaySfx(accent, 0.05f, _ambience.AccentVolumeDb);
 			}
 		}
 
@@ -781,7 +818,7 @@ public partial class AudioManager : Node
 		{
 			case "Exploration":
 				UpdateBiomeAmbiance();
-				_birdTimer = _rng.RandfRange(5f, 15f);
+				_accentTimer = _rng.RandfRange(_ambience.AccentFirstMinS, _ambience.AccentFirstMaxS);
 				break;
 			case "Crisis":
 			case "LateGame":
@@ -792,25 +829,25 @@ public partial class AudioManager : Node
 		UpdateContextAmbiance();
 	}
 
-	private bool IsSoundInCurrentBiome(string key) =>
-		!_soundBiomes.TryGetValue(key, out string biomeId) || biomeId == _currentBiomeId;
-
 	private void OnPlayerBiomeChanged(string biomeId)
 	{
 		if (_currentBiomeId == biomeId)
 			return;
 		_currentBiomeId = biomeId;
+		_ambience = (biomeId.Length > 0 ? BiomeDataLoader.Get(biomeId)?.Ambience : null) ?? BiomeAmbience.Silent;
+		if (!_runAudioStopped)
+			FadeWorldReverb(_ambience);
 		UpdateBiomeAmbiance();
-		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
-			_birdTimer = _rng.RandfRange(5f, 15f);
+		if (_currentPhase == "Exploration" && _ambience.HasAccents)
+			_accentTimer = _rng.RandfRange(_ambience.AccentFirstMinS, _ambience.AccentFirstMaxS);
 	}
 
 	private void UpdateBiomeAmbiance()
 	{
 		if (_runAudioStopped)
 			return;
-		if (_currentPhase == "Exploration" && IsSoundInCurrentBiome("sfx_ambiance_foret"))
-			PlayAmbiance("sfx_ambiance_foret");
+		if (_currentPhase == "Exploration" && _ambience.LoopKey != null)
+			PlayAmbiance(_ambience.LoopKey);
 		else if (_ambiancePlayer.Playing && !_ambianceFadingOut)
 			FadeOutAmbiance(0.5f);
 	}
@@ -957,6 +994,8 @@ public partial class AudioManager : Node
 	{
 		_currentPhase = "";
 		_currentBiomeId = "";
+		_ambience = BiomeAmbience.Silent;
+		ResetWorldReverb();
 		_currentRandomEventId = "";
 		_ambianceFade?.Kill();
 		_ambianceFade = null;
