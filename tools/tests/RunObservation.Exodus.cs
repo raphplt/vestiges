@@ -76,6 +76,11 @@ public partial class RunObservation
         {
             foreach (float distance in new[] { 700f, 420f, 200f, 90f })
                 await ListenAt(voices, erasure, radio, distance, $"radio à {distance} px");
+            Vector2 initialZoom = _camera.Zoom;
+            _camera.Zoom = initialZoom * 2f;
+            await Frames(10);
+            Save("voices-radio-zoom.png");
+            _camera.Zoom = initialZoom;
             // Zone à demi oubliée : la moitié des mots environ se perdent dans le grésillement.
             Dictionary<Vector2I, float> memory = (Dictionary<Vector2I, float>)typeof(ErasureManager)
                 .GetField("_zoneMemory", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(erasure);

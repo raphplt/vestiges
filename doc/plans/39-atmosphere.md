@@ -511,11 +511,13 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 **Vérifié :**
 - `tools/test_catalogs.sh` vert (316 contrôles) : réglages du dépôt acceptés, boucle de 24 sons, 40 sprites de l'exode présents ; son absent, phrase vide, mémoires inversées, téléphone muet d'avance, niveau qui sature, écart de hauteur excessif et clé inconnue refusés ;
 - `dotnet build` 0 warning, `tools/smoke_test.sh` vert ;
-- planche des voitures à radio regardée : poste lisible avec son antenne sur les quatre sens.
+- planche des voitures à radio regardée : poste lisible avec son antenne sur les quatre sens ;
+- en run, au zoom ×2, le poste crème et son antenne se lisent sur le capot ; au zoom normal, c'est un détail de quelques pixels, le son reste le repère. [Planche](planches/39-C1-radio.jpg), non versionnée ;
+- corrections de la relecture recapturées : même comportement à chaque étape.
 
 **Non vérifié :**
-- **l'écoute** : rien n'a été écouté par l'agent. Niveaux posés d'après les autres sons du monde.
-- les voitures à radio en capture de run.
+- **l'écoute** : rien n'a été écouté par l'agent. Niveaux posés d'après les autres sons du monde ; la musique couvre la mesure globale de l'enregistrement, qui ne dit rien du niveau de la radio.
+- le passage d'un lecteur à l'autre entre deux sources proches, et la coupure sèche d'une radio qui passe au Néant (non fondue, à juger à l'oreille).
 
 **À écouter par Raphaël**, hors dépôt :
 - `~/.local/share/vestiges-audio/2026-10-12/c1-radio/run.mp4` : la radio puis la cabine en vraie run, aux distances du tableau ;
