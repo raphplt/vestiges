@@ -468,6 +468,48 @@ def picnic(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(90, 60))
 
 
+def campfire(stem: str, seed: int) -> PropModel:
+    """
+    Feu de camp éteint (plan 39 B4c) : cercle de pierres, bûches calcinées croisées sur un lit de cendres où couvent
+    quelques braises, une bûche pour s'asseoir et une gamelle renversée. La fumée et la lueur des braises viennent du
+    jeu (`FalseLightDirector`), le décor reste immobile.
+    """
+    STONE_M, CHAR, ASH, EMBER, SEAT, BARK, POT = range(7)
+    materials = [make_material("stone", STONE), make_material("char", "#2A2422", contrast=0.6),
+                 make_material("ash", "#8A8580", contrast=0.4), make_material("ember", "#C8582A", contrast=0.4),
+                 make_material("seat", "#7A5A3E"), make_material("bark", "#4E3A2E", contrast=0.6),
+                 make_material("pot", "#5E6266", contrast=0.6)]
+    w = Weathering(seed)
+    stones = []
+    for k in range(9):
+        angle = k / 9 * 2 * np.pi + w.uniform(-0.15, 0.15)
+        radius = w.uniform(0.5, 0.58) * M
+        stones.append(((np.cos(angle) * radius, 0.08 * M, np.sin(angle) * radius),
+                       (w.uniform(0.11, 0.15) * M, w.uniform(0.08, 0.11) * M, w.uniform(0.1, 0.13) * M)))
+    # Tipi de bûches à moitié effondré : trois encore appuyées au sommet, une tombée en travers.
+    apex = (0.04 * M, 0.42 * M, 0.02 * M)
+    logs = [((np.cos(a) * 0.3 * M, 0.04 * M, np.sin(a) * 0.3 * M), apex) for a in (0.4, 2.5, 4.4)]
+    logs.append(((-0.3 * M, 0.06 * M, 0.18 * M), (0.28 * M, 0.06 * M, -0.05 * M)))
+    ash = lambda p: ellipsoid(p, (0, 0.0, 0), (0.42 * M, 0.06 * M, 0.42 * M))
+
+    def parts() -> list[Part]:
+        seat = lambda p: capsule(p, (-1.25 * M, 0.16 * M, -0.55 * M), (-0.55 * M, 0.16 * M, -1.15 * M), 0.16 * M)
+        pot = lambda p: np.maximum(cylinder(p, (0.85 * M, 0.14 * M, 0.55 * M), 0.17 * M, 0.13 * M, 0.02 * M, rotation_x(1.35)),
+                                   -cylinder(p, (0.85 * M, 0.22 * M, 0.6 * M), 0.14 * M, 0.13 * M, 0.0, rotation_x(1.35)))
+        return [
+            Part(lambda p: _union(*(ellipsoid(p, c, h) for c, h in stones)), STONE_M),
+            Part(ash, ASH),
+            Part(painted(ash, both(noise_mask(0.1 * M, seed, 0.25), lambda p: np.hypot(p[:, 0], p[:, 2]) - 0.22 * M), 0.012 * M),
+                 EMBER, relief=False),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.065 * M, 0.04 * M) for a, b in logs)), CHAR),
+            Part(seat, SEAT),
+            Part(painted(seat, lambda p: np.abs(np.mod(p[:, 0] + p[:, 2], 0.18 * M) - 0.09 * M) - 0.03 * M, 0.012 * M), BARK, relief=False),
+            Part(pot, POT),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(90, 60))
+
+
 def clothesline(stem: str, seed: int) -> PropModel:
     """Linge encore étendu : deux poteaux, une corde qui ploie, draps et chemises décolorés qui battent au vent."""
     POST, ROPE, SHEET, SHIRT, PIN = range(5)
@@ -627,6 +669,7 @@ def catalog() -> list[PropModel]:
         clothesline("prop_scene_clothesline", 802),
         crow_scarecrow("prop_scene_crow_scarecrow", 803),
         mired_tractor("prop_scene_mired_tractor", 804),
+        campfire("prop_scene_campfire", 805),
     ]
     # Arbres de verger, plantés en rangs : bas et ronds, l'un en feuilles, l'autre encore en fleurs.
     models += tree("prop_orchard_tree", 791, 3.4 * M, 1.25 * M, 0.13 * M, 12, "#5E4A38", GRASS, "#8AC060", False, (80, 110))

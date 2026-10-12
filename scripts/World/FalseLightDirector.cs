@@ -35,6 +35,9 @@ public partial class FalseLightDirector : Node2D
 		public Sprite2D Pool;
 		// Fenêtre (B4b) : l'immeuble qui la porte, dont la transparence (joueur derrière) éteint d'autant la lueur.
 		public EnvironmentProp Building;
+		// Feu de camp (B4c) : point d'où montent les bouffées, et attente avant la suivante.
+		public Vector2 Bulb;
+		public float SmokeTimer;
 		public float Phase;
 		public uint Seed;
 		public float Failing;
@@ -44,7 +47,22 @@ public partial class FalseLightDirector : Node2D
 		public int UpdatedFrame = -2;
 	}
 
+	/// <summary>Bouffée de fumée d'un feu de camp : un sprite sans script, prêté puis rendu au pool.</summary>
+	private sealed class Puff
+	{
+		public Sprite2D Sprite;
+		public Vector2 Origin;
+		public float Age;
+		public float Sway;
+		public bool Active;
+	}
+
+	// Fumée : au-dessus des entités et des lueurs, sous le brouillard (10) et les canopées (couches d'AGENTS.md).
+	private const int SmokeZIndex = 9;
+
 	private FalseLightsConfig _config;
+	private readonly List<Puff> _puffs = new();
+	private Vector2 _wind = Vector2.Right;
 	private ErasureManager _erasure;
 	private CanvasModulate _scene;
 	private float _sceneDayLuminance = 1f;
@@ -128,7 +146,7 @@ public partial class FalseLightDirector : Node2D
 			int index = seen.GetValueOrDefault(kind);
 			seen[kind] = index + 1;
 			// Une part de chaque sorte, à intervalles réguliers dans l'ordre de pose.
-			if (Mathf.FloorToInt((index + 1) * _config.LitShare) <= Mathf.FloorToInt(index * _config.LitShare))
+			if (Mathf.FloorToInt((index + 1) * kind.LitShare) <= Mathf.FloorToInt(index * kind.LitShare))
 				continue;
 			lit[kind] = lit.GetValueOrDefault(kind) + 1;
 			Light light = new()
@@ -140,6 +158,8 @@ public partial class FalseLightDirector : Node2D
 				MemoryTimer = rng.Randf() * MemoryCheckIntervalS,
 			};
 			Vector2 bulb = prop.TextureOrigin + kind.Anchor;
+			light.Bulb = bulb;
+			light.SmokeTimer = rng.Randf() * _config.Smoke.IntervalS;
 			light.Core = AddGlow(core, bulb, CoreZIndex, additive);
 			if (kind.Halo > 0f)
 				light.Halo = AddGlow(halo, bulb, CoreZIndex, additive);
@@ -246,10 +266,35 @@ public partial class FalseLightDirector : Node2D
 		}
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_eventBus.WeatherChanged += OnWeatherChanged;
+		// Pool de fumée seulement si la carte a des feux de camp.
+		bool smokes = false;
+		foreach (Light light in _lights)
+			smokes |= light.Kind.Smoke;
+		if (smokes)
+			CreatePuffs();
 		// Une météo déjà installée (mode dev, captures) compte dès le départ.
 		WeatherDirector weather = GetParent().GetNodeOrNull<WeatherDirector>("WeatherDirector");
 		if (weather != null)
 			OnWeatherChanged(weather.ActiveId);
+	}
+
+	private void CreatePuffs()
+	{
+		if (AtmosphereConfig.TryLoad(out AtmosphereConfig atmosphere, out string error))
+			_wind = atmosphere.WindDirection;
+		else
+			GD.PushWarning($"[FalseLightDirector] {error} : la fumée dérive vers l'est");
+		Texture2D smoke = GD.Load<Texture2D>("res://assets/vfx/lights/light_smoke.png");
+		for (int i = 0; i < _config.Smoke.MaxPuffs; i++)
+		{
+			Sprite2D sprite = new()
+			{
+				Texture = smoke, ZIndex = SmokeZIndex, ZAsRelative = false, TextureFilter = TextureFilterEnum.Nearest,
+				Visible = false,
+			};
+			AddChild(sprite);
+			_puffs.Add(new Puff { Sprite = sprite });
+		}
 	}
 
 	public override void _ExitTree()
@@ -274,6 +319,8 @@ public partial class FalseLightDirector : Node2D
 		_darkness = Mathf.MoveToward(_darkness, targetDarkness, dt / _config.DarknessFadeS);
 		float strength = Mathf.Lerp(_config.DayStrength, _config.DarkStrength, _darkness) * _sceneDayLuminance / luminance;
 
+		// Les bouffées déjà parties finissent leur course, caméra ou pas.
+		UpdatePuffs(dt);
 		Camera2D camera = GetViewport().GetCamera2D();
 		if (camera == null)
 			return;
@@ -293,6 +340,53 @@ public partial class FalseLightDirector : Node2D
 						UpdateLight(light, strength, dt);
 				}
 			}
+		}
+	}
+
+	private void UpdateSmoke(Light light, float dt)
+	{
+		light.SmokeTimer -= dt;
+		if (light.SmokeTimer > 0f)
+			return;
+		FalseLightSmoke smoke = _config.Smoke;
+		// Un départ un peu irrégulier : les bouffées ne montent pas en cadence.
+		light.SmokeTimer = smoke.IntervalS * (0.7f + 0.6f * Noise(light.Seed ^ 0x51u, Mathf.FloorToInt(_time / smoke.IntervalS)));
+		foreach (Puff puff in _puffs)
+		{
+			if (puff.Active)
+				continue;
+			puff.Active = true;
+			puff.Age = 0f;
+			puff.Origin = light.Bulb;
+			puff.Sway = Noise(light.Seed ^ 0x5Au, Mathf.FloorToInt(_time * 7f)) * Mathf.Tau;
+			puff.Sprite.Visible = true;
+			return;
+		}
+	}
+
+	private void UpdatePuffs(float dt)
+	{
+		FalseLightSmoke smoke = _config.Smoke;
+		foreach (Puff puff in _puffs)
+		{
+			if (!puff.Active)
+				continue;
+			puff.Age += dt;
+			float t = puff.Age / smoke.LifeS;
+			if (t >= 1f)
+			{
+				puff.Active = false;
+				puff.Sprite.Visible = false;
+				continue;
+			}
+			// Monte, dérive au vent qui forcit avec la hauteur, ondule ; grandit et se dissipe.
+			Vector2 drift = _wind * (smoke.DriftPxPerSecond * puff.Age * (0.4f + t));
+			float wobble = Mathf.Sin(puff.Sway + puff.Age * 2.2f) * 2.5f * t;
+			puff.Sprite.Position = (puff.Origin + drift + new Vector2(wobble, -smoke.RisePxPerSecond * puff.Age)).Round();
+			float grow = 1f + smoke.Grow * t;
+			puff.Sprite.Scale = new Vector2(grow, grow);
+			float alpha = smoke.Alpha * Mathf.Min(1f, t / 0.12f) * Mathf.Pow(1f - t, 1.5f);
+			puff.Sprite.Modulate = new Color(smoke.Color, alpha);
 		}
 	}
 
@@ -319,6 +413,8 @@ public partial class FalseLightDirector : Node2D
 		}
 
 		FalseLightKind kind = light.Kind;
+		if (kind.Smoke)
+			UpdateSmoke(light, dt);
 		float cycle = _time / kind.PeriodS + light.Phase;
 		float level = kind.Pattern switch
 		{

@@ -24,6 +24,23 @@ public sealed class FalseLightKind
     public float Floor { get; init; }
     public float Halo { get; init; }
     public float Pool { get; init; }
+    /// <summary>Part de ces décors qui gardent leur lumière ; par défaut, celle de la racine (lit_share).</summary>
+    public float LitShare { get; init; }
+    /// <summary>Fume (feu de camp éteint, plan 39 B4c).</summary>
+    public bool Smoke { get; init; }
+}
+
+/// <summary>Fumée des feux de camp éteints (plan 39 B4c) : bouffées qui montent, dérivent au vent et se dissipent.</summary>
+public sealed class FalseLightSmoke
+{
+    public float IntervalS { get; init; }
+    public float LifeS { get; init; }
+    public float RisePxPerSecond { get; init; }
+    public float DriftPxPerSecond { get; init; }
+    public float Grow { get; init; }
+    public float Alpha { get; init; }
+    public int MaxPuffs { get; init; }
+    public Color Color { get; init; }
 }
 
 /// <summary>
@@ -61,6 +78,7 @@ public sealed class FalseLightsConfig
     public float ScreenShare { get; private init; }
     public FalseLightKind WindowKind { get; private init; }
     public FalseLightKind ScreenKind { get; private init; }
+    public FalseLightSmoke Smoke { get; private init; }
 
     public static bool TryLoad(out FalseLightsConfig config, out string error)
     {
@@ -97,7 +115,7 @@ public sealed class FalseLightsConfig
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "racine", "lit_share", "day_strength", "dark_strength", "darkness_fade_s",
-                "weather_darkness", "memory_steady", "memory_dead", "rhythm", "kinds", "windows");
+                "weather_darkness", "memory_steady", "memory_dead", "rhythm", "kinds", "windows", "smoke");
             float litShare = reader.Chance(root, "lit_share");
             float dayStrength = reader.Chance(root, "day_strength");
             float darkStrength = reader.Ratio(root, "dark_strength");
@@ -130,7 +148,8 @@ public sealed class FalseLightsConfig
             HashSet<string> sprites = new();
             foreach (JsonElement entry in reader.List(root, "kinds", 1))
             {
-                reader.AllowOnly(entry, "kinds", "sprite", "anchor", "color", "pattern", "period_s", "on_share", "halo", "pool");
+                reader.AllowOnly(entry, "kinds", "sprite", "anchor", "color", "pattern", "period_s", "on_share", "halo", "pool",
+                    "lit_share", "smoke");
                 string sprite = reader.Text(entry, "sprite");
                 if (sprite != null && !spriteExists(sprite))
                     reader.Fail($"kinds : décor « {sprite} » absent des manifestes");
@@ -154,10 +173,14 @@ public sealed class FalseLightsConfig
                     reader.Fail($"kinds : on_share réservé au rythme blink ({sprite})");
                 float halo = reader.Chance(entry, "halo");
                 float pool = reader.Chance(entry, "pool");
+                float kindShare = entry.ValueKind == JsonValueKind.Object && entry.TryGetProperty("lit_share", out _)
+                    ? reader.Chance(entry, "lit_share")
+                    : litShare;
+                bool smokes = reader.Flag(entry, "smoke");
                 kinds.Add(new FalseLightKind
                 {
                     Sprite = sprite, Anchor = anchor, Color = color, Pattern = parsed, PeriodS = period,
-                    OnShare = onShare, Halo = halo, Pool = pool,
+                    OnShare = onShare, Halo = halo, Pool = pool, LitShare = kindShare, Smoke = smokes,
                 });
             }
 
@@ -176,6 +199,20 @@ public sealed class FalseLightsConfig
             float screenPeriod = reader.Positive(windows, "screen_period_s");
             float screenFloor = reader.Chance(windows, "screen_floor");
 
+            JsonElement smoke = reader.Section("smoke");
+            reader.AllowOnly(smoke, "smoke", "interval_s", "life_s", "rise_px_s", "drift_px_s", "grow", "alpha", "max_puffs", "color");
+            FalseLightSmoke smokeConfig = new()
+            {
+                IntervalS = reader.Positive(smoke, "interval_s"),
+                LifeS = reader.Positive(smoke, "life_s"),
+                RisePxPerSecond = reader.Positive(smoke, "rise_px_s"),
+                DriftPxPerSecond = reader.NonNegative(smoke, "drift_px_s"),
+                Grow = reader.NonNegative(smoke, "grow"),
+                Alpha = reader.Ratio(smoke, "alpha"),
+                MaxPuffs = reader.Integer(smoke, "max_puffs", 1, 256),
+                Color = reader.Rgb(smoke, "color"),
+            };
+
             // Au-dessus de memory_steady la lampe tient, sous memory_dead elle meurt : l'ordre inverse n'a pas de sens.
             if (memoryDead >= memorySteady)
                 reader.Fail("memory_dead : doit rester sous memory_steady");
@@ -191,7 +228,7 @@ public sealed class FalseLightsConfig
             {
                 LitShare = litShare, DayStrength = dayStrength, DarkStrength = darkStrength, DarknessFadeS = fade,
                 WeatherDarkness = darkness, MemorySteady = memorySteady, MemoryDead = memoryDead, Kinds = kinds,
-                WindowsPath = windowsPath, BuildingShare = buildingShare, ScreenShare = screenShare,
+                WindowsPath = windowsPath, BuildingShare = buildingShare, ScreenShare = screenShare, Smoke = smokeConfig,
                 // Une fenêtre tremble à peine (une variation par demi-seconde) ; un écran change à chaque plan.
                 WindowKind = new FalseLightKind
                 {

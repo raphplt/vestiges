@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Godot;
@@ -722,9 +723,9 @@ public partial class CatalogContractRegression : Node
         string valid = FileAccess.GetFileAsString("res://data/world/false_lights.json");
         string[] weathers = { "storm", "thick_fog", "ash_rain", "forgotten_wind" };
         bool accepted = FalseLightsConfig.TryParse(valid, FalseLightsConfig.PropSpriteExists, path => FileAccess.FileExists(path), weathers, out FalseLightsConfig config, out string error);
-        Check(accepted && config.Kinds.Count == 4 && config.WeatherDarkness["storm"] == 1f, $"fausses lumières du dépôt acceptées {error}");
-        int glows = Array.FindAll(new[] { "core", "halo", "pool", "pixel" }, id => ResourceLoader.Exists($"res://assets/vfx/lights/light_{id}.png")).Length;
-        Check(glows == 4, $"fausses lumières : 4 lueurs présentes ({glows})");
+        Check(accepted && config.Kinds.Count == 5 && config.Kinds.Any(kind => kind.Sprite == "prop_scene_campfire" && kind.Smoke && kind.LitShare == 1f) && config.WeatherDarkness["storm"] == 1f, $"fausses lumières du dépôt acceptées {error}");
+        int glows = Array.FindAll(new[] { "core", "halo", "pool", "pixel", "smoke" }, id => ResourceLoader.Exists($"res://assets/vfx/lights/light_{id}.png")).Length;
+        Check(glows == 5, $"fausses lumières : 5 lueurs présentes ({glows})");
         // Fenêtres (B4b) : chaque immeuble a son entrée, chaque vitre tient dans son sprite.
         using JsonDocument windows = JsonDocument.Parse(FileAccess.GetFileAsString("res://" + config.WindowsPath));
         int buildings = 0;
@@ -774,6 +775,8 @@ public partial class CatalogContractRegression : Node
             ("plus fortes de jour", root => root["dark_strength"] = 0.3, "day_strength"),
             ("fenêtres introuvables", root => root["windows"]!["data"] = "assets/props/urban_ruins/absent.json", "absent.json"),
             ("télévision sans rythme", root => root["windows"]!["screen_period_s"] = 0, "screen_period_s"),
+            ("fumée sans bouffée", root => root["smoke"]!["max_puffs"] = 0, "max_puffs"),
+            ("part propre hors bornes", root => root["kinds"]![0]!["lit_share"] = 2, "lit_share"),
             ("lampe éteinte plus vive", root => root["rhythm"]!["off_level"] = 0.5, "off_level"),
             ("clé inconnue", root => root["glow"] = 1, "glow"),
         };

@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18), **B4b livré** (§19).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18), **B4b livré** (§19), **B4c livré** (§20) : B4 complet.
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -622,3 +622,24 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 - le coût au banc : même mécanisme que B4a, 74 immeubles × 2 sprites de plus, animés seulement près de la vue.
 
 **À juger par Raphaël :** la part d'immeubles éclairés, l'aplat (une fenêtre pleine plutôt qu'une lumière derrière la vitre), la part de télévisions.
+
+## 20. B4c livré, feux de camp éteints qui fument — 12 octobre 2026
+
+**Fait :**
+- **décor** : `prop_scene_campfire` (`tools/sprites/props/farm.py`, `generate_props.py fields_farm`). Cercle de pierres, tipi de bûches calcinées à moitié effondré, cendres où couvent des braises, une bûche pour s'asseoir, une gamelle renversée. Les autres décors de la ferme sont inchangés ;
+- **placement à densité égale** : cinquième scène-récit des champs (`data/world/farms.json`), tirée parmi cinq au lieu de quatre, une par région au plus. Les scènes ne sont pas plus nombreuses : le feu prend la place d'un pique-nique, d'une corde à linge, d'un épouvantail ou d'un tracteur. Le choix de la scène d'une région change donc d'une graine à l'autre par rapport à avant ;
+- **braises** : même mécanique que les lampes de B4a (`kinds` de `false_lights.json`). Lueur rouge-orangé qui respire (2,6 s), halo et flaque discrets ; tous les feux couvent (`lit_share` 1, nouveau réglage par sorte), plus fort dans le sombre, morts avec l'oubli ;
+- **fumée** (section `smoke`) : une bouffée toutes les 0,8 s environ, à cadence irrégulière. Elle vit 3,6 s, monte de 13 px/s, dérive dans le sens du vent commun (B1) en forcissant avec la hauteur, ondule, grandit de 180 % et se dissipe. Pool de 48 sprites sans script (`light_smoke.png`), créé seulement si la carte a des feux, prêté aux feux proches de la vue ; couche 9, sous le brouillard et les canopées.
+
+**Relecture appliquée** : pool créé seulement si la carte a des feux, bouffées qui finissent leur course même sans caméra, avertissement si le vent ne se charge pas, contrôle de catalogue qui cherche le feu par son nom.
+
+**Mesures** (`tools/measure_run.sh`, 8 graines) : 2 à 8 feux de camp par carte, 4 en moyenne, pour 13 à 25 scènes-récits.
+
+**Vérifié :**
+- en run (`--capture-lights`, seed 221092026, recapturé après la relecture) : panache léger au-dessus des braises, discret de jour, plus visible sous l'orage où les braises rougeoient. Premier essai : capture prise avant que la fumée ait monté, attente portée à 4 s ; puis fumée trop pâle, opacité et ampleur relevées. [Planche B4](planches/39-B4-lumieres.jpg), non versionnée : feux tricolores, lampes de carrière, lanternes, fenêtre et feu de camp, de jour puis sous l'orage ;
+- `tools/test_catalogs.sh` vert (333 contrôles) : cinq sortes de lampes dont le feu qui fume et couve toujours, cinq lueurs présentes ; fumée sans bouffée et part propre hors bornes refusées ;
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :** la fumée en mouvement (captures fixes), sa dérive par vent fort ou sous la météo, le coût au banc (au plus 48 sprites de plus).
+
+**À juger par Raphaël :** la lisibilité du feu de camp (petit décor), la densité de la fumée, le nombre de feux par carte.

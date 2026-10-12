@@ -83,7 +83,8 @@ public partial class RunObservation
             _player.GlobalPosition = position + new Vector2(-60f, 50f);
             _camera.Zoom = initialZoom;
             _camera.ResetSmoothing();
-            await Frames(30);
+            // La fumée d'un feu de camp met quelques secondes à monter.
+            await Frames(240);
             Save($"lights-{label}-{sprite}.png");
             _camera.Zoom = initialZoom * 2f;
             await Frames(10);
