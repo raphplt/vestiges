@@ -100,6 +100,11 @@ public partial class MenuNavigationRegression : Node
         HubCampUpgradesPanel camp = Field<HubCampUpgradesPanel>(hub, "_campPanel");
         Button rack = (Button)camp.FindChild("camp_weapon_slots", true, false);
         Button pockets = (Button)camp.FindChild("camp_pockets", true, false);
+        HBoxContainer header = camp.GetParentControl().GetNode<HBoxContainer>("PageHeader");
+        Button back = header.GetNode<Button>("PageBack");
+        Check(header.GetGlobalRect().End.Y <= camp.GetGlobalRect().Position.Y
+            && Mathf.IsEqualApprox(back.GetGlobalRect().End.X, camp.GetGlobalRect().End.X),
+            "Retour est dans l'en-tête, aligné au bord droit du contenu");
         MetaSaveManager.AddVestiges(1000);
         rack.GrabFocus();
         await Frames(2);
@@ -125,7 +130,9 @@ public partial class MenuNavigationRegression : Node
         Check(MetaSaveManager.GetVestiges() == 1000 && MetaSaveManager.GetCampRank("camp_weapon_slots") == 0,
             "Tout rendre rembourse aussi les autres améliorations");
         Check(GetViewport().GuiGetFocusOwner() == pockets, "Tout rendre conserve la sélection et un focus utilisable");
-        await Press("ui_cancel");
+        back.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(2);
+        Check(!camp.IsVisibleInTree(), "Le retour de l'en-tête ferme la page du Campement");
     }
 
     private static T Field<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(owner);

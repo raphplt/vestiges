@@ -1,5 +1,41 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+## Reprise visuelle M9 — alignements et retour, 12 octobre 2026
+
+Pendant la publication de M8, Raphaël signale que le bouton Retour ne doit
+plus être en bas à gauche, et que des éléments sont mal alignés dans le
+Campement et les autres menus. Le lot M8 et les autres changements prêts
+sont enregistrés en `2eea7165`, avant cette reprise.
+
+Lot unique sur les pages du Hub :
+- En-tête en conteneur, titre et Retour sur la même ligne ; Retour en haut
+  à droite proposé (alternative demandée : haut à gauche près du titre).
+- Même grille de marges pour Campement, Personnages, Quêtes et Collection.
+- Dans le Campement, largeur de liste adaptée à l'espace disponible, solde,
+  catégories, cartes et titre alignés ; prix et boutons de fiche au même
+  bord que Retour et Tout rendre. Ligne nom/rang en conteneur pour éviter
+  les décalages quand la largeur varie.
+- Conserver navigation, historique des liens et transactions ; vérifier
+  en-têtes et contenus en captures 720p/1080p, build et suites de navigation.
+
+**M9 livré et vérifié le 12 octobre 2026.** Haut à droite retenu par
+l'agent après la demande de préférence restée sans réponse.
+
+- En-tête partagé, marges latérales de 132 px en base 1080p ; le contenu
+  conserve toute la hauteur disponible jusqu'à 88 px du bas.
+- Liste du Campement extensible, noms et compteurs sur une même ligne en
+  conteneur ; icônes et descriptions gardent des marges constantes.
+- Build du dossier partagé : zéro warning, zéro erreur. Validation sur
+  copie isolée : cinq suites vertes (`smoke`, `camp`, `menu_navigation`,
+  `ui_art`, `quests`), aucune modification de source pendant les contrôles,
+  preuves dans `/tmp/vestiges-m9-validation/`.
+- Capture du Campement inspectée en 1080p et 720p ; Personnages, Quêtes et
+  Collection inspectés en 720p. Le contrôle de navigation vérifie la
+  position du retour et son action ; liens et transactions restent verts.
+
+Captures de revue : [Campement 1080p](planches/36-M9-campement-1080.png)
+et [Campement 720p](planches/36-M9-campement-720.png).
+
 ## Reprise visuelle M8 — lisibilité du Campement, 12 octobre 2026
 
 Raphaël apprécie la direction M7, mais demande des cadres autour des icônes

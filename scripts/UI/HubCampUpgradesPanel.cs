@@ -80,16 +80,17 @@ public partial class HubCampUpgradesPanel : MarginContainer
         _refundAll.Pressed += OnRefundAll;
         top.AddChild(_refundAll);
 
-        HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
+        HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddThemeConstantOverride("separation", 40);
         column.AddChild(body);
         ScrollContainer scroll = new()
         {
             CustomMinimumSize = new Vector2(ListWidth + 16f, 0f), SizeFlagsVertical = SizeFlags.ExpandFill,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
         };
         body.AddChild(scroll);
-        _list = new VBoxContainer();
+        _list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _list.AddThemeConstantOverride("separation", 8);
         scroll.AddChild(_list);
         body.AddChild(MakeDetail());
@@ -143,30 +144,49 @@ public partial class HubCampUpgradesPanel : MarginContainer
         row.Select = MakeButton("", new Vector2(ListWidth, RowHeight));
         row.Select.Name = upgrade.Id;
         row.Select.MouseDefaultCursorShape = Control.CursorShape.PointingHand;
+        MarginContainer inset = new() { MouseFilter = MouseFilterEnum.Ignore };
+        inset.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        inset.AddThemeConstantOverride("margin_left", 12);
+        inset.AddThemeConstantOverride("margin_right", 20);
+        inset.AddThemeConstantOverride("margin_top", 8);
+        inset.AddThemeConstantOverride("margin_bottom", 8);
+        row.Select.AddChild(inset);
+        HBoxContainer line = new() { MouseFilter = MouseFilterEnum.Ignore };
+        line.AddThemeConstantOverride("separation", 20);
+        inset.AddChild(line);
         Panel iconFrame = new()
         {
-            Name = "CampIconFrame", Position = new Vector2(12f, 8f), Size = new Vector2(88f, 88f),
+            Name = "CampIconFrame", CustomMinimumSize = new Vector2(88f, 88f),
             MouseFilter = MouseFilterEnum.Ignore, TextureFilter = TextureFilterEnum.Nearest,
         };
         iconFrame.AddThemeStyleboxOverride("panel", UITheme.CreateNinePatch(MenuSkin.TextureFor("ui_card_locked.png"), 4, 4, 4, 4));
-        row.Select.AddChild(iconFrame);
+        line.AddChild(iconFrame);
         TextureRect icon = MakeIcon(row.Icon, 64f);
         icon.Position = new Vector2(12f, 12f);
         iconFrame.AddChild(icon);
+        VBoxContainer text = new()
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        text.AddThemeConstantOverride("separation", 4);
+        line.AddChild(text);
+        HBoxContainer heading = new() { MouseFilter = MouseFilterEnum.Ignore };
+        heading.AddThemeConstantOverride("separation", 16);
+        text.AddChild(heading);
         Label name = CampTypography.Label(Tr(upgrade.NameKey), TextRole.Heading, UITheme.TextLight, TextWeight.Strong);
-        name.Position = new Vector2(120f, 12f);
-        row.Select.AddChild(name);
+        name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        name.ClipText = true;
+        name.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+        heading.AddChild(name);
+        row.Rank = CampTypography.Label("", TextRole.Lead, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Right);
+        row.Rank.CustomMinimumSize = new Vector2(72f, 0f);
+        heading.AddChild(row.Rank);
         Label hint = CampTypography.Label(Tr(upgrade.NameKey + "_HINT"), TextRole.Body, UITheme.TextColor);
-        hint.Position = new Vector2(120f, 52f);
-        hint.Size = new Vector2(ListWidth - 144f, 40f);
         hint.ClipText = true;
         hint.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         hint.TooltipText = hint.Text;
-        row.Select.AddChild(hint);
-        row.Rank = CampTypography.Label("", TextRole.Lead, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Right);
-        row.Rank.Position = new Vector2(ListWidth - 92f, 14f);
-        row.Rank.Size = new Vector2(72f, 30f);
-        row.Select.AddChild(row.Rank);
+        text.AddChild(hint);
         row.Select.FocusEntered += () => SelectRow(row);
         row.Select.Pressed += () => SelectRow(row);
         _rows.Add(row);

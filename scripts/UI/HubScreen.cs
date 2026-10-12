@@ -39,7 +39,7 @@ public partial class HubScreen : Control
 	private string _collectionKind = "weapons";
 	private readonly Stack<(HubState State, string Focus, string Tab)> _returnStack = new();
 	/// <summary>Pages ouvertes depuis le menu : calque, bouton de retour et bouton du menu qui retrouve le focus.</summary>
-	private readonly Dictionary<HubState, (Control Layer, HubMenuButton Back, HubMenuButton Opener)> _pages = new();
+	private readonly Dictionary<HubState, (Control Layer, Button Back, HubMenuButton Opener)> _pages = new();
 	private readonly List<HubMenuButton> _menuButtons = new();
 	private readonly Dictionary<HubState, HubMenuButton> _openers = new();
 	private Label _vestigesLabel;
@@ -337,51 +337,58 @@ public partial class HubScreen : Control
 	private void BuildPages()
 	{
 		_charactersPanel = new HubCharactersPanel();
-		AddPage(HubState.Characters, "Choisir un personnage", _charactersPanel, 100f, -120f, -160f);
+		AddPage(HubState.Characters, "Choisir un personnage", _charactersPanel);
 		_charactersPanel.DepartRequested += StartRun;
 		_charactersPanel.QuestRequested += OpenQuest;
 		_charactersPanel.WeaponRequested += id => OpenReward((int)UnlockKind.Weapon, id);
 		_campPanel = new HubCampUpgradesPanel();
-		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel, 120f, -140f, -88f);
+		AddPage(HubState.Camp, Tr("UI_CAMP_TITLE"), _campPanel);
 		_questsPanel = new HubQuestsPanel();
-		AddPage(HubState.Quests, "Quêtes", _questsPanel, 120f, -140f, -160f);
+		AddPage(HubState.Quests, "Quêtes", _questsPanel);
 		_questsPanel.RewardRequested += OpenReward;
 		_collectionPanel = new HubCollectionPanel();
-		AddPage(HubState.Collection, "Collection", _collectionPanel, 140f, -160f, -160f);
+		AddPage(HubState.Collection, "Collection", _collectionPanel);
 		_collectionPanel.QuestRequested += OpenQuest;
 	}
 
-	private void AddPage(HubState state, string title, Control panel, float left, float right, float bottom)
+	private void AddPage(HubState state, string title, Control panel)
 	{
 		Control layer = new() { Visible = false };
 		layer.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		AddChild(layer);
-
 		bool camp = state == HubState.Camp;
 		MenuSkin.AddBackdrop(layer, brightness: camp ? 0.52f : 1f);
-		// Chaque page est une destination à part : un titre, pas d'onglets vers les autres (DECISIONS §117).
+		// Un même en-tête aligne le titre, l'action de retour et les bords du contenu.
+		HBoxContainer header = new() { Name = "PageHeader" };
+		header.SetAnchorsAndOffsetsPreset(LayoutPreset.TopWide);
+		header.OffsetLeft = 132f;
+		header.OffsetRight = -132f;
+		header.OffsetTop = 32f;
+		header.OffsetBottom = 96f;
+		header.AddThemeConstantOverride("separation", 24);
+		layer.AddChild(header);
 		Label heading = CreateLabel(title, TextRole.Title, UITheme.GoldBright, true);
 		heading.Name = "PageTitle";
-		heading.Position = new Vector2(MenuLeft + 36f, camp ? 32f : 96f);
+		heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+		heading.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		if (camp) CampTypography.Apply(heading, TextRole.Title, true);
-		layer.AddChild(heading);
-		VBoxContainer back = new() { Position = new Vector2(MenuLeft - 40f, camp ? 1012f : 970f) };
-		layer.AddChild(back);
-		HubMenuButton backButton = new();
-		backButton.Setup("Retour", TextRole.Title, _bodyFont);
+		header.AddChild(heading);
+		Button backButton = MenuSkin.Button(Tr("UI_MENU_BACK"));
+		backButton.Name = "PageBack";
+		backButton.CustomMinimumSize = new Vector2(220f, 56f);
+		backButton.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		if (camp) CampTypography.Apply(backButton, TextRole.Heading);
 		backButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			ReturnToPrevious();
 		};
-		back.AddChild(backButton);
-
+		header.AddChild(backButton);
 		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		panel.OffsetLeft = left;
-		panel.OffsetRight = right;
-		panel.OffsetTop = camp ? 108f : 180f;
-		panel.OffsetBottom = bottom;
+		panel.OffsetLeft = 132f;
+		panel.OffsetRight = -132f;
+		panel.OffsetTop = camp ? 108f : 120f;
+		panel.OffsetBottom = -88f;
 		layer.AddChild(panel);
 		_pages[state] = (layer, backButton, _openers.GetValueOrDefault(state));
 	}
@@ -428,12 +435,12 @@ public partial class HubScreen : Control
 			if (first != null)
 				first.GrabFocus();
 			else
-				_pages[state].Back.GrabFocusSilently();
+				_pages[state].Back.GrabFocus();
 			return;
 		}
 
 		UpdateVestigesDisplay();
-		if (_pages.TryGetValue(from, out (Control Layer, HubMenuButton Back, HubMenuButton Opener) previous))
+		if (_pages.TryGetValue(from, out (Control Layer, Button Back, HubMenuButton Opener) previous))
 			previous.Opener?.GrabFocusSilently();
 	}
 
@@ -572,7 +579,7 @@ public partial class HubScreen : Control
 		_mainMenuLayer.ProcessMode = showCamp ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
 		_backdrop.Visible = showCamp;
 		_backdrop.ProcessMode = showCamp ? ProcessModeEnum.Inherit : ProcessModeEnum.Disabled;
-		foreach ((HubState state, (Control Layer, HubMenuButton Back, HubMenuButton Opener) page) in _pages)
+		foreach ((HubState state, (Control Layer, Button Back, HubMenuButton Opener) page) in _pages)
 			page.Layer.Visible = show && state == _currentState;
 	}
 
