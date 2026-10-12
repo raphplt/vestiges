@@ -209,21 +209,21 @@ public partial class HubScreen : Control
 		menu.AddThemeConstantOverride("separation", 4);
 		_mainMenuLayer.AddChild(menu);
 
-		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, _strongFont, () => OpenPage(HubState.Characters));
+		_enterVoidButton = AddMenuButton(menu, "Partir", TextRole.Display, UITheme.TitleFont, () => OpenPage(HubState.Characters));
 		menu.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 20f), MouseFilter = MouseFilterEnum.Ignore });
 		_openers[HubState.Characters] = _enterVoidButton;
-		_openers[HubState.Camp] = AddMenuButton(menu, Tr("UI_CAMP_TITLE"), TextRole.Title, _bodyFont, () => OpenPage(HubState.Camp));
-		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, _bodyFont, () => OpenPage(HubState.Quests));
-		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, _bodyFont, () => OpenPage(HubState.Collection));
+		_openers[HubState.Camp] = AddMenuButton(menu, Tr("UI_CAMP_TITLE"), TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Camp));
+		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Quests));
+		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Collection));
 		HBoxContainer utilities = new() { Position = new Vector2(MenuLeft - 40, 970) };
 		utilities.AddThemeConstantOverride("separation", 16);
 		_mainMenuLayer.AddChild(utilities);
-		AddMenuButton(utilities, "Paramètres", TextRole.Heading, _bodyFont, () =>
+		AddMenuButton(utilities, "Paramètres", TextRole.Heading, UITheme.TitleFont, () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			_settingsScreen?.Open();
 		});
-		AddMenuButton(utilities, "Quitter", TextRole.Heading, _bodyFont, () => _ = GameExit.QuitAsync(GetTree()));
+		AddMenuButton(utilities, "Quitter", TextRole.Heading, UITheme.TitleFont, () => _ = GameExit.QuitAsync(GetTree()));
 	}
 
 	private HubMenuButton AddMenuButton(BoxContainer menu, string text, TextRole role, Font font, System.Action onPressed)
@@ -369,6 +369,7 @@ public partial class HubScreen : Control
 		layer.AddChild(header);
 		Label heading = CreateLabel(title, TextRole.Title, UITheme.GoldBright, true);
 		heading.Name = "PageTitle";
+		heading.AddThemeFontOverride("font", UITheme.TitleFont);
 		heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		heading.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		header.AddChild(heading);

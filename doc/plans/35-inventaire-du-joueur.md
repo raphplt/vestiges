@@ -1,5 +1,7 @@
 # Plan 35 — L'inventaire du joueur, repensé une dernière fois
 
+> **Amendement I15, 12 octobre 2026 (DECISIONS §144)** : les places comptent désormais les **types distincts**, pas les exemplaires. Capacité initiale en données (10 sans amélioration), augmentée par les Poches ; doublons empilés dans leur place existante, même à sac plein. Les descriptions historiques « un exemplaire, une place » ci-dessous sont remplacées par le [lot I15](35-raretes-des-objets.md#i15--places-par-type-dobjet-doublons-empilés-12-octobre-2026).
+
 11 octobre 2026. Demande de Raphaël au [§109](DECISIONS.md), partie du retour sur le late game ([plan 34](34-late-game.md)) : « qu'on repense encore une dernière fois à l'inventaire du joueur et à ce qu'il a », « de manière assez prioritaire ». **Étude et proposition : rien n'est implémenté.** Questions tranchées le 11 octobre (§8) : la deuxième étagère, ce sont **les Écussons**. La progression permanente (améliorations au Hub) est traitée à part, au [plan 36](36-progression-permanente.md).
 
 ## 0. En bref

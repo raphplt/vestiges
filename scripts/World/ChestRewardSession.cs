@@ -20,7 +20,6 @@ public sealed class ChestRewardSession
     public bool Complete => _rewards.Count >= _count;
     public bool Applied { get; private set; }
     public IReadOnlyList<PassiveSouvenirData> Eligible { get; }
-    public double[] Probabilities { get; }
 
     public ChestRewardSession(ItemLootPool pool, string source, float luck, int count, int extraChoices, RandomNumberGenerator rng)
     {
@@ -28,7 +27,6 @@ public sealed class ChestRewardSession
         // Flux privé : aucun délai de lecture ou autre système ne peut modifier les récompenses suivantes.
         _rng = new RandomNumberGenerator { Seed = rng.Randi() };
         Eligible = pool.Eligible(source, luck);
-        Probabilities = pool.Probabilities(source, luck);
     }
     public IReadOnlyList<PassiveSouvenirData> Propose()
     {

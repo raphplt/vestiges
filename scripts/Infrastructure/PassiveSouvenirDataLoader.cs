@@ -19,7 +19,7 @@ public class PassiveSouvenirData
 	public string Subtitle = "";
 	/// <summary>Rareté fixe de l’objet ; les Écussons suivent la rareté de leurs cartes.</summary>
 	public string Rarity = "common";
-	/// <summary>Maximum d’exemplaires ; 0 signifie illimité, la place du sac reste nécessaire.</summary>
+	/// <summary>Maximum d'exemplaires ; 0 signifie illimité. Seul un nouveau type occupe une place du sac.</summary>
 	public int MaxCopies;
 	/// <summary>Capacité unique explicitement limitée, même sans rareté légendaire.</summary>
 	public bool Unique;

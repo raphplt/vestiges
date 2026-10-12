@@ -516,7 +516,7 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 - `tools/test_catalogs.sh` vert (316 contrôles) : réglages du dépôt acceptés, boucle de 24 sons, 40 sprites de l'exode présents ; son absent, phrase vide, mémoires inversées, téléphone muet d'avance, niveau qui sature, écart de hauteur excessif et clé inconnue refusés ;
 - `dotnet build` 0 warning, `tools/smoke_test.sh` vert ;
 - planche des voitures à radio regardée : poste lisible avec son antenne sur les quatre sens ;
-- en run, au zoom ×2, le poste crème et son antenne se lisent sur le capot ; au zoom normal, c'est un détail de quelques pixels, le son reste le repère. [Planche](planches/39-C1-radio.jpg), non versionnée ;
+- en run, au zoom ×2, le poste crème et son antenne se lisent sur le capot ; au zoom normal, c'est un détail de quelques pixels, le son reste le repère. [Planche](planches/39-C1-radio.jpg) ;
 - corrections de la relecture recapturées : même comportement à chaque étape.
 
 **Non vérifié :**
@@ -636,7 +636,7 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 **Mesures** (`tools/measure_run.sh`, 8 graines) : 2 à 8 feux de camp par carte, 4 en moyenne, pour 13 à 25 scènes-récits.
 
 **Vérifié :**
-- en run (`--capture-lights`, seed 221092026, recapturé après la relecture) : panache léger au-dessus des braises, discret de jour, plus visible sous l'orage où les braises rougeoient. Premier essai : capture prise avant que la fumée ait monté, attente portée à 4 s ; puis fumée trop pâle, opacité et ampleur relevées. [Planche B4](planches/39-B4-lumieres.jpg), non versionnée : feux tricolores, lampes de carrière, lanternes, fenêtre et feu de camp, de jour puis sous l'orage ;
+- en run (`--capture-lights`, seed 221092026, recapturé après la relecture) : panache léger au-dessus des braises, discret de jour, plus visible sous l'orage où les braises rougeoient. Premier essai : capture prise avant que la fumée ait monté, attente portée à 4 s ; puis fumée trop pâle, opacité et ampleur relevées. [Planche B4](planches/39-B4-lumieres.jpg) : feux tricolores, lampes de carrière, lanternes, fenêtre et feu de camp, de jour puis sous l'orage ;
 - `tools/test_catalogs.sh` vert (333 contrôles) : cinq sortes de lampes dont le feu qui fume et couve toujours, cinq lueurs présentes ; fumée sans bouffée et part propre hors bornes refusées ;
 - `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
 

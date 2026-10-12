@@ -26,11 +26,11 @@ Autorité : Stratégie V2 §10 (rareté des améliorations, distincte des objets
 ## 1. Règles de cumul et de puissance
 
 - Une seule rareté par ID d’objet : Commun / Inhabituel / Rare / Épique / Légendaire. La rareté indique la puissance et la fréquence attendues, sans multiplicateur automatique des effets.
-- `n` = nombre d’exemplaires présents dans le sac. Chaque exemplaire prend une place. Un bonus de +20 % par exemplaire donne +20 / +40 / +60 %, pas ×1,2 à chaque ajout.
+- `n` = nombre d’exemplaires présents dans le sac. Une pile de même type occupe une seule place (amendement I15). Un bonus de +20 % par exemplaire donne +20 / +40 / +60 %, pas ×1,2 à chaque ajout.
 - **Aucun palier d’objet.** Retirer les bonus auparavant déclenchés au deuxième exemplaire : propagation, gel, seconde explosion, armure du Tabouret, remboursement du Porte-monnaie, etc. Les paliers des Écussons restent distincts et ne sont pas concernés.
 - Cumul quantitatif du même effet : puissance, durée, débit maximal ou charges. Choisir explicitement l’axe par objet ; éviter de faire monter simultanément chance, dégâts et fréquence et de créer un gain quadratique caché.
 - Ne plus faire passer les objets par les anciens niveaux d’effet `[10,15,19,22,24,25]`. Décrire les effets par exemplaire et leur plafond en données. La suppression d’un exemplaire retire exactement son apport ; la fiche affiche 1 exemplaire, quantité actuelle et quantité suivante.
-- **Aucune limite de copies pour les objets ordinaires**, y compris les anciennes exceptions à deux, trois, quatre ou dix copies. Seuls les légendaires et objets explicitement uniques gardent une limite. `max_copies: 0` signifie illimité ; la place du sac reste nécessaire. Les plafonds de sécurité d’un effet (probabilité ≤ 100 %, nombre d’ennemis disponibles, immunités) restent distincts d’une limite de copies.
+- **Aucune limite de copies pour les objets ordinaires**, y compris les anciennes exceptions à deux, trois, quatre ou dix copies. Seuls les légendaires et objets explicitement uniques gardent une limite. `max_copies: 0` signifie illimité ; une place du sac reste nécessaire seulement pour un nouveau type (I15). Les plafonds de sécurité d’un effet (probabilité ≤ 100 %, nombre d’ennemis disponibles, immunités) restent distincts d’une limite de copies.
 - Les budgets de déclenchement ne se rechargent pas artificiellement en oubliant/reprenant un objet, ni en changeant d’arme. Les bonus temporaires disparaissent lorsque leur objet quitte le sac. Un soin déjà effectué ne se retire pas ; un bonus de PV max, lui, se retire sans soin gratuit au rééquipement.
 
 ## 2. Les 22 objets existants, révisés
@@ -307,3 +307,46 @@ Livré : `ItemSort` conserve la préférence de session et produit une liste de 
 Captures inspectées : Collection 1080p `/tmp/vestiges-item-sort-collection-1080-20261012/hub-00.png` ; quatre tris et menu déroulant parcourus par les vrais événements clavier à 720p `/tmp/vestiges-item-sort-options-720-20261012/` ; libellés anglais et passage au tri décroissant `/tmp/vestiges-item-sort-options-en-720-20261012/` ; sac/HUD en vraie run `/tmp/vestiges-item-sort-pause-720-20261012/`.
 
 Validation finale : `/tmp/vestiges-item-sort-validation-isolated-20261012/`, **5/5 suites vertes** (smoke, inventaire, choix, navigation, UI art), **77 contrôles d'inventaire**, **49 contrôles de menus**, build **zéro warning/erreur**, import vert et sources inchangées pendant les tests. Copie isolée `/tmp/vestiges-item-sort-source-20261012/`, fichiers du tri vérifiés identiques à ceux du dépôt. Deux relances dans le dépôt partagé ont été perturbées par l'ajout concurrent des voix abandonnées (nouveau JSON pendant les suites, puis erreur temporaire de compilation déjà corrigée dans leur loader) ; aucun fichier de ce travail n'a été modifié ici. Le premier import de la copie neuve a signalé la police pas encore importée, comme documenté dans `VALIDATION.md` ; préimport terminé, puis import de la validation sans erreur. Aucun changement d'équilibrage ni conclusion de performance.
+
+## I15 — Places par type d'objet, doublons empilés (12 octobre 2026)
+
+Correction demandée par Raphaël : le sac doit compter les types distincts, pas les exemplaires. **Dix est la capacité de départ sans amélioration**, lue dans `inventory.json` ; les Poches du Campement continuent d'ajouter des places. Les doublons ordinaires rejoignent leur pile même quand tous les emplacements sont occupés. Les limites explicites de copies des objets uniques/légendaires restent en données.
+
+Un seul lot : compteur de types et compteur séparé d'exemplaires, admission des doublons à sac plein, remplacement d'une pile entière pour un nouveau type à capacité atteinte, libellés et HUD cohérents. Adapter les régressions de ramassage/coffres/échange et les fixtures qui remplissaient le sac par une boucle de doublons. Vérifier les capacités de départ/améliorée et présenter des captures réelles d'un coffre et du HUD gauche avec plusieurs piles dépassant dix exemplaires au total.
+
+- [x] Compteurs, ramassage et échange de pile raccordés, bonus du Campement conservés.
+- [x] Build sans warning, suites objets/inventaire/butin/Campement/smoke et captures en run vérifiés.
+
+Livré : `BagCount` compte les fiches distinctes, `BagCopyCount` garde le total d'exemplaires pour les mesures. `CanTakeItem` accepte les doublons d'une pile existante à capacité atteinte, en respectant les limites en données. La capacité reste celle d'`inventory.json` et du Campement, jamais sous les types portés. HUD, pause, fiche et libellés du Campement parlent de types ; l'échange annonce la suppression de toute la pile, retire ses effets en un recalcul et rétablit ses copies si le nouveau ramassage échoue. Les offres de l'Atelier ne demandent plus d'échange pour un doublon à sac plein. Fixtures d'échange remplies par des types distincts, sans boucle infinie sur les copies.
+
+Validation en copie isolée `/tmp/vestiges-item-stacks-source-20261012/` (une autre validation occupait le dépôt partagé) : **10/10 suites vertes**, build **zéro warning/erreur**, import vert, sources inchangées pendant les suites (`/tmp/vestiges-item-stacks-validation-isolated-20261012/`). Inventaire : **82 contrôles**, dont doublons à sac plein, nouveau type refusé, oubli de la dernière copie, dépôt/échange réels et restauration d'une pile. Complément Campement `/tmp/vestiges-item-stacks-camp-full-20261012/` : **25 types et 28 exemplaires** avec les Poches maximales, vingt-sixième type refusé, doublon encore admissible. Fichiers de ce lot comparés à ceux du dépôt : identiques. `git diff --check` vert.
+
+Captures inspectées de Main, avec inventaire préparé et combat arrêté pour lire le HUD : dix types et **48 exemplaires**, Allumette passant réellement de **12 à 13** par ramassage à sac plein sans ouvrir d'échange. `/tmp/vestiges-item-stacks-capture-1080-20261012/items-hud-after-duplicate.png` et `loot-revealed.png` : coffre commun payé, Pétard épique donné comme doublon (49 exemplaires après fermeture). `/tmp/vestiges-item-stacks-capture-epic-final-720-20261012/` : même HUD en 720p, coffre épique payé avec deux nouvelles récompenses laissées au sol ; seconde description accessible par défilement. L'attente du rattachement différé des dépôts avant la fermeture du banc évite les RIDs orphelins du premier essai. Nouveau mode `--capture-item-stacks [--capture-loot-epic]`. Ces captures prouvent le rendu et les transactions contrôlées, pas l'équilibrage d'une run naturelle ni les performances.
+
+
+## I16 — Butin compact et hiérarchie des cartes d'amélioration (12 octobre 2026)
+
+Retour de Raphaël : retirer la description du butin des coffres et mieux agencer les cartes d'amélioration, avec la lisibilité de Megabonk comme référence sans en copier le rendu. Un lot de présentation : résultat de coffre limité à l'icône, au nom et à la rareté ; probabilités retirées, y compris du choix Carnet d’adresses ; cartes de level-up avec icône encadrée, bandeau de rareté, nom et niveau alignés, gains séparés et valeur obtenue mise en avant. Conserver les explications nécessaires aux nouveautés et aux Réminiscences, la pierre teintée de Vestiges et les actions/navigation existantes. Aucun changement de calcul ni de tirage.
+
+- [x] Présentation raccordée, révélation des coffres et actions conservées.
+- [x] Build zéro warning, suites de choix/butin/UI et captures en run 720p/1080p inspectées.
+
+Livré : récompenses sans description ni probabilités, nom sans préfixe redondant, rareté sur une ligne distincte et icône agrandie. La hauteur du coffre est resserrée sur ces résultats compacts. Les probabilités disparaissent aussi du sous-titre du Carnet d’adresses ; leur calcul réservé à cet affichage est retiré de la session, le tirage conserve ses tables et son flux privé.
+
+Level-up : icône encadrée dans la teinte de la carte, rareté en bandeau, nom en Alkhemikal avec niveau actuel → suivant à droite, gain principal en 32 px et gain secondaire/règle de nouveauté en 24 px. Valeur actuelle claire, valeur obtenue verte ; palier, ascension, surplus, offre de Réminiscences, report, saut de rareté par la Chance et actions restent présents. Les textes se replient dans la largeur disponible sans minimum qui pousse le contenu hors de la carte.
+
+Captures réelles inspectées : cinq raretés, niveaux, nouveaux Écussons, ascensions, Réminiscences et saut de Chance dans `/tmp/vestiges-cards-levelup-1080-20261012/` et `/tmp/vestiges-cards-levelup-720-20261012/` ; résultats d'un coffre épique à deux récompenses dans `/tmp/vestiges-cards-chest-1080-20261012/loot-revealed.png` et `/tmp/vestiges-cards-chest-720-20261012/loot-revealed.png`. Trois cartes ordinaires sont entièrement visibles aux deux résolutions ; la quatrième carte du Trèfle garde le défilement existant.
+
+Validation isolée, sources inchangées : `/tmp/vestiges-cards-validation-20261012/`, **6/6 suites vertes** (smoke, choix, navigation, UI art, butin, inventaire), dont **41 contrôles de choix**, **201 de butin**, **82 d'inventaire**. Après retrait du calcul de probabilités devenu inutilisé, smoke et butin repassent dans `/tmp/vestiges-cards-validation-final-20261012/`, **2/2**. Build final du dépôt partagé : **zéro warning, zéro erreur**. Les cinq fichiers de code de ce lot sont identiques à ceux de la copie validée `/tmp/vestiges-cards-source-20261012/`.
+
+
+## I17 — Description de l'objet sous le titre du butin (12 octobre 2026)
+
+Retour de Raphaël : rétablir la description de l'objet sous son titre dans les coffres. Un lot de présentation : description d'effet dans un libellé distinct en Pixel Operator 24 px, sous le nom en Alkhemikal ; rareté séparée et probabilités toujours masquées. Révéler le texte avec le résultat, agrandir la hauteur de lecture pour conserver les descriptions de deux récompenses, garder le défilement pour les textes plus longs.
+
+- [x] Description raccordée à la révélation du résultat.
+- [x] Build zéro warning, suites choix/butin et captures 720p/1080p vérifiées.
+
+Livré : description issue d'`ItemPresentation.Describe` dans un libellé courant distinct, directement sous le nom, masqué pendant la roulette puis révélé avec le résultat. La rareté conserve sa ligne dédiée ; le texte d'effet reste clair plutôt que teinté par la rareté. Hauteur de lecture augmentée, descriptions repliées et défilement existant conservé.
+
+Captures du coffre épique à deux récompenses inspectées en vraie run : `/tmp/vestiges-chest-description-1080-20261012/loot-revealed.png` et `/tmp/vestiges-chest-description-720-20261012/loot-revealed.png`, deux descriptions entièrement visibles. Build du dépôt zéro warning/erreur. Copie isolée `/tmp/vestiges-chest-description-source-20261012/` avec `ChestLootScreen.cs` identique au dépôt : **2/2 suites vertes**, choix (41 contrôles) et butin (201 contrôles), sources inchangées, build zéro warning (`/tmp/vestiges-chest-description-validation-20261012/`).

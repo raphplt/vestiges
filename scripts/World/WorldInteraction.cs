@@ -127,7 +127,7 @@ public partial class WorldInteraction : Node
             List<ResolvedLoot> rewards = new(session.Rewards);
             if (_lootScreen != null)
                 _lootScreen.ShowLoot(rewards, chest.Rarity, () => ApplyAll(chest), session.Eligible,
-                    FormatProbabilities(session.Probabilities), chest.FreeOpening ? "Ouverture gratuite" : $"{chest.QuotedCost} Essence dépensée");
+                    chest.FreeOpening ? "Ouverture gratuite" : $"{chest.QuotedCost} Essence dépensée");
             else ApplyAll(chest);
             return;
         }
@@ -145,7 +145,7 @@ public partial class WorldInteraction : Node
             ItemPresentation.AddComparison(card, candidate, _player.FindObject(candidate.Id)?.Copies ?? 0);
             cards.Add(card);
         }
-        _choices.Open("Carnet d’adresses", "Choisissez un seul objet · " + FormatProbabilities(session.Probabilities), cards, null,
+        _choices.Open("Carnet d’adresses", "Choisissez un seul objet", cards, null,
             index => { if (session.Choose(index)) ChooseNext(chest); });
     }
 
@@ -156,14 +156,6 @@ public partial class WorldInteraction : Node
         for (int i = 0; i < session.Rewards.Count; i++)
             LootRewards.Apply(session.Rewards[i], _player, _eventBus, chest.GlobalPosition + new Vector2(18f * i, 24f));
         WorldItemEffects.AttractChestXp(_player, chest.GlobalPosition);
-    }
-
-    internal static string FormatProbabilities(double[] probabilities)
-    {
-        List<string> values = new();
-        for (int i = 0; i < probabilities.Length; i++)
-            if (probabilities[i] > 0d) values.Add($"{Infrastructure.RarityPalette.DisplayName(Infrastructure.ItemLootConfig.Rarities[i])} {probabilities[i] * 100d:0.#} %");
-        return string.Join(" · ", values);
     }
 
     private static bool IsValid(IInteractable interactable) =>

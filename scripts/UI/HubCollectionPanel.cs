@@ -127,7 +127,7 @@ public partial class HubCollectionPanel : MarginContainer
         _detailIconFrame = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ShrinkBegin, TextureFilter = TextureFilterEnum.Nearest };
         _detailIconFrame.AddChild(_detailIcon);
         detail.AddChild(_detailIconFrame);
-        _detailName = AddDetailLabel(detail, _strongFont, TextRole.Title, UITheme.TextLight);
+        _detailName = AddDetailLabel(detail, UITheme.TitleFont, TextRole.Title, UITheme.TextLight);
         _detailRarity = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.TextLight);
         _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
@@ -190,7 +190,7 @@ public partial class HubCollectionPanel : MarginContainer
         };
         foreach (string state in new[] { "normal", "pressed", "hover", "focus", "hover_pressed" })
             tab.AddThemeStyleboxOverride(state, underline);
-        tab.AddThemeFontOverride("font", _strongFont);
+        tab.AddThemeFontOverride("font", UITheme.TitleFont);
         UITheme.SetTextRole(tab, TextRole.Title);
         tab.AddThemeColorOverride("font_color", active ? UITheme.GoldBright : UITheme.TextDim);
         tab.AddThemeColorOverride("font_hover_color", UITheme.GoldBright);

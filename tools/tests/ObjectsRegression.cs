@@ -132,8 +132,8 @@ public partial class ObjectsRegression : Node2D
             items += _player.AddOrUpgradePassive(id) ? 1 : 0;
         Check(_player.BagCapacity == 10 && items == 10 && _player.BagCount == 10, "Sac de dix places ; le onzième objet est refusé");
         Check(_player.AddOrUpgradePassive("memoire_vive") && _player.GetPassiveLevel("memoire_vive") == 2
-            && !_player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 1,
-            "Sac plein : une carte améliore un Écusson, mais une copie exige une place libre");
+            && _player.AddOrUpgradePassive("glacon") && _player.GetPassiveLevel("glacon") == 2 && _player.BagCount == 10,
+            "Sac plein : un Écusson progresse et un doublon rejoint sa pile sans prendre de place");
     }
 
     private void CheckLevels()

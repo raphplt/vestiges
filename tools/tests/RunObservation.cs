@@ -215,6 +215,8 @@ public partial class RunObservation : Node
                 await CapturePlaces();
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
+            else if (Array.IndexOf(args, "--capture-item-stacks") >= 0)
+                await CaptureItemStacks();
             else if (Array.IndexOf(args, "--capture-loot") >= 0)
                 await CaptureLootScreen();
             else if (Array.IndexOf(args, "--capture-cascade") >= 0)

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
 using Vestiges.World;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Tests;
 
@@ -17,11 +18,13 @@ public partial class RunObservation
     private async Task CaptureExchange()
     {
         await PrepareCloseUpScene();
-        foreach (string id in new[] { "glacon", "allumette_humide", "de_a_coudre", "semelle_usee", "chewing_gum" })
-            while (_player.HasBagRoom && _player.AddItemCopy(id)) { }
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            if (!item.IsBadge && _player.HasBagRoom)
+                _player.AddItemCopy(item.Id);
         await Frames(5);
         SaveFrame("exchange-0-bag");
-        ItemPickup pickup = _world.GetNode<ItemDropDirector>("ItemDropDirector").Drop(_player.GlobalPosition + new Vector2(30f, 10f));
+        PassiveSouvenirData absent = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
+        ItemPickup pickup = _world.GetNode<ItemDropDirector>("ItemDropDirector").Drop(_player.GlobalPosition + new Vector2(30f, 10f), absent);
         await Frames(40);
         SaveFrame("exchange-1-ground");
         pickup.Interact(_player);
@@ -30,6 +33,43 @@ public partial class RunObservation
         await Frames(2);
         SaveFrame("exchange-2-screen");
         GD.Print($"[RunObservation] RESULT exchange objet={pickup.ItemId} sac={_player.BagCount}/{_player.BagCapacity} dossier={_output}");
+    }
+
+    /// <summary>Vraie run : dix types et plus de dix copies, doublon ramassé à sac plein, puis vrai coffre payé.</summary>
+    private async Task CaptureItemStacks()
+    {
+        ProcessMode = ProcessModeEnum.Always;
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node enemy in GetTree().GetNodesInGroup("enemies"))
+            enemy.QueueFree();
+        _player.AIInputOverride = Vector2.Zero;
+        _player.SetBagCapacity(InventoryConfig.BagSize);
+        (string Id, int Copies)[] stacks =
+        {
+            ("boite_de_pansements", 8), ("semelle_usee", 7), ("allumette_humide", 12), ("thermos", 4),
+            ("flacon_de_pharmacie", 5), ("de_a_coudre", 3), ("petard_mouille", 2),
+            ("loupe_de_philateliste", 3), ("ticket_de_consigne", 2), ("trefle_plastifie", 1),
+        };
+        foreach ((string id, int copies) in stacks)
+            for (int i = 0; i < copies; i++)
+                if (!_player.AddItemCopy(id))
+                    throw new System.InvalidOperationException($"Pile de capture refusée : {id} copie {i + 1}");
+        await Frames(5);
+        SaveFrame("items-hud-stacks");
+        int before = _player.FindObject("allumette_humide").Copies;
+        ItemPickup duplicate = _world.GetNode<ItemDropDirector>("ItemDropDirector").Drop(
+            _player.GlobalPosition + new Vector2(40, 0), PassiveSouvenirDataLoader.Get("allumette_humide"));
+        await Frames(2);
+        duplicate.Interact(_player);
+        await ToSignal(GetTree().CreateTimer(1, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        if (_player.BagCount != stacks.Length || _player.FindObject("allumette_humide").Copies != before + 1
+            || GodotObject.IsInstanceValid(duplicate) || GetTree().Paused)
+            throw new System.InvalidOperationException("Le doublon n'a pas rejoint sa pile à sac plein.");
+        SaveFrame("items-hud-after-duplicate");
+        await CaptureLootScreen(keepCapacity: true, report: false);
+        // Les nouveaux types sont déposés par CallDeferred : les rattacher avant de fermer la scène du banc.
+        await Frames(3);
+        GD.Print($"[RunObservation] RESULT item_stacks types={_player.BagCount}/{_player.BagCapacity} copies={_player.BagCopyCount} duplicate={before}->{before + 1} dossier={_output}");
     }
 
     /// <summary>

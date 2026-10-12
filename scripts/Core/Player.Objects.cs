@@ -9,7 +9,7 @@ namespace Vestiges.Core;
 
 /// <summary>
 /// Objets du joueur (plan 21 §4, plan 23 R3, plan 35). Les Écussons, quatre au plus, montent de niveau carte après carte,
-/// avec des gains selon la rareté et des paliers. Les objets vont dans un sac, un exemplaire par place : chaque
+/// avec des gains selon la rareté et des paliers. Les objets vont dans un sac, un type par place : chaque
 /// exemplaire ajoute son effet de base, sans palier ; l’oubli retire exactement cet apport.
 /// </summary>
 public partial class Player
@@ -41,8 +41,11 @@ public partial class Player
     /// <summary>Places du sac (plan 35) : inventory.json, puis les Poches du Campement.</summary>
     public int BagCapacity { get; private set; } = InventoryConfig.BagSize;
 
-    /// <summary>Places occupées : une par exemplaire.</summary>
-    public int BagCount
+    /// <summary>Places occupées : une par type distinct, indépendamment de ses exemplaires.</summary>
+    public int BagCount => _passiveSlots.Count;
+
+    /// <summary>Nombre total d'exemplaires portés, distinct de la capacité du sac.</summary>
+    public int BagCopyCount
     {
         get
         {
@@ -55,7 +58,7 @@ public partial class Player
 
     public bool HasBagRoom => BagCount < BagCapacity;
 
-    /// <summary>Fixe les places du sac de la run, jamais sous les exemplaires déjà portés.</summary>
+    /// <summary>Fixe les places du sac de la run, jamais sous les types déjà portés.</summary>
     public void SetBagCapacity(int capacity)
     {
         BagCapacity = Mathf.Max(Mathf.Max(1, capacity), BagCount);
@@ -168,14 +171,14 @@ public partial class Player
         return true;
     }
 
-    /// <summary>Le sac peut recevoir un exemplaire de cet objet : une place libre, et l'objet pas encore à son maximum.</summary>
+    /// <summary>Une pile existante reçoit ses doublons même à sac plein ; un nouveau type exige une place.</summary>
     public bool CanTakeItem(string id)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(id);
-        if (data == null || data.IsBadge || !HasBagRoom)
+        if (data == null || data.IsBadge)
             return false;
         ActivePassiveSouvenir owned = FindObject(id);
-        return !data.IsCopyLimitReached(owned?.Copies ?? 0);
+        return (owned != null || HasBagRoom) && !data.IsCopyLimitReached(owned?.Copies ?? 0);
     }
 
     /// <summary>Objet déjà à son maximum d'exemplaires : aucun échange ne peut le faire entrer.</summary>
@@ -227,14 +230,23 @@ public partial class Player
     /// <summary>
     /// Oublie un exemplaire et son apport exact ; la dernière copie retire l’objet du sac.
     /// </summary>
-    public bool ForgetItemCopy(string id)
+    public bool ForgetItemCopy(string id) => RemoveItemCopies(id, 1);
+
+    /// <summary>Oublie une pile entière pour libérer son emplacement, avec un seul recalcul des effets.</summary>
+    public bool ForgetItemStack(string id)
+    {
+        ActivePassiveSouvenir owned = FindObject(id);
+        return owned != null && !owned.Data.IsBadge && RemoveItemCopies(id, owned.Copies);
+    }
+
+    private bool RemoveItemCopies(string id, int copies)
     {
         ActivePassiveSouvenir owned = FindObject(id);
         if (owned == null || owned.Data.IsBadge)
             return false;
         for (int i = 0; i < owned.Data.Effects.Count; i++)
             _passiveValuesBefore[i] = owned.Value(i);
-        owned.SetItemCopies(owned.Copies - 1);
+        owned.SetItemCopies(Mathf.Max(0, owned.Copies - copies));
         ApplyPassiveEffects(owned, _passiveValuesBefore);
         if (owned.Copies <= 0)
             _passiveSlots.Remove(owned);

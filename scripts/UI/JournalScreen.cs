@@ -143,7 +143,7 @@ public partial class JournalScreen : CanvasLayer
         VBoxContainer indexContent = new();
         indexContent.AddThemeConstantOverride("separation", 16);
         index.AddChild(indexContent);
-        indexContent.AddChild(UITheme.MakeLabel("FRAGMENTS", TextRole.Heading, UITheme.GoldBright));
+        indexContent.AddChild(UITheme.MakeLabel("FRAGMENTS", TextRole.Section, UITheme.GoldBright));
         _fragmentScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             FollowFocus = true, SizeFlagsVertical = Control.SizeFlags.ExpandFill };
         indexContent.AddChild(_fragmentScroll);

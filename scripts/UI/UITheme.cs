@@ -4,9 +4,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>Rôle d'un texte d'interface : sa taille vient de l'échelle commune, jamais d'un nombre écrit dans l'écran.</summary>
-public enum TextRole { Caption, Small, Body, Lead, Subhead, Heading, Title, Banner, Display }
+public enum TextRole { Caption, Small, Body, Lead, Subhead, Heading, Title, Banner, Display, Section }
 
-/// <summary>Graisse de Pixel Operator : normale ou grasse pour les accents et titres.</summary>
+/// <summary>Graisse de Pixel Operator : normale ou grasse pour les accents. Les titres en Alkhemikal l'ignorent.</summary>
 public enum TextWeight { Regular, Strong, Bold }
 
 /// <summary>
@@ -17,22 +17,25 @@ public static class UITheme
 {
 	// --- Typographie ---
 	// Échelle du Campement approuvée, en base 1080p ; les petits textes du HUD ont leur grille native de 8 px.
-	private static readonly int[] RoleSizes = { 24, 24, 32, 32, 32, 32, 48, 64, 64 };
+	private static readonly int[] RoleSizes = { 24, 24, 32, 32, 32, 32, 48, 64, 64, 32 };
 	private static Font _bodyFont;
 	private static Font _strongFont;
 	private static Font _smallFont;
 	private static Font _smallStrongFont;
+	private static Font _titleFont;
 
 	public static Font BodyFont => _bodyFont ??= LoadFont("PixelOperator.ttf");
 	public static Font StrongFont => _strongFont ??= LoadFont("PixelOperator-Bold.ttf");
 	public static Font BoldFont => StrongFont;
 	public static Font SmallFont => _smallFont ??= LoadFont("PixelOperator8.ttf");
 	public static Font SmallStrongFont => _smallStrongFont ??= LoadFont("PixelOperator8-Bold.ttf");
+	/// <summary>Alkhemikal (jeti, CC BY 4.0) : titres et en-têtes seulement, jamais les chiffres ; grille de 16 px, sans graisse grasse.</summary>
+	public static Font TitleFont => _titleFont ??= LoadFont("Alkhemikal.ttf", "alkhemikal");
 
-	private static Font LoadFont(string name)
+	private static Font LoadFont(string name, string family = "pixel-operator")
 	{
 		// Même ressource que le thème global : les textes hérités gardent aussi leurs pixels sans lissage.
-		FontFile font = GD.Load<FontFile>($"res://assets/fonts/pixel-operator/{name}");
+		FontFile font = GD.Load<FontFile>($"res://assets/fonts/{family}/{name}");
 		font.Antialiasing = TextServer.FontAntialiasing.None;
 		return font;
 	}
@@ -52,6 +55,18 @@ public static class UITheme
 		control.AddThemeFontSizeOverride("font_size", nativeSize);
 	}
 
+	/// <summary>Rôles écrits en Alkhemikal : titres, grands affichages et en-têtes de section.</summary>
+	public static bool IsTitleRole(TextRole role) => role is TextRole.Title or TextRole.Banner or TextRole.Display or TextRole.Section;
+
+	public static Font FontFor(TextRole role, TextWeight weight) => IsTitleRole(role) ? TitleFont : FontFor(weight);
+
+	/// <summary>Titre compact du HUD ou du monde : Alkhemikal sur sa grille de 16 px.</summary>
+	public static void SetCompactTitle(Control control, int size)
+	{
+		control.AddThemeFontOverride("font", TitleFont);
+		control.AddThemeFontSizeOverride("font_size", Mathf.Max(16, Mathf.RoundToInt(size / 16f) * 16));
+	}
+
 	public static Font FontFor(TextWeight weight) => weight switch
 	{
 		TextWeight.Strong => StrongFont,
@@ -66,13 +81,13 @@ public static class UITheme
 	public static void SetTextRole(Control control, TextRole role)
 	{
 		if (!control.HasThemeFontOverride("font"))
-			control.AddThemeFontOverride("font", BodyFont);
+			control.AddThemeFontOverride("font", IsTitleRole(role) ? TitleFont : BodyFont);
 		control.AddThemeFontSizeOverride("font_size", FontSize(role));
 	}
 
 	public static void ApplyTypography(Control control, TextRole role, TextWeight weight = TextWeight.Regular)
 	{
-		control.AddThemeFontOverride("font", FontFor(weight));
+		control.AddThemeFontOverride("font", FontFor(role, weight));
 		SetTextRole(control, role);
 		control.AddThemeConstantOverride("outline_size", 2);
 		control.AddThemeColorOverride("font_outline_color", OutlineColor);
@@ -83,7 +98,7 @@ public static class UITheme
 		HorizontalAlignment align = HorizontalAlignment.Left, int outline = 2)
 	{
 		Label label = new() { Text = text, HorizontalAlignment = align, MouseFilter = Control.MouseFilterEnum.Ignore };
-		label.AddThemeFontOverride("font", FontFor(weight));
+		label.AddThemeFontOverride("font", FontFor(role, weight));
 		SetTextRole(label, role);
 		label.AddThemeColorOverride("font_color", color);
 		if (outline > 0)

@@ -35,7 +35,7 @@ public static class InventoryConfig
         }
     }
 
-    /// <summary>Places du sac d'objets avant le Campement : une par exemplaire porté.</summary>
+    /// <summary>Places du sac avant le Campement : une par type distinct, les doublons partagent leur pile.</summary>
     public static int BagSize
     {
         get

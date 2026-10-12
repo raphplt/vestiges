@@ -148,7 +148,7 @@ public partial class GameOverScreen : CanvasLayer
         AddChild(_root);
         MenuSkin.AddBackdrop(_root, subdued: true);
 
-        _title = MakeLabel("FIN D’EXPÉDITION", _strongFont, TextRole.Title, UITheme.GoldDim, HorizontalAlignment.Center);
+        _title = MakeLabel("FIN D’EXPÉDITION", UITheme.TitleFont, TextRole.Title, UITheme.GoldDim, HorizontalAlignment.Center);
         Place(_title, 0, 34, DesignSize.X, 42);
         _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 4);
         _score.AddThemeFontSizeOverride("font_size", ScoreFontSize);
@@ -208,7 +208,7 @@ public partial class GameOverScreen : CanvasLayer
         _facts = new VBoxContainer();
         _facts.AddThemeConstantOverride("separation", 12);
         _overview.AddChild(_facts);
-        _timelineCaption = UITheme.MakeLabel(Tr("UI_END_TIMELINE"), TextRole.Subhead, UITheme.GoldBright);
+        _timelineCaption = UITheme.MakeLabel(Tr("UI_END_TIMELINE"), TextRole.Section, UITheme.GoldBright);
         _overview.AddChild(_timelineCaption);
         _timeline = new RunTimelineStrip { CustomMinimumSize = new Vector2(0, 90), MouseFilter = Control.MouseFilterEnum.Ignore };
         _overview.AddChild(_timeline);
@@ -222,7 +222,7 @@ public partial class GameOverScreen : CanvasLayer
         VBoxContainer rewardsContent = new();
         rewardsContent.AddThemeConstantOverride("separation", 18);
         rewards.AddChild(rewardsContent);
-        rewardsContent.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Heading, UITheme.GoldBright));
+        rewardsContent.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Section, UITheme.GoldBright));
         _gainsScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
         UITheme.ApplyFocusStyle(_gainsScroll);
@@ -397,12 +397,12 @@ public partial class GameOverScreen : CanvasLayer
         _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills)));
         _equipment.AddChild(RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration));
         // Les Écussons gardent leurs cases, même vides (comme au HUD).
-        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BADGES"), TextRole.Heading, UITheme.GoldBright));
+        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BADGES"), TextRole.Section, UITheme.GoldBright));
         HFlowContainer badges = MakeSlotFlow();
         _equipment.AddChild(badges);
         AddBuildSlots(badges, _build?.Badges, InventoryConfig.BadgeSlots, UITheme.GoldColor);
         // Les objets du sac, un par fiche avec ses exemplaires.
-        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BAG"), TextRole.Heading, UITheme.GoldBright));
+        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BAG"), TextRole.Section, UITheme.GoldBright));
         HFlowContainer passives = MakeSlotFlow();
         _equipment.AddChild(passives);
         if (_build != null)
@@ -418,7 +418,7 @@ public partial class GameOverScreen : CanvasLayer
             }
         if (_build == null || _build.Passives.Count == 0)
             passives.AddChild(UITheme.MakeLabel("Aucun objet", TextRole.Subhead, UITheme.TextDim));
-        _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Heading, UITheme.GoldBright));
+        _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Section, UITheme.GoldBright));
         if (_build != null)
             foreach ((string icon, string name) in _build.Perks)
             {

@@ -162,7 +162,7 @@ public partial class RunObservation
     /// --capture-loot : le joueur ouvre le coffre fermé le plus proche par le vrai chemin d'ouverture (plan 23 R8) ;
     /// l'écran de butin est capturé pendant que ses lignes apparaissent.
     /// </summary>
-    private async Task CaptureLootScreen()
+    private async Task CaptureLootScreen(bool keepCapacity = false, bool report = true)
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         ProcessMode = ProcessModeEnum.Always;
@@ -180,7 +180,8 @@ public partial class RunObservation
             GD.PushError("[RunObservation] Aucun coffre fermé");
             return;
         }
-        _player.SetBagCapacity(20);
+        if (!keepCapacity)
+            _player.SetBagCapacity(20);
         if (System.Array.IndexOf(options, "--capture-loot-pointers") >= 0)
         {
             _player.AIInputOverride = Vector2.Zero;
@@ -265,7 +266,8 @@ public partial class RunObservation
                 await Frames(1);
             await CaptureLootGallery();
         }
-        GD.Print($"[RunObservation] RESULT loot-screen chest={nearest.ChestId} dossier={_output}");
+        if (report)
+            GD.Print($"[RunObservation] RESULT loot-screen chest={nearest.ChestId} dossier={_output}");
     }
 
     /// <summary>Galerie de présentation : récompenses résolues, sans appliquer un butin supplémentaire au joueur.</summary>

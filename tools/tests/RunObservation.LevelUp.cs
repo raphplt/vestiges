@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
@@ -186,6 +187,20 @@ public partial class RunObservation
             GetViewport().PushInput(new InputEventMouseMotion { Position = point, GlobalPosition = point }, true);
             await Frames(5);
             SaveFrame("pause-hover-focus");
+        }
+        // Le détail d'une stat (base, bonus du build) n'est plus écrit sous la ligne : il s'ouvre au survol.
+        VBoxContainer sheet = (VBoxContainer)pause.GetType().GetField("_sheetContainer", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(pause);
+        Control statRow = sheet.GetChildren().OfType<Control>().FirstOrDefault(row => !string.IsNullOrEmpty(row.TooltipText))
+            ?? throw new System.InvalidOperationException("Les lignes de stats de la pause doivent porter leur détail en infobulle.");
+        Vector2 statPoint = statRow.GetGlobalRect().GetCenter();
+        GetViewport().PushInput(new InputEventMouseMotion { Position = statPoint, GlobalPosition = statPoint }, true);
+        await Frames(60);
+        SaveFrame("pause-stat-tooltip");
+        if (focus != null)
+        {
+            Vector2 back = focus.GetGlobalRect().GetCenter();
+            GetViewport().PushInput(new InputEventMouseMotion { Position = back, GlobalPosition = back }, true);
+            await Frames(5);
         }
         // Journal depuis la pause : ouverture à la manette, retour sans reprise et focus restitué.
         GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = true });

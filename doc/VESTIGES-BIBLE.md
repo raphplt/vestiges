@@ -461,7 +461,9 @@ Fondus entre morceaux et couches musicales séparées sont deux options de produ
 
 ### 9.1 Typographie
 
-**Police principale (titres, HUD) :** Une sans-serif condensée avec du caractère — pas générique. Quelque chose qui évoque l'industriel/utilitaire mais avec une touche d'usure. Inspiration : les lettres peintes au pochoir sur des caisses militaires. Pas de serif fantaisie, pas de gothique — moderne, pragmatique, survivant.
+**Polices retenues (12 octobre 2026, DECISIONS §146) :** Alkhemikal, un gothique pixel lisible, pour les titres et en-têtes ; Pixel Operator pour le texte, les chiffres et le HUD. Ce choix remplace l'intention d'origine ci-dessous, gardée comme historique ; le détail d'usage est dans la Charte graphique.
+
+**Police principale (titres, HUD), intention d'origine :** Une sans-serif condensée avec du caractère — pas générique. Quelque chose qui évoque l'industriel/utilitaire mais avec une touche d'usure. Inspiration : les lettres peintes au pochoir sur des caisses militaires. Pas de serif fantaisie, pas de gothique — moderne, pragmatique, survivant.
 
 **Police secondaire (corps de texte, lore) :** Une serif à empattement fin, lisible, avec une personnalité "livresque". Le lore doit se lire comme un fragment de document — pas comme un écran de jeu. Léger contraste avec le HUD pour distinguer visuellement "jeu" et "histoire".
 

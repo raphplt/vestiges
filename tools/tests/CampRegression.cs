@@ -229,6 +229,14 @@ public partial class CampRegression : Node
             && Mathf.IsEqualApprox(player.LuckBonus, luck + 0.15f), "régénération +0,5, armure +5, Chance +0,15");
         Check(Mathf.IsEqualApprox(player.XpMagnetMultiplier, 1.5f) && Mathf.IsEqualApprox(player.XpGainMultiplier, 1.2f),
             "attraction ×1,5, XP ×1,2");
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            if (!item.IsBadge && player.HasBagRoom)
+                player.AddItemCopy(item.Id);
+        string stacked = player.PassiveSlots[0].Id;
+        player.AddOrUpgradePassive(stacked, 3);
+        PassiveSouvenirData extra = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && player.FindObject(item.Id) == null);
+        Check(player.BagCount == 25 && player.BagCopyCount == 28 && !player.CanTakeItem(extra.Id) && player.CanTakeItem(stacked),
+            "Poches améliorées : 25 types, doublons sans place supplémentaire, vingt-sixième type refusé");
         player.QueueFree();
         fragments.QueueFree();
         essence.QueueFree();

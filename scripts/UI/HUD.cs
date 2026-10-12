@@ -329,6 +329,7 @@ public partial class HUD : CanvasLayer
         anchor.AddChild(_timeLabel);
 
         _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
+        UITheme.SetCompactTitle(_biomeLabel, 16);
         _biomeLabel.Position = new Vector2(-120f, PlateMargin + 22f);
         _biomeLabel.Size = new Vector2(240f, 14f);
         _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;

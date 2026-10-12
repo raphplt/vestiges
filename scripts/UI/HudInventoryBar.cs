@@ -208,7 +208,6 @@ public partial class HudInventoryBar : Control
             SetThread(_badges[i], badge != null ? player.BadgeUsage?.ProgressOf(badge.Id) ?? 0f : 0f);
         }
 
-        int copies = 0;
         int row = 0;
         foreach (ItemRow itemRow in _items)
             itemRow.Root.Visible = false;
@@ -223,11 +222,10 @@ public partial class HudInventoryBar : Control
             // Garder le contrôle lié à son objet : un vol de ramassage peut encore viser cette icône.
             _bag.MoveChild(itemRow.Root, row++);
             FillItem(itemRow, item);
-            copies += item.Copies;
         }
         // Au-delà de douze objets différents, une seconde colonne : le sac des Poches tient sans couvrir le combat.
         _bag.Columns = row > ItemsPerColumn ? 2 : 1;
-        _bagCount.Text = $"{copies}/{player.BagCapacity}";
+        _bagCount.Text = string.Format(Tr("INVENTORY_BAG_TYPES_COUNT"), player.BagCount, player.BagCapacity);
         _bagCount.Visible = row > 0;
     }
 

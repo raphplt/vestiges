@@ -146,8 +146,8 @@ public partial class InventoryRegression : Node
             "deux exemplaires : deux pas, aucun gel de doublon");
         for (int i = 0; i < 6; i++)
             _player.AddItemCopy("glacon");
-        Check(item.Copies == 8 && _player.BagCount == 8 && _player.CanTakeItem("glacon"),
-            "huit exemplaires ordinaires acceptés, sans seuil artificiel à six");
+        Check(item.Copies == 8 && _player.BagCount == 1 && _player.BagCopyCount == 8 && _player.CanTakeItem("glacon"),
+            "huit exemplaires ordinaires : une seule place, sans seuil artificiel à six");
         _player.AddItemCopy("ticket_de_consigne");
         _player.AddItemCopy("ticket_de_consigne");
         _player.SetBagCapacity(12);
@@ -196,18 +196,26 @@ public partial class InventoryRegression : Node
     private void CheckBag()
     {
         Setup();
-        string[] ids = { "glacon", "allumette_humide", "de_a_coudre", "semelle_usee", "chewing_gum" };
+        string[] ids = { "glacon", "allumette_humide", "de_a_coudre", "semelle_usee", "chewing_gum",
+            "boite_de_pansements", "thermos", "medaille_cabossee", "tabouret_de_camping", "flacon_de_pharmacie" };
         foreach (string id in ids)
         {
             _player.AddItemCopy(id);
             _player.AddItemCopy(id);
         }
-        Check(_player.BagCount == 10 && !_player.HasBagRoom && !_player.AddItemCopy("thermometre") && !_player.AddItemCopy("glacon"),
-            "sac plein : ni objet neuf, ni doublon");
+        Check(_player.BagCount == InventoryConfig.BagSize && _player.BagCopyCount == 20 && !_player.HasBagRoom
+            && !_player.AddItemCopy("thermometre") && _player.AddItemCopy("glacon") && _player.BagCount == 10,
+            "dix types, vingt exemplaires : nouveau type refusé, doublon accepté à sac plein");
+        _player.ForgetItemCopy("chewing_gum");
+        Check(_player.BagCount == 10 && !_player.HasBagRoom && !_player.AddItemCopy("thermometre"),
+            "oublier un exemplaire laisse la pile et son emplacement occupés");
         _player.ForgetItemCopy("chewing_gum");
         Check(_player.AddItemCopy("thermometre") && _player.BagCount == 10, "une place oubliée se reprend");
         _player.SetBagCapacity(13);
-        Check(_player.HasBagRoom && _player.AddItemCopy("glacon"), "les Poches agrandissent le sac");
+        Check(_player.HasBagRoom && _player.AddItemCopy("epingle_a_nourrice") && _player.BagCount == 11,
+            "une capacité améliorée accepte plus de dix types distincts");
+        _player.SetBagCapacity(1);
+        Check(_player.BagCapacity == 11, "la capacité ne descend pas sous les types portés, sans compter les doublons");
     }
 
     private async Task CheckChestItem()
@@ -246,8 +254,9 @@ public partial class InventoryRegression : Node
         bus.LootReceived += OnLoot;
         try
         {
-            // Un épique donne deux objets même s'il ne reste qu'une place ; le second doit rester échangeable.
+            // À sac plein, les deux objets d'un épique sont de nouveaux types (le Glaçon est Inhabituel).
             _player.SetBagCapacity(1);
+            _player.AddItemCopy("glacon");
             WorldInteraction interaction = new();
             AddChild(interaction);
             interaction.Setup(_player);
@@ -263,15 +272,17 @@ public partial class InventoryRegression : Node
             Check(chestEssence.CurrentEssence == 0, "coffre épique : paiement de 90 Essence avant les deux objets");
             chestEssence.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            ItemPickup overflow = ground.GetChildCount() == 1 ? ground.GetChild<ItemPickup>(0) : null;
+            ItemPickup overflow = ground.GetChildCount() == 2 ? ground.GetChild<ItemPickup>(0) : null;
             Check(chest.IsOpened && _player.BagCount == 1 && overflow != null && otherLoot == 0,
-                "coffre épique : un objet dans la dernière place, un au sol, aucune autre récompense");
+                "coffre épique à sac plein : deux nouveaux types au sol, aucune autre récompense");
 
             List<ResolvedLoot> fullBag = LootRewards.Resolve(LootResolver.Roll("chest_common", 1), _player);
             Check(fullBag.Count == 1 && fullBag[0].Type == "object", "sac plein au tirage : toujours un objet");
+            bool joinsStack = _player.CanTakeItem(fullBag[0].ItemId);
             LootRewards.Apply(fullBag[0], _player, bus, new Vector2(700f, 0f));
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            Check(ground.GetChildCount() == 2 && otherLoot == 0, "sac plein : objet posé, aucune conversion en Essence");
+            Check(ground.GetChildCount() == (joinsStack ? 2 : 3) && otherLoot == 0,
+                "sac plein : doublon empilé, nouveau type posé, aucune conversion en Essence");
 
             overflow?.Interact(_player);
             Check(choices.IsOpen && GetTree().Paused, "objet du coffre : échange ouvert en pause");
@@ -322,15 +333,26 @@ public partial class InventoryRegression : Node
         Check(_player.FindObject(dropped.Id)?.Copies == 1 && !IsInstanceValid(pickup), "ramassé : l'objet entre dans le sac et quitte le sol");
 
         // Sac plein : l'invite ouvre l'échange ; oublier la première fiche fait la place et prend le nouvel objet.
-        foreach (string id in new[] { "glacon", "allumette_humide", "de_a_coudre", "semelle_usee", "chewing_gum" })
-            while (_player.HasBagRoom && _player.AddItemCopy(id)) { }
-        string first = _player.PassiveSlots[0].Id;
-        int firstCopies = _player.PassiveSlots[0].Copies;
+        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            if (!item.IsBadge && _player.HasBagRoom && _player.FindObject(item.Id) == null)
+                _player.AddItemCopy(item.Id);
+        int duplicateBefore = _player.FindObject("glacon").Copies;
+        ItemPickup duplicate = drops.Drop(new Vector2(450f, 0f), PassiveSouvenirDataLoader.Get("glacon"));
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        duplicate.Interact(_player);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(_player.BagCount == 10 && _player.FindObject("glacon").Copies == duplicateBefore + 1
+            && !choices.IsOpen && !IsInstanceValid(duplicate), "doublon au sol à sac plein : empilé sans échange");
+        string first = ItemSort.Order(_player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name)[0].Id;
+        _player.AddOrUpgradePassive(first, 3);
+        int firstCopies = _player.FindObject(first).Copies;
         // Un objet que le joueur peut encore cumuler, absent du sac : le tirage au hasard pourrait tomber sur un objet au maximum.
-        ItemPickup full = drops.Drop(new Vector2(500f, 0f), PassiveSouvenirDataLoader.Get("thermometre"));
+        PassiveSouvenirData absent = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
+        ItemPickup full = drops.Drop(new Vector2(500f, 0f), absent);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         PassiveSouvenirData incoming = PassiveSouvenirDataLoader.Get(full.ItemId);
         int incomingBefore = _player.FindObject(incoming.Id)?.Copies ?? 0;
+        int copiesBeforeExchange = _player.BagCopyCount;
         full.Interact(_player);
         bool opened = choices.IsOpen && GetTree().Paused;
         choices.Activate(_player.PassiveSlots.Count);
@@ -341,17 +363,25 @@ public partial class InventoryRegression : Node
         choices.Activate(0);
         choices.Activate(0);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        int expectedFirst = first == incoming.Id ? firstCopies : firstCopies - 1;
         Check(opened && leftAlone, "sac plein : l'invite ouvre l'échange en pause ; « Laisser au sol » ne change rien");
-        Check((_player.FindObject(first)?.Copies ?? 0) == expectedFirst && (_player.FindObject(incoming.Id)?.Copies ?? 0) == incomingBefore + (first == incoming.Id ? 0 : 1)
+        Check(_player.FindObject(first) == null && (_player.FindObject(incoming.Id)?.Copies ?? 0) == incomingBefore + 1
             && _player.BagCount == 10 && !IsInstanceValid(full) && !GetTree().Paused,
-            $"échange : un exemplaire de {first} oublié, {incoming.Id} pris, la run reprend");
+            $"échange : pile de {first} oubliée, {incoming.Id} pris, la run reprend");
+        Check(_player.BagCopyCount == copiesBeforeExchange - firstCopies + 1,
+            "remplacer une pile retire tous ses exemplaires et ajoute la nouvelle copie");
+        ActivePassiveSouvenir rollback = ItemSort.Order(_player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name)[0];
+        int restoredCopies = rollback.Copies;
+        int restoredBagCopies = _player.BagCopyCount;
+        PassiveSouvenirData refused = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
+        exchange.Open(_player, refused, () => false);
+        choices.Activate(0);
+        choices.Activate(0);
+        Check(_player.FindObject(rollback.Id)?.Copies == restoredCopies && _player.BagCopyCount == restoredBagCopies && _player.BagCount == 10,
+            "un échange refusé restaure tous les exemplaires de la pile");
         // Seuls les objets légendaires/uniques saturés refusent un échange.
-        while ((_player.FindObject("ticket_de_consigne")?.Copies ?? 0) < 2)
-        {
-            _player.ForgetItemCopy(_player.PassiveSlots[0].Id);
-            _player.AddItemCopy("ticket_de_consigne");
-        }
+        if (_player.FindObject("ticket_de_consigne") == null)
+            _player.ForgetItemStack(_player.PassiveSlots[0].Id);
+        _player.AddOrUpgradePassive("ticket_de_consigne", 2);
         int bag = _player.BagCount;
         ItemPickup maxed = drops.Drop(new Vector2(600f, 0f), PassiveSouvenirDataLoader.Get("ticket_de_consigne"));
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

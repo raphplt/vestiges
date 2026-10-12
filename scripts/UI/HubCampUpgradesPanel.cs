@@ -71,6 +71,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
             });
         }
         _balance = UITheme.MakeLabel("", TextRole.Title, UITheme.GoldBright, TextWeight.Strong);
+        _balance.AddThemeFontOverride("font", UITheme.StrongFont);
         _balance.TooltipText = Tr("UI_VESTIGES_HINT");
         _balance.MouseFilter = MouseFilterEnum.Pass;
         top.AddChild(_balance);
@@ -155,7 +156,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
             {
                 if (_list.GetChildCount() > 0)
                     _list.AddChild(new Control { CustomMinimumSize = new Vector2(0f, 16f), MouseFilter = MouseFilterEnum.Ignore });
-                _list.AddChild(UITheme.MakeLabel(Tr(titleKey), TextRole.Subhead, UITheme.GoldColor, TextWeight.Strong));
+                _list.AddChild(UITheme.MakeLabel(Tr(titleKey), TextRole.Section, UITheme.GoldColor));
                 any = true;
             }
             _list.AddChild(MakeRow(upgrade));
@@ -367,8 +368,10 @@ public partial class HubCampUpgradesPanel : MarginContainer
         returned.AddThemeConstantOverride("separation", 12);
         content.AddChild(returned);
         returned.AddChild(MakeIcon(_currency, 48f));
-        returned.AddChild(UITheme.MakeLabel("+" + MetaSaveManager.GetCampRefundAmount().ToString("N0", PlayerSheet.French),
-            TextRole.Title, UITheme.GoldBright, TextWeight.Strong));
+        Label refundAmount = UITheme.MakeLabel("+" + MetaSaveManager.GetCampRefundAmount().ToString("N0", PlayerSheet.French),
+            TextRole.Title, UITheme.GoldBright, TextWeight.Strong);
+        refundAmount.AddThemeFontOverride("font", UITheme.StrongFont);
+        returned.AddChild(refundAmount);
         HBoxContainer actions = new();
         actions.AddThemeConstantOverride("separation", 24);
         content.AddChild(actions);

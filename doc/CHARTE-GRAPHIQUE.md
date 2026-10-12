@@ -22,6 +22,17 @@ généralisation (plan 36 M10, DECISIONS §135 sexies).
 - Les textes longs se replient ou défilent ; noms et valeurs de stats
   conservent un espace explicite entre leurs colonnes.
 
+**Alkhemikal** (jeti, CC BY 4.0, `assets/fonts/alkhemikal/`) écrit les
+titres : titres de page et d'écran, en-têtes de section, menu d'accueil,
+bouton Partir, nom de l'élément détaillé, nom du biome et chuchotements
+(plan 36 M12, DECISIONS §146). Jamais les chiffres, le texte courant ni
+les boutons d'action, qui restent en Pixel Operator.
+
+- Même grille de 16 px que Pixel Operator : 32, 48 ou 64 px en menu,
+  16 px dans le HUD ; jamais 24 px. Pas de graisse grasse.
+- Crédit obligatoire : « Police Alkhemikal par jeti, CC BY 4.0 ».
+- Infobulles : fond sombre opaque, liseré doré, texte clair en 24 px.
+
 ### Rareté des objets — retour du 12 octobre 2026
 
 Les cinq teintes de `data/ui/rarities.json` occupent le **fond entier de la case** et sa tranche, avec la matière de pierre des menus. Commun gris, Inhabituel vert, Rare bleu, Épique violet, Légendaire or. Un petit éclat seul ne suffit plus à annoncer la rareté (plan 35 I13, DECISIONS §141).

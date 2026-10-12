@@ -186,7 +186,7 @@ public partial class LevelUpScreen : CanvasLayer
         inner.AddThemeConstantOverride("separation", 8);
         panel.AddChild(inner);
         Label label = new() { Text = title };
-        UITheme.SetTextRole(label, TextRole.Heading);
+        UITheme.SetTextRole(label, TextRole.Section);
         label.AddThemeColorOverride("font_color", GoldBright);
         inner.AddChild(label);
         ScrollContainer scroll = new()
@@ -278,31 +278,35 @@ public partial class LevelUpScreen : CanvasLayer
         foreach (string side in new[] { "left", "right", "top", "bottom" })
             margin.AddThemeConstantOverride($"margin_{side}", side is "left" or "right" ? 12 : 8);
         card.AddChild(margin);
+        VBoxContainer body = new();
+        body.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(body);
+
         HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 14);
-        margin.AddChild(row);
-
+        row.AddThemeConstantOverride("separation", 18);
+        body.AddChild(row);
         Texture2D icon = LoadIcon(choice, isWeapon);
-        if (icon != null)
+        PanelContainer iconFrame = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            MouseFilter = Control.MouseFilterEnum.Ignore };
+        iconFrame.AddThemeStyleboxOverride("panel", MenuSkin.Choice(frame, false, choice.Rarity?.Rank ?? -1));
+        iconFrame.AddChild(new TextureRect
         {
-            row.AddChild(new TextureRect
-            {
-                Texture = icon,
-                // Icônes 32×32 à échelle entière (×2).
-                CustomMinimumSize = new Vector2(96, 96),
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-            });
-        }
-
-        VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        text.AddThemeConstantOverride("separation", 2);
+            Texture = icon,
+            CustomMinimumSize = new Vector2(96, 96),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        });
+        row.AddChild(iconFrame);
+        VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
+        text.AddThemeConstantOverride("separation", 6);
         row.AddChild(text);
 
-        // Bandeau : rareté en petit (symbole et nom), sinon la nature de la carte ; le niveau à droite, ou « nouveau ».
+        // La rareté occupe son bandeau ; le niveau appartient à la ligne du nom.
         HBoxContainer header = new();
+        header.AddThemeConstantOverride("separation", 8);
         text.AddChild(header);
         string tag = choice.Rarity != null
             ? RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()
@@ -312,29 +316,31 @@ public partial class LevelUpScreen : CanvasLayer
                 : PassiveSouvenirDataLoader.Get(choice.Id)?.IsBadge == true ? "LEVELUP_KIND_BADGE" : "LEVELUP_KIND_OBJECT");
         if (choice.IsCarried)
             tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
-        Label tagLabel = MakeLabel(tag, TextRole.Body, frame, true);
+        Label tagLabel = MakeLabel(tag, TextRole.Small, frame, true);
         RarityIcon rarityIcon = choice.Rarity != null ? new RarityIcon(choice.Rarity.Rank) : null;
         if (rarityIcon != null)
             header.AddChild(rarityIcon);
         header.AddChild(tagLabel);
         if (choice.RarityRaised && !choice.IsCarried)
             ShowRarityRaise(header, tagLabel, rarityIcon, choice, tag, frame, _cards.Count);
-        header.AddChild(MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Body,
-            isNew && !isPerk ? GoldBright : TextColor, false, HorizontalAlignment.Right));
 
         HBoxContainer title = new();
         title.AddThemeConstantOverride("separation", 10);
         text.AddChild(title);
         Color titleColor = choice.Rarity != null ? RarityPalette.Colors(choice.Rarity.Id).Light : TextLight;
-        title.AddChild(MakeLabel(choice.DisplayName, TextRole.Heading, titleColor, false));
+        Label name = MakeLabel(choice.DisplayName, TextRole.Section, titleColor, true);
+        name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        title.AddChild(name);
         if (UpgradeText.ReachesMilestone(choice, player))
             title.AddChild(MilestoneBadge());
+        Label level = MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Body,
+            GoldBright, false);
+        level.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        title.AddChild(level);
+        int lineIndex = 0;
         foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
         {
-            Label gain = MakeLabel(line, TextRole.Subhead, color, false);
-            gain.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            gain.CustomMinimumSize = new Vector2(CardWidth - 170, 0);
-            text.AddChild(gain);
+            text.AddChild(ChoiceStyle.MakeGainLabel(line, color, lineIndex++ == 0 ? TextRole.Subhead : TextRole.Small));
         }
 
         _cards.Add(card);

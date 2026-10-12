@@ -254,7 +254,7 @@ public partial class PauseMenu : CanvasLayer
 		VBoxContainer inventory = new();
 		inventory.AddThemeConstantOverride("separation", 12);
 		inventoryPanel.AddChild(inventory);
-		inventory.AddChild(UITheme.MakeLabel("ÉQUIPEMENT", TextRole.Subhead, GoldBright));
+		inventory.AddChild(UITheme.MakeLabel("ÉQUIPEMENT", TextRole.Section, GoldBright));
 		_inventoryContainer = new VBoxContainer();
 		_inventoryContainer.AddThemeConstantOverride("separation", 10);
 		inventory.AddChild(_inventoryContainer);
@@ -294,7 +294,7 @@ public partial class PauseMenu : CanvasLayer
 		frame.AddChild(wrapper);
 
 		Label title = new() { Text = titleText };
-		UITheme.SetTextRole(title, TextRole.Subhead);
+		UITheme.SetTextRole(title, TextRole.Section);
 		title.AddThemeColorOverride("font_color", GoldBright);
 		wrapper.AddChild(title);
 		wrapper.AddChild(new ColorRect
@@ -341,7 +341,7 @@ public partial class PauseMenu : CanvasLayer
 			AddInventoryTile(badges, badge.Data.Icon, badge.Data.Name, $"Niv {badge.Level}", () => AddPassiveRow(badge));
 		FillEmpty(badges, InventoryConfig.BadgeSlots);
 		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
-		_objectsGrid = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6, sortable: true);
+		_objectsGrid = InventoryGroup($"{Tr("INVENTORY_BAG")}  {string.Format(Tr("INVENTORY_BAG_TYPES_COUNT"), player.BagCount, player.BagCapacity)}", 6, sortable: true);
 		FillObjects(player);
 		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)

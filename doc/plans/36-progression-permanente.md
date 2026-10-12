@@ -1,5 +1,72 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+## Reprise visuelle M12 — Alkhemikal pour les titres, 12 octobre 2026
+
+Raphaël compare en jeu Pixel Operator, Alkhemikal et Ithaca (dafont,
+catégories Bitmap et Gothique ; captures 1080p de sept écrans) et retient
+« un mélange de Alkhemikal et Pixel Operator ». Alkhemikal (jeti, CC BY 4.0,
+crédit obligatoire) a la même grille de 16 px que Pixel Operator, mais pas
+de graisse grasse.
+
+Lot unique, règle de partage :
+- **Alkhemikal** : titres de page et d'écran, en-têtes de section, entrées
+  du menu d'accueil et bouton Partir, nom de l'élément détaillé (héros,
+  amélioration, objet de Collection), onglets de Collection, nom du biome
+  et chuchotements de l'Effacement en run. Tailles multiples de 16 px
+  uniquement (32, 48, 64 en menu ; 16 dans le HUD).
+- **Pixel Operator** : texte courant, descriptions, boutons d'action,
+  listes, tous les chiffres (solde, prix, statistiques, score, chrono,
+  dégâts), petits textes du HUD et lieux à effet chiffré.
+- `UITheme` porte la police de titre et un rôle `Section` pour les
+  en-têtes ; un titre ignore la graisse.
+- Licence et crédit rangés avec la police ; Charte et Bible §9.1 mises à
+  jour (le « pas de gothique » de la Bible est levé par ce choix).
+- Vérifier accueil, Personnages, Campement, Collection, level-up, pause,
+  bilan et HUD sur captures 1080p ; build zéro warning et smoke.
+
+**M12 livré et vérifié le 12 octobre 2026.**
+
+- `UITheme.TitleFont` (Alkhemikal, sans anticrénelage) ; les rôles `Title`,
+  `Banner`, `Display` et le nouveau rôle `Section` (32 px) choisissent
+  Alkhemikal dans `MakeLabel`, `ApplyTypography` et `SetTextRole`. Les
+  libellés qui fixent déjà leur police gardent la leur : les chiffres du
+  bilan restent en Pixel Operator.
+- Alkhemikal posé explicitement sur le menu d'accueil, les titres de page,
+  le bouton Partir, le nom détaillé de Collection, ses onglets et le titre
+  du bilan. Solde et montant remboursé du Campement, en rôle `Title`,
+  forcés en Pixel Operator grasse. En-têtes passés en `Section` : pause
+  (Équipement, Statistiques), level-up (Inventaire, Stats), sections du
+  Campement, Journal, bilan. HUD : nom du biome et chuchotements de
+  l'Effacement en Alkhemikal 16 px (`SetCompactTitle`).
+- Police et licence dans `assets/fonts/alkhemikal/`. Le crédit reste à
+  afficher : le jeu n'a pas encore d'écran de crédits.
+- Captures 1080p regardées : accueil, Personnages, Campement, Collection,
+  level-up, pause, combat, repère dans le monde et bilan. Build zéro
+  warning ; `tools/validate.sh` 6/6 (`smoke`, `camp`, `menu_navigation`,
+  `choice_screen`, `ui_art`, `inventory`).
+- La capture `--capture-death` échoue sur « Le bilan doit ouvrir
+  l'équipement avec A » ; l'échec persiste avec la police de titre
+  remplacée par Pixel Operator : il ne vient pas de ce lot, cause non
+  cherchée.
+
+## Reprise visuelle M13 — détail des stats en infobulle, 12 octobre 2026
+
+Raphaël : la ligne de détail sous chaque stat de la pause est inutile ;
+l'afficher au survol, en fenêtre surgissante (DECISIONS §147).
+
+**M13 livré et vérifié le 12 octobre 2026.**
+
+- `PlayerSheet.AddStatLines` n'écrit plus la ligne « Base · Bonus du
+  build » : la ligne de stat porte ce détail en infobulle, un élément par
+  ligne. Pause et level-up partagent la fiche et changent ensemble ; les
+  effets des Oublis restent écrits.
+- Thème global : style commun des infobulles (fond sombre opaque, liseré
+  doré de 2 px, texte clair en 24 px), aussi appliqué aux infobulles
+  existantes (cases du sac, Collection, Campement).
+- La capture de pause survole la première stat et enregistre
+  `pause-stat-tooltip` ; elle échoue si aucune ligne ne porte d'infobulle.
+- Limite : infobulle à la souris seulement, rien à la manette.
+
 ## Reprise visuelle M11 — gains, niveaux et remboursement, 12 octobre 2026
 
 Raphaël demande de retirer « Effet actuel → suivant », le bleu et les

@@ -60,7 +60,7 @@ public static class MenuSkin
         focus.SetBorderWidthAll(2);
         focus.SetExpandMarginAll(4);
         button.AddThemeStyleboxOverride("focus", focus);
-        button.AddThemeFontOverride("font", UITheme.StrongFont);
+        button.AddThemeFontOverride("font", UITheme.TitleFont);
         UITheme.SetTextRole(button, TextRole.Title);
         foreach (string state in new[] { "font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color" })
             button.AddThemeColorOverride(state, UITheme.TextLight);

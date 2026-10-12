@@ -186,7 +186,7 @@ public partial class WorkshopDirector : Node
             return;
         int cost = Price(ItemLootConfig.WorkshopCost(item.Rarity), workshop.ServiceUses(ServiceItem));
         // Sac plein : l'achat passe par l'écran d'échange, qui fait la place.
-        bool bagFull = !_player.HasBagRoom;
+        bool bagFull = !_player.HasBagRoom && _player.FindObject(item.Id) == null;
         ChoiceCard card = new()
         {
             Tag = Tr("WORKSHOP_ITEM_TAG"),

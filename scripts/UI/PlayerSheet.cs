@@ -29,10 +29,10 @@ public static class PlayerSheet
     {
         foreach (StatLine stat in StatLines(player))
         {
-            AddLine(container, stat.Label, stat.Value, null, role);
-            Label detail = MakeLabel(stat.Detail, TextRole.Caption, UITheme.TextVeryDim);
-            detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            container.AddChild(detail);
+            // Le détail (base, bonus du build) n'alourdit plus la colonne : il s'ouvre au survol de la ligne.
+            HBoxContainer row = AddLine(container, stat.Label, stat.Value, null, role);
+            row.TooltipText = stat.Detail.Replace(" · ", "\n");
+            row.MouseFilter = Control.MouseFilterEnum.Stop;
         }
         if (player.ObjectStances is { } stances)
             AddLine(container, "Dégâts conditionnels actifs", StatCatalog.FormatBonus("damage", stances.DamageMultiplier, true), null, role);
@@ -139,7 +139,7 @@ public static class PlayerSheet
         AddSectionTitle(container, $"{Tr("INVENTORY_BADGES")}  {player.BadgeSlots.Count}/{InventoryConfig.BadgeSlots}");
         foreach (ActivePassiveSouvenir badge in player.BadgeSlots)
             AddCompactRow(container, badge.Data.IconSmall, badge.Data.Name, string.Format(Tr("INVENTORY_LEVEL"), badge.Level));
-        AddSectionTitle(container, $"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}");
+        AddSectionTitle(container, $"{Tr("INVENTORY_BAG")}  {string.Format(Tr("INVENTORY_BAG_TYPES_COUNT"), player.BagCount, player.BagCapacity)}");
         foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
             AddCompactRow(container, passive.Data.IconSmall, $"{passive.Data.Name} · {ItemPresentation.RarityText(passive.Data)}", $"×{passive.Copies}");
         string slots = reminiscenceSlots > 0 ? $"  {player.Specializations.Count}/{reminiscenceSlots}" : "";
@@ -169,7 +169,7 @@ public static class PlayerSheet
     public static void AddSectionTitle(VBoxContainer container, string text) =>
         container.AddChild(MakeLabel(text.ToUpper(), TextRole.Caption, UITheme.TextDim));
 
-    public static void AddLine(VBoxContainer container, string label, string value, Color? color = null, TextRole role = TextRole.Body)
+    public static HBoxContainer AddLine(VBoxContainer container, string label, string value, Color? color = null, TextRole role = TextRole.Body)
     {
         HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 16);
@@ -186,6 +186,7 @@ public static class PlayerSheet
         amount.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         row.AddChild(amount);
         container.AddChild(row);
+        return row;
     }
 
     public static Label MakeLabel(string text, TextRole role, Color color, HorizontalAlignment align = HorizontalAlignment.Left) =>

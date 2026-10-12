@@ -462,8 +462,8 @@ CAMP_WEAPON_SLOTS,Râtelier,Weapon Rack
 CAMP_WEAPON_SLOTS_HINT,Porter plus d'armes en même temps.,Carry more weapons at once.
 CAMP_WEAPON_SLOTS_DESC,+{0} emplacement d'arme,+{0} weapon slot
 CAMP_POCKETS,Poches,Pockets
-CAMP_POCKETS_HINT,Plus de place pour les objets trouvés.,More room for the items you find.
-CAMP_POCKETS_DESC,+{0} places dans le sac,+{0} bag spaces
+CAMP_POCKETS_HINT,Plus de types d’objets différents dans le sac.,More distinct item types in the bag.
+CAMP_POCKETS_DESC,+{0} places pour des types d’objets,+{0} slots for distinct item types
 CAMP_REROLLS,Jeu de cartes,Deck of Cards
 CAMP_REROLLS_HINT,Retirer les cartes d'un level-up.,Redraw the cards of a level-up.
 CAMP_REROLLS_DESC,+{0} relance par run,+{0} reroll per run
@@ -531,9 +531,9 @@ CHEST_LOOT_OBJECT,Objet : {0},Item: {0}
 INVENTORY_BAG,Sac,Bag
 ITEM_MILESTONE,{0} exemplaires : {1},{0} copies: {1}
 ITEM_EXCHANGE_PROMPT,Sac plein — échanger contre {0},Bag full — swap for {0}
-ITEM_EXCHANGE_TITLE,Sac plein ({0}/{1}),Bag full ({0}/{1})
-ITEM_EXCHANGE_SUBTITLE,Nouvel objet : {0} — {1} Choisis un exemplaire à oublier.,New item: {0} — {1} Pick a copy to forget.
-ITEM_EXCHANGE_FORGET,OUBLIER UN EXEMPLAIRE,FORGET ONE COPY
+ITEM_EXCHANGE_TITLE,Sac plein ({0}/{1} types),Bag full ({0}/{1} types)
+ITEM_EXCHANGE_SUBTITLE,Nouvel objet : {0} — {1} Choisis une pile entière à remplacer.,New item: {0} — {1} Choose an entire stack to replace.
+ITEM_EXCHANGE_FORGET,REMPLACER TOUTE LA PILE,REPLACE THE ENTIRE STACK
 ITEM_EXCHANGE_LEAVE,Laisser au sol,Leave it
 WORKSHOP_ITEM_TAG,OBJET,ITEM
 WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
@@ -550,7 +550,7 @@ STAT_SOVEREIGN_SLOW,Temps arrêté,Stopped time
 COLLECTION_BADGE_RULE,"Cousu en souvenir de : {0}. Monte au level-up jusqu'au niveau {1}, à demi-pas après le niveau {2}.","Sewn in memory of: {0}. Rises on level-up up to level {1}, at half step after level {2}."
 COLLECTION_ITEM_RULE,Jusqu'à {0} exemplaires dans le sac ; palier au {1}ᵉ.,Up to {0} copies in the bag; tier at copy {1}.
 COLLECTION_ITEM_RULE_PLAIN,Jusqu'à {0} exemplaires dans le sac.,Up to {0} copies in the bag.
-COLLECTION_ITEM_UNLIMITED,Cumul sans limite dans les places disponibles du sac.,Unlimited stacking within available bag slots.
+COLLECTION_ITEM_UNLIMITED,"Doublons sans limite, sans place supplémentaire.","Unlimited duplicates, no extra slot needed."
 STAT_STILL_DAMAGE,Dégâts immobile,Stationary damage
 STAT_ELITE_SLOW,Ralentissement des élites,Elite slow
 STAT_CRIT_MULTIPLIER,Multiplicateur critique,Critical multiplier
@@ -574,3 +574,4 @@ ITEM_SORT_RARITY_ASC,Rareté croissante,Rarity ascending
 ITEM_SORT_RARITY_DESC,Rareté décroissante,Rarity descending
 ITEM_SORT_NAME,Nom (A–Z),Name (A–Z)
 ITEM_SORT_ORIGINAL,Ordre initial,Original order
+INVENTORY_BAG_TYPES_COUNT,{0}/{1} types,{0}/{1} types

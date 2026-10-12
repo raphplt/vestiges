@@ -58,4 +58,33 @@ public static class ChoiceStyle
             label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         return label;
     }
+
+    /// <summary>La comparaison garde la valeur actuelle claire et distingue la valeur obtenue en vert.</summary>
+    public static RichTextLabel MakeGainLabel(string text, Color color, TextRole role)
+    {
+        RichTextLabel label = new()
+        {
+            FitContent = true,
+            ScrollActive = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        label.AddThemeFontOverride("normal_font", UITheme.BodyFont);
+        label.AddThemeFontSizeOverride("normal_font_size", UITheme.FontSize(role));
+        label.AddThemeColorOverride("default_color", color);
+        int arrow = text.IndexOf('→');
+        if (arrow < 0)
+            label.AddText(text);
+        else
+        {
+            label.PushColor(TextColor);
+            label.AddText(text[..(arrow + 1)]);
+            label.Pop();
+            label.PushColor(GainColor);
+            label.AddText(text[(arrow + 1)..]);
+            label.Pop();
+        }
+        return label;
+    }
 }

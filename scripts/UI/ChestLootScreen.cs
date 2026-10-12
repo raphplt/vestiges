@@ -33,9 +33,9 @@ public partial class ChestLootScreen : CanvasLayer
     // flottait dans un rectangle vide.
     private const float PanelWidth = 720f;
     private const float CardWidth = 610f;
-    private const float PanelBaseHeight = 460f;
-    private const float SlotHeight = 164f;
-    private const int IconSize = 52;
+    private const float PanelBaseHeight = 416f;
+    private const float SlotHeight = 220f;
+    private const int IconSize = 64;
 
     // --- UI nodes ---
     private ColorRect _overlay;
@@ -72,6 +72,8 @@ public partial class ChestLootScreen : CanvasLayer
     private class SlotState
     {
         public Label Label;
+        public Label Description;
+        public Label RarityLabel;
         public PanelContainer Card;
         public ColorRect Flash;
         public TextureRect Icon;
@@ -152,7 +154,7 @@ public partial class ChestLootScreen : CanvasLayer
     /// Montre le chest roulette. Callback onComplete appelé quand l'animation est terminée.
     /// </summary>
     public void ShowLoot(List<ResolvedLoot> loots, string rarity, Action onComplete,
-        IReadOnlyList<PassiveSouvenirData> eligible = null, string probabilities = "", string payment = "")
+        IReadOnlyList<PassiveSouvenirData> eligible = null, string payment = "")
     {
         // Seulement des objets accessibles : la roulette ne promet plus d'autres catégories de butin.
         List<LootDisplayInfo> candidates = new();
@@ -167,7 +169,7 @@ public partial class ChestLootScreen : CanvasLayer
         AudioManager.FadeOutUI(_revealAudio, RevealSound, RevealFadeSeconds);
         _revealAudio = null;
         _rarity = rarity;
-        _details.Text = payment + (probabilities.Length > 0 ? "\n" + probabilities : "");
+        _details.Text = payment;
         _details.Visible = _details.Text.Length > 0;
         _onComplete = onComplete;
         _slotsRevealed = 0;
@@ -215,7 +217,7 @@ public partial class ChestLootScreen : CanvasLayer
     private SlotState CreateSlot(ResolvedLoot loot, int index)
     {
         PanelContainer card = new();
-        card.CustomMinimumSize = new Vector2(CardWidth, 84);
+        card.CustomMinimumSize = new Vector2(CardWidth, 104);
 
         ChoiceStyle.StyleCard(card, ChoiceStyle.NeutralBorder, -1, false);
 
@@ -237,7 +239,7 @@ public partial class ChestLootScreen : CanvasLayer
         label.HorizontalAlignment = HorizontalAlignment.Left;
         label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         label.VerticalAlignment = VerticalAlignment.Center;
-        UITheme.SetTextRole(label, TextRole.Lead);
+        UITheme.ApplyTypography(label, TextRole.Section);
         label.AddThemeColorOverride("font_color", TextDim);
         label.Text = "???";
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
@@ -251,23 +253,41 @@ public partial class ChestLootScreen : CanvasLayer
         icon.Texture = initial.Icon;
         contents.AddChild(icon);
         label.Text = initial.Text;
-        contents.AddChild(label);
+        VBoxContainer identity = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            Alignment = BoxContainer.AlignmentMode.Center };
+        identity.AddThemeConstantOverride("separation", 4);
+        contents.AddChild(identity);
+        identity.AddChild(label);
+        PassiveSouvenirData data = loot.Type == "object" ? PassiveSouvenirDataLoader.Get(loot.ItemId) : null;
+        Label description = UITheme.MakeLabel(data != null ? ItemPresentation.Describe(data) : "",
+            TextRole.Small, UITheme.TextColor);
+        description.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        description.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        description.Visible = false;
+        identity.AddChild(description);
         // L'éclat reste un badge secondaire : il ne remplace jamais le signe du gain.
         string itemRarity = loot.Type == "object" ? PassiveSouvenirDataLoader.Get(loot.ItemId)?.Rarity ?? _rarity : _rarity;
         int rarityRank = RarityArt.Rank(itemRarity);
+        HBoxContainer rarityRow = new() { Visible = false };
+        rarityRow.AddThemeConstantOverride("separation", 8);
+        identity.AddChild(rarityRow);
         if (rarityRank >= 0)
-            contents.AddChild(new RarityIcon(rarityRank, 24));
+            rarityRow.AddChild(new RarityIcon(rarityRank, 24));
+        Label rarityLabel = UITheme.MakeLabel(RarityPalette.DisplayName(itemRarity), TextRole.Body,
+            RarityPalette.Colors(itemRarity).Light);
+        rarityRow.AddChild(rarityLabel);
 
         card.AddChild(flash);
         _slotsContainer.AddChild(card);
 
-        PassiveSouvenirData data = loot.Type == "object" ? PassiveSouvenirDataLoader.Get(loot.ItemId) : null;
-        LootDisplayInfo finalItem = new(data != null ? $"{loot.Label} · {RarityPalette.DisplayName(itemRarity)}\n{ItemPresentation.Describe(data)}" : loot.Label,
+        LootDisplayInfo finalItem = new(data?.Name ?? loot.Label,
             loot.Color, LootIconResolver.Get(loot.Type, loot.ItemId));
 
         return new SlotState
         {
             Label = label,
+            Description = description,
+            RarityLabel = rarityLabel,
             Card = card,
             Flash = flash,
             Icon = icon,
@@ -382,8 +402,9 @@ public partial class ChestLootScreen : CanvasLayer
 
         // Set final item
         slot.Label.Text = slot.FinalItem.Text;
+        slot.Description.Visible = !string.IsNullOrEmpty(slot.Description.Text);
         slot.Label.AddThemeColorOverride("font_color", TextLight);
-        UITheme.SetTextRole(slot.Label, TextRole.Subhead);
+        slot.RarityLabel.GetParent<Control>().Show();
 
         // Card glow border
         ChoiceStyle.StyleCard(slot.Card, RarityPalette.Main(slot.Rarity), RarityArt.Rank(slot.Rarity), false);

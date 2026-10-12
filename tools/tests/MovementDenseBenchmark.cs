@@ -488,7 +488,7 @@ public partial class MovementDenseBenchmark : Node
                 traveled_pixels = _distance, dash_traveled_pixels = _dashDistance,
                 // Noms historiques du premier banc : moniteurs Godot, pas un profil CPU isolé.
                 process_cpu_mean_ms = _processSum / _samples, physics_cpu_mean_ms = _physicsSum / _samples,
-                enemies = _enemyCount, churn = _churn, items = _items, item_copies = _player.BagCount, xp_orbs = CountXpOrbs(), respawns = _respawns,
+                enemies = _enemyCount, churn = _churn, items = _items, item_copies = _player.BagCopyCount, xp_orbs = CountXpOrbs(), respawns = _respawns,
                 respawns_per_second = _respawns / (_frames.Take(_samples).Sum() / 1000),
                 render_cpu_mean_ms = _renderCpuSum / _samples, render_gpu_mean_ms = _renderGpuSum / _samples,
                 draw_calls_mean = _drawCallsSum / _samples, rendered_objects_mean = _objectsSum / _samples,
@@ -506,7 +506,7 @@ public partial class MovementDenseBenchmark : Node
                 },
                 native_start_bytes = _nativeStart, native_end_bytes = nativeEnd,
                 rss_start_bytes = _rssStart, rss_end_bytes = rssEnd, rss_process_peak_bytes = rssPeak,
-                fixture = $"Main réelle ; profil dev temporaire, Steam désactivé ; combat centré sur terrain ouvert (arena) ; Ombres et Cracheurs à 5 pour 1 ({_enemyCount}), PV {(_churn ? "normaux" : "×10000")} ; traqueur invincible, {_player.WeaponSlots.Count} armes, {_player.BagCount} copies d’objets ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
+                fixture = $"Main réelle ; profil dev temporaire, Steam désactivé ; combat centré sur terrain ouvert (arena) ; Ombres et Cracheurs à 5 pour 1 ({_enemyCount}), PV {(_churn ? "normaux" : "×10000")} ; traqueur invincible, {_player.WeaponSlots.Count} armes, {_player.BagCopyCount} copies d’objets ; spawn naturel, Effacement et crises figés ; cible orbitale commune, trajectoires réelles différentes avec dash ; code courant dans les deux cas."
             };
             Directory.CreateDirectory(Path.GetDirectoryName(_output)!);
             File.WriteAllText(_output + ".json", JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));

@@ -1648,6 +1648,10 @@ Raphaël, avant le [lot C1 du plan 39](39-atmosphere.md) : « ok continue avec l
 - **Radios dans les embouteillages.** Sur le capot d'une voiture d'environ un embouteillage sur trois (5 à 6 par carte), sans nouveau décor ailleurs.
 - **Une cabine sur deux sonne.** Parmi les cabines activables (petits lieux), elle se tait quand le joueur arrive et garde son usage (révéler les lieux proches).
 
+## 144. Capacité du sac par types distincts — 12 octobre 2026
+
+Raphaël : le sac compte actuellement les doublons dans ses dix places, alors qu'il attend dix types d'objets distincts avec les doublons empilés. Précision : « le 10 c'est pas une valeur absolue c'est la valeur par défaut sans les améliorations ». La capacité reste calculée à partir d'`inventory.json` et du Campement ; seuls les types distincts occupent une place, les doublons rejoignent leur pile à sac plein. Un nouveau type demande de remplacer une pile entière si la capacité est atteinte. Il demande aussi de voir les objets dans les coffres et dans le HUD à gauche. Lot I15 du [plan des raretés](35-raretes-des-objets.md).
+
 ## 145. Fausses lumières : décors existants, fenêtres, feux de camp — 12 octobre 2026
 
 Raphaël, après C1 : « je vais écouter je te ferai les retours ultérieurement en attendant continue avec d'autres choses du plan ». Réponses aux questions du [lot B4 du plan 39](39-atmosphere.md) :
@@ -1657,3 +1661,25 @@ Raphaël, après C1 : « je vais écouter je te ferai les retours ultérieuremen
 - **Avec l'oubli** : une lampe d'une zone qui s'oublie vacille de plus en plus, puis meurt pour de bon.
 
 Découpage proposé par l'agent : B4a (lueurs sur les décors existants), B4b (fenêtres), B4c (feux de camp), un lot à la fois.
+
+## 146. Alkhemikal pour les titres, Pixel Operator pour le reste — 12 octobre 2026
+
+Raphaël demande une police plus adaptée sur dafont, catégories Bitmap ou Gothique. Recherche de l'agent : polices à accents et licence compatible avec un jeu vendu, puis comparaison en jeu de Pixel Operator, Alkhemikal (jeti, CC BY 4.0) et Ithaca (GGBotNet, OFL) sur sept écrans en 1080p. Raphaël : « un mélange de Alkhemikal et Pixel Operator je dirai ».
+
+**Acquis :** Alkhemikal pour les titres, en-têtes de section, entrées du menu d'accueil, bouton Partir, nom de l'élément détaillé, onglets de Collection, nom du biome et chuchotements ; Pixel Operator pour le texte courant, les boutons d'action et tous les chiffres. Le « pas de gothique » de la Bible §9.1 est levé. Crédit obligatoire : « Police Alkhemikal par jeti, CC BY 4.0 », à faire figurer dans les crédits du jeu dès qu'ils existent. Lot [M12](36-progression-permanente.md#reprise-visuelle-m12--alkhemikal-pour-les-titres-12-octobre-2026).
+
+## 147. Détail des stats en infobulle — 12 octobre 2026
+
+Raphaël, pendant M12 : « il n'y a pas besoin d'une ligne de texte sous le détail de chaque stat. à la limite on peut l'afficher au hover mais en mode pop up. » La ligne grise sous chaque stat (base, bonus du build) disparaît de la pause et de la colonne de stats du level-up, qui partagent la même fiche ; elle s'ouvre en infobulle au survol de la ligne, une information par ligne. Les infobulles du jeu reçoivent un style commun (fond sombre opaque, liseré doré, 24 px). Limite : l'infobulle ne s'ouvre qu'à la souris, pas à la manette. Lot [M13](36-progression-permanente.md#reprise-visuelle-m13--détail-des-stats-en-infobulle-12-octobre-2026).
+
+
+## 148. Coffres sans description et cartes d'amélioration mieux agencées — 12 octobre 2026
+
+Raphaël : « dans les coffres il ne faut pas afficher la description de l'arme » ; les récompenses actuelles étant des objets, leur effet disparaît du résultat du coffre. Il demande aussi des cartes d'amélioration mieux agencées, inspirées de la clarté de Megabonk sans recopier son interface : icône, nom, rareté, niveau et gains distincts, matières et typographie de Vestiges conservées. Lot [I16](35-raretes-des-objets.md#i16--butin-compact-et-hiérarchie-des-cartes-damélioration-12-octobre-2026).
+
+Précision pendant I16 : « il ne faut surtout pas les probas du coffre affichés » ; retirer leur affichage du résultat et du choix de coffre. « il faut le niveau de l'amélioration aussi pour les carts de level up » : afficher le niveau actuel et le niveau obtenu à droite du nom, et Nouveau pour une acquisition.
+
+
+## 149. Description des objets rétablie dans les coffres — 12 octobre 2026
+
+Raphaël revient sur la suppression d'I16 : « pour les coffres je pense qu'il faut quand meme la description de l'objet sous le titre ». Remettre l'effet de l'objet directement sous son nom, avec un texte courant clair et replié, conserver la rareté séparée et les probabilités masquées. Reprise [I17](35-raretes-des-objets.md#i17--description-de-lobjet-sous-le-titre-du-butin-12-octobre-2026).

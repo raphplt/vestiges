@@ -9,7 +9,7 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Écran d'échange quand le sac est plein (plan 35 §9.3) : le nouvel objet en tête, puis chaque autre objet du sac ;
-/// choisir une carte oublie un exemplaire de cet objet et prend le nouveau, « Laisser au sol » ne change rien. Passe par
+/// choisir une carte oublie toute la pile de cet objet et prend le nouveau, « Laisser au sol » ne change rien. Passe par
 /// l'écran de choix commun, en pause ; l'oubli ne coûte rien (§110).
 /// </summary>
 public partial class ItemExchange : Node
@@ -20,16 +20,17 @@ public partial class ItemExchange : Node
 
     /// <summary>
     /// Ouvre l'échange ; <paramref name="take"/> prend le nouvel objet une fois la place faite et rend faux s'il n'a pas pu
-    /// entrer : l'exemplaire oublié revient alors. <paramref name="onCancel"/> suit « Laisser au sol ». Rien ne s'ouvre pour
+    /// entrer : la pile oubliée revient alors. <paramref name="onCancel"/> suit « Laisser au sol ». Rien ne s'ouvre pour
     /// un objet déjà à son maximum d'exemplaires : aucun oubli ne le ferait entrer.
     /// </summary>
     public bool Open(Player player, PassiveSouvenirData incoming, Func<bool> take, Action onCancel = null)
     {
-        if (_choices == null || _choices.IsOpen || player == null || incoming == null || player.IsItemAtMax(incoming.Id))
+        if (_choices == null || _choices.IsOpen || player == null || incoming == null || incoming.IsBadge
+            || player.CanTakeItem(incoming.Id) || player.IsItemAtMax(incoming.Id))
             return false;
         List<ChoiceCard> cards = new();
         List<string> forgettable = new();
-        foreach (ActivePassiveSouvenir item in player.PassiveSlots)
+        foreach (ActivePassiveSouvenir item in ItemSort.Order(player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name))
         {
             // Oublier le nouvel objet pour le reprendre serait un échange nul.
             if (item.Id == incoming.Id)
@@ -43,7 +44,7 @@ public partial class ItemExchange : Node
             ItemPresentation.ConfigureCard(card, item.Data);
             card.Tag = Tr("ITEM_EXCHANGE_FORGET") + " · " + ItemPresentation.RarityText(item.Data);
             card.Lines.Add(($"Actuel : {ItemPresentation.Describe(item.Data, item.Copies)}", ChoiceStyle.TextColor));
-            card.Lines.Add(($"Après oubli : {ItemPresentation.Describe(item.Data, item.Copies - 1)}", ChoiceStyle.TextDim));
+            card.Lines.Add(($"Après oubli : {ItemPresentation.Describe(item.Data, 0)}", ChoiceStyle.TextDim));
             cards.Add(card);
             forgettable.Add(item.Id);
         }
@@ -57,8 +58,9 @@ public partial class ItemExchange : Node
                     return;
                 }
                 string forgotten = forgettable[choice];
-                if (player.ForgetItemCopy(forgotten) && !take())
-                    player.AddItemCopy(forgotten);
+                int copies = player.FindObject(forgotten)?.Copies ?? 0;
+                if (player.ForgetItemStack(forgotten) && !take())
+                    player.AddOrUpgradePassive(forgotten, copies);
             });
         return true;
     }
