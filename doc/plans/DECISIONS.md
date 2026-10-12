@@ -1378,6 +1378,13 @@ Raphaël, après une partie (retours dictés, extraits) :
 
 **Acquis :** voile du marais coupé ; ombres portées au pixel du monde par défaut. Le reste est découpé au [plan 41](41-retours-du-12-octobre.md).
 
+### 129 bis. Réponses sur le plan 41
+
+- Personnage par défaut : **le Traqueur**, sélectionné sur un profil neuf et premier de la liste.
+- Particules de la ville : « tester 1 et 2 » — poussière qui flotte et scintille dans la lumière (avec des papiers rares dessinés), et papiers dessinés seuls ; Raphaël choisit en jeu.
+- Colonnes de lumière : planche de trois propositions avant intégration.
+- Ordre : HUD, rectangle de la carrière, particules, colonnes de lumière.
+
 ### 129 ter. Traqueur de départ, Vagabond gagné par la chasse
 
 Le Traqueur et son arc étaient gardés par « Mener la chasse » (vaincre un Souverain) ; d'où un Traqueur verrouillé en tête de liste et un Vagabond sélectionné. Choix de Raphaël : **échange** — Traqueur et arc libres dès le départ, « Mener la chasse » débloque le Vagabond et sa lame.
