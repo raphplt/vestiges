@@ -1483,3 +1483,12 @@ Constat dans le code : la rafale de G6g (§59) ne retardait que les tirs qui ret
 - **Critiques (plan 06 §10, quêtes de critique) :** « il faut pas qu'il y ait du critique de base par défaut pour tous les personnages. mais par contre, il faut qu'il y ait au moins un ou deux objets qui permettent d'avoir des chances de coups critiques, obtenables dès le début sans avoir de quête. il faut aussi peut-être qu'il y ait un personnage qui a un passif lié aux critiques et il faut aussi peut-être qu'il y ait des armes qui augmentent le critique […] il faut qu'il y ait plus d'armes qui intègrent des coups critiques dans leurs statistiques de level up. » **Acquis :** pas de critique de base ; un ou deux objets de critique dans la réserve de départ ; davantage d'armes avec le critique dans leurs gains de niveau. **Pistes à proposer :** un personnage au passif de critique, des armes qui augmentent le critique. Lot à découper plus tard : Raphaël demande le 12 octobre de **ne rien toucher pour l'instant** (objets, stats, critiques), seulement de le consigner. Le tirage du critique pour les armes en arc reste ouvert.
 - **Campement (plan 36 §13) et Inventaire (plan 35 §16) :** pas encore joué, questions reportées.
 - **Reste du tableau de bord :** rien de neuf.
+
+
+## 134. Améliorations d'arme : stat au plafond, Rallonge, Épique à deux stats — 12 octobre 2026
+
+Raphaël signale une carte « Rallonge, Zone +0 % » au level-up. Cause : les armes circulaires (Rallonge, Cloche d'école) frappent toujours à 360° et ignorent l'arc, mais `arc_angle` restait dans leur `growth`, hérité du gabarit de mêlée.
+
+- **Tirage :** une stat d'arme déjà à son plafond (arc à 360°, cône à 180°) n'est plus tirée (`WeaponInstance.IsStatCapped`) ; `arc_angle` retiré du `growth` des deux armes circulaires.
+- **Rallonge :** « la portée de cette arme doit aussi augmenter et là par défaut la portée est environ 2 fois trop grande ». Rayon de base 95 → 48 px ; poids de la portée au tirage 1,5 → 2,5 (elle reprend celui de l'arc). La Cloche d'école (110 px) n'est pas touchée.
+- **Épique :** passait une seule stat ×1,75 (total 1,75), moins que la Rare (2 × 1,25). Raphaël : « corrige ». L'Épique améliore **deux stats ×1,75**, comme le prévoyait le plan 17 : gains totaux 1 / 1,5 / 2,5 / 3,5 / 6.

@@ -105,7 +105,7 @@ public static class UpgradeRoller
 	}
 
 	/// <summary>
-	/// Gains d'une amélioration d'arme : stats montables tirées selon leur poids (sans répétition). Une stat de pas
+	/// Gains d'une amélioration d'arme : stats montables (hors plafond) tirées selon leur poids (sans répétition). Une stat de pas
 	/// gagne son pas au gain de la rareté ; une stat entière (projectile, perforation, saut, orbe) gagne la part
 	/// entière de la rareté, en fraction (plan 23 R4). <paramref name="extraStats"/> : stats en plus de la rareté
 	/// (Trempe de l'Atelier, plan 22 C2), dans la limite des stats que l'arme peut monter.
@@ -114,6 +114,10 @@ public static class UpgradeRoller
 	{
 		List<StatGain> gains = new();
 		Dictionary<string, float> pool = new(weapon.Base.Growth);
+		// Une stat au plafond (arc déjà à 360°) donnerait une carte « +0 % » et volerait la place d'un vrai gain.
+		foreach (string stat in weapon.Base.Growth.Keys)
+			if (weapon.IsStatCapped(stat))
+				pool.Remove(stat);
 		for (int i = 0; i < rarity.WeaponStats + extraStats && pool.Count > 0; i++)
 		{
 			string stat = WeightedPick(pool, rng);

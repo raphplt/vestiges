@@ -52,7 +52,7 @@ La fiche de la pause affiche aujourd'hui : PV, Régénération, Bouclier, Armure
 
 - **Montée :** une amélioration = un niveau (50 au plus), qui tire au hasard une ou plusieurs stats parmi celles que l'arme peut monter.
 - **Pas d'une commune :** dégâts +12 %, cadence +8 %, portée +6 %, zone +8 %, recul +15 %, vitesse de projectile ou d'orbite +10 %.
-- **Gain selon la rareté :** inhabituelle × 1,5 ; rare : 2 stats × 1,25 ; épique × 1,75 ; légendaire : 3 stats × 2.
+- **Gain selon la rareté :** inhabituelle × 1,5 ; rare : 2 stats × 1,25 ; épique : 2 stats × 1,75 ; légendaire : 3 stats × 2.
 - **Stats entières :** « +1 projectile / perforation / saut / orbe » ne tombe **qu'en épique ou légendaire** (4 % des tirages), et seulement pour les armes de la colonne « Entier ».
 
 | Arme | Motif | Dégâts | Cadence /s | Portée | Particularité | Entier possible | Ascension |

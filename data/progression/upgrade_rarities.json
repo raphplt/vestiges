@@ -4,7 +4,7 @@
 		{ "id": "common", "weight": 62, "bump_chance": 0.25, "weapon_stats": 1, "weapon_gain": 1.0, "integer_gain": 0.5, "passive_gain": 1.0 },
 		{ "id": "uncommon", "weight": 27, "bump_chance": 0.15, "weapon_stats": 1, "weapon_gain": 1.5, "integer_gain": 0.75, "passive_gain": 1.5 },
 		{ "id": "rare", "weight": 9, "bump_chance": 0.07, "weapon_stats": 2, "weapon_gain": 1.25, "integer_gain": 1, "passive_gain": 2.0 },
-		{ "id": "epic", "weight": 1.7, "bump_chance": 0.05, "weapon_stats": 1, "weapon_gain": 1.75, "integer_gain": 2, "passive_gain": 2.5 },
+		{ "id": "epic", "weight": 1.7, "bump_chance": 0.05, "weapon_stats": 2, "weapon_gain": 1.75, "integer_gain": 2, "passive_gain": 2.5 },
 		{ "id": "legendary", "weight": 0.3, "bump_chance": 0, "weapon_stats": 3, "weapon_gain": 2.0, "integer_gain": 3, "passive_gain": 3.0 }
 	],
 		"luck_steps_per_point": 10,

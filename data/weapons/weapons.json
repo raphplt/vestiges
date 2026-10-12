@@ -387,7 +387,7 @@
     },
     "summary": "Fouette tout autour de toi.",
     "count_name_key": "STAT_STRIKES",
-    "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1, "projectile_count": 1.25 },
+    "growth": { "damage": 3, "attack_speed": 2, "range": 2.5, "knockback": 1, "projectile_count": 1.25 },
     "ascensions": [
       {
         "id": "short_circuit",
@@ -412,7 +412,7 @@
       "projectile_count": 1,
       "damage": 9,
       "attack_speed": 0.9,
-      "range": 95,
+      "range": 48,
       "arc_angle": 360,
       "knockback": 15
     },
@@ -537,7 +537,7 @@
     },
     "summary": "Une onde qui repousse et ralentit.",
     "count_name_key": "STAT_STRIKES",
-    "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "arc_angle": 1, "knockback": 1, "projectile_count": 1.25 },
+    "growth": { "damage": 3, "attack_speed": 2, "range": 1.5, "knockback": 1, "projectile_count": 1.25 },
     "ascensions": [
       {
         "id": "knell",

@@ -150,6 +150,13 @@ public class WeaponInstance
 		return key == "damage" && SurplusDamage > 0f ? value * (1f + SurplusDamage) : value;
 	}
 
+	/// <summary>La stat a atteint son plafond d'amélioration : un gain de plus n'y changerait rien.</summary>
+	public bool IsStatCapped(string key)
+	{
+		WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(key);
+		return config != null && config.Max > 0f && LeveledStat(key) >= config.Max;
+	}
+
 	/// <summary>Stat avant l'ascension : base des données et gains de niveau, plafonnée selon sa configuration.</summary>
 	private float LeveledStat(string key)
 	{

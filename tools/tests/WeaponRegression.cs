@@ -610,6 +610,15 @@ public partial class WeaponRegression : Node2D
               && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce")) == "3,5",
             $"Commune sur la Cloueuse : perforation {pierceBefore} → {StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce"))}");
 
+        // Parcmètre monté à 360° (120° + 200 %) : l'arc au plafond n'est plus tiré, pas de carte « Zone +0 % ».
+        WeaponInstance hammer = new(WeaponDataLoader.Get("heavy_hammer"));
+        hammer.ApplyUpgrade(new[] { new StatGain("arc_angle", 2f) });
+        bool arcOffered = false;
+        for (int i = 0; i < 200 && !arcOffered; i++)
+            arcOffered = UpgradeRoller.RollWeaponGains(hammer, UpgradeRoller.Get("common"), rng).Exists(g => g.Stat == "arc_angle");
+        Check(hammer.IsStatCapped("arc_angle") && !arcOffered,
+            $"Parcmètre : l'arc au plafond ({hammer.GetStat("arc_angle"):0}°) n'est plus tiré");
+
         // Lance-billes à 3,5 projectiles : 3 ou 4 par salve, la moitié du temps chacun, sur 1 000 attaques.
         WeaponInstance sling = new(WeaponDataLoader.Get("sling"));
         sling.ApplyUpgrade(new[] { new StatGain("projectile_count", 0.5f) });
