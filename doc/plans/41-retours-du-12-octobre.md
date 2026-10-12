@@ -24,6 +24,8 @@ Constat : les blocs de lumière verticaux au-dessus des coffres et de certains l
 - Planche de trois propositions en pixel art, dans la direction crade (plan 40), avant intégration.
 - Vérification : `--capture-chests` et les captures des lieux.
 
+**Livré le 12 octobre :** planche de trois propositions (`doc/plans/planches/41-R3-colonnes.jpg`, non versionnée : A faisceau effiloché, B poussière de mémoire, C rai oblique). Retour de Raphaël : « aucun ne me plaît… le A était pas mal mais pas assez animé ». A repris en plus animé, vidéo de 31 s (`~/.local/share/vestiges-planches/2026-10-12/colonnes-A2.mp4`), puis « parfait comme ça » ([DECISIONS §129 quater](DECISIONS.md)). La colonne des coffres, Failles, Mémoriaux et Ateliers est désormais un faisceau fin qui se défait en pixels vers le haut : vagues de lumière qui le remontent, cœur qui respire d'un à deux texels, éclats qui quittent le sommet, dix poussières qui montent, anneau en losange au sol qui part du pied et s'efface. Les styles non retenus et l'ancien sont retirés ; la teinte sombre de rareté n'y sert plus. Outil gardé : `--capture-light-columns <s>` (arrêt devant un coffre de chaque rareté, rafale de gros plans, à filmer avec `--write-movie`).
+
 ## R4 — Rectangle semi-transparent à la carrière (≈ 0,5 j)
 
 Constat : autour d'un lieu à briser dans la mine, un rectangle semi-transparent au sol, hors de la direction artistique. Source non identifiée à la lecture (ni `SmallPlace`, ni le filon de cristal). À trouver par capture des lieux de la carrière, puis corriger.

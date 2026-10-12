@@ -17,6 +17,39 @@ namespace Vestiges.Tests;
 /// </summary>
 public partial class RunObservation
 {
+    /// <summary>
+    /// --capture-light-columns [secondes] : arrêt devant le plus proche coffre de chaque rareté, la durée donnée, pour
+    /// juger l'animation des colonnes de lumière (plan 41 R3) ; rafale de quatre gros plans à 0,15 s en fin d'arrêt.
+    /// À filmer avec --write-movie.
+    /// </summary>
+    private async Task CaptureLightColumns(double seconds)
+    {
+        _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+            if (node is Vestiges.Combat.Enemy existing && existing.IsActive)
+                _world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(existing);
+        _player.AIInputOverride = Vector2.Zero;
+        await Frames(180);
+        List<Chest> chests = new(Chest.Closed);
+        Vector2 spawn = _player.GlobalPosition;
+        chests.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(spawn).CompareTo(b.GlobalPosition.DistanceSquaredTo(spawn)));
+        HashSet<string> seen = new();
+        foreach (Chest chest in chests)
+        {
+            if (!seen.Add(chest.ChestId))
+                continue;
+            _player.GlobalPosition = chest.GlobalPosition + new Vector2(-60f, 30f);
+            _camera.ResetSmoothing();
+            await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);
+            for (int shot = 0; shot < 4; shot++)
+            {
+                SaveCrop($"column-{chest.ChestId[6..]}-{shot}", chest.GlobalPosition + new Vector2(0f, -60f), new Vector2(200f, 160f));
+                await ToSignal(GetTree().CreateTimer(0.15), SceneTreeTimer.SignalName.Timeout);
+            }
+        }
+        GD.Print($"[RunObservation] RESULT light-columns kinds={seen.Count}");
+    }
+
     private async Task CaptureChests()
     {
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;

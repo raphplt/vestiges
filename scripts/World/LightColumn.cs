@@ -4,8 +4,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Colonne de lumière à la couleur d'une rareté, dessinée par light_column.gdshader sur la grille des texels.
-/// Se lit de loin, et dépasse du bord de l'écran avant que sa source n'y entre. Pied au point d'origine du nœud.
+/// Colonne de lumière à la couleur d'une rareté, dessinée par light_column.gdshader sur la grille des texels : faisceau
+/// fin et animé qui se défait vers le haut (plan 41 R3). Se lit de loin, et dépasse du bord de l'écran avant que sa
+/// source n'y entre. Pied au point d'origine du nœud.
 /// </summary>
 public partial class LightColumn : Sprite2D
 {
@@ -15,7 +16,6 @@ public partial class LightColumn : Sprite2D
     private static readonly StringName SeedParam = "seed";
     private static readonly StringName LightParam = "c_light";
     private static readonly StringName MidParam = "c_mid";
-    private static readonly StringName DarkParam = "c_dark";
 
     private static Shader _shader;
     private static Texture2D _pixel;
@@ -52,6 +52,5 @@ public partial class LightColumn : Sprite2D
         material.SetShaderParameter(SeedParam, GD.Randf());
         material.SetShaderParameter(LightParam, colors.Light);
         material.SetShaderParameter(MidParam, colors.Main);
-        material.SetShaderParameter(DarkParam, colors.Dark);
     }
 }

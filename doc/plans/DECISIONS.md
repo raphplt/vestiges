@@ -1492,3 +1492,7 @@ Raphaël signale une carte « Rallonge, Zone +0 % » au level-up. Cause : les ar
 - **Tirage :** une stat d'arme déjà à son plafond (arc à 360°, cône à 180°) n'est plus tirée (`WeaponInstance.IsStatCapped`) ; `arc_angle` retiré du `growth` des deux armes circulaires.
 - **Rallonge :** « la portée de cette arme doit aussi augmenter et là par défaut la portée est environ 2 fois trop grande ». Rayon de base 95 → 48 px ; poids de la portée au tirage 1,5 → 2,5 (elle reprend celui de l'arc). La Cloche d'école (110 px) n'est pas touchée.
 - **Épique :** passait une seule stat ×1,75 (total 1,75), moins que la Rare (2 × 1,25). Raphaël : « corrige ». L'Épique améliore **deux stats ×1,75**, comme le prévoyait le plan 17 : gains totaux 1 / 1,5 / 2,5 / 3,5 / 6.
+
+### 129 quater. Colonnes de lumière
+
+Planche de trois propositions (A faisceau effiloché, B poussière de mémoire, C rai oblique) : « là comme ça aucun me plaît. En fait le A était pas mal mais pas assez animé. » A repris en plus animé (vagues qui remontent, cœur qui respire, éclats au sommet, anneau au sol), vidéo : « parfait comme ça on laisse ainsi ». **Acquis** pour toutes les colonnes de lumière.
