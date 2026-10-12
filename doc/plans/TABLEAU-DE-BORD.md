@@ -77,7 +77,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Essai XP, niveaux de surplus, réserve automatique | 21 (absorbé du plan 20, §57) |
 | Anomalies : Écho de ta dernière run, Oubli de soi, Effondrement ; pénalité ≤ 25 % des PV max ; une ligne de texte (§49) | 14 |
 | Atelier et Trempe, niveau d'arme déplacé, Atlas (§49) | 22 C2 |
-| Critiques sans base : un ou deux objets de critique dans la réserve de départ, plus d'armes qui gagnent du critique au niveau ; pistes : personnage au passif de critique, armes qui augmentent le critique (§124) | 06, 21 |
+| Critiques sans base : un ou deux objets de critique dans la réserve de départ, plus d'armes qui gagnent du critique au niveau ; pistes : personnage au passif de critique, armes qui augmentent le critique (§124). **Plus tard, pas avant le feu vert de Raphaël.** | 06, 21 |
 
 ## 4. Idées en suspens, rattachées pour ne pas les perdre
 
