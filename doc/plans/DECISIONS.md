@@ -1600,3 +1600,9 @@ Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sprites ». D
 - **Visuels en jeu (S10d) :** Raphaël a demandé ce que c'était ; explication donnée, décision en attente.
 
 Après la planche S10a : « je valide à 100 % ces nouvelles identités et la planche aussi. Go, fais le reste ». **Acquis :** Dossard froissé, Bouillotte, Yo-yo, Longue-vue et Bocal de conserve remplacent les cinq objets, IDs compris ; planche S10a validée. S10b et S10c livrés le même jour ([§7.6](35-catalogue-objets-v2.md#76-s10b-et-s10c--livrés-12-octobre-2026)) ; la planche S10b n'a pas été validée séparément. S10d (visuels en jeu) reste en attente de décision.
+
+## 140. Visuels des objets reportés, son des petits lieux — 12 octobre 2026
+
+Sur S10d (silhouette du Portrait, fil de la Pelote, éclat du Tampon ANNULÉ…) : « non t'inquiète pas besoin des effets sonores des objets pour l'instant ». Lu comme le report de S10d ; ni visuels ni sons d'objets à faire pour l'instant.
+
+« Il manque un effet sonore quand on valide un POI sur le jeu (la cabine téléphonique, le wagon de la mine, etc.) ». Les neuf petits lieux du plan 22 (puits, veine, épouvantail, boîte aux lettres, wagonnet, voiture, cabine, abribus, pique-nique) émettaient `SmallPlaceUsed` sans aucun son, contrairement aux POI explorés. Correctif : `AudioManager` joue à l'usage la confirmation des POI (`sfx_poi_activate`), une fois, jamais sur un lieu déjà utilisé. Vérifié par `tools/test_small_places.sh` (demande de son comptée) ; **à écouter en jeu**, un son propre par lieu reste possible plus tard.

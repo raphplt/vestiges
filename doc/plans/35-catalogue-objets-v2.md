@@ -137,7 +137,7 @@ Exigence explicite de Raphaël : aucun objet ne peut être déclaré livré sur 
 
 ## 7. Icônes des 34 nouveaux objets — préparation du 12 octobre 2026
 
-Demande de Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sprites ». **S10a–S10c livrés le 12 octobre (§7.6) ; S10d en attente.** Aujourd'hui chacun des 34 objets du §3 prête l'icône d'un Écusson ou d'un autre objet (`icon` de `data/progression/passive_souvenirs.json`) : Capsule et Écusson du forain partagent le jeton, Verre fêlé et Bille irisée les lunettes, quatre objets le Plan de métro. Cible : une icône 32 × 32 et sa version 16 × 16 par objet, aucune icône partagée.
+Demande de Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sprites ». **S10a–S10c livrés le 12 octobre (§7.6) ; S10d reporté.** Aujourd'hui chacun des 34 objets du §3 prête l'icône d'un Écusson ou d'un autre objet (`icon` de `data/progression/passive_souvenirs.json`) : Capsule et Écusson du forain partagent le jeton, Verre fêlé et Bille irisée les lunettes, quatre objets le Plan de métro. Cible : une icône 32 × 32 et sa version 16 × 16 par objet, aucune icône partagée.
 
 ### 7.1 Règles de dessin
 
@@ -199,7 +199,7 @@ Demande de Raphaël : « il y a des nouveaux objets, il faudrait créer leurs sp
 
 1. ~~Conflits avec les Écussons~~ : cinq objets repensés, identités validées « à 100 % » et renommées (§7.6).
 2. ~~Rareté sur l'icône~~ : cadre seul.
-3. S10d (visuels en jeu) : expliqué à Raphaël le 12 octobre, décision en attente ; non lancé.
+3. S10d (visuels en jeu) : reporté par Raphaël le 12 octobre (DECISIONS §140) ; non lancé.
 
 ### 7.5 S10a — planche proposée, 12 octobre 2026
 

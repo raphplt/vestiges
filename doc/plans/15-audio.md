@@ -669,3 +669,7 @@ Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les q
 - **Réveil de la Faille :** G (`sfx_rift_wake`), joué par `RiftDirector` au réveil, ducking −4 dB pendant 2 s, gain visé −20 effectif.
 - Le contrôle de la banque a refusé un premier fichier du tir visé (117 ms de silence de tête), retiré.
 - Contrôles : `smoke audio music enemy_abilities` 4/4, dont un nouveau contrôle du départ calé du tir visé.
+
+## Correctif du 12 octobre — son des petits lieux
+
+Retour de Raphaël : pas de son en validant la cabine téléphonique, le wagonnet de la mine, etc. Les petits lieux (plan 22) passaient par `SmallPlaceUsed`, que l'`AudioManager` n'écoutait pas. Ils jouent désormais `sfx_poi_activate`, la même confirmation que les POI explorés ; aucune nouvelle entrée de banque. Contrôle automatique dans `SmallPlacesRegression` (une demande à l'usage, aucune sur un lieu épuisé). À écouter en jeu ; un son propre par lieu reste un besoin possible.

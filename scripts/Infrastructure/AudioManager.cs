@@ -809,6 +809,7 @@ public partial class AudioManager : Node
 		eb.GameStateChanged   += OnGameStateChanged;
 		eb.ChestOpened        += OnChestOpened;
 		eb.PoiExplored        += OnPoiExplored;
+		eb.SmallPlaceUsed     += OnSmallPlaceUsed;
 		eb.WeaponEquipped += OnWeaponEquipped;
 		eb.WeaponDropped += OnWeaponDropped;
 		eb.WeatherChanged     += OnWeatherChanged;
@@ -832,6 +833,7 @@ public partial class AudioManager : Node
 		eb.GameStateChanged   -= OnGameStateChanged;
 		eb.ChestOpened        -= OnChestOpened;
 		eb.PoiExplored        -= OnPoiExplored;
+		eb.SmallPlaceUsed     -= OnSmallPlaceUsed;
 		eb.WeaponEquipped -= OnWeaponEquipped;
 		eb.WeaponDropped -= OnWeaponDropped;
 		eb.WeatherChanged     -= OnWeatherChanged;
@@ -971,6 +973,9 @@ public partial class AudioManager : Node
 		if (rarity == "lore")
 			PlaySfx("sfx_artefact_trouve", 0f, -3f);
 	}
+
+	/// <summary>Petit lieu utilisé (cabine, wagonnet, puits…) : même confirmation qu'un POI exploré.</summary>
+	private void OnSmallPlaceUsed(string placeId, Vector2 position) => PlaySfx("sfx_poi_activate", 0.03f);
 
 	private void OnWeaponEquipped(string weaponId, int slotIndex)
 	{

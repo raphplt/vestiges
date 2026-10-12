@@ -69,6 +69,15 @@ public partial class SmallPlacesRegression : Node2D
 			player.TakeDamage(40f);
 			float hp = player.CurrentHp;
 			float maxBefore = player.EffectiveMaxHp;
+			// Le son de confirmation part à l'usage, pas à une seconde tentative sur un lieu épuisé.
+			AudioManager audio = GetNode<AudioManager>("/root/AudioManager");
+			int confirmations = 0;
+			void OnSound(string key, AudioManager.SoundOutcome outcome)
+			{
+				if (key == "sfx_poi_activate")
+					confirmations++;
+			}
+			audio.SoundRequested += OnSound;
 			well.Interact(player);
 			// Le Repère du puits ajoute aussi des PV max, et autant de PV (plan 24 D3).
 			float waymarkHp = player.EffectiveMaxHp - maxBefore;
@@ -77,6 +86,8 @@ public partial class SmallPlacesRegression : Node2D
 			well.Interact(player);
 			Check(healed && Mathf.IsEqualApprox(player.CurrentHp, after) && !well.CanInteract,
 				$"Puits : soigne 15 % des PV max, une seule fois ({hp:0.0} → {after:0.0}, PV max {maxBefore:0} → {player.EffectiveMaxHp:0})");
+			audio.SoundRequested -= OnSound;
+			Check(confirmations == 1, $"Puits : un son de confirmation à l'usage, aucun sur le lieu épuisé ({confirmations})");
 
 			SmallPlace vein = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "crystal_vein");
 			int before = essence.CurrentEssence;
