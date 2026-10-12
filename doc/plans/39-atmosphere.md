@@ -289,3 +289,15 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 **Vérifié :** `tools/test_audio.sh` vert, avec 4 nouveaux contrôles de réverbération (entrée en fondu, niveau complet, retour au sec et effet coupé, rien au Hub) ; les contrôles existants de la forêt passent sans changement de comportement (`_birdTimer` renommé `_accentTimer`, régression mise à jour). `tools/test_catalogs.sh` vert (4 refus du bloc `ambience`), `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
 
 **À écouter :** la réverbération de la carrière et de la ville, sur les coups et les cris.
+
+### A4b livré — planche d'écoute, 12 octobre 2026
+
+`~/.local/share/vestiges-audio/2026-10-12/ambiances/index.html`, hors dépôt : 13 besoins, 39 candidats, choix gardés dans le navigateur et export `choix-ambiances-2026-10-12.json`.
+
+- **Fonds en boucle** (24 s, fondu enchaîné de 1,5 s à la reprise) : ville (vent entre les immeubles), marais (tourbières, mare, grenouilles), carrière (grottes, vent en volume clos), champs (vent dans les cultures, insectes et chaleur), Hub (feu de cheminée ou de branches, pour A4c).
+- **Sons ponctuels** : métal qui grince ou bat et chute lointaine (ville), bulles et grenouille isolée (marais), goutte-à-goutte et pierre qui roule (carrière), corbeaux et insecte (champs).
+- Sources : BigSoundBank, Joseph SARDIN, CC0. La page de chaque prise est archivée dans `sources/` avec l'empreinte du fichier. `prepare.py` régénère tout ; `manifest.json` garde source, licence, point de coupe et empreintes par candidat.
+- Découpes faites **par mesure, sans écoute** : la fenêtre de fond la plus régulière (crêtes pénalisées), l'événement ponctuel le plus net, prolongé tant qu'il reprend dans les 0,3 s. Une voix ou un choc peut s'y être glissé ; la page invite à le signaler.
+- Niveaux : fonds à −26 dB RMS (grottes à −28 et −30, deux feux à −33 : crépitements tout en crêtes), sons ponctuels à −20 dB RMS au plus, crête ≤ −6 dBFS partout. Un doublon voulu : la même chute de pierres sert à la ville et à la carrière.
+
+**Suite :** Raphaël écoute et exporte ses choix ; A4c les intègre (banque, blocs `ambience`, fondu enchaîné entre fonds, ambiance du Hub).
