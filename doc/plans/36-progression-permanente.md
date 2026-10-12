@@ -1,5 +1,105 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+## Reprise visuelle M11 — gains, niveaux et remboursement, 12 octobre 2026
+
+Raphaël demande de retirer « Effet actuel → suivant », le bleu et les
+comparaisons `x → y` de la fiche, au profit de gains `+1 …`. Les rangs de
+la liste deviennent des points colorés, un par niveau possible. « Tout
+rendre » doit être éloigné du retour et ouvrir une confirmation. Une
+icône doit identifier les Vestiges.
+
+Lot unique :
+- Fiche : gain du prochain achat en texte clair, sans flèche ni légende
+  redondante ; au maximum, bonus total acquis et achat désactivé.
+- Points de rang nets, vides puis dorés à l'achat, issus du nombre de
+  niveaux du catalogue ; actualisés aussi au remboursement.
+- « Tout rendre » en pied de liste, aligné en hauteur avec les actions de
+  fiche ; confirmation modale, montant effectivement versé, Annuler
+  focalisé par défaut, Échap/B annulent sans fermer le Campement.
+- Icône dorée des Vestiges au rendu natif des objets, dans solde et prix.
+- Vérifier achat, annulation et confirmation au clavier/manette, retour
+  du focus et sauvegarde ; captures normal/dev et français/anglais en
+  720p/1080p, build et suites ciblées.
+
+**M11 livré et vérifié le 12 octobre 2026.** Aucune courbe de prix ni aucun
+effet de gameplay modifié.
+
+- Fiche : légende et flèches retirées, gain clair `+1 emplacement d'arme`,
+  `+3 places dans le sac`, `+4 % dégâts` ; total acquis au maximum.
+  La régénération s'exprime en PV/min, comme la fiche des stats.
+- Points natifs dessinés par `CampRankPips`, un par niveau du catalogue,
+  remplissage doré à l'achat et retour au vide au remboursement ; compte
+  numérique conservé dans la fiche, et disponible en infobulle de liste.
+- Action globale au pied gauche, alignée avec Acheter/Rendre à droite.
+  Dialogue dans la matière des panneaux, voile couvrant aussi Retour,
+  Annuler focalisé ; flèches et Tab restent dans le dialogue, Échap/B le
+  ferment. Montant annoncé par `GetCampRefundAmount`, somme réellement
+  payée ; la mutation et l'écriture n'interviennent qu'après confirmation.
+- Icône des Vestiges en 32×32, fragment de sceau doré au même rendu que les
+  objets (`python3 -m tools.sprites.ui.currency`), utilisée au solde, au
+  prix et dans la confirmation. Régénération identique pixel pour pixel.
+- Build du dossier partagé : zéro warning, zéro erreur. Quatre suites
+  vertes sur copie isolée (`smoke`, `camp`, `menu_navigation`, `ui_art`),
+  aucune modification de source pendant les contrôles ; navigation :
+  37 assertions, dont annulation par bouton, Échap/B, boucle Tab, achats,
+  montant annoncé, confirmation unique, mise à jour des points et focus.
+  Preuves : `/tmp/vestiges-m11-validation/`.
+- Captures inspectées : profil normal, rangs partiels, tous les gains et
+  confirmation en français à 720p ; Campement à 1080p ; profil dev et
+  rangs maximaux en anglais à 720p.
+
+Captures : [Campement 1080p](planches/36-M11-campement-1080.png) et
+[confirmation 720p](planches/36-M11-confirmation-720.png).
+
+## Reprise visuelle M10 — Pixel Operator dans tout le jeu, 12 octobre 2026
+
+Raphaël valide la police du Campement et demande de l'appliquer partout.
+Lot unique :
+- Centraliser les variantes normale et grasse de Pixel Operator dans
+  `UITheme`, avec le rendu sans anticrénelage apprécié sur le Campement.
+- Reprendre le thème global et les rôles des menus ; retirer la couche
+  temporaire `CampTypography` devenue redondante.
+- Utiliser la variante native 8 px de la même famille pour les petits
+  textes du HUD et du monde ; migrer aussi plaques ennemies et dégâts.
+- Vérifier les textes longs et les alignements dans les pages du Hub,
+  paramètres, choix, pause et bilan, en 720p/1080p et en vraie run ; build,
+  smoke et suites d'interface avant de cocher la roadmap.
+
+**M10 livré et vérifié le 12 octobre 2026.**
+
+- Pixel Operator normale et grasse centralisées dans `UITheme`, sans
+  anticrénelage, y compris pour les contrôles héritant du thème global.
+  La couche d'essai `CampTypography` et son UID sont retirés.
+- Rôles du Campement repris dans tous les menus ; petits textes du HUD,
+  interactions et plaques ennemies en variante native 8 px. Dégâts, stèles,
+  lieux et échos utilisent la même famille ; aucune référence à Saira
+  ne reste dans les scripts, scènes ou thème actif.
+- Fiche de stats : espace entre nom et valeur, repli sans couper les noms
+  en plein mot et largeur bornée des valeurs longues. Au level-up,
+  colonne de stats de 380 px et listes latérales en 24 px ; les cartes
+  conservent leurs corps de 32 px.
+- Build du dossier partagé : zéro warning et zéro erreur. Copie isolée :
+  dix suites vertes (`smoke`, `camp`, `menu_navigation`, `ui_art`,
+  `choice_screen`, `inventory`, `loading`, `small_places`, `weapons`,
+  `quests`), puis trois suites ciblées après l'ajustement des colonnes
+  (`choice_screen`, `inventory`, `menu_navigation`), sources inchangées
+  pendant les contrôles. Preuves : `/tmp/vestiges-m10-validation/` et
+  `/tmp/vestiges-m10-layout-validation/`.
+- Captures inspectées en 720p : accueil, Personnages, Collection, quête
+  longue, Paramètres, HUD, pause et objets, Journal, level-up et bilan
+  chargé. En 1080p : Campement anglais, Faille et pause avec Oubli ;
+  chargement anglais en 720p. Les parcours de pause et de relance du bilan
+  conservent leurs assertions fonctionnelles.
+- Capture d'une plaque d'élite inspectée en 1080p. Cette capture de
+  `--perk-scene priority` ne valide pas le perk : son repère est déclaré
+  `False`, et le lanceur termine avec 1 car il cherche un RESULT
+  `RunObservation` alors que ce mode écrit `Perks`. Aucun résultat de
+  gameplay du perk n'est revendiqué dans ce lot typographique.
+
+Captures de revue : [Personnages 720p](planches/36-M10-personnages-720.png),
+[level-up 720p](planches/36-M10-levelup-720.png) et
+[Faille 1080p](planches/36-M10-faille-1080.png).
+
 ## Reprise visuelle M9 — alignements et retour, 12 octobre 2026
 
 Pendant la publication de M8, Raphaël signale que le bouton Retour ne doit

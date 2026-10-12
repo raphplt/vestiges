@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -460,3 +460,66 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 - les portées des bagages et du panneau autour de la chaussée restent des constantes de géométrie dans le placeur, liées à la taille des sprites.
 
 **À juger par Raphaël :** l'encombrement, la fréquence des scènes, la lisibilité du panneau, le sens de fuite commun.
+
+## 17. C1 livré, radios et téléphones abandonnés — 12 octobre 2026
+
+**Choix de Raphaël avant le lot** ([DECISIONS §143](DECISIONS.md)) :
+- voix synthétisée et traitée en poste de radio ;
+- son seul, rien à l'écran ;
+- radios seulement dans les embouteillages de B3 ;
+- une cabine sur deux sonne.
+
+**Sons** (`tools/generate_radio_sounds.py`, déterministe, dans `assets/audio/sfx/radio/`) :
+- deux messages d'évacuation en 23 fichiers, un mot ou un groupe de mots par fichier (un mot lié au suivant reste avec lui : « grands axes »). Voix espeak-ng, seul moteur disponible ici, passée dans un poste : bande étroite, saturation douce, flottement de réception. Un enregistrement de Raphaël pourra remplacer les fichiers sous les mêmes noms ;
+- texte : « Avis à la population. Ordre d'évacuation immédiate. Quittez la ville par les grands axes. Ne revenez pas en arrière. » puis « Ceci n'est pas un exercice. Rejoignez les points de rassemblement. N'emportez que le nécessaire. Ne vous retournez pas. » ;
+- grésillement en boucle de 6 s sans raccord, trois bips d'alerte avant le message, sonnerie à deux cloches frappées (1,5 s, puis 3,5 s de silence).
+
+**Radios** :
+- dessinées sur le capot de la dernière voiture de la file (`prop_exodus_car_<peinture>_<sens>_radio`, 12 sprites, poste sombre sur la peinture crème) ;
+- part réglée par `radio_share` dans `exodus.json` (0,35), répartie à intervalles réguliers : 5 à 6 radios par carte ;
+- boucle : bip, premier message, second message, 6 s de silence. On arrive au milieu du message, pas à son début ;
+- **oubli** : chaque mot se perd avec une chance qui monte quand la mémoire de la zone descend (tous entendus au-dessus de 0,75, aucun sous 0,2) ; le grésillement monte à sa place. Au Néant, la radio se tait.
+
+**Cabines** : une cabine activable sur deux (petit lieu `phone_booth`) sonne, entendue jusqu'à 760 px. Elle se tait pour de bon quand le joueur arrive à 110 px, contrôlé à chaque image pour qu'un dash ne traverse pas la zone sans la couper. La cabine garde son usage.
+
+**Moteur** (`World/AbandonedVoicesDirector`, réglages dans `data/world/abandoned_voices.json`) :
+- un seul gestionnaire ; deux paires de lecteurs spatialisés (`AudioStreamPlayer2D`, bus des sons du monde, donc réverbération du biome et assourdissement à la mort) prêtées aux sources audibles les plus proches ;
+- choix des sources 4 fois par seconde, sur une douzaine de sources par carte. Une source déjà entendue garde son lecteur face à une voisine à peine plus proche ;
+- muet hors de la run (Hub, mort) et en pause.
+
+**Relecture appliquée** :
+- silence de la cabine contrôlé à chaque image ;
+- marge avant de reprendre un lecteur ;
+- atténuation, écart de hauteur entre postes et identifiant de la cabine passés en JSON.
+
+**Mesures** :
+- `tools/measure_run.sh`, 8 graines : 5 radios par carte (6 sur une graine), 6 cabines sur 12 qui sonnent ;
+- `--listen-voices` (nouveau mode de `RunObservation`), seed 221092026 :
+
+| Étape | Lecteurs | Mots joués | Mots perdus |
+|---|---|---|---|
+| Radio à 700 px (hors portée) | 0 | 0 | 0 |
+| Radio à 420 px | 1 | 13 | 0 |
+| Radio à 200 px | 1 | 12 | 0 |
+| Radio à 90 px | 1 | 11 | 0 |
+| Radio, zone ramenée à 0,45 de mémoire | 1 | 8 | 8 |
+| Cabine à 900 px (hors portée) | 0 | — | — |
+| Cabine à 600 px, puis 300 px | 1 | — | — |
+| Cabine à 60 px | 0, tue | — | — |
+| Retour à 300 px | 0, reste muette | — | — |
+
+**Vérifié :**
+- `tools/test_catalogs.sh` vert (316 contrôles) : réglages du dépôt acceptés, boucle de 24 sons, 40 sprites de l'exode présents ; son absent, phrase vide, mémoires inversées, téléphone muet d'avance, niveau qui sature, écart de hauteur excessif et clé inconnue refusés ;
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert ;
+- planche des voitures à radio regardée : poste lisible avec son antenne sur les quatre sens.
+
+**Non vérifié :**
+- **l'écoute** : rien n'a été écouté par l'agent. Niveaux posés d'après les autres sons du monde.
+- les voitures à radio en capture de run.
+
+**À écouter par Raphaël**, hors dépôt :
+- `~/.local/share/vestiges-audio/2026-10-12/c1-radio/run.mp4` : la radio puis la cabine en vraie run, aux distances du tableau ;
+- `~/.local/share/vestiges-audio/2026-10-12/c1-apercu/radio-intacte-puis-oubliee.wav` : la boucle entière intacte, à demi oubliée, puis presque effacée ;
+- `sonnerie-cabine.wav` dans le même dossier.
+
+À juger : la voix (synthèse acceptable ou enregistrement), le niveau, la portée, la sonnerie.

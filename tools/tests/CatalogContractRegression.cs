@@ -39,6 +39,7 @@ public partial class CatalogContractRegression : Node
             CheckWeather();
             CheckFauna();
             CheckExodus();
+            CheckAbandonedVoices();
             GD.Print($"[CatalogContractRegression] RESULT failures=0 checks={_checks}");
             GetTree().Quit(0);
         }
@@ -665,7 +666,10 @@ public partial class CatalogContractRegression : Node
             sprites.Add($"sign_{direction}");
             sprites.Add($"arrow_{direction}");
             foreach (string paint in new[] { "red", "teal", "cream" })
+            {
                 sprites.Add($"car_{paint}_{direction}");
+                sprites.Add($"car_{paint}_{direction}_radio");
+            }
         }
         int missing = sprites.FindAll(id => !ResourceLoader.Exists($"res://assets/props/urban_ruins/prop_exodus_{id}.png")).Count;
         Check(missing == 0, $"exode : {sprites.Count} sprites présents ({missing} absents)");
@@ -682,6 +686,32 @@ public partial class CatalogContractRegression : Node
             bool refused = !ExodusConfig.TryParse(Mutated(valid, mutate), out ExodusConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"exode refusé ({label}) : {message}");
+        }
+    }
+
+    private void CheckAbandonedVoices()
+    {
+        string valid = FileAccess.GetFileAsString("res://data/world/abandoned_voices.json");
+        Func<string, bool> exists = path => ResourceLoader.Exists(path);
+        bool accepted = AbandonedVoicesConfig.TryParse(valid, exists, out AbandonedVoicesConfig config, out string error);
+        // Bip, puis les 23 mots des deux messages ; le dernier mot porte le silence de fin de boucle.
+        Check(accepted && config.RadioLoop.Count == 24 && !config.RadioLoop[0].Word
+            && config.RadioLoop[^1].GapAfterS == 6f, $"radios et téléphones du dépôt acceptés {error}");
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("son absent", root => root["radio"]!["messages"]![0]![0]![0] = "radio_inconnu", "radio_inconnu"),
+            ("phrase vide", root => root["radio"]!["messages"]![1]![2] = new JsonArray(), "liste non vide"),
+            ("mémoire inversée", root => root["radio"]!["memory_silent"] = 0.9, "memory_silent"),
+            ("téléphone muet d'avance", root => root["phone"]!["silence_px"] = 900, "silence_px"),
+            ("niveau qui sature", root => root["phone"]!["ring_db"] = 3, "0 au plus"),
+            ("voix méconnaissable", root => root["radio"]!["pitch_jitter"] = 0.4, "pitch_jitter"),
+            ("clé inconnue", root => root["radio"]!["volume"] = 1, "volume"),
+        };
+        foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
+        {
+            bool refused = !AbandonedVoicesConfig.TryParse(Mutated(valid, mutate), exists, out AbandonedVoicesConfig refusedConfig, out string message);
+            Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
+                $"radios et téléphones refusés ({label}) : {message}");
         }
     }
 

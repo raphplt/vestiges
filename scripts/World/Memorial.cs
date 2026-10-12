@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -78,8 +79,7 @@ public partial class Memorial : StaticBody2D, IInteractable
             Visible = false,
             TextureFilter = TextureFilterEnum.Nearest,
         };
-        _status.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/pixel-operator/PixelOperator8.ttf"));
-        _status.AddThemeFontSizeOverride("font_size", 8);
+        UITheme.SetCompactText(_status, 8);
         _status.AddThemeColorOverride("font_color", ColumnColors.Light);
         AddChild(_status);
     }

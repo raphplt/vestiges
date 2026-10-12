@@ -96,7 +96,7 @@ public static class RunSummaryPanels
     }
 
     /// <summary>Case du build : icône, cadre coloré selon la famille, niveau en coin. Vide : cadre éteint.</summary>
-    public static Control Slot(string iconPath, int level, Color frame, float iconSize = IconSize)
+    public static Control Slot(string iconPath, int level, Color frame, float iconSize = IconSize, string rarityId = null)
     {
         PanelContainer slot = new()
         {
@@ -104,7 +104,7 @@ public static class RunSummaryPanels
             SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        slot.AddThemeStyleboxOverride("panel", MenuSkin.Choice(frame));
+        slot.AddThemeStyleboxOverride("panel", rarityId != null ? MenuSkin.ItemCard(rarityId) : MenuSkin.Choice(frame));
         if (!string.IsNullOrEmpty(iconPath) && ResourceLoader.Exists(iconPath))
         {
             slot.AddChild(new TextureRect

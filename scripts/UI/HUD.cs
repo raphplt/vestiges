@@ -289,7 +289,7 @@ public partial class HUD : CanvasLayer
     private static Label MakeLabel(string text, int size, Color color, int outline = 3)
     {
         Label label = new() { Text = text, MouseFilter = Control.MouseFilterEnum.Ignore };
-        label.AddThemeFontSizeOverride("font_size", size);
+        UITheme.SetCompactText(label, size);
         label.AddThemeColorOverride("font_color", color);
         if (outline > 0)
         {

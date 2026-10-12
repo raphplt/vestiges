@@ -33,7 +33,11 @@ public partial class HubCollectionPanel : MarginContainer
     private HBoxContainer _tabs;
     private Button _activeTab;
     private GridContainer _grid;
+    private HBoxContainer _sortRow;
+    private ItemSortSelector _itemSort;
     private TextureRect _detailIcon;
+    private PanelContainer _detailIconFrame;
+    private Label _detailRarity;
     private Label _detailName;
     private Label _detailState;
     private Label _detailText;
@@ -79,6 +83,14 @@ public partial class HubCollectionPanel : MarginContainer
         column.AddChild(_tabs);
         column.AddChild(new ColorRect { Color = new Color(UITheme.GoldDim, 0.45f), CustomMinimumSize = new Vector2(0f, 4f) });
 
+        _sortRow = new HBoxContainer { Visible = false };
+        _sortRow.AddThemeConstantOverride("separation", 16);
+        _sortRow.AddChild(UITheme.MakeLabel(Tr("ITEM_SORT_LABEL"), TextRole.Body, UITheme.TextDim));
+        _itemSort = new ItemSortSelector();
+        _sortRow.AddChild(_itemSort);
+        column.AddChild(_sortRow);
+        ItemSort.Changed += OnItemSortChanged;
+
         HBoxContainer body = new() { SizeFlagsVertical = SizeFlags.ExpandFill };
         body.AddThemeConstantOverride("separation", 40);
         column.AddChild(body);
@@ -112,8 +124,11 @@ public partial class HubCollectionPanel : MarginContainer
             TextureFilter = TextureFilterEnum.Nearest,
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
         };
-        detail.AddChild(_detailIcon);
+        _detailIconFrame = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ShrinkBegin, TextureFilter = TextureFilterEnum.Nearest };
+        _detailIconFrame.AddChild(_detailIcon);
+        detail.AddChild(_detailIconFrame);
         _detailName = AddDetailLabel(detail, _strongFont, TextRole.Title, UITheme.TextLight);
+        _detailRarity = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.TextLight);
         _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
         // Règles et chiffres toujours affichés : souvent une ligne, jamais derrière un bouton (DECISIONS §117).
@@ -198,6 +213,7 @@ public partial class HubCollectionPanel : MarginContainer
     private Control RebuildGrid(string focusId = null)
     {
         MenuSkin.Clear(_grid);
+        _sortRow.Visible = _tab == "passives";
         List<Entry> entries = _tab switch
         {
             "weapons" => WeaponEntries(),
@@ -205,6 +221,9 @@ public partial class HubCollectionPanel : MarginContainer
             "badges" => PassiveEntries(true),
             _ => PassiveEntries(false),
         };
+        if (_tab == "passives")
+            entries = ItemSort.Order(entries, entry => PassiveSouvenirDataLoader.Get(entry.Id)?.Rarity,
+                entry => entry.Name, entry => entry.Unlocked);
         int unlocked = 0;
         int index = 0;
         Control first = null;
@@ -218,7 +237,7 @@ public partial class HubCollectionPanel : MarginContainer
             _grid.AddChild(tile);
             // Manette : du premier rang, « haut » remonte aux onglets ; des onglets, « bas » redescend.
             if (index++ < Columns && _activeTab != null)
-                tile.FocusNeighborTop = _activeTab.GetPath();
+                tile.FocusNeighborTop = (_sortRow.Visible ? (Control)_itemSort : _activeTab).GetPath();
             first ??= tile;
             if (focused == null && entry.Id == focusId)
             {
@@ -231,8 +250,10 @@ public partial class HubCollectionPanel : MarginContainer
             foreach (Node tab in _tabs.GetChildren())
             {
                 if (!tab.IsQueuedForDeletion())
-                    ((Control)tab).FocusNeighborBottom = first.GetPath();
+                    ((Control)tab).FocusNeighborBottom = _sortRow.Visible ? _itemSort.GetPath() : first.GetPath();
             }
+            _itemSort.FocusNeighborTop = _activeTab.GetPath();
+            _itemSort.FocusNeighborBottom = (focused ?? first).GetPath();
         }
         _count.Text = $"{unlocked} / {entries.Count} disponibles";
         if (focused != null)
@@ -245,9 +266,17 @@ public partial class HubCollectionPanel : MarginContainer
         return first;
     }
 
+    private void OnItemSortChanged()
+    {
+        if (IsVisibleInTree() && _tab == "passives")
+            RebuildGrid(ExaminedEntryId);
+    }
+
+    public override void _ExitTree() => ItemSort.Changed -= OnItemSortChanged;
+
     private Button MakeTile(Entry entry)
     {
-        Button tile = new() { CustomMinimumSize = new Vector2(TileSize, TileSize), FocusMode = FocusModeEnum.All };
+        Button tile = new() { Name = entry.Id, CustomMinimumSize = new Vector2(TileSize, TileSize), FocusMode = FocusModeEnum.All };
         tile.TextureFilter = TextureFilterEnum.Nearest;
         string skin = entry.Unlocked || entry.Preview ? "ui_card_normal.png" : "ui_card_locked.png";
         StyleBoxTexture normal = UITheme.CreateNinePatch(UITheme.LoadTex(UITheme.MenusPath + skin), 4, 4, 4, 4);
@@ -276,6 +305,7 @@ public partial class HubCollectionPanel : MarginContainer
         PassiveSouvenirData item = _tab == "passives" ? PassiveSouvenirDataLoader.Get(entry.Id) : null;
         if (item != null && !item.IsBadge)
         {
+            MenuSkin.StyleItemButton(tile, item.Rarity, !entry.Unlocked);
             TextureRect rarity = new() { Texture = RarityArt.Icons(RarityArt.Rank(item.Rarity), 12)[0],
                 Position = new Vector2(6, 6), Size = new Vector2(12, 12), MouseFilter = MouseFilterEnum.Ignore };
             tile.AddChild(rarity);
@@ -308,6 +338,12 @@ public partial class HubCollectionPanel : MarginContainer
         _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;
         _detailName.Text = entry.Name;
         PassiveSouvenirData item = _tab == "passives" ? PassiveSouvenirDataLoader.Get(entry.Id) : null;
+        bool hasRarity = item != null && !item.IsBadge;
+        _detailIconFrame.AddThemeStyleboxOverride("panel", hasRarity
+            ? MenuSkin.ItemCard(item.Rarity, locked: !entry.Unlocked) : new StyleBoxEmpty());
+        _detailRarity.Visible = hasRarity;
+        _detailRarity.Text = hasRarity ? ItemPresentation.RarityText(item) : "";
+        _detailRarity.AddThemeColorOverride("font_color", hasRarity ? ItemPresentation.Color(item) : UITheme.TextLight);
         _detailName.AddThemeColorOverride("font_color", item != null && !item.IsBadge ? ItemPresentation.Color(item) : UITheme.TextLight);
         _detailState.Text = entry.Unlocked ? "Disponible en run" : entry.Preview ? "À venir" : "Pas encore disponible";
         _detailText.Text = entry.Description;
@@ -352,7 +388,7 @@ public partial class HubCollectionPanel : MarginContainer
                 stats = string.Format(TranslationServer.Translate("COLLECTION_BADGE_RULE"), passive.Subtitle,
                     passive.MaxLevel, InventoryConfig.BadgeSoftCapLevel);
             else
-                stats = RarityPalette.DisplayName(passive.Rarity) + " · " + (passive.HasCopyLimit
+                stats = (passive.HasCopyLimit
                     ? string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies)
                     : TranslationServer.Translate("COLLECTION_ITEM_UNLIMITED").ToString());
             bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
@@ -361,9 +397,8 @@ public partial class HubCollectionPanel : MarginContainer
                 condition = "Déblocage à venir.";
             entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.IsBadge ? passive.RuleText() : ItemPresentation.Describe(passive), stats, unlocked, condition));
         }
-        entries = entries.OrderByDescending(entry => entry.Unlocked).ToList();
         if (badges)
-            return entries;
+            return entries.OrderByDescending(entry => entry.Unlocked).ToList();
         foreach (CollectionArtDataLoader.Entry art in CollectionArtDataLoader.Items)
             if (art.World)
                 entries.Add(new Entry(art.Id, art.Name, art.Icon, "Objet du monde", "", false,

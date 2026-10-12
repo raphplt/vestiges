@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using System.Linq;
+using System.Globalization;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
@@ -61,6 +63,7 @@ public partial class MenuNavigationRegression : Node
             Control returnFocus = GetViewport().GuiGetFocusOwner();
             settings.Open(); await Frames(2); settings.Close();
             Check(GetViewport().GuiGetFocusOwner() == returnFocus, "Paramètres restitue le focus");
+            await CheckItemSorting(hub);
             hub.QueueFree(); await Frames(2);
             manager.ChangeState(GameManager.GameState.Death);
             manager.OpenCharacterSelection = true;
@@ -115,6 +118,11 @@ public partial class MenuNavigationRegression : Node
         await Press("ui_accept");
         Check(MetaSaveManager.GetCampRank("camp_weapon_slots") == 1 && MetaSaveManager.GetVestiges() == 600,
             "Acheter dans la fiche donne un rang et prélève son prix");
+        CampRankPips rackPips = rack.FindChild("RankPips", true, false) as CampRankPips;
+        Check(rackPips is { Rank: 1, MaxRank: 2 }, "Le Râtelier remplit un point parmi ses deux niveaux");
+        Check(Field<Label>(camp, "_detailEffect").Text == TranslationServer.Translate("CAMP_WEAPON_SLOTS_DESC").ToString().Replace("{0}", "1")
+            && Field<Label>(camp, "_detailEffect").GetThemeColor("font_color") == UITheme.TextLight,
+            "La fiche affiche le gain d'un achat en texte clair, sans comparaison");
         Check(Field<Label>(camp, "_detailRank").Text == "1/2", "Le compteur de fiche se met à jour sans « Rang »");
         pockets.GrabFocus(); await Frames(2);
         Check(Field<Label>(camp, "_detailName").Text == TranslationServer.Translate("CAMP_POCKETS"),
@@ -126,17 +134,99 @@ public partial class MenuNavigationRegression : Node
             "Rendre dans la fiche rembourse uniquement l'amélioration choisie");
         Check(GetViewport().GuiGetFocusOwner() == pockets, "Dernier rang rendu : focus restitué à la ligne examinée");
         Button all = Field<Button>(camp, "_refundAll");
+        Check(all.GetGlobalRect().Position.Y > camp.GetGlobalRect().GetCenter().Y
+            && all.GetGlobalRect().End.X < back.GetGlobalRect().Position.X,
+            "Tout rendre est au bas de la liste, éloigné du retour");
         all.GrabFocus(); await Press("ui_accept");
+        Check(Field<Control>(camp, "_confirmation")?.IsVisibleInTree() == true
+            && MetaSaveManager.GetCampRefundAmount() == 400 && MetaSaveManager.GetVestiges() == 600
+            && MetaSaveManager.GetCampRank("camp_weapon_slots") == 1,
+            "Ouvrir la confirmation annonce le remboursement sans modifier le Campement");
+        Check(GetViewport().GuiGetFocusOwner() == Field<Button>(camp, "_confirmCancel"),
+            "Annuler est focalisé par défaut, un second appui ne rembourse pas");
+        await Press("ui_accept");
+        Check(Field<Control>(camp, "_confirmation") == null && MetaSaveManager.GetVestiges() == 600
+            && MetaSaveManager.GetCampRank("camp_weapon_slots") == 1 && GetViewport().GuiGetFocusOwner() == all,
+            "Annuler garde les rangs et rend le focus à Tout rendre");
+        await Press("ui_accept"); await Press("ui_cancel");
+        Check(Field<Control>(camp, "_confirmation") == null && camp.IsVisibleInTree()
+            && MetaSaveManager.GetCampRank("camp_weapon_slots") == 1,
+            "Échap/B ferme la confirmation sans quitter le Campement ni rembourser");
+        await Press("ui_accept");
+        await Tab();
+        Check(GetViewport().GuiGetFocusOwner() == Field<Button>(camp, "_confirmRefund"),
+            "Tab atteint la confirmation du remboursement");
+        await Tab();
+        Check(GetViewport().GuiGetFocusOwner() == Field<Button>(camp, "_confirmCancel"),
+            "Tab reste dans le dialogue");
+        await Press("ui_right"); await Press("ui_accept");
         Check(MetaSaveManager.GetVestiges() == 1000 && MetaSaveManager.GetCampRank("camp_weapon_slots") == 0,
-            "Tout rendre rembourse aussi les autres améliorations");
+            "Confirmer rembourse les améliorations une seule fois");
+        Check(rackPips.Rank == 0 && MetaSaveManager.GetCampRefundAmount() == 0,
+            "Après remboursement, les points et le montant remboursable reviennent à zéro");
         Check(GetViewport().GuiGetFocusOwner() == pockets, "Tout rendre conserve la sélection et un focus utilisable");
         back.EmitSignal(BaseButton.SignalName.Pressed);
         await Frames(2);
         Check(!camp.IsVisibleInTree(), "Le retour de l'en-tête ferme la page du Campement");
     }
 
+    private async Task CheckItemSorting(HubScreen hub)
+    {
+        Type stateType = typeof(HubScreen).GetNestedType("HubState", BindingFlags.NonPublic)!;
+        typeof(HubScreen).GetMethod("OpenPage", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .Invoke(hub, new[] { Enum.Parse(stateType, "Collection") });
+        HubCollectionPanel collection = Field<HubCollectionPanel>(hub, "_collectionPanel");
+        collection.Refresh("allumette_humide", "passives");
+        await Frames(2);
+        GridContainer grid = Field<GridContainer>(collection, "_grid");
+        ItemSortSelector sort = Field<ItemSortSelector>(collection, "_itemSort");
+        Check(ItemSort.Mode == ItemSortMode.RarityAscending && sort.ItemCount == 4,
+            "Objets : rareté croissante par défaut et quatre options de tri");
+        ((Control)grid.GetChild(0)).GrabFocus();
+        await Press("ui_up");
+        Check(GetViewport().GuiGetFocusOwner() == sort, "Haut depuis la première rangée atteint le tri");
+        string examined = collection.ExaminedEntryId;
+        foreach (ItemSortMode mode in Enum.GetValues<ItemSortMode>())
+        {
+            sort.EmitSignal(OptionButton.SignalName.ItemSelected, (long)mode);
+            await Frames(2);
+            PassiveSouvenirData[] items = grid.GetChildren().Select(tile => PassiveSouvenirDataLoader.Get(tile.Name))
+                .Where(item => item != null).ToArray();
+            if (mode is ItemSortMode.RarityAscending or ItemSortMode.RarityDescending)
+            {
+                int[] ranks = items.Select(item => RarityArt.Rank(item.Rarity)).ToArray();
+                Check(ranks.Zip(ranks.Skip(1), (a, b) => mode == ItemSortMode.RarityAscending ? a <= b : a >= b).All(ordered => ordered),
+                    $"{mode} : tous les rangs restent groupés, verrouillés compris");
+            }
+            else if (mode == ItemSortMode.Name)
+            {
+                StringComparer names = StringComparer.Create(CultureInfo.GetCultureInfo("fr"), true);
+                Check(items.Select(item => item.Name).SequenceEqual(items.Select(item => item.Name).OrderBy(name => name, names)),
+                    "Le tri par nom respecte l'alphabet français");
+            }
+            else
+                Check(items.Select(item => item.Id).SequenceEqual(PassiveSouvenirDataLoader.GetAll().Where(item => !item.IsBadge).Select(item => item.Id)),
+                    "Ordre initial : ordre du catalogue restauré");
+            Check(collection.ExaminedEntryId == examined && GetViewport().GuiGetFocusOwner() == sort,
+                "Changer de tri conserve la fiche examinée et le focus du sélecteur");
+        }
+        collection.Refresh("arc", "weapons");
+        Check(!sort.IsVisibleInTree(), "Le sélecteur d'objets est absent des armes sans rareté");
+        collection.Refresh(examined, "passives");
+        Check(sort.Selected == (int)ItemSortMode.Original && collection.ExaminedEntryId == examined,
+            "Revenir aux objets conserve le tri et la fiche");
+        ItemSort.Select(ItemSortMode.RarityAscending);
+    }
+
     private static T Field<T>(object owner, string name) => (T)owner.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(owner);
     private async Task Frames(int count) { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
+    private async Task Tab()
+    {
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Tab, Pressed = true });
+        await Frames(1);
+        GetViewport().PushInput(new InputEventKey { Keycode = Key.Tab, Pressed = false });
+        await Frames(2);
+    }
     private async Task Press(string action)
     {
         Input.ParseInputEvent(new InputEventAction { Action = action, Pressed = true });

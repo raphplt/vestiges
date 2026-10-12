@@ -10,7 +10,7 @@ namespace Vestiges.UI;
 /// Accueil entre les runs : un camp vivant où veillent les personnages débloqués.
 /// Partir ouvre la sélection du personnage ; le camp reste un décor, les catalogues sont reliés. Le Campement dépense les
 /// Vestiges en progression permanente (plan 36).
-/// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Saira (lisibilité, retour du 24 septembre).
+/// Espace de conception 1920×1080, au grain ×4 de la peinture du camp ; texte en Pixel Operator (retour du 12 octobre).
 /// </summary>
 public partial class HubScreen : Control
 {
@@ -371,13 +371,12 @@ public partial class HubScreen : Control
 		heading.Name = "PageTitle";
 		heading.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 		heading.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-		if (camp) CampTypography.Apply(heading, TextRole.Title, true);
 		header.AddChild(heading);
 		Button backButton = MenuSkin.Button(Tr("UI_MENU_BACK"));
 		backButton.Name = "PageBack";
 		backButton.CustomMinimumSize = new Vector2(220f, 56f);
 		backButton.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-		if (camp) CampTypography.Apply(backButton, TextRole.Heading);
+		UITheme.ApplyTypography(backButton, TextRole.Heading);
 		backButton.Pressed += () =>
 		{
 			AudioManager.PlayUI("sfx_menu_confirmer");

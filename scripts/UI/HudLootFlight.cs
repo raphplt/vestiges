@@ -55,7 +55,6 @@ public partial class HudLootFlight : Control
             return;
         // Tout en coordonnées locales : la racine du HUD est mise à l'échelle de l'écran.
         Transform2D toLocal = GetGlobalTransform().AffineInverse();
-        Vector2 targetPosition = toLocal * slotIcon.GetGlobalRect().Position;
         Vector2 targetSize = slotIcon.Size;
         Transform2D layer = GetCanvasLayerNode()?.Transform ?? Transform2D.Identity;
         Vector2 start = toLocal * (layer.AffineInverse() * (GetViewport().GetCanvasTransform() * worldPosition));
@@ -75,7 +74,13 @@ public partial class HudLootFlight : Control
         slotIcon.Modulate = Colors.Transparent;
 
         Tween tween = flying.CreateTween().SetParallel();
-        tween.TweenProperty(flying, "position", targetPosition, FlightSec)
+        Vector2 startPosition = flying.Position;
+        // Un nouvel objet ou un tri peut déplacer la case pendant le vol ; suivre son contrôle stable.
+        tween.TweenMethod(Callable.From<float>(progress =>
+        {
+            if (IsInstanceValid(slotIcon))
+                flying.Position = startPosition.Lerp(toLocal * slotIcon.GetGlobalRect().Position, progress);
+        }), 0f, 1f, FlightSec)
             .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
         tween.TweenProperty(flying, "size", targetSize, FlightSec)
             .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);

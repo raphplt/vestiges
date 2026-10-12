@@ -174,6 +174,10 @@ public partial class ChoiceScreen : CanvasLayer
         _title = ChoiceStyle.MakeLabel("", TextRole.Title, ChoiceStyle.GoldBright, false, HorizontalAlignment.Center);
         inner.AddChild(_title);
         _subtitle = ChoiceStyle.MakeLabel("", TextRole.Subhead, ChoiceStyle.TextColor, false, HorizontalAlignment.Center);
+        // Une description d'objet ne doit pas élargir tout le panneau d'échange au-delà de l'écran.
+        _subtitle.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _subtitle.CustomMinimumSize = new Vector2(CardWidth, 0f);
+        _subtitle.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         inner.AddChild(_subtitle);
 
         _cardsContainer = new VBoxContainer();
@@ -287,7 +291,14 @@ public partial class ChoiceScreen : CanvasLayer
     {
         _focusIndex = index;
         if (index < _cardPanels.Count)
-            _scroll.EnsureControlVisible(_cardPanels[index]);
+        {
+            PanelContainer card = _cardPanels[index];
+            // Une longue fiche ne tient pas entière : montrer d'abord son nom et sa rareté, pas sa dernière ligne.
+            if (card.Size.Y > _scroll.Size.Y)
+                _scroll.ScrollVertical = Mathf.RoundToInt(card.Position.Y);
+            else
+                _scroll.EnsureControlVisible(card);
+        }
         for (int i = 0; i < _cards.Count; i++)
             ChoiceStyle.StyleCard(_cardPanels[i], _cards[i].Frame, _cards[i].Rank, i == index, _cards[i].Enabled);
         if (_cancelButton != null)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -97,8 +98,7 @@ public partial class ErasureEchoes : Node2D
             // Rastérisé au double puis réduit : la caméra zoome ×2, le texte reste net au lieu d'un 9 px agrandi.
             Scale = Vector2.One * WhisperScale,
         };
-        _whisper.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf"));
-        _whisper.AddThemeFontSizeOverride("font_size", 18);
+        UITheme.SetCompactText(_whisper, 18, TextWeight.Strong);
         _whisper.AddThemeColorOverride("font_color", new Color(0.86f, 0.9f, 0.95f));
         _whisper.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.14f, 0.2f, 0.85f));
         _whisper.AddThemeConstantOverride("outline_size", 6);

@@ -1550,12 +1550,35 @@ Lot [M8](36-progression-permanente.md#reprise-visuelle-m8--lisibilité-du-campem
 
 M8 intégré et vérifié : cadres, 144 px supplémentaires en hauteur de corps, trait supprimé, décor à 52 % de luminosité, Pixel Operator limitée au Campement. Captures 720p/1080p et libellés anglais inspectés, quatre suites vertes sur copie isolée et build du dossier partagé zéro warning. **Police et luminosité à juger par Raphaël** sur ces captures.
 
-
 ### 135 quinquies. Alignements et place du retour
 
 M8 apprécié (« top »), commit et push de tout demandés. Pendant cette publication : « sur le campement, et les autres menus […] certains éléments […] le bouton retour ne devrait pas être en bas à gauche […] des éléments qui sont mal alignés ». Lot [M9](36-progression-permanente.md#reprise-visuelle-m9--alignements-et-retour-12-octobre-2026) : en-tête commun, marges communes et Campement aligné sur sa liste. Préférence demandée pour Retour : haut à droite (proposition) ou haut à gauche près du titre ; sans réponse durant la préparation, haut à droite retenu par l'agent, sans le présenter comme une approbation de Raphaël.
 
 M9 intégré et vérifié : captures des quatre pages en 720p et du Campement en 1080p inspectées, build zéro warning et cinq suites vertes. Retour placé dans l'en-tête, aligné au bord droit du contenu ; son action et les transactions sont contrôlées. Publication sur `main` dans le mandat précédent.
+
+### 135 sexies. Généraliser la police du Campement
+
+Raphaël : « la font que tu as mis sur campement elle me plait met la partout dans le jeu stp ». Pixel Operator approuvée comme police globale. Lot [M10](36-progression-permanente.md#reprise-visuelle-m10--pixel-operator-dans-tout-le-jeu-12-octobre-2026) : thème commun, menus, HUD et textes du monde, avec les variantes native 8 px et grasse de la même famille pour les petites tailles. Le choix de Saira du 24 septembre est remplacé par ce retour ; tailles et mises en page à vérifier sur captures.
+
+M10 livré : police centralisée, essai isolé du Campement retiré, petits textes et dégâts migrés, colonnes de stats adaptées. Captures des menus et de vraies runs inspectées en 720p/1080p, français et anglais ; build zéro warning, dix suites puis trois suites ciblées vertes. [Preuves et limites](36-progression-permanente.md#reprise-visuelle-m10--pixel-operator-dans-tout-le-jeu-12-octobre-2026).
+
+### 135 septies. Simplifier les gains et confirmer « Tout rendre »
+
+Raphaël : retirer « Effet actuel → suivant », ne pas mettre le gain en bleu,
+écrire « +1 truc » plutôt que `x → y`, remplacer les `x/y` de la liste par
+autant de points colorés que de niveaux possibles, confirmer « Tout rendre »
+et l'éloigner de Retour, ajouter une icône de Vestiges. Lot [M11](36-progression-permanente.md#reprise-visuelle-m11--gains-niveaux-et-remboursement-12-octobre-2026).
+Choix de l'agent : action globale au bas de la liste, gain du prochain
+achat (bonus total au maximum), confirmation avec Annuler focalisé et
+montant versé réellement remboursable ; icône dorée partagée par le solde
+et les prix.
+
+M11 livré : gains sans comparaison ni cyan, points de niveau dans la
+liste, action globale au pied gauche et confirmation avec montant payé
+annoncé. Annuler, Échap/B et focus vérifiés sans mutation ; confirmation
+unique, remboursement, points et sauvegarde contrôlés. Icône native des
+Vestiges exportée par le pipeline des objets. Captures normal/dev,
+français/anglais en 720p/1080p, build zéro warning et quatre suites vertes.
 
 
 ## 136. Préparer les quêtes après les objets — 12 octobre 2026
@@ -1606,3 +1629,21 @@ Après la planche S10a : « je valide à 100 % ces nouvelles identités et la pl
 Sur S10d (silhouette du Portrait, fil de la Pelote, éclat du Tampon ANNULÉ…) : « non t'inquiète pas besoin des effets sonores des objets pour l'instant ». Lu comme le report de S10d ; ni visuels ni sons d'objets à faire pour l'instant.
 
 « Il manque un effet sonore quand on valide un POI sur le jeu (la cabine téléphonique, le wagon de la mine, etc.) ». Les neuf petits lieux du plan 22 (puits, veine, épouvantail, boîte aux lettres, wagonnet, voiture, cabine, abribus, pique-nique) émettaient `SmallPlaceUsed` sans aucun son, contrairement aux POI explorés. Correctif : `AudioManager` joue à l'usage la confirmation des POI (`sfx_poi_activate`), une fois, jamais sur un lieu déjà utilisé. Vérifié par `tools/test_small_places.sh` (demande de son comptée) ; **à écouter en jeu**, un son propre par lieu reste possible plus tard.
+
+## 141. Couleur de rareté plus visible — 12 octobre 2026
+
+Raphaël demande de mettre davantage en avant la couleur de rareté des objets dans les menus et probablement en jeu. La comparaison fournie avec Megabonk montre une rareté lisible par le fond entier de la case ; il demande de s'en inspirer sans recopier. Lot I13 du [plan des raretés](35-raretes-des-objets.md) : fonds teintés, cadres colorés, focus qui conserve la rareté et rappel explicite sur la fiche, puis raccordement HUD/butin/sol.
+
+## 142. Trier les objets — 12 octobre 2026
+
+Raphaël : « il faudrait que les objets soient triés par raretés et qu'il y ait plusieurs options de tri disponibles ». Lot I14 du [plan des raretés](35-raretes-des-objets.md) : rareté croissante par défaut, décroissante, nom et ordre initial ; commandes dans la Collection et le sac en pause, préférence de session commune au HUD et au bilan. Choix d'implémentation : regrouper les raretés même sur profil neuf, disponibilité seulement à rang égal ; conserver l'objet examiné quand le tri change.
+
+## 143. Radios et téléphones abandonnés : son seul — 12 octobre 2026
+
+Raphaël, avant le [lot C1 du plan 39](39-atmosphere.md) : « ok continue avec la suite des modifications stp », puis ses réponses aux quatre questions du lot (toutes sur la recommandation).
+
+**Acquis pour C1 :**
+- **Voix synthétisée et traitée.** espeak-ng, seul moteur disponible sur la machine, passé dans un poste de radio (bande étroite, saturation, flottement) : un message d'alerte automatique. Un fichier par mot ou groupe de mots, remplaçable plus tard par un enregistrement de Raphaël sous les mêmes noms.
+- **Son seul.** Rien à l'écran, ni bulle ni sous-titre : on entend la radio en s'approchant.
+- **Radios dans les embouteillages.** Sur le capot d'une voiture d'environ un embouteillage sur trois (5 à 6 par carte), sans nouveau décor ailleurs.
+- **Une cabine sur deux sonne.** Parmi les cabines activables (petits lieux), elle se tait quand le joueur arrive et garde son usage (révéler les lieux proches).

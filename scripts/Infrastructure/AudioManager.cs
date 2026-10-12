@@ -19,7 +19,7 @@ public partial class AudioManager : Node
 	private const string BusMusic    = "Music";
 	private const string BusSfx      = "SFX";
 	// Sons du monde : sous-bus de SFX (même curseur), seul à être étouffé et compressé ; l'interface reste nette.
-	private const string BusWorld    = "World";
+	internal const string BusWorld    = "World";
 	private const string BusAmbiance = "Ambiance";
 	// Équilibre interne du mix, hors curseurs : les curseurs du joueur partent tous de 100 %.
 	private const float MusicMixDb    = -6f;
@@ -1263,7 +1263,8 @@ public partial class AudioManager : Node
 			fade.Kill();
 	}
 
-	private static AudioStream CreateLoopableStream(AudioStream stream)
+	/// <summary>Copie bouclée d'un son de la banque (le WAV importé ne boucle pas).</summary>
+	internal static AudioStream CreateLoopableStream(AudioStream stream)
 	{
 		if (stream is not AudioStreamWav wav)
 			return stream;

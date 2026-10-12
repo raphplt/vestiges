@@ -39,6 +39,8 @@ public partial class PauseMenu : CanvasLayer
 	private SettingsScreen _settingsScreen;
 	private VBoxContainer _loadoutContainer;
 	private VBoxContainer _inventoryContainer;
+	private GridContainer _objectsGrid;
+	private string _examinedItemId;
 	private Control _confirmation;
 	private Control _confirmReturnFocus;
 	private System.Action _confirmAction;
@@ -68,7 +70,23 @@ public partial class PauseMenu : CanvasLayer
 		_settingsScreen.Closed += () => _root.Visible = _isPaused;
 
 		BuildUI();
+		ItemSort.Changed += OnItemSortChanged;
 		_root.Visible = false;
+	}
+
+	public override void _ExitTree() => ItemSort.Changed -= OnItemSortChanged;
+
+	private void OnItemSortChanged()
+	{
+		if (!_isPaused || GetTree().GetFirstNodeInGroup("player") is not Player player)
+			return;
+		FillObjects(player);
+		ActivePassiveSouvenir examined = _examinedItemId == null ? null : player.FindObject(_examinedItemId);
+		if (examined != null)
+		{
+			MenuSkin.Clear(_loadoutContainer);
+			AddPassiveRow(examined);
+		}
 	}
 
 	public override void _Process(double delta)
@@ -323,10 +341,8 @@ public partial class PauseMenu : CanvasLayer
 			AddInventoryTile(badges, badge.Data.Icon, badge.Data.Name, $"Niv {badge.Level}", () => AddPassiveRow(badge));
 		FillEmpty(badges, InventoryConfig.BadgeSlots);
 		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
-		GridContainer objects = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6);
-		foreach (ActivePassiveSouvenir passive in player.PassiveSlots)
-			AddInventoryTile(objects, passive.Data.Icon, passive.Data.Name, $"×{passive.Copies}", () => AddPassiveRow(passive), passive.Data.Rarity);
-		FillEmpty(objects, objects.Columns);
+		_objectsGrid = InventoryGroup($"{Tr("INVENTORY_BAG")}  {player.BagCount}/{player.BagCapacity}", 6, sortable: true);
+		FillObjects(player);
 		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)
 			AddInventoryTile(perks, perk.Icon, perk.Name, "", () => AddPerkRow(perk, player));
@@ -336,18 +352,39 @@ public partial class PauseMenu : CanvasLayer
 		UpdateSheet(player);
 	}
 
-	private GridContainer InventoryGroup(string title, int columns)
+	private void FillObjects(Player player)
 	{
-		_inventoryContainer.AddChild(UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor));
+		MenuSkin.Clear(_objectsGrid);
+		foreach (ActivePassiveSouvenir item in ItemSort.Order(player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name))
+			AddInventoryTile(_objectsGrid, item.Data.Icon, item.Data.Name, $"×{item.Copies}", () => AddPassiveRow(item), item.Data.Rarity, item.Id);
+		FillEmpty(_objectsGrid, _objectsGrid.Columns);
+	}
+
+	private GridContainer InventoryGroup(string title, int columns, bool sortable = false)
+	{
+		if (sortable)
+		{
+			HBoxContainer header = new();
+			header.AddThemeConstantOverride("separation", 12);
+			Label label = UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor);
+			label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+			header.AddChild(label);
+			header.AddChild(UITheme.MakeLabel(Tr("ITEM_SORT_LABEL"), TextRole.Small, UITheme.TextDim));
+			header.AddChild(new ItemSortSelector { Role = TextRole.Small, CustomMinimumSize = new Vector2(330, 48) });
+			_inventoryContainer.AddChild(header);
+		}
+		else
+			_inventoryContainer.AddChild(UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor));
 		GridContainer grid = new() { Columns = columns, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		grid.AddThemeConstantOverride("h_separation", 8);
 		_inventoryContainer.AddChild(grid);
 		return grid;
 	}
 
-	private void AddInventoryTile(GridContainer grid, string icon, string name, string level, System.Action detail, string rarityId = null)
+	private void AddInventoryTile(GridContainer grid, string icon, string name, string level, System.Action detail, string rarityId = null, string itemId = null)
 	{
 		Button tile = MenuSkin.Button("");
+		if (itemId != null) tile.Name = itemId;
 		tile.TooltipText = rarityId == null ? name : $"{name} · {RarityPalette.DisplayName(rarityId)}";
 		tile.AccessibilityName = name;
 		tile.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
@@ -357,17 +394,16 @@ public partial class PauseMenu : CanvasLayer
 		tile.AddChild(picture);
 		if (rarityId != null)
 		{
+			MenuSkin.StyleItemButton(tile, rarityId);
 			TextureRect rarity = new() { Texture = RarityArt.Icons(RarityArt.Rank(rarityId), 12)[0],
 				Position = new Vector2(6, 6), Size = new Vector2(12, 12), MouseFilter = Control.MouseFilterEnum.Ignore };
 			tile.AddChild(rarity);
-			tile.AddChild(new ColorRect { Color = RarityPalette.Main(rarityId), Position = new Vector2(4, 88),
-				Size = new Vector2(tile.CustomMinimumSize.X - 8, 2), MouseFilter = Control.MouseFilterEnum.Ignore });
 		}
 		Label text = UITheme.MakeLabel(level, TextRole.Body, UITheme.TextLight, align: HorizontalAlignment.Center);
 		text.Position = new Vector2(0, 62);
 		text.Size = new Vector2(tile.CustomMinimumSize.X, 24);
 		tile.AddChild(text);
-		void Inspect() { MenuSkin.Clear(_loadoutContainer); detail(); }
+		void Inspect() { _examinedItemId = itemId; MenuSkin.Clear(_loadoutContainer); detail(); }
 		tile.MouseEntered += Inspect;
 		tile.FocusEntered += Inspect;
 		tile.Pressed += Inspect;

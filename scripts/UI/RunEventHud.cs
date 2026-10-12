@@ -50,7 +50,7 @@ public partial class RunEventHud : Control
     private void BuildHint()
     {
         _hintLabel = new Label { MouseFilter = MouseFilterEnum.Ignore, Modulate = Colors.Transparent };
-        _hintLabel.AddThemeFontSizeOverride("font_size", 11);
+        UITheme.SetCompactText(_hintLabel, 11);
         _hintLabel.AddThemeColorOverride("font_color", WhiteOff);
         _hintLabel.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         _hintLabel.AddThemeConstantOverride("outline_size", 3);

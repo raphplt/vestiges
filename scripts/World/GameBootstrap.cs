@@ -254,6 +254,10 @@ public partial class GameBootstrap : Node
         smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.Seed);
         sceneRoot.AddChild(smallPlaces);
         smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
+        // Radios des embouteillages et cabines qui sonnent (plan 39 C1) : après les petits lieux, dont les cabines.
+        AbandonedVoicesDirector abandonedVoices = new() { Name = "AbandonedVoicesDirector" };
+        abandonedVoices.Setup(worldSetup, smallPlaces, erasureManager, player);
+        sceneRoot.AddChild(abandonedVoices);
         LoadProfiler.Mark("directeurs et petits lieux");
         // Jeu toujours en pause : rendre la main ici coupe la dernière image figée du chargement en deux (plan 37 R5).
         await NextLoadingFrame();

@@ -17,7 +17,7 @@ public partial class ItemPickup : Area2D, IInteractable
     private const float BobAmplitude = 3f;
     private const float BobSpeed = 2.2f;
     private const float DespawnTime = 120f;
-    private const float RingRadius = 12f;
+    private const float RingRadius = 16f;
     private const float ExchangeHoldSec = 0.35f;
 
     private PassiveSouvenirData _item;
@@ -58,7 +58,7 @@ public partial class ItemPickup : Area2D, IInteractable
         CollisionMask = 1;
         CollisionShape2D shape = new() { Shape = new CircleShape2D { Radius = PickupRadius } };
         AddChild(shape);
-        PixelGroundRing ring = new() { Name = "Ring" };
+        PixelGroundRing ring = new() { Name = "Ring", RimAlpha = 0.95f, FillAlpha = 0.36f };
         AddChild(ring);
         ring.Show(GaugeColor, RingRadius);
         _visualRoot = new Node2D();

@@ -406,9 +406,9 @@ public partial class GameOverScreen : CanvasLayer
         HFlowContainer passives = MakeSlotFlow();
         _equipment.AddChild(passives);
         if (_build != null)
-            foreach ((string icon, string name, int copies, string rarity) in _build.Passives)
+            foreach ((string icon, string name, int copies, string rarity) in ItemSort.Order(_build.Passives, item => item.Rarity, item => item.Name))
             {
-                Control slot = RunSummaryPanels.Slot(icon, copies, RarityPalette.Main(rarity));
+                Control slot = RunSummaryPanels.Slot(icon, copies, RarityPalette.Main(rarity), rarityId: rarity);
                 slot.MouseFilter = Control.MouseFilterEnum.Stop;
                 slot.TooltipText = $"{name} · {RarityPalette.DisplayName(rarity)} · ×{copies}";
                 slot.AddChild(new TextureRect { Texture = RarityArt.Icons(RarityArt.Rank(rarity), 12)[0],

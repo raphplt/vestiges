@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Combat;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -1744,7 +1745,7 @@ public partial class Player : CharacterBody2D
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         label.AddThemeColorOverride("font_color", color);
-        label.AddThemeFontSizeOverride("font_size", 12);
+        UITheme.SetCompactText(label, 16, TextWeight.Strong);
         label.Size = new Vector2(width, 16);
 
         GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, label);

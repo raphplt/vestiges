@@ -156,13 +156,13 @@ public static class PlayerSheet
         row.AddThemeConstantOverride("separation", 8);
         if (iconPath != null)
             row.AddChild(MakeIcon(iconPath, 32));
-        Label label = MakeLabel(name, TextRole.Subhead, StatValueColor);
+        Label label = MakeLabel(name, TextRole.Small, StatValueColor);
         label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         label.CustomMinimumSize = new Vector2(100, 0);
         row.AddChild(label);
         if (level.Length > 0)
-            row.AddChild(MakeLabel(level, TextRole.Subhead, StatBonusColor, HorizontalAlignment.Right));
+            row.AddChild(MakeLabel(level, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
         container.AddChild(row);
     }
 
@@ -172,10 +172,19 @@ public static class PlayerSheet
     public static void AddLine(VBoxContainer container, string label, string value, Color? color = null, TextRole role = TextRole.Body)
     {
         HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 16);
         Label name = MakeLabel(label, role, color ?? StatLabelColor);
         name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        name.AutowrapMode = TextServer.AutowrapMode.Word;
+        name.CustomMinimumSize = new Vector2(100f, 0f);
         row.AddChild(name);
-        row.AddChild(MakeLabel(value, role, StatValueColor, HorizontalAlignment.Right));
+        Label amount = MakeLabel(value, role, StatValueColor, HorizontalAlignment.Right);
+        amount.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        // Une contrepartie longue peut se replier, sans repousser le nom de la stat hors de sa colonne.
+        float valueWidth = UITheme.BodyFont.GetStringSize(value, HorizontalAlignment.Left, -1, UITheme.FontSize(role)).X;
+        amount.CustomMinimumSize = new Vector2(Mathf.Min(Mathf.Ceil(valueWidth), 220f), 0f);
+        amount.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
+        row.AddChild(amount);
         container.AddChild(row);
     }
 

@@ -4,7 +4,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Vie et niveau posés sur le jeu, sans plaque (plan 37 R2, DECISIONS §117) : niveau en grand chiffre détouré, jauge
-/// fine cerclée de métal, PV au-dessus. Les métriques de Saira réservent une vraie ligne aux chiffres, hors de la jauge.
+/// fine cerclée de métal, PV au-dessus. Les textes Pixel Operator restent sur leur grille native, hors de la jauge.
 /// </summary>
 public partial class VitalsDisplay : Control
 {
@@ -39,9 +39,9 @@ public partial class VitalsDisplay : Control
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
-        _caption = CreateLabel("LevelCaption", Tr("UI_HUD_LEVEL"), 7, Paper.Darkened(0.15f), UITheme.StrongFont);
-        _level = CreateLabel("Level", "1", 22, Cyan, UITheme.BoldFont);
-        _health = CreateLabel("HealthValue", "100 / 100", 11, Paper, UITheme.StrongFont);
+        _caption = CreateLabel("LevelCaption", Tr("UI_HUD_LEVEL"), 7, Paper.Darkened(0.15f), TextWeight.Strong);
+        _level = CreateLabel("Level", "1", 22, Cyan, TextWeight.Bold);
+        _health = CreateLabel("HealthValue", "100 / 100", 11, Paper, TextWeight.Strong);
         _health.HorizontalAlignment = HorizontalAlignment.Right;
         _perks = new VitalsPerkOverlay { Name = "SurvivalPerks" };
         AddChild(_perks);
@@ -49,15 +49,14 @@ public partial class VitalsDisplay : Control
         SetProcess(false);
     }
 
-    private Label CreateLabel(string name, string text, int fontSize, Color color, Font font)
+    private Label CreateLabel(string name, string text, int fontSize, Color color, TextWeight weight)
     {
         Label label = new()
         {
             Name = name, Text = text, MouseFilter = MouseFilterEnum.Ignore,
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
         };
-        label.AddThemeFontOverride("font", font);
-        label.AddThemeFontSizeOverride("font_size", fontSize);
+        UITheme.SetCompactText(label, fontSize, weight);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         label.AddThemeConstantOverride("outline_size", Outline);
@@ -70,9 +69,9 @@ public partial class VitalsDisplay : Control
         float captionHeight = Mathf.Ceil(_caption.GetMinimumSize().Y);
         float levelHeight = Mathf.Ceil(_level.GetMinimumSize().Y);
         float healthHeight = Mathf.Ceil(_health.GetMinimumSize().Y);
-        // La légende chevauche le haut du grand chiffre : Saira réserve de l'interligne au-dessus des chiffres.
-        float levelTop = captionHeight - 6f;
-        float height = Mathf.Max(levelTop + levelHeight - 4f, healthHeight + BarHeight + 4f);
+        // La légende conserve sa propre ligne au-dessus du grand chiffre.
+        float levelTop = captionHeight - 2f;
+        float height = Mathf.Max(levelTop + levelHeight, healthHeight + BarHeight + 4f);
         CustomMinimumSize = Size = new Vector2(PlateWidth, height);
         _caption.Position = new Vector2(0f, 0f);
         _caption.Size = new Vector2(BadgeWidth, captionHeight);

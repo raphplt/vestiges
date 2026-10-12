@@ -25,7 +25,9 @@ public partial class RunObservation
         await Frames(40);
         SaveFrame("exchange-1-ground");
         pickup.Interact(_player);
-        await Frames(90);
+        // La cadence peut dépasser 60 FPS : attendre la durée de révélation, pas un nombre d'images.
+        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+        await Frames(2);
         SaveFrame("exchange-2-screen");
         GD.Print($"[RunObservation] RESULT exchange objet={pickup.ItemId} sac={_player.BagCount}/{_player.BagCapacity} dossier={_output}");
     }

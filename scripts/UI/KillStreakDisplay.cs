@@ -28,13 +28,13 @@ public partial class KillStreakDisplay : Control
     {
         MouseFilter = MouseFilterEnum.Ignore;
         _count = new Label { MouseFilter = MouseFilterEnum.Ignore, Size = new Vector2(120f, 30f) };
-        _count.AddThemeFontSizeOverride("font_size", 22);
+        UITheme.SetCompactText(_count, 24, TextWeight.Strong);
         _count.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         _count.AddThemeConstantOverride("outline_size", 5);
         _count.PivotOffset = new Vector2(0f, 15f);
         AddChild(_count);
         _caption = new Label { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(2f, 26f), Text = Tr("UI_HUD_KILL_STREAK") };
-        _caption.AddThemeFontSizeOverride("font_size", 8);
+        UITheme.SetCompactText(_caption, 8);
         _caption.AddThemeColorOverride("font_color", new Color(0.8f, 0.78f, 0.72f));
         _caption.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         _caption.AddThemeConstantOverride("outline_size", 3);
@@ -66,7 +66,7 @@ public partial class KillStreakDisplay : Control
         // Plus la rafale est longue, plus le chiffre est gros et doré (plein à 50).
         float heat = Mathf.Clamp((_streak - ShowFrom) / 45f, 0f, 1f);
         _count.AddThemeColorOverride("font_color", Warm.Lerp(Gold, heat));
-        _count.AddThemeFontSizeOverride("font_size", 22 + (int)(heat * 10f));
+        _count.AddThemeFontSizeOverride("font_size", UITheme.CompactSize(24 + (int)(heat * 8f)));
         _sincePop = 0f;
     }
 

@@ -28,7 +28,7 @@ public static class ChoiceStyle
     /// </summary>
     public static readonly Color InRunOverlayColor = new(0.035f, 0.035f, 0.055f, 0f);
 
-    /// <summary>La tranche et le symbole portent la rareté, le creux reste calme pour lire le gain.</summary>
+    /// <summary>Tranche et fond teinté portent la rareté, avec un contraste conservé pour lire le gain.</summary>
     public static void StyleCard(PanelContainer card, Color border, int rank, bool focused, bool enabled = true)
     {
         card.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;

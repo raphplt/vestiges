@@ -12,8 +12,8 @@ namespace Vestiges.Combat;
 public partial class PixelGroundRing : Node2D
 {
     private const float PoseSec = 0.2f;
-    private const float RimAlpha = 0.7f;
-    private const float FillAlpha = 0.2f;
+    public float RimAlpha { get; set; } = 0.7f;
+    public float FillAlpha { get; set; } = 0.2f;
     private static readonly int[] PoseOffsets = { 0, 1, 2, 1 };
     private static readonly Dictionary<int, (Vector2I[] Rim, Vector2I[] Fill)> Shapes = new();
 

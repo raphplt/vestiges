@@ -2,10 +2,34 @@
 
 > **Version :** 1.0
 > **Auteur :** Raphaël Plassart
-> **Dernière mise à jour :** 2 mars 2026
+> **Dernière mise à jour :** 12 octobre 2026
 > **Docs liés :** Bible Artistique (sections 4, 7, 11), Guide Pixel Art, Asset List
 
 ---
+
+### Typographie globale — retour du 12 octobre 2026
+
+**Pixel Operator**, normale et grasse (`assets/fonts/pixel-operator/`),
+est la police du jeu : accueil, menus, HUD, chiffres de combat et textes
+dans le monde. Raphaël valide le rendu du Campement et demande sa
+généralisation (plan 36 M10, DECISIONS §135 sexies).
+
+- Sans anticrénelage ; les sprites conservent leur filtrage nearest.
+- Menus en base 1080p : petits textes 24 px, corps et sections 32 px,
+  titres 48 px, grands affichages 64 px ; échelle centralisée dans `UITheme`.
+- HUD et monde : variante Pixel Operator 8 aux petites tailles, variante
+  16 aux tailles supérieures ; tailles compactes sur la grille de 8 px.
+- Les textes longs se replient ou défilent ; noms et valeurs de stats
+  conservent un espace explicite entre leurs colonnes.
+
+### Rareté des objets — retour du 12 octobre 2026
+
+Les cinq teintes de `data/ui/rarities.json` occupent le **fond entier de la case** et sa tranche, avec la matière de pierre des menus. Commun gris, Inhabituel vert, Rare bleu, Épique violet, Légendaire or. Un petit éclat seul ne suffit plus à annoncer la rareté (plan 35 I13, DECISIONS §141).
+
+- Collection, sac en pause et bilan : fond nettement teinté, icône dans ses couleurs d'origine ; verrouillés assourdis.
+- Survol : éclaircir la teinte existante. Focus : contour clair taillé, intérieur à la case, sans transformer la rareté en or.
+- Fiche de Collection : grande icône encadrée et libellé de rareté séparé. Éclat et texte restent des repères complémentaires à la couleur.
+- HUD : fond et bord colorés compacts ; choix/butin : fond plus sombre pour conserver le contraste des descriptions ; objets au sol : anneau de rareté plus large et plus opaque.
 
 ## 1. RÉSOLUTION ET GRILLE
 

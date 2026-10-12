@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.UI;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Core;
@@ -29,8 +30,7 @@ public partial class InteractionPrompt : Node2D
             VerticalAlignment = VerticalAlignment.Center,
             TextureFilter = TextureFilterEnum.Nearest,
         };
-        _label.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/pixel-operator/PixelOperator8.ttf"));
-        _label.AddThemeFontSizeOverride("font_size", 8);
+        UITheme.SetCompactText(_label, 8);
         _label.AddThemeColorOverride("font_color", TextColor);
         AddChild(_label);
         Refresh();

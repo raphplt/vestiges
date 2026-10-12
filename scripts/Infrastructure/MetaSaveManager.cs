@@ -348,6 +348,13 @@ public static class MetaSaveManager
         return new Dictionary<string, int>(_data.CampRanks);
     }
 
+    /// <summary>Somme réellement versée, pour annoncer le remboursement intégral avant confirmation.</summary>
+    public static int GetCampRefundAmount()
+    {
+        Load();
+        return _data.CampPaid.Values.Sum();
+    }
+
     /// <summary>Achète le rang suivant d'une amélioration du Campement : Vestiges et rang changent en une seule écriture.</summary>
     public static CampTransaction BuyCampRank(string upgradeId, out SaveFile.WriteResult saved)
     {
@@ -414,7 +421,7 @@ public static class MetaSaveManager
     {
         Load();
         saved = SaveFile.WriteResult.Ok;
-        int refund = _data.CampPaid.Values.Sum();
+        int refund = GetCampRefundAmount();
         if (_data.CampRanks.Count == 0 && refund == 0)
             return 0;
         BeginBatch();

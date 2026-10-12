@@ -145,6 +145,8 @@ public partial class CampRegression : Node
         Check(MetaSaveManager.GetCampRank("camp_rerolls") == 2 && MetaSaveManager.GetVestiges() == 9900,
             "un rang rendu : son prix (2 000) revient");
         MetaSaveManager.BuyCampRank("camp_damage", out _);
+        Check(MetaSaveManager.GetCampRefundAmount() == 1350,
+            "la confirmation peut annoncer les 1 350 Vestiges réellement versés, sans modifier le solde");
         int refunded = MetaSaveManager.RefundAllCamp(out saved);
         Check(refunded == 1100 + 250 && saved.Succeeded && MetaSaveManager.GetVestiges() == 11_000
             && MetaSaveManager.GetCampRanks().Count == 0, $"tout rembourser rend 1 350 et vide le Campement ({refunded})");

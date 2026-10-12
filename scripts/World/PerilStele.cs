@@ -97,8 +97,7 @@ public partial class PerilStele : Node2D, IInteractable
     private void ShowLine(string text)
     {
         _line = new Label { ZIndex = LineZIndex, HorizontalAlignment = HorizontalAlignment.Center, Scale = Vector2.One * 0.5f, Text = text };
-        _line.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf"));
-        _line.AddThemeFontSizeOverride("font_size", 22);
+        UITheme.SetCompactText(_line, 22, TextWeight.Strong);
         _line.AddThemeColorOverride("font_color", PlayerSheet.PerilColor);
         _line.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.1f, 0.1f, 0.85f));
         _line.AddThemeConstantOverride("outline_size", 6);

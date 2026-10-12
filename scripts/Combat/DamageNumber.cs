@@ -1,11 +1,12 @@
 using System;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Chiffre de dégâts recyclé par CombatPools (plan 02 J1). En Saira cerné de sombre pour rester lisible sur tous les sols.
+/// Chiffre de dégâts recyclé par CombatPools (plan 02 J1). En Pixel Operator cerné de sombre pour rester lisible sur tous les sols.
 /// Les coups normaux rapprochés sur une même cible s'additionnent dans un seul chiffre qui reste en place et
 /// pulse à chaque ajout, puis s'envole ; le critique ne se fond jamais : plus gros, doré, suffixé « ! », il jaillit.
 /// Un coup renforcé par Débordement jaillit de même, en bleu pâle et préfixé « » », sans se confondre avec un critique.
@@ -67,19 +68,19 @@ public partial class DamageNumber : Node2D
 		_label = GetNode<Label>("Label");
 		if (_small == null)
 		{
-			Font semiBold = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
-			Font bold = GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf");
+			Font semiBold = UITheme.StrongFont;
+			Font bold = UITheme.BoldFont;
 			Color normal = new(1f, 0.96f, 0.82f);
 			Color outline = new(0.08f, 0.05f, 0.1f);
-			_small = Settings(semiBold, 14, normal, outline);
+			_small = Settings(UITheme.BodyFont, 16, normal, outline);
 			_medium = Settings(semiBold, 16, normal, outline);
-			_large = Settings(bold, 19, new Color(1f, 0.9f, 0.45f), outline);
+			_large = Settings(bold, 24, new Color(1f, 0.9f, 0.45f), outline);
 			_crit = Settings(bold, 24, new Color(1f, 0.74f, 0.12f), new Color(0.35f, 0.05f, 0.02f));
-			_carried = Settings(bold, 22, new Color(0.66f, 0.9f, 1f), new Color(0.04f, 0.1f, 0.24f));
+			_carried = Settings(bold, 24, new Color(0.66f, 0.9f, 1f), new Color(0.04f, 0.1f, 0.24f));
 			StatusVisualConfig config = EnemyStatusVisual.Config();
-			_burn = Settings(semiBold, 12, config?.BurnNumberColor ?? normal, outline);
-			_bleed = Settings(semiBold, 12, config?.BleedNumberColor ?? normal, outline);
-			_poison = Settings(semiBold, 12, config?.PoisonNumberColor ?? normal, outline);
+			_burn = Settings(UITheme.SmallStrongFont, 8, config?.BurnNumberColor ?? normal, outline);
+			_bleed = Settings(UITheme.SmallStrongFont, 8, config?.BleedNumberColor ?? normal, outline);
+			_poison = Settings(UITheme.SmallStrongFont, 8, config?.PoisonNumberColor ?? normal, outline);
 		}
 		SetProcess(false);
 	}
@@ -114,7 +115,7 @@ public partial class DamageNumber : Node2D
 		if (_received == null || color != _receivedColor)
 		{
 			_receivedColor = color;
-			_received = Settings(GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf"), 18, color, new Color(0.08f, 0.02f, 0.04f));
+			_received = Settings(UITheme.BoldFont, 16, color, new Color(0.08f, 0.02f, 0.04f));
 		}
 		_total = 0f;
 		Add(damage);

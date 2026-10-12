@@ -1,4 +1,5 @@
 using Godot;
+using Vestiges.UI;
 
 namespace Vestiges.Combat;
 
@@ -10,7 +11,7 @@ namespace Vestiges.Combat;
 public partial class EnemyNameplate : Node2D
 {
     private const int NameFontSize = 8;
-    private const int AffixFontSize = 6;
+    private const int AffixFontSize = 8;
     private const float BarWidth = 34f;
     private const float BarHeight = 3f;
     private const float Gap = 3f;
@@ -28,7 +29,7 @@ public partial class EnemyNameplate : Node2D
 
     public void Setup(Enemy owner, string displayName, string affixLine, Color accent, float ownerScale, float visualTop)
     {
-        _font ??= GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
+        _font ??= UITheme.SmallStrongFont;
         _owner = owner;
         _name = displayName;
         _affixLine = affixLine;

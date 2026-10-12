@@ -7,7 +7,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Inventaire au HUD (plan 35, disposition du plan 37 R3) : les Écussons en grandes cartes au-dessus des armes, cadre
-/// doré, niveau et fil d'usage ; les objets du sac en colonne au bord gauche, sans cadre, une ligne par objet avec son
+/// doré, niveau et fil d'usage ; les objets du sac en colonne au bord gauche, sur fond de rareté, une ligne par objet avec son
 /// nombre d'exemplaires. Rafraîchi sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>, jamais par image. Sous chaque
 /// Écusson, un fil se remplit avec l'usage (plan 35 I7) ; un niveau gagné ainsi fait briller l'Écusson une fois.
 /// </summary>
@@ -43,6 +43,7 @@ public partial class HudInventoryBar : Control
         public TextureRect Icon;
         public Label Copies;
         public TextureRect Rarity;
+        public PanelContainer Frame;
     }
 
     /// <summary>Bas de la rangée d'Écussons, en unités HUD depuis le bas de l'écran : le haut de la barre d'armes.</summary>
@@ -50,6 +51,7 @@ public partial class HudInventoryBar : Control
 
     private readonly List<Badge> _badges = new();
     private readonly List<ItemRow> _items = new();
+    private readonly Dictionary<string, ItemRow> _itemRows = new();
     private GridContainer _bag;
     private Label _bagCount;
     private Texture2D _emptyTexture;
@@ -69,11 +71,13 @@ public partial class HudInventoryBar : Control
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.PassiveSouvenirSlotsChanged += Refresh;
         _eventBus.BadgeThreadChanged += OnBadgeThreadChanged;
+        ItemSort.Changed += Refresh;
         Refresh();
     }
 
     public override void _ExitTree()
     {
+        ItemSort.Changed -= Refresh;
         if (_eventBus == null)
             return;
         _eventBus.PassiveSouvenirSlotsChanged -= Refresh;
@@ -163,7 +167,9 @@ public partial class HudInventoryBar : Control
             MouseFilter = MouseFilterEnum.Ignore, SizeFlagsVertical = SizeFlags.ShrinkCenter } };
         root.AddChild(row.Rarity);
         row.Icon.CustomMinimumSize = new Vector2(ItemIconSize, ItemIconSize);
-        root.AddChild(row.Icon);
+        row.Frame = new PanelContainer { MouseFilter = MouseFilterEnum.Ignore, TextureFilter = TextureFilterEnum.Nearest };
+        row.Frame.AddChild(row.Icon);
+        root.AddChild(row.Frame);
         row.Copies.CustomMinimumSize = new Vector2(14f, 0f);
         row.Copies.SizeFlagsVertical = SizeFlags.ShrinkEnd;
         root.AddChild(row.Copies);
@@ -183,7 +189,7 @@ public partial class HudInventoryBar : Control
     private static Label Text(int size, Color color)
     {
         Label label = new() { MouseFilter = MouseFilterEnum.Ignore };
-        label.AddThemeFontSizeOverride("font_size", size);
+        UITheme.SetCompactText(label, size);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         label.AddThemeConstantOverride("outline_size", 3);
@@ -204,15 +210,21 @@ public partial class HudInventoryBar : Control
 
         int copies = 0;
         int row = 0;
-        foreach (ActivePassiveSouvenir item in player.PassiveSlots)
+        foreach (ItemRow itemRow in _items)
+            itemRow.Root.Visible = false;
+        foreach (ActivePassiveSouvenir item in ItemSort.Order(player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name))
         {
-            if (row == _items.Count)
-                _items.Add(AddItemRow());
-            FillItem(_items[row++], item);
+            if (!_itemRows.TryGetValue(item.Id, out ItemRow itemRow))
+            {
+                itemRow = AddItemRow();
+                _items.Add(itemRow);
+                _itemRows.Add(item.Id, itemRow);
+            }
+            // Garder le contrôle lié à son objet : un vol de ramassage peut encore viser cette icône.
+            _bag.MoveChild(itemRow.Root, row++);
+            FillItem(itemRow, item);
             copies += item.Copies;
         }
-        for (int i = row; i < _items.Count; i++)
-            _items[i].Root.Visible = false;
         // Au-delà de douze objets différents, une seconde colonne : le sac des Poches tient sans couvrir le combat.
         _bag.Columns = row > ItemsPerColumn ? 2 : 1;
         _bagCount.Text = $"{copies}/{player.BagCapacity}";
@@ -241,6 +253,7 @@ public partial class HudInventoryBar : Control
     {
         row.Root.Visible = true;
         row.Rarity.Texture = RarityArt.Icons(RarityArt.Rank(owned.Data.Rarity), 12)[0];
+        row.Frame.AddThemeStyleboxOverride("panel", MenuSkin.ItemIcon(owned.Data.Rarity));
         row.Copies.AddThemeColorOverride("font_color", ItemPresentation.Color(owned.Data));
         row.Root.TooltipText = $"{owned.Data.Name} · {ItemPresentation.RarityText(owned.Data)} · ×{owned.Copies}";
         row.Icon.Texture = LoadIcon(owned);
@@ -283,11 +296,6 @@ public partial class HudInventoryBar : Control
     /// <summary>Icône de la ligne du sac qui porte cet objet, ou null : là où atterrit un objet ramassé.</summary>
     public Control ItemIconOf(string itemId)
     {
-        if (_groupCache?.GetPlayer() is not Player player)
-            return null;
-        for (int i = 0; i < player.PassiveSlots.Count && i < _items.Count; i++)
-            if (player.PassiveSlots[i].Id == itemId)
-                return _items[i].Icon;
-        return null;
+        return _itemRows.TryGetValue(itemId, out ItemRow row) && row.Root.Visible ? row.Icon : null;
     }
 }

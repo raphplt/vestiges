@@ -212,7 +212,7 @@ public partial class Minimap : Control
             row.AddChild(new MapLegendIcon(icon, color, key == "MAP_LEGEND_VOID"));
             Label label = new() { Text = Tr(key), MouseFilter = MouseFilterEnum.Ignore };
             label.AddThemeColorOverride("font_color", new Color(0.88f, 0.84f, 0.76f));
-            label.AddThemeFontSizeOverride("font_size", LegendFontSize);
+            UITheme.SetCompactText(label, LegendFontSize);
             row.AddChild(label);
             _legend.AddChild(row);
         }

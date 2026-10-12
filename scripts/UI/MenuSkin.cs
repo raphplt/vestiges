@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
 
@@ -97,14 +98,58 @@ public static class MenuSkin
         string key = $"choice-{accent.ToHtml()}-{focused}-{rank}";
         if (!Textures.TryGetValue(key, out Texture2D texture))
         {
-            Color edge = focused ? accent.Lightened(0.22f) : accent.Darkened(0.18f);
-            texture = Stone(new Color("24212d"), edge, new Color("3a3535"), false, 12);
+            Color edge = focused ? accent.Lightened(0.22f) : rank >= 0 ? accent : accent.Darkened(0.18f);
+            Color body = rank >= 0 ? new Color("24212d").Lerp(accent, focused ? 0.26f : 0.18f) : new Color("24212d");
+            texture = Stone(body, edge, rank >= 0 ? accent.Darkened(0.65f) : new Color("3a3535"), false, 12);
             Textures[key] = texture;
         }
         StyleBoxTexture style = UITheme.CreateNinePatch(texture, 12, 8, 8, 8);
         style.ContentMarginLeft = 16;
         style.ContentMarginRight = 12;
         style.ContentMarginTop = style.ContentMarginBottom = 10;
+        return style;
+    }
+
+    /// <summary>La surface entière annonce la rareté ; une case verrouillée conserve une teinte assourdie.</summary>
+    public static StyleBoxTexture ItemCard(string rarityId, bool focused = false, bool locked = false)
+    {
+        Color accent = RarityPalette.Main(rarityId);
+        string key = $"item-{rarityId}-{focused}-{locked}";
+        Texture2D texture = Cached(key, () => Stone(
+            new Color("24212d").Lerp(accent, locked ? 0.14f : focused ? 0.54f : 0.44f),
+            locked ? accent.Darkened(0.48f) : focused ? accent.Lightened(0.2f) : accent,
+            accent.Darkened(0.68f), false, 12));
+        StyleBoxTexture style = UITheme.CreateNinePatch(texture, 12, 12, 12, 12);
+        style.ContentMarginLeft = style.ContentMarginRight = 12;
+        style.ContentMarginTop = style.ContentMarginBottom = 12;
+        return style;
+    }
+
+    public static void StyleItemButton(Button button, string rarityId, bool locked = false)
+    {
+        StyleBoxTexture normal = ItemCard(rarityId, locked: locked);
+        StyleBoxTexture lit = ItemCard(rarityId, focused: true, locked: locked);
+        button.AddThemeStyleboxOverride("normal", normal);
+        foreach (string state in new[] { "hover", "pressed", "hover_pressed" })
+            button.AddThemeStyleboxOverride(state, lit);
+        // Le focus reste distinct d'un légendaire : contour clair, sans remplacer sa teinte.
+        StyleBoxFlat focus = new() { DrawCenter = false, BorderColor = UITheme.TextLight, CornerDetail = 1, AntiAliasing = false };
+        focus.SetBorderWidthAll(2);
+        focus.SetCornerRadiusAll(14);
+        // À l'intérieur de la case : le ScrollContainer ne coupe pas le focus de la première rangée.
+        focus.SetExpandMarginAll(-2);
+        button.AddThemeStyleboxOverride("focus", focus);
+        button.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+    }
+
+    /// <summary>Petit format du HUD : fond plein et bord d'un pixel, sans rogner l'icône avec une grosse tranche.</summary>
+    public static StyleBoxFlat ItemIcon(string rarityId)
+    {
+        Color accent = RarityPalette.Main(rarityId);
+        StyleBoxFlat style = new() { BgColor = new Color("24212d").Lerp(accent, 0.44f), BorderColor = accent };
+        style.SetBorderWidthAll(1);
+        style.ContentMarginLeft = style.ContentMarginRight = 2;
+        style.ContentMarginTop = style.ContentMarginBottom = 2;
         return style;
     }
 

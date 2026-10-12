@@ -29,6 +29,7 @@ namespace Vestiges.Tests;
 /// --capture-paths : chemins de terre par biome, raccord à une rue, vue dézoomée du départ (RunObservation.Paths.cs).
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
 /// --capture-exodus : scènes de l'exode dans les rues les plus proches du départ, normal et ×2 (RunObservation.Exodus.cs).
+/// --listen-voices : radio et cabine les plus proches écoutées à plusieurs distances, journal des mots joués et perdus (RunObservation.Exodus.cs).
 /// --capture-quarries : chantiers de la Carrière Effondrée les plus proches du départ, normal et dézoomé (idem).
 /// --capture-omen : présage d'une Résurgence, avant, pendant l'avertissement et pendant la crise (RunObservation.Omen.cs).
 /// --check-connectivity : coffres, Mémoriaux et Failles accessibles à pied depuis le départ (RunObservation.Connectivity.cs).
@@ -173,6 +174,8 @@ public partial class RunObservation : Node
                 await CaptureFarms();
             else if (Array.IndexOf(args, "--capture-exodus") >= 0)
                 await CaptureExodus();
+            else if (Array.IndexOf(args, "--listen-voices") >= 0)
+                await ListenVoices();
             else if (Array.IndexOf(args, "--capture-landmarks") >= 0)
                 await CaptureLandmarks();
             else if (Array.IndexOf(args, "--capture-levelup-fx") >= 0)

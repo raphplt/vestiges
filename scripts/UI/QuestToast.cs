@@ -99,7 +99,7 @@ public partial class QuestToast : Control
     private static Label MakeLabel(int size, Color color)
     {
         Label label = new() { MouseFilter = MouseFilterEnum.Ignore, HorizontalAlignment = HorizontalAlignment.Center };
-        label.AddThemeFontSizeOverride("font_size", size);
+        UITheme.SetCompactText(label, size);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
         label.AddThemeConstantOverride("outline_size", 3);

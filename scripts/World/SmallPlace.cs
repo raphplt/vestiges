@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Vestiges.UI;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -87,8 +88,7 @@ public partial class SmallPlace : Node2D, IInteractable
 		if (_line == null)
 		{
 			_line = new Label { ZIndex = LineZIndex, HorizontalAlignment = HorizontalAlignment.Center, Scale = Vector2.One * 0.5f };
-			_line.AddThemeFontOverride("font", GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf"));
-			_line.AddThemeFontSizeOverride("font_size", 18);
+			UITheme.SetCompactText(_line, 18, TextWeight.Strong);
 			_line.AddThemeColorOverride("font_color", new Color(0.93f, 0.9f, 0.84f));
 			_line.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.1f, 0.1f, 0.85f));
 			_line.AddThemeConstantOverride("outline_size", 6);

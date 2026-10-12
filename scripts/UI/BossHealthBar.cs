@@ -52,7 +52,7 @@ public partial class BossHealthBar : Control
 		_bar = new Rect2(3f, NameHeight + 2f, Width - 6f, BarHeight);
 
 		_name = new Label { MouseFilter = MouseFilterEnum.Ignore, HorizontalAlignment = HorizontalAlignment.Center };
-		_name.AddThemeFontSizeOverride("font_size", 11);
+		UITheme.SetCompactText(_name, 11, TextWeight.Strong);
 		_name.AddThemeColorOverride("font_color", Paper);
 		_name.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
 		_name.AddThemeConstantOverride("outline_size", 3);

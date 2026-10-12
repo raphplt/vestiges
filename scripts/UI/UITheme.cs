@@ -6,7 +6,7 @@ namespace Vestiges.UI;
 /// <summary>Rôle d'un texte d'interface : sa taille vient de l'échelle commune, jamais d'un nombre écrit dans l'écran.</summary>
 public enum TextRole { Caption, Small, Body, Lead, Subhead, Heading, Title, Banner, Display }
 
-/// <summary>Graisse de Saira Semi Condensed : Medium (police du thème), SemiBold, Bold.</summary>
+/// <summary>Graisse de Pixel Operator : normale ou grasse pour les accents et titres.</summary>
 public enum TextWeight { Regular, Strong, Bold }
 
 /// <summary>
@@ -16,15 +16,41 @@ public enum TextWeight { Regular, Strong, Bold }
 public static class UITheme
 {
 	// --- Typographie ---
-	// Échelle « confort » en base 1080p : rien sous 14 px, soit environ 9 px physiques en 1280×720.
-	private static readonly int[] RoleSizes = { 14, 15, 16, 18, 20, 24, 30, 36, 46 };
+	// Échelle du Campement approuvée, en base 1080p ; les petits textes du HUD ont leur grille native de 8 px.
+	private static readonly int[] RoleSizes = { 24, 24, 32, 32, 32, 32, 48, 64, 64 };
 	private static Font _bodyFont;
 	private static Font _strongFont;
-	private static Font _boldFont;
+	private static Font _smallFont;
+	private static Font _smallStrongFont;
 
-	public static Font BodyFont => _bodyFont ??= GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Medium.ttf");
-	public static Font StrongFont => _strongFont ??= GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-SemiBold.ttf");
-	public static Font BoldFont => _boldFont ??= GD.Load<Font>("res://assets/fonts/saira/SairaSemiCondensed-Bold.ttf");
+	public static Font BodyFont => _bodyFont ??= LoadFont("PixelOperator.ttf");
+	public static Font StrongFont => _strongFont ??= LoadFont("PixelOperator-Bold.ttf");
+	public static Font BoldFont => StrongFont;
+	public static Font SmallFont => _smallFont ??= LoadFont("PixelOperator8.ttf");
+	public static Font SmallStrongFont => _smallStrongFont ??= LoadFont("PixelOperator8-Bold.ttf");
+
+	private static Font LoadFont(string name)
+	{
+		// Même ressource que le thème global : les textes hérités gardent aussi leurs pixels sans lissage.
+		FontFile font = GD.Load<FontFile>($"res://assets/fonts/pixel-operator/{name}");
+		font.Antialiasing = TextServer.FontAntialiasing.None;
+		return font;
+	}
+
+	/// <summary>Police native adaptée au texte du HUD ou du monde, sans réduire les glyphes de 16 px.</summary>
+	public static Font CompactFont(int size, TextWeight weight = TextWeight.Regular) => size < 16
+		? weight == TextWeight.Regular ? SmallFont : SmallStrongFont
+		: FontFor(weight);
+
+	/// <summary>Taille du HUD ou du monde sur sa grille de 8 px.</summary>
+	public static int CompactSize(int size) => Mathf.Max(8, Mathf.RoundToInt(size / 8f) * 8);
+
+	public static void SetCompactText(Control control, int size, TextWeight weight = TextWeight.Regular)
+	{
+		int nativeSize = CompactSize(size);
+		control.AddThemeFontOverride("font", CompactFont(nativeSize, weight));
+		control.AddThemeFontSizeOverride("font_size", nativeSize);
+	}
 
 	public static Font FontFor(TextWeight weight) => weight switch
 	{
@@ -37,16 +63,27 @@ public static class UITheme
 	public static int FontSize(TextRole role) => RoleSizes[(int)role];
 
 	/// <summary>Donne à un contrôle la taille d'un rôle.</summary>
-	public static void SetTextRole(Control control, TextRole role) =>
+	public static void SetTextRole(Control control, TextRole role)
+	{
+		if (!control.HasThemeFontOverride("font"))
+			control.AddThemeFontOverride("font", BodyFont);
 		control.AddThemeFontSizeOverride("font_size", FontSize(role));
+	}
+
+	public static void ApplyTypography(Control control, TextRole role, TextWeight weight = TextWeight.Regular)
+	{
+		control.AddThemeFontOverride("font", FontFor(weight));
+		SetTextRole(control, role);
+		control.AddThemeConstantOverride("outline_size", 2);
+		control.AddThemeColorOverride("font_outline_color", OutlineColor);
+	}
 
 	/// <summary>Libellé d'interface : rôle, couleur, graisse, contour facultatif pour les textes posés sur le décor.</summary>
 	public static Label MakeLabel(string text, TextRole role, Color color, TextWeight weight = TextWeight.Regular,
-		HorizontalAlignment align = HorizontalAlignment.Left, int outline = 0)
+		HorizontalAlignment align = HorizontalAlignment.Left, int outline = 2)
 	{
 		Label label = new() { Text = text, HorizontalAlignment = align, MouseFilter = Control.MouseFilterEnum.Ignore };
-		if (weight != TextWeight.Regular)
-			label.AddThemeFontOverride("font", FontFor(weight));
+		label.AddThemeFontOverride("font", FontFor(weight));
 		SetTextRole(label, role);
 		label.AddThemeColorOverride("font_color", color);
 		if (outline > 0)

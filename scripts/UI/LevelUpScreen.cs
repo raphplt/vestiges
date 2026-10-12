@@ -26,7 +26,7 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color OverlayColor = ChoiceStyle.InRunOverlayColor;
     private const float PanelEntranceScale = 0.82f;
     private const float InventoryWidth = 340f;
-    private const float StatsWidth = 340f;
+    private const float StatsWidth = 380f;
     private const float SideMinHeight = 0f;
     private Tween _entranceTween;
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
@@ -220,7 +220,7 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
         PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
-            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Subhead);
+            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
     }
 
     // ==============================
