@@ -326,4 +326,4 @@ Le sens du vent (20°) est provisoire : B1 le reprendra comme vent commun.
 
 **Non vérifié :** les éclairs et le défilement en mouvement (captures fixes), le son des météos en jeu, le coût au banc (voile plein écran seulement pendant le brouillard, 110 à 220 particules).
 
-**Point ouvert :** le voile du marais (`BiomeAtmosphere.CreateSwampOverlay`) pose son ancrage de la même façon que le premier voile de brouillard, qui restait à taille nulle. Il est peut-être invisible depuis toujours ; à vérifier.
+**Constat, à trancher par Raphaël :** le voile du marais (`BiomeAtmosphere.CreateSwampOverlay`, `swamp_atmosphere.gdshader` : brume laiteuse, reflets spectraux) pose son ancrage comme le premier voile de brouillard. Mesuré le 12 octobre : rectangle de taille (0, 0) avec une intensité de 1 en plein marais. **Il n'a jamais été visible.** Le corriger (`SetAnchorsAndOffsetsPreset`) changerait d'un coup l'allure du marais et ajouterait une passe plein écran : non fait sans son avis.
