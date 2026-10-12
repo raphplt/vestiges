@@ -1,6 +1,6 @@
 # Plan 39 — Atmosphère et détail du monde
 
-Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18).
+Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18), **B4b livré** (§19).
 
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
@@ -589,3 +589,36 @@ Toutes les graines atteignent leur cible : 30 scènes en moyenne, 18 embouteilla
 - les lanternes du marais sont vertes et non violettes comme le disait le plan : la lueur suit la couleur de leur verre.
 
 **À juger par Raphaël :** la force de jour (peut-être trop discrète), le rythme des feux, le nombre de lampes allumées.
+
+## 19. B4b livré, fenêtres éclairées — 12 octobre 2026
+
+**Fait** (même gestionnaire que B4a, section `windows` de `data/world/false_lights.json`) :
+- **vitres repérées dans les sprites** (`tools/extract_building_windows.py`, à relancer après `generate_props.py urban_buildings`) :
+  - recherche des tons exacts des matériaux « pane » (vitre) et « glint » (reflet) des immeubles, groupés en rectangles ; les morceaux d'une même vitre coupée par un meneau sont fusionnés ;
+  - seules comptent les vitres d'au moins 8 × 8 px et remplies à 80 % : les fenêtres des façades de côté, vues de biais, ne se liraient pas, et l'aplat d'une vitre creuse déborderait sur la maçonnerie ;
+  - 52 vitres sur 18 immeubles, dans `assets/props/urban_ruins/building_windows.json`. L'église n'en a aucune (vitraux) ; deux ruines non plus ;
+- **de loin en loin** : 15 % des immeubles à vitres gardent une fenêtre allumée, choisie au hasard parmi leurs vitres. Mesuré à la graine 221092026 : 74 sur 497, soit une fenêtre pour quatre immeubles environ à l'écran ;
+- **deux lueurs** :
+  - lumière chaude qui tremble à peine ;
+  - pour un quart des fenêtres, une télévision restée allumée, bleutée, qui change d'image toutes les 0,4 s (20 sur 74) ;
+- **rendu** : un aplat additif sur la vitre (pixel blanc étiré) et un halo, **enfants de l'immeuble**. Ils se trient avec lui : un passant devant la façade cache la fenêtre. Quand le joueur passe derrière l'immeuble et que la façade s'efface (`PropOcclusion`), la fenêtre s'efface d'autant ;
+- même force jour et sombre, même oubli que les lampes de B4a.
+
+**Relecture appliquée** :
+- vitres entières (reflets inclus, morceaux fusionnés, vitres creuses écartées) : avant, une fenêtre coupée par un meneau pouvait ne s'allumer qu'à moitié ;
+- un fichier de fenêtres abîmé ne coûte que les fenêtres, plus la run ;
+- creux de la télévision (`screen_floor`) et tremblement de la fenêtre dans leurs propres champs ;
+- chaque style d'immeuble, sauf l'église, doit garder au moins une vitre (contrôle de catalogue).
+
+**Vérifié :**
+- en run (`--capture-lights`, seed 221092026, recapturé après la relecture), la fenêtre la plus proche du départ : chaude et discrète de jour, franche sous l'orage, posée sur toute la vitre, reflet compris ;
+- l'oubli de B4a se vérifie toujours (une lampe meurt) ;
+- `tools/test_catalogs.sh` vert (331 contrôles) : quatre lueurs présentes ; chaque immeuble a son entrée de fenêtres, chaque vitre tient dans son sprite, chaque style hors église a des vitres ; fichier de fenêtres introuvable et télévision sans rythme refusés ;
+- `dotnet build` 0 warning, `tools/smoke_test.sh` vert.
+
+**Non vérifié :**
+- la télévision à l'image (aucune parmi les fenêtres capturées) ;
+- la fenêtre qui s'efface quand le joueur passe derrière ;
+- le coût au banc : même mécanisme que B4a, 74 immeubles × 2 sprites de plus, animés seulement près de la vue.
+
+**À juger par Raphaël :** la part d'immeubles éclairés, l'aplat (une fenêtre pleine plutôt qu'une lumière derrière la vitre), la part de télévisions.

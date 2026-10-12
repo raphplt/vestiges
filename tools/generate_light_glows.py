@@ -6,7 +6,8 @@ bonus au sol (`generate_pickups.py`).
 
 - light_core.png : point lumineux sur l'ampoule, cœur plein et deux anneaux ;
 - light_halo.png : halo d'air autour de l'ampoule ;
-- light_pool.png : flaque de lumière au sol, ellipse écrasée par la vue à 30°.
+- light_pool.png : flaque de lumière au sol, ellipse écrasée par la vue à 30° ;
+- light_pixel.png : un pixel blanc, étiré sur la vitre d'une fenêtre éclairée (B4b).
 
     python3 tools/generate_light_glows.py
 """
@@ -47,7 +48,8 @@ def main() -> None:
     glow(7, 7, [(1.0, 70), (0.72, 150), (0.36, 255)], 0.0).save(OUTPUT / "light_core.png")
     glow(26, 26, [(1.0, 22), (0.7, 44), (0.42, 72)], 0.18).save(OUTPUT / "light_halo.png")
     glow(60, 26, [(1.0, 18), (0.7, 36), (0.4, 56)], 0.16).save(OUTPUT / "light_pool.png")
-    print(f"[generate_light_glows] 3 lueurs → {OUTPUT.relative_to(ROOT)}")
+    Image.new("RGBA", (1, 1), (255, 255, 255, 255)).save(OUTPUT / "light_pixel.png")
+    print(f"[generate_light_glows] 4 lueurs → {OUTPUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

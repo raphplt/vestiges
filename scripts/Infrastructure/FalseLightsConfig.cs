@@ -5,8 +5,11 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
-/// <summary>Rythme d'une fausse lumière (plan 39 B4a).</summary>
-public enum FalseLightPattern { Blink, Buzz, Breathe }
+/// <summary>
+/// Rythme d'une fausse lumière (plan 39 B4) : clignote, grésille, respire ; fenêtre éclairée qui tremble à peine
+/// (Steady) ou télévision restée allumée (Screen).
+/// </summary>
+public enum FalseLightPattern { Blink, Buzz, Breathe, Steady, Screen }
 
 /// <summary>Une sorte de lampe : le décor qui la porte, son ampoule, sa couleur et son rythme.</summary>
 public sealed class FalseLightKind
@@ -17,6 +20,8 @@ public sealed class FalseLightKind
     public FalseLightPattern Pattern { get; init; }
     public float PeriodS { get; init; }
     public float OnShare { get; init; }
+    /// <summary>Creux d'une fenêtre qui tremble ou d'une image de télévision (rythmes Steady et Screen).</summary>
+    public float Floor { get; init; }
     public float Halo { get; init; }
     public float Pool { get; init; }
 }
@@ -28,6 +33,8 @@ public sealed class FalseLightKind
 public sealed class FalseLightsConfig
 {
     private const string ConfigPath = "res://data/world/false_lights.json";
+    /// <summary>Immeubles de la ville (UrbanBuildingPlacer) : leurs fenêtres vitrées peuvent s'allumer.</summary>
+    public const string WindowSpritePrefix = "prop_bld_";
     private static readonly string[] Patterns = { "blink", "buzz", "breathe" };
 
     public float LitShare { get; private init; }
@@ -48,6 +55,13 @@ public sealed class FalseLightsConfig
     public float FailStepS { get; private init; }
     public IReadOnlyList<FalseLightKind> Kinds { get; private init; }
 
+    /// <summary>Fenêtres éclairées (plan 39 B4b) : part des immeubles qui en gardent une, lueur chaude ou télévision.</summary>
+    public string WindowsPath { get; private init; }
+    public float BuildingShare { get; private init; }
+    public float ScreenShare { get; private init; }
+    public FalseLightKind WindowKind { get; private init; }
+    public FalseLightKind ScreenKind { get; private init; }
+
     public static bool TryLoad(out FalseLightsConfig config, out string error)
     {
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
@@ -63,7 +77,7 @@ public sealed class FalseLightsConfig
             foreach (WeatherData data in weather.Weathers)
                 weathers.Add(data.Id);
         }
-        if (!TryParse(file.GetAsText(), PropSpriteExists, weathers, out config, out string parseError))
+        if (!TryParse(file.GetAsText(), PropSpriteExists, path => FileAccess.FileExists(path), weathers, out config, out string parseError))
         {
             error = $"{ConfigPath} : {parseError}";
             return false;
@@ -72,7 +86,8 @@ public sealed class FalseLightsConfig
         return true;
     }
 
-    public static bool TryParse(string json, Func<string, bool> spriteExists, IReadOnlyCollection<string> weathers,
+    public static bool TryParse(string json, Func<string, bool> spriteExists, Func<string, bool> windowsExist,
+        IReadOnlyCollection<string> weathers,
         out FalseLightsConfig config, out string error)
     {
         config = null;
@@ -82,7 +97,7 @@ public sealed class FalseLightsConfig
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "racine", "lit_share", "day_strength", "dark_strength", "darkness_fade_s",
-                "weather_darkness", "memory_steady", "memory_dead", "rhythm", "kinds");
+                "weather_darkness", "memory_steady", "memory_dead", "rhythm", "kinds", "windows");
             float litShare = reader.Chance(root, "lit_share");
             float dayStrength = reader.Chance(root, "day_strength");
             float darkStrength = reader.Ratio(root, "dark_strength");
@@ -146,6 +161,21 @@ public sealed class FalseLightsConfig
                 });
             }
 
+            JsonElement windows = reader.Section("windows");
+            reader.AllowOnly(windows, "windows", "data", "building_share", "color", "flicker", "halo", "screen_share",
+                "screen_color", "screen_period_s", "screen_floor");
+            string windowsPath = reader.Text(windows, "data");
+            if (windowsPath != null && !windowsExist("res://" + windowsPath))
+                reader.Fail($"windows.data : « {windowsPath} » introuvable");
+            float buildingShare = reader.Chance(windows, "building_share");
+            Color windowColor = reader.Rgb(windows, "color");
+            float flicker = reader.Chance(windows, "flicker");
+            float windowHalo = reader.Chance(windows, "halo");
+            float screenShare = reader.Chance(windows, "screen_share");
+            Color screenColor = reader.Rgb(windows, "screen_color");
+            float screenPeriod = reader.Positive(windows, "screen_period_s");
+            float screenFloor = reader.Chance(windows, "screen_floor");
+
             // Au-dessus de memory_steady la lampe tient, sous memory_dead elle meurt : l'ordre inverse n'a pas de sens.
             if (memoryDead >= memorySteady)
                 reader.Fail("memory_dead : doit rester sous memory_steady");
@@ -161,6 +191,18 @@ public sealed class FalseLightsConfig
             {
                 LitShare = litShare, DayStrength = dayStrength, DarkStrength = darkStrength, DarknessFadeS = fade,
                 WeatherDarkness = darkness, MemorySteady = memorySteady, MemoryDead = memoryDead, Kinds = kinds,
+                WindowsPath = windowsPath, BuildingShare = buildingShare, ScreenShare = screenShare,
+                // Une fenêtre tremble à peine (une variation par demi-seconde) ; un écran change à chaque plan.
+                WindowKind = new FalseLightKind
+                {
+                    Sprite = WindowSpritePrefix, Color = windowColor, Pattern = FalseLightPattern.Steady, PeriodS = 0.5f,
+                    OnShare = 1f, Floor = 1f - flicker, Halo = windowHalo,
+                },
+                ScreenKind = new FalseLightKind
+                {
+                    Sprite = WindowSpritePrefix, Color = screenColor, Pattern = FalseLightPattern.Screen,
+                    PeriodS = screenPeriod, OnShare = 1f, Floor = screenFloor, Halo = windowHalo,
+                },
                 OffLevel = offLevel, BreatheFloor = breatheFloor, BuzzDropChance = buzzDropChance, BuzzDropLevel = buzzDropLevel,
                 BuzzFloor = buzzFloor, FailCutMax = failCutMax, FailStepS = failStep,
             };

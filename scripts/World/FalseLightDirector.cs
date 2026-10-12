@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -31,6 +33,8 @@ public partial class FalseLightDirector : Node2D
 		public Sprite2D Core;
 		public Sprite2D Halo;
 		public Sprite2D Pool;
+		// Fenêtre (B4b) : l'immeuble qui la porte, dont la transparence (joueur derrière) éteint d'autant la lueur.
+		public EnvironmentProp Building;
 		public float Phase;
 		public uint Seed;
 		public float Failing;
@@ -56,16 +60,17 @@ public partial class FalseLightDirector : Node2D
 	/// <summary>Lampes allumées et lampes mortes avec l'oubli : lus par les captures et les journaux.</summary>
 	public int LitCount => _lights.Count - _diedCount;
 	public int DiedCount => _diedCount;
+	public int WindowCount { get; private set; }
 	public float Darkness => _darkness;
 
-	/// <summary>Lampes encore vivantes : décor porteur et position, pour les captures.</summary>
+	/// <summary>Lampes encore vivantes : décor porteur et pied du décor, pour les captures.</summary>
 	public List<(string Sprite, Vector2 Position)> LivingLights()
 	{
 		List<(string, Vector2)> living = new();
 		foreach (Light light in _lights)
 		{
 			if (!light.Dead)
-				living.Add((light.Kind.Sprite, light.Position));
+				living.Add((light.Kind.Sprite, light.Building?.GlobalPosition ?? light.Position));
 		}
 		return living;
 	}
@@ -91,6 +96,10 @@ public partial class FalseLightDirector : Node2D
 		Texture2D core = GD.Load<Texture2D>("res://assets/vfx/lights/light_core.png");
 		Texture2D halo = GD.Load<Texture2D>("res://assets/vfx/lights/light_halo.png");
 		Texture2D pool = GD.Load<Texture2D>("res://assets/vfx/lights/light_pool.png");
+		Texture2D pixel = GD.Load<Texture2D>("res://assets/vfx/lights/light_pixel.png");
+		Dictionary<string, Rect2I[]> windows = LoadWindows(_config.WindowsPath);
+		int buildings = 0;
+		int screens = 0;
 		CanvasItemMaterial additive = new() { BlendMode = CanvasItemMaterial.BlendModeEnum.Add };
 		RandomNumberGenerator rng = RunRandom.Create("false_lights");
 
@@ -101,6 +110,19 @@ public partial class FalseLightDirector : Node2D
 			if (child is not EnvironmentProp prop || prop.BaseTexture == null)
 				continue;
 			string stem = prop.BaseTexture.ResourcePath.GetFile().GetBaseName();
+			if (windows.TryGetValue(stem, out Rect2I[] panes) && panes.Length > 0)
+			{
+				bool lights = Mathf.FloorToInt((buildings + 1) * _config.BuildingShare) > Mathf.FloorToInt(buildings * _config.BuildingShare);
+				buildings++;
+				if (lights)
+				{
+					bool screen = rng.Randf() < _config.ScreenShare;
+					screens += screen ? 1 : 0;
+					AddWindow(prop, panes[rng.RandiRange(0, panes.Length - 1)], screen ? _config.ScreenKind : _config.WindowKind,
+						pixel, halo, additive, rng);
+				}
+				continue;
+			}
 			if (!byStem.TryGetValue(stem, out FalseLightKind kind))
 				continue;
 			int index = seen.GetValueOrDefault(kind);
@@ -123,14 +145,83 @@ public partial class FalseLightDirector : Node2D
 				light.Halo = AddGlow(halo, bulb, CoreZIndex, additive);
 			if (kind.Pool > 0f)
 				light.Pool = AddGlow(pool, new Vector2(bulb.X, light.Position.Y), -1, additive);
-			_lights.Add(light);
-			Vector2I cell = CellOf(light.Position);
-			if (!_grid.TryGetValue(cell, out List<Light> bucket))
-				_grid[cell] = bucket = new List<Light>();
-			bucket.Add(light);
+			Register(light);
 		}
 		foreach (FalseLightKind kind in _config.Kinds)
 			GD.Print($"[FalseLightDirector] {kind.Sprite} : {lit.GetValueOrDefault(kind)}/{seen.GetValueOrDefault(kind)} allumées");
+		GD.Print($"[FalseLightDirector] fenêtres : {WindowCount} immeubles éclairés sur {buildings} à vitres, dont {screens} télévisions");
+	}
+
+	private void Register(Light light)
+	{
+		_lights.Add(light);
+		Vector2I cell = CellOf(light.Position);
+		if (!_grid.TryGetValue(cell, out List<Light> bucket))
+			_grid[cell] = bucket = new List<Light>();
+		bucket.Add(light);
+	}
+
+	/// <summary>
+	/// Fenêtre éclairée (B4b) : un aplat additif sur la vitre et un halo, enfants de l'immeuble. Ils se trient avec lui :
+	/// un passant devant la façade la cache, comme il cache la fenêtre.
+	/// </summary>
+	private void AddWindow(EnvironmentProp building, Rect2I pane, FalseLightKind kind, Texture2D pixel, Texture2D halo,
+		Material additive, RandomNumberGenerator rng)
+	{
+		Vector2 origin = building.TextureOrigin - building.GlobalPosition;
+		Sprite2D fill = new()
+		{
+			Texture = pixel, Centered = false, Position = origin + pane.Position, Scale = pane.Size, Material = additive,
+			TextureFilter = TextureFilterEnum.Nearest, Modulate = Colors.Black,
+		};
+		building.AddChild(fill);
+		Vector2 center = origin + pane.Position + (Vector2)pane.Size * 0.5f;
+		Sprite2D glow = new()
+		{
+			Texture = halo, Centered = false, Position = (center - halo.GetSize() * 0.5f).Round(), Material = additive,
+			TextureFilter = TextureFilterEnum.Nearest, Modulate = Colors.Black,
+		};
+		building.AddChild(glow);
+		Register(new Light
+		{
+			Kind = kind,
+			Position = building.GlobalPosition + center,
+			Core = fill,
+			Halo = glow,
+			Building = building,
+			Phase = rng.Randf(),
+			Seed = rng.Randi(),
+			MemoryTimer = rng.Randf() * MemoryCheckIntervalS,
+		});
+		WindowCount++;
+	}
+
+	/// <summary>Vitres de chaque immeuble, en px du sprite (tools/extract_building_windows.py).</summary>
+	private static Dictionary<string, Rect2I[]> LoadWindows(string path)
+	{
+		Dictionary<string, Rect2I[]> windows = new();
+		using FileAccess file = FileAccess.Open("res://" + path, FileAccess.ModeFlags.Read);
+		if (file == null)
+			return windows;
+		// Fichier généré, mais un fichier abîmé ne doit coûter que les fenêtres, pas la run.
+		try
+		{
+			using JsonDocument document = JsonDocument.Parse(file.GetAsText());
+			foreach (JsonProperty building in document.RootElement.EnumerateObject())
+			{
+				Rect2I[] panes = new Rect2I[building.Value.GetArrayLength()];
+				int i = 0;
+				foreach (JsonElement rect in building.Value.EnumerateArray())
+					panes[i++] = new Rect2I(rect[0].GetInt32(), rect[1].GetInt32(), rect[2].GetInt32(), rect[3].GetInt32());
+				windows[building.Name] = panes;
+			}
+		}
+		catch (Exception exception) when (exception is JsonException or InvalidOperationException or IndexOutOfRangeException or FormatException)
+		{
+			GD.PushError($"[FalseLightDirector] {path} illisible ({exception.Message}) : aucune fenêtre éclairée");
+			windows.Clear();
+		}
+		return windows;
 	}
 
 	private Sprite2D AddGlow(Texture2D texture, Vector2 position, int zIndex, Material material)
@@ -233,13 +324,18 @@ public partial class FalseLightDirector : Node2D
 		{
 			FalseLightPattern.Blink => Mathf.PosMod(cycle, 1f) < kind.OnShare ? 1f : _config.OffLevel,
 			FalseLightPattern.Buzz => Buzz(Noise(light.Seed, Mathf.FloorToInt(cycle))),
-			_ => Mathf.Lerp(_config.BreatheFloor, 1f, 0.5f + 0.5f * Mathf.Sin(Mathf.Tau * cycle)),
+			FalseLightPattern.Breathe => Mathf.Lerp(_config.BreatheFloor, 1f, 0.5f + 0.5f * Mathf.Sin(Mathf.Tau * cycle)),
+			// Fenêtre qui tremble à peine, ou télévision : une valeur tirée par période, au-dessus de son creux.
+			_ => Mathf.Lerp(kind.Floor, 1f, Noise(light.Seed, Mathf.FloorToInt(cycle))),
 		};
 		// Oubli : la lampe se coupe d'autant plus souvent que sa zone s'efface, par à-coups d'un dixième de seconde.
 		if (light.Failing > 0f
 			&& Noise(light.Seed ^ 0x5A17u, Mathf.FloorToInt(_time / _config.FailStepS)) < light.Failing * _config.FailCutMax)
 			level = _config.OffLevel;
 		level *= strength;
+		// Joueur derrière l'immeuble : la façade s'efface (PropOcclusion), sa fenêtre aussi.
+		if (light.Building != null)
+			level *= light.Building.BaseAlpha;
 		if (Mathf.Abs(level - light.ShownLevel) < LevelStep)
 			return;
 		light.ShownLevel = level;

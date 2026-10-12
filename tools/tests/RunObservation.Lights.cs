@@ -8,7 +8,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-lights : fausses lumières (plan 39 B4a). La lampe allumée la plus proche du départ pour chaque sorte, en
-/// plein jour (normal et ×2), puis sous l'orage ; enfin une lampe dont la zone s'oublie, qui vacille puis meurt.
+/// plein jour (normal et ×2), puis sous l'orage, fenêtres éclairées comprises (B4b) ; enfin une lampe dont la zone
+/// s'oublie, qui vacille puis meurt.
 /// </summary>
 public partial class RunObservation
 {
@@ -44,9 +45,12 @@ public partial class RunObservation
             ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
             Dictionary<Vector2I, float> memory = (Dictionary<Vector2I, float>)typeof(ErasureManager)
                 .GetField("_zoneMemory", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(erasure);
+            // Une lampe, pas une fenêtre : la position rendue pour une fenêtre est le pied de l'immeuble, dans une autre zone.
             Vector2 target = default;
-            foreach (Vector2 position in nearest.Values)
+            foreach ((string sprite, Vector2 position) in nearest)
             {
+                if (sprite.StartsWith(Vestiges.Infrastructure.FalseLightsConfig.WindowSpritePrefix, System.StringComparison.Ordinal))
+                    continue;
                 target = position;
                 break;
             }

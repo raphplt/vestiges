@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Godot;
 using Vestiges.Infrastructure;
@@ -720,10 +721,47 @@ public partial class CatalogContractRegression : Node
     {
         string valid = FileAccess.GetFileAsString("res://data/world/false_lights.json");
         string[] weathers = { "storm", "thick_fog", "ash_rain", "forgotten_wind" };
-        bool accepted = FalseLightsConfig.TryParse(valid, FalseLightsConfig.PropSpriteExists, weathers, out FalseLightsConfig config, out string error);
+        bool accepted = FalseLightsConfig.TryParse(valid, FalseLightsConfig.PropSpriteExists, path => FileAccess.FileExists(path), weathers, out FalseLightsConfig config, out string error);
         Check(accepted && config.Kinds.Count == 4 && config.WeatherDarkness["storm"] == 1f, $"fausses lumières du dépôt acceptées {error}");
-        int glows = Array.FindAll(new[] { "core", "halo", "pool" }, id => ResourceLoader.Exists($"res://assets/vfx/lights/light_{id}.png")).Length;
-        Check(glows == 3, $"fausses lumières : 3 lueurs présentes ({glows})");
+        int glows = Array.FindAll(new[] { "core", "halo", "pool", "pixel" }, id => ResourceLoader.Exists($"res://assets/vfx/lights/light_{id}.png")).Length;
+        Check(glows == 4, $"fausses lumières : 4 lueurs présentes ({glows})");
+        // Fenêtres (B4b) : chaque immeuble a son entrée, chaque vitre tient dans son sprite.
+        using JsonDocument windows = JsonDocument.Parse(FileAccess.GetFileAsString("res://" + config.WindowsPath));
+        int buildings = 0;
+        int panes = 0;
+        List<string> faults = new();
+        foreach (string file in DirAccess.GetFilesAt("res://assets/props/urban_ruins"))
+        {
+            if (!file.StartsWith(FalseLightsConfig.WindowSpritePrefix, StringComparison.Ordinal) || !file.EndsWith(".png", StringComparison.Ordinal))
+                continue;
+            buildings++;
+            string stem = file.GetBaseName();
+            if (!windows.RootElement.TryGetProperty(stem, out JsonElement rects))
+            {
+                faults.Add($"{stem} absent");
+                continue;
+            }
+            Vector2 size = GD.Load<Texture2D>($"res://assets/props/urban_ruins/{file}").GetSize();
+            foreach (JsonElement rect in rects.EnumerateArray())
+            {
+                panes++;
+                if (rect[0].GetInt32() < 0 || rect[1].GetInt32() < 0 || rect[0].GetInt32() + rect[2].GetInt32() > size.X
+                    || rect[1].GetInt32() + rect[3].GetInt32() > size.Y)
+                    faults.Add($"{stem} : vitre hors du sprite");
+            }
+        }
+        // Chaque style d'immeuble garde au moins une vitre, sauf l'église (vitraux, aucune vitre ordinaire).
+        foreach (string style in new[] { "apartment", "house", "shop", "ruin" })
+        {
+            bool glazed = false;
+            foreach (JsonProperty building in windows.RootElement.EnumerateObject())
+                glazed |= building.Name.StartsWith($"{FalseLightsConfig.WindowSpritePrefix}{style}_", StringComparison.Ordinal)
+                    && building.Value.GetArrayLength() > 0;
+            if (!glazed)
+                faults.Add($"style {style} sans vitre");
+        }
+        Check(buildings > 0 && panes > 0 && faults.Count == 0,
+            $"fenêtres : {panes} vitres sur {buildings} immeubles {string.Join(", ", faults)}");
         (string, Action<JsonObject>, string)[] cases =
         {
             ("décor inconnu", root => root["kinds"]![0]!["sprite"] = "prop_lampe_inconnue", "prop_lampe_inconnue"),
@@ -734,12 +772,15 @@ public partial class CatalogContractRegression : Node
             ("ampoule hors du sprite", root => root["kinds"]![0]!["anchor"] = new JsonArray(-2, 10), "anchor"),
             ("mémoire inversée", root => root["memory_dead"] = 0.8, "memory_dead"),
             ("plus fortes de jour", root => root["dark_strength"] = 0.3, "day_strength"),
+            ("fenêtres introuvables", root => root["windows"]!["data"] = "assets/props/urban_ruins/absent.json", "absent.json"),
+            ("télévision sans rythme", root => root["windows"]!["screen_period_s"] = 0, "screen_period_s"),
             ("lampe éteinte plus vive", root => root["rhythm"]!["off_level"] = 0.5, "off_level"),
             ("clé inconnue", root => root["glow"] = 1, "glow"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
-            bool refused = !FalseLightsConfig.TryParse(Mutated(valid, mutate), FalseLightsConfig.PropSpriteExists, weathers,
+            bool refused = !FalseLightsConfig.TryParse(Mutated(valid, mutate), FalseLightsConfig.PropSpriteExists,
+                path => FileAccess.FileExists(path), weathers,
                 out FalseLightsConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
                 $"fausses lumières refusées ({label}) : {message}");
