@@ -339,10 +339,15 @@ public partial class HUD : CanvasLayer
         anchor.AnchorRight = 1f;
         _hudRoot.AddChild(anchor);
 
+        // Le crâne seul dit ce qu'on compte : pas de mot (retour de Raphaël, 13 octobre), doublé au pixel près.
         HBoxContainer killsRow = RightAlignedRow(anchor, PlateMargin - 4f, 6);
-        Label caption = MakeLabel(Tr("UI_HUD_KILLS"), 8, PalGrayLight, 3);
-        caption.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        killsRow.AddChild(caption);
+        killsRow.AddChild(new TextureRect
+        {
+            Texture = GD.Load<Texture2D>("res://assets/ui/hud/plan25/kill_skull.png"), TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            CustomMinimumSize = new Vector2(20f, 20f), SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        });
         _killsLabel = MakeLabel("0", 22, PalGold, 4);
         killsRow.AddChild(_killsLabel);
 

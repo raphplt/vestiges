@@ -221,7 +221,6 @@ UI_DEV_MODE,MODE DEV · Tout débloqué,DEV MODE · All unlocked
 UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
 UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.
 UI_HUD_LEVEL,NIV.,LVL
-UI_HUD_KILLS,ÉLIMINATIONS,KILLS
 UI_HUD_PERIL,Péril {0},Peril {0}
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
 UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
