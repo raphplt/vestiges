@@ -9,8 +9,8 @@ using Vestiges.Score;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Bilan de l'expédition : score, distance et durée en tête ; portrait, vues Expédition/Équipement et gains.
-/// Les colonnes défilent indépendamment. La révélation n'attribue rien : les gains sont enregistrés à la mort.
+/// Bilan de l'expédition : score, distance et durée en tête ; portrait, Expédition (dernier coup, détail du score, faits)
+/// et Équipement visibles ensemble, puis une rangée de gains (DECISIONS §150). Les colonnes défilent indépendamment. La révélation n'attribue rien : les gains sont enregistrés à la mort.
 /// Un premier appui termine la révélation sans activer les boutons ; Rejouer retourne au choix du personnage.
 /// </summary>
 public partial class GameOverScreen : CanvasLayer
@@ -21,8 +21,6 @@ public partial class GameOverScreen : CanvasLayer
     private const float ScoreStart = 0.4f;
     private const float ScoreSec = 0.9f;
     private const float BuildStart = 1.2f;
-    private const float TimelineStart = 1.5f;
-    private const float TimelineSec = 0.8f;
     private const float GainsStart = 2f;
     // Première carte de gain retournée après l'apparition de la rangée, les suivantes à la file.
     private const float FirstCardDelay = 0.25f;
@@ -30,12 +28,13 @@ public partial class GameOverScreen : CanvasLayer
     private const float MinRevealEnd = 2.5f;
     private const float ButtonGuardSec = 0.35f;
     private const float SlideIn = 24f;
-    private const float MiddleY = 320f;
+    private const float MiddleY = 258f;
+    private const float ExpeditionWidth = 560f;
+    private const float BuildIconSize = 40f;
     private static readonly Color VeilColor = new(0.025f, 0.02f, 0.05f, 0.93f);
 
     private EventBus _eventBus;
     private ScoreManager _scoreManager;
-    private RunTracker _runTracker;
     private Font _bodyFont;
     private Font _strongFont;
     private Font _boldFont;
@@ -50,21 +49,15 @@ public partial class GameOverScreen : CanvasLayer
     private Label _duration;
     private Label _durationCaption;
     private Label _record;
-    private Label _detail;
     private Control _middle;
     private TextureRect _portrait;
     private Label _characterName;
-    private VBoxContainer _overview;
     private VBoxContainer _equipment;
     private VBoxContainer _facts;
-    private ScrollContainer _detailScroll;
+    private ScrollContainer _expeditionScroll;
+    private ScrollContainer _equipmentScroll;
     private ScrollContainer _gainsScroll;
-    private Button _overviewTab;
-    private Button _equipmentTab;
-    private bool _equipmentVisible;
     private bool _leaving;
-    private Label _timelineCaption;
-    private RunTimelineStrip _timeline;
     private Control _gains;
     private Button _restartButton;
     private Button _hubButton;
@@ -130,11 +123,6 @@ public partial class GameOverScreen : CanvasLayer
         _scoreManager = scoreManager;
     }
 
-    public void SetRunTracker(RunTracker runTracker)
-    {
-        _runTracker = runTracker;
-    }
-
     // ==============================
     // Construction
     // ==============================
@@ -163,14 +151,12 @@ public partial class GameOverScreen : CanvasLayer
         Place(_durationCaption, 1260, 176, 480, 34);
         _record = MakeLabel("", _strongFont, TextRole.Heading, UITheme.TextColor, HorizontalAlignment.Center, 0);
         Place(_record, 0, 216, DesignSize.X, 38);
-        _detail = MakeLabel("", _bodyFont, TextRole.Subhead, UITheme.TextDim, HorizontalAlignment.Center, 0);
-        Place(_detail, 0, 260, DesignSize.X, 30);
 
         HBoxContainer middle = new();
         middle.AddThemeConstantOverride("separation", 24);
         _middle = middle;
-        Place(middle, 80, MiddleY, 1760, 620);
-        VBoxContainer character = new() { CustomMinimumSize = new Vector2(260, 0) };
+        Place(middle, 80, MiddleY, 1760, 622);
+        VBoxContainer character = new() { CustomMinimumSize = new Vector2(200, 0) };
         middle.AddChild(character);
         _portrait = new TextureRect { ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
@@ -180,56 +166,21 @@ public partial class GameOverScreen : CanvasLayer
         _characterName = UITheme.MakeLabel("", TextRole.Heading, UITheme.TextColor, TextWeight.Strong, HorizontalAlignment.Center);
         character.AddChild(_characterName);
 
-        PanelContainer detail = new() { CustomMinimumSize = new Vector2(980, 0), SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        detail.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
-        middle.AddChild(detail);
-        VBoxContainer detailContent = new();
-        detailContent.AddThemeConstantOverride("separation", 18);
-        detail.AddChild(detailContent);
-        HBoxContainer tabs = new();
-        tabs.AddThemeConstantOverride("separation", 12);
-        detailContent.AddChild(tabs);
-        _overviewTab = MenuSkin.Button("Expédition", true);
-        _equipmentTab = MenuSkin.Button("Équipement");
-        _overviewTab.SizeFlagsHorizontal = _equipmentTab.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        tabs.AddChild(_overviewTab);
-        tabs.AddChild(_equipmentTab);
-        _overviewTab.Pressed += () => SelectDetails(false);
-        _equipmentTab.Pressed += () => SelectDetails(true);
-        _detailScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
-        UITheme.ApplyFocusStyle(_detailScroll);
-        detailContent.AddChild(_detailScroll);
-        VBoxContainer pages = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _detailScroll.AddChild(pages);
-        _overview = new VBoxContainer();
-        _overview.AddThemeConstantOverride("separation", 12);
-        pages.AddChild(_overview);
-        _facts = new VBoxContainer();
-        _facts.AddThemeConstantOverride("separation", 12);
-        _overview.AddChild(_facts);
-        _timelineCaption = UITheme.MakeLabel(Tr("UI_END_TIMELINE"), TextRole.Section, UITheme.GoldBright);
-        _overview.AddChild(_timelineCaption);
-        _timeline = new RunTimelineStrip { CustomMinimumSize = new Vector2(0, 90), MouseFilter = Control.MouseFilterEnum.Ignore };
-        _overview.AddChild(_timeline);
-        _equipment = new VBoxContainer { Visible = false };
-        _equipment.AddThemeConstantOverride("separation", 18);
-        pages.AddChild(_equipment);
+        // Expédition et équipement côte à côte : tout le build se lit sans onglet (DECISIONS §150).
+        (_expeditionScroll, _facts) = AddColumn(middle, Tr("UI_END_EXPEDITION"), ExpeditionWidth);
+        (_equipmentScroll, _equipment) = AddColumn(middle, Tr("UI_END_EQUIPMENT"), 0f);
 
-        PanelContainer rewards = new() { CustomMinimumSize = new Vector2(450, 0) };
-        rewards.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
-        middle.AddChild(rewards);
-        VBoxContainer rewardsContent = new();
-        rewardsContent.AddThemeConstantOverride("separation", 18);
-        rewards.AddChild(rewardsContent);
-        rewardsContent.AddChild(UITheme.MakeLabel("CE QUI DEMEURE", TextRole.Section, UITheme.GoldBright));
-        _gainsScroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
+        // Gains en une rangée, sans titre, centrée ; elle défile de côté s'il y en a beaucoup.
+        _gainsScroll = new ScrollContainer { VerticalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.ShowNever, FocusMode = Control.FocusModeEnum.All };
         UITheme.ApplyFocusStyle(_gainsScroll);
-        rewardsContent.AddChild(_gainsScroll);
-        _gains = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        _gains.AddThemeConstantOverride("separation", 12);
-        _gainsScroll.AddChild(_gains);
+        Place(_gainsScroll, 80, 892, 1760, 62);
+        CenterContainer center = new() { CustomMinimumSize = new Vector2(1760, 60), MouseFilter = Control.MouseFilterEnum.Ignore };
+        _gainsScroll.AddChild(center);
+        HBoxContainer gains = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        gains.AddThemeConstantOverride("separation", 14);
+        _gains = gains;
+        center.AddChild(gains);
 
         HBoxContainer buttons = new() { Alignment = BoxContainer.AlignmentMode.Center };
         _buttons = buttons;
@@ -249,26 +200,39 @@ public partial class GameOverScreen : CanvasLayer
         buttons.AddChild(_collectionButton);
         _restartButton.FocusNeighborRight = _hubButton.GetPath();
         _hubButton.FocusNeighborLeft = _restartButton.GetPath();
-        _overviewTab.FocusNeighborBottom = _detailScroll.GetPath();
-        _equipmentTab.FocusNeighborBottom = _detailScroll.GetPath();
-        _detailScroll.FocusNeighborBottom = _restartButton.GetPath();
-        _detailScroll.FocusNeighborRight = _gainsScroll.GetPath();
-        _gainsScroll.FocusNeighborLeft = _detailScroll.GetPath();
-        _restartButton.FocusNeighborTop = _overviewTab.GetPath();
+        _expeditionScroll.FocusNeighborRight = _equipmentScroll.GetPath();
+        _equipmentScroll.FocusNeighborLeft = _expeditionScroll.GetPath();
+        _expeditionScroll.FocusNeighborBottom = _gainsScroll.GetPath();
+        _equipmentScroll.FocusNeighborBottom = _gainsScroll.GetPath();
+        _gainsScroll.FocusNeighborTop = _equipmentScroll.GetPath();
+        _gainsScroll.FocusNeighborBottom = _restartButton.GetPath();
+        _restartButton.FocusNeighborTop = _gainsScroll.GetPath();
         _seed = MakeLabel("", _bodyFont, TextRole.Body, UITheme.TextDim, HorizontalAlignment.Left, 0);
         Place(_seed, 80, 1036, 1200, 28);
         GetViewport().SizeChanged += FitToViewport;
         FitToViewport();
     }
 
-    private void SelectDetails(bool equipment)
+    /// <summary>Panneau de pierre titré, au contenu défilant ; largeur 0 : il prend la place qui reste.</summary>
+    private (ScrollContainer, VBoxContainer) AddColumn(HBoxContainer parent, string title, float width)
     {
-        _equipmentVisible = equipment;
-        _overview.Visible = !equipment;
-        _equipment.Visible = equipment;
-        MenuSkin.StyleButton(_overviewTab, !equipment);
-        MenuSkin.StyleButton(_equipmentTab, equipment);
-        _detailScroll.ScrollVertical = 0;
+        PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 0) };
+        if (width <= 0f)
+            panel.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        parent.AddChild(panel);
+        VBoxContainer column = new();
+        column.AddThemeConstantOverride("separation", 10);
+        panel.AddChild(column);
+        column.AddChild(UITheme.MakeLabel(title, TextRole.Section, UITheme.GoldBright));
+        ScrollContainer scroll = new() { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill, FocusMode = Control.FocusModeEnum.All };
+        UITheme.ApplyFocusStyle(scroll);
+        column.AddChild(scroll);
+        VBoxContainer content = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        content.AddThemeConstantOverride("separation", 10);
+        scroll.AddChild(content);
+        return (scroll, content);
     }
 
     private void FitToViewport()
@@ -349,10 +313,8 @@ public partial class GameOverScreen : CanvasLayer
 
         _characterName.Text = _build?.CharacterName ?? "";
         _portrait.Texture = _build != null ? CharacterPortrait.Artwork(_build.CharacterId) ?? CharacterPortrait.Idle(_build.CharacterId) : null;
-        SelectDetails(false);
         _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
-        _detail.Text = FormatDetail();
         _seed.Text = gm.EffectiveSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed) : "";
         string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
             : gm.LastRunHistoryPending ? Tr("UI_END_HISTORY_PENDING") : "";
@@ -361,8 +323,10 @@ public partial class GameOverScreen : CanvasLayer
         _seed.AddThemeColorOverride("font_color", saveNotice.Length > 0 ? UITheme.GoldBright : UITheme.TextVeryDim);
 
         BuildMiddle(record);
-        BuildTimeline();
         BuildGains(gm);
+        _expeditionScroll.ScrollVertical = 0;
+        _equipmentScroll.ScrollVertical = 0;
+        _gainsScroll.ScrollHorizontal = 0;
 
         _score.Text = "0";
         _elapsed = 0f;
@@ -378,15 +342,6 @@ public partial class GameOverScreen : CanvasLayer
         SetProcess(true);
     }
 
-    private string FormatDetail()
-    {
-        if (_scoreManager == null)
-            return "";
-        string detail = string.Format(Tr("UI_END_DETAIL"), _scoreManager.TotalKills.ToString("N0"));
-        float multiplier = _scoreManager.CharacterMultiplier * _scoreManager.MutatorMultiplier * _scoreManager.PerilMultiplier;
-        return multiplier > 1.001f ? $"{detail}  ·  ×{multiplier:0.00}" : detail;
-    }
-
     private void BuildMiddle(RunRecord record)
     {
         MenuSkin.Clear(_facts);
@@ -394,49 +349,72 @@ public partial class GameOverScreen : CanvasLayer
         Control killer = RunSummaryPanels.KillerCard(record?.DeathCause, _finalDuration);
         if (killer != null) _facts.AddChild(killer);
         int totalKills = _scoreManager?.TotalKills ?? 0;
-        _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills)));
+        _facts.AddChild(RunSummaryPanels.Facts(BuildScoreLines(), 1, 300f));
+        _facts.AddChild(new ColorRect { Color = new Color(0.23f, 0.24f, 0.28f), CustomMinimumSize = new Vector2(0, 1),
+            MouseFilter = Control.MouseFilterEnum.Ignore });
+        _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills), 1, 300f));
+
         _equipment.AddChild(RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration));
-        // Les Écussons gardent leurs cases, même vides (comme au HUD).
-        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BADGES"), TextRole.Section, UITheme.GoldBright));
-        HFlowContainer badges = MakeSlotFlow();
-        _equipment.AddChild(badges);
+        // Écussons et Réminiscences sur une même rangée, le sac dessous : tout le build tient sans défiler.
+        HBoxContainer marks = new();
+        marks.AddThemeConstantOverride("separation", 40);
+        _equipment.AddChild(marks);
+        VBoxContainer badgeColumn = BuildGroup(marks, Tr("INVENTORY_BADGES"));
+        HBoxContainer badges = MakeSlotRow();
+        badgeColumn.AddChild(badges);
         AddBuildSlots(badges, _build?.Badges, InventoryConfig.BadgeSlots, UITheme.GoldColor);
-        // Les objets du sac, un par fiche avec ses exemplaires.
-        _equipment.AddChild(UITheme.MakeLabel(Tr("INVENTORY_BAG"), TextRole.Section, UITheme.GoldBright));
-        HFlowContainer passives = MakeSlotFlow();
-        _equipment.AddChild(passives);
+        VBoxContainer perkColumn = BuildGroup(marks, "Réminiscences");
+        HBoxContainer perks = MakeSlotRow();
+        perkColumn.AddChild(perks);
         if (_build != null)
-            foreach ((string icon, string name, int copies, string rarity) in ItemSort.Order(_build.Passives, item => item.Rarity, item => item.Name))
+            foreach ((string icon, string name) in _build.Perks)
             {
-                Control slot = RunSummaryPanels.Slot(icon, copies, RarityPalette.Main(rarity), rarityId: rarity);
+                Control slot = RunSummaryPanels.Slot(icon, 0, UITheme.GoldDim, BuildIconSize);
+                slot.MouseFilter = Control.MouseFilterEnum.Stop;
+                slot.TooltipText = name;
+                perks.AddChild(slot);
+            }
+        if (_build == null || _build.Perks.Count == 0)
+            perks.AddChild(UITheme.MakeLabel("Aucune", TextRole.Subhead, UITheme.TextDim));
+
+        VBoxContainer bagColumn = BuildGroup(_equipment, Tr("INVENTORY_BAG"));
+        HFlowContainer passives = MakeSlotFlow();
+        bagColumn.AddChild(passives);
+        if (_build != null)
+            foreach ((string icon, string name, int copies, string rarity) in _build.Passives)
+            {
+                // Le nombre d'exemplaires seulement au-delà d'un, comme au HUD.
+                Control slot = RunSummaryPanels.Slot(icon, copies > 1 ? copies : 0, RarityPalette.Main(rarity), BuildIconSize, rarity);
                 slot.MouseFilter = Control.MouseFilterEnum.Stop;
                 slot.TooltipText = $"{name} · {RarityPalette.DisplayName(rarity)} · ×{copies}";
-                slot.AddChild(new TextureRect { Texture = RarityArt.Icons(RarityArt.Rank(rarity), 12)[0],
-                    CustomMinimumSize = new Vector2(12, 12), SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
-                    SizeFlagsVertical = Control.SizeFlags.ShrinkBegin, MouseFilter = Control.MouseFilterEnum.Ignore });
                 passives.AddChild(slot);
             }
         if (_build == null || _build.Passives.Count == 0)
             passives.AddChild(UITheme.MakeLabel("Aucun objet", TextRole.Subhead, UITheme.TextDim));
-        _equipment.AddChild(UITheme.MakeLabel("RÉMINISCENCES", TextRole.Section, UITheme.GoldBright));
-        if (_build != null)
-            foreach ((string icon, string name) in _build.Perks)
-            {
-                HBoxContainer row = new();
-                row.AddThemeConstantOverride("separation", 14);
-                row.AddChild(PlayerSheet.MakeIcon(icon, 40));
-                row.AddChild(UITheme.MakeLabel(name, TextRole.Subhead, UITheme.TextColor));
-                _equipment.AddChild(row);
-            }
-        if (_build == null || _build.Perks.Count == 0)
-            _equipment.AddChild(UITheme.MakeLabel("Aucune réminiscence", TextRole.Subhead, UITheme.TextDim));
+    }
+
+    private static VBoxContainer BuildGroup(Container parent, string title)
+    {
+        VBoxContainer group = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        group.AddThemeConstantOverride("separation", 8);
+        group.AddChild(UITheme.MakeLabel(title, TextRole.Subhead, UITheme.TextDim));
+        parent.AddChild(group);
+        return group;
+    }
+
+    // Quatre cases au plus : une rangée qui ne passe jamais à la ligne.
+    private static HBoxContainer MakeSlotRow()
+    {
+        HBoxContainer row = new();
+        row.AddThemeConstantOverride("separation", 10);
+        return row;
     }
 
     private static HFlowContainer MakeSlotFlow()
     {
         HFlowContainer flow = new();
-        flow.AddThemeConstantOverride("h_separation", 12);
-        flow.AddThemeConstantOverride("v_separation", 12);
+        flow.AddThemeConstantOverride("h_separation", 10);
+        flow.AddThemeConstantOverride("v_separation", 10);
         return flow;
     }
 
@@ -446,9 +424,31 @@ public partial class GameOverScreen : CanvasLayer
         {
             bool filled = carried != null && i < carried.Count;
             row.AddChild(filled
-                ? RunSummaryPanels.Slot(carried[i].Icon, carried[i].Level, frame)
-                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim));
+                ? RunSummaryPanels.Slot(carried[i].Icon, carried[i].Level, frame, BuildIconSize)
+                : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim, BuildIconSize));
         }
+    }
+
+    /// <summary>D'où vient le score : points des éliminations, part de l'oubli, puis les multiplicateurs qui jouent.</summary>
+    private List<(string Caption, string Value)> BuildScoreLines()
+    {
+        List<(string, string)> lines = new();
+        if (_scoreManager == null)
+            return lines;
+        int bonus = _scoreManager.ErasureBonusScore;
+        lines.Add((Tr("UI_END_SCORE_KILLS"), (_scoreManager.CombatScore - bonus).ToString("N0")));
+        if (bonus > 0)
+            lines.Add((Tr("UI_END_SCORE_ERASURE"), "+" + bonus.ToString("N0")));
+        AddMultiplier(lines, Tr("UI_END_SCORE_PERIL"), _scoreManager.PerilMultiplier);
+        AddMultiplier(lines, Tr("UI_END_SCORE_CHARACTER"), _scoreManager.CharacterMultiplier);
+        AddMultiplier(lines, Tr("UI_END_SCORE_MUTATORS"), _scoreManager.MutatorMultiplier);
+        return lines;
+    }
+
+    private static void AddMultiplier(List<(string, string)> lines, string caption, float multiplier)
+    {
+        if (Mathf.Abs(multiplier - 1f) > 0.001f)
+            lines.Add((caption, "×" + multiplier.ToString("0.00", PlayerSheet.French)));
     }
 
     private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)
@@ -469,17 +469,6 @@ public partial class GameOverScreen : CanvasLayer
         return facts;
     }
 
-    private void BuildTimeline()
-    {
-        RunJourney journey = _runTracker?.Journey;
-        _timeline.Visible = journey != null && journey.Samples.Count >= 2;
-        _timelineCaption.Visible = _timeline.Visible;
-        if (!_timeline.Visible)
-            return;
-        _timeline.SetData(journey.Samples, journey.Markers, _finalDuration, RunSummaryPanels.FormatDuration(0f), RunSummaryPanels.FormatDuration(_finalDuration));
-        _timeline.Reveal = 0f;
-    }
-
     private string FormatMeters(float meters) => string.Format(Tr("UI_END_DISTANCE_M"), Mathf.RoundToInt(meters).ToString("N0"));
 
     /// <summary>Les gains sont déjà acquis (sauvegardés à la mort) : les cartes ne font que les montrer.</summary>
@@ -490,27 +479,28 @@ public partial class GameOverScreen : CanvasLayer
         int vestiges = _scoreManager?.VestigesEarned ?? 0;
         if (vestiges > 0)
         {
-            AddGainCard(string.Format(Tr("UI_END_VESTIGES"), vestiges), UITheme.GoldBright).SetCounter(Tr("UI_END_VESTIGES"), vestiges);
-            // Le solde renvoie au Campement, où il se dépense (plan 36) ; faux si le règlement n'a pas été écrit.
+            // Le solde renvoie au Campement, où il se dépense (plan 36) ; absent si le règlement n'a pas été écrit.
+            string format = Tr("UI_END_VESTIGES");
             if (string.IsNullOrEmpty(gm.LastRunSaveError))
-                AddGainCard(string.Format(Tr("UI_END_VESTIGES_BALANCE"), MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French)),
-                    UITheme.TextLight);
+                format += "  ·  " + string.Format(Tr("UI_END_VESTIGES_BALANCE"), MetaSaveManager.GetVestiges().ToString("N0", PlayerSheet.French));
+            AddGainCard(format, UITheme.GoldBright, UITheme.LoadTex(UITheme.IconsPath + "ui_icon_vestiges.png")).SetCounter(format, vestiges);
         }
         foreach (string questId in _questsDone)
         {
             QuestDefinition quest = QuestDataLoader.Get(questId);
             if (quest != null)
                 AddGainCard(string.Format(Tr("UI_END_QUEST"), quest.Name, QuestBook.RewardSummary(quest)), UITheme.GreenKit,
-                    flipSound: "sfx_souvenir_trouve");
+                    QuestRewardIcon.For(quest), "sfx_souvenir_trouve");
         }
         foreach (WeaponData weapon in _newWeapons)
-            AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright, weapon.Sprite, "sfx_souvenir_trouve");
+            AddGainCard(string.Format(Tr("UI_END_NEW_WEAPON"), weapon.Name), UITheme.GoldBright,
+                ResourceLoader.Exists(weapon.Sprite) ? GD.Load<Texture2D>(weapon.Sprite) : null, "sfx_souvenir_trouve");
         _collectionButton.Visible = _newWeapons.Count > 0;
         if (_gainCards.Count == 0)
             _gains.AddChild(UITheme.MakeLabel("Aucun nouveau gain.", TextRole.Subhead, UITheme.TextDim));
     }
 
-    private EndGainCard AddGainCard(string text, Color accent, string icon = null, string flipSound = null)
+    private EndGainCard AddGainCard(string text, Color accent, Texture2D icon = null, string flipSound = null)
     {
         EndGainCard card = new();
         card.Setup(text, accent, _strongFont, icon, flipSound);
@@ -555,23 +545,26 @@ public partial class GameOverScreen : CanvasLayer
         float axis = Input.GetAxis("scroll_up", "scroll_down");
         if (axis != 0f)
         {
-            Control focus = GetViewport().GuiGetFocusOwner();
-            ScrollContainer scroll = focus == _gainsScroll || (focus != _detailScroll && _gainsScroll.GetGlobalRect().HasPoint(_gainsScroll.GetGlobalMousePosition()))
-                ? _gainsScroll : _detailScroll;
-            scroll.ScrollVertical += Mathf.RoundToInt(axis * 850f * (float)delta);
+            int step = Mathf.RoundToInt(axis * 850f * (float)delta);
+            if (IsActiveColumn(_gainsScroll))
+                _gainsScroll.ScrollHorizontal += step;
+            else
+                (IsActiveColumn(_expeditionScroll) ? _expeditionScroll : _equipmentScroll).ScrollVertical += step;
         }
+    }
+
+    /// <summary>La colonne qui a le focus, ou à défaut celle que survole la souris.</summary>
+    private bool IsActiveColumn(ScrollContainer scroll)
+    {
+        Control focus = GetViewport().GuiGetFocusOwner();
+        if (focus is ScrollContainer focused && (focused == _gainsScroll || focused == _expeditionScroll || focused == _equipmentScroll))
+            return focused == scroll;
+        return scroll.GetGlobalRect().HasPoint(scroll.GetGlobalMousePosition());
     }
 
     /// <summary>Un appui pendant la révélation la termine, gains compris et sans son ; il ne déclenche jamais un bouton.</summary>
     public override void _Input(InputEvent @event)
     {
-        if (_showing && _elapsed >= _revealEnd && @event.IsActionPressed("ui_cancel") && _equipmentVisible)
-        {
-            SelectDetails(false);
-            _overviewTab.GrabFocus();
-            GetViewport().SetInputAsHandled();
-            return;
-        }
         if (!_showing || _elapsed >= _revealEnd || !@event.IsPressed() || @event.IsEcho())
             return;
         if (@event is not (InputEventKey or InputEventMouseButton or InputEventJoypadButton))
@@ -607,16 +600,10 @@ public partial class GameOverScreen : CanvasLayer
         // Le record pulse doucement, une fois révélé : c'est la seule célébration de la run.
         float pulse = _isRecord && recordIn >= 1f ? 0.75f + 0.25f * Mathf.Sin(_elapsed * 4f) : 1f;
         _record.Modulate = new Color(pulse, pulse, pulse, recordIn);
-        _detail.Modulate = new Color(1f, 1f, 1f, recordIn);
 
         float middle = Mathf.Clamp((_elapsed - BuildStart) / 0.35f, 0f, 1f);
         _middle.Modulate = new Color(1f, 1f, 1f, middle);
         _middle.Position = new Vector2(80f, MiddleY + (1f - middle) * SlideIn);
-
-        float timeline = Mathf.Clamp((_elapsed - TimelineStart) / TimelineSec, 0f, 1f);
-        _timelineCaption.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(timeline * 4f, 0f, 1f));
-        _timeline.Modulate = _timelineCaption.Modulate;
-        _timeline.Reveal = timeline;
 
         float gains = Mathf.Clamp((_elapsed - GainsStart) / 0.35f, 0f, 1f);
         _gains.Modulate = new Color(1f, 1f, 1f, gains);
@@ -630,8 +617,6 @@ public partial class GameOverScreen : CanvasLayer
         _restartButton.Disabled = !enabled;
         _hubButton.Disabled = !enabled;
         _collectionButton.Disabled = !enabled;
-        _overviewTab.Disabled = !enabled;
-        _equipmentTab.Disabled = !enabled;
     }
 
     private void OnRestartPressed()

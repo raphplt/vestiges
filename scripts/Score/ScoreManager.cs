@@ -26,6 +26,8 @@ public partial class ScoreManager : Node
     private static string HighScorePath => DevelopmentMode.GetSavePath("highscore_kills.save");
 
     private int _combatScore;
+    // Part du score de combat gagnée par le bonus des zones qui s'oublient : le bilan la montre à part.
+    private int _erasureBonusScore;
     private int _totalKills;
     private int _bestScore;
     private bool _bestScoreWritable = true;
@@ -38,6 +40,7 @@ public partial class ScoreManager : Node
 
     public int CurrentScore => (int)(_combatScore * _scoreMultiplier * _mutatorMultiplier * _perilMultiplier);
     public int CombatScore => _combatScore;
+    public int ErasureBonusScore => _erasureBonusScore;
     public int TotalKills => _totalKills;
     /// <summary>Meilleur score avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
     public int BestScore => _endSettled ? _previousBest : _bestScore;
@@ -230,10 +233,11 @@ public partial class ScoreManager : Node
     {
         _totalKills++;
 
-        int points = _config?.KillPoints(enemyId) ?? 0;
+        int basePoints = _config?.KillPoints(enemyId) ?? 0;
         // Combattre là où le monde s'oublie rapporte davantage.
-        points = Mathf.RoundToInt(points * (1f + ErasureEffectAt(position).ScoreBonus));
+        int points = Mathf.RoundToInt(basePoints * (1f + ErasureEffectAt(position).ScoreBonus));
         _combatScore += points;
+        _erasureBonusScore += points - basePoints;
 
         if (enemyId == EnemyGrammar.FinalBossId)
             _bossDefeated = true;

@@ -216,13 +216,28 @@ public partial class RunObservation
         await Frames(3);
         if (!GetTree().Paused || GetViewport().GuiGetFocusOwner() != journalButton)
             throw new System.InvalidOperationException("Fermer le journal doit retrouver la pause et son focus.");
-        // L'abandon est confirmé dans une modale qui garde la run en pause.
+        // Recommencer, puis l'abandon, confirmé dans une modale qui garde la run en pause.
+        GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = true });
+        await Frames(1);
+        GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = false });
+        await Frames(2);
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Recommencer" } restart)
+            throw new System.InvalidOperationException("Bas après le Journal doit atteindre Recommencer.");
+        restart.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(3);
+        SaveFrame("pause-confirm-restart");
+        if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Continuer la partie" } || !GetTree().Paused)
+            throw new System.InvalidOperationException("Recommencer doit d'abord proposer de conserver la partie.");
+        GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        await Frames(1);
+        GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = false });
+        await Frames(3);
         GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = true });
         await Frames(1);
         GetViewport().PushInput(new InputEventAction { Action = "ui_down", Pressed = false });
         await Frames(2);
         if (GetViewport().GuiGetFocusOwner() is not Button { Text: "Abandonner la run" } abandon)
-            throw new System.InvalidOperationException("Bas après Paramètres doit atteindre Abandonner.");
+            throw new System.InvalidOperationException("Bas après Recommencer doit atteindre Abandonner.");
         abandon.EmitSignal(BaseButton.SignalName.Pressed);
         await Frames(3);
         SaveFrame("pause-confirm-abandon");
@@ -259,6 +274,34 @@ public partial class RunObservation
         SaveFrame("pause-scrolled");
         if (columns[1].ScrollVertical <= previousScroll || columns[0].ScrollVertical != 0)
             throw new System.InvalidOperationException("Le défilement doit affecter seulement la fiche sélectionnée.");
+        if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--restart-from-pause") >= 0)
+            await RestartFromPause();
         GD.Print($"[RunObservation] RESULT pause_captured=True output={_output}");
+    }
+
+    /// <summary>--restart-from-pause : Recommencer, confirmé, relance Main avec le même personnage et une graine neuve.</summary>
+    private async Task RestartFromPause()
+    {
+        GameManager manager = GetNode<GameManager>("/root/GameManager");
+        string character = manager.SelectedCharacterId;
+        ulong previousSeed = manager.EffectiveSeed;
+        Vestiges.UI.PauseMenu pause = _world.GetNode<Vestiges.UI.PauseMenu>("PauseMenu");
+        Button restart = null;
+        foreach (Node node in pause.FindChildren("*", "Button", true, false))
+            if (node is Button { Text: "Recommencer" } button)
+                restart = button;
+        restart!.EmitSignal(BaseButton.SignalName.Pressed);
+        await Frames(3);
+        foreach (Node node in pause.FindChildren("*", "Button", true, false))
+            if (node is Button { Text: "Recommencer" } accept && accept != restart)
+                accept.EmitSignal(BaseButton.SignalName.Pressed);
+        for (int tick = 0; tick < 1800 && (GetTree().CurrentScene is not Vestiges.World.WorldSetup { IsWorldReady: true } world || world == _world || GetTree().Paused); tick++)
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await Seconds(1.5);
+        if (GetTree().CurrentScene is not Vestiges.World.WorldSetup { IsWorldReady: true } || GetTree().Paused
+            || manager.CurrentState != GameManager.GameState.Run || manager.SelectedCharacterId != character || manager.RunSeed != 0)
+            throw new System.InvalidOperationException("Recommencer depuis la pause doit relancer Main avec le même personnage et une graine neuve.");
+        SaveFrame("restart-from-pause");
+        GD.Print($"[RunObservation] RESULT restart_from_pause character={character} seed {previousSeed} → {manager.EffectiveSeed}");
     }
 }

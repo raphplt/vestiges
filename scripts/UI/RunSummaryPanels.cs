@@ -12,13 +12,15 @@ namespace Vestiges.UI;
 public static class RunSummaryPanels
 {
     public const float IconSize = 48f;
-    private const float RowHeight = 62f;
+    // Le tableau des armes partage le bilan avec tout le build : icônes et lignes resserrées (DECISIONS §150).
+    private const float TableIconSize = 40f;
+    private const float RowHeight = 54f;
     private const float NameWidth = 250f;
     private const float BarWidth = 210f;
     private const float NumberWidth = 96f;
     private const int Separation = 10;
     // Du bord de la ligne à la colonne des éliminations : case, nom, part, dégâts, dégâts par seconde et leurs écarts.
-    private const float KillsColumnX = IconSize + 14f + NameWidth + BarWidth + NumberWidth * 2f + Separation * 5;
+    private const float KillsColumnX = TableIconSize + 14f + NameWidth + BarWidth + NumberWidth * 2f + Separation * 5;
     private static readonly Color BarTrack = new(1f, 1f, 1f, 0.06f);
 
     /// <summary>Une ligne par arme du build, puis les éliminations sans arme (brûlure, feu, explosions) s'il y en a.</summary>
@@ -59,7 +61,7 @@ public static class RunSummaryPanels
     private static Control HeaderRow()
     {
         HBoxContainer row = Row();
-        row.AddChild(Fixed(Text(TranslationServer.Translate("UI_END_WEAPONS"), TextRole.Subhead, UITheme.TextDim, weight: TextWeight.Strong), IconSize + 14f + NameWidth + BarWidth + Separation * 2));
+        row.AddChild(Fixed(Text(TranslationServer.Translate("UI_END_WEAPONS"), TextRole.Subhead, UITheme.TextDim, weight: TextWeight.Strong), TableIconSize + 14f + NameWidth + BarWidth + Separation * 2));
         foreach (string key in new[] { "UI_END_COL_DAMAGE", "UI_END_COL_DPS", "UI_END_COL_KILLS" })
             row.AddChild(Fixed(Text(TranslationServer.Translate(key), TextRole.Small, UITheme.TextDim, HorizontalAlignment.Right), NumberWidth));
         return row;
@@ -71,7 +73,7 @@ public static class RunSummaryPanels
         Color accent = top ? UITheme.GoldBright : UITheme.TextLight;
         HBoxContainer row = Row();
         row.CustomMinimumSize = new Vector2(0f, RowHeight);
-        row.AddChild(Slot(data?.Sprite, weapon.Level, top ? UITheme.GoldBright : UITheme.GoldDim));
+        row.AddChild(Slot(data?.Sprite, weapon.Level, top ? UITheme.GoldBright : UITheme.GoldDim, TableIconSize));
 
         VBoxContainer name = new() { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
         Label weaponName = Text(data?.Name ?? weapon.Id, TextRole.Lead, accent, weight: TextWeight.Strong);
@@ -204,15 +206,15 @@ public static class RunSummaryPanels
         return null;
     }
 
-    /// <summary>Faits de la run en deux colonnes : libellé discret, valeur lisible.</summary>
-    public static Control Facts(IReadOnlyList<(string Caption, string Value)> facts)
+    /// <summary>Faits de la run, <paramref name="pairsPerRow"/> paires par ligne : libellé discret, valeur lisible.</summary>
+    public static Control Facts(IReadOnlyList<(string Caption, string Value)> facts, int pairsPerRow, float captionWidth)
     {
-        GridContainer grid = new() { Columns = 4, MouseFilter = Control.MouseFilterEnum.Ignore };
+        GridContainer grid = new() { Columns = pairsPerRow * 2, MouseFilter = Control.MouseFilterEnum.Ignore };
         grid.AddThemeConstantOverride("h_separation", 18);
         grid.AddThemeConstantOverride("v_separation", 6);
         foreach ((string caption, string value) in facts)
         {
-            grid.AddChild(Fixed(Text(caption, TextRole.Subhead, UITheme.TextDim), 240f));
+            grid.AddChild(Fixed(Text(caption, TextRole.Subhead, UITheme.TextDim), captionWidth));
             grid.AddChild(Text(value, TextRole.Heading, UITheme.TextLight, weight: TextWeight.Strong));
         }
         return grid;

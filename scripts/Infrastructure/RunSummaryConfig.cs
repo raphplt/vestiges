@@ -7,7 +7,6 @@ public sealed class RunSummaryConfig
 {
     public float PixelsPerMeter { get; private init; } = 16f;
     public float DistanceStepSeconds { get; private init; } = 0.25f;
-    public float TimelineSampleSeconds { get; private init; } = 10f;
 
     public static RunSummaryConfig Load()
     {
@@ -25,7 +24,6 @@ public sealed class RunSummaryConfig
         {
             PixelsPerMeter = Read(d, "pixels_per_meter", defaults.PixelsPerMeter),
             DistanceStepSeconds = Read(d, "distance_step_seconds", defaults.DistanceStepSeconds),
-            TimelineSampleSeconds = Read(d, "timeline_sample_seconds", defaults.TimelineSampleSeconds),
         };
     }
 

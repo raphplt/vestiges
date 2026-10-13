@@ -4,8 +4,8 @@ using Vestiges.Infrastructure;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Carte de gain du bilan (plan 02 lot D, M4). Elle attend face cachée, se retourne à son tour, puis fait monter son
-/// compteur s'il y en a un (Vestiges gagnés). Le gain est déjà acquis quand la carte s'anime : l'animation ne fait que
+/// Carte de gain du bilan (plan 02 lot D, M4), compacte sur une ligne : icône puis texte (DECISIONS §150).
+/// Elle attend face cachée, se retourne à son tour, puis fait monter son compteur s'il y en a un (Vestiges gagnés). Le gain est déjà acquis quand la carte s'anime : l'animation ne fait que
 /// le montrer, et <see cref="Advance"/> avec un temps au-delà de <see cref="Duration"/> donne l'état final.
 /// </summary>
 public partial class EndGainCard : PanelContainer
@@ -28,23 +28,23 @@ public partial class EndGainCard : PanelContainer
     /// <summary>Durée de l'animation de cette carte, retournement et compteur compris.</summary>
     public float Duration => FlipSec + (_counterFormat != null ? CountSec : 0f);
 
-    public void Setup(string text, Color accent, Font font, string icon = null, string flipSound = null)
+    public void Setup(string text, Color accent, Font font, Texture2D icon = null, string flipSound = null)
     {
         MouseFilter = MouseFilterEnum.Ignore;
         if (flipSound != null)
             _flipSound = flipSound;
         _face = MenuSkin.Choice(accent);
         _back = MenuSkin.Choice(UITheme.TextVeryDim);
-        CustomMinimumSize = new Vector2(340, 104);
-        _label = new Label { Text = text, HorizontalAlignment = HorizontalAlignment.Left, MouseFilter = MouseFilterEnum.Ignore,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(270, 0) };
+        CustomMinimumSize = new Vector2(0, 52);
+        _label = new Label { Text = text, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore };
         _label.AddThemeFontOverride("font", font);
-        UITheme.SetTextRole(_label, TextRole.Subhead);
+        UITheme.SetTextRole(_label, TextRole.Body);
         _label.AddThemeColorOverride("font_color", accent);
         _label.AddThemeColorOverride("font_outline_color", UITheme.OutlineColor);
         _label.AddThemeConstantOverride("outline_size", 4);
 
-        if (string.IsNullOrEmpty(icon) || !ResourceLoader.Exists(icon))
+        if (icon == null)
         {
             _content = _label;
         }
@@ -54,8 +54,9 @@ public partial class EndGainCard : PanelContainer
             row.AddThemeConstantOverride("separation", 12);
             row.AddChild(new TextureRect
             {
-                Texture = GD.Load<Texture2D>(icon),
-                CustomMinimumSize = new Vector2(36f, 36f),
+                Texture = icon,
+                CustomMinimumSize = new Vector2(28f, 28f),
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = TextureFilterEnum.Nearest,

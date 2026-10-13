@@ -47,7 +47,7 @@ public partial class RunObservation
             .GetValue(gameOver)).Remove("chain_of_names");
         if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--bilan-rich") >= 0)
         {
-            // Épreuve de mise en page : neuf annonces et quatre Réminiscences, sans attribuer de quêtes.
+            // Épreuve de mise en page : neuf annonces, quatre Réminiscences et un sac de douze objets, sans attribuer de quêtes.
             List<string> gainedQuests = (List<string>)typeof(GameOverScreen).GetField("_questsDone", PrivateField).GetValue(gameOver);
             foreach (QuestDefinition quest in QuestDataLoader.GetAll())
             {
@@ -58,6 +58,11 @@ public partial class RunObservation
             {
                 _player.AcquireSpecialization(perk);
                 if (_player.Specializations.Count >= 4) break;
+            }
+            foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
+            {
+                if (_player.BagCount >= 12) break;
+                _player.AddItemCopy(item.Id);
             }
         }
         // Le coup fatal vient de la créature la plus proche, pour que la séquence ait un tueur à montrer.
@@ -107,26 +112,23 @@ public partial class RunObservation
         if (history.Count > 0)
             GD.Print($"[RunObservation] RECORD {System.Text.Json.JsonSerializer.Serialize(history[0])}");
         RunJourney journey = _world.GetNode<RunTracker>("RunTracker").Journey;
-        Dictionary<RunMarkerKind, int> markers = new();
-        foreach (RunMarker marker in journey.Markers)
-            markers[marker.Kind] = markers.GetValueOrDefault(marker.Kind) + 1;
-        RunSample last = journey.Samples.Count > 0 ? journey.Samples[^1] : default;
-        GD.Print($"[RunObservation] JOURNEY samples={journey.Samples.Count} last=({last.Time:0.0} s, niv. {last.Level}, {last.Kills} élim., {last.DistanceMeters:0} m) markers={System.Text.Json.JsonSerializer.Serialize(markers)}");
-        // Les deux vues se consultent sur place ; tous les gains restent dans leur propre défilement.
-        Button equipmentTab = (Button)typeof(GameOverScreen).GetField("_equipmentTab", PrivateField).GetValue(gameOver);
-        equipmentTab.GrabFocus();
-        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = true });
+        GD.Print($"[RunObservation] JOURNEY farthest={journey.MaxDistanceMeters:0} m travelled={journey.TravelledMeters:0} m");
+        // Expédition et équipement visibles ensemble, sans onglet (DECISIONS §150) : chaque colonne prend le focus et défile seule.
+        ScrollContainer expedition = (ScrollContainer)typeof(GameOverScreen).GetField("_expeditionScroll", PrivateField).GetValue(gameOver);
+        ScrollContainer equipment = (ScrollContainer)typeof(GameOverScreen).GetField("_equipmentScroll", PrivateField).GetValue(gameOver);
+        // Les boutons prennent le focus en s'activant, à la fin de la révélation : attendre ce moment.
+        Button replay = (Button)typeof(GameOverScreen).GetField("_restartButton", PrivateField).GetValue(gameOver);
+        for (int frame = 0; frame < 600 && replay.Disabled; frame++)
+            await Frames(1);
         await Frames(2);
-        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.A, Pressed = false });
-        await Frames(4);
-        if (!(bool)typeof(GameOverScreen).GetField("_equipmentVisible", PrivateField).GetValue(gameOver))
-            throw new System.InvalidOperationException("Le bilan doit ouvrir l'équipement avec A.");
+        expedition.GrabFocus();
+        GetViewport().PushInput(new InputEventAction { Action = "ui_right", Pressed = true });
+        await Frames(2);
+        GetViewport().PushInput(new InputEventAction { Action = "ui_right", Pressed = false });
+        await Frames(2);
+        if (GetViewport().GuiGetFocusOwner() != equipment)
+            throw new System.InvalidOperationException($"Droite depuis l'expédition doit atteindre l'équipement (focus : {GetViewport().GuiGetFocusOwner()?.GetPath()}).");
         SaveFrame("bilan-equipement");
-        GetViewport().PushInput(new InputEventJoypadButton { ButtonIndex = JoyButton.B, Pressed = true });
-        await Frames(4);
-        if ((bool)typeof(GameOverScreen).GetField("_equipmentVisible", PrivateField).GetValue(gameOver))
-            throw new System.InvalidOperationException("B doit retrouver l'expédition sans quitter le bilan.");
-        SaveFrame("bilan-expedition");
         Control middle = (Control)typeof(GameOverScreen).GetField("_middle", PrivateField).GetValue(gameOver);
         AssertMenuFits(middle, "bilan");
         if (System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--bilan-rich") >= 0)
@@ -137,7 +139,7 @@ public partial class RunObservation
             await Seconds(1.5f);
             Input.ActionRelease("scroll_down");
             await Frames(3);
-            if (gains.ScrollVertical == 0) throw new System.InvalidOperationException("Les gains longs doivent défiler.");
+            if (gains.ScrollHorizontal == 0) throw new System.InvalidOperationException("Les gains longs doivent défiler.");
             SaveFrame("bilan-gains-suite");
         }
 

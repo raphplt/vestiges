@@ -99,6 +99,19 @@ Trois lots, dans cet ordre ; l'outillage de mesure du [plan 42](42-signature.md)
 - Bilan : courbe de distance retirée ; score détaillé et build (armes, Écussons, objets) visibles sans clic ; gains en rangée compacte avec icônes, sans titre.
 - Pause : bouton Recommencer (même personnage, nouvelle graine, confirmation ; la run compte comme abandonnée).
 
+**Livré le 13 octobre :**
+
+- **Recommencer** dans la pause, entre le Journal et « Abandonner la run » : confirmation (« La partie en cours sera abandonnée et une nouvelle commencera avec le même personnage »), puis comme un abandon suivi d'un départ immédiat : même personnage et mêmes mutateurs, graine tirée au hasard, passage par l'état Hub puis Run pour que la nouvelle run reparte de zéro. Les trois confirmations de la pause partagent une même fenêtre (`PauseMenu.Confirm`).
+- **Bilan sans onglets** : Expédition et Équipement côte à côte, chacun dans son panneau de pierre et son défilement (gauche, droite, puis la rangée de gains et les boutons à la manette).
+  - Expédition : dernier coup, **détail du score** (points des éliminations, bonus de l'oubli, multiplicateurs de Péril, de personnage et de mutateurs quand ils jouent), puis les faits de la run sur une colonne. La ligne « N éliminations · ×1,10 » sous le record disparaît, reprise par ce détail. Le bonus de l'oubli est maintenant compté à part par `ScoreManager`.
+  - Équipement : tableau des armes resserré (icônes 40, lignes 54), Écussons et Réminiscences sur une même rangée, le sac dessous dans l'ordre de ramassage, nombre d'exemplaires affiché au-delà d'un seul. Un build de quatre armes, quatre Écussons, quatre Réminiscences et dix objets tient sans défiler.
+- **Courbe retirée** : la frise « Distance au départ au fil de la run » et tout ce qui ne servait qu'à elle (`RunTimelineStrip`, échantillons et repères de `RunJourney`, `timeline_sample_seconds`). La distance « au plus loin » reste en tête, avec le score et la durée.
+- **Gains en rangée** sous les panneaux, sans titre : cartes compactes sur une ligne, icône puis texte (Vestiges avec leur solde au Campement, quête avec l'icône de sa récompense, arme retrouvée). Au-delà de la largeur, la rangée défile de côté.
+
+**Vérifié** : build sans warning ; suites smoke, quêtes, trace de run, sauvegardes, navigation des menus, inventaire ; `--capture-death --bilan-rich --play-bot` (neuf quêtes, build complet) regardé à chaque itération, navigation gauche/droite entre les colonnes contrôlée ; `--restart-from-bilan --skip-reveal` relance bien une run ; `--capture-pause --restart-from-pause` : confirmation regardée, nouvelle run avec le même personnage et une autre graine (221092026 → 2331755709).
+
+**Non vérifié** : la lecture du bilan sur un écran 720p.
+
 ### L3 — Densité du monde (≈ 0,5 j)
 
 - Faune −30 %, pigeons qui s'envolent gardés.

@@ -194,7 +194,6 @@ public partial class GameBootstrap : Node
 
         levelUpScreen.SetFragmentManager(fragmentManager);
         gameOverScreen.SetScoreManager(scoreManager);
-        gameOverScreen.SetRunTracker(runTracker);
         PauseMenu pauseMenu = GetNode<PauseMenu>("../PauseMenu");
         JournalScreen journal = GetNode<JournalScreen>("../JournalScreen");
         pauseMenu.JournalRequested += journal.Show;

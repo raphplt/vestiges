@@ -161,6 +161,23 @@ public partial class PauseMenu : CanvasLayer
 		GetTree().ChangeSceneToFile("res://scenes/Hub.tscn");
 	}
 
+	/// <summary>
+	/// Comme un abandon suivi d'un départ immédiat : même personnage, graine tirée au hasard. Les mutateurs de la run
+	/// restent tels quels (le Hub les remet à zéro à chaque départ, mais n'en propose plus).
+	/// </summary>
+	private void RestartRun()
+	{
+		AudioManager.PlayUI("sfx_menu_confirmer");
+		_isPaused = false;
+		_root.Visible = false;
+		GetTree().Paused = false;
+		GameManager gameManager = GetNode<GameManager>("/root/GameManager");
+		gameManager.RunSeed = 0;
+		gameManager.ChangeState(GameManager.GameState.Hub);
+		gameManager.ChangeState(GameManager.GameState.Run);
+		GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
+	}
+
 	private void QuitGame()
 	{
 		AudioManager.PlayUI("sfx_menu_confirmer");
@@ -213,12 +230,18 @@ public partial class PauseMenu : CanvasLayer
 		};
 		vbox.AddChild(_journalButton);
 
+		// Recommencer : même personnage, nouvelle graine, la run en cours compte comme abandonnée (DECISIONS §150).
+		Button restartBtn = CreateButton("Recommencer");
+		restartBtn.Pressed += () => Confirm("Recommencer ?", "La partie en cours sera abandonnée et une nouvelle commencera avec le même personnage.",
+			"Recommencer", RestartRun);
+		vbox.AddChild(restartBtn);
+
 		Button hubBtn = CreateButton("Abandonner la run");
-		hubBtn.Pressed += () => ConfirmExit(false);
+		hubBtn.Pressed += () => Confirm("Abandonner la run ?", "La partie en cours sera abandonnée.", "Abandonner", ReturnToHub);
 		vbox.AddChild(hubBtn);
 
 		Button quitBtn = CreateButton("Quitter");
-		quitBtn.Pressed += () => ConfirmExit(true);
+		quitBtn.Pressed += () => Confirm("Quitter le jeu ?", "La partie en cours sera abandonnée.", "Quitter", QuitGame);
 		vbox.AddChild(quitBtn);
 
 		Control spacer = new() { SizeFlagsVertical = Control.SizeFlags.ExpandFill };
@@ -253,7 +276,7 @@ public partial class PauseMenu : CanvasLayer
 		detailScroll.AddChild(_loadoutContainer);
 		_sheetContainer = BuildInfoPanel(hbox, "STATISTIQUES", 440);
 		// Boucle explicite : la géométrie des colonnes ne détourne pas la navigation.
-		Button[] buttons = { resumeBtn, settingsBtn, _journalButton, hubBtn, quitBtn };
+		Button[] buttons = { resumeBtn, settingsBtn, _journalButton, restartBtn, hubBtn, quitBtn };
 		for (int i = 0; i < buttons.Length; i++)
 		{
 			Button button = buttons[i];
@@ -399,15 +422,15 @@ public partial class PauseMenu : CanvasLayer
 			Button empty = MenuSkin.Button("—");
 			empty.Disabled = true;
 			empty.FocusMode = Control.FocusModeEnum.None;
-			empty.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
+			empty.CustomMinimumSize = TileSize(grid);
 			grid.AddChild(empty);
 		}
 	}
 
-	private void ConfirmExit(bool quit)
+	private void Confirm(string title, string text, string acceptText, System.Action action)
 	{
 		_confirmReturnFocus = GetViewport().GuiGetFocusOwner();
-		_confirmAction = quit ? QuitGame : ReturnToHub;
+		_confirmAction = action;
 		_content.Visible = false;
 		_confirmation = new Control { Name = "AbandonConfirmation" };
 		_root.AddChild(_confirmation);
@@ -423,14 +446,14 @@ public partial class PauseMenu : CanvasLayer
 		VBoxContainer content = new();
 		content.AddThemeConstantOverride("separation", 24);
 		panel.AddChild(content);
-		content.AddChild(UITheme.MakeLabel(quit ? "Quitter le jeu ?" : "Abandonner la run ?", TextRole.Title, UITheme.TextLight));
-		Label description = UITheme.MakeLabel("La partie en cours sera abandonnée.", TextRole.Heading, UITheme.TextColor);
+		content.AddChild(UITheme.MakeLabel(title, TextRole.Title, UITheme.TextLight));
+		Label description = UITheme.MakeLabel(text, TextRole.Heading, UITheme.TextColor);
 		description.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		content.AddChild(description);
 		HBoxContainer actions = new(); actions.AddThemeConstantOverride("separation", 20); content.AddChild(actions);
 		Button cancel = MenuSkin.Button("Continuer la partie", true);
 		cancel.Pressed += CloseConfirmation; actions.AddChild(cancel);
-		Button accept = MenuSkin.Button(quit ? "Quitter" : "Abandonner");
+		Button accept = MenuSkin.Button(acceptText);
 		accept.Pressed += () => { System.Action action = _confirmAction; CloseConfirmation(); action?.Invoke(); };
 		actions.AddChild(accept);
 		cancel.FocusNeighborLeft = cancel.GetPath(); cancel.FocusNeighborRight = accept.GetPath();
