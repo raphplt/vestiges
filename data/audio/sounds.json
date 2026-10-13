@@ -160,6 +160,20 @@
     "priority": 80,
     "max_voices": 1
   },
+  "sfx_compte_tic": {
+    "path": "res://assets/audio/sfx/gameplay/countdown_tick.wav",
+    "volume_db": -10,
+    "min_interval_ms": 0,
+    "priority": 20,
+    "max_voices": 2
+  },
+  "sfx_compte_tic_presse": {
+    "path": "res://assets/audio/sfx/gameplay/countdown_tick_urgent.wav",
+    "volume_db": -7,
+    "min_interval_ms": 0,
+    "priority": 25,
+    "max_voices": 2
+  },
   "sfx_sante_basse": {
     "path": "res://assets/audio/sfx/gameplay/heartbeat.wav",
     "volume_db": 0,

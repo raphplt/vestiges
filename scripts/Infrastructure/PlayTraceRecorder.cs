@@ -46,7 +46,7 @@ public partial class PlayTraceRecorder : Node
                 $"traces/{DateTime.Now:yyyyMMdd-HHmmss}-{_gameManager.SelectedCharacterId}");
             int level = _progression.CurrentLevel;
             Write($"{stem}.csv", _trace.ToCsv());
-            Write($"{stem}.txt", _trace.Summary(_gameManager.SelectedCharacterId, _gameManager.RunSeed, level) + "\n");
+            Write($"{stem}.txt", _trace.Summary(_gameManager.SelectedCharacterId, _gameManager.EffectiveSeed, level) + "\n");
             GD.Print($"[PlayTraceRecorder] Trace écrite : {ProjectSettings.GlobalizePath(stem)}.csv");
         }
         _trace = null;

@@ -36,6 +36,7 @@ public partial class MemorialDirector : Node
     private EventBus _eventBus;
     private Player _player;
     private Memorial _gathering;
+    private GatherCountdown _countdown;
     private float _gatherRemaining;
     private int _collected;
     private float _lossTimer = LossCheckInterval;
@@ -118,6 +119,7 @@ public partial class MemorialDirector : Node
         _gatherRemaining = _config.ShardTime;
         _collected = 0;
         memorial.SetState(Memorial.MemorialState.Gathering);
+        Countdown().Begin(_gatherRemaining);
         UpdateStatus();
         AudioManager.PlayUI("sfx_chest_opening");
     }
@@ -177,14 +179,25 @@ public partial class MemorialDirector : Node
 
     private void UpdateStatus()
     {
-        _gathering.ShowStatus(string.Format(Tr("MEMORIAL_GATHER_STATUS"), _collected, _collected + _shards.Count,
-            Mathf.CeilToInt(_gatherRemaining)));
+        _countdown.Show(_collected, _collected + _shards.Count, _gatherRemaining);
+    }
+
+    /// <summary>Compte à rebours qui suit le joueur, créé au premier ramassage.</summary>
+    private GatherCountdown Countdown()
+    {
+        if (_countdown != null)
+            return _countdown;
+        _countdown = new GatherCountdown { Name = "GatherCountdown" };
+        _countdown.Setup(_player, RarityPalette.Colors("memorial").Light, _config.ShardUrgentTime);
+        AddChild(_countdown);
+        return _countdown;
     }
 
     private void EndGathering(bool success)
     {
         Memorial memorial = _gathering;
         _gathering = null;
+        _countdown?.End();
         foreach (MemoryShard shard in _shards)
             shard.QueueFree();
         _shards.Clear();

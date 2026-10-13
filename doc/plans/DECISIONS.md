@@ -1738,3 +1738,23 @@ Raphaël veut un jeu aussi complet et poussé que Vampire Survivors, Megabonk et
   - Les profils partent d'ordres de grandeur humains de réaction et d'attention.
   - Un enregistreur en mode dev suit les parties de test habituelles de Raphaël. On compare au profil fort quand quelques runs se sont accumulées, et on ne recale que si l'écart est grand. Plan 42 M0e.
   - La matrice n'attend pas ce contrôle.
+
+## 154. Retours de jeu du 13 octobre après-midi — 13 octobre 2026
+
+Cinq runs jouées par Raphaël (Traqueur ×2, Facteur ×2, Vagabond), toutes tracées par l'enregistreur (plan 42 M0e).
+
+- **Build cassé** : une run « totalement broken », intuable en moins de 10 min, à partir d'une seule arme (la Pelle à neige, corps à corps). Il s'est laissé tuer pour finir. Les autres morts viennent en partie de la difficulté et en partie d'un jeu sans forcer : les traces ne mesurent donc pas un joueur qui « try hard ».
+- **Départ trop rapide** : la montée en niveau va trop vite (niveau 10 vers 2 min ; traces : niveau 50 à 10 min, 66 à 14 min). Les cinq premières minutes sont trop nerveuses : des ennemis dangereux arrivent vite, et l'XP compense. Dans les autres bullet heaven, les premiers niveaux sont plus lents, ce qui rend la montée graduelle et évite de se sentir trop fort dès le début.
+  - **Tranché** : équilibrer le départ **avant** la grande matrice du plan 42, pour qu'elle mesure le jeu corrigé. Cible : **niveau 10 vers 4–5 min**, avec une pression ennemie qui baisse d'autant au début.
+- **Corps à corps** : les personnages de corps à corps semblent moins forts que ceux à distance. À mesurer (matrice, bloc personnages) puis équilibrer.
+- **Difficulté** : il manque des moyens de l'augmenter (monter son Péril, etc.). Va dans la conception du plan 42 (pression, gambling).
+- **Méthode des essais** : à chaque run d'essai, varier les personnages et les builds. C'est « hyper important » pour détecter les failles et les builds trop forts, et donc pour équilibrer, même si ce n'était pas le but premier de l'outillage.
+- **Petits points** :
+  - un badge « Nouveau » dans la Collection sur un objet qu'on vient de débloquer ;
+  - un tic-tac ou un compte à rebours quand on ramasse les trois éclats d'un Mémorial.
+- **Machine** : la grande mesure peut tourner cette nuit (4 cœurs, 7 à 8 h).
+- **Choix du personnage** (ajout du même jour) : la sélection ne doit pas changer au simple survol de la carte ; il faut cliquer. Fait : survol et focus ne font que surligner, seul l'appui choisit.
+- **Livré le 13 octobre** :
+  - badge « Nouveau » sur les cases de la Collection débloquées par une quête, tant qu'on ne les a pas regardées, et point d'or sur l'onglet ;
+  - compte à rebours des éclats au-dessus du joueur, à la place de celui du Mémorial, qui sortait de l'écran pendant le ramassage ; tic-tac à chaque seconde, pressé (deux par seconde) et en rouge dans les 5 dernières (`shard_urgent_time`) ;
+  - la trace de survie note la vraie graine de la run.

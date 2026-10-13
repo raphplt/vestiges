@@ -154,8 +154,8 @@ public partial class HubCharactersPanel : MarginContainer
                 text.AddChild(UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextVeryDim));
                 if (!unlocked)
                     text.AddChild(UITheme.MakeLabel("À débloquer", TextRole.Small, UITheme.TextVeryDim));
-                row.FocusEntered += () => ShowSheet(character);
-                row.MouseEntered += () => ShowSheet(character);
+                // Seul un clic (ou la validation à la manette) change le personnage choisi : survol et focus ne font que
+                // surligner la carte (DECISIONS §154).
                 row.Pressed += () => { ShowSheet(character); if (unlocked) _depart.GrabFocus(); else if (_quest.Visible) _quest.GrabFocus(); };
                 _list.AddChild(row);
                 _rows[character.Id] = row;

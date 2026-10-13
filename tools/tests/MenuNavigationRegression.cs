@@ -36,7 +36,11 @@ public partial class MenuNavigationRegression : Node
             CharacterData locked = CharacterDataLoader.GetAll().Find(character => !MetaSaveManager.IsCharacterUnlocked(character.Id));
             Check(locked != null, "Le profil neuf contient un héros verrouillé");
             Button lockedRow = (Button)characters.FindChild(locked.Id, true, false);
+            string examined = characters.ExaminedCharacterId;
             lockedRow.GrabFocus();
+            await Frames(2);
+            Check(characters.ExaminedCharacterId == examined, "Le focus seul ne change pas la fiche (DECISIONS §154)");
+            lockedRow.EmitSignal(BaseButton.SignalName.Pressed);
             await Frames(2);
             Check(!characters.CanDepart && Field<Button>(characters, "_depart").Disabled, "Le héros verrouillé ne peut pas partir");
             Check(manager.SelectedCharacterId == selected, "Examiner un héros ne change pas le choix confirmé");

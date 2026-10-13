@@ -39,6 +39,10 @@ public class MetaSaveData
     [JsonPropertyName("seen_hints")]
     public List<string> SeenHints { get; set; } = new();
 
+    /// <summary>Pièces débloquées par une quête et pas encore regardées dans la Collection (« genre:id »).</summary>
+    [JsonPropertyName("new_unlocks")]
+    public List<string> NewUnlocks { get; set; } = new();
+
     /// <summary>Dernières runs dont les acquis sont engagés : une même run ne se règle jamais deux fois (plan 26 Q2b).</summary>
     [JsonPropertyName("settled_runs")]
     public List<string> SettledRuns { get; set; } = new();
@@ -496,6 +500,12 @@ public static class MetaSaveManager
         {
             _data.CompletedQuests.Add(quest.Id);
             _data.QuestProgress.Remove(quest.Id);
+            foreach (QuestUnlock unlock in quest.Unlocks)
+            {
+                string key = UnlockKey(unlock.Kind, unlock.Id);
+                if (!_data.NewUnlocks.Contains(key))
+                    _data.NewUnlocks.Add(key);
+            }
             _batchDirty = true;
         }
         finally
@@ -503,6 +513,33 @@ public static class MetaSaveManager
             saved = EndBatch();
         }
         GD.Print($"[MetaSaveManager] Quest completed: {quest.Id}");
+        return true;
+    }
+
+    private static string UnlockKey(UnlockKind kind, string id) => $"{kind}:{id}";
+
+    /// <summary>Débloquée par une quête et pas encore regardée dans la Collection : elle porte le badge « Nouveau ».</summary>
+    public static bool IsNewUnlock(UnlockKind kind, string id)
+    {
+        Load();
+        return _data.NewUnlocks.Contains(UnlockKey(kind, id));
+    }
+
+    /// <summary>Au moins une pièce nouvelle de ce genre (onglet de la Collection).</summary>
+    public static bool HasNewUnlocks(UnlockKind kind)
+    {
+        Load();
+        string prefix = $"{kind}:";
+        return _data.NewUnlocks.Exists(key => key.StartsWith(prefix, StringComparison.Ordinal));
+    }
+
+    /// <summary>La pièce a été regardée : elle perd son badge. Faux si elle n'en avait pas.</summary>
+    public static bool MarkUnlockSeen(UnlockKind kind, string id)
+    {
+        Load();
+        if (!_data.NewUnlocks.Remove(UnlockKey(kind, id)))
+            return false;
+        Save();
         return true;
     }
 
@@ -628,6 +665,7 @@ public static class MetaSaveManager
         _data.CompletedQuests ??= new List<string>();
         _data.QuestProgress ??= new Dictionary<string, List<float>>();
         _data.SeenHints ??= new List<string>();
+        _data.NewUnlocks ??= new List<string>();
         _data.SettledRuns ??= new List<string>();
         _data.PendingHistory ??= new List<RunRecord>();
         _data.PendingHistory.RemoveAll(run => run == null || string.IsNullOrEmpty(run.RunId));

@@ -19,12 +19,15 @@ public partial class HubCollectionPanel : MarginContainer
     public string ExaminedEntryId { get; private set; }
     public string CurrentTab => _tab;
     private readonly Dictionary<string, string> _examined = new();
+    // Pièces nouvelles déjà regardées pendant cette ouverture : leur badge et leur mention restent jusqu'à la suivante.
+    private readonly HashSet<string> _seenNow = new();
     private Button _questLink;
     private string _questId;
     private const int Columns = 6;
     private const float TileSize = 112f;
     private const float IconSize = 64f;
     private static readonly Color LockedTint = new(0.48f, 0.45f, 0.5f, 1f);
+    private static readonly Color NewBadgeText = new(0.12f, 0.08f, 0.04f);
 
     private static string _tab = "weapons";
 
@@ -160,12 +163,16 @@ public partial class HubCollectionPanel : MarginContainer
     {
         if (!string.IsNullOrEmpty(focusWeaponId) && kind != null)
             _tab = kind;
+        _seenNow.Clear();
         MenuSkin.Clear(_tabs);
         Button[] tabs =
         {
             AddTab("weapons", "Armes"), AddTab("badges", Tr("INVENTORY_BADGES")), AddTab("passives", "Objets"),
             AddTab("perks", "Réminiscences"),
         };
+        foreach (Button tab in tabs)
+            if (MetaSaveManager.HasNewUnlocks(UnlockKindOf(tab.Name)))
+                tab.AddChild(NewMarker(tab));
         // Liens explicites : la recherche géométrique de Godot plongeait dans la grille au lieu de l'onglet voisin.
         for (int i = 0; i < tabs.Length; i++)
         {
@@ -177,7 +184,7 @@ public partial class HubCollectionPanel : MarginContainer
 
     private Button AddTab(string id, string text)
     {
-        Button tab = new() { Text = text, Flat = true, FocusMode = FocusModeEnum.All };
+        Button tab = new() { Name = id, Text = text, Flat = true, FocusMode = FocusModeEnum.All };
         bool active = _tab == id;
         StyleBoxFlat underline = new()
         {
@@ -311,6 +318,9 @@ public partial class HubCollectionPanel : MarginContainer
             tile.AddChild(rarity);
             tile.TooltipText = entry.Name + " · " + ItemPresentation.RarityText(item);
         }
+        // Débloquée par une quête et pas encore regardée : le badge reste jusqu'à la prochaine ouverture (DECISIONS §154).
+        if (entry.Unlocked && (_seenNow.Contains($"{_tab}:{entry.Id}") || MetaSaveManager.IsNewUnlock(TabUnlockKind(), entry.Id)))
+            tile.AddChild(NewBadge());
         tile.FocusEntered += () => ShowDetail(entry);
         tile.MouseEntered += () => ShowDetail(entry);
         tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); };
@@ -318,7 +328,9 @@ public partial class HubCollectionPanel : MarginContainer
         return tile;
     }
 
-    private UnlockKind TabUnlockKind() => _tab switch
+    private UnlockKind TabUnlockKind() => UnlockKindOf(_tab);
+
+    private static UnlockKind UnlockKindOf(string tab) => tab switch
     {
         "weapons" => UnlockKind.Weapon,
         "badges" => UnlockKind.Badge,
@@ -326,9 +338,35 @@ public partial class HubCollectionPanel : MarginContainer
         _ => UnlockKind.Object,
     };
 
+    /// <summary>Badge « Nouveau » posé en haut à droite d'une case.</summary>
+    private static Control NewBadge()
+    {
+        PanelContainer badge = new() { MouseFilter = MouseFilterEnum.Ignore };
+        badge.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = UITheme.GoldBright, ContentMarginLeft = 5f, ContentMarginRight = 5f, ContentMarginTop = 1f, ContentMarginBottom = 1f,
+        });
+        badge.AddChild(UITheme.MakeLabel("Nouveau", TextRole.Small, NewBadgeText));
+        badge.SetAnchorsAndOffsetsPreset(LayoutPreset.TopRight, LayoutPresetMode.KeepSize, 4);
+        badge.GrowHorizontal = GrowDirection.Begin;
+        return badge;
+    }
+
+    /// <summary>Point d'or sur un onglet qui contient une pièce nouvelle.</summary>
+    private static Control NewMarker(Button tab)
+    {
+        ColorRect marker = new() { Color = UITheme.GoldBright, CustomMinimumSize = new Vector2(10f, 10f), Size = new Vector2(10f, 10f),
+            MouseFilter = MouseFilterEnum.Ignore };
+        marker.SetAnchorsAndOffsetsPreset(LayoutPreset.TopRight, LayoutPresetMode.KeepSize);
+        return marker;
+    }
+
     private void ShowDetail(Entry entry)
     {
         ExaminedEntryId = entry.Id;
+        bool isNew = entry.Unlocked && (_seenNow.Contains($"{_tab}:{entry.Id}") || MetaSaveManager.IsNewUnlock(TabUnlockKind(), entry.Id));
+        if (isNew && MetaSaveManager.MarkUnlockSeen(TabUnlockKind(), entry.Id))
+            _seenNow.Add($"{_tab}:{entry.Id}");
         _examined[_tab] = entry.Id;
         QuestDefinition quest = entry.Preview ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
         _questId = quest?.Id;
@@ -345,7 +383,8 @@ public partial class HubCollectionPanel : MarginContainer
         _detailRarity.Text = hasRarity ? ItemPresentation.RarityText(item) : "";
         _detailRarity.AddThemeColorOverride("font_color", hasRarity ? ItemPresentation.Color(item) : UITheme.TextLight);
         _detailName.AddThemeColorOverride("font_color", item != null && !item.IsBadge ? ItemPresentation.Color(item) : UITheme.TextLight);
-        _detailState.Text = entry.Unlocked ? "Disponible en run" : entry.Preview ? "À venir" : "Pas encore disponible";
+        _detailState.Text = entry.Unlocked ? (isNew ? "Nouveau · disponible en run" : "Disponible en run")
+            : entry.Preview ? "À venir" : "Pas encore disponible";
         _detailText.Text = entry.Description;
         _detailStats.Text = entry.Stats;
         _detailCondition.Text = entry.Unlocked ? "" : entry.Condition;

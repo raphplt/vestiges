@@ -15,6 +15,7 @@ namespace Vestiges.Tests;
 /// avec le temps écoulé et la scène courante de chaque frame.
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
 /// --quest-focus ID : ouvre la quête précise ; les actions suivantes exercent ses liens réels vers la Collection.
+/// --claim-quests a,b : quêtes accomplies dans le profil isolé avant l'accueil (badge « Nouveau » de la Collection).
 /// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
 /// </summary>
 public partial class HubCapture : Node
@@ -46,6 +47,10 @@ public partial class HubCapture : Node
                 System.IO.File.WriteAllText(ProjectSettings.GlobalizePath(Vestiges.Infrastructure.DevelopmentMode.GetSavePath("meta_save.json")), fixture);
                 Vestiges.Infrastructure.MetaSaveManager.ReloadProfile();
             }
+
+            // --claim-quests a,b : quêtes accomplies avant l'accueil, leurs pièces portent le badge « Nouveau ».
+            foreach (string questId in Argument(args, "--claim-quests", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+                Vestiges.Infrastructure.MetaSaveManager.ClaimQuest(Vestiges.Infrastructure.QuestDataLoader.Get(questId), out _);
 
             GetTree().CurrentScene = null;
             Node hub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate();

@@ -21,6 +21,8 @@ public class MemorialConfig
     public float ShardDistanceMin;
     public float ShardDistanceMax;
     public float ShardTime;
+    /// <summary>Dernières secondes du ramassage : le tic-tac presse et le compte à rebours rougit (DECISIONS §154).</summary>
+    public float ShardUrgentTime;
     public float ShardPickupPx;
     public int BlessingChoices;
     public string BlessingMinRarity;
@@ -166,7 +168,7 @@ public static class LandmarkDataLoader
 
             JsonElement m = reader.Section("memorial");
             reader.AllowOnly(m, "memorial", "sprite_dormant", "sprite_awake", "sprite_shard", "placement", "min_spacing_px",
-                "hold_time", "shards", "shard_distance_px", "shard_time", "shard_pickup_px", "blessing_choices",
+                "hold_time", "shards", "shard_distance_px", "shard_time", "shard_urgent_time", "shard_pickup_px", "blessing_choices",
                 "blessing_min_rarity", "services");
             JsonElement ms = reader.Section(m, "services");
             reader.AllowOnly(ms, "memorial.services", "heal_cost", "heal_percent", "cost_growth", "lift_oubli_cost", "blessing_reroll_cost");
@@ -183,6 +185,7 @@ public static class LandmarkDataLoader
                 ShardDistanceMin = shardMin,
                 ShardDistanceMax = shardMax,
                 ShardTime = reader.Positive(m, "shard_time"),
+                ShardUrgentTime = reader.Positive(m, "shard_urgent_time"),
                 ShardPickupPx = reader.Positive(m, "shard_pickup_px"),
                 BlessingChoices = reader.Count(m, "blessing_choices", 6),
                 BlessingMinRarity = reader.OneOf(m, "blessing_min_rarity", rarityIds),
@@ -192,6 +195,8 @@ public static class LandmarkDataLoader
                 LiftOubliCost = reader.Integer(ms, "lift_oubli_cost", 0, 100_000),
                 BlessingRerollCost = reader.Integer(ms, "blessing_reroll_cost", 0, 100_000),
             };
+            if (memorial.ShardUrgentTime >= memorial.ShardTime)
+                reader.Fail("memorial.shard_urgent_time : doit rester sous shard_time");
 
             JsonElement r = reader.Section("rift");
             reader.AllowOnly(r, "rift", "sprite_open", "sprite_closed", "placement", "min_spacing_px", "hold_time", "offers",

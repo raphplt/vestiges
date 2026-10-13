@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Godot;
-using Vestiges.UI;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
@@ -29,7 +28,6 @@ public partial class Memorial : StaticBody2D, IInteractable
     private MemorialConfig _config;
     private Sprite2D _sprite;
     private LightColumn _column;
-    private Label _status;
     private LightColumn _revivalColumn;
     private readonly List<Sprite2D> _revivalShards = new();
     private EventBus _eventBus;
@@ -69,19 +67,6 @@ public partial class Memorial : StaticBody2D, IInteractable
             MoveChild(shadow, 0);
         }
 
-        // Texte à lire au-dessus des entités : compte des éclats et temps restant pendant le rassemblement.
-        _status = new Label
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Position = new Vector2(-60f, _sprite.Offset.Y - 18f),
-            Size = new Vector2(120f, 12f),
-            ZIndex = 20,
-            Visible = false,
-            TextureFilter = TextureFilterEnum.Nearest,
-        };
-        UITheme.SetCompactText(_status, 8);
-        _status.AddThemeColorOverride("font_color", ColumnColors.Light);
-        AddChild(_status);
     }
 
     public override void _EnterTree()
@@ -110,7 +95,6 @@ public partial class Memorial : StaticBody2D, IInteractable
     public void SetState(MemorialState state)
     {
         State = state;
-        _status.Visible = state == MemorialState.Gathering;
         // Pendant le rassemblement, les éclats portent la lumière ; celle du Mémorial masquerait son compteur.
         _column.Visible = state == MemorialState.Dormant;
         if (CanInteract)
@@ -131,8 +115,6 @@ public partial class Memorial : StaticBody2D, IInteractable
                 break;
         }
     }
-
-    public void ShowStatus(string text) => _status.Text = text;
 
     /// <summary>
     /// Part du Mémorial dans son réveil, à l'avancement <paramref name="progress"/> (0 à 1) : une colonne élargie
@@ -175,7 +157,6 @@ public partial class Memorial : StaticBody2D, IInteractable
 
     private void BeginRevival(int shards, Texture2D shardTexture)
     {
-        _status.Visible = false;
         _revivalColumn = new LightColumn { Name = "RevivalColumn" };
         AddChild(_revivalColumn);
         _revivalColumn.Configure(ColumnColors, 240f, 3f, 20f);
