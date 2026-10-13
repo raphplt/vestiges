@@ -26,6 +26,11 @@ public partial class HubCharactersPanel : MarginContainer
     private readonly Dictionary<string, Button> _rows = new();
     // Le médaillon ne s'allume pas à la sélection : le cadre doré de la carte suffit (DECISIONS §150).
     private readonly StyleBoxFlat _medallion = Medallion(new Color("4a4550"));
+    private const float RowHeight = 124f;
+    private const float RowInset = 20f;
+    private const float MedallionWidth = 66f;
+    private static readonly Color LockedStone = new(0.62f, 0.6f, 0.66f);
+    private static readonly Color LockedSilhouette = new(0.2f, 0.19f, 0.24f);
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
     private int _idleCount;
     private float _idleTime;
@@ -134,24 +139,36 @@ public partial class HubCharactersPanel : MarginContainer
                 MenuSkin.StyleRosterCard(row, false);
                 row.Name = character.Id;
                 row.AccessibilityName = character.Name;
-                row.CustomMinimumSize = new Vector2(300, 112);
-                Panel medallion = new() { Position = new Vector2(14, 10), Size = new Vector2(68, 92), MouseFilter = MouseFilterEnum.Ignore };
+                row.CustomMinimumSize = new Vector2(300, RowHeight);
+                // Verrouillé : la pierre s'éteint, le personnage n'est qu'une ombre, le nom pâlit (DECISIONS §150).
+                row.SelfModulate = unlocked ? Colors.White : LockedStone;
+                // Médaillon et texte en conteneurs, en retrait égal du liseré de pierre : rien ne touche le cadre.
+                HBoxContainer content = new() { MouseFilter = MouseFilterEnum.Ignore };
+                content.AddThemeConstantOverride("separation", 16);
+                row.AddChild(content);
+                content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+                content.OffsetLeft = RowInset; content.OffsetRight = -RowInset;
+                content.OffsetTop = RowInset; content.OffsetBottom = -RowInset;
+                Panel medallion = new() { CustomMinimumSize = new Vector2(MedallionWidth, 0), MouseFilter = MouseFilterEnum.Ignore };
                 medallion.AddThemeStyleboxOverride("panel", _medallion);
-                row.AddChild(medallion);
+                content.AddChild(medallion);
                 TextureRect sprite = new()
                 {
-                    Texture = CharacterPortrait.Idle(character.Id), Position = new Vector2(16, 8), Size = new Vector2(64, 96),
+                    Texture = CharacterPortrait.Idle(character.Id),
                     ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                     TextureFilter = TextureFilterEnum.Nearest, MouseFilter = MouseFilterEnum.Ignore,
-                    Modulate = unlocked ? Colors.White : new Color(0.55f, 0.53f, 0.58f),
+                    Modulate = unlocked ? Colors.White : LockedSilhouette,
                 };
-                row.AddChild(sprite);
-                Label name = UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextDim);
-                name.Position = new Vector2(98, 26);
-                row.AddChild(name);
-                Label state = UITheme.MakeLabel(unlocked ? "Jouable" : "À débloquer", TextRole.Small, UITheme.TextDim);
-                state.Position = new Vector2(98, 62);
-                row.AddChild(state);
+                medallion.AddChild(sprite);
+                sprite.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+                sprite.OffsetLeft = sprite.OffsetTop = 4f;
+                sprite.OffsetRight = sprite.OffsetBottom = -4f;
+                VBoxContainer text = new() { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
+                text.AddThemeConstantOverride("separation", 2);
+                content.AddChild(text);
+                text.AddChild(UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextVeryDim));
+                if (!unlocked)
+                    text.AddChild(UITheme.MakeLabel("À débloquer", TextRole.Small, UITheme.TextVeryDim));
                 row.FocusEntered += () => ShowSheet(character);
                 row.MouseEntered += () => ShowSheet(character);
                 row.Pressed += () => { ShowSheet(character); if (unlocked) _depart.GrabFocus(); else if (_quest.Visible) _quest.GrabFocus(); };

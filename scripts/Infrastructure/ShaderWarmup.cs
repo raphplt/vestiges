@@ -44,6 +44,8 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/menu_game_veil.gdshader", SampleKind.Rectangle),
         ("res://assets/shaders/menu_portrait.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/minimap_disc.gdshader", SampleKind.Sprite),
+        // Contour des icônes du sac au HUD : compilé au premier objet ramassé, en pleine run.
+        ("res://assets/shaders/outline.gdshader", SampleKind.Sprite),
     };
     private static readonly Dictionary<string, Shader> Shaders = new();
     private static Texture2D _texture;

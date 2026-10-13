@@ -199,11 +199,15 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
 		btn.AddThemeColorOverride("font_hover_pressed_color", GoldBright);
 		btn.AddThemeColorOverride("font_disabled_color", TextVeryDim);
-		ApplyFocusStyle(btn);
+		// Clavier et manette : le bouton choisi s'éclaire comme au survol, pas de liseré à côté (DECISIONS §150).
+		if (hoverTex != null)
+			btn.AddThemeStyleboxOverride("focus", CreateNinePatch(hoverTex, 4, 4, 4, 4));
+		else
+			ApplyFocusStyle(btn);
 		WireButtonAudio(btn);
 	}
 
-	/// <summary>Un seul repère latéral, également lisible quand le survol et le focus se superposent.</summary>
+	/// <summary>Repère de focus des contrôles sans pierre éclairée (défilements, curseurs) : un liseré latéral.</summary>
 	public static void ApplyFocusStyle(Control control)
 	{
 		StyleBoxFlat focus = new()
@@ -233,7 +237,10 @@ public static class UITheme
 		btn.AddThemeColorOverride("font_color", fontColor);
 		btn.AddThemeColorOverride("font_hover_color", GoldColor);
 		btn.AddThemeColorOverride("font_pressed_color", GoldBright);
-		ApplyFocusStyle(btn);
+		if (hoverTex != null)
+			btn.AddThemeStyleboxOverride("focus", CreateNinePatch(hoverTex, 4, 4, 4, 4));
+		else
+			ApplyFocusStyle(btn);
 		WireButtonAudio(btn);
 	}
 

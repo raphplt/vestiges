@@ -8,7 +8,8 @@ namespace Vestiges.UI;
 /// <summary>
 /// Inventaire au HUD (plan 35, disposition du plan 37 R3) : les Écussons en grandes cartes au-dessus des armes, cadre
 /// doré, niveau et fil d'usage ; les objets du sac en colonne au bord gauche, icône nue et nombre d'exemplaires teinté de
-/// la rareté, dans l'ordre de ramassage, sans cadre ni compte du sac (DECISIONS §150). Rafraîchi sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>, jamais par image. Sous chaque
+/// la rareté, dans l'ordre de ramassage, sans cadre ni compte du sac ; un contour d'un pixel à la couleur de la rareté détache
+/// l'icône du sol (DECISIONS §150). Rafraîchi sur <see cref="EventBus.PassiveSouvenirSlotsChanged"/>, jamais par image. Sous chaque
 /// Écusson, un fil se remplit avec l'usage (plan 35 I7) ; un niveau gagné ainsi fait briller l'Écusson une fois.
 /// </summary>
 public partial class HudInventoryBar : Control
@@ -17,6 +18,7 @@ public partial class HudInventoryBar : Control
     private const float BadgeGap = 4f;
     private const float ItemIconSize = 24f;
     private const int ItemsPerColumn = 12;
+    private const string OutlineShaderPath = "res://assets/shaders/outline.gdshader";
     private static readonly Color LevelColor = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     // Les Écussons se distinguent des objets par un cadre doré, en attendant leurs icônes brodées (plan 25).
     private static readonly Color BadgeFrameTint = new(1.4f, 1.1f, 0.5f);
@@ -53,6 +55,7 @@ public partial class HudInventoryBar : Control
     private GridContainer _bag;
     private Texture2D _emptyTexture;
     private Texture2D _filledTexture;
+    private Shader _outline;
     private EventBus _eventBus;
     private GroupCache _groupCache;
 
@@ -61,6 +64,7 @@ public partial class HudInventoryBar : Control
         MouseFilter = MouseFilterEnum.Ignore;
         _emptyTexture = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive.png");
         _filledTexture = GD.Load<Texture2D>("res://assets/ui/hud/hud_slot_passive_filled.png");
+        _outline = GD.Load<Shader>(OutlineShaderPath);
         BuildBadgeShelf();
         BuildBagColumn();
 
@@ -154,6 +158,7 @@ public partial class HudInventoryBar : Control
         root.AddThemeConstantOverride("separation", 2);
         ItemRow row = new() { Root = root, Icon = Icon(), Copies = Text(9, CountColor) };
         row.Icon.CustomMinimumSize = new Vector2(ItemIconSize, ItemIconSize);
+        row.Icon.Material = new ShaderMaterial { Shader = _outline };
         root.AddChild(row.Icon);
         row.Copies.CustomMinimumSize = new Vector2(14f, 0f);
         row.Copies.SizeFlagsVertical = SizeFlags.ShrinkEnd;
@@ -234,6 +239,7 @@ public partial class HudInventoryBar : Control
     private static void FillItem(ItemRow row, ActivePassiveSouvenir owned)
     {
         row.Root.Visible = true;
+        ((ShaderMaterial)row.Icon.Material).SetShaderParameter("outline_color", ItemPresentation.Color(owned.Data));
         row.Copies.AddThemeColorOverride("font_color", ItemPresentation.Color(owned.Data));
         row.Root.TooltipText = $"{owned.Data.Name} · {ItemPresentation.RarityText(owned.Data)} · ×{owned.Copies}";
         row.Icon.Texture = LoadIcon(owned);
