@@ -321,6 +321,13 @@ public partial class GameBootstrap : Node
 #if TOOLS
         if (DevelopmentMode.IsEnabled)
             AddDevelopmentTools();
+        // Trace de survie des vraies parties (plan 42 M0e) ; les bancs ont leur propre relevé.
+        if (!DevelopmentMode.IsTestSession)
+        {
+            PlayTraceRecorder recorder = new() { Name = "PlayTraceRecorder" };
+            recorder.Setup(player);
+            GetNode("..").CallDeferred("add_child", recorder);
+        }
 #endif
 
         if (SteamManager.IsActive)

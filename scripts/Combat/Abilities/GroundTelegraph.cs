@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 
@@ -18,6 +19,18 @@ public partial class GroundTelegraph : Node2D
     private readonly PixelFx _fx;
     private int _progressStep = -1;
 
+    /// <summary>
+    /// Annonces de coup affichées (disques et couloirs, pas les simples limites de portée), lues par le bot de mesure
+    /// qui les fuit (plan 42 M0d). Coordonnées au sol, comme le dessin.
+    /// </summary>
+    internal static readonly HashSet<GroundTelegraph> Shown = new();
+    internal bool IsLane { get; private set; }
+    internal Vector2 Origin => GlobalPosition;
+    internal Vector2 GroundEnd { get; private set; }
+    internal float GroundSize { get; private set; }
+    /// <summary>Annonces successives d'un même marqueur réutilisé : chaque coup est une menace nouvelle.</summary>
+    internal int Generation { get; private set; }
+
     public GroundTelegraph()
     {
         TopLevel = true;
@@ -31,6 +44,8 @@ public partial class GroundTelegraph : Node2D
     /// <summary>Disque au sol de rayon <paramref name="radius"/> : une ellipse deux fois plus large que haute à l'écran.</summary>
     public void ShowCircle(Vector2 center, float radius, FxFamily family)
     {
+        IsLane = false;
+        GroundSize = radius;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
         spec.Squash = Iso.GroundSquash;
         Begin(center, spec);
@@ -43,6 +58,7 @@ public partial class GroundTelegraph : Node2D
         spec.Squash = Iso.GroundSquash;
         spec.FillDensity = 0f;
         spec.ZIndex = 0;
+        Shown.Remove(this);
         GlobalPosition = center;
         Visible = true;
         _progressStep = -1;
@@ -53,6 +69,9 @@ public partial class GroundTelegraph : Node2D
     public void ShowLine(Vector2 from, Vector2 to, float width, FxFamily family)
     {
         Vector2 ground = Iso.ToGround(to - from);
+        IsLane = true;
+        GroundEnd = ground;
+        GroundSize = width;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Lane, family, ground.Length(), width, 1f);
         spec.Angle = ground.Angle();
         spec.Squash = Iso.GroundSquash;
@@ -71,6 +90,8 @@ public partial class GroundTelegraph : Node2D
     /// <summary>Intensité 1 → 0 de l'éclat d'impact : zone pleine qui se défait en trame.</summary>
     public void SetFlash(float intensity)
     {
+        // Le coup est parti : l'éclat n'est plus une menace à fuir.
+        Shown.Remove(this);
         float clamped = Mathf.Clamp(intensity, 0f, 1f);
         _fx.SetProgress(1f);
         _fx.SetFillDensity(1f);
@@ -82,7 +103,10 @@ public partial class GroundTelegraph : Node2D
     {
         _fx.Stop();
         Visible = false;
+        Shown.Remove(this);
     }
+
+    public override void _ExitTree() => Shown.Remove(this);
 
     private void Begin(Vector2 origin, in PixelFxSpec baseSpec)
     {
@@ -95,5 +119,7 @@ public partial class GroundTelegraph : Node2D
         _progressStep = -1;
         _fx.Hold(origin, spec, CombatFxSettings.EnemyOpacity);
         SetProgress(0f);
+        Generation++;
+        Shown.Add(this);
     }
 }

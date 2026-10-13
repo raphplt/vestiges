@@ -145,12 +145,51 @@ Tout passe par `tools/measure_run.sh` (`MEASURE_EXTRA_ARGS`), sans rien changer 
   - Débutant : erre autour du départ, détour de 220 px, carte au hasard.
   - Moyen : garde un cap, détour de 700 px, prend d'abord ce qu'il possède (montées, ascensions, spécialisations).
   - Fort : garde un cap, détour de 1 100 px, choisit par score (arme principale poussée, objets qui partagent une stat déjà portée, rareté), relance une offre sans intérêt, bannit gratuitement une nouveauté inutile ; s'écarte de la foule ; il dashe quand trois créatures l'entourent à moins de 110 px, ou pour fuir sous 40 % des PV. Son écart à la foule marche si bien que quatre créatures au contact n'arrivent que quelques images par run : d'où ce seuil bas (16 dashs en 5 min sur la graine 7). Avec un build fermé, une montée d'arme est presque toujours offerte : il ne relance donc presque jamais.
-  - Limite : aucun profil n'esquive les projectiles, faute d'index des tirs ennemis ; le fort ne lit que la foule.
+  - L'esquive des tirs et des annonces au sol vient en M0d (ci-dessous).
   - Ajouter `--mortal` pour compter les morts.
 - **M0c — builds et méta** (`RunObservation.Builds.cs`) :
   - `--start-build <id>` : cinq builds dans `tools/tests/measure_builds.json` (une arme poussée, synergie d'objets autour du feu, zone, critique, tank). Armes au départ, cartes du build prises d'abord, objets posés dans le sac à heure fixe (le butin d'un coffre ne se choisit pas), nouvelles armes refusées si le build est fermé.
   - `--meta neuf|milieu|complet`, avec `MEASURE_PROFILE=normal` : milieu = une quête sur deux du catalogue (chaque famille à moitié) et la moitié des rangs du Campement ; complet = tout. Les rangs de puissance brute ne sont jamais achetés (§4).
   - Les niveaux d'arme ne s'imposent pas : le build grandit par les cartes, ce qui garde une courbe de puissance réaliste.
+
+### M0d et M0e — esquive et contrôle (demandés le 13 octobre)
+
+Retour de Raphaël : un bot invincible gâche la mesure, un bot qui meurt par bêtise aussi. Il faut un bot qui esquive comme un joueur, sans séance de jeu dédiée.
+
+- **M0d — esquive** (`RunObservation.Dodge.cs`). Le bot ne lit que ce qu'un joueur voit à l'écran :
+  - les tirs ennemis en vol : il s'écarte de leur trajectoire ;
+  - les annonces de coup au sol, disques et couloirs : il en sort.
+
+  Chaque menace est remarquée ou non, puis seulement après un temps de réaction. Si marcher ne suffit plus, il dashe.
+
+  | Profil | Réaction | Menaces remarquées | Dash pour esquiver |
+  |---|---|---|---|
+  | Débutant | 0,5 s | une sur trois | jamais |
+  | Moyen | 0,35 s | deux sur trois | sous 40 % des PV |
+  | Fort | 0,22 s | 95 % | dès que marcher ne suffit plus |
+
+  Ce sont des ordres de grandeur humains, pas un calage sur un joueur. Côté jeu, seul un accès interne en lecture est ajouté (`EnemyProjectile.InFlight`, `GroundTelegraph.Shown`), sans changer aucun comportement.
+- **M0e — contrôle sur les parties de Raphaël.** Un enregistreur, actif en mode dev seulement, note pendant ses parties de test habituelles :
+  - les PV perdus par minute et par source ;
+  - les morts et les dashs.
+
+  Quand quelques runs se sont accumulées, on compare au profil fort ; on ne recale que si l'écart est grand. Pas de séance dédiée, et la matrice n'attend pas ce contrôle.
+  - Côté jeu : `PlayTraceRecorder`, présent seulement dans les builds d'édition et jamais dans les bancs. Il écrit `traces/<date>-<personnage>.csv` et `.txt` dans le profil Godot à la fin de chaque run de plus de 30 s.
+  - Côté bot : le même compte (`PlayTrace`), écrit à chaque mesure (`trace-<seed>.csv`).
+  - Comparaison : `python3 tools/compare_play_traces.py [--character traqueur] <dossiers de mesure>`.
+  - Vérification : `--check-play-trace` (le bot joue 40 s avec l'enregistreur branché, puis la trace doit être écrite).
+- **Effet mesuré de l'esquive** (graine 7, build zone, méta complet, 5 min) :
+
+  | Bot | PV perdus / min | Morts | Dégâts du Présage reçus |
+  |---|---|---|---|
+  | Fort sans esquive des tirs | 78 | 4 | 434 |
+  | Fort | 34 | 2 | 196 |
+  | Moyen | 48 | 0 | 66 |
+  | Débutant | 363 | 21 | 1 888 |
+
+  L'ordre attendu est là, sur une graine.
+- **Dispersion** : une même graine ne rejoue pas la même run, car le monde se génère en parallèle et le combat dépend du rythme des images. Sur la graine 7, deux runs identiques du profil fort ont encaissé 744 puis 66 dégâts du Présage (8 puis 0 coups fatals). Une configuration ne se lit donc qu'en moyenne et en étendue sur plusieurs runs : trois graines au moins par case de la matrice, avec l'étendue min–max à côté de chaque moyenne.
+- Bornes gardées : **invincible** pour la pression brute (dégâts si on encaisse tout), **mortel** pour la survie (un coup fatal compte une mort et la run continue).
 
 ### Run de référence (13 octobre)
 

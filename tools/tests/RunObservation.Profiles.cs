@@ -64,7 +64,7 @@ public partial class RunObservation
         if (_profile == BotProfile.Legacy)
             return;
         summary.Append(System.Globalization.CultureInfo.InvariantCulture,
-            $" profile={_profile} rerolls_used={_profileRerolls} banishes_used={_profileBanishes} dashes={_player.Mobility.DashesStarted}");
+            $" profile={_profile} rerolls_used={_profileRerolls} banishes_used={_profileBanishes} dashes={_player.Mobility.DashesStarted} dodge_frames={_threatsDodged}");
     }
 
     private float ProfileDetourRange => _profile switch

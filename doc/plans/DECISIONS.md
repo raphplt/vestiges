@@ -1726,3 +1726,15 @@ Raphaël veut un jeu aussi complet et poussé que Vampire Survivors, Megabonk et
 - **Campement** : « ça me va de retirer les bonus de puissance bruts permanents » (PV max, dégâts, cadence, vitesse, régénération, armure ; XP et Chance à trancher avec le gambling, plan 42 §4). **Aucune logique de remboursement** des Vestiges dépensés : « personne n'a de copie du jeu ». Les améliorations d'options et d'ampleur restent. Lot à découper au plan 36.
 - **Ordre** : lot 1 des retours du 12 octobre au soir (§150), puis l'outillage de mesure du plan 42 (M0a–M0c).
 - **Builds de référence** : les quatre proposés (une arme poussée, synergie d'objets, zone, critique), plus **un build tank** ; « de toute façon on en découvrira au fur et à mesure ».
+
+## 153. Bot de mesure qui esquive, sans séance de jeu — 13 octobre 2026
+
+- **Constat de Raphaël** : « si le bot est invincible ça gâche la mesure, et s'il meurt parce qu'il est bête ça ne va pas aussi ».
+- **Retenu** :
+  - le bot esquive ce qu'un joueur voit : tirs ennemis en vol, annonces de coup au sol ;
+  - chaque profil a un temps de réaction, une part de menaces remarquées et un usage du dash ;
+  - les deux bornes restent, invincible (pression brute) et mortel (survie, la run continue après une mort comptée). Plan 42 M0d.
+- **Calage** : pas d'heure de jeu dédiée (« c'était pas automatisable justement ? »).
+  - Les profils partent d'ordres de grandeur humains de réaction et d'attention.
+  - Un enregistreur en mode dev suit les parties de test habituelles de Raphaël. On compare au profil fort quand quelques runs se sont accumulées, et on ne recale que si l'écart est grand. Plan 42 M0e.
+  - La matrice n'attend pas ce contrôle.

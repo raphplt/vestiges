@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 
@@ -14,6 +15,10 @@ public partial class EnemyProjectile : Node2D, ITicked
 	// Godot n'appelle plus les projectiles un par un : une seule boucle C# les avance tous (plan 29).
 	private static readonly TickRoster<EnemyProjectile> Roster = new("EnemyProjectiles");
 	public int TickSlot { get; set; } = -1;
+	/// <summary>Tirs en vol, lus par le bot de mesure qui les esquive (plan 42 M0d) : rien en jeu ne les parcourt.</summary>
+	internal static IReadOnlyList<EnemyProjectile> InFlight => Roster.Items;
+	internal Vector2 Direction => _direction;
+	internal bool IsSpent => _isDespawning;
 
 	[Export] public float Speed = 185f;
 	[Export] public float MaxLifetime = 4f;

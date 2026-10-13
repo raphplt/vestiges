@@ -7,6 +7,7 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -46,6 +47,8 @@ internal sealed class RunPaceProbe : IDisposable
     private readonly StringBuilder _decisions = new("t,kind\n");
     private readonly Dictionary<(int Minute, string Weapon, DamageKind Kind), double> _damage = new();
     private readonly Dictionary<EnemyLife, double> _firstHit = new();
+    // Même compte que les parties de Raphaël, pour comparer un profil à un vrai joueur (plan 42 M0e).
+    private readonly PlayTrace _trace;
 
     public RunPaceProbe(string output, ulong seed, SceneTree tree, Player player, ErasureManager erasure, EventBus bus)
     {
@@ -58,6 +61,7 @@ internal sealed class RunPaceProbe : IDisposable
         _pixelsPerMeter = RunSummaryConfig.Load().PixelsPerMeter;
         _start = player.GlobalPosition;
         _last = _start;
+        _trace = new PlayTrace(bus, player);
         _bus.EnemyDamageResolved += OnDamage;
         _bus.EnemyKillResolved += OnKill;
         _bus.PlayerDamageResolved += OnPlayerDamage;
@@ -75,6 +79,7 @@ internal sealed class RunPaceProbe : IDisposable
     /// <summary>À chaque image de jeu, pauses exclues : <paramref name="time"/> est le temps de jeu.</summary>
     public void Sample(double time)
     {
+        _trace.Advance(time - _time);
         _time = time;
         Vector2 position = _player.GlobalPosition;
         TravelledMeters += Iso.ToGround(position - _last).Length() / _pixelsPerMeter;
@@ -153,6 +158,7 @@ internal sealed class RunPaceProbe : IDisposable
 
     public void Dispose()
     {
+        _trace.Dispose();
         _bus.EnemyDamageResolved -= OnDamage;
         _bus.EnemyKillResolved -= OnKill;
         _bus.PlayerDamageResolved -= OnPlayerDamage;
@@ -173,5 +179,8 @@ internal sealed class RunPaceProbe : IDisposable
         File.WriteAllText(Path.Combine(root, $"damage-sources-{_seed}.csv"), damage.ToString());
         File.WriteAllText(Path.Combine(root, $"kills-{_seed}.csv"), _kills.ToString());
         File.WriteAllText(Path.Combine(root, $"decisions-{_seed}.csv"), _decisions.ToString());
+        File.WriteAllText(Path.Combine(root, $"trace-{_seed}.csv"), _trace.ToCsv());
+        File.WriteAllText(Path.Combine(root, $"trace-{_seed}.txt"),
+            _trace.Summary(_player.CharacterId, _seed, _player.GetNodeOrNull<PlayerProgression>("PlayerProgression")?.CurrentLevel ?? 0) + "\n");
     }
 }

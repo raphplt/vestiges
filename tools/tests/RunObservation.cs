@@ -40,6 +40,7 @@ namespace Vestiges.Tests;
 /// --capture-levelup-fx : effet de montée de niveau au ralenti, puis entrée de l'écran de choix (RunObservation.LevelUpFx.cs).
 /// --capture-crowd : foule de 60 créatures, recul de caméra puis compteur de morts en rafale (RunObservation.Crowd.cs).
 /// --capture-micro : coffre qui frémit à l'approche, poussière de pas (RunObservation.Micro.cs).
+/// --check-play-trace : l'enregistreur des vraies parties écrit sa trace à la fin d'une run (RunObservation.PlayTrace.cs).
 /// --capture-death [--seconds 8] : mort réelle après quelques secondes, bilan de fin de run (RunObservation.Death.cs).
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
@@ -191,6 +192,8 @@ public partial class RunObservation : Node
                 await CaptureCrowd();
             else if (Array.IndexOf(args, "--capture-micro") >= 0)
                 await CaptureMicro();
+            else if (Array.IndexOf(args, "--check-play-trace") >= 0)
+                await CheckPlayTrace();
             else if (Array.IndexOf(args, "--capture-death") >= 0)
                 await CaptureDeath(double.Parse(Argument(args, "--seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-echoes") >= 0)
@@ -816,6 +819,9 @@ public partial class RunObservation : Node
             // Arrivé au point de passage, le profil fort s'écarte encore de la foule ; pas pendant une interaction tenue.
             if (_profile == BotProfile.Strong && !holding)
                 _player.AIInputOverride = StrongSteer(_player.AIInputOverride);
+            // Tirs et annonces au sol remarqués selon le profil (plan 42 M0d) ; une interaction tenue n'est pas lâchée.
+            if (_profile != BotProfile.Legacy && !holding)
+                _player.AIInputOverride = DodgeThreats(_player.AIInputOverride, t, VisibleWorldRect());
 
             int level = progression.Level;
             if (weaponsAt240 < 0 && t >= 240)
