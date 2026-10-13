@@ -1829,3 +1829,13 @@ Réponses sur la [planche avant/après](planches/25-s1c-projectiles-joueur.png) 
 - Instantané : même étoile, plus petite, cœur chaud et branches dorées pour ne plus se perdre dans les éclairs d'impact blancs.
 
 **Livré :** [plan 25 S1c](25-sprites-et-design.md#s1c--projectiles-au-même-niveau-de-finition-13-octobre-decisions-159). À juger en jeu.
+
+## 160. Souverains calés sur le niveau du joueur, petits retours d'interface — 13 octobre 2026, soir
+
+**Souverains.** Raphaël : « les souverains doivent avoir des stats dépendantes du niveau du joueur. là notamment premier souverain qui pop (vers 4-5 min) a bcp trop d'HP dans la plupart de mes runs qui scalent pas trop. »
+- Constat : leurs PV ne suivent que le temps (cible 1 200 × montée des créatures), soit environ 2 400 PV à 4:00 et 7 000 à 9:30. Le départ ralenti (plan 42 D1) a amené le joueur au premier Souverain vers le niveau 9–10 au lieu de 13–15, sans que le Souverain baisse.
+- **Tranché** (lot S1, plan 42) : PV et, plus modérément, dégâts selon le **niveau du joueur** à l'apparition, courbe en données, calée pour une mort en 20 à 40 s face à un build moyen de ce niveau (cible du §84). La mesure ajoute les dégâts par seconde du joueur par minute et le temps pour tuer chaque Souverain ; vérification sur la matrice (5 personnages × 3 profils), Facteur compris.
+
+**Interface** (livré avec le classement, plan 43) :
+- carte de niveau d'une arme commune : voile gris transparent sur la pierre, plus de plaque claire ;
+- compteur d'éliminations du HUD : le crâne seul, sans le mot.
