@@ -6,7 +6,7 @@ namespace Vestiges.UI;
 /// <summary>Rôle d'un texte d'interface : sa taille vient de l'échelle commune, jamais d'un nombre écrit dans l'écran.</summary>
 public enum TextRole { Caption, Small, Body, Lead, Subhead, Heading, Title, Banner, Display, Section }
 
-/// <summary>Graisse de Pixel Operator : normale ou grasse pour les accents. Les titres en Alkhemikal l'ignorent.</summary>
+/// <summary>Graisse demandée par un texte. Alkhemikal n'a pas de graisse grasse : elle ne change plus la police.</summary>
 public enum TextWeight { Regular, Strong, Bold }
 
 /// <summary>
@@ -16,63 +16,50 @@ public enum TextWeight { Regular, Strong, Bold }
 public static class UITheme
 {
 	// --- Typographie ---
-	// Échelle du Campement approuvée, en base 1080p ; les petits textes du HUD ont leur grille native de 8 px.
+	// Échelle du Campement approuvée, en base 1080p. Une seule police dans tout le jeu, Alkhemikal (DECISIONS §163) :
+	// sa grille est de 16 px, aucun texte ne descend en dessous.
 	private static readonly int[] RoleSizes = { 24, 24, 32, 32, 32, 32, 48, 64, 64, 32 };
-	private static Font _bodyFont;
-	private static Font _strongFont;
-	private static Font _smallFont;
-	private static Font _smallStrongFont;
-	private static Font _titleFont;
+	private const int MinimumSize = 16;
+	private static Font _font;
 
-	public static Font BodyFont => _bodyFont ??= LoadFont("PixelOperator.ttf");
-	public static Font StrongFont => _strongFont ??= LoadFont("PixelOperator-Bold.ttf");
-	public static Font BoldFont => StrongFont;
-	public static Font SmallFont => _smallFont ??= LoadFont("PixelOperator8.ttf");
-	public static Font SmallStrongFont => _smallStrongFont ??= LoadFont("PixelOperator8-Bold.ttf");
-	/// <summary>Alkhemikal (jeti, CC BY 4.0) : titres et en-têtes seulement, jamais les chiffres ; grille de 16 px, sans graisse grasse.</summary>
-	public static Font TitleFont => _titleFont ??= LoadFont("Alkhemikal.ttf", "alkhemikal");
+	/// <summary>Alkhemikal (jeti, CC BY 4.0), la police unique du jeu : textes, chiffres et titres.</summary>
+	public static Font TitleFont => _font ??= LoadFont();
+	public static Font BodyFont => TitleFont;
+	public static Font StrongFont => TitleFont;
+	public static Font BoldFont => TitleFont;
+	public static Font SmallFont => TitleFont;
+	public static Font SmallStrongFont => TitleFont;
 
-	private static Font LoadFont(string name, string family = "pixel-operator")
+	private static Font LoadFont()
 	{
 		// Même ressource que le thème global : les textes hérités gardent aussi leurs pixels sans lissage.
-		FontFile font = GD.Load<FontFile>($"res://assets/fonts/{family}/{name}");
+		FontFile font = GD.Load<FontFile>("res://assets/fonts/alkhemikal/Alkhemikal.ttf");
 		font.Antialiasing = TextServer.FontAntialiasing.None;
 		return font;
 	}
 
-	/// <summary>Police native adaptée au texte du HUD ou du monde, sans réduire les glyphes de 16 px.</summary>
-	public static Font CompactFont(int size, TextWeight weight = TextWeight.Regular) => size < 16
-		? weight == TextWeight.Regular ? SmallFont : SmallStrongFont
-		: FontFor(weight);
+	/// <summary>Police du HUD ou du monde, quelle que soit la taille.</summary>
+	public static Font CompactFont(int size, TextWeight weight = TextWeight.Regular) => TitleFont;
 
-	/// <summary>Taille du HUD ou du monde sur sa grille de 8 px.</summary>
-	public static int CompactSize(int size) => Mathf.Max(8, Mathf.RoundToInt(size / 8f) * 8);
+	/// <summary>Taille du HUD ou du monde sur une grille de 8 px, jamais sous les 16 px d'Alkhemikal.</summary>
+	public static int CompactSize(int size) => Mathf.Max(MinimumSize, Mathf.RoundToInt(size / 8f) * 8);
 
 	public static void SetCompactText(Control control, int size, TextWeight weight = TextWeight.Regular)
 	{
-		int nativeSize = CompactSize(size);
-		control.AddThemeFontOverride("font", CompactFont(nativeSize, weight));
-		control.AddThemeFontSizeOverride("font_size", nativeSize);
+		control.AddThemeFontOverride("font", TitleFont);
+		control.AddThemeFontSizeOverride("font_size", CompactSize(size));
 	}
 
-	/// <summary>Rôles écrits en Alkhemikal : titres, grands affichages et en-têtes de section.</summary>
-	public static bool IsTitleRole(TextRole role) => role is TextRole.Title or TextRole.Banner or TextRole.Display or TextRole.Section;
+	public static Font FontFor(TextRole role, TextWeight weight) => TitleFont;
 
-	public static Font FontFor(TextRole role, TextWeight weight) => IsTitleRole(role) ? TitleFont : FontFor(weight);
-
-	/// <summary>Titre compact du HUD ou du monde : Alkhemikal sur sa grille de 16 px.</summary>
+	/// <summary>Titre compact du HUD ou du monde, sur la grille de 16 px.</summary>
 	public static void SetCompactTitle(Control control, int size)
 	{
 		control.AddThemeFontOverride("font", TitleFont);
-		control.AddThemeFontSizeOverride("font_size", Mathf.Max(16, Mathf.RoundToInt(size / 16f) * 16));
+		control.AddThemeFontSizeOverride("font_size", Mathf.Max(MinimumSize, Mathf.RoundToInt(size / 16f) * 16));
 	}
 
-	public static Font FontFor(TextWeight weight) => weight switch
-	{
-		TextWeight.Strong => StrongFont,
-		TextWeight.Bold => BoldFont,
-		_ => BodyFont,
-	};
+	public static Font FontFor(TextWeight weight) => TitleFont;
 
 	/// <summary>Taille d'un rôle en base 1080p.</summary>
 	public static int FontSize(TextRole role) => RoleSizes[(int)role];
@@ -81,7 +68,7 @@ public static class UITheme
 	public static void SetTextRole(Control control, TextRole role)
 	{
 		if (!control.HasThemeFontOverride("font"))
-			control.AddThemeFontOverride("font", IsTitleRole(role) ? TitleFont : BodyFont);
+			control.AddThemeFontOverride("font", TitleFont);
 		control.AddThemeFontSizeOverride("font_size", FontSize(role));
 	}
 

@@ -21,6 +21,8 @@ uniform float fade = 0.0;
 uniform float fill_density = 0.35;
 uniform bool progress_fill = true;
 uniform float seed = 0.0;
+// Matière d'une zone au sol (forme 3) : 0 annonce, 1 liquide, 2 feu, 3 cadran, 4 éclat (plan 25 S10).
+uniform int matter = 0;
 uniform vec4 c_light : source_color = vec4(0.96, 0.94, 0.92, 1.0);
 uniform vec4 c_mid : source_color = vec4(0.91, 0.88, 0.83, 1.0);
 uniform vec4 c_dark : source_color = vec4(0.83, 0.66, 0.26, 1.0);
@@ -89,26 +91,16 @@ float thrust_tone(vec2 p) {
 float ring_tone(vec2 p) {
 	vec2 q = vec2(p.x, p.y * squash);
 	float grow = 1.0 - pow(1.0 - progress, 2.0);
-	float ring_radius = radius * (0.2 + 0.8 * grow);
+	// Onde au bord légèrement irrégulier, comme les zones qu'elle accompagne (plan 25 S10).
+	float theta = atan(q.y, q.x);
+	float wobble = 1.0 + 0.04 * sin(3.0 * theta + seed * 1.7) + 0.03 * sin(5.0 * theta + seed * 3.9);
+	float ring_radius = radius * (0.2 + 0.8 * grow) * wobble;
 	float th = max(1.0, thickness * (1.0 - 0.75 * progress));
 	float d = length(q) - ring_radius;
 	if (abs(d) > th * 0.5)
 		return -1.0;
 	float v = (d + th * 0.5) / th;
 	return v > 0.6 ? 1.0 : (v > 0.3 ? 0.5 : 0.0);
-}
-
-// Zone au sol annoncée : bord plein, intérieur tramé, disque de progression qui se remplit.
-float zone_tone(vec2 p) {
-	vec2 q = vec2(p.x, p.y * squash);
-	float d = length(q);
-	if (d > radius)
-		return -1.0;
-	if (d > radius - max(1.0, thickness))
-		return 0.5;
-	if (progress_fill && d < radius * progress)
-		return bayer4(p) < max(0.5, fill_density) ? 1.0 : -1.0;
-	return bayer4(p) < fill_density ? 0.0 : -1.0;
 }
 
 float cone_tone(vec2 p) {
@@ -170,33 +162,240 @@ float star_tone(vec2 p) {
 	return -1.0;
 }
 
-// Couloir au sol depuis le centre du quad, longueur radius, largeur thickness : bord plein,
-// intérieur tramé, remplissage qui avance avec la progression.
-float lane_tone(vec2 p) {
+// --- Zones au sol (formes 3 et 7, plan 25 S10) ------------------------------------------------------------------
+// Une matière par zone. Le bord est irrégulier, tiré de la graine : chaque zone est unique. Il garde une épaisseur
+// d'un texel à l'écran, pôles compris, car il se lit sur les texels voisins. L'animation avance à 8 poses par seconde
+// pendant toute la vie de la zone.
+
+
+float cell_hash(vec2 c) {
+	return fract(sin(dot(c, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453);
+}
+
+float value_noise(vec2 x) {
+	vec2 i = floor(x);
+	vec2 f = fract(x);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = cell_hash(i);
+	float b = cell_hash(i + vec2(1.0, 0.0));
+	float c = cell_hash(i + vec2(0.0, 1.0));
+	float d = cell_hash(i + vec2(1.0, 1.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+vec2 ground(vec2 p) {
+	return vec2(p.x, p.y * squash);
+}
+
+// Rayon relatif du bord dans la direction theta : trois harmoniques déphasées par la graine.
+float lobes(float theta, float amp) {
+	float s = seed * 1.7;
+	return 1.0 + amp * (0.07 * sin(3.0 * theta + s) + 0.05 * sin(5.0 * theta + s * 2.3) + 0.03 * sin(9.0 * theta + s * 4.1));
+}
+
+bool in_zone(vec2 p, float scale, float amp) {
+	vec2 q = ground(p);
+	return length(q) <= radius * scale * lobes(atan(q.y, q.x), amp);
+}
+
+// Couloir au sol depuis l'origine, longueur radius × len_scale, largeur thickness qui ondule le long du trajet.
+bool in_lane(vec2 p, float len_scale) {
 	vec2 q = to_local(p);
-	float half_width = thickness * 0.5;
-	float end_distance = length(q - vec2(radius, 0.0));
-	bool inside_rect = q.x >= 0.0 && q.x <= radius && abs(q.y) <= half_width;
-	if (!inside_rect && end_distance > half_width)
-		return -1.0;
-	bool border = (abs(q.y) > half_width - 1.0 && q.x <= radius) || q.x < 1.0
-		|| (q.x > radius && end_distance > half_width - 1.0);
-	if (border)
-		return 0.5;
-	if (progress_fill && q.x < radius * progress)
-		return bayer4(p) < max(0.5, fill_density) ? 1.0 : -1.0;
-	return bayer4(p) < fill_density ? 0.0 : -1.0;
+	float wobble = 1.0 + 0.18 * (0.6 * sin(q.x * 0.21 + seed) + 0.4 * sin(q.x * 0.53 + seed * 2.1));
+	float half_width = thickness * 0.5 * wobble;
+	float len = radius * len_scale;
+	if (q.x < 0.0)
+		return length(q) <= half_width;
+	if (q.x <= len)
+		return abs(q.y) <= half_width;
+	return length(q - vec2(len, 0.0)) <= half_width;
+}
+
+bool in_area(vec2 p, float scale, float amp) {
+	return shape == 7 ? in_lane(p, scale) : in_zone(p, scale, amp);
+}
+
+// 0 dedans, 1 bord intérieur, 2 contour extérieur, 3 dehors (voisins à un texel d'écran).
+int edge_class(vec2 p, float scale, float amp) {
+	bool r = in_area(p + vec2(1.0, 0.0), scale, amp);
+	bool l = in_area(p - vec2(1.0, 0.0), scale, amp);
+	bool d = in_area(p + vec2(0.0, 1.0), scale, amp);
+	bool u = in_area(p - vec2(0.0, 1.0), scale, amp);
+	if (in_area(p, scale, amp))
+		return (r && l && d && u) ? 0 : 1;
+	return (r || l || d || u) ? 2 : 3;
+}
+
+vec4 shade(vec4 c, float a) {
+	return vec4(c.rgb, a);
+}
+
+// Annonce d'un coup : bord net, contour sombre, sol assombri, front de remplissage clair. Un remplissage
+// complet (fill_density 1) est l'éclair d'impact ; une densité nulle, une simple limite (portée).
+vec4 mark_color(vec2 p) {
+	const float amp = 0.6;
+	int e = edge_class(p, 1.0, amp);
+	if (e == 3)
+		return vec4(0.0);
+	if (e == 2)
+		return shade(c_outline, 0.85);
+	if (e == 1)
+		return c_mid;
+	if (fill_density >= 0.99)
+		return c_light;
+	if (fill_density <= 0.0)
+		return vec4(0.0);
+	int f = edge_class(p, progress, amp);
+	if (progress > 0.12 && f == 1)
+		return c_light;
+	if (f == 0)
+		return shade(c_dark, 0.55);
+	return shade(c_outline, value_noise(p * 0.35) > 0.72 ? 0.4 : 0.26);
+}
+
+// Flaque : bord en lobes, volume par la lumière haut-gauche, reflet, taches, bulles qui éclatent, gouttes autour.
+// fill_density règle son opacité : épaisse pour la bile, translucide pour une tache de gomme.
+vec4 liquid_color(vec2 p, float t) {
+	const float scale = 0.92;
+	const float amp = 1.0;
+	int e = edge_class(p, scale, amp);
+	vec2 q = ground(p);
+	if (e >= 2) {
+		bool rim = e == 2;
+		for (int k = 0; k < 5; k++) {
+			float a = hash(float(k) * 3.1) * TAU;
+			vec2 c = vec2(cos(a), sin(a)) * radius * (1.0 + 0.2 * hash(float(k) * 5.7)) * lobes(a, amp);
+			float drop = 1.2 + 1.2 * hash(float(k) * 9.3);
+			float dd = length(q - c);
+			if (dd < drop)
+				return c_mid;
+			rim = rim || dd < drop + 1.5;
+		}
+		return rim ? shade(c_outline, 0.75) : vec4(0.0);
+	}
+	if (e == 1)
+		return p.x + q.y < 0.0 ? c_light : c_dark;
+	if (!in_zone(p + vec2(1.0, 2.0), scale, amp))
+		return c_dark;
+	vec2 h = vec2(p.x + radius * 0.32, q.y + radius * 0.08);
+	if ((abs(h.y) < 1.6 && abs(h.x) < radius * 0.16) || (abs(h.x - radius * 0.28) < 1.0 && abs(h.y) < 1.6))
+		return c_light;
+	for (int k = 0; k < 3; k++) {
+		float a = hash(float(k) * 7.7 + 1.0) * TAU;
+		vec2 c = vec2(cos(a), sin(a) / squash) * radius * (0.15 + 0.4 * hash(float(k) * 4.3 + 2.0));
+		float phase = fract(t * 0.7 + float(k) / 3.0);
+		float ring = abs(length((p - c) * vec2(1.0, 1.5)) - (0.6 + phase * 2.0));
+		if (ring < 0.6 && phase < 0.8)
+			return phase < 0.5 ? c_light : c_dark;
+	}
+	return value_noise(q / 3.5) > 0.78 ? c_dark : c_mid;
+}
+
+float fire_heat(vec2 p, float t) {
+	vec2 q = ground(p);
+	float rel = length(q) / (radius * 0.95 * lobes(atan(q.y, q.x), 1.3));
+	float n = value_noise(vec2(p.x / 1.6, (p.y + t * 10.0) / 4.0)) * 0.6
+		+ value_noise(vec2(p.x / 4.0, (p.y + t * 6.0) / 7.0) + 17.0) * 0.4;
+	return n * (1.25 - rel * 0.7);
+}
+
+// Feu : sol roussi en lobes, flammèches qui montent, langues qui dépassent vers le haut de l'écran, braises.
+vec4 fire_color(vec2 p, float t) {
+	const float scale = 0.95;
+	const float amp = 1.3;
+	int e = edge_class(p, scale, amp);
+	if (e <= 1) {
+		if (cell_hash(floor(p) + vec2(0.0, floor(t * 8.0))) > 0.975)
+			return c_light;
+		float heat = fire_heat(p, t);
+		if (heat > 0.70)
+			return c_light;
+		if (heat > 0.55)
+			return c_mid;
+		if (heat > 0.42)
+			return c_dark;
+		return (e == 0 || bayer4(p) < 0.5) ? vec4(c_outline.rgb * 0.6, 0.5) : vec4(0.0);
+	}
+	for (int lift = 1; lift <= 6; lift++) {
+		vec2 below = p + vec2(0.0, float(lift));
+		if (in_zone(below, scale, amp) && fire_heat(below, t) - float(lift) * 0.05 > 0.5
+				&& value_noise(vec2(p.x / 1.5, (p.y + t * 14.0) / 2.5) + 31.0) > 0.45)
+			return lift < 4 ? c_mid : c_dark;
+	}
+	return vec4(0.0);
+}
+
+// Cadran couché : douze graduations, cercle intérieur tramé, aiguille qui fait un tour pendant la vie du champ.
+vec4 dial_color(vec2 p) {
+	int e = edge_class(p, 1.0, 0.0);
+	if (e == 3)
+		return vec4(0.0);
+	if (e == 2)
+		return shade(c_outline, 0.6);
+	if (e == 1)
+		return c_mid;
+	vec2 q = ground(p);
+	float d = length(q);
+	float theta = atan(q.y, q.x);
+	if (d > radius - 9.0 && abs(mod(theta + TAU / 24.0, TAU / 12.0) - TAU / 24.0) < 0.04)
+		return c_light;
+	if (edge_class(p, 0.62, 0.0) == 1 && bayer4(p) < 0.5)
+		return shade(c_mid, 0.8);
+	float hand = -TAU * 0.25 + progress * TAU;
+	vec2 dir = vec2(cos(hand), sin(hand));
+	float along = dot(q, dir);
+	if (along > 0.0 && along < radius * 0.85 && abs(q.x * dir.y - q.y * dir.x) < 1.4)
+		return c_light;
+	float behind = mod(hand - theta, TAU);
+	if (behind < 0.6 && bayer4(p) < 0.3)
+		return shade(c_mid, 0.8);
+	return shade(c_dark, 0.12);
+}
+
+// Éclat : éclaboussure en étoile qui s'ouvre, rayons clairs depuis le centre, sol roussi tramé.
+bool in_splash(vec2 p, float scale) {
+	vec2 q = ground(p);
+	float theta = atan(q.y, q.x);
+	float spikes = pow(0.5 + 0.5 * sin(7.0 * theta + seed), 4.0) * (0.6 + 0.4 * sin(3.0 * theta + seed * 2.0));
+	return length(q) <= radius * scale * (0.8 + 0.3 * spikes);
+}
+
+vec4 burst_color(vec2 p) {
+	float grow = 0.55 + 0.45 * min(1.0, progress * 2.5);
+	if (!in_splash(p, grow)) {
+		bool near = in_splash(p + vec2(1.0, 0.0), grow) || in_splash(p - vec2(1.0, 0.0), grow)
+			|| in_splash(p + vec2(0.0, 1.0), grow) || in_splash(p - vec2(0.0, 1.0), grow);
+		return near ? shade(c_outline, 0.45) : vec4(0.0);
+	}
+	vec2 q = ground(p);
+	float d = length(q);
+	float ray = abs(fract(atan(q.y, q.x) * 7.0 / TAU + seed / TAU) - 0.5);
+	if (ray < 0.06 && d < radius * grow * 0.85)
+		return d < radius * 0.35 ? c_light : c_mid;
+	if (d < radius * 0.22 * (1.0 - progress))
+		return c_light;
+	return bayer4(p) < 0.5 ? vec4(c_outline.rgb * 0.7, 0.4) : vec4(0.0);
+}
+
+vec4 ground_color(vec2 p, float t) {
+	if (shape == 7 || matter == 0) return mark_color(p);
+	if (matter == 1) {
+		vec4 liquid = liquid_color(p, t);
+		return vec4(liquid.rgb, liquid.a * fill_density);
+	}
+	if (matter == 2) return fire_color(p, t);
+	if (matter == 3) return dial_color(p);
+	return burst_color(p);
 }
 
 float tone_at(vec2 p) {
 	if (shape == 0) return arc_tone(p);
 	if (shape == 1) return thrust_tone(p);
 	if (shape == 2) return ring_tone(p);
-	if (shape == 3) return zone_tone(p);
 	if (shape == 4) return cone_tone(p);
 	if (shape == 5) return beam_tone(p);
 	if (shape == 6) return star_tone(p);
-	return lane_tone(p);
+	return -1.0;
 }
 
 void fragment() {
@@ -204,9 +403,11 @@ void fragment() {
 	vec2 p = floor(UV * size_px) - floor(size_px * 0.5) + 0.5;
 	float tone = tone_at(p);
 	vec4 col = vec4(0.0);
-	if (tone >= 0.0) {
+	if (shape == 3 || shape == 7) {
+		col = ground_color(p, floor(TIME * 8.0) / 8.0);
+	} else if (tone >= 0.0) {
 		col = tone > 0.75 ? c_light : (tone > 0.25 ? c_mid : c_dark);
-	} else if (shape != 3 && shape != 4 && shape != 7 && (tone_at(p + vec2(1.0, 0.0)) >= 0.0 || tone_at(p - vec2(1.0, 0.0)) >= 0.0
+	} else if (shape != 4 && (tone_at(p + vec2(1.0, 0.0)) >= 0.0 || tone_at(p - vec2(1.0, 0.0)) >= 0.0
 			|| tone_at(p + vec2(0.0, 1.0)) >= 0.0 || tone_at(p - vec2(0.0, 1.0)) >= 0.0)) {
 		col = c_outline;
 	}

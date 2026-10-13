@@ -1,0 +1,146 @@
+{
+  "runtime_validation": {
+    "results": [
+      {
+        "name": "smoke",
+        "exit_code": 0
+      },
+      {
+        "name": "audio",
+        "exit_code": 0
+      },
+      {
+        "name": "weapons",
+        "exit_code": 0
+      },
+      {
+        "name": "movement-integration",
+        "exit_code": 0
+      },
+      {
+        "name": "perk_effects",
+        "exit_code": 0
+      }
+    ],
+    "passed": 5,
+    "expected": 5,
+    "source_changes": []
+  },
+  "sprites": {
+    "icon_size": [
+      32,
+      32
+    ],
+    "atlas_size": [
+      512,
+      24
+    ],
+    "opaque_bounds": [
+      [
+        15,
+        8
+      ],
+      [
+        13,
+        7
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        13,
+        7
+      ],
+      [
+        15,
+        8
+      ],
+      [
+        13,
+        7
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        7,
+        9
+      ],
+      [
+        9,
+        9
+      ],
+      [
+        13,
+        7
+      ]
+    ],
+    "alpha": [
+      0,
+      50,
+      100,
+      150,
+      255
+    ],
+    "regeneration_identical": true
+  },
+  "preservation": {
+    "before_count": 11848,
+    "changed": [
+      "assets/audio/CREDITS.json",
+      "assets/vfx/projectiles/projectiles_manifest.json"
+    ]
+  },
+  "audio": [
+    {
+      "effect_id": "weapon_harpoon_rifle",
+      "duration_seconds": 0.22,
+      "gain_db": -9.3,
+      "effective_momentary": -40.046,
+      "sha256": "b789bcddc9e533d54ef607ab71fcd78fa9c7e25cc7d27ae0eae1a699e9f9116a"
+    },
+    {
+      "effect_id": "air_consume",
+      "duration_seconds": 0.192,
+      "gain_db": -17.2,
+      "effective_momentary": -43.035,
+      "sha256": "9f39971c3a90bb00e76760b3b769b00574d08896d85aee66c0189a6ab253d975"
+    },
+    {
+      "effect_id": "air_empty",
+      "duration_seconds": 0.24,
+      "gain_db": -18.6,
+      "effective_momentary": -43.043000000000006,
+      "sha256": "f65fe69a0e4bf0aac6b080d0f315a0ab0cb0a9f8ae8f851d4407bfac6f5f5443"
+    }
+  ],
+  "independent_review": "PASS ; WAV reproduits octet pour octet, crédits vérifiés",
+  "human_audition": "À confirmer en N5 ; aucune écoute humaine revendiquée",
+  "run_capture": "Après catalogue N4, en N5"
+}

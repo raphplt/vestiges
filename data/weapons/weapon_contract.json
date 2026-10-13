@@ -25,6 +25,12 @@
     "freeze": { "duration": { "min": 0 } }
   },
   "special_effects": {
+    "harpoon_traction": {
+      "pull_distance": { "min": 1, "max": 240 },
+      "pull_speed": { "min": 1, "max": 800 },
+      "pull_duration": { "min": 0.01, "max": 2 },
+      "stop_distance": { "min": 1, "max": 96 }
+    },
     "heal_every_n_hits": { "n": { "min": 1, "integer": true }, "heal_amount": { "min": 0 } },
     "instant_disintegrate": {},
     "delayed_echo": {

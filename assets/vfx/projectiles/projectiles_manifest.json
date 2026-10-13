@@ -75,6 +75,15 @@
     "frames": 4,
     "fps": 14
   },
+  "harpoon": {
+    "frame": [
+      32,
+      24
+    ],
+    "directions": 16,
+    "frames": 1,
+    "fps": 0
+  },
   "howl": {
     "frame": [
       32,

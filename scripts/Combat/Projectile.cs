@@ -40,6 +40,9 @@ public partial class Projectile : Area2D, ITicked
     private bool _isDespawning;
     private Player _owner;
     private AttackContext _context;
+    private HarpoonTether _harpoon;
+    private int _harpoonLaunch = -1;
+    private Vector2 _shotOrigin;
     private Sprite2D _sprite;
     private CollisionShape2D _collision;
     // Ombre au sol dessinée en lot par GroundShadowLayer (plan 29 C2) ; seulement une fois parti, comme le tir.
@@ -105,7 +108,9 @@ public partial class Projectile : Area2D, ITicked
                        bool isCrit, Player owner, WeaponData weapon, WeaponInstance source, AttackContext context = default,
                        float pierceDamageRamp = 0f, float sizeScale = 1f, float launchDelay = 0f)
     {
+        ReleaseHarpoon();
         GlobalPosition = position;
+        _shotOrigin = position;
         _launchDelay = launchDelay;
         _departureTarget = default;
         _departureOffset = 0f;
@@ -126,6 +131,11 @@ public partial class Projectile : Area2D, ITicked
         _owner = owner;
         _context = context.OwnerId != 0 || owner == null ? context
             : owner.BeginAttack(source, damage);
+        if (source?.SpecialEffect?.Kind == SpecialEffectKind.HarpoonTraction && owner != null)
+        {
+            _harpoon = owner.Harpoon;
+            _harpoonLaunch = _harpoon.Register(_context);
+        }
         SourceWeapon = weapon;
         SourceInstance = source;
         _isDespawning = false;
@@ -180,6 +190,7 @@ public partial class Projectile : Area2D, ITicked
             GlobalPosition = origin;
         else if (_owner != null && IsInstanceValid(_owner))
             GlobalPosition = _owner.GlobalPosition;
+        _shotOrigin = GlobalPosition;
         if (_departureTarget.IsSet)
         {
             // Cible tombée ou revenue du pool pendant l'attente : la plus proche, comme le ferait un tir neuf.
@@ -227,6 +238,7 @@ public partial class Projectile : Area2D, ITicked
 
     public override void _ExitTree()
     {
+        ReleaseHarpoon();
         Roster.Remove(this);
         GroundShadowLayer.Remove(_shadow);
     }
@@ -390,6 +402,8 @@ public partial class Projectile : Area2D, ITicked
         // Notify owner for perk effects (vampirism, ignite, execution, ricochet)
         if (ownerValid)
             _owner.OnProjectileHit(enemy, damage, _isCrit, SourceInstance, _context, _damage);
+        if (ownerValid && _harpoon != null && IsInstanceValid(_harpoon))
+            _harpoon.TryCatch(_harpoonLaunch, enemy, _shotOrigin);
 
         if (_spawnsGroundFire)
         {
@@ -479,6 +493,7 @@ public partial class Projectile : Area2D, ITicked
 
     private void Release()
     {
+        ReleaseHarpoon();
         Roster.Remove(this);
         GroundShadowLayer.Remove(_shadow);
         _isDespawning = true;
@@ -496,5 +511,13 @@ public partial class Projectile : Area2D, ITicked
             _release(this);
         else
             QueueFree();
+    }
+
+    private void ReleaseHarpoon()
+    {
+        if (_harpoon != null && IsInstanceValid(_harpoon)) _harpoon.Release(_harpoonLaunch);
+        _harpoon = null;
+        _harpoonLaunch = -1;
+        _shotOrigin = default;
     }
 }

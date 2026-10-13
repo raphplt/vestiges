@@ -33,8 +33,8 @@ public partial class MenuNavigationRegression : Node
             Check(characters.IsVisibleInTree() && manager.CurrentState == GameManager.GameState.Hub, "Partir ouvre le choix sans lancer la run");
             Check(characters.CanDepart, "Le héros du profil neuf est jouable");
             Check(!Field<Label>(characters, "_details").Visible, "Les statistiques sont secondaires");
-            CharacterData locked = CharacterDataLoader.GetAll().Find(character => !MetaSaveManager.IsCharacterUnlocked(character.Id));
-            Check(locked != null, "Le profil neuf contient un héros verrouillé");
+            CharacterData locked = CharacterDataLoader.Get("scaphandriere");
+            Check(locked != null && !MetaSaveManager.IsCharacterUnlocked(locked.Id), "La Scaphandrière est verrouillée au profil neuf");
             Button lockedRow = (Button)characters.FindChild(locked.Id, true, false);
             string examined = characters.ExaminedCharacterId;
             lockedRow.GrabFocus();
@@ -43,6 +43,15 @@ public partial class MenuNavigationRegression : Node
             lockedRow.EmitSignal(BaseButton.SignalName.Pressed);
             await Frames(2);
             Check(!characters.CanDepart && Field<Button>(characters, "_depart").Disabled, "Le héros verrouillé ne peut pas partir");
+            TextureRect portrait = Field<TextureRect>(characters, "_portrait");
+            Check(portrait.Texture != null && portrait.Texture.GetSize() == new Vector2(42, 48)
+                && portrait.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
+                "La Scaphandrière emploie son sprite animé existant en l'absence de portrait");
+            Field<Button>(characters, "_detailsButton").EmitSignal(BaseButton.SignalName.Pressed);
+            string details = Field<Label>(characters, "_details").Text;
+            Check(details.Contains("6 s d'air") && details.Contains("Perfore") && details.Contains("Saut flottant")
+                && Field<Button>(characters, "_weapon").Text == "Fusil-harpon",
+                "La fiche relie réserve d'air, harpon et saut aux textes du catalogue");
             Check(manager.SelectedCharacterId == selected, "Examiner un héros ne change pas le choix confirmé");
             QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, locked.Id);
             Field<Button>(characters, "_quest").EmitSignal(BaseButton.SignalName.Pressed);
@@ -69,6 +78,8 @@ public partial class MenuNavigationRegression : Node
             Check(GetViewport().GuiGetFocusOwner() == returnFocus, "Paramètres restitue le focus");
             await CheckItemSorting(hub);
             hub.QueueFree(); await Frames(2);
+            Check(MetaSaveManager.ClaimQuest(QuestDataLoader.Get("raise_the_bodies"), out _),
+                "La quête déverrouille la Scaphandrière avant le prochain accueil");
             manager.ChangeState(GameManager.GameState.Death);
             manager.OpenCharacterSelection = true;
             HubScreen retryHub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate<HubScreen>();
@@ -77,9 +88,14 @@ public partial class MenuNavigationRegression : Node
                 "La relance ouvre la sélection et consomme sa destination");
             Check(manager.CurrentState == GameManager.GameState.Hub, "Le retour du bilan rétablit l’état du Hub");
             HubCharactersPanel retryCharacters = Field<HubCharactersPanel>(retryHub, "_charactersPanel");
+            ((Button)retryCharacters.FindChild("scaphandriere", true, false)).EmitSignal(BaseButton.SignalName.Pressed);
+            await Frames(2);
+            Check(retryCharacters.CanDepart && !Field<Button>(retryCharacters, "_quest").Visible,
+                "La Scaphandrière débloquée peut partir sans nouvelle condition");
             Button depart = Field<Button>(retryCharacters, "_depart");
             depart.GrabFocus();
             await Press("ui_accept");
+            Check(manager.SelectedCharacterId == "scaphandriere", "Le départ confirme la Scaphandrière");
             await Press("ui_up");
             Check(GetViewport().GuiGetFocusOwner() == depart, "La transition bloque la navigation après le départ confirmé");
             GD.Print($"[MenuNavigationRegression] RESULT checks={_checks} failures=0");

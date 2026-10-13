@@ -78,9 +78,9 @@ public partial class DamageNumber : Node2D
 			_crit = Settings(bold, 24, new Color(1f, 0.74f, 0.12f), new Color(0.35f, 0.05f, 0.02f));
 			_carried = Settings(bold, 24, new Color(0.66f, 0.9f, 1f), new Color(0.04f, 0.1f, 0.24f));
 			StatusVisualConfig config = EnemyStatusVisual.Config();
-			_burn = Settings(UITheme.SmallStrongFont, 8, config?.BurnNumberColor ?? normal, outline);
-			_bleed = Settings(UITheme.SmallStrongFont, 8, config?.BleedNumberColor ?? normal, outline);
-			_poison = Settings(UITheme.SmallStrongFont, 8, config?.PoisonNumberColor ?? normal, outline);
+			_burn = Settings(UITheme.SmallStrongFont, 16, config?.BurnNumberColor ?? normal, outline);
+			_bleed = Settings(UITheme.SmallStrongFont, 16, config?.BleedNumberColor ?? normal, outline);
+			_poison = Settings(UITheme.SmallStrongFont, 16, config?.PoisonNumberColor ?? normal, outline);
 		}
 		SetProcess(false);
 	}

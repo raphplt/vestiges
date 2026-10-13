@@ -105,5 +105,27 @@
         "sprite_folder": "eveillee",
         "sprite_feet_offset": 18,
         "mobility": "phase"
+    },
+    {
+        "id": "scaphandriere",
+        "name": "La Scaphandrière",
+        "description": "Endurante, elle garde son souffle dans l'Effacement et ramène ses proies au harpon.",
+        "starting_weapon": "harpoon_rifle",
+        "base_stats": {
+            "speed": 190,
+            "attack_damage": 10,
+            "attack_speed": 0.9,
+            "attack_range": 340,
+            "max_hp": 115,
+            "regen_rate": 1.035,
+            "shield": 0,
+            "interact_range": 65
+        },
+        "passive_perk": "scaphandriere_air",
+        "exclusive_perks": [],
+        "visual_color": [0.63, 0.44, 0.27, 1.0],
+        "sprite_folder": "scaphandriere",
+        "sprite_feet_offset": 16,
+        "mobility": "float_jump"
     }
 ]

@@ -5,6 +5,8 @@ public struct PixelFxSpec
 {
     public PixelFxShape Shape;
     public FxFamily Family;
+    /// <summary>Zone au sol : matière dessinée (annonce par défaut).</summary>
+    public ZoneMatter Matter;
     public float Angle;
     public float Radius;
     public float Thickness;

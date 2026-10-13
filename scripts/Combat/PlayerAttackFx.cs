@@ -297,9 +297,8 @@ public sealed class PlayerAttackFx
         if (Pools == null)
             return;
         PixelFxSpec zone = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 0.25f);
+        zone.Matter = ZoneMatter.Burst;
         zone.Squash = squash;
-        zone.ProgressFill = false;
-        zone.FillDensity = 0.4f;
         zone.Steps = 4;
         zone.FadeTail = 0.5f;
         zone.ZIndex = -1;
@@ -317,15 +316,16 @@ public sealed class PlayerAttackFx
         EmitSparks(position, direction, family, 4, 0.9f, 20f, 50f, 1);
     }
 
-    /// <summary>Tache collante du Chewing-gum, tramée au sol le temps qu'elle ralentit.</summary>
+    /// <summary>Tache collante du Chewing-gum, flaque rose posée au sol le temps qu'elle ralentit.</summary>
     public void PlayTrail(Vector2 position, float radius, float duration)
     {
         if (Pools == null)
             return;
-        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Silk, radius, 1f, duration);
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Gum, radius, 1f, duration);
+        spec.Matter = ZoneMatter.Liquid;
+        // Translucide : les taches d'un dash se chevauchent en traînée sans couvrir le sol.
+        spec.FillDensity = 0.4f;
         spec.Squash = Iso.GroundSquash;
-        spec.FillDensity = 0.35f;
-        spec.ProgressFill = false;
         spec.Steps = 4;
         spec.FadeTail = 0.3f;
         spec.ZIndex = -1;
@@ -340,12 +340,11 @@ public sealed class PlayerAttackFx
         if (Pools == null || frame == _timeFieldFrame)
             return;
         _timeFieldFrame = frame;
-        // Rempli en trame (plan 27 V2c) et rond à l'écran : le champ se contrôle en cercle (DistanceTo), pas au sol.
+        // Cadran couché au sol (plan 25 S10) : le champ se contrôle au sol, comme les autres zones.
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Hybrid, radius, 1f, duration);
-        spec.Squash = 1f;
-        spec.FillDensity = 0.3f;
-        spec.ProgressFill = false;
-        spec.Steps = 8;
+        spec.Matter = ZoneMatter.Dial;
+        spec.Squash = Iso.GroundSquash;
+        spec.Steps = 12;
         spec.ZIndex = -1;
         Pools.PlayFx(position, spec, FxOwner.Player);
     }

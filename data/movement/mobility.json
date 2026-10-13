@@ -29,6 +29,18 @@
       "cooldown_seconds": 3.0,
       "turn_rate_degrees": 180,
       "slides_along_walls": true
+    },
+    "float_jump": {
+      "name": "Saut flottant",
+      "description": "Un saut court et lourd, orientable en l'air. Il survole l'eau de carte sans ralentir ; les obstacles et les dangers gardent leurs effets.",
+      "duration_seconds": 0.5,
+      "speed_multiplier": 1.2,
+      "cooldown_seconds": 3.0,
+      "turn_rate_degrees": 90,
+      "visual_height_px": 10,
+      "ignore_water_while_active": true
     }
-  }
+  },
+  "visual_height_px": 0,
+  "ignore_water_while_active": false
 }

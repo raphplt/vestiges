@@ -22,6 +22,7 @@ public enum SpecialEffectKind
 	LocalTimeSlow,
 	RandomShape,
 	SustainedCone,
+	HarpoonTraction,
 }
 
 /// <summary>Effet à l'impact (saignement, ralentissement, désorientation, gel) ; ses réglages sont validés au chargement.</summary>
@@ -63,6 +64,10 @@ public sealed class WeaponSpecialEffect
 /// <summary>Noms des réglages d'effets spéciaux lus par le combat, tels que déclarés dans le contrat des armes.</summary>
 public static class SpecialEffectParam
 {
+	public const string PullDistance = "pull_distance";
+	public const string PullSpeed = "pull_speed";
+	public const string PullDuration = "pull_duration";
+	public const string StopDistance = "stop_distance";
 	public const string HitsPerHeal = "n";
 	public const string HealAmount = "heal_amount";
 	public const string EchoDelay = "echo_delay";

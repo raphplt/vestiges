@@ -10,7 +10,7 @@ public enum DamageKind { Unknown, DirectWeapon, SecondaryWeapon, DamageOverTime,
 /// le même LaunchId et peut porter plusieurs références : le consommateur agrège sous un plafond unique.
 /// </summary>
 public readonly record struct AttackContext(ulong OwnerId, WeaponInstance Weapon, ulong LaunchId,
-    DamageKind Kind, float ReferenceDamage = 0f)
+    DamageKind Kind, float ReferenceDamage = 0f, Vector2 Origin = default, bool IsEcho = false)
 {
     public bool IsPlayerOwned => OwnerId != 0;
     public bool IsDirectWeapon => IsPlayerOwned && Weapon != null && Kind == DamageKind.DirectWeapon;

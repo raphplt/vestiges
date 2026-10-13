@@ -10,8 +10,8 @@ namespace Vestiges.Combat;
 /// </summary>
 public partial class EnemyNameplate : Node2D
 {
-    private const int NameFontSize = 8;
-    private const int AffixFontSize = 8;
+    private const int NameFontSize = 16;
+    private const int AffixFontSize = 16;
     private const float BarWidth = 34f;
     private const float BarHeight = 3f;
     private const float Gap = 3f;

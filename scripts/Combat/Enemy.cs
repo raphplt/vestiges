@@ -292,6 +292,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
 	public void Initialize(EnemyData data, float hpScale, float dmgScale)
 	{
+		HarpoonOwner = 0;
+		IsHarpoonHeavy = data.GetStat("traction_weight") >= 1f;
 		_lifeGeneration++;
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
@@ -518,6 +520,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
 	public void Reset()
 	{
+		HarpoonOwner = 0;
+		IsHarpoonHeavy = false;
 		// Tuer tous les tweens actifs pour eviter qu'ils reprennent apres re-pooling
 		// (les tweens Godot sont pauses quand le node quitte l'arbre et reprennent quand il y revient)
 		_hitFeedback.RestScale = Vector2.One;
@@ -675,6 +679,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			CancelAbilities();
 
 			// Un gardien ne quitte pas son poste pour un joueur hors de vue.
+			if (HarpoonOwner != 0)
+			{
+				if (_mods.IsTraveling) _mods.TickTravel(dt);
+				return;
+			}
 			if (_guardTarget != null)
 				return;
 			if (lostTrack)
@@ -814,6 +823,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// <summary>Avance de la vitesse du tick, puis sort des décors bloquants en les longeant (plan 29 B).</summary>
 	private void MoveBody(float delta)
 	{
+		if (HarpoonOwner != 0) return;
 		Vector2 next = GlobalPosition + Velocity * delta;
 		World.ObstacleField.Resolve(ref next, _bodyRadius);
 		GlobalPosition = next;

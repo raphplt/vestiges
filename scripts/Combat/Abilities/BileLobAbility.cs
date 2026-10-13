@@ -188,7 +188,7 @@ public class BileLobAbility : IEnemyAbility
 
         if (_puddleSeconds > 0f)
         {
-            _puddle.ShowCircle(_impactCenter, _radius, _family);
+            _puddle.ShowCircle(_impactCenter, _radius, _family, ZoneMatter.Liquid);
             _puddle.SetProgress(1f);
             _puddleTimer = _puddleSeconds;
         }

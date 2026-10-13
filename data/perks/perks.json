@@ -116,5 +116,25 @@
             "mobility",
             "projectile"
         ]
+    },
+    {
+        "id": "scaphandriere_air",
+        "name": "Réserve d'air",
+        "description": "6 s d'air suspendent les malus de vitesse et de dégâts en zone effilochée ou effacée. Recharge complète en 10 s hors de ces zones. Le Néant conserve ses dangers et ne recharge pas l'air.",
+        "category": "passive",
+        "rarity": "passive",
+        "max_stacks": 1,
+        "is_passive": true,
+        "character_id": "scaphandriere",
+        "air": {
+            "seconds": 6,
+            "recharge_seconds": 10,
+            "audio": {
+                "consume": "sfx_air_consume",
+                "empty": "sfx_air_empty",
+                "min_interval_seconds": 1.5
+            }
+        },
+        "tags": ["mobility", "erasure"]
     }
 ]

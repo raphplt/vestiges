@@ -2,7 +2,7 @@
 
 > **Version :** 1.0
 > **Auteur :** Raphaël Plassart
-> **Dernière mise à jour :** 12 octobre 2026
+> **Dernière mise à jour :** 13 octobre 2026
 > **Docs liés :** Bible Artistique (sections 4, 7, 11), Guide Pixel Art, Asset List
 
 ---
@@ -61,7 +61,7 @@ Les cinq teintes de `data/ui/rarities.json` occupent le **fond entier de la case
 |-----------|-------------|-------|
 | **Tiles sol** | 32×16 | Losange iso de base |
 | **Tiles avec hauteur** | 32×32 à 32×48 | Sol + mur/élévation |
-| **Personnage joueur** | 16×24 ou 24×32 | Doit être lisible sur un tile |
+| **Personnage joueur** | ≈ 11–30×14–35 selon personnage et pose | Emprise visible mesurée ; cadres d’export 40–44×42–48, voir amendement ci-dessous |
 | **Ennemis petits** (Ombre, Charognard) | 12×12 | |
 | **Ennemis moyens** (Rôdeur, Sentinelle) | 16×20 | |
 | **Ennemis gros** (Brute, Tisseuse) | 24×24 | |
@@ -73,6 +73,9 @@ Les cinq teintes de `data/ui/rarities.json` occupent le **fond entier de la case
 | **Icônes UI** (items, perks) | 16×16 | |
 | **Icônes d'armes** | 32×32 | Amendement du 26 septembre 2026 (plan 17 §4.7, validé par Raphaël) : objet du monde d'avant en diagonale, pipeline SDF (`tools/generate_weapon_icons.py`), toujours affiché à échelle entière (×1 ou ×2) |
 | **Coffres** | ≈ 28×28 à 32×35 | 4 silhouettes (bois, métal, cristal, ancien), fermé et ouvert, pipeline procédural ; la rareté se lit par la colonne de lumière (palette `data/ui/rarities.json`) — plan 17, lot 0A |
+
+
+**Amendement personnages joués — plans 25/32, consolidé le 13 octobre 2026 (plan 45 N0).** Les dimensions ci-dessus sont les bounding boxes des pixels opaques, pas les cadres PNG. Mesure des 216 frames de chaque modèle livré : Traqueur 12–25×15–31 dans 40×42 ; Vagabond 13–23×18–35 dans 40×44 ; Forgeuse 11–24×15–29 dans 44×44 ; Facteur 12–23×17–30 dans 42×44 ; Éveillée 12–30×14–32 dans 42×44 ; Scaphandrière avant retouche du saut 12–22×15–29 dans 42×44. Les bornes largeur/hauteur sont indépendantes, elles ne décrivent pas une frame unique. Garder le pivot propre au modèle ; Scaphandrière : (21, 40), décalage des pieds **16 px** dans le cadre **42×48**. L’audit N1 du plan 45 a ajouté quatre lignes transparentes sous le cadre initial afin de restituer les 1–2 pixels de semelles coupés dans plusieurs poses ; proportions et pivot ne changent pas. Ne pas redimensionner l'export pour le faire entrer dans les anciens gabarits historiques 16×24/24×32.
 
 ---
 
@@ -292,16 +295,16 @@ Toutes les créatures partagent ces règles chromatiques :
 
 | Animation | Frames | Notes |
 |-----------|--------|-------|
-| Idle | 2-4 | Sub-pixel shift suffit pour un idle vivant |
-| Walk | 4 | 4 directions iso |
-| Dash | 2-3 | Rapide, squash & stretch |
-| Hurt | 2 | Flash blanc frame 1, pose de recul frame 2 |
-| Death joueur | 4 | + effet dissolution Godot |
+| Idle joueur | 6 | Souffle et éléments souples en retard |
+| Walk joueur | 8 | Poids, contre-balancier et foulée |
+| Dash / mobilité joueur | 4 | Poses propres au profil ; saut flottant de la Scaphandrière |
+| Hurt joueur | 3 | Recul ; flash géré en jeu |
+| Death joueur | 6 | + effet dissolution Godot |
 | Attack ennemi | 3-4 | Anticipation → frappe → recovery |
 | Death ennemi | 3-4 | + GPUParticles2D pour compléter la dissolution |
 
 ### Directions
-- **Personnages joueurs :** 4 directions (haut-droite, bas-droite, bas-gauche, haut-gauche)
+- **Personnages joueurs :** 8 directions `E, SE, S, SW, W, NW, N, NE`, soit **27 frames par direction et 216 PNG par personnage**. Contrat du pipeline des plans 25/32, repris par `CharacterSpriteLoader` ; numérotation à partir de `01`.
 - **Ennemis moyens/gros :** 4 directions
 - **Ennemis petits** (Ombre, Charognard) : 2 directions (droite, gauche) + flip si acceptable
 - **Décor animé** (feu, eau, végétation) : 1 direction, 2-4 frames

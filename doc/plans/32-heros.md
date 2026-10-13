@@ -102,3 +102,12 @@ Silhouettes, proportions et animations inchangées : seuls les visages, les lune
 **Vérifications.** Aperçus ×10 en quatre vues ; planche avant/après à l'échelle du jeu ; sprites régénérés (648 PNG, mêmes noms, aucun ajouté ni retiré, `.import` inchangés) ; captures en vraie run des trois (`--capture-character`, seed 1002) avant et après, regardées : la Forgeuse n'a plus les yeux rouges, pieds toujours calés sur la barre de vie.
 
 **Ménage associé (DECISIONS §87).** 19 scripts remplacés par le pipeline supprimés ; puis, avec l'accord de Raphaël, les 27 tuiles orphelines qu'ils avaient laissées (`assets/tiles/foret/`, `assets/tiles/champs/`) et leurs `.import`.
+
+
+## 10. Scaphandrière — préparation du branchement, 13 octobre (plan 45 N1)
+
+Raphaël autorise l'intégration de la Scaphandrière (DECISIONS §161), puis précise de ne pas recréer son sprite détaillé : le design, les matériaux et les proportions du modèle H1 sont conservés ; aucun nouveau portrait de remplacement n'est livré. Le fallback des poses de repos reste disponible dans `CharacterPortrait`.
+
+Les quatre poses `dash` deviennent les poses du saut flottant : impulsion, deux suspensions jambes repliées, réception. Les autres poses restent celles de H1. L'audit détecte 1–2 pixels de semelles coupés au bas de plusieurs anciennes frames ; le cadre d'export passe de 42×44 à **42×48**, pivot **(21, 40)** conservé, échelle 0,53 inchangée. Au branchement, utiliser **`sprite_feet_offset: 16`**, exception qui remplace le 18 du bilan historique ci-dessus pour cette seule héroïne. Le saut vertical sera appliqué au sprite en jeu, avec ombre et collisions au sol.
+
+Recette technique et planches : plan 45, N1. Le contrôle artistique en run reste à faire pendant l'intégration ; aucune approbation artistique ni équilibrage global acquis par ce lot d'assets.

@@ -3,6 +3,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Combat;
+using Vestiges.Progression;
+using System.Collections.Generic;
 using Vestiges.Infrastructure;
 using Vestiges.UI;
 using Vestiges.World;
@@ -15,6 +18,8 @@ public partial class MovementRegression
     {
         CheckMobilityModuleBoundaries();
         CheckGlideModule();
+        CheckFloatJumpModule();
+        await CheckFloatJumpPlayer();
         await ReadyMobility();
         Check(InputMap.HasAction("mobility"), "mobilité : action déclarée");
         float dashDistance = _player.Speed * 2.4f * 0.15f;
@@ -249,14 +254,21 @@ public partial class MovementRegression
         chest.Initialize(ChestDataLoader.Get("chest_common"));
         _player.Position = Vector2.Zero;
         await Step(1);
-        _player._UnhandledInput(new InputEventAction { Action = "interact", Pressed = true });
+        // Depuis l'économie des coffres, cette intention exige des fonds même sans aller jusqu'au paiement.
+        EssenceTracker wallet = new();
+        AddChild(wallet);
+        wallet.AddEssence(10000);
         WorldInteraction chests = _player.GetNode<WorldInteraction>("WorldInteraction");
+        chests.Configure(null, wallet, null);
+        _player._UnhandledInput(new InputEventAction { Action = "interact", Pressed = true });
         Check(chests.IsActive, "vrai coffre : ouverture commencée");
         PressMobility();
         await Step(1);
         ReleaseMobility();
         Check(!chests.IsActive && !chest.IsOpened,
             "dash au neutre : ouverture coffre annulée sans loot");
+        chests.Configure(null, null, null);
+        wallet.QueueFree();
         chest.QueueFree();
 
         await ReadyMobility();
@@ -610,4 +622,205 @@ public partial class MovementRegression
 
     private T ReadPlayerField<T>(string name) => (T)typeof(Player)
         .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(_player);
+
+    private void CheckFloatJumpModule()
+    {
+        MobilityConfig config = MobilityConfig.Load("float_jump");
+        Check(MobilityConfig.Load().VisualHeightPixels == 0f && !MobilityConfig.Load().IgnoreWaterWhileActive,
+            "Saut : dash commun sans hauteur ni exception d’eau");
+        Check(config.IgnoreWaterWhileActive && config.VisualHeightPixels == 10f && config.InvulnerabilitySeconds == 0f,
+            "Saut : profil lu, hauteur 10 px, eau survolée et aucune invulnérabilité");
+        foreach (int rate in new[] { 30, 60, 120 })
+        {
+            PlayerMobility jump = new(config);
+            jump.Request();
+            float distance = 0f, active = 0f, top = 0f;
+            for (int tick = 0; tick < rate; tick++)
+            {
+                Vector2 velocity = jump.Step(1f / rate, Vector2.Zero, 190f, 0.5f, true, 1f);
+                if (jump.IsDashStep) { distance += velocity.Length() / rate; active += 1f / rate; }
+                top = Mathf.Max(top, jump.VisualHeight);
+            }
+            Check(Mathf.Abs(distance - 114f) < 0.01f && Mathf.Abs(active - 0.5f) < 0.001f
+                && Mathf.Abs(top - 10f) < 0.1f && jump.VisualHeight == 0f,
+                $"Saut {rate} Hz : {distance:0.000} px en {active:0.000} s, sommet {top:0.00} px puis sol");
+        }
+        PlayerMobility turning = new(config);
+        turning.Request();
+        turning.Step(0.25f, Vector2.Right, 190f, 1f, true);
+        Check(Mathf.Abs(turning.VisualHeight - 10f) < 0.001f, "Saut : sommet exact à mi-course");
+        Vector2 heading = turning.Step(0.25f, Vector2.Up, 190f, 1f, true);
+        Check(Mathf.Abs(Mathf.RadToDeg(Vector2.Right.AngleTo(heading)) + 22.5f) < 0.01f,
+            "Saut : direction ajustée de 22,5° au plus en un quart de seconde");
+        PlayerMobility blink = new(config) { BlinkDistance = 0.8f };
+        blink.Request();
+        Vector2 blinkVelocity = blink.Step(1f / 60f, Vector2.Right, 190f, 0.25f, true, 0.5f);
+        Check(blink.BlinkedThisStep && !blink.IsDashing && blink.VisualHeight == 0f
+            && Mathf.Abs(blinkVelocity.Length() / 60f - 45.6f) < 0.01f,
+            "Saut : Plan de métro prioritaire, contrôle ×0,5 conservé, aucune hauteur persistante");
+    }
+
+    private async Task CheckFloatJumpPlayer()
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        Player previous = _player;
+        int previousRate = Engine.PhysicsTicksPerSecond;
+        _player = GD.Load<PackedScene>("res://scenes/Player.tscn").Instantiate<Player>();
+        AddChild(_player);
+        _player.InitializeCharacter(new CharacterData
+        {
+            Id = "scaphandriere", SpriteFolder = "scaphandriere", SpriteFeetOffset = 16f,
+            MobilityProfile = "float_jump", StartingWeaponId = "harpoon_rifle", VisualColor = Colors.White,
+            BaseStats = new CharacterStats { Speed = 190f, MaxHp = 115f, AttackDamage = 10f, AttackSpeed = 0.9f,
+                AttackRange = 340f, InteractRange = 65f },
+        });
+        _player.DisableDefenseForTests();
+        _player.SetPhysicsProcess(false);
+        _player.IsAIControlled = true;
+        AnimatedSprite2D sprite = _player.GetNode<AnimatedSprite2D>("Sprite");
+        Sprite2D shadow = _player.GetNode<Sprite2D>("GroundShadow");
+        Vector2 shadowPosition = shadow.Position;
+        PropertyInfo mobilityProperty = typeof(Player).GetProperty(nameof(Player.Mobility));
+        void Reset()
+        {
+            mobilityProperty.SetValue(_player, new PlayerMobility(MobilityConfig.Load("float_jump")));
+            _player.Position = Vector2.Zero;
+            _player.AIInputOverride = Vector2.Right;
+            _player.ApplySlow(1f, 0f);
+            typeof(Player).GetField("_hurtAnimTimer", flags).SetValue(_player, 0f);
+        }
+        // Monde de données miniature : vrai GetTerrain, sans lancer l'initialisation d'une scène Main.
+        WorldSetup world = new();
+        WorldGenerator generator = new(20, 20, 0, 0,
+            new List<WorldGenerator.ZoneConfig> { new() { MaxRadius = 1f, GrassWeight = 1f } }, 45, 0);
+        TerrainType[,] grid = generator.Generate();
+        for (int x = 0; x < grid.GetLength(0); x++)
+            for (int y = 0; y < grid.GetLength(1); y++) grid[x, y] = TerrainType.Water;
+        typeof(WorldSetup).GetField("_generator", flags).SetValue(world, generator);
+        TileMapLayer ground = new() { TileSet = new TileSet { TileSize = new Vector2I(32, 32) } };
+        AddChild(ground);
+        void BindWorld(bool bind)
+        {
+            typeof(Player).GetField("_worldSetup", flags).SetValue(_player, bind ? world : null);
+            typeof(Player).GetField("_groundLayer", flags).SetValue(_player, bind ? ground : null);
+        }
+        StaticBody2D wall = null;
+        ErasureManager erasure = null;
+        Enemy heavy = null;
+        try
+        {
+            foreach (int rate in new[] { 30, 60, 120 })
+            {
+                Engine.PhysicsTicksPerSecond = rate;
+                Reset(); BindWorld(true);
+                _player.Mobility.Request();
+                await Step(1);
+                Check(Mathf.Abs(_player.Position.X - 228f / rate) < 0.01f && sprite.Position.Y < 0f,
+                    $"Saut {rate} Hz : dès le premier tick, eau sans ralentissement et sprite en l'air");
+                await Step(rate / 2 - 1);
+                Check(Mathf.Abs(_player.Position.X - 114f) < 0.05f && Mathf.Abs(sprite.Position.Y) < 0.01f
+                    && shadow.Position == shadowPosition && sprite.Offset == new Vector2(0f, -6f),
+                    $"Saut {rate} Hz : vraie distance 114 px, ombre fixe, offset des pieds conservé");
+                float before = _player.Position.X;
+                await Step(1);
+                Check(Mathf.Abs(_player.Position.X - before - 95f / rate) < 0.02f,
+                    $"Saut {rate} Hz : ralentissement de l'eau restauré à l'atterrissage");
+            }
+            Engine.PhysicsTicksPerSecond = 60;
+            Reset(); BindWorld(true);
+            _player.ApplySlow(0.5f, 5f);
+            _player.Mobility.Request();
+            await Step(30);
+            Check(Mathf.Abs(_player.Position.X - 57f) < 0.02f, "Saut : le ralentissement de combat/marée reste ×0,5 dans l'eau");
+            Reset(); BindWorld(true);
+            EventBus events = GetNode<EventBus>("/root/EventBus");
+            events.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)ErasureManager.ErasureZonePhase.Erased);
+            _player.Mobility.Request(); await Step(30);
+            Check(Mathf.Abs(_player.Position.X - 114f * ErasureEffects.For(ErasureManager.ErasureZonePhase.Erased).Speed) < 0.02f,
+                "Saut : malus d'Effacement conservé même au-dessus de l'eau");
+            events.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)ErasureManager.ErasureZonePhase.Anchored);
+            Reset(); BindWorld(false);
+            _player.Mobility.Request();
+            await Step(8);
+            float hp = _player.CurrentHp;
+            _player.TakeDamage(1f);
+            Check(_player.CurrentHp < hp && sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing,
+                "Saut : blessure reçue sans immunité, silhouette reposée immédiatement");
+            Reset(); _player.Mobility.Request(); await Step(8);
+            GetTree().Paused = true;
+            Check(sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing && sprite.Animation.ToString().EndsWith("_idle"),
+                "Saut : pause repose aussitôt le sprite et sa pose de repos");
+            float cooldown = _player.Mobility.CooldownRemaining;
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Check(_player.Mobility.CooldownRemaining == cooldown, "Saut : recharge figée en vraie pause");
+            GetTree().Paused = false;
+            Reset(); _player.Mobility.Request(); await Step(8);
+            _manager.ChangeState(GameManager.GameState.Hub);
+            Check(sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing && sprite.Animation.ToString().EndsWith("_idle"),
+                "Saut : sortie de run repose la silhouette et sa pose");
+            _manager.ChangeState(GameManager.GameState.Run);
+
+            Reset();
+            wall = new StaticBody2D { Position = new Vector2(60f, 0f), CollisionLayer = 4 };
+            wall.AddChild(new CollisionShape2D { Shape = new RectangleShape2D { Size = new Vector2(2f, 2000f) } });
+            AddChild(wall);
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            _player.Mobility.Request(); await Step(20);
+            Check(_player.Position.X < 48f && sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing,
+                "Saut : un mur fin arrête le corps et repose le sprite");
+            wall.QueueFree(); wall = null;
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            Reset();
+            erasure = new ErasureManager(); AddChild(erasure); erasure.SetProcess(false);
+            Dictionary<Vector2I, ErasureManager.ErasureZonePhase> phases =
+                (Dictionary<Vector2I, ErasureManager.ErasureZonePhase>)typeof(ErasureManager).GetField("_zonePhases", flags).GetValue(erasure);
+            phases[new Vector2I(1, 0)] = ErasureManager.ErasureZonePhase.Void;
+            typeof(Player).GetField("_erasureManager", flags).SetValue(_player, erasure);
+            _player.Position = new Vector2(erasure.CellSize - 20f, 20f);
+            _player.Mobility.Request();
+            for (int tick = 0; tick < 12; tick++)
+            {
+                await Step(1);
+                if (!_player.Mobility.IsDashing) break;
+            }
+            Check(_player.Position.X < erasure.CellSize && sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing,
+                "Saut : le Néant arrête la mobilité et la hauteur visuelle");
+            typeof(Player).GetField("_erasureManager", flags).SetValue(_player, null);
+            Reset();
+            _player.Mobility.BlinkDistance = 0.8f;
+            _player.Mobility.Request(); await Step(1);
+            Check(Mathf.Abs(_player.Position.X - 91.2f) < 0.03f && sprite.Position == Vector2.Zero,
+                "Saut : vrai Plan de métro 91,2 px, aucune silhouette restée en l'air");
+
+            Reset(); await Step(1); _player.Position = Vector2.Zero;
+            heavy = GD.Load<PackedScene>("res://scenes/enemies/Enemy.tscn").Instantiate<Enemy>();
+            AddChild(heavy); heavy.Initialize(EnemyDataLoader.Get("void_brute"), 1000f, 1f); heavy.SetTicking(false);
+            heavy.Position = new Vector2(180f, 0f);
+            WeaponInstance weapon = new(WeaponDataLoader.Get("harpoon_rifle"));
+            int token = _player.Harpoon.Register(_player.BeginAttack(weapon, 1f));
+            Check(_player.Harpoon.TryCatch(token, heavy, _player.Position), "Saut : rappel lourd actif avant mobilité");
+            _player.Mobility.Request(); await Step(1);
+            Check(!_player.Harpoon.IsActive && _player.Mobility.IsDashing && Mathf.Abs(_player.Position.X - 3.8f) < 0.02f,
+                "Saut : priorité sur la traction dès le départ, aucun déplacement additionné");
+            _player.Harpoon.Release(token);
+            token = _player.Harpoon.Register(_player.BeginAttack(weapon, 1f));
+            Check(!_player.Harpoon.TryCatch(token, heavy, _player.Position), "Saut : nouvelle accroche refusée pendant la mobilité");
+            _player.Harpoon.Release(token);
+            _player.TakeErasureDamage(10000f);
+            Check(_player.IsDead && sprite.Position == Vector2.Zero && shadow.Position == shadowPosition,
+                "Saut : mort en l'air repose immédiatement la silhouette, ombre inchangée");
+        }
+        finally
+        {
+            GetTree().Paused = false;
+            Engine.PhysicsTicksPerSecond = previousRate;
+            wall?.QueueFree(); erasure?.QueueFree(); heavy?.QueueFree();
+            BindWorld(false);
+            ground.QueueFree(); world.Free();
+            RemoveChild(_player); _player.QueueFree();
+            _player = previous;
+            SetActions(Vector2.Zero);
+        }
+    }
+
 }

@@ -2,6 +2,7 @@
   "_doc": "Garde-fous du mix (plan 15, revue du 10 octobre). tools/audio_bank_audit.py mesure chaque son de sounds.json et échoue si une famille sort de sa cible. Niveau effectif = sonie momentanée maximale du fichier (EBU R128, 400 ms) + volume_db de la banque + call_offset_db, le décalage passé par le code à l'appel. Musiques : sonie intégrée + volume_db.",
   "families": [
     { "id": "attaques d'armes", "keys": "^sfx_weapon_(?!equip$|drop$)", "target": -40, "tolerance": 2 },
+    { "id": "ponctuations air", "keys": "^sfx_air_(consume|empty)$", "target": -43, "tolerance": 2 },
     { "id": "impacts par matière", "keys": "^sfx_impact_", "target": -38, "tolerance": 2 },
     { "id": "critique", "keys": "^sfx_hit_critique$", "target": -33, "tolerance": 2 },
     { "id": "coup générique", "keys": "^sfx_hit_ennemi$", "target": -38, "tolerance": 2 },

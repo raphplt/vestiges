@@ -761,8 +761,29 @@ def letter_satchel() -> IconModel:
     return IconModel("weapon_icon_letter_satchel", parts, materials, weapon_id="letter_satchel")
 
 
+def harpoon_rifle() -> IconModel:
+    """Fusil de récupération : fût de laiton, poignée gainée, flèche à barbes et bobine de filin."""
+    BRASS, STEEL, GRIP, LINE = range(4)
+    materials = [make_material("brass", "#B88C50"), make_material("steel", "#B8BCC0", contrast=1.1),
+                 make_material("grip", "#514638"), make_material("line", "#C5B994", contrast=0.7)]
+    def parts() -> list[Part]:
+        return [
+            Part(lambda p: cylinder(p, (0, -2, 0), 2.8, 15, 0.7), BRASS),
+            Part(lambda p: capsule(p, (0, 10, 0), (0, 25, 0), 1.0), STEEL),
+            Part(lambda p: capsule(p, (0, 25, 0), (0, 30, 0), 1.6, 0.15), STEEL),
+            Part(lambda p: _union(capsule(p, (0, 25, 0), (-4, 21, 0), 1.0, 0.3),
+                                  capsule(p, (0, 25, 0), (4, 21, 0), 1.0, 0.3)), STEEL),
+            Part(lambda p: rounded_box(p, (5, -13, 0), (5, 2.5, 2.6), 0.8), GRIP),
+            Part(lambda p: cylinder(p, (-4.5, -6, 1), 4.5, 2, 0.5, FACING), LINE),
+            Part(lambda p: cylinder(p, (-4.5, -6, 2.8), 2.0, 0.5, 0.3, FACING), BRASS),
+            Part(lambda p: capsule(p, (-6, -4, 2), (-2.5, 13, 1), 0.6), LINE),
+            Part(lambda p: cylinder(p, (0, 12, 0), 3.1, 1.0, 0.3), STEEL),
+        ]
+    return IconModel("weapon_icon_harpoon_rifle", parts, materials, weapon_id="harpoon_rifle")
+
+
 def catalog() -> list[IconModel]:
     return [sickle(), parking_meter(), gym_bow(), slingshot(), umbrella(), nail_gun(), snow_shovel(), extension_cord(),
             plates(), leaf_rake(), school_bell(), scalpel(), lighthouse_lens(), music_box(), keyring(), compass(),
             instant_camera(), dowsing_rod(), eraser(), oil_lamp(), boxing_gloves(), chalks(), transistor(), stopwatch(),
-            letter_satchel()]
+            letter_satchel(), harpoon_rifle()]

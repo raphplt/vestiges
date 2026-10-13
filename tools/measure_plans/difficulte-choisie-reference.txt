@@ -1,0 +1,38 @@
+# Plan 46 D0 — référence du Péril actuel ; aucune mécanique proposée n'est simulée ici.
+# Format : nom | secondes | graines | profil de sauvegarde | args RunObservation.
+# 26 configurations, 3 graines par configuration, 30 min : 78 runs (39 h de jeu simulé).
+# Première passe : seules les lignes A, dans une copie hors dépôt ; adapter ensuite le palier 6 des contrôles si besoin.
+# --peril est un Péril initial ; les Failles peuvent encore le monter. Le bot ne vise pas les stèles.
+# Les fixtures --meta n'achètent pas les rangs de puissance brute du Campement ; profil normal obligatoire.
+# Référence et variantes : mêmes graines et fixtures, dossiers neufs, moyennes ET étendues (plan 46 §7).
+# A — choix du palier : Traqueur moyen, méta complète, build naturel.
+A-naturel-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+A-naturel-peril3 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 3 --measure-erasure
+A-naturel-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+A-naturel-peril10 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 10 --measure-erasure
+A-naturel-peril15 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 15 --measure-erasure
+A-naturel-peril20 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal --peril 20 --measure-erasure
+# B — ouverture et progression : référence appariée dans chaque état méta.
+B-neuf-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta neuf --mortal --peril 0 --measure-erasure
+B-neuf-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta neuf --mortal --peril 6 --measure-erasure
+B-milieu-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta milieu --mortal --peril 0 --measure-erasure
+B-milieu-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta milieu --mortal --peril 6 --measure-erasure
+# C — les cinq builds de référence, chacun avec son propre témoin à Péril 0.
+C-arme_poussee-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --start-build arme_poussee --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+C-arme_poussee-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --start-build arme_poussee --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+C-synergie_objets-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --start-build synergie_objets --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+C-synergie_objets-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --start-build synergie_objets --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+C-zone-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --start-build zone --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+C-zone-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --start-build zone --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+C-critique-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --start-build critique --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+C-critique-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --start-build critique --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+C-tank-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --start-build tank --player-profile moyen --meta complet --mortal --peril 0 --measure-erasure
+C-tank-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --start-build tank --player-profile moyen --meta complet --mortal --peril 6 --measure-erasure
+# D — corps à corps et personnage faible, méta milieu.
+D-vagabond-peril0 | 1800 | 7 42 1002 | normal | --character vagabond --player-profile moyen --meta milieu --mortal --peril 0 --measure-erasure
+D-vagabond-peril6 | 1800 | 7 42 1002 | normal | --character vagabond --player-profile moyen --meta milieu --mortal --peril 6 --measure-erasure
+D-facteur-peril0 | 1800 | 7 42 1002 | normal | --character facteur --player-profile moyen --meta milieu --mortal --peril 0 --measure-erasure
+D-facteur-peril6 | 1800 | 7 42 1002 | normal | --character facteur --player-profile moyen --meta milieu --mortal --peril 6 --measure-erasure
+# E — contrôle du profil fort ; le profil moyen reste la référence tant que le fort n'est pas recalé.
+E-fort-peril0 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile fort --meta complet --mortal --peril 0 --measure-erasure
+E-fort-peril6 | 1800 | 7 42 1002 | normal | --character traqueur --player-profile fort --meta complet --mortal --peril 6 --measure-erasure

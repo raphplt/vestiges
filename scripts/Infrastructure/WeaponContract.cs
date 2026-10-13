@@ -27,6 +27,7 @@ public static class WeaponContract
 		("delayed_echo", SpecialEffectKind.DelayedEcho), ("ground_fire", SpecialEffectKind.GroundFire),
 		("local_time_slow", SpecialEffectKind.LocalTimeSlow), ("random_shape", SpecialEffectKind.RandomShape),
 		("sustained_cone", SpecialEffectKind.SustainedCone),
+		("harpoon_traction", SpecialEffectKind.HarpoonTraction),
 	};
 
 	private static readonly Dictionary<string, DataValueRule> _stats = new();

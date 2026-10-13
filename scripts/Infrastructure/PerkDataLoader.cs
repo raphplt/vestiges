@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -26,6 +27,27 @@ public class PerkData
     public PerkMomentum Momentum { get; set; }
     /// <summary>Rémanence d'une signature qui répète un tir après la mobilité (Double de l'Éveillée), sinon null.</summary>
     public PerkEcho Echo { get; set; }
+    /// <summary>Réserve qui suspend les malus de déplacement et de dégâts de l'Effacement, sinon null.</summary>
+    public PerkAir Air { get; set; }
+}
+
+/// <summary>Durées de la réserve d'air : consommation complète et recharge complète hors danger.</summary>
+public sealed record PerkAirAudio(string Consume, string Empty, float MinIntervalSeconds);
+
+public sealed class PerkAir
+{
+    public float Seconds { get; }
+    public float RechargeSeconds { get; }
+    public PerkAirAudio Audio { get; }
+
+    public PerkAir(float seconds, float rechargeSeconds, PerkAirAudio audio = null)
+    {
+        if (!float.IsFinite(seconds) || seconds <= 0f || !float.IsFinite(rechargeSeconds) || rechargeSeconds <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(seconds), "Les durées d'air doivent être finies et strictement positives.");
+        Seconds = seconds;
+        RechargeSeconds = rechargeSeconds;
+        Audio = audio;
+    }
 }
 
 /// <summary>Réglages de la rémanence : sa durée et la part des dégâts du tir qu'elle répète.</summary>
@@ -71,6 +93,8 @@ public static class PerkDataLoader
             return;
         }
 
+        // Ne publier aucune signature si un réglage du fichier est refusé.
+        List<PerkData> parsed = new();
         foreach (Variant item in json.Data.AsGodotArray())
         {
             if (item.VariantType != Variant.Type.Dictionary)
@@ -107,10 +131,12 @@ public static class PerkDataLoader
                 Effects = effects,
                 Momentum = dict.ContainsKey("momentum") ? ReadMomentum(dict["momentum"].AsGodotDictionary()) : null,
                 Echo = dict.ContainsKey("echo") ? ReadEcho(dict["echo"].AsGodotDictionary()) : null,
+                Air = dict.ContainsKey("air") ? ReadAir(dict["air"]) : null,
             };
-            _allPerks.Add(perk);
+            parsed.Add(perk);
         }
 
+        _allPerks.AddRange(parsed);
         _loaded = true;
         GD.Print($"[PerkDataLoader] Loaded {_allPerks.Count} character signatures");
     }
@@ -128,6 +154,50 @@ public static class PerkDataLoader
         Seconds = Mathf.Max(0.1f, (float)dict["seconds"].AsDouble()),
         DamageRatio = Mathf.Clamp((float)dict["damage_ratio"].AsDouble(), 0f, 1f),
     };
+
+    internal static PerkAir ReadAir(Variant value)
+    {
+        if (value.VariantType != Variant.Type.Dictionary)
+            throw new InvalidOperationException("air : objet attendu.");
+        Godot.Collections.Dictionary dict = value.AsGodotDictionary();
+        foreach (Variant key in dict.Keys)
+            if (key.AsString() is not ("seconds" or "recharge_seconds" or "audio"))
+                throw new InvalidOperationException($"air : clé inconnue « {key} ».");
+        return new PerkAir(ReadAirSeconds(dict, "seconds"), ReadAirSeconds(dict, "recharge_seconds"),
+            dict.TryGetValue("audio", out Variant audio) ? ReadAirAudio(audio) : null);
+    }
+
+    private static PerkAirAudio ReadAirAudio(Variant value)
+    {
+        if (value.VariantType != Variant.Type.Dictionary)
+            throw new InvalidOperationException("air.audio : objet attendu.");
+        Godot.Collections.Dictionary audio = value.AsGodotDictionary();
+        foreach (Variant key in audio.Keys)
+            if (key.AsString() is not ("consume" or "empty" or "min_interval_seconds"))
+                throw new InvalidOperationException($"air.audio : clé inconnue « {key} ».");
+        string Sound(string key)
+        {
+            if (!audio.TryGetValue(key, out Variant item) || item.VariantType != Variant.Type.String
+                || string.IsNullOrWhiteSpace(item.AsString())
+                || !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(item.AsString()))
+                throw new InvalidOperationException($"air.audio.{key} : son de la banque requis.");
+            return item.AsString();
+        }
+        float interval = ReadAirSeconds(audio, "min_interval_seconds");
+        if (interval < 1f || interval > 30f)
+            throw new InvalidOperationException("air.audio : intervalle entre 1 et 30 secondes requis.");
+        return new PerkAirAudio(Sound("consume"), Sound("empty"), interval);
+    }
+
+    private static float ReadAirSeconds(Godot.Collections.Dictionary dict, string key)
+    {
+        if (!dict.TryGetValue(key, out Variant value) || value.VariantType is not (Variant.Type.Float or Variant.Type.Int))
+            throw new InvalidOperationException($"air.{key} : nombre requis.");
+        float seconds = (float)value.AsDouble();
+        if (!float.IsFinite(seconds) || seconds <= 0f)
+            throw new InvalidOperationException($"air.{key} : durée finie strictement positive requise.");
+        return seconds;
+    }
 
     public static List<PerkData> GetAll()
     {

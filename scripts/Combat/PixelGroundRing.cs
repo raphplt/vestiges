@@ -5,8 +5,9 @@ using Vestiges.Core;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Anneau au sol en pixel art : bord plein et intérieur tramé, qui respire par poses (trois rayons) plutôt qu'en
-/// glissement continu. Aura des créatures à affixe (une par créature, réutilisée par le pool), repère des armes au sol.
+/// Halo au sol en pixel art : bord en lobes propre à chaque porteur (plan 25 S10), lueur tramée plus dense près du bord,
+/// qui respire par poses (trois rayons) plutôt qu'en glissement continu ; la trame se décale à chaque pose et scintille.
+/// Aura des créatures à affixe (une par créature, réutilisée par le pool), repère des armes au sol.
 /// Le dessin ne se refait qu'au changement de pose.
 /// </summary>
 public partial class PixelGroundRing : Node2D
@@ -20,6 +21,7 @@ public partial class PixelGroundRing : Node2D
     private readonly List<Color> _colors = new();
     private int _colorIndex;
     private int _baseRadius;
+    private int _variant;
     private int _pose;
     private float _poseTimer;
 
@@ -54,6 +56,7 @@ public partial class PixelGroundRing : Node2D
     {
         _colorIndex = 0;
         _baseRadius = Mathf.Max(6, Mathf.RoundToInt(radius));
+        _variant = (int)(GetInstanceId() % PixelBlob.Variants);
         _pose = 0;
         _poseTimer = PoseSec;
         Visible = true;
@@ -81,19 +84,25 @@ public partial class PixelGroundRing : Node2D
 
     public override void _Draw()
     {
-        (Vector2I[] rim, Vector2I[] fill) = Ellipse(_baseRadius + PoseOffsets[_pose]);
+        PixelBlob.Shape shape = PixelBlob.Get(_baseRadius + PoseOffsets[_pose], _variant, 1f);
         Color color = _colors[_colorIndex];
         Color fillColor = color with { A = FillAlpha };
-        foreach (Vector2I pixel in fill)
-            DrawRect(new Rect2(pixel, Vector2.One), fillColor);
+        Vector2I shift = new(_pose, _pose * 2);
+        for (int i = 0; i < shape.Inside.Length; i++)
+        {
+            // Lueur plus dense près du bord, quelques pixels épars au centre.
+            float density = shape.Depth[i] > 0.7f ? 0.5f : 0.2f;
+            if (PixelBlob.Bayer(shape.Inside[i] + shift) < density)
+                DrawRect(new Rect2(shape.Inside[i], Vector2.One), fillColor);
+        }
         Color rimColor = color with { A = RimAlpha };
-        foreach (Vector2I pixel in rim)
+        foreach (Vector2I pixel in shape.Rim)
             DrawRect(new Rect2(pixel, Vector2.One), rimColor);
     }
 
     /// <summary>
-    /// Ellipse au sol (deux fois plus large que haute) : pixels du bord et trame d'un pixel sur deux dedans. Partagée
-    /// avec les repères des micro-événements (<see cref="PixelEllipseArt"/>).
+    /// Ellipse au sol exacte (deux fois plus large que haute) : pixels du bord et trame d'un pixel sur deux dedans, pour
+    /// les repères des micro-événements (<see cref="PixelEllipseArt"/>, <c>RunEventMarker</c>).
     /// </summary>
     public static (Vector2I[] Rim, Vector2I[] Fill) Ellipse(int radius)
     {

@@ -180,6 +180,7 @@ Options, à trancher avant la page Steam (§12) : garder « Vestiges » avec un 
 - INPI n° **5181093**, marque figurative (logo de quatre carrés et mot « vestiges »), déposée le 17/09/2025 par Jean-Paul Houssier (Limoges), enregistrée le 06/02/2026, jusqu'en 2035. Classes 9 et 41, avec « Jeux vidéos », « Jeux informatiques » et « services de jeu en ligne ».
 - Le projet a commencé en février 2026, après ce dépôt : aucun droit antérieur.
 - Un sous-titre ne suffit pas, « Vestiges » resterait l'élément dominant. **Décision (DECISIONS §156) : changer de nom.** « Vestiges » peut rester le nom de la monnaie en jeu.
+- **Piste en tête le 13 octobre, non tranchée : *Unnamable*** (DECISIONS §156) : libre sur Steam et en classes 9 et 41 dans les bases de l'INPI (France, UE, international) ; USPTO à vérifier ; dépôt INPI la semaine où la page Steam devient publique.
 - Méthode pour le nouveau nom : recherche [TMview](https://www.tmdn.org/tmview) (classes 9, 28, 41, tous offices) et recherche Steam, puis dépôt INPI (environ 190 € pour une classe, 40 € par classe en plus) **avant que la page Steam ou une annonce ne le rende public**. L'EUIPO (environ 850 €) et les autres pays peuvent attendre les wishlists.
 
 ## 9 bis. Conformité des contenus (audit du 13 octobre 2026)

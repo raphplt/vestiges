@@ -5,8 +5,8 @@ using Vestiges.Core;
 namespace Vestiges.Combat.Abilities;
 
 /// <summary>
-/// Annonce au sol d'une attaque ennemie ou d'un événement : zone circulaire ou trajectoire, en pixel art
-/// (bord plein, intérieur tramé, remplissage selon l'avancement). Détachée du transform de son
+/// Annonce au sol d'une attaque ennemie ou d'un événement : zone ou trajectoire en pixel art, au bord irrégulier
+/// (sol assombri, front de remplissage selon l'avancement ; plan 25 S10). Détachée du transform de son
 /// propriétaire pour rester fixe pendant que l'ennemi bouge. Toujours affichée : seule son opacité se règle.
 /// </summary>
 public partial class GroundTelegraph : Node2D
@@ -14,6 +14,8 @@ public partial class GroundTelegraph : Node2D
     /// <summary>Paliers de remplissage : l'annonce avance par poses lisibles, pas en glissement continu.</summary>
     private const int ProgressSteps = 12;
     private const float AreaDensity = 0.25f;
+    /// <summary>Opacité d'une flaque (matière liquide) : épaisse, elle se lit comme un sol à éviter.</summary>
+    private const float PuddleOpacity = 0.9f;
     private const float RingOpacity = 0.6f;
 
     private readonly PixelFx _fx;
@@ -41,13 +43,17 @@ public partial class GroundTelegraph : Node2D
         AddChild(_fx);
     }
 
-    /// <summary>Disque au sol de rayon <paramref name="radius"/> : une ellipse deux fois plus large que haute à l'écran.</summary>
-    public void ShowCircle(Vector2 center, float radius, FxFamily family)
+    /// <summary>
+    /// Disque au sol de rayon <paramref name="radius"/> : une ellipse deux fois plus large que haute à l'écran. Une annonce
+    /// par défaut ; <paramref name="matter"/> en fait une matière posée (flaque).
+    /// </summary>
+    public void ShowCircle(Vector2 center, float radius, FxFamily family, ZoneMatter matter = ZoneMatter.Mark)
     {
         IsLane = false;
         GroundSize = radius;
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
         spec.Squash = Iso.GroundSquash;
+        spec.Matter = matter;
         Begin(center, spec);
     }
 
@@ -111,7 +117,7 @@ public partial class GroundTelegraph : Node2D
     private void Begin(Vector2 origin, in PixelFxSpec baseSpec)
     {
         PixelFxSpec spec = baseSpec;
-        spec.FillDensity = AreaDensity;
+        spec.FillDensity = spec.Matter == ZoneMatter.Liquid ? PuddleOpacity : AreaDensity;
         spec.ProgressFill = true;
         spec.ZIndex = 0;
         GlobalPosition = origin;

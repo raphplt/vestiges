@@ -426,3 +426,9 @@ Deuxième héros du plan 32, même chemin que le Facteur (DECISIONS §102 bis). 
 - **Relecture :** trois défauts relevés et corrigés avant le commit (rafale répétée qui repartait du joueur, rémanence consommée sans tir, charge de la Semelle usée prise par l'écho).
 
 **Reste à faire pour l'Éveillée :** sons propres (accord de verre, écho décalé), le contour « double » permanent de la fiche, équilibrage en jouant (la Baguette est une arme de tier 4 : à surveiller comme arme de départ).
+
+## 13. P4 — Scaphandrière, en implémentation — 13 octobre 2026
+
+Après la préparation, Raphaël répond « okok go alors » à la recommandation de la Scaphandrière et de l'adaptation de sa réserve d'air (**DECISIONS §161**). Le [plan 45](45-nouveau-personnage.md) porte les sous-lots N0–N5 : N0–N1 sont livrés techniquement ; les poses du saut flottant partent du modèle existant. L'air neutralise temporairement les malus de vitesse/dégâts de l'Effacement ; le Néant garde ses règles. Les chiffres d'essai sont attribués à l'agent dans le plan.
+
+Raphaël demande de conserver le sprite détaillé existant : le portrait IA produit par l’agent a été retiré. Fallback sprite runtime tant que la source correcte n’est pas retrouvée. Les 216 frames ont passé l’audit de cadre et de déterminisme avant branchement ; harpon, réserve d'air, mobilité et accès restent à intégrer. Aucune case globale d'équilibrage ou d'approbation artistique cochée.

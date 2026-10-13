@@ -8,17 +8,20 @@ des personnages joués (plan 25 S2). Toile grise dominante, laiton et cuivre en 
 """
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_emissive, make_material
-from ..poses import Gait, playable_animations
+from ..poses import Gait, playable_animations, stance_pose
 from ..render import Part
 from ..rig import Proportions, Skeleton
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rounded_box, sphere
 
 CHARACTER_ID = "scaphandriere"
-FRAME_SIZE = (42, 44)
+# Les semelles et deux poses de mort dépassaient de 1–2 pixels sous l'ancien cadre de 44.
+FRAME_SIZE = (42, 48)
 FRAME_PIVOT = (21.0, 40.0)
 # La tête porte le casque : son rayon est celui du cuivre, plus gros que la tête des autres personnages.
 DIMENSIONS = Proportions(ankle=2.8, shin=8.8, thigh=9.4, spine=11.0, neck=0.6, head_radius=7.6, shoulder_half=7.4,
@@ -113,4 +116,18 @@ def build(skeleton: Skeleton) -> list[Part]:
     return parts
 
 
-ANIMATIONS = playable_animations(Gait(lean=0.06, arm_out=0.32, stride=0.8, arm_swing=0.7, bounce=0.5, heavy=0.8))
+GAIT = Gait(lean=0.06, arm_out=0.32, stride=0.8, arm_swing=0.7, bounce=0.5, heavy=0.8)
+ANIMATIONS = playable_animations(GAIT)
+_stance = stance_pose(GAIT)
+# Le déplacement vertical est appliqué en jeu : les poses replient les jambes sans déplacer le pivot au sol.
+# Deux poses ouvertes portent la suspension ; la réception absorbe le poids des semelles de plomb.
+ANIMATIONS["dash"] = [
+    replace(_stance, crouch=2.4, lean=0.14, hip_l=0.35, hip_r=0.35, knee_l=0.65, knee_r=0.65,
+            shoulder_l=-0.3, shoulder_r=-0.3, elbow_l=0.4, elbow_r=0.4, drape=-0.7),
+    replace(_stance, crouch=0.4, lean=-0.03, hip_l=0.65, hip_r=0.45, knee_l=1.25, knee_r=1.0,
+            arm_out=0.6, shoulder_l=0.1, shoulder_r=0.15, elbow_l=0.65, elbow_r=0.65, drape=0.8),
+    replace(_stance, crouch=0.5, lean=0.04, hip_l=0.42, hip_r=0.6, knee_l=0.95, knee_r=1.2,
+            arm_out=0.55, shoulder_l=0.1, shoulder_r=0.05, elbow_l=0.6, elbow_r=0.6, drape=0.4),
+    replace(_stance, crouch=2.8, lean=0.18, hip_l=0.4, hip_r=0.4, knee_l=0.8, knee_r=0.8,
+            arm_out=0.4, shoulder_l=0.25, shoulder_r=0.25, elbow_l=0.5, elbow_r=0.5, drape=-0.9),
+]

@@ -53,6 +53,10 @@ public sealed class PlayerMobility
     public bool StartedThisStep { get; private set; }
     public bool IsDashStep { get; private set; }
     public bool IsDashing => State == MobilityState.Mobility;
+    /// <summary>Arc visuel ; interruption et saut instantané remettent immédiatement la hauteur à zéro.</summary>
+    public float VisualHeight => IsDashing && !BlinkedThisStep
+        ? Config.VisualHeightPixels * Mathf.Max(0f, Mathf.Sin(Mathf.Pi * Mathf.Clamp(_dashElapsed / Config.DurationSeconds, 0f, 1f)))
+        : 0f;
     public bool IsInvulnerable => IsDashing && _dashElapsed < Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds)
         || _blinkInvulnerableRemaining > 0f;
 
@@ -91,7 +95,8 @@ public sealed class PlayerMobility
         BufferRemaining = Config.InputBufferSeconds;
     }
 
-    public Vector2 Step(float delta, Vector2 input, float speed, float terrainFactor, bool allowed)
+    public Vector2 Step(float delta, Vector2 input, float speed, float terrainFactor, bool allowed,
+        float? mobilityTerrainFactor = null)
     {
         StartedThisStep = false;
         IsDashStep = false;
@@ -136,7 +141,7 @@ public sealed class PlayerMobility
                 _blinkInvulnerableRemaining = Mathf.Min(Config.DurationSeconds, InvulnerabilitySeconds);
                 SecondsSinceDash = 0f;
                 IsDashStep = true;
-                float length = speed * terrainFactor * Config.SpeedMultiplier * DistanceMultiplier * Config.DurationSeconds;
+                float length = speed * (mobilityTerrainFactor ?? terrainFactor) * Config.SpeedMultiplier * DistanceMultiplier * Config.DurationSeconds;
                 // Le saut est fini dès cette image : aucun lecteur ne le voit durer.
                 State = MobilityState.Locomotion;
                 _dashRemaining = 0f;
@@ -166,7 +171,7 @@ public sealed class PlayerMobility
                 _dashDirection = _dashDirection.Rotated(Mathf.Clamp(_dashDirection.AngleTo(input), -turn, turn));
             }
             // La dernière fraction de tick conserve la distance prévue, même hors 60 Hz.
-            return _dashDirection * (speed * terrainFactor * Config.SpeedMultiplier * DistanceMultiplier * activeDelta / delta);
+            return _dashDirection * (speed * (mobilityTerrainFactor ?? terrainFactor) * Config.SpeedMultiplier * DistanceMultiplier * activeDelta / delta);
         }
 
         if (speed <= 0f || terrainFactor <= 0f)

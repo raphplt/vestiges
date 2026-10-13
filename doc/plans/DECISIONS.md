@@ -1790,6 +1790,7 @@ Audit des droits et des contenus (plan 31 §9 et §9 bis).
 - **Fait le jour même** : page Crédits dans le Hub, arme Polaroïd renommée Instantané, `LICENSE` complété, logo Godot (`icon.svg`) retiré et remplacé par le halo de lumière dans les trois décors de lore qui l'utilisaient.
 - **Étude de marché** ([rapport](../reports/Étude%20de%20marché%20Vestiges.md)) : Raphaël valide le plan de validation en quatre étapes (clips sous nom de code, page Coming Soon, démo, Next Fest), sans s'interdire d'être ambitieux. Les tags post-apocalyptique et pixel isométrique peu porteurs ne condamnent pas le jeu, mais il doit être très propre et peaufiné. La mélancolie n'est pas le ressort principal : les parties doivent être nerveuses, stimulantes, avec du *juice*.
 - **Direction du nouveau nom** : un mot inventé, ou l'oubli.
+- **Piste en tête, non tranchée : *Unnamable*** (Raphaël s'en laisse la nuit, pas convaincu) (l'Innommable, l'Indicible du lore ; on finit le jeu en nommant). Vérifié le 13 octobre : libre sur Steam, aucun jeu de ce nom ; à l'INPI (bases française, européenne et internationale), seules des marques « UN-NAMABLE » et « UNNAME » de mode et de cosmétique (classes 3, 14, 18, 25, 35, 39, 42), aucune en 9 ni 41 ; `unnamablegame.com` et `playunnamable.com` libres. Reste à vérifier les États-Unis (USPTO). « Vestiges » reste le nom de la monnaie. Le titre en jeu ne change qu'au moment où le nom devient public.
 
 ## 157. Oublier une arme, un Écusson ou un objet à la Faille — 13 octobre 2026
 
@@ -1830,6 +1831,20 @@ Réponses sur la [planche avant/après](planches/25-s1c-projectiles-joueur.png) 
 
 **Livré :** [plan 25 S1c](25-sprites-et-design.md#s1c--projectiles-au-même-niveau-de-finition-13-octobre-decisions-159). À juger en jeu.
 
+## 161. Préparer un nouveau personnage et ses sprites — 13 octobre 2026
+
+Raphaël : « est ce que tu pourrais préparer l'implémentation d'un nouveau personnage en jeu ? il y a tous les sprites à créer ».
+
+**Acquis :** préparer l'implémentation et couvrir l'ensemble des besoins visuels. L'identité n'est pas précisée dans cette demande.
+
+**Préparation de l'agent :** [plan 45](45-nouveau-personnage.md), rattaché au plan 06. Scaphandrière recommandée, car dernière des trois intégrations déjà demandées au §90 ; son choix pour cette demande reste à préciser. Audit : 216 images de corps déjà présentes, portrait et harpon absents, mobilité et effets à compléter. Le passif historique ne correspond plus aux malus actuels de l'Effacement ; une adaptation est proposée, sans la présenter comme validée. Aucun gameplay ni sprite modifié, aucune case de roadmap cochée.
+
+**Suite du 13 octobre — implémentation autorisée :** après la recommandation de Scaphandrière et l'adaptation de sa réserve d'air, Raphaël répond « okok go alors ». Le plan 45 passe en exécution N0–N5. Le choix et le lancement sont acquis ; l'équilibrage et le rendu final restent à éprouver.
+
+**Réglages d'essai choisis par l'agent :** air 6 s neutralisant les malus de vitesse/dégâts Effiloché/Effacé, recharge 10 s Ancré/Fragile, aucun effet protecteur/recharge dans le Néant ; 115 PV, vitesse 190, dégâts 10, cadence 0,9, portée 340, régénération 1,035, bouclier 0, interaction 65. Harpon : léger ramené, lourd attirant le joueur, boss ancrés ; saut flottant de 0,5 s avec ombre au sol, contrôle limité et collisions actives. Ces chiffres ne sont pas des demandes explicites de Raphaël.
+
+**Correction de Raphaël pendant N1 :** « je t'ai pas demandé de recréer le sprite détaillé du personnage son........ ». Le portrait détaillé IA créé par l'agent dépasse l'intention ; il est retiré du jeu ainsi que son prompt de production du dépôt. **Respecter le design détaillé existant ; ne pas inventer un nouveau portrait.** Utiliser le fallback du sprite en menu tant que la source correcte n'est pas localisée. Les corrections de poses et de cadrage requises pour le gameplay continuent, sans refonte de la silhouette ni des matériaux.
+
 ## 160. Souverains calés sur le niveau du joueur, petits retours d'interface — 13 octobre 2026, soir
 
 **Souverains.** Raphaël : « les souverains doivent avoir des stats dépendantes du niveau du joueur. là notamment premier souverain qui pop (vers 4-5 min) a bcp trop d'HP dans la plupart de mes runs qui scalent pas trop. »
@@ -1839,3 +1854,22 @@ Réponses sur la [planche avant/après](planches/25-s1c-projectiles-joueur.png) 
 **Interface** (livré avec le classement, plan 43) :
 - carte de niveau d'une arme commune : voile gris transparent sur la pierre, plus de plaque claire ;
 - compteur d'éliminations du HUD : le crâne seul, sans le mot.
+
+## 162. Difficulté choisie : stèles et défi volontaire — 13 octobre 2026
+
+Raphaël, sur le [plan 46](46-difficulte-choisie.md) : « steles ca me va, défi volontaire aussi. il faut un objet ou un écusson qui permette d'augmenter le péril si cest pas déjà le cas. Le reste ca me pariat pas mal ».
+
+**Acquis de conception :**
+- stèles à engagement choisi et défi volontaire retenus comme moyens d'augmenter la difficulté ;
+- un objet ou un Écusson doit aussi permettre de monter le Péril ; **le Sifflet d'arbitre existant couvre déjà ce besoin** : +1 par exemplaire pris, copies ordinaires illimitées, Péril conservé même après oubli au Puits ; pas de doublon à créer pour satisfaire cette demande ;
+- accord de principe sur les autres pistes proposées : paliers de Péril avant la run et pression d'Effacement réglable, à détailler avec les mesures et le plan 42.
+
+**Limites de la validation :** Raphaël ne précise pas séparément les montants +1/+3/+5, les paliers 0/3/6/10, ni les chiffres du défi (60 s, 60 créatures, 150 m) ; ils restent les réglages d'essai de l'agent. L'ordre des lots et une récompense de quête précise ne sont pas tranchés par ce retour. Le principe de gains par les créatures (§78) et le classement en éliminations brutes (§155) restent en vigueur.
+
+**État :** plan et suivi mis à jour ; aucune implémentation de gameplay du plan 46, aucune case de roadmap cochée. Référence D0 préparée à trois graines minimum par configuration, non exécutée.
+
+## 163. Une seule police, Alkhemikal ; niveau dans un sceau — 13 octobre 2026, soir
+
+- **Alkhemikal partout dans le jeu** (demande de Raphaël) : textes, chiffres, titres, HUD, chiffres de dégâts, plaques d'élites, thème global. Pixel Operator n'est plus chargé. `UITheme` garde ses accès (`BodyFont`, `StrongFont`…) qui renvoient tous Alkhemikal ; la graisse ne change plus la police (Alkhemikal n'a pas de gras).
+- Métriques presque identiques à Pixel Operator à taille égale (226 px contre 228 pour la même phrase en 16) : les mises en page tiennent. Aucun texte sous 16 px (grille d'Alkhemikal) : les textes en 8 (Pixel Operator 8) passent en 16, même largeur, plus hauts.
+- **Vitals** : niveau dans un petit sceau (coins coupés, liseré de métal de la jauge, bandeau « NIV. », rivets d'or), chiffre en blanc papier, en 24 ; PV et jauge centrés sur la hauteur du sceau.

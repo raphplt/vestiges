@@ -115,8 +115,11 @@
             "unlocks": [
                 {
                     "type": "character",
-                    "id": "scaphandriere",
-                    "name": "La Scaphandrière"
+                    "id": "scaphandriere"
+                },
+                {
+                    "type": "weapon",
+                    "id": "harpoon_rifle"
                 }
             ]
         },

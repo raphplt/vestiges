@@ -1,0 +1,20 @@
+{
+  "frames": 216,
+  "frame_size": [
+    42,
+    48
+  ],
+  "pivot": [
+    21,
+    40
+  ],
+  "feet_offset": 16,
+  "independent_dash_sha256_matches": 32,
+  "non_dash_identical_initial_44_rows": 183,
+  "non_dash_restored_bottom_contour": 1,
+  "non_dash_identical_initial_42_rows": 184,
+  "aseprite_roundtrips": 216,
+  "other_heroes_unchanged": true,
+  "clipped_frames": [],
+  "edge_frames": 0
+}

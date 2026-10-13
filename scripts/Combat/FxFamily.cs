@@ -19,4 +19,5 @@ public enum FxFamily
     Brass,
     Glass,
     Verdigris,
+    Gum,
 }

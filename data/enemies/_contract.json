@@ -1,6 +1,7 @@
 {
   "_doc": "Contrat des fiches de créatures (plan 26 Q6c). Une règle sans « default » est obligatoire. Les minimums égalent les planchers que le code imposait. Textes : family (famille d'effets), sound (banque audio), enemy (fiche de créature), shake (secousse d'écran). Le préfixe _ exclut ce fichier des fiches.",
   "stats": {
+    "traction_weight": { "default": 0, "min": 0, "max": 1, "integer": true, "_comment": "Harpon : 0 léger ramené, 1 lourd attirant le joueur. Boss/mini-boss/parties restent ancrés indépendamment de cette valeur." },
     "hp": { "min": 1 },
     "speed": { "min": 0 },
     "damage": { "min": 0 },

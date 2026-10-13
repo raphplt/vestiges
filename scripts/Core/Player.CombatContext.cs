@@ -14,5 +14,6 @@ public partial class Player
     /// contact orbitale est une attaque autonome. Les répliques et DOT conservent le lancement d'origine.
     /// </summary>
     public AttackContext BeginAttack(WeaponInstance weapon, float referenceDamage,
-        DamageKind kind = DamageKind.DirectWeapon) => new(GetInstanceId(), weapon, ++_attackSequence, kind, referenceDamage);
+        DamageKind kind = DamageKind.DirectWeapon) => new(GetInstanceId(), weapon, ++_attackSequence, kind, referenceDamage,
+            AttackOrigin, _isEchoAttack);
 }

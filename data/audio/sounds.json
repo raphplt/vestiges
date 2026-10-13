@@ -1115,5 +1115,32 @@
     "max_voices": 1,
     "duck_music_db": -4,
     "duck_sec": 2.0
+  },
+  "sfx_weapon_harpoon_rifle": {
+    "path": "res://assets/audio/sfx/weapons/harpoon_rifle.wav",
+    "volume_db": -9.3,
+    "volume_variance_db": 1.0,
+    "min_interval_ms": 60,
+    "effect_id": "weapon_harpoon_rifle",
+    "priority": 10,
+    "max_voices": 3
+  },
+  "sfx_air_consume": {
+    "path": "res://assets/audio/sfx/scaphandriere/air_consume.wav",
+    "volume_db": -17.2,
+    "volume_variance_db": 0.0,
+    "min_interval_ms": 1500,
+    "effect_id": "air_consume",
+    "priority": 30,
+    "max_voices": 1
+  },
+  "sfx_air_empty": {
+    "path": "res://assets/audio/sfx/scaphandriere/air_empty.wav",
+    "volume_db": -18.6,
+    "volume_variance_db": 0.0,
+    "min_interval_ms": 1500,
+    "effect_id": "air_empty",
+    "priority": 30,
+    "max_voices": 1
   }
 }

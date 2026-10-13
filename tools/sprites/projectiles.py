@@ -73,6 +73,23 @@ def _arrow() -> ProjectileModel:
     return _sized(ProjectileModel(materials, parts, (32, 24), 16, 1, 0, streak=5), 0.76)
 
 
+def _harpoon() -> ProjectileModel:
+    """Hampe fine et barbes de récupération ; gabarit de flèche, sans halo supplémentaire."""
+    materials = (make_material("steel", "#A8B3BA", contrast=1.2),
+                 make_material("brass", "#BE9559", contrast=0.9))
+    def parts(_: int) -> Sequence[Part]:
+        return (
+            Part(lambda p: capsule(p, (0, 0, -12), (0, 0, 12), 1.0), 0),
+            Part(lambda p: capsule(p, (0, 0, 10), (0, 0, 18), 2.3, 0.15), 0),
+            Part(lambda p: capsule(p, (0, 0, 12), (0, 6, 5), 1.4, 0.7), 0),
+            Part(lambda p: capsule(p, (0, 0, 12), (0, -6, 5), 1.4, 0.7), 0),
+            Part(lambda p: capsule(p, (0, 0, 12), (5, 0, 5), 1.4, 0.7), 0),
+            Part(lambda p: capsule(p, (0, 0, 12), (-5, 0, 5), 1.4, 0.7), 0),
+            Part(lambda p: ellipsoid(p, (0, 0, -10), (1.4, 1.4, 2.5)), 1),
+        )
+    return _sized(ProjectileModel(materials, parts, (32, 24), 16, 1, 0, streak=3), 0.76)
+
+
 def _bolt() -> ProjectileModel:
     """Carreau d'arbalète : court et trapu, tête carrée en fer, ailettes de laiton en croix."""
     materials = (make_material("shaft", "#5A4A38"), make_material("head", "#6B6161", contrast=1.4),
@@ -379,6 +396,7 @@ def enemy_impact(name: str) -> ProjectileModel:
 MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "arrow": _arrow,
     "bolt": _bolt,
+    "harpoon": _harpoon,
     "needle": _needle,
     "shard": _shard,
     "plate": _plate,

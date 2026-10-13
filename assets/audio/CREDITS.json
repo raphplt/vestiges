@@ -2434,5 +2434,119 @@
       }
     ],
     "selection_date": "2026-10-12"
+  },
+  {
+    "effect_id": "weapon_harpoon_rifle",
+    "candidate_id": "scaph_20261013_weapon_harpoon_rifle",
+    "file": "assets/audio/sfx/weapons/harpoon_rifle.wav",
+    "sha256": "b789bcddc9e533d54ef607ab71fcd78fa9c7e25cc7d27ae0eae1a699e9f9116a",
+    "author": "Ben Jaszczak & Brian Nelson ; rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/medieval-sound-effects-weapon-textures ; https://opengameart.org/content/80-cc0-rpg-sfx",
+    "attribution": "Ben Jaszczak & Brian Nelson — Medieval Weapon Textures — https://opengameart.org/content/medieval-sound-effects-weapon-textures — CC0-1.0. Filtre FFmpeg : aresample=44100,silenceremove=start_periods=1:start_duration=0.003:start_threshold=-42dB:stop_periods=1:stop_duration=0.22:stop_threshold=-42dB,asetrate=39690,aresample=44100,volume=-3.40dB. Source originale conservée. Premier geste isolé avec suppression des silences ; écouter la fin de phrase. ; rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Durée et hauteur originales. Gain constant -3.60 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": "tools/generate_scaphandriere_audio.py : Percuteur naval et départ discret du filin, variante A, fondus, mono 48 kHz ; audition humaine en run à confirmer.",
+    "recipe": {
+      "duration_seconds": 0.22,
+      "variant": 0,
+      "layers": [
+        [
+          "crossbow_release",
+          0.82,
+          1
+        ],
+        [
+          "chain_jump",
+          1.1,
+          0.16
+        ]
+      ]
+    },
+    "sources": [
+      {
+        "effect_id": "crossbow_release",
+        "sha256": "76c69b28b0464b58612416848bbaed5170357ef017a1fafdbabca0d768da907a"
+      },
+      {
+        "effect_id": "chain_jump",
+        "sha256": "28be1b3676f16c6ae2a3ee01fd949dafdf0ff0474112e65dd3fbba4fe0277e37"
+      }
+    ]
+  },
+  {
+    "effect_id": "air_consume",
+    "candidate_id": "scaph_20261013_air_consume",
+    "file": "assets/audio/sfx/scaphandriere/air_consume.wav",
+    "sha256": "9f39971c3a90bb00e76760b3b769b00574d08896d85aee66c0189a6ab253d975",
+    "author": "artisticdude ; rubberduck",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/swishes-sound-pack ; https://opengameart.org/content/80-cc0-rpg-sfx",
+    "attribution": "artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack (CC0-1.0 ; crédit de courtoisie) ; rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Aigus atténués par filtrage. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe.",
+    "processing": "tools/generate_scaphandriere_audio.py : Vanne douce et souffle court, variante C, fondus, mono 48 kHz ; audition humaine en run à confirmer.",
+    "recipe": {
+      "duration_seconds": 0.24,
+      "variant": 2,
+      "layers": [
+        [
+          "dash_start",
+          0.65,
+          0.28
+        ],
+        [
+          "lantern_fire",
+          1.7,
+          0.65
+        ]
+      ]
+    },
+    "sources": [
+      {
+        "effect_id": "dash_start",
+        "sha256": "46e5628746a8678919c4a008ffedf55948a5356c9da336c7c9e6fe5612145d0d"
+      },
+      {
+        "effect_id": "lantern_fire",
+        "sha256": "cf8e902af766e6dd0bcbff543dfe157e1a7a1b13263e7d80ffa748a8001988ce"
+      }
+    ]
+  },
+  {
+    "effect_id": "air_empty",
+    "candidate_id": "scaph_20261013_air_empty",
+    "file": "assets/audio/sfx/scaphandriere/air_empty.wav",
+    "sha256": "f65fe69a0e4bf0aac6b080d0f315a0ab0cb0a9f8ae8f851d4407bfac6f5f5443",
+    "author": "rubberduck ; artisticdude",
+    "license": "CC0-1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source_url": "https://opengameart.org/content/80-cc0-rpg-sfx ; https://opengameart.org/content/swishes-sound-pack",
+    "attribution": "rubberduck — 80 CC0 RPG SFX — https://opengameart.org/content/80-cc0-rpg-sfx — CC0-1.0. Aigus atténués par filtrage. Gain constant +12.00 dB ; WAV PCM16 44,1 kHz. Aucune coupe. ; artisticdude — Swishes Sound Pack — https://opengameart.org/content/swishes-sound-pack (CC0-1.0 ; crédit de courtoisie)",
+    "processing": "tools/generate_scaphandriere_audio.py : Souffle de vanne qui se ferme, variante C, fondus, mono 48 kHz ; audition humaine en run à confirmer.",
+    "recipe": {
+      "duration_seconds": 0.3,
+      "variant": 2,
+      "layers": [
+        [
+          "lantern_fire",
+          0.85,
+          0.65
+        ],
+        [
+          "dash_start",
+          1.3,
+          0.12
+        ]
+      ]
+    },
+    "sources": [
+      {
+        "effect_id": "lantern_fire",
+        "sha256": "cf8e902af766e6dd0bcbff543dfe157e1a7a1b13263e7d80ffa748a8001988ce"
+      },
+      {
+        "effect_id": "dash_start",
+        "sha256": "46e5628746a8678919c4a008ffedf55948a5356c9da336c7c9e6fe5612145d0d"
+      }
+    ]
   }
 ]

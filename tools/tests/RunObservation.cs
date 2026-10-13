@@ -287,6 +287,8 @@ public partial class RunObservation : Node
                 await CaptureWell();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
+            else if (Array.IndexOf(args, "--capture-scaph-kit") >= 0)
+                await CaptureScaphandriereKit();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
                 await CaptureCharacter(Argument(args, "--character", "traqueur"));
             else
@@ -510,6 +512,12 @@ public partial class RunObservation : Node
         while (_world.GetNodeOrNull("GameLoadingOverlay") != null)
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        AnimatedSprite2D sprite = _player.GetNode<AnimatedSprite2D>("Sprite");
+        Vector2 frameSize = sprite.SpriteFrames.GetFrameTexture(sprite.Animation, sprite.Frame).GetSize();
+        // Le recadrage comprend le corps, son ancrage aux pieds et l'arc maximal, quelle que soit la taille du héros.
+        Vector2 cropHalf = frameSize * sprite.Scale.Abs() * 0.5f
+            + (sprite.Position + sprite.Offset * sprite.Scale).Abs()
+            + new Vector2(8f, 8f + _player.Mobility.Config.VisualHeightPixels);
         SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
         // Repères d'échelle : un petit et un grand ennemi à distance du joueur.
         spawner.ForceSpawnEnemy("shade", _player.GlobalPosition + new Vector2(-150f, 60f));
@@ -518,30 +526,37 @@ public partial class RunObservation : Node
         for (int index = 0; index < directions.Length; index++)
         {
             _player.AIInputOverride = directions[index].Normalized();
-            await Seconds(0.35);
+            await Seconds(0.35f);
             SaveFrame($"{characterId}-{index:00}");
-            SaveCrop($"{characterId}-{index:00}-detail", _player.GlobalPosition, new Vector2(42, 44));
+            SaveCrop($"{characterId}-{index:00}-detail", _player.GlobalPosition, cropHalf);
         }
         _player.AIInputOverride = Vector2.Down;
         _player.Mobility.Request();
-        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
-        await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+        await Seconds(_player.Mobility.Config.DurationSeconds * 0.5f);
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         SaveFrame($"{characterId}-dash");
-        GD.Print($"[RunObservation] character dash animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
-        await Seconds(0.8);
+        SaveCrop($"{characterId}-dash-detail", _player.GlobalPosition, cropHalf);
+        GD.Print($"[RunObservation] character dash animation={sprite.Animation} height={_player.Mobility.VisualHeight:F2}");
+        _player.AIInputOverride = Vector2.Zero;
+        await Seconds(_player.Mobility.Config.DurationSeconds * 0.5f + 0.1f);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        SaveFrame($"{characterId}-landing");
+        GD.Print($"[RunObservation] character landing animation={sprite.Animation} height={_player.Mobility.VisualHeight:F2}");
+        await Seconds(0.8f);
         _player.IsGodMode = false;
-        _player.TakeErasureDamage(1f);
+        _player.TakeDamage(1f, _player.GlobalPosition + Vector2.Right * 40f);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         SaveFrame($"{characterId}-hurt");
-        GD.Print($"[RunObservation] character hurt animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
-        await Seconds(0.8);
+        GD.Print($"[RunObservation] character hurt animation={sprite.Animation}");
+        await Seconds(0.8f);
         _player.TakeErasureDamage(100000f);
+        // La mort ralentit le temps de jeu et dissout le sprite en temps réel : saisir sa pose avant dissolution.
         await Seconds(0.15);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         SaveFrame($"{characterId}-death");
-        GD.Print($"[RunObservation] character death animation={_player.GetNode<AnimatedSprite2D>("Sprite").Animation}");
+        GD.Print($"[RunObservation] character death animation={sprite.Animation}");
         GD.Print($"[RunObservation] RESULT character={characterId} output={_output}");
     }
 

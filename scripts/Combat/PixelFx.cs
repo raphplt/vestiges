@@ -20,6 +20,7 @@ public partial class PixelFx : Sprite2D
     private static readonly StringName FadeParam = "fade";
     private static readonly StringName FillParam = "fill_density";
     private static readonly StringName SeedParam = "seed";
+    private static readonly StringName MatterParam = "matter";
     private static readonly StringName ProgressFillParam = "progress_fill";
     private static readonly StringName LightParam = "c_light";
     private static readonly StringName MidParam = "c_mid";
@@ -69,7 +70,8 @@ public partial class PixelFx : Sprite2D
     public void Play(Vector2 position, in PixelFxSpec spec, float opacity, Node2D follow = null)
     {
         FxRamp ramp = PixelPalette.Ramp(spec.Family);
-        float reach = spec.Radius + spec.Thickness + 2f;
+        // Une zone au sol déborde de son rayon : lobes du bord, gouttes autour d'une flaque, langues d'un feu.
+        float reach = spec.Shape == PixelFxShape.Zone ? spec.Radius * 1.4f + 8f : spec.Radius + spec.Thickness + 6f;
         Vector2 size = new(reach * 2f, reach * 2f / Mathf.Max(spec.Squash, 1f));
         // Taille paire : les bords du quad tombent sur la grille des texels.
         size = new Vector2(Mathf.Ceil(size.X / 2f) * 2f + 2f, Mathf.Ceil(size.Y / 2f) * 2f + 2f);
@@ -91,6 +93,7 @@ public partial class PixelFx : Sprite2D
         _material.SetShaderParameter(FillParam, spec.FillDensity);
         _material.SetShaderParameter(ProgressFillParam, spec.ProgressFill);
         _material.SetShaderParameter(SeedParam, (float)GD.Randf() * 100f);
+        _material.SetShaderParameter(MatterParam, (int)spec.Matter);
         _material.SetShaderParameter(LightParam, ramp.Light);
         _material.SetShaderParameter(MidParam, ramp.Mid);
         _material.SetShaderParameter(DarkParam, ramp.Dark);

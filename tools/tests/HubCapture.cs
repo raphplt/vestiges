@@ -16,6 +16,7 @@ namespace Vestiges.Tests;
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
 /// --quest-focus ID : ouvre la quête précise ; les actions suivantes exercent ses liens réels vers la Collection.
 /// --fake-leaderboard : l'écran Classement lit un faux service rempli (aucun appel à Steam).
+/// --character ID : personnage sélectionné avant ouverture de la page Characters.
 /// --claim-quests a,b : quêtes accomplies dans le profil isolé avant l'accueil (badge « Nouveau » de la Collection).
 /// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
 /// </summary>
@@ -57,6 +58,14 @@ public partial class HubCapture : Node
             // --claim-quests a,b : quêtes accomplies avant l'accueil, leurs pièces portent le badge « Nouveau ».
             foreach (string questId in Argument(args, "--claim-quests", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
                 Vestiges.Infrastructure.MetaSaveManager.ClaimQuest(Vestiges.Infrastructure.QuestDataLoader.Get(questId), out _);
+
+            string characterId = Argument(args, "--character", "");
+            if (characterId.Length > 0)
+            {
+                if (Vestiges.Infrastructure.CharacterDataLoader.Get(characterId) == null)
+                    throw new ArgumentException($"Personnage de capture inconnu : {characterId}");
+                GetNode<Vestiges.Core.GameManager>("/root/GameManager").SelectedCharacterId = characterId;
+            }
 
             GetTree().CurrentScene = null;
             Node hub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate();
@@ -104,6 +113,14 @@ public partial class HubCapture : Node
                 typeof(Vestiges.UI.HubScreen).GetMethod("OpenQuest", BindingFlags.NonPublic | BindingFlags.Instance)
                     .Invoke(hub, new object[] { questFocus });
                 await Frames(30);
+            }
+            if (characterId.Length > 0 && page == "Characters")
+            {
+                Vestiges.UI.HubCharactersPanel panel = (Vestiges.UI.HubCharactersPanel)hub.GetType()
+                    .GetField("_charactersPanel", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(hub);
+                if (panel.ExaminedCharacterId != characterId)
+                    throw new InvalidOperationException("Le Hub n'examine pas le personnage demandé.");
+                GD.Print($"[HubCapture] character={panel.ExaminedCharacterId} unlocked={panel.CanDepart}");
             }
             Capture("hub-00");
 

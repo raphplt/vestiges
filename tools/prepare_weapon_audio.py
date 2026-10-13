@@ -29,6 +29,7 @@ RECIPES = {
     "makeshift_bow": ("Corde sèche", .28, [("bow_release", 1, 1)]),
     "sling": ("Déclic puis départ de bille", .14, [("throw_release", 1.1, 1), ("ui_click", 1.3, .28)]),
     "sharpened_pipe": ("Armature légère qui fend l'air", .22, [("blade_swing", 1.35, 1), ("crossbow_release", 1.4, .25)]),
+    "harpoon_rifle": ("Percuteur naval et départ discret du filin", .22, [("crossbow_release", .82, 1), ("chain_jump", 1.1, .16)]),
     "crossbow": ("Percuteur court", .22, [("crossbow_release", 1.1, 1)]),
     "cleaver": ("Balayage large de tôle", .25, [("heavy_swing", 1.05, 1), ("blade_swing", .7, .35)]),
     "whip": ("Claquement souple", .32, [("whip_snap", 1, 1)]),

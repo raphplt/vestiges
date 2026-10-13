@@ -42,6 +42,12 @@ public partial class PerkManager : Node
                 echo.Initialize(player, passive.Echo);
                 player.AddChild(echo);
             }
+            if (passive.Air != null)
+            {
+                AirReserve air = new() { Name = "AirReserve" };
+                air.Initialize(player, passive.Air);
+                player.AddChild(air);
+            }
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }
     }

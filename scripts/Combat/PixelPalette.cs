@@ -31,6 +31,10 @@ public static class PixelPalette
     public static readonly Color FlowerYellow = new("E0C84A");
     public static readonly Color SporeGreen = new("6ACA5A");
     public static readonly Color CanopyDark = new("2D5A27");
+    // Rose du chewing-gum, repris de la craie du joueur (tools/sprites/projectiles.py) : seule matière rose du combat.
+    public static readonly Color GumLight = new("F2A6C4");
+    public static readonly Color GumPink = new("E87BA8");
+    public static readonly Color GumDark = new("9C3E6A");
 
     private static readonly FxRamp[] Ramps =
     {
@@ -50,6 +54,7 @@ public static class PixelPalette
         new(FlowerYellow, HearthGold, RustOrange, RustDark),            // Brass
         new(ErasureWhite, GlassBlue, OxidizedCopper, NightBlue),        // Glass
         new(GlassBlue, OxidizedCopper, CanopyDark, DeepBlack),          // Verdigris
+        new(GumLight, GumPink, GumDark, Iridescent),                    // Gum
     };
 
     public static FxRamp Ramp(FxFamily family) => Ramps[(int)family];
@@ -73,6 +78,7 @@ public static class PixelPalette
         "brass" => FxFamily.Brass,
         "glass" => FxFamily.Glass,
         "verdigris" => FxFamily.Verdigris,
+        "gum" => FxFamily.Gum,
         _ => fallback,
     };
 

@@ -60,6 +60,7 @@ public partial class WeaponRegression : Node2D
             CheckTemper();
             await CheckObstacleField();
             await CheckFastShotHits();
+            await CheckHarpoon();
 
             GD.Print($"[WeaponRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);

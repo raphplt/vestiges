@@ -91,16 +91,15 @@ public partial class CombatPools : Node2D
         _sleepingOrbs.Add((orb, orb.GlobalPosition, orb.SleepToken));
     }
 
-    /// <summary>Flaque de feu : dégâts au sol pendant <paramref name="duration"/> secondes, zone tramée qui la montre.</summary>
+    /// <summary>Flaque de feu : dégâts au sol pendant <paramref name="duration"/> secondes, feu qui brûle au sol pour la montrer.</summary>
     public void AddGroundFire(Vector2 position, float damage, float duration, float radius, float burnSeconds, AttackContext source = default)
     {
         _groundFire.Add(position, damage, duration, radius, burnSeconds, source);
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, duration);
+        spec.Matter = ZoneMatter.Fire;
         spec.Squash = Iso.GroundSquash;
-        spec.FillDensity = 0.3f;
-        spec.ProgressFill = false;
         spec.Steps = 8;
-        spec.FadeTail = 0.4f;
+        spec.FadeTail = 0.25f;
         spec.ZIndex = -1;
         PlayFx(position, spec, FxOwner.Player);
     }
@@ -357,9 +356,8 @@ public partial class CombatPools : Node2D
     public void ShowExplosion(Vector2 position, float radius)
     {
         PixelFxSpec zone = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Fire, radius, 1f, 0.35f);
+        zone.Matter = ZoneMatter.Burst;
         zone.Squash = Iso.GroundSquash;
-        zone.ProgressFill = false;
-        zone.FillDensity = 0.5f;
         zone.Steps = 4;
         zone.FadeTail = 0.5f;
         zone.ZIndex = -1;

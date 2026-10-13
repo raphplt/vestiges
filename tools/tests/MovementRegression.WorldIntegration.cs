@@ -276,6 +276,29 @@ public partial class MovementRegression
             }
         }
         Check(found, "monde généré : trajet continu dans l'eau trouvé");
+        if (found)
+        {
+            Check(_player.ClampHarpoonTravel(waterStart, Vector2.Right * 50f) == Vector2.Zero,
+                "Harpon : aucun trajet forcé depuis une cellule d'eau réelle");
+            bool shoreChecked = false;
+            for (int distance = 8; distance <= 512 && !shoreChecked; distance += 8)
+            {
+                foreach (Vector2 direction in new[] { Vector2.Left, Vector2.Right, Vector2.Up, Vector2.Down })
+                {
+                    Vector2 land = waterStart + direction * distance;
+                    Vector2I cell = ground.LocalToMap(ground.ToLocal(land));
+                    if (!world.Generator.IsWithinBounds(cell.X, cell.Y) || world.Generator.IsErased(cell.X, cell.Y)
+                        || world.IsWaterAt(land) || erasure.GetZonePhaseAt(land) == ErasureManager.ErasureZonePhase.Void) continue;
+                    Vector2 requested = waterStart - land;
+                    Vector2 permitted = _player.ClampHarpoonTravel(land, requested);
+                    Check(permitted.Length() < requested.Length() && !world.IsWaterAt(land + permitted),
+                        "Harpon : le clamp partagé des deux tractions s'arrête à l'entrée de l'eau générée");
+                    shoreChecked = true;
+                    break;
+                }
+            }
+            Check(shoreChecked, "Harpon : frontière terre/eau réelle vérifiée");
+        }
         if (!found)
             return;
         await ReadyMobility();

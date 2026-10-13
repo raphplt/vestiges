@@ -4,12 +4,14 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Trou au pied d'une main de l'Indicible (plan 07 B5b) : terre retournée autour d'un fond noir, ou cercle de remous si
-/// la main sort de l'eau. Décalque au sol ; sa présence varie par l'opacité du nœud, sans redessin.
+/// la main sort de l'eau. Décalque au sol en pixels, au bord en lobes (plan 25 S10) ; sa présence varie par l'opacité du
+/// nœud, sans redessin.
 /// </summary>
 public partial class IndicibleHandHole : Node2D
 {
-	private const float Radius = 13f;
+	private const int Radius = 16;
 	private static readonly Color Dirt = new(0.27f, 0.21f, 0.16f);
+	private static readonly Color DirtLight = new(0.4f, 0.32f, 0.24f);
 	private static readonly Color Pit = new(0.05f, 0.04f, 0.05f);
 	private static readonly Color Ripple = new(0.55f, 0.68f, 0.8f, 0.7f);
 	private static readonly Color DeepWater = new(0.03f, 0.06f, 0.12f, 0.85f);
@@ -20,8 +22,6 @@ public partial class IndicibleHandHole : Node2D
 	{
 		ZAsRelative = false;
 		ZIndex = -1;
-		// Disque au sol : deux fois plus large que haut à l'écran.
-		Scale = new Vector2(1f, 0.5f);
 		Visible = false;
 	}
 
@@ -39,14 +39,32 @@ public partial class IndicibleHandHole : Node2D
 
 	public override void _Draw()
 	{
+		int variant = (int)(GetInstanceId() % PixelBlob.Variants);
+		PixelBlob.Shape outer = PixelBlob.Get(Radius, variant, 1.4f);
 		if (_water)
 		{
-			DrawCircle(Vector2.Zero, Radius * 0.8f, DeepWater);
-			DrawArc(Vector2.Zero, Radius, 0f, Mathf.Tau, 20, Ripple, 1f);
-			DrawArc(Vector2.Zero, Radius * 1.5f, 0f, Mathf.Tau, 24, Ripple with { A = 0.35f }, 1f);
+			PixelBlob.Shape wake = PixelBlob.Get(Mathf.RoundToInt(Radius * 1.5f), variant, 1f);
+			foreach (Vector2I pixel in wake.Rim)
+				if (PixelBlob.Bayer(pixel) < 0.5f)
+					Fill(pixel, Ripple with { A = 0.35f });
+			for (int i = 0; i < outer.Inside.Length; i++)
+				Fill(outer.Inside[i], outer.Depth[i] < 0.8f ? DeepWater : Ripple);
+			foreach (Vector2I pixel in outer.Rim)
+				Fill(pixel, Ripple);
 			return;
 		}
-		DrawCircle(Vector2.Zero, Radius * 1.25f, Dirt);
-		DrawCircle(Vector2.Zero, Radius * 0.8f, Pit);
+		// Terre retournée : mottes claires sur le bord éclairé (haut-gauche), fond noir au centre.
+		for (int i = 0; i < outer.Inside.Length; i++)
+		{
+			Vector2I pixel = outer.Inside[i];
+			bool lit = pixel.X + pixel.Y * 2 < 0;
+			Color color = outer.Depth[i] < 0.62f ? Pit
+				: lit && PixelBlob.Bayer(pixel) < 0.4f ? DirtLight : Dirt;
+			Fill(pixel, color);
+		}
+		foreach (Vector2I pixel in outer.Rim)
+			Fill(pixel, PixelBlob.Bayer(pixel) < 0.5f ? Dirt : DirtLight);
 	}
+
+	private void Fill(Vector2I pixel, Color color) => DrawRect(new Rect2(pixel, Vector2.One), color);
 }

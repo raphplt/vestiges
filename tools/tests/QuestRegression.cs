@@ -55,6 +55,7 @@ public partial class QuestRegression : Node
                 CheckRefusals();
                 CheckStartingPool();
                 CheckClaimAndReload();
+                CheckEarlierScaphandriereUnlock();
             }
             GD.Print($"[QuestRegression] RESULT failures={_failures} checks={_checks}");
             if (_failures == 0)
@@ -96,9 +97,9 @@ public partial class QuestRegression : Node
         Check(cumulative == 18, $"dix-huit quêtes de cumul ({cumulative})");
         Check(unlocks[UnlockKind.Reminiscence] == 11 && dormant == 7,
             $"11 Réminiscences par quête, dont 7 en attente de leur effet ({unlocks[UnlockKind.Reminiscence]}, {dormant})");
-        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 17 && unlocks[UnlockKind.Object] == 29
+        Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 18 && unlocks[UnlockKind.Object] == 29
             && unlocks[UnlockKind.Badge] == 6,
-            $"5 personnages, 17 armes (13 + 4 de départ de personnage), 29 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
+            $"5 personnages, 18 armes (13 + 5 de départ de personnage), 29 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");
         // Traqueur de départ, Vagabond gagné par la chasse (plan 41 R6, DECISIONS §129 ter).
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "makeshift_bow") == null,
             "l'arc du Traqueur, personnage de départ, est libre");
@@ -106,6 +107,13 @@ public partial class QuestRegression : Node
             "l'arme de départ du Vagabond vient avec lui");
         Check(QuestDataLoader.FindUnlocking(UnlockKind.Weapon, "letter_satchel")?.Id == "the_round",
             "la Sacoche de lettres vient avec le Facteur");
+        CharacterData scaphandriere = CharacterDataLoader.Get("scaphandriere");
+        WeaponData harpoon = WeaponDataLoader.Get(scaphandriere?.StartingWeaponId ?? "");
+        Check(harpoon?.Id == "harpoon_rifle" && harpoon.DefaultFor == scaphandriere.Id
+            && harpoon.Source == "default" && harpoon.Tier == 1
+            && QuestDataLoader.FindUnlocking(UnlockKind.Weapon, harpoon.Id)?.Id == "raise_the_bodies"
+            && QuestDataLoader.FindUnlocking(UnlockKind.Character, scaphandriere.Id)?.Id == "raise_the_bodies",
+            "Scaphandrière et harpon de départ partagent Remonter les corps");
     }
 
     private void CheckRefusals()
@@ -121,7 +129,7 @@ public partial class QuestRegression : Node
             ("pièce débloquée deux fois", root => Unlock(root, 5)["id"] = "lighthouse_shard", "déjà débloqué par la quête"),
             ("pièce inconnue", root => Unlock(root, 18)["id"] = "parapluie_dore", "pièce inconnue"),
             ("nom d'un personnage connu", root => Unlock(root, 0)["name"] = "Le Traqueur", "déjà au catalogue"),
-            ("personnage inconnu sans nom", root => ((JsonObject)Quest(root, 4)["unlocks"]![0]!).Remove("name"), "inconnu sans name"),
+            ("personnage inconnu sans nom", root => { Unlock(root, 4)["id"] = "unknown_character"; Unlock(root, 4).Remove("name"); }, "inconnu sans name"),
             ("difficulté hors bornes", root => Quest(root, 0)["difficulty"] = 4, "difficulty"),
             ("clé inconnue", root => Quest(root, 0)["reward"] = "souvenir", "clé « reward » inconnue"),
             ("id en double", root => Quest(root, 1)["id"] = "lead_the_hunt", "id en double"),
@@ -179,6 +187,8 @@ public partial class QuestRegression : Node
             if (MetaSaveManager.IsCharacterUnlocked(character.Id))
                 characters.Add(character.Id);
         Check(characters.Count == 1 && characters[0] == "traqueur", $"profil neuf : le Traqueur seul ({string.Join(", ", characters)})");
+        Check(!MetaSaveManager.IsCharacterUnlocked("scaphandriere") && !MetaSaveManager.IsWeaponUnlocked("harpoon_rifle"),
+            "profil neuf : Scaphandrière et harpon verrouillés ensemble");
 
         HashSet<string> reminiscences = new();
         foreach (PerkSpecializationData perk in PerkSpecializationDataLoader.GetAll())
@@ -250,7 +260,12 @@ public partial class QuestRegression : Node
 
         QuestDefinition voices = QuestDataLoader.Get("hear_the_voices");
         Check(MetaSaveManager.ClaimQuest(voices, out _) && MetaSaveManager.IsCharacterUnlocked("eveillee"),
-            "un personnage à venir garde son déblocage");
+            "l'Éveillée garde son déblocage");
+
+        QuestDefinition bodies = QuestDataLoader.Get("raise_the_bodies");
+        Check(MetaSaveManager.ClaimQuest(bodies, out SaveFile.WriteResult bodiesSaved) && bodiesSaved.Succeeded
+            && MetaSaveManager.IsCharacterUnlocked("scaphandriere") && MetaSaveManager.IsWeaponUnlocked("harpoon_rifle"),
+            "Remonter les corps écrit les droits Scaphandrière et Fusil-harpon ensemble");
 
         QuestDefinition doors = QuestDataLoader.Get("every_door");
         MetaSaveManager.RecordQuestProgress(doors, new[] { 30f });
@@ -271,6 +286,38 @@ public partial class QuestRegression : Node
         Check(MetaSaveManager.HasCompletedQuest("lead_the_hunt") && MetaSaveManager.IsWeaponUnlocked("chipped_blade")
               && Near(MetaSaveManager.GetQuestProgress("every_door"), 55f), "déblocages et avancée retrouvés après rechargement");
         Check(QuestBook.ProgressText(doors, MetaSaveManager.GetQuestProgress("every_door")) == "55 / 60", "avancée lisible");
+        Check(MetaSaveManager.IsCharacterUnlocked("scaphandriere") && MetaSaveManager.IsWeaponUnlocked("harpoon_rifle")
+            && !MetaSaveManager.ClaimQuest(bodies, out _), "Scaphandrière et harpon retrouvés sans nouvel accomplissement");
+    }
+
+    private void CheckEarlierScaphandriereUnlock()
+    {
+        string path = ProjectSettings.GlobalizePath(DevelopmentMode.GetSavePath("meta_save.json"));
+        string current = File.ReadAllText(path);
+        // Profil écrit avant l'entrée au catalogue : seule la quête existe, sans liste de droits de l'arme.
+        const string earlier = """
+            {"version":2,"vestiges":37,"completed_quests":["raise_the_bodies"],"new_unlocks":["character:scaphandriere"]}
+            """;
+        try
+        {
+            File.WriteAllText(path, earlier);
+            MetaSaveManager.ReloadProfile();
+            MetaSaveManager.Load();
+            Check(MetaSaveManager.IsCharacterUnlocked("scaphandriere") && MetaSaveManager.IsWeaponUnlocked("harpoon_rifle")
+                && MetaSaveManager.GetVestiges() == 37 && MetaSaveManager.GetCompletedQuests().Count == 1,
+                "ancienne sauvegarde : harpon ouvert par la quête déjà accomplie, acquis conservés");
+            Check(!MetaSaveManager.ClaimQuest(QuestDataLoader.Get("raise_the_bodies"), out _)
+                && File.ReadAllText(path) == earlier, "ancienne sauvegarde : aucun nouvel accomplissement ni réécriture forcée");
+            Check(MetaSaveManager.Save().Succeeded, "ancienne sauvegarde : sauvegarde normale possible");
+            MetaSaveManager.ReloadProfile();
+            Check(MetaSaveManager.IsWeaponUnlocked("harpoon_rifle") && MetaSaveManager.IsCharacterUnlocked("scaphandriere"),
+                "ancienne sauvegarde : les deux droits persistent au rechargement suivant");
+        }
+        finally
+        {
+            File.WriteAllText(path, current);
+            MetaSaveManager.ReloadProfile();
+        }
     }
 
     private static bool Near(IReadOnlyList<float> values, params float[] expected)

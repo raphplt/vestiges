@@ -1,0 +1,10 @@
+{
+  "targets": [
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_01.png",
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_02.png",
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_03.png",
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_04.png",
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_05.png",
+    "assets/characters/scaphandriere/char_scaphandriere_S_idle_06.png"
+  ]
+}

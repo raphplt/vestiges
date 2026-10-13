@@ -1,0 +1,12 @@
+{
+  "targets": [
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_01.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_02.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_03.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_04.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_05.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_06.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_07.png",
+    "assets/characters/scaphandriere/char_scaphandriere_SE_walk_08.png"
+  ]
+}

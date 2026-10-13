@@ -603,6 +603,19 @@ Raphaël : les projectiles des armes à distance « ne ressemblent plus à des p
 
 **Vérification :** build sans avertissement, smoke vert, suite armes verte ; enveloppe et lettre régénérées identiques octet pour octet ; captures en run des 12 armes à distance et de la Boîte à musique inspectées.
 
+### S10 — zones au sol au niveau du reste, 13 octobre (DECISIONS §164)
+
+Raphaël : les zones posées au sol, du joueur comme des créatures, sont « souvent un cercle parfait avec une texture légère », « clairement pas au niveau du reste ». Constat : presque toutes passent par la forme 3 de `pixel_fx.gdshader`, une ellipse mathématique avec un bord d'un texel, lacunaire aux pôles, et une trame de Bayer uniforme. Elles restent figées entre l'apparition et l'effacement. Font exception l'aura d'affixe (`PixelGroundRing`, damier) et le trou des mains de l'Indicible (`DrawCircle` lissé).
+
+[Planche](planches/25-s10-zones-au-sol.png). Choix de Raphaël : bord irrégulier pour toutes les zones, annonces comprises ; matières comme sur la planche ; Chronomètre couché au sol ; tout ce qui est au sol dans ce lot.
+
+| Lot | Contenu |
+|---|---|
+| Z1 | Shader : une matière par zone (`matter` : annonce, liquide, feu, cadran, éclat). Bord en lobes tiré de la graine, épaisseur constante en texels d'écran, contour sombre, animation au rythme de 8 poses/s pendant toute la vie de la zone. Couloir au bord irrégulier. |
+| Z2 | Branchement : annonces des créatures et des boss, flaque de bile, feu de la Lampe, Chewing-gum (famille `Gum`, rose), explosions, Écho, éclat de portée. |
+| Z3 | Chronomètre : cadran couché au sol, touche en ellipse au sol, rayon relevé de √2 (80 → 113) pour garder la surface. |
+| Z4 | Aura d'affixe et trou des mains de l'Indicible au même rendu. |
+
 ### S2 à S4 — personnages joués repris et intégrés, 3 octobre
 
 Direction retenue par Raphaël entre « stylisé » et « grosse tête » (DECISIONS §61). [Planche avant/après](planches/25-s9-personnages.png), [animations](planches/25-s9-animations.png).

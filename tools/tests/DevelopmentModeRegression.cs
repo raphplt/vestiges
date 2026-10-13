@@ -69,6 +69,8 @@ public partial class DevelopmentModeRegression : Node
             {
                 Check(MetaSaveManager.IsCharacterUnlocked("forgeuse"), "acquis normal conservé");
                 Check(!MetaSaveManager.IsCharacterUnlocked("vagabond"), "verrou normal conservé");
+                Check(!MetaSaveManager.IsCharacterUnlocked("scaphandriere") && !MetaSaveManager.IsWeaponUnlocked("harpoon_rifle"),
+                    "Scaphandrière et harpon restent verrouillés dans le profil normal après le passage dev");
                 Check(MetaSaveManager.GetDiscoveredSouvenirs().Count == 1, "lore normal conservé");
                 Check(MetaSaveManager.HasCompletedQuest("rake") && MetaSaveManager.IsWeaponUnlocked("nail_mace"), "quête normale et son arme conservées");
                 Check(!MetaSaveManager.IsWeaponUnlocked("lighthouse_shard") && !MetaSaveManager.IsObjectUnlocked("thermometre"), "verrous de quête conservés");

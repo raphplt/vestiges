@@ -79,6 +79,7 @@ public partial class Player : CharacterBody2D
 
     // Sprite animé (remplace Polygon2D quand sprite_folder est défini)
     private AnimatedSprite2D _sprite;
+    private Vector2 _spriteRestPosition;
     private PlayerAttackFx _attackFx;
     private bool _hasSprite;
     private bool _itemDashActive;
@@ -104,6 +105,9 @@ public partial class Player : CharacterBody2D
     private float _speedMultiplier = 1f;
     // Ce que l'oubli coûte là où se tient le joueur (plan 16 O4), à part des bonus pour rester réversible.
     private ErasureEffects.Effect _erasurePenalty = ErasureEffects.Effect.None;
+    private bool _erasurePenaltyProtected;
+    internal ErasureManager.ErasureZonePhase ErasurePhase { get; private set; } = ErasureManager.ErasureZonePhase.Anchored;
+    internal event System.Action<ErasureManager.ErasureZonePhase> ErasurePhaseChanged;
     private float _attackSpeedMultiplier = 1f;
     private float _bonusMaxHp;
     private float _aoeMultiplier = 1f;
@@ -209,6 +213,7 @@ public partial class Player : CharacterBody2D
         BodyRadius = GetNode<CollisionShape2D>("CollisionShape2D").Shape is CircleShape2D body ? body.Radius : BodyRadius;
         _visual = GetNode<Polygon2D>("Visual");
         _sprite = GetNode<AnimatedSprite2D>("Sprite");
+        _spriteRestPosition = _sprite.Position;
         _attackFx = new PlayerAttackFx(this, _sprite);
         AddChild(GroundShadow.Create(ShadowWidth));
         _originalColor = _visual.Color;
@@ -225,6 +230,9 @@ public partial class Player : CharacterBody2D
         Waymarks = new Waymarks { Name = "Waymarks" };
         AddChild(Waymarks);
         Mobility = new PlayerMobility(MobilityConfig.Load());
+        Harpoon = new HarpoonTether { Name = "HarpoonTether" };
+        Harpoon.Initialize(this);
+        AddChild(Harpoon);
         _defense = new PlayerDefense(DefenseConfig.Load());
         _mobilityFeedback = new MobilityFeedback { Name = "MobilityFeedback" };
         AddChild(_mobilityFeedback);
@@ -249,6 +257,7 @@ public partial class Player : CharacterBody2D
 
     public void InitializeCharacter(CharacterData data)
     {
+        Harpoon.Cancel();
         // Le bootstrap crée les services du monde après _Ready, avant cette initialisation.
         // Refaire la liaison ici couvre aussi une nouvelle scène lorsque l'état est déjà Run.
         CacheWorldSetup();
@@ -276,6 +285,7 @@ public partial class Player : CharacterBody2D
         if (Mobility?.Config != mobility)
             Mobility = new PlayerMobility(mobility) { BlinkDistance = _objectUtilities?.BlinkDistance ?? 0f };
 
+        UpdateMobilityHeight();
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
 
@@ -523,7 +533,13 @@ public partial class Player : CharacterBody2D
         if (_mobilityRequiresRelease && !Input.IsActionPressed("mobility"))
             _mobilityRequiresRelease = false;
         float terrainFactor = (IsOnWater() ? Mobility.Config.WaterSpeedFactor : 1f) * _slowFactor;
-        Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier * _erasurePenalty.Speed, terrainFactor, inputAllowed);
+        float mobilityTerrainFactor = Mobility.Config.IgnoreWaterWhileActive ? _slowFactor : terrainFactor;
+        Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier * _erasurePenalty.Speed, terrainFactor, inputAllowed,
+            mobilityTerrainFactor);
+        Vector2 harpoonTravel = Harpoon.Advance(dt, inputAllowed);
+        bool harpoonMovement = Harpoon.PullsPlayer;
+        if (harpoonMovement)
+            Velocity = dt > 0f ? harpoonTravel / dt : Vector2.Zero;
         if (inputDir != Vector2.Zero || Mobility.IsDashStep)
         {
             CancelPoiExplore();
@@ -545,6 +561,18 @@ public partial class Player : CharacterBody2D
         }
         MoveAndSlide();
         Vector2 movementVelocity = GetRealVelocity();
+        if (harpoonMovement)
+        {
+            Vector2 traveled = GlobalPosition - previousPosition;
+            if (ClampHarpoonTravel(previousPosition, traveled).DistanceSquaredTo(traveled) > 0.0025f)
+            {
+                GlobalPosition = previousPosition;
+                traveled = Vector2.Zero;
+                Velocity = Vector2.Zero;
+                movementVelocity = Vector2.Zero;
+            }
+            Harpoon.FinishPlayerTravel(traveled);
+        }
         if (dashMovement)
         {
             Vector2 traveled = GlobalPosition - previousPosition;
@@ -566,7 +594,7 @@ public partial class Player : CharacterBody2D
             movementVelocity = KeepOnWorldGround(previousPosition, dt);
         }
         // La dérive (vent) pousse le corps sans compter comme un pas : ni marche, ni pas sonores, ni changement de face.
-        if (!dashMovement && inputAllowed && ExternalDrift != Vector2.Zero)
+        if (!dashMovement && !harpoonMovement && inputAllowed && ExternalDrift != Vector2.Zero)
         {
             Vector2 beforeDrift = GlobalPosition;
             MoveAndCollide(ExternalDrift * dt);
@@ -580,6 +608,7 @@ public partial class Player : CharacterBody2D
 
         }
         Mobility.FinishMovement(movementVelocity);
+        UpdateMobilityHeight();
         PublishItemDash(previousPosition, dashMovement);
 
         _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
@@ -658,10 +687,15 @@ public partial class Player : CharacterBody2D
 
     private void SuspendMovement()
     {
+        bool wasAirborne = (Mobility?.VisualHeight ?? 0f) > 0f;
+        Harpoon?.Cancel();
         Mobility?.Suspend();
+        UpdateMobilityHeight();
         _mobilityFeedback?.Suspend();
         _mobilityRequiresRelease = true;
         Velocity = Vector2.Zero;
+        if (wasAirborne && !_isDead)
+            UpdateSpriteAnimation(0f, Vector2.Zero, 0f);
         CancelPoiExplore();
         _interaction.Cancel();
     }
@@ -692,7 +726,7 @@ public partial class Player : CharacterBody2D
         return delta > 0f ? kept / delta : Vector2.Zero;
     }
 
-    private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement)
+    private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement, bool stopAtWater = false)
     {
         // Le dash n'accorde aucun franchissement du vide, même sans collision physique.
         // Échantillonnage borné à 512 px/tick pour conserver un coût maximal prévisible.
@@ -709,6 +743,8 @@ public partial class Player : CharacterBody2D
             {
                 Vector2I cell = _groundLayer.LocalToMap(_groundLayer.ToLocal(position));
                 if (!_worldSetup.Generator.IsWithinBounds(cell.X, cell.Y) || _worldSetup.Generator.IsErased(cell.X, cell.Y))
+                    break;
+                if (stopAtWater && _worldSetup.Generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water)
                     break;
             }
             lastValid = offset;
@@ -751,6 +787,7 @@ public partial class Player : CharacterBody2D
         _erasureManager = GetNodeOrNull<ErasureManager>("/root/Main/ErasureManager");
         if (_worldSetup != null)
             _groundLayer = _worldSetup.GetNodeOrNull<TileMapLayer>("Ground");
+        SynchronizeErasurePhase();
     }
 
     private TerrainType GetCurrentTerrain()
@@ -1089,7 +1126,9 @@ public partial class Player : CharacterBody2D
                     using CrowdQuery crowd = CrowdIndex.Near(impactPos, radius);
                     foreach (Node node in crowd.Targets)
                     {
-                        if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e) && e.GlobalPosition.DistanceTo(impactPos) < radius)
+                        // Couché au sol comme son cadran (plan 25 S10) : distance au sol, pas à l'écran.
+                        if (node is Enemy { IsActive: true, IsDying: false } e && e != enemy && IsInstanceValid(e)
+                            && Iso.GroundDistanceSquared(e.GlobalPosition, impactPos) < radius * radius)
                             ApplyTimeField(e, freeze, factor, duration, context);
                     }
                     SpawnTimeSlowVisual(impactPos, radius, duration);
@@ -1463,7 +1502,9 @@ public partial class Player : CharacterBody2D
         // paquet d'une blessure, qui secouait l'écran deux fois par seconde et bloquait le dash (plan 27 V3d).
         if (kind != PlayerDamageKind.Erasure)
         {
+            Harpoon.Cancel();
             Mobility.Hurt(Mobility.Config.HurtRecoverySeconds);
+            UpdateMobilityHeight();
             ShowHurt(result.HpLost);
             if (_hasSprite)
                 _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
@@ -1564,7 +1605,33 @@ public partial class Player : CharacterBody2D
 
     private void OnErasurePhaseChanged(int phase)
     {
-        _erasurePenalty = ErasureEffects.For((ErasureManager.ErasureZonePhase)phase);
+        ErasurePhase = (ErasureManager.ErasureZonePhase)phase;
+        RefreshErasurePenalty();
+        ErasurePhaseChanged?.Invoke(ErasurePhase);
+    }
+
+    /// <summary>Le bootstrap peut brancher une signature après le dernier changement de phase publié.</summary>
+    internal void SynchronizeErasurePhase()
+    {
+        if (_erasureManager != null)
+            OnErasurePhaseChanged((int)_erasureManager.GetZonePhaseAt(GlobalPosition));
+    }
+
+    /// <summary>Protection de l'air, distincte des bonus de stats et sans effet sur le Néant.</summary>
+    internal void SetErasurePenaltyProtection(bool active)
+    {
+        if (_erasurePenaltyProtected == active)
+            return;
+        _erasurePenaltyProtected = active;
+        RefreshErasurePenalty();
+    }
+
+    private void RefreshErasurePenalty()
+    {
+        ErasureEffects.Effect raw = ErasureEffects.For(ErasurePhase);
+        _erasurePenalty = _erasurePenaltyProtected && ErasurePhase is ErasureManager.ErasureZonePhase.Frayed or ErasureManager.ErasureZonePhase.Erased
+            ? raw with { Speed = 1f, Damage = 1f }
+            : raw;
     }
 
     /// <summary>Multiplie le speed multiplier courant (pour buffs événementiels temporaires).</summary>
@@ -1780,7 +1847,9 @@ public partial class Player : CharacterBody2D
     private void Die()
     {
         _isDead = true;
+        Harpoon.Cancel();
         Mobility.Die();
+        UpdateMobilityHeight();
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
         CancelPoiExplore();
@@ -1905,6 +1974,12 @@ public partial class Player : CharacterBody2D
 
     // --- Sprite Animation ---
 
+    private void UpdateMobilityHeight()
+    {
+        if (_sprite != null)
+            _sprite.Position = _spriteRestPosition + new Vector2(0f, -(Mobility?.VisualHeight ?? 0f));
+    }
+
     private static StringName[,] BuildSpriteAnimations()
     {
         string[] directions = CharacterFacing.DirectionNames;
@@ -1932,7 +2007,8 @@ public partial class Player : CharacterBody2D
             action = SpriteAction.Death;
         else if (_hurtAnimTimer > 0f)
             action = SpriteAction.Hurt;
-        else if (Mobility.IsDashStep && movementRate > 0f)
+        else if (Mobility.IsDashStep && movementRate > 0f
+            && (Mobility.Config.VisualHeightPixels == 0f || Mobility.IsDashing))
             action = SpriteAction.Dash;
         else if (movementRate > 0f)
             action = SpriteAction.Walk;

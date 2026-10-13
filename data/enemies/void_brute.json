@@ -5,6 +5,7 @@
     "type": "melee",
     "behavior": "default",
     "stats": {
+        "traction_weight": 1,
         "hp": 80,
         "speed": 35,
         "damage": 12,

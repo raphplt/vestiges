@@ -27,6 +27,9 @@ public sealed class MobilityConfig
     public float TurnRateDegrees { get; init; }
     /// <summary>Longe un mur au lieu de s'y arrêter ; seul un choc de face l'interrompt.</summary>
     public bool SlidesAlongWalls { get; init; }
+    /// <summary>Hauteur du sprite au sommet du saut ; corps et ombre restent au sol.</summary>
+    public float VisualHeightPixels { get; init; }
+    public bool IgnoreWaterWhileActive { get; init; }
     public string StartAudio { get; init; }
     public string EndAudio { get; init; }
 
@@ -77,6 +80,8 @@ public sealed class MobilityConfig
             WaterSpeedFactor = ReadNumber(data, "water_speed_factor", 0f, 1f),
             TurnRateDegrees = ReadNumber(data, "turn_rate_degrees", 0f, 720f),
             SlidesAlongWalls = data["slides_along_walls"].AsBool(),
+            VisualHeightPixels = ReadNumber(data, "visual_height_px", 0f, 32f),
+            IgnoreWaterWhileActive = ReadBool(data, "ignore_water_while_active"),
             StartAudio = data["start_audio"].AsString(),
             EndAudio = data["end_audio"].AsString()
         };
@@ -86,9 +91,18 @@ public sealed class MobilityConfig
 
     private static float ReadNumber(Godot.Collections.Dictionary data, string key, float minimum, float maximum)
     {
-        float value = (float)data[key].AsDouble();
+        if (!data.TryGetValue(key, out Variant item) || item.VariantType is not (Variant.Type.Float or Variant.Type.Int))
+            throw new InvalidOperationException($"Paramètre de mobilité numérique requis : {key}.");
+        float value = (float)item.AsDouble();
         if (!float.IsFinite(value) || value < minimum || value > maximum)
             throw new InvalidOperationException($"Paramètre de mobilité hors limites : {key}.");
         return value;
+    }
+
+    private static bool ReadBool(Godot.Collections.Dictionary data, string key)
+    {
+        if (!data.TryGetValue(key, out Variant value) || value.VariantType != Variant.Type.Bool)
+            throw new InvalidOperationException($"Paramètre de mobilité booléen requis : {key}.");
+        return value.AsBool();
     }
 }

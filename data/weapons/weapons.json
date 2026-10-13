@@ -1260,7 +1260,7 @@
     },
     "special_effect": {
       "type": "local_time_slow",
-      "slow_radius": 80,
+      "slow_radius": 113,
       "slow_factor": 0.3,
       "slow_duration": 0.5
     },
@@ -1322,5 +1322,81 @@
     "default_for": "facteur",
     "source": "default",
     "lore_flavor": "Les adresses ont été rayées à la règle, une par une. Il les distribue quand même : il reste toujours quelqu'un qui attend."
+  },
+  {
+    "id": "harpoon_rifle",
+    "impact_audio": "sfx_impact_blade",
+    "attack_audio": "sfx_weapon_harpoon_rifle",
+    "name": "Fusil-harpon",
+    "description": "Un harpon de chantier naval relié à son filin de sécurité.",
+    "sprite": "assets/weapons/icons/weapon_icon_harpoon_rifle.png",
+    "tier": 1,
+    "type": "ranged",
+    "damage_type": "physical",
+    "attack_pattern": "linear",
+    "trigger_coefficient": 1.0,
+    "fx": {
+      "projectile": "harpoon",
+      "family": "brass"
+    },
+    "summary": "Perfore. Ramène le premier léger ; un lourd t'attire vers lui.",
+    "growth": {
+      "damage": 3,
+      "attack_speed": 2,
+      "range": 1.5,
+      "projectile_speed": 1,
+      "projectile_pierce": 0.75,
+      "projectile_count": 1.25
+    },
+    "ascensions": [
+      {
+        "id": "salvage_winch",
+        "name": "Treuil de sauvetage",
+        "description": "Un filin plus long et rapide, pour ramener les légers et rejoindre les lourds.",
+        "stat_multipliers": {
+          "range": 1.25,
+          "attack_speed": 1.1
+        },
+        "special_overrides": {
+          "pull_distance": 160,
+          "pull_speed": 440,
+          "pull_duration": 0.45
+        }
+      },
+      {
+        "id": "abyssal_spear",
+        "name": "Lance des abysses",
+        "description": "Un harpon plus puissant et perforant, au rappel plus court.",
+        "stat_multipliers": {
+          "damage": 1.75,
+          "attack_speed": 0.8
+        },
+        "stat_overrides": {
+          "projectile_pierce": 8
+        },
+        "special_overrides": {
+          "pull_distance": 56,
+          "pull_duration": 0.2
+        }
+      }
+    ],
+    "special_effect": {
+      "type": "harpoon_traction",
+      "pull_distance": 96,
+      "pull_speed": 320,
+      "pull_duration": 0.35,
+      "stop_distance": 12
+    },
+    "stats": {
+      "damage": 24,
+      "attack_speed": 0.65,
+      "range": 340,
+      "projectile_speed": 260,
+      "projectile_count": 1,
+      "projectile_pierce": 2
+    },
+    "default_for": "scaphandriere",
+    "source": "default",
+    "lore_flavor": "Le filin ramenait ceux qui ne pouvaient plus nager. Solange refuse encore de le lâcher."
   }
 ]
