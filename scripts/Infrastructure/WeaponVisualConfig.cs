@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -28,10 +27,6 @@ public sealed class WeaponVisualConfig
     public float WaveInterval { get; private init; }
     /// <summary>Fronts d'onde dessinés au plus dans le cône du Transistor.</summary>
     public int ConeMaxFronts { get; private init; }
-    private readonly Dictionary<string, float> _projectileBaseScale = new();
-
-    /// <summary>Échelle de base d'un sprite de projectile du joueur, 1 s'il se lit déjà (DECISIONS §53).</summary>
-    public float ProjectileBaseScale(string spriteId) => _projectileBaseScale.GetValueOrDefault(spriteId ?? "", 1f);
 
     /// <summary>Échelle d'un visuel d'arme pour un multiplicateur de taille donné, jamais sous 1 ni au-delà du plafond.</summary>
     public float ScaleFor(float sizeMultiplier) => Mathf.Clamp(1f + (sizeMultiplier - 1f) * SizeResponse, 1f, MaxScale);
@@ -59,9 +54,6 @@ public sealed class WeaponVisualConfig
             WaveInterval = (float)data["wave_interval_s"].AsDouble(),
             ConeMaxFronts = (int)data["cone_max_fronts"].AsDouble(),
         };
-        if (data.ContainsKey("projectile_base_scale"))
-            foreach ((Variant key, Variant value) in data["projectile_base_scale"].AsGodotDictionary())
-                _cached._projectileBaseScale[key.AsString()] = (float)value.AsDouble();
         return _cached;
     }
 }

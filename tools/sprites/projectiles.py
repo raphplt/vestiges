@@ -2,11 +2,15 @@
 
 Un projectile vole à hauteur de buste ; son avant local est +Z. Les projectiles orientés sont prérendus
 dans 16 directions d'écran pour ne jamais tourner un sprite en jeu (pixels de biais). Les objets qui
-tournoient (hache, pierre) ou rayonnent (orbe, note) portent leur animation dans les frames.
+tournoient (assiette, bille) ou rayonnent (orbe, note) portent leur animation dans les frames.
+
+Projectiles du joueur (plan 25 S1c) : chacun est rendu à sa taille finale, sans agrandissement en jeu qui épaissirait
+pixels et contour ; une flèche fait environ la moitié de la hauteur d'un héros, une bille un quart. Les tirs
+physiques laissent une courte traînée de vitesse (`streak`), qui les fait lire comme des objets lancés.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Sequence
 
 import numpy as np
@@ -29,6 +33,8 @@ class ProjectileModel:
     outline: str | None = None
     dissolve: bool = False
     opacity: tuple[int, ...] = ()
+    # Longueur en pixels de la traînée pâle laissée derrière un projectile orienté, 0 sans traînée.
+    streak: int = 0
 
 
 def _rotated(distance, rotation: np.ndarray):
@@ -40,6 +46,14 @@ def _flat(distance, squash: float):
     """Aplatit un volume en hauteur (Y) : une pièce couchée au sol se lit de dessus, comme une aiguille de boussole."""
     factor = np.array([1.0, squash, 1.0])
     return lambda p: distance(p * factor) / squash
+
+
+def _sized(model: ProjectileModel, factor: float, frame_size: tuple[int, int] | None = None) -> ProjectileModel:
+    """Le même modèle mis à l'échelle en volume : redessiné à sa taille finale, contour d'un pixel compris."""
+    def parts(frame: int) -> Sequence[Part]:
+        return [replace(part, distance=lambda p, distance=part.distance: distance(p / factor) * factor)
+                for part in model.parts(frame)]
+    return replace(model, parts=parts, frame_size=frame_size or model.frame_size)
 
 
 def _arrow() -> ProjectileModel:
@@ -56,7 +70,7 @@ def _arrow() -> ProjectileModel:
             Part(lambda p: rounded_box(p, (0, -2.2, -11), (0.35, 2.0, 2.8), 0.3), 3),
         )
 
-    return ProjectileModel(materials, parts, (32, 24), 16, 1, 0)
+    return _sized(ProjectileModel(materials, parts, (32, 24), 16, 1, 0, streak=5), 0.76)
 
 
 def _bolt() -> ProjectileModel:
@@ -73,7 +87,7 @@ def _bolt() -> ProjectileModel:
             Part(lambda p: rounded_box(p, (0, 0, -6), (3.2, 0.4, 1.8), 0.2), 2),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 16, 1, 0)
+    return _sized(ProjectileModel(materials, parts, (24, 24), 16, 1, 0, streak=4), 0.88)
 
 
 def _needle() -> ProjectileModel:
@@ -88,7 +102,7 @@ def _needle() -> ProjectileModel:
             Part(lambda p: cylinder(p, (0, 0.3, 0), 2.2, 0.9, 0.3), 2),
         )
 
-    return ProjectileModel(materials, parts, (32, 24), 16, 1, 0)
+    return _sized(ProjectileModel(materials, parts, (32, 24), 16, 1, 0, streak=4), 0.92)
 
 
 def _shard() -> ProjectileModel:
@@ -106,22 +120,24 @@ def _shard() -> ProjectileModel:
             Part(lambda p: capsule(p, (0, 0, -8), (0, 0, -16), 0.9, 0.2), 2),
         )
 
-    return ProjectileModel(materials, parts, (32, 24), 16, 1, 0)
+    return _sized(ProjectileModel(materials, parts, (32, 24), 16, 1, 0), 0.88)
 
 
 def _flash() -> ProjectileModel:
-    """Flash photo : étoile de lumière à quatre branches qui palpite, sans orientation."""
-    materials = (make_emissive("burst", "#F5F0FF"), make_material("halo", "#B8A8E8", contrast=0.7))
-    sizes = (6.0, 8.5, 7.0, 9.0)
+    """Flash de l'Instantané : étoile de lumière à quatre branches qui palpite, sans orientation. Cœur chaud et
+    branches dorées : un flash blanc se perdait dans les éclairs d'impact, blancs eux aussi."""
+    materials = (make_emissive("core", "#FFF6D6"), make_emissive("burst", "#FFC53A"),
+                 make_material("glint", "#E8742A", contrast=0.9))
+    sizes = (4.6, 6.2, 5.2, 6.8)
 
     def parts(frame: int) -> Sequence[Part]:
         size = sizes[frame]
         return (
-            Part(lambda p: sphere(p, (0, 0, 0), 2.4), 0),
-            Part(lambda p: capsule(p, (-size, 0, 0), (size, 0, 0), 1.3, 1.3), 0),
-            Part(lambda p: capsule(p, (0, -size * 0.8, 0), (0, size * 0.8, 0), 1.3, 1.3), 0),
-            Part(lambda p: capsule(p, (-size * 0.45, -size * 0.45, 0), (size * 0.45, size * 0.45, 0), 0.7), 1),
-            Part(lambda p: capsule(p, (-size * 0.45, size * 0.45, 0), (size * 0.45, -size * 0.45, 0), 0.7), 1),
+            Part(lambda p: capsule(p, (-size, 0, 0), (size, 0, 0), 1.1, 1.1), 1),
+            Part(lambda p: capsule(p, (0, -size * 0.8, 0), (0, size * 0.8, 0), 1.1, 1.1), 1),
+            Part(lambda p: capsule(p, (-size * 0.45, -size * 0.45, 0), (size * 0.45, size * 0.45, 0), 0.6), 2),
+            Part(lambda p: capsule(p, (-size * 0.45, size * 0.45, 0), (size * 0.45, -size * 0.45, 0), 0.6), 2),
+            Part(lambda p: sphere(p, (0, 0, 0.5), 2.0), 0),
         )
 
     return ProjectileModel(materials, parts, (24, 24), 1, len(sizes), 14)
@@ -140,7 +156,7 @@ def _chalk() -> ProjectileModel:
             Part(_rotated(lambda p: capsule(p, (0, 5, 0), (0, 8.5, 0), 2.0, 0.5), spin), 2),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 16, 4, 14)
+    return ProjectileModel(materials, parts, (24, 24), 16, 4, 14, streak=4)
 
 
 def _stone() -> ProjectileModel:
@@ -156,7 +172,7 @@ def _stone() -> ProjectileModel:
             Part(lambda p: sphere(p, (-1.6, 2.4, 1.8), 1.1), 2),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 1, 4, 14)
+    return ProjectileModel(materials, parts, (16, 16), 16, 4, 14, streak=4)
 
 
 def _flame() -> ProjectileModel:
@@ -175,7 +191,7 @@ def _flame() -> ProjectileModel:
             Part(lambda p: capsule(p, (2.2, 1.5, 0), (3.2 + lean, 7, -1), 1.6, 0.2), 2),
         )
 
-    return ProjectileModel(materials, parts, (24, 32), 1, len(sway), 12)
+    return _sized(ProjectileModel(materials, parts, (24, 32), 1, len(sway), 12), 1.15)
 
 
 def _comet() -> ProjectileModel:
@@ -193,23 +209,27 @@ def _comet() -> ProjectileModel:
             Part(lambda p: capsule(p, (bend, 0.4, -7), (-bend, 0.8, -13), 1.6, 0.3), 2),
         )
 
-    return ProjectileModel(materials, parts, (32, 24), 16, len(sway), 10)
+    return _sized(ProjectileModel(materials, parts, (32, 24), 16, len(sway), 10), 0.95)
 
 
-def _axe() -> ProjectileModel:
-    materials = (make_material("handle", "#7A5C42"), make_material("blade", "#9E9494", contrast=1.2),
-                 make_material("edge", "#E8E0D4", contrast=0.7))
+def _plate() -> ProjectileModel:
+    """Assiette lancée à plat comme un palet : faïence blanche à liseré bleu, qui vacille en tournant ; le motif
+    du marli fait le tour pour montrer la rotation."""
+    materials = (make_material("rim", "#4A6FA8", contrast=1.0), make_material("faience", "#E8E4DA", contrast=0.8),
+                 make_material("well", "#C9C2B4", contrast=0.6))
 
     def parts(frame: int) -> Sequence[Part]:
-        # Tournoiement vers l'avant, un quart de tour par frame.
-        spin = rotation_x(frame * np.pi / 2)
+        turn = frame * np.pi / 2
+        wobble = rotation_x(0.22 * np.cos(turn)) @ rotation_z(0.22 * np.sin(turn))
+        motif = (np.cos(turn) * 4.6, 0.75, np.sin(turn) * 4.6)
         return (
-            Part(_rotated(lambda p: capsule(p, (0, -7, 0), (0, 6, 0), 1.2), spin), 0),
-            Part(_rotated(lambda p: rounded_box(p, (0, 4.5, 2.6), (0.7, 2.8, 2.8), 0.4), spin), 1),
-            Part(_rotated(lambda p: rounded_box(p, (0, 4.5, 5.4), (0.5, 3.1, 0.6), 0.2), spin), 2),
+            Part(_rotated(lambda p: cylinder(p, (0, 0, 0), 7.0, 0.6, 0.3), wobble), 0),
+            Part(_rotated(lambda p: cylinder(p, (0, 0.1, 0), 5.6, 0.6, 0.2), wobble), 1),
+            Part(_rotated(lambda p: cylinder(p, (0, 0.2, 0), 3.0, 0.55, 0.2), wobble), 2),
+            Part(_rotated(lambda p: sphere(p, motif, 0.8), wobble), 0),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 16, 4, 16)
+    return ProjectileModel(materials, parts, (24, 24), 16, 4, 14, streak=4)
 
 
 def _envelope() -> ProjectileModel:
@@ -254,7 +274,7 @@ def _note() -> ProjectileModel:
             Part(_rotated(lambda p: capsule(p, (1.9, 5.0, 0), (4.3, 2.4, 0), 0.8), tilt), 0),
         )
 
-    return ProjectileModel(materials, parts, (16, 16), 1, 2, 4)
+    return _sized(ProjectileModel(materials, parts, (16, 16), 1, 2, 4), 1.7, (20, 28))
 
 
 def _spit() -> ProjectileModel:
@@ -361,7 +381,7 @@ MODELS: dict[str, Callable[[], ProjectileModel]] = {
     "bolt": _bolt,
     "needle": _needle,
     "shard": _shard,
-    "axe": _axe,
+    "plate": _plate,
     "envelope": _envelope,
     "letter": _letter,
     "stone": _stone,

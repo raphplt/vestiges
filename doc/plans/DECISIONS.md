@@ -1814,3 +1814,18 @@ Raphaël, découvrant que la Faille est le lieu des améliorations contre Péril
 - le puits à boire n'est plus un petit lieu : le décor des champs reste, sans interaction.
 
 **Choisi par l'agent :** 6 Puits par carte ; le Repère « Puits » (+10 PV max) passe au premier oubli à un Puits, ce qui garde 13 types de Repères.
+
+## 159. Projectiles du joueur : plus petits, bordure allégée, même finition — 13 octobre 2026
+
+Raphaël : « je trouve que c'est trop (je parle des projectiles des armes à distance comme l'arc et les billes). en gros on ne dirait plus des projectiles mais des armes en soit […] ils sont trop gros, ont une trop grosse bordure... d'autres sont trop peu visibles comme l'instantané. il faudrait dans l'ensemble que tous les sprites des projectiles soient au meme "niveau de finition". »
+
+Réponses sur la [planche avant/après](planches/25-s1c-projectiles-joueur.png) : « arc ok, arbalete ok, boussole ok, éclat de phare ok, lance bille ok, assiette ca ne ressemble pas à des assietes. instantané je garderai le meme, mais je le réduirai. [Bâton d'essence], lanterne, craies, le reste, ok. »
+
+**Acquis :**
+- chaque projectile est dessiné à sa taille finale, sans agrandissement en jeu (flèche ~16 px pour un héros de 28 px, bille ~8 px) ;
+- bordure : contour du sprite et liseré crème léger (0,25), sans halo ;
+- traînée de vitesse dessinée dans le sprite derrière les tirs physiques ;
+- Assiettes : une vraie assiette au lieu de la hache ;
+- Instantané : même étoile, plus petite, cœur chaud et branches dorées pour ne plus se perdre dans les éclairs d'impact blancs.
+
+**Livré :** [plan 25 S1c](25-sprites-et-design.md#s1c--projectiles-au-même-niveau-de-finition-13-octobre-decisions-159). À juger en jeu.

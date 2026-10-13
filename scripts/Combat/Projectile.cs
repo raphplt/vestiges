@@ -142,8 +142,8 @@ public partial class Projectile : Area2D, ITicked
             spriteId = _family == FxFamily.Fire ? "orb_fire" : "orb_essence";
         _glowTrail = spriteId is "orb_fire" or "orb_essence" or "shard" or "note" or "flash";
         _spriteSet = ProjectileSprites.Get(spriteId) ?? ProjectileSprites.Get("arrow");
-        // Les petits sprites (notes, billes, orbes) ont une échelle de base, sans toucher à la zone de contact (§53).
-        _sprite.Scale = Vector2.One * sizeScale * WeaponVisualConfig.Load().ProjectileBaseScale(spriteId);
+        // Chaque sprite est dessiné à sa taille finale (plan 25 S1c) : seule la stat de taille l'agrandit.
+        _sprite.Scale = Vector2.One * sizeScale;
         _spriteDirection = -1;
         _spriteFrame = -1;
         _sprite.Visible = CombatFxSettings.PlayerProjectiles && _spriteSet != null;

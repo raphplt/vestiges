@@ -8,15 +8,6 @@
     "frames": 1,
     "fps": 0
   },
-  "axe": {
-    "frame": [
-      24,
-      24
-    ],
-    "directions": 16,
-    "frames": 4,
-    "fps": 16
-  },
   "bile": {
     "frame": [
       32,
@@ -135,8 +126,8 @@
   },
   "note": {
     "frame": [
-      16,
-      16
+      20,
+      28
     ],
     "directions": 1,
     "frames": 2,
@@ -191,6 +182,15 @@
     "frames": 4,
     "fps": 12
   },
+  "plate": {
+    "frame": [
+      24,
+      24
+    ],
+    "directions": 16,
+    "frames": 4,
+    "fps": 14
+  },
   "shard": {
     "frame": [
       32,
@@ -233,10 +233,10 @@
   },
   "stone": {
     "frame": [
-      24,
-      24
+      16,
+      16
     ],
-    "directions": 1,
+    "directions": 16,
     "frames": 4,
     "fps": 14
   },

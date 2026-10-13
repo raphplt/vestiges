@@ -589,6 +589,20 @@ Planche validée par Raphaël (DECISIONS §61). PNG régénérés (`tools/genera
 
 **Vérification :** build sans avertissement, smoke vert, suites armes, UI, objets vertes (4/4). Captures en run des 11 armes à distance inspectées ([première passe](../audits/sprites-2026-10-03/s1b-projectiles-premiere-passe.png), [après réglage des échelles](../audits/sprites-2026-10-03/s1b-projectiles-en-jeu.png)) : chaque arme se reconnaît à son projectile. L'éclat de phare reste petit en vol, à juger en jeu.
 
+### S1c — projectiles au même niveau de finition, 13 octobre (DECISIONS §159)
+
+Raphaël : les projectiles des armes à distance « ne ressemblent plus à des projectiles mais à des armes », trop gros, bordure trop épaisse ; l'Instantané au contraire se voit mal. Mesure à côté du Facteur (13 × 28 px) : flèche 21 px, bille 11 px, comète 20 px. Bordure : contour du sprite, liseré crème à 0,45 et halo à 0,1, soit 2 à 3 px autour d'un objet de 6 px. Les échelles de base ×1,3, ×1,4 et ×2, non entières, épaississaient aussi pixels et contour. L'Instantané blanc et lavande se confondait avec les éclairs d'impact, blancs eux aussi.
+
+[Planche avant/après](planches/25-s1c-projectiles-joueur.png), validée avec deux reprises (Assiettes, Instantané) :
+
+- **Taille finale dans le modèle** (`_sized` dans `tools/sprites/projectiles.py`) : flèche ~16 px, carreau et aiguille ~12, éclat ~13, bille ~8, comète ~13, flamme ~8 × 11, note ~9 × 15, craie et enveloppe inchangées. `projectile_base_scale` est supprimé (`weapon_visuals.json`, `WeaponVisualConfig`) : en jeu, seule la stat de taille agrandit un projectile.
+- **Bordure :** contour du sprite gardé ; liseré du shader ramené à 0,25 et posé autour des seuls pixels opaques ; halo supprimé (`player_projectile.gdshader`).
+- **Traînée de vitesse** dessinée dans la planche (`streak`) : une ligne pâle de 4 à 5 px qui s'estompe derrière la flèche, le carreau, l'aiguille, la bille, la craie et l'assiette. La bille et l'assiette passent à 16 directions pour l'orienter.
+- **Assiettes :** la hache est remplacée par une assiette de faïence à liseré bleu qui vacille en tournant (`plate`, `proj_axe.png` supprimé).
+- **Instantané :** même étoile, plus petite, cœur chaud et branches dorées.
+
+**Vérification :** build sans avertissement, smoke vert, suite armes verte ; enveloppe et lettre régénérées identiques octet pour octet ; captures en run des 12 armes à distance et de la Boîte à musique inspectées.
+
 ### S2 à S4 — personnages joués repris et intégrés, 3 octobre
 
 Direction retenue par Raphaël entre « stylisé » et « grosse tête » (DECISIONS §61). [Planche avant/après](planches/25-s9-personnages.png), [animations](planches/25-s9-animations.png).

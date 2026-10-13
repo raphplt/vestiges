@@ -18,6 +18,7 @@ import math
 import sys
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -54,9 +55,33 @@ def render_model(model: ProjectileModel) -> list[Image.Image]:
                         for x in range(width):
                             if (x + y * 3) % 5 < frame - 1:
                                 layer.putpixel((x, y), (0, 0, 0, 0))
+            if model.streak:
+                _draw_streak(layers[-1], layers, angle, model.streak)
             for sheet, layer in zip(sheets, layers):
                 sheet.alpha_composite(layer, (direction * width, frame * height))
     return sheets
+
+
+STREAK_COLOR = (245, 236, 214)
+
+
+def _draw_streak(target: Image.Image, layers: list[Image.Image], angle: float, length: int) -> None:
+    """Traînée de vitesse : une ligne d'un pixel qui part de l'arrière de la silhouette, sur l'axe du vol, et
+    s'estompe. Semi-transparente, elle ne reçoit pas le liseré du shader, posé autour des seuls pixels opaques."""
+    covered = np.zeros((target.height, target.width), dtype=bool)
+    for layer in layers:
+        covered |= np.asarray(layer.getchannel("A")) > 0
+    ys, xs = np.nonzero(covered)
+    if len(xs) == 0:
+        return
+    forward = np.array([math.cos(angle), math.sin(angle)])
+    center = np.array([xs.mean(), ys.mean()])
+    along = (xs - center[0]) * forward[0] + (ys - center[1]) * forward[1]
+    tail = center + forward * along.min()
+    for step in range(1, length + 1):
+        x, y = np.rint(tail - forward * step).astype(int)
+        if 0 <= x < target.width and 0 <= y < target.height and not covered[y, x]:
+            target.putpixel((int(x), int(y)), (*STREAK_COLOR, int(150 * (1 - (step - 1) / length))))
 
 
 def write_biome_sheet(sheets: dict[str, Image.Image], path: Path) -> None:

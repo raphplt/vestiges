@@ -198,7 +198,7 @@ public sealed class PlayerAttackFx
             Name = "Visual",
             Texture = set?.Get(0, 0),
             Position = new Vector2(0f, -TorsoHeight),
-            Scale = Vector2.One * sizeScale * WeaponVisualConfig.Load().ProjectileBaseScale("note"),
+            Scale = Vector2.One * sizeScale,
             Material = ProjectileMaterial,
             Visible = set != null && CombatFxSettings.PlayerProjectiles,
             Modulate = new Color(1f, 1f, 1f, CombatFxSettings.PlayerOpacity),
