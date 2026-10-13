@@ -130,6 +130,41 @@ Inventaire du 13 octobre :
     - complet.
   - Le « milieu » se fait par fixture de sauvegarde, pas par `--dev`.
 
+### Livré le 13 octobre (M0a à M0c)
+
+Tout passe par `tools/measure_run.sh` (`MEASURE_EXTRA_ARGS`), sans rien changer au jeu.
+
+- **M0a — rythme**, relevé à chaque mesure (`tools/tests/RunPaceProbe.cs`) :
+  - `pace-<seed>.csv`, chaque seconde : chemin parcouru, éloignement du départ, phase d'oubli sous le joueur, PV et PV max, morts comptées, secondes depuis la dernière décision, élite à portée ;
+  - `damage-sources-<seed>.csv` : dégâts infligés par minute, arme et nature (coup, secondaire, sur la durée, objets) ;
+  - `kills-<seed>.csv` : temps pour tuer chaque créature, du premier coup du joueur à sa mort, élite ou non ;
+  - `decisions-<seed>.csv` : journal des décisions (choix, coffre, lieu, monument, micro-événement, Résurgence, Souverain, élite à portée ; un élite proche suspend le creux tant qu'il est là) ;
+  - synthèse : `python3 tools/summarize_pace.py <dossier> [autre dossier…]`, un tableau par minute et la part des dégâts par source.
+  - Limite : les dégâts d'un objet sont rangés sous l'arme dont l'impact l'a déclenché, en nature « objets » ; le nom de l'objet n'est pas connu du combat.
+- **M0b — profils**, `--player-profile debutant|moyen|fort` (`RunObservation.Profiles.cs`) ; sans l'option, le bot historique reste inchangé.
+  - Débutant : erre autour du départ, détour de 220 px, carte au hasard.
+  - Moyen : garde un cap, détour de 700 px, prend d'abord ce qu'il possède (montées, ascensions, spécialisations).
+  - Fort : garde un cap, détour de 1 100 px, choisit par score (arme principale poussée, objets qui partagent une stat déjà portée, rareté), relance une offre sans intérêt, bannit gratuitement une nouveauté inutile ; s'écarte de la foule ; il dashe quand trois créatures l'entourent à moins de 110 px, ou pour fuir sous 40 % des PV. Son écart à la foule marche si bien que quatre créatures au contact n'arrivent que quelques images par run : d'où ce seuil bas (16 dashs en 5 min sur la graine 7). Avec un build fermé, une montée d'arme est presque toujours offerte : il ne relance donc presque jamais.
+  - Limite : aucun profil n'esquive les projectiles, faute d'index des tirs ennemis ; le fort ne lit que la foule.
+  - Ajouter `--mortal` pour compter les morts.
+- **M0c — builds et méta** (`RunObservation.Builds.cs`) :
+  - `--start-build <id>` : cinq builds dans `tools/tests/measure_builds.json` (une arme poussée, synergie d'objets autour du feu, zone, critique, tank). Armes au départ, cartes du build prises d'abord, objets posés dans le sac à heure fixe (le butin d'un coffre ne se choisit pas), nouvelles armes refusées si le build est fermé.
+  - `--meta neuf|milieu|complet`, avec `MEASURE_PROFILE=normal` : milieu = une quête sur deux du catalogue (chaque famille à moitié) et la moitié des rangs du Campement ; complet = tout. Les rangs de puissance brute ne sont jamais achetés (§4).
+  - Les niveaux d'arme ne s'imposent pas : le build grandit par les cartes, ce qui garde une courbe de puissance réaliste.
+
+### Run de référence (13 octobre)
+
+Traqueur, profil dev, bot historique `--nomad --visit --mortal`, graine 221092026 :
+- **30 min de jeu en 19 min de calcul** (1131 s), sous le quota de 2 cœurs du terminal. La matrice entière (93 runs) prendrait donc environ 29 h en série. Il faut la lancer hors quota (`systemd-run --user --scope`) avec `MEASURE_JOBS=4`, soit environ 7 à 8 h, ou réduire à deux graines.
+- Premiers signaux, à confirmer par la matrice :
+  - de la minute 6 à la minute 27, le bot ne perd pas un PV ;
+  - le temps pour tuer reste sous 0,4 s jusqu'à 25 min ;
+  - le rapport dégâts / PV apparus tourne autour de 1, la marée est absorbée ;
+  - l'oubli sous le joueur passe Fragile vers 8 min, Effiloché vers 19 min, Effacé vers 28 min, et jamais Néant ;
+  - le bot reste dans 800 m du départ (la carte) ;
+  - 82 % des dégâts viennent de la Cloche, dont 35 % par les objets qu'elle déclenche ;
+  - le plus long creux sans décision monte de 10–20 s à 30–40 s après 20 min.
+
 ### Matrice (lot M1)
 
 Une run de référence est d'abord chronométrée, pour connaître le rapport entre temps de jeu et temps machine. Durée : 30 min de jeu, jusqu'à l'Indicible. Ordre (§152) : après le lot 1 des retours du 12 octobre au soir. Budget visé : une nuit de calcul, `MEASURE_JOBS=2`.

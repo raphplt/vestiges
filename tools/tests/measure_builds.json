@@ -1,0 +1,68 @@
+{
+	"_doc": "Builds de référence des mesures du plan 42 (M0c), lus par RunObservation --start-build <id> pendant --density. Données de banc, pas de jeu. armes : armes portées au départ, niveau 1, à la place de l'arme du personnage (dans la limite des emplacements de la run). armes_fermees : le bot refuse toute nouvelle arme hors de la liste. cartes : cartes de niveau prises d'abord (armes du build, Écussons, objets), comme --prefer. objets : objets posés dans le sac à la minute dite, pour simuler les trouvailles de coffres qui font le build (le butin d'un coffre ne se choisit pas). Conçus pour le Traqueur (arc de fortune).",
+	"builds": {
+		"arme_poussee": {
+			"nom": "Une arme poussée",
+			"armes": ["makeshift_bow"],
+			"armes_fermees": true,
+			"cartes": ["makeshift_bow", "memoire_vive", "souffle_du_neant", "reflet_brise", "portee_etendue"],
+			"objets": [
+				{ "id": "petite_cle", "minute": 3 },
+				{ "id": "diapositive_en_double", "minute": 6 },
+				{ "id": "peigne_casse", "minute": 9 },
+				{ "id": "petite_cle", "minute": 12 }
+			]
+		},
+		"synergie_objets": {
+			"nom": "Synergie d'objets (feu)",
+			"armes": ["makeshift_bow", "memory_lantern"],
+			"armes_fermees": false,
+			"cartes": ["memory_lantern", "makeshift_bow", "persistance", "memoire_vive"],
+			"objets": [
+				{ "id": "allumette_humide", "minute": 2 },
+				{ "id": "thermometre", "minute": 4 },
+				{ "id": "allumette_humide", "minute": 6 },
+				{ "id": "thermometre", "minute": 8 },
+				{ "id": "bocal_de_conserve", "minute": 10 },
+				{ "id": "thermometre", "minute": 12 }
+			]
+		},
+		"zone": {
+			"nom": "Zone",
+			"armes": ["makeshift_bow", "teachers_bell", "whip", "last_broadcast"],
+			"armes_fermees": true,
+			"cartes": ["resonance", "teachers_bell", "whip", "last_broadcast", "persistance"],
+			"objets": [
+				{ "id": "compas", "minute": 3 },
+				{ "id": "compas", "minute": 7 },
+				{ "id": "bocal_de_conserve", "minute": 11 }
+			]
+		},
+		"critique": {
+			"nom": "Critique",
+			"armes": ["makeshift_bow", "crossbow", "sharpened_pipe", "throwing_axes"],
+			"armes_fermees": true,
+			"cartes": ["oeil_critique", "crossbow", "memoire_vive", "sharpened_pipe"],
+			"objets": [
+				{ "id": "verre_fele", "minute": 2 },
+				{ "id": "bille_irisee", "minute": 5 },
+				{ "id": "loupe_de_philateliste", "minute": 8 },
+				{ "id": "stylo_quatre_couleurs", "minute": 11 },
+				{ "id": "verre_fele", "minute": 14 }
+			]
+		},
+		"tank": {
+			"nom": "Tank",
+			"armes": ["makeshift_bow", "heavy_hammer", "teachers_bell", "nail_mace"],
+			"armes_fermees": true,
+			"cartes": ["ancrage", "peau_dure", "carapace", "regeneration", "heavy_hammer"],
+			"objets": [
+				{ "id": "bouillotte", "minute": 2 },
+				{ "id": "agrafe_rouillee", "minute": 4 },
+				{ "id": "boucle_cabossee", "minute": 7 },
+				{ "id": "pastille_mentholee", "minute": 10 },
+				{ "id": "agrafe_rouillee", "minute": 13 }
+			]
+		}
+	}
+}

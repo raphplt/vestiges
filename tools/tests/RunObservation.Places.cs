@@ -18,6 +18,7 @@ namespace Vestiges.Tests;
 /// </summary>
 public partial class RunObservation
 {
+    // Détour par défaut ; un profil de joueur (--player-profile) le change.
     private const float PlaceDetourRange = 700f;
     private const float PlaceReachRange = 36f;
     private const double PlaceGiveUpSeconds = 12.0;
@@ -58,6 +59,8 @@ public partial class RunObservation
         private readonly HashSet<ulong> _visited = new();
         private readonly HashSet<ulong> _abandoned = new();
         private readonly Dictionary<ulong, int> _interactions = new();
+        /// <summary>Distance jusqu'à laquelle le bot se détourne vers un lieu vu.</summary>
+        public float DetourRange { get; set; } = PlaceDetourRange;
         private readonly Dictionary<string, int> _seenByKind = new();
         private readonly Dictionary<string, int> _visitedByKind = new();
         private readonly List<(Node2D Node, string Kind)> _places = new();
@@ -212,7 +215,7 @@ public partial class RunObservation
 
         private void PickTarget(double t, Vector2 from)
         {
-            float best = PlaceDetourRange;
+            float best = DetourRange;
             foreach ((Node2D node, string kind) in _places)
             {
                 ulong id = node.GetInstanceId();

@@ -77,7 +77,7 @@ namespace Vestiges.Tests;
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
 /// coffres entrés dans le cadre, et parmi eux ceux qu'aucun décor ne masquait ; lieux croisés et visités par minute,
-/// micro-événements, Essence gagnée et dépensée).
+/// micro-événements, Essence gagnée et dépensée) ; rythme de la run toujours relevé (RunPaceProbe, plan 42 M0a).
 /// --mortal : mesure de survie, bot non invincible ; un coup fatal le remet à fond et se compte (RunObservation.Balance.cs).
 /// --damage-probe : avec --mortal, blessures acceptées en CSV et soins par minute/origine (plan 33 R2).
 /// --prefer id,id,… : pendant la mesure, le bot prend d'abord une carte de ces armes ou objets (plan 21 G6d : build XP/Chance).
@@ -93,6 +93,9 @@ namespace Vestiges.Tests;
 /// --mute-buses A,B : pendant la mesure, bus audio coupés (Music, SFX, Ambiance), pour écouter le reste seul.
 /// --audio-trace : pendant la mesure, trace d'écoute (signaux, musique, sons) pour tools/record_run_audio.sh (AudioTraceProbe).
 /// --audio-stems : pendant la mesure, pistes musique, ambiance et effets synchrones du mixage (AudioStemRecorder).
+/// --start-build id : pendant la mesure, build de référence imposé (tools/tests/measure_builds.json, RunObservation.Builds.cs, plan 42 M0c).
+/// --meta neuf|milieu|complet : progression du profil isolé avant la run, sans --dev (RunObservation.Builds.cs).
+/// --player-profile debutant|moyen|fort : pendant la mesure, niveau de joueur du bot (RunObservation.Profiles.cs, plan 42 M0b).
 /// --nomad : pendant la mesure, le bot garde un cap (tiré de la seed) au lieu d'errer autour du départ,
 /// et en change quand il bute sur le bord du monde.
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
@@ -311,6 +314,7 @@ public partial class RunObservation : Node
                 throw new ArgumentOutOfRangeException(nameof(howlerCooldown));
             EnemyDataLoader.Get("hurleur").Abilities[EnemyAbilityKind.AimedShot].Numbers["cooldown_multiplier"] = multiplier;
         }
+        ApplyMetaState(Argument(OS.GetCmdlineUserArgs(), "--meta", null));
         if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--camp-full") >= 0)
             BuyFullCamp();
         GameManager manager = GetNode<GameManager>("/root/GameManager");
@@ -540,6 +544,7 @@ public partial class RunObservation : Node
         string[] args = OS.GetCmdlineUserArgs();
         _preferredCards = Argument(args, "--prefer", "").Split(',', StringSplitOptions.RemoveEmptyEntries);
         StartBalanceProbes(args);
+        ReadBuild(args);
         string lifetime = Argument(args, "--projectile-lifetime", null);
         using ProjectilePressureProbe projectiles = Array.IndexOf(args, "--measure-projectiles") >= 0
             ? new ProjectilePressureProbe(lifetime == null ? null : float.Parse(lifetime, CultureInfo.InvariantCulture))
@@ -594,6 +599,7 @@ public partial class RunObservation : Node
             ? new ErasureRunProbe(_output, erasure, _player, eventBus) : null;
         using RunTimelineProbe timeline = Array.IndexOf(args, "--timeline") >= 0
             ? new RunTimelineProbe(_output, seed, GetTree(), _world, _player, eventBus, GetNode<GameManager>("/root/GameManager")) : null;
+        using RunPaceProbe pace = new(_output, seed, GetTree(), _player, erasure, eventBus);
         // Souffle du tout début de run (retour du 26 septembre) : premier coup reçu et dégâts cumulés à 10 et 30 s.
         double firstHit = -1, damage10 = 0, damage30 = 0;
         // Plan 24 L3 : dégâts reçus avant et pendant la première Résurgence (4:00 à 5:10), armes portées à 4:00.
@@ -685,6 +691,10 @@ public partial class RunObservation : Node
         double nextChestSample = 0.0;
         List<(Rect2 Rect, float SortY, bool Canopy)> propRects = CollectPropRects();
         bool nomad = Array.IndexOf(OS.GetCmdlineUserArgs(), "--nomad") >= 0;
+        // --player-profile : le profil décide du cap, des détours, des cartes et de l'esquive (plan 42 M0b).
+        bool profiled = ReadProfile(args, seed);
+        if (profiled)
+            nomad |= _profile != BotProfile.Beginner;
         float heading = rng.RandfRange(0f, Mathf.Tau);
         Vestiges.Events.RunEventDirector director = _world.GetNode<Vestiges.Events.RunEventDirector>("RunEventDirector");
         Vestiges.Events.BarrierDirector barrierDirector = _world.GetNodeOrNull<Vestiges.Events.BarrierDirector>("BarrierDirector");
@@ -695,7 +705,8 @@ public partial class RunObservation : Node
         // Lieux croisés et visités, événements, Essence (plan 22, lot C0).
         PlaceTracker places = new(_world.GetNode<Vestiges.Progression.EssenceTracker>("EssenceTracker").CurrentEssence);
         _placeTracker = places;
-        _visitPlaces = Array.IndexOf(OS.GetCmdlineUserArgs(), "--visit") >= 0;
+        _visitPlaces = profiled || Array.IndexOf(OS.GetCmdlineUserArgs(), "--visit") >= 0;
+        places.DetourRange = ProfileDetourRange;
         if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hold-map") >= 0)
             Input.ActionPress("show_map");
         bool showBonuses = Array.IndexOf(OS.GetCmdlineUserArgs(), "--show-bonuses") >= 0;
@@ -747,6 +758,8 @@ public partial class RunObservation : Node
             projectiles?.Sample(t, VisibleWorldRect());
             erasureProbe?.Sample(t);
             timeline?.Sample(t);
+            pace.Sample(t);
+            GrantBuildObjects(t);
 
             // Déplacement nomade déterministe : nouveau point de passage à 500–900 px dès l'arrivée,
             // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes.
@@ -800,6 +813,9 @@ public partial class RunObservation : Node
             _player.AIInputOverride = !holding && _player.GlobalPosition.DistanceTo(waypoint) > 12f
                 ? (waypoint - _player.GlobalPosition).Normalized()
                 : Vector2.Zero;
+            // Arrivé au point de passage, le profil fort s'écarte encore de la foule ; pas pendant une interaction tenue.
+            if (_profile == BotProfile.Strong && !holding)
+                _player.AIInputOverride = StrongSteer(_player.AIInputOverride);
 
             int level = progression.Level;
             if (weaponsAt240 < 0 && t >= 240)
@@ -933,6 +949,8 @@ public partial class RunObservation : Node
         summary.Append(CultureInfo.InvariantCulture,
             $" items_received={itemsReceived} bag={_player.BagCount}/{_player.BagCapacity} items_on_ground={GetTree().GetNodesInGroup("item_pickups").Count} elite_kills={eliteKills} sovereign_kills={sovereignKills}");
         summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
+        pace.AppendSummary(summary);
+        AppendProfile(summary);
         AppendBadgeUsage(summary);
         AppendBreakdown(summary, "hit_by", damageBySource);
         AppendBreakdown(summary, "hit_gated", gatedBySource);
@@ -1085,7 +1103,7 @@ public partial class RunObservation : Node
         // Péril d'une mesure reste celui qu'elle impose.
         Vestiges.Progression.FragmentOption choice = fragments.PendingChoices[0];
         foreach (Vestiges.Progression.FragmentOption option in fragments.PendingChoices)
-            if (option.Id != PerilObjectId)
+            if (option.Id != PerilObjectId && !BuildRefuses(option))
             {
                 choice = option;
                 break;
@@ -1096,6 +1114,12 @@ public partial class RunObservation : Node
                 choice = option;
                 break;
             }
+        if (_profile != BotProfile.Legacy)
+        {
+            choice = PickProfileCard(fragments, choice);
+            if (choice == null)
+                return;
+        }
         screen.GetType().GetMethod("OnCardChosen", BindingFlags.NonPublic | BindingFlags.Instance)
             .Invoke(screen, new object[] { choice });
     }
