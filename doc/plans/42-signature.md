@@ -265,6 +265,19 @@ Matrice complète : 31 configurations × 3 graines, 30 min de jeu, bot mortel qu
 
 **Run cassée à la Pelle à neige** (§154), remesurée le 13 octobre au soir. Dans l'historique, c'est le Traqueur de 14 h 49 : 834 s, niveau 66, 7 710 éliminations, **9,1 millions de dégâts** (23 fois l'autre Traqueur du jour). Après 7 min, il ne perdait plus de PV que contre les Présages, qui tirent de loin. Le build `pelle` (Pelle seule, Traqueur, 15 min, méta milieu et complète, 3 graines) reproduit la façon de survivre : la Pelle repousse les créatures au corps à corps (Déblayer : tout autour, recul ×2), et après 7 min les PV perdus viennent à 75–90 % des Présages. Il ne reproduit pas les dégâts : 1,3 à 1,5 million, autant que l'arc poussé (1,5 à 1,8). Ce qui a multiplié les dégâts venait donc du reste du build, que l'historique ne garde pas. Depuis, la trace des parties écrit aussi le build final et les dégâts par arme (`traces/<date>-<personnage>-build.txt`).
 
+### Lot S1 — Souverains calés sur le niveau du joueur (DECISIONS §160), en pause
+
+Commencé le 13 octobre au soir, arrêté à la demande de Raphaël avant la fin du calage. Code sur la branche `souverains-niveau` (commit `474b303e`), **pas fusionné** :
+- `level_scaling` du Souverain dans `data/enemies/_variants.json` : PV = durée × coefficient × niveau^exposant (× Péril et affixes), dégâts = base + pente × niveau, à la place du temps ; `SpawnManager` suit le niveau par `EventBus.LevelUp` ;
+- la sonde de rythme relève chaque combat de Souverain (`sovereigns-<graine>.csv` : niveau, PV, durée, secondes où il prend des coups).
+
+Mesures (5 personnages, profils débutant et moyen, méta milieu, 3 graines, 11 min 30) :
+- avant : 1er Souverain ≈ 2 400 PV ; combat médian 67 s, 7 sur 30 en 40 s ou moins, 5 jamais tués. 2e : médiane 33 s, 4 jamais tués ;
+- premier réglage (30 s × 1,8 × niveau^1,45) : 1er à 450–2 500 PV selon le niveau ; médiane 50 s, 9 sur 30 en 40 s ou moins, 3 jamais tués. 2e : médiane 50 s, 7 jamais tués, à revoir au-dessus du niveau 20.
+- Limite : le bot ne va pas chercher le Souverain (Facteur : 557 PV, vivant après 7 min 30) ; la durée du premier coup à la mort compte surtout ce temps-là. Reprise : caler sur les secondes de combat réel, puis fusionner.
+
+Un Souverain jamais tué bloque les événements suivants (§157), ce qui pèse surtout sur les builds faibles.
+
 ### Lecture (lot M2)
 
 - Une page de résultats : courbes de puissance joueur / ennemis par profil, morts, exposition à l'oubli, creux.
