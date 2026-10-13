@@ -27,11 +27,16 @@ public partial class RunObservation
     private const float StrongDetourRange = 1100f;
     // Foule lue par le profil fort : distance d'écart, rayon et effectif d'un encerclement qui déclenche le dash.
     private const float DodgeRadius = 170f;
+    // Un build de corps à corps reste au contact : il ne s'écarte que de ce qui le colle (mesure du 13 octobre : à
+    // 170 px, le Vagabond fort fuyait tout et plafonnait au niveau 3 à 5 min).
+    private const float MeleeDodgeRadius = 60f;
     private const float DodgeWeight = 1.6f;
     private const float EncircledRadius = 110f;
     // L'écart à la foule marche : quatre créatures à moins de 110 px n'arrivent que quelques images par run (mesure du
     // 13 octobre), d'où un seuil bas. Sous 40 % des PV, une seule créature au contact suffit pour fuir.
     private const int EncircledCount = 3;
+    // Au corps à corps, trois créatures au contact sont l'ordinaire : il faut une vraie mêlée pour dasher.
+    private const int MeleeEncircledCount = 7;
     private const float FleeHpRatio = 0.4f;
 
     private BotProfile _profile = BotProfile.Legacy;
@@ -163,6 +168,16 @@ public partial class RunObservation
         };
     }
 
+    /// <summary>La moitié au moins des armes portées frappe au corps à corps.</summary>
+    private bool IsMeleeBuild()
+    {
+        int melee = 0;
+        foreach (WeaponInstance weapon in _player.WeaponSlots)
+            if (weapon.Base.Category == WeaponCategory.Melee)
+                melee++;
+        return melee * 2 >= _player.WeaponSlots.Count && melee > 0;
+    }
+
     /// <summary>Arme qui a fait le plus de dégâts jusqu'ici.</summary>
     private string MainWeaponId()
     {
@@ -202,26 +217,30 @@ public partial class RunObservation
     private Vector2 StrongSteer(Vector2 direction)
     {
         Vector2 position = _player.GlobalPosition;
+        bool melee = IsMeleeBuild();
+        float radius = melee ? MeleeDodgeRadius : DodgeRadius;
         Vector2 away = Vector2.Zero;
         int close = 0;
-        using (CrowdQuery crowd = CrowdIndex.Near(position, DodgeRadius))
+        using (CrowdQuery crowd = CrowdIndex.Near(position, Mathf.Max(radius, EncircledRadius)))
         {
             foreach (Node2D target in crowd.Targets)
             {
                 Vector2 offset = position - target.GlobalPosition;
                 float distance = offset.Length();
-                if (distance > DodgeRadius || distance < 0.01f)
+                if (distance < 0.01f)
                     continue;
-                // Plus la créature est proche, plus elle repousse.
-                away += offset / distance * (1f - distance / DodgeRadius);
                 if (distance <= EncircledRadius)
                     close++;
+                if (distance > radius)
+                    continue;
+                // Plus la créature est proche, plus elle repousse.
+                away += offset / distance * (1f - distance / radius);
             }
         }
         Vector2 steered = (direction + away * DodgeWeight).Normalized();
         if (steered == Vector2.Zero)
             steered = direction;
-        bool threatened = close >= EncircledCount || (close > 0 && _player.CurrentHp < _player.EffectiveMaxHp * FleeHpRatio);
+        bool threatened = close >= (melee ? MeleeEncircledCount : EncircledCount) || (close > 0 && _player.CurrentHp < _player.EffectiveMaxHp * FleeHpRatio);
         if (threatened && _player.Mobility.SecondsSinceDash >= _player.Mobility.Config.CooldownSeconds)
             _player.Mobility.Request();
         return steered;

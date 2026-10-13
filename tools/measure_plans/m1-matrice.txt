@@ -1,0 +1,36 @@
+# Matrice M1 du plan 42 : 30 min de jeu, trois graines par configuration (dispersion, plan 42 §5).
+# Lancer hors du quota du terminal : MEASURE_JOBS=3 systemd-run --user --scope -p CPUQuota=400% tools/measure_matrix.sh <dossier> tools/measure_plans/m1-matrice.txt
+# Bloc A — personnages : méta milieu, trois profils, builds naturels.
+A-traqueur-debutant | 1800 | 7 42 1002 | normal | --character traqueur --player-profile debutant --meta milieu --mortal
+A-traqueur-moyen | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta milieu --mortal
+A-traqueur-fort | 1800 | 7 42 1002 | normal | --character traqueur --player-profile fort --meta milieu --mortal
+A-vagabond-debutant | 1800 | 7 42 1002 | normal | --character vagabond --player-profile debutant --meta milieu --mortal
+A-vagabond-moyen | 1800 | 7 42 1002 | normal | --character vagabond --player-profile moyen --meta milieu --mortal
+A-vagabond-fort | 1800 | 7 42 1002 | normal | --character vagabond --player-profile fort --meta milieu --mortal
+A-forgeuse-debutant | 1800 | 7 42 1002 | normal | --character forgeuse --player-profile debutant --meta milieu --mortal
+A-forgeuse-moyen | 1800 | 7 42 1002 | normal | --character forgeuse --player-profile moyen --meta milieu --mortal
+A-forgeuse-fort | 1800 | 7 42 1002 | normal | --character forgeuse --player-profile fort --meta milieu --mortal
+A-facteur-debutant | 1800 | 7 42 1002 | normal | --character facteur --player-profile debutant --meta milieu --mortal
+A-facteur-moyen | 1800 | 7 42 1002 | normal | --character facteur --player-profile moyen --meta milieu --mortal
+A-facteur-fort | 1800 | 7 42 1002 | normal | --character facteur --player-profile fort --meta milieu --mortal
+A-eveillee-debutant | 1800 | 7 42 1002 | normal | --character eveillee --player-profile debutant --meta milieu --mortal
+A-eveillee-moyen | 1800 | 7 42 1002 | normal | --character eveillee --player-profile moyen --meta milieu --mortal
+A-eveillee-fort | 1800 | 7 42 1002 | normal | --character eveillee --player-profile fort --meta milieu --mortal
+# Bloc B — progression : Traqueur, méta neuve et complète.
+B-traqueur-neuf-debutant | 1800 | 7 42 1002 | normal | --character traqueur --player-profile debutant --meta neuf --mortal
+B-traqueur-neuf-moyen | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta neuf --mortal
+B-traqueur-neuf-fort | 1800 | 7 42 1002 | normal | --character traqueur --player-profile fort --meta neuf --mortal
+B-traqueur-complet-debutant | 1800 | 7 42 1002 | normal | --character traqueur --player-profile debutant --meta complet --mortal
+B-traqueur-complet-moyen | 1800 | 7 42 1002 | normal | --character traqueur --player-profile moyen --meta complet --mortal
+B-traqueur-complet-fort | 1800 | 7 42 1002 | normal | --character traqueur --player-profile fort --meta complet --mortal
+# Bloc C — builds de référence : Traqueur, méta complète (tools/tests/measure_builds.json).
+C-arme_poussee-moyen | 1800 | 7 42 1002 | normal | --character traqueur --start-build arme_poussee --player-profile moyen --meta complet --mortal
+C-arme_poussee-fort | 1800 | 7 42 1002 | normal | --character traqueur --start-build arme_poussee --player-profile fort --meta complet --mortal
+C-synergie_objets-moyen | 1800 | 7 42 1002 | normal | --character traqueur --start-build synergie_objets --player-profile moyen --meta complet --mortal
+C-synergie_objets-fort | 1800 | 7 42 1002 | normal | --character traqueur --start-build synergie_objets --player-profile fort --meta complet --mortal
+C-zone-moyen | 1800 | 7 42 1002 | normal | --character traqueur --start-build zone --player-profile moyen --meta complet --mortal
+C-zone-fort | 1800 | 7 42 1002 | normal | --character traqueur --start-build zone --player-profile fort --meta complet --mortal
+C-critique-moyen | 1800 | 7 42 1002 | normal | --character traqueur --start-build critique --player-profile moyen --meta complet --mortal
+C-critique-fort | 1800 | 7 42 1002 | normal | --character traqueur --start-build critique --player-profile fort --meta complet --mortal
+C-tank-moyen | 1800 | 7 42 1002 | normal | --character traqueur --start-build tank --player-profile moyen --meta complet --mortal
+C-tank-fort | 1800 | 7 42 1002 | normal | --character traqueur --start-build tank --player-profile fort --meta complet --mortal

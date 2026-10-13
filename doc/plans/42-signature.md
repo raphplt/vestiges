@@ -194,7 +194,7 @@ Retour de Raphaël : un bot invincible gâche la mesure, un bot qui meurt par b�
 ### Run de référence (13 octobre)
 
 Traqueur, profil dev, bot historique `--nomad --visit --mortal`, graine 221092026 :
-- **30 min de jeu en 19 min de calcul** (1131 s), sous le quota de 2 cœurs du terminal. La matrice entière (93 runs) prendrait donc environ 29 h en série. Il faut la lancer hors quota (`systemd-run --user --scope`) avec `MEASURE_JOBS=4`, soit environ 7 à 8 h, ou réduire à deux graines.
+- **30 min de jeu en 19 min de calcul** (1131 s). Une run n'occupe qu'un cœur (le thread principal de Godot) et environ 1 Go de mémoire ; la machine a 16 cœurs, et cette session n'a pas de quota. La matrice entière (93 runs) prendrait environ 29 h en série, et environ 5 h avec six runs à la fois (`MEASURE_JOBS=3 MATRIX_JOBS=2`).
 - Premiers signaux, à confirmer par la matrice :
   - de la minute 6 à la minute 27, le bot ne perd pas un PV ;
   - le temps pour tuer reste sous 0,4 s jusqu'à 25 min ;
@@ -203,6 +203,42 @@ Traqueur, profil dev, bot historique `--nomad --visit --mortal`, graine 22109202
   - le bot reste dans 800 m du départ (la carte) ;
   - 82 % des dégâts viennent de la Cloche, dont 35 % par les objets qu'elle déclenche ;
   - le plus long creux sans décision monte de 10–20 s à 30–40 s après 20 min.
+
+### Lot D1 — départ graduel (avant la matrice, DECISIONS §154)
+
+Retour de jeu : niveau 10 vers 2 min, cinq premières minutes trop nerveuses ; cible : **niveau 10 vers 4–5 min**, pression ennemie plus basse d'autant au début. Fait avant M1 pour que la matrice mesure le jeu corrigé.
+
+1. **Mesure de base**, 10 min de jeu :
+   - les cinq personnages, profils moyen et fort, méta milieu, deux graines ;
+   - relevés par minute : niveau, temps pour tuer, PV perdus, créatures apparues.
+2. **Leviers**, tous en données :
+   - la courbe d'XP (`data/scaling/progression.json`) : majoration des premiers niveaux, aujourd'hui neutre ;
+   - le flux d'apparition des premières minutes (`data/scaling/spawn_flow.json`).
+
+   Moins d'ennemis, c'est aussi moins d'XP : les deux leviers se règlent ensemble.
+3. **Mesure après réglage**, avec les mêmes configurations : niveau 10 entre 4 et 5 min pour le profil moyen, sans que le profil débutant reste bloqué sous le niveau 5.
+4. **Contrôle de non-régression** : le niveau à 10, 20 et 30 min, pour ne pas déplacer tout le reste de la run sans le vouloir.
+
+Outil : `tools/measure_matrix.sh <dossier> <plan>` enchaîne des configurations en une seule compilation (une ligne par configuration : nom, secondes, graines, profil de sauvegarde, arguments).
+
+**Livré le 13 octobre.** Réglages :
+- les dix premiers niveaux coûtent ×1,8, en décroissant jusqu'à ×1 au niveau 10 (`early_levels` 10, `early_multiplier_start` 1,8) ;
+- la rampe d'ouverture des apparitions passe de 120 à 300 s.
+
+Mesure : méta milieu, deux graines, 10 min.
+
+| Personnage | Niveau 10 atteint, moyen (avant → après) | Fort (avant → après) | Créatures à moins de 600 px à 3 min (avant → après) |
+|---|---|---|---|
+| Traqueur | 3,0 → 4,2 min | 3,9 → 5,1 min | 34 → 23 (moyen) |
+| Vagabond | 3,0 → 4,4 min | 2,9 → 4,0 min | 35 → 26 |
+| Forgeuse | 3,1 → 4,5 min | 3,5 → 4,0 min | 37 → 23 |
+| Éveillée | 4,1 → 5,4 min | 5,0 → 5,1 min | 36 → 25 |
+| Facteur | 4,7 → 7,0 min | 5,8 → 5,9 min | 40 → 32 |
+
+- Au profil moyen, le niveau 10 tombe vers 4–5 min, sauf pour le Facteur, plus faible que les autres de toute façon (niveau 14 à 20 à 10 min). Son cas relève de l'équilibrage des personnages (matrice, bloc A).
+- **Bot fort au corps à corps corrigé en route.** Il fuyait la foule à 170 px : le Vagabond restait au niveau 3,5 à 5 min. Désormais, un build de corps à corps ne s'écarte que de ce qui le colle (60 px) et ne dashe qu'à partir de sept créatures au contact.
+- **Écart avec Raphaël.** Le bot fort encaisse encore bien plus que lui sur les cinq premières minutes : 33 à 470 PV par minute selon le personnage, contre 10 à 66 dans ses traces. Il dashe aussi beaucoup plus (10 à 14 par minute au corps à corps, contre 0,7). À recaler avec plus de traces (M0e).
+- Le niveau à 20 et à 30 minutes sera vérifié par la matrice M1, qui mesure le jeu ainsi corrigé.
 
 ### Matrice (lot M1)
 

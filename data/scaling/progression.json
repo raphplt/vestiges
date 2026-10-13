@@ -1,9 +1,9 @@
 {
-  "_doc": "Courbe d'XP du joueur (plan 20 §6.6). XP pour passer du niveau n au suivant = base_xp × n^exponent. Les niveaux 1 à early_levels sont majorés d'un facteur qui va de early_multiplier_start à early_multiplier_end. Le coût d'un niveau ne dépasse jamais max_xp_per_level. Historique (DECISIONS §50-51, plan 21 E2 et E5) : 20 / 1,35 / 3 000 enchaînait les niveaux après le 41 ; 30 / 1,5 / 15 000 était trop lent ; 22 / 1,42 avec ×1,65 → ×1,2 sur les cinq premiers niveaux donnait, au Vagabond en profil neuf, le niveau 2 vers 80 s et 15 à 22 niveaux à 10 min. Réglé le 10 octobre (plan 33, DECISIONS §101) : 15 / 1,4 sans majoration d'ouverture, visée environ 30 à 10 min pour une bonne run, davantage pour une excellente. tools/progression_model.py lit ce fichier.",
+  "_doc": "Courbe d'XP du joueur (plan 20 §6.6). XP pour passer du niveau n au suivant = base_xp × n^exponent. Les niveaux 1 à early_levels sont majorés d'un facteur qui va de early_multiplier_start à early_multiplier_end. Le coût d'un niveau ne dépasse jamais max_xp_per_level. Historique (DECISIONS §50-51, plan 21 E2 et E5) : 20 / 1,35 / 3 000 enchaînait les niveaux après le 41 ; 30 / 1,5 / 15 000 était trop lent ; 22 / 1,42 avec ×1,65 → ×1,2 sur les cinq premiers niveaux donnait, au Vagabond en profil neuf, le niveau 2 vers 80 s et 15 à 22 niveaux à 10 min. Réglé le 10 octobre (plan 33, DECISIONS §101) : 15 / 1,4 sans majoration d'ouverture, visée environ 30 à 10 min pour une bonne run, davantage pour une excellente. Ouverture ralentie le 13 octobre (DECISIONS §154, plan 42 D1) : niveau 10 vers 2 à 3 min jugé trop rapide ; les dix premiers niveaux coûtent ×1,8 décroissant jusqu'à ×1 au niveau 10, visée niveau 10 vers 4–5 min au profil moyen ; la suite de la courbe ne change pas. tools/progression_model.py lit ce fichier.",
   "base_xp": 15,
   "exponent": 1.4,
-  "early_levels": 5,
-  "early_multiplier_start": 1.0,
+  "early_levels": 10,
+  "early_multiplier_start": 1.8,
   "early_multiplier_end": 1.0,
   "max_xp_per_level": 20000
 }
