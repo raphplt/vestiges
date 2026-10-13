@@ -6,7 +6,7 @@
     "path_reach_px": 800,
     "spur_start": [0, 70],
     "spur_width_factor": 0.75,
-    "parcel_edges": ["prop_hedge_h", "prop_hedge_h_v2", "prop_hedge_h", "prop_low_stone_wall_h", "prop_wooden_fence_h", "prop_wooden_fence_broken_h"],
+    "parcel_edges": ["prop_hedge_h", "prop_hedge_h_v2", "prop_hedge_h", "prop_low_stone_wall_h", "prop_hedge_h_v2", "prop_low_stone_wall_h"],
     "orchard_trees": [["prop_orchard_tree_base", "prop_orchard_tree_canopy"], ["prop_orchard_tree_blossom_base", "prop_orchard_tree_blossom_canopy"]],
     "scene_chance_per_region": 0.5,
     "scenes": ["prop_scene_picnic", "prop_scene_clothesline", "prop_scene_crow_scarecrow", "prop_scene_mired_tractor", "prop_scene_campfire"],

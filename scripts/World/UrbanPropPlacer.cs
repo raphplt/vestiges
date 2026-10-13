@@ -38,10 +38,12 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_mailbox.png",
 	};
 
+	private const string ChainLinkFenceSprite = "assets/props/urban_ruins/prop_chain_link_fence.png";
+
 	private static readonly string[] SidewalkEdgeSprites = {
 		"assets/props/urban_ruins/prop_dumpster.png",
 		"assets/props/urban_ruins/prop_dumpster_v2.png",
-		"assets/props/urban_ruins/prop_chain_link_fence.png",
+		ChainLinkFenceSprite,
 		"assets/props/urban_ruins/prop_torn_billboard.png",
 		// Abribus (plan 23 R7) : petit lieu de vitesse, le long des trottoirs.
 		"assets/props/urban_ruins/prop_bus_shelter.png",
@@ -194,6 +196,9 @@ public static class UrbanPropPlacer
 				sprite = SidewalkIntersectionSprites[(int)(hash % (uint)SidewalkIntersectionSprites.Length)];
 			else if (nearBuilding && roll < 9)
 				sprite = SidewalkEdgeSprites[(int)(hash % (uint)SidewalkEdgeSprites.Length)];
+			// Un grillage sur deux laisse sa place vide : la ville en portait trop (DECISIONS §150).
+			if (sprite == ChainLinkFenceSprite && (hash >> 16) % 2 == 0)
+				sprite = null;
 
 			if (sprite == null || IsCrowded(streetProps, cell))
 				continue;

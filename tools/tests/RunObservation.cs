@@ -43,6 +43,7 @@ namespace Vestiges.Tests;
 /// --capture-death [--seconds 8] : mort réelle après quelques secondes, bilan de fin de run (RunObservation.Death.cs).
 /// --capture-echoes : échos de l'oubli forcés en zone Fragile, apparition, dissolution, murmure (RunObservation.Echoes.cs).
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
+/// --census-props : avec le relevé de densité, décors comptés par famille, barrières à part (RunObservation.Census.cs).
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
@@ -557,6 +558,8 @@ public partial class RunObservation : Node
         foreach (string bus in Argument(args, "--mute-buses", "").Split(',', StringSplitOptions.RemoveEmptyEntries))
             AudioServer.SetBusMute(AudioServer.GetBusIndex(bus), true);
         using AudioStemRecorder stems = Array.IndexOf(args, "--audio-stems") >= 0 ? new AudioStemRecorder(_output) : null;
+        if (Array.IndexOf(args, "--census-props") >= 0)
+            PrintPropCensus();
         RunTracker tracker = _world.GetNode<RunTracker>("RunTracker");
         // --barrier-memorials N : la Barrière compte N Mémoriaux ravivés (1 + N battants), le bot n'en ravivant pas.
         int barrierMemorials = int.Parse(Argument(args, "--barrier-memorials", "-1"), CultureInfo.InvariantCulture);

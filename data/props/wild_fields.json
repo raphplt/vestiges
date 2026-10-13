@@ -96,7 +96,7 @@
         {
             "id": "wooden_fence",
             "name": "Cloture de bois",
-            "weight": 0.75,
+            "weight": 0.375,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence.png",
             "blocking": true,
@@ -106,7 +106,7 @@
         {
             "id": "wooden_fence_broken",
             "name": "Cloture de bois brisee",
-            "weight": 0.6,
+            "weight": 0.3,
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence_broken.png",
             "blocking": true,

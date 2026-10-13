@@ -116,3 +116,21 @@ Trois lots, dans cet ordre ; l'outillage de mesure du [plan 42](42-signature.md)
 
 - Faune −30 %, pigeons qui s'envolent gardés.
 - Barrières : source mesurée (`measure_run.sh`, décors par type), puis divisée par deux.
+
+**Livré le 13 octobre.** Mesure par `--census-props` (nouveau : décors de la carte comptés par famille au début du relevé de densité, barrières à part et par biome), 4 graines (221092026, 1002, 7, 42), avant et après, avec `MEASURE_EXTRA_ARGS="--census-props --nomad"` sur 120 s :
+
+| Par carte (moyenne) | Avant | Après | Écart |
+|---|---|---|---|
+| Clôtures en bois (champs) | 616 | 303 | −51 % |
+| Grillages (ville) | 99 | 54 | −46 % |
+| Barrages d'évacuation (ville) | 11,5 | 6 | −48 % |
+| Embouteillages (ville) | 16 | 16 | = |
+| Bêtes en vie en moyenne | 11,3 | 8,7 | −23 % |
+| Bêtes apparues en 120 s | 303 | 221 | −27 % |
+| Décors au total | 21 300 | 21 500 | ≈ |
+
+- **D'où viennent les barrières** : rien n'avait monté récemment dans les données. Les clôtures des champs datent des fermes et des parcelles (fin septembre) ; leur dessin a été repris au plan 31 et les barrages de l'exode sont arrivés au plan 39 B3. En ville, ce sont les grillages des trottoirs et les barrages ; toutes les clôtures en bois sont dans les champs, surtout aux bords des parcelles.
+- **Champs** : plus de clôture aux bords des parcelles (haies et murets à la place, `farms.json`) ; poids des clôtures du semis divisés par deux (`data/props/wild_fields.json`). Les clôtures des cours de ferme restent.
+- **Ville** : un grillage de trottoir sur deux laisse sa place vide (`UrbanPropPlacer`) ; barrages d'évacuation divisés par deux sans toucher aux embouteillages (`exodus.json` : une scène pour 300 cellules de rue au lieu de 240, 75 % d'embouteillages au lieu de 60 %).
+- **Faune** : 25 bêtes au plus au lieu de 36, un groupe toutes les 1,15 s au lieu de 0,8 s ; en ville, rats et corbeaux plus rares (0,6 et 0,5 au lieu de 1,0 et 0,8) pour que les pigeons gardent presque leur fréquence (`fauna.json`).
+- **Vérifié** : build, smoke, catalogues, petits lieux ; visite des biomes regardée (champs bordés de haies, rue avec un seul grillage).
