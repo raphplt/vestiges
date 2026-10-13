@@ -1,25 +1,23 @@
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
 
 /// <summary>
-/// Barème du score, lu dans data/scaling/score.json : les points de chaque élimination (DECISIONS §40). Contrôlé en
-/// entier (plan 26 Q7a) : « default » obligatoire, points entiers positifs ou nuls, chaque clé est une créature connue.
+/// Barème de fin de run, lu dans data/scaling/score.json : les Vestiges gagnés pour un nombre d'éliminations
+/// (DECISIONS §155). Contrôlé en entier (plan 26 Q7a) : un taux strictement positif, aucune autre clé.
 /// </summary>
 public sealed class ScoreConfig
 {
     private const string ConfigPath = "res://data/scaling/score.json";
-    private const int MaxPoints = 1_000_000;
-
-    private readonly Dictionary<string, int> _killPoints = new();
-    private int _defaultKill;
 
     private static ScoreConfig _cached;
 
-    public int KillPoints(string enemyId) => _killPoints.TryGetValue(enemyId, out int points) ? points : _defaultKill;
+    public float KillsPerVestige { get; private init; }
+
+    /// <summary>Vestiges d'une run de <paramref name="kills"/> éliminations, arrondis en dessous.</summary>
+    public int VestigesFor(int kills) => Mathf.FloorToInt(kills / KillsPerVestige);
 
     /// <summary>Le barème du jeu, lu une fois ; un barème invalide arrête le chargement de la run (GameBootstrap).</summary>
     public static ScoreConfig Load() =>
@@ -40,8 +38,7 @@ public sealed class ScoreConfig
             error = $"{ConfigPath} absent";
             return false;
         }
-        EnemyDataLoader.Load();
-        if (!TryParse(file.GetAsText(), EnemyDataLoader.Exists, out config, out string parseError))
+        if (!TryParse(file.GetAsText(), out config, out string parseError))
         {
             error = $"{ConfigPath} : {parseError}";
             return false;
@@ -51,39 +48,17 @@ public sealed class ScoreConfig
         return true;
     }
 
-    /// <param name="enemyExists">Une clé du barème doit nommer une créature du catalogue.</param>
-    public static bool TryParse(string json, Func<string, bool> enemyExists, out ScoreConfig config, out string error)
+    public static bool TryParse(string json, out ScoreConfig config, out string error)
     {
         config = null;
         try
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "barème", "kill_points");
-            JsonElement table = reader.Section("kill_points");
-            ScoreConfig parsed = new();
-            bool hasDefault = false;
-            foreach ((string key, _) in reader.Entries(table, "kill_points"))
-            {
-                int points = reader.Integer(table, key, 0, MaxPoints);
-                if (key == "default")
-                {
-                    parsed._defaultKill = points;
-                    hasDefault = true;
-                }
-                else if (!enemyExists(key))
-                {
-                    reader.Fail($"kill_points : créature « {key} » inconnue");
-                }
-                else
-                {
-                    parsed._killPoints[key] = points;
-                }
-            }
-            if (!hasDefault)
-                reader.Fail("kill_points : default absent");
+            reader.AllowOnly(reader.Root, "barème", "kills_per_vestige");
+            float rate = reader.Positive(reader.Root, "kills_per_vestige");
             error = reader.Error;
-            config = error == null ? parsed : null;
+            config = error == null ? new ScoreConfig { KillsPerVestige = rate } : null;
             return error == null;
         }
         catch (JsonException ex)

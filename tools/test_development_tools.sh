@@ -21,7 +21,7 @@ for stage in normal test dev; do
     if [[ "$stage" == normal ]]; then
         cp -a "$(vestiges_user_dir)" "$TEST_DIR/normal-before"
     else
-        for file in meta_save.json run_history.json highscore_kills.save analytics/aggregate.json; do
+        for file in meta_save.json run_history.json analytics/aggregate.json; do
             if [[ -f "$TEST_DIR/normal-before/$file" ]]; then
                 cmp "$TEST_DIR/normal-before/$file" "$(vestiges_user_dir)/$file"
             elif [[ -e "$(vestiges_user_dir)/$file" ]]; then

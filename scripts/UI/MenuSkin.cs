@@ -99,7 +99,10 @@ public static class MenuSkin
         if (!Textures.TryGetValue(key, out Texture2D texture))
         {
             Color edge = focused ? accent.Lightened(0.22f) : rank >= 0 ? accent : accent.Darkened(0.18f);
-            Color body = rank >= 0 ? new Color("24212d").Lerp(accent, focused ? 0.26f : 0.18f) : new Color("24212d");
+            // Une teinte grise (le commun) éclaircit la dalle sans la colorer : on la mêle moins, pour qu'elle reste un
+            // voile sur la pierre sombre comme les autres raretés au lieu d'une plaque claire.
+            float tint = (focused ? 0.26f : 0.18f) * Mathf.Lerp(0.45f, 1f, Mathf.Clamp(accent.S * 2.5f, 0f, 1f));
+            Color body = rank >= 0 ? new Color("24212d").Lerp(accent, tint) : new Color("24212d");
             texture = Stone(body, edge, rank >= 0 ? accent.Darkened(0.65f) : new Color("3a3535"), false, 12);
             Textures[key] = texture;
         }

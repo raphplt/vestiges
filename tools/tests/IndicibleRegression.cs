@@ -102,7 +102,7 @@ public partial class IndicibleRegression : Node2D
         EventBus.EnemyKilledEventHandler onKill = (id, _) => { if (id == EnemyGrammar.FinalBossId) kills++; };
         bus.EnemyKilled += onKill;
         ScoreManager score = main.GetNodeOrNull<ScoreManager>("ScoreManager");
-        int scoreBefore = score?.CurrentScore ?? 0;
+        int killsBefore = score?.TotalKills ?? 0;
 
         Indicible boss = new() { Name = "IndicibleBoss" };
         main.AddChild(boss);
@@ -154,7 +154,7 @@ public partial class IndicibleRegression : Node2D
             await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
         Check(boss.IsDefeated && kills == 1, $"vaincu une fois : {kills} élimination(s) « indicible »");
         Check(string.Join(",", phases) == "1,2", $"seuils dans l'ordre : {string.Join(",", phases)}");
-        Check(score == null || score.CurrentScore - scoreBefore >= 5000, $"récompense : +{(score?.CurrentScore ?? 0) - scoreBefore} points");
+        Check(score == null || score.TotalKills - killsBefore >= 1, $"élimination comptée : +{(score?.TotalKills ?? 0) - killsBefore}");
         Check(player.ExternalDrift == Vector2.Zero, "le vent tombe avec lui");
         bus.EnemyKilled -= onKill;
         main.QueueFree();

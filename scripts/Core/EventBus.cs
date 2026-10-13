@@ -54,9 +54,6 @@ public partial class EventBus : Node
     [Signal] public delegate void XpGainedEventHandler(float amount);
     [Signal] public delegate void LevelUpEventHandler(int newLevel);
 
-    // --- Score ---
-    [Signal] public delegate void ScoreChangedEventHandler(int newScore);
-
     // --- Points d'Intérêt ---
     [Signal] public delegate void PoiDiscoveredEventHandler(string poiId, string poiType, Vector2 position);
     [Signal] public delegate void PoiExploredEventHandler(string poiId, string poiType);

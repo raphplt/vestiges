@@ -15,7 +15,6 @@ public static class PerilDataLoader
     private static int _activeEnemiesCeiling;
     private static float _enemyHp;
     private static float _enemyDamage;
-    private static float _score;
     private static int _banishFree = 3;
     private static int _banishPerilDivisor = 3;
     private static bool _loaded;
@@ -47,12 +46,6 @@ public static class PerilDataLoader
     {
         Load();
         return 1f + _enemyDamage * peril;
-    }
-
-    public static float ScoreMultiplier(int peril)
-    {
-        Load();
-        return 1f + _score * peril;
     }
 
     /// <summary>Bannissements gratuits par run avant qu'ils ne coûtent du Péril.</summary>
@@ -117,11 +110,10 @@ public static class PerilDataLoader
             int free = reader.Integer(banish, "free", 0, 1000);
             int divisor = reader.Integer(banish, "peril_divisor", 1, 1000);
             JsonElement perPoint = reader.Section("per_point");
-            reader.AllowOnly(perPoint, "per_point", "enemy_count", "enemy_hp", "enemy_damage", "score");
+            reader.AllowOnly(perPoint, "per_point", "enemy_count", "enemy_hp", "enemy_damage");
             float enemyCount = reader.NonNegative(perPoint, "enemy_count");
             float enemyHp = reader.NonNegative(perPoint, "enemy_hp");
             float enemyDamage = reader.NonNegative(perPoint, "enemy_damage");
-            float score = reader.NonNegative(perPoint, "score");
             if (reader.Error != null)
                 return reader.Error;
             _enemyCountBonusMax = enemyCountBonusMax;
@@ -131,7 +123,6 @@ public static class PerilDataLoader
             _enemyCount = enemyCount;
             _enemyHp = enemyHp;
             _enemyDamage = enemyDamage;
-            _score = score;
             return null;
         }
         catch (JsonException ex)

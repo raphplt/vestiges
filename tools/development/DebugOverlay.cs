@@ -202,9 +202,9 @@ public partial class DebugOverlay : CanvasLayer
 
         float dps = _runTracker?.RollingDps ?? 0f;
         float damagePerMin = _runTracker?.DamageTakenPerMinute ?? 0f;
-        int score = _scoreManager?.CurrentScore ?? 0;
+        int kills = _scoreManager?.TotalKills ?? 0;
         float duration = _runTracker?.RunDurationSeconds ?? 0f;
-        float scorePerMin = duration > 60f ? score / (duration / 60f) : 0f;
+        float killsPerMin = duration > 60f ? kills / (duration / 60f) : 0f;
         int level = _runTracker?.MaxLevel ?? 0;
         int crises = _runTracker?.CrisesSurvived ?? 0;
 
@@ -219,7 +219,7 @@ public partial class DebugOverlay : CanvasLayer
             $"HP: {hp:F0}/{maxHp:F0} ({(hp / maxHp * 100f):F0}%)\n" +
             $"DPS (10s): {dps:F1}\n" +
             $"Dmg reçus/min: {damagePerMin:F1}\n" +
-            $"Score: {score} ({scorePerMin:F0}/min)\n" +
+            $"Éliminations: {kills} ({killsPerMin:F0}/min)\n" +
             $"Niveau: {level}\n" +
             $"Durée: {FormatDuration(duration)}";
     }
@@ -283,7 +283,7 @@ public partial class DebugOverlay : CanvasLayer
         if (string.IsNullOrEmpty(perksText))
             perksText = "N/A";
 
-        List<int> trend = RunAnalytics.GetScoreTrend(5);
+        List<int> trend = RunAnalytics.GetKillTrend(5);
         string trendText = string.Join(" -> ", trend);
         float avgDps = RunAnalytics.GetAverageDps();
 
@@ -294,7 +294,7 @@ public partial class DebugOverlay : CanvasLayer
             $"Pression moy.: {avgPressure:F2}\n" +
             $"Causes de mort: {causesText}\n" +
             $"Top perks: {perksText}\n" +
-            $"Scores récents: {trendText}\n" +
+            $"Éliminations récentes: {trendText}\n" +
             $"DPS moyen: {avgDps:F1}";
     }
 

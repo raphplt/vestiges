@@ -341,7 +341,7 @@ Le prototype V1 avait des ennemis trop passifs et trop loin. En V2 :
 
 > **Amendement du 26 septembre 2026 (plan 17, vague 3, direction validée par Raphaël)** : l'Autel devient le **Mémorial**. On le ravive en rassemblant ses trois éclats (20 s) ; il stabilise sa zone et offre une bénédiction à rareté, puis des services contre de l'Essence (raviver une arme au choix, Rare au moins ; soin ; lever un Oubli). Son miroir est la **Faille** : une amélioration Épique ou Légendaire contre un **Oubli** (malus durable) et un point de **Péril** (créatures plus fortes, score, XP et raretés majorés), toujours refusable. L'Appel du Vide et les malédictions disparaissent. Écart avec le paragraphe « Interaction » ci-dessous, validé par Raphaël : le choix se fait sur un écran de trois cartes qui fige la run, comme le level-up.
 >
-> **Amendement du 7 octobre 2026 (plan 28, DECISIONS §78)** : le Péril n'a plus de plafond et ne paie plus directement. Il renforce les créatures (nombre, PV, dégâts) et multiplie le score ; XP et Essence viennent seulement des éliminations en plus. Il monte aussi aux stèles du Péril (une dizaine par carte) et avec le Sifflet d'arbitre (+1 par niveau).
+> **Amendement du 7 octobre 2026 (plan 28, DECISIONS §78)** : le Péril n'a plus de plafond et ne paie plus directement. Il renforce les créatures (nombre, PV, dégâts) ; XP, Essence et éliminations (la mesure des classements depuis le 13 octobre, DECISIONS §155) viennent seulement des créatures en plus. Il monte aussi aux stèles du Péril (une dizaine par carte) et avec le Sifflet d'arbitre (+1 par niveau).
 
 ### Concept
 
@@ -373,7 +373,7 @@ Approcher un Autel → menu contextuel rapide (pas de menu plein écran). Le jou
 |-----------|--------|-------------|-----------|
 | **XP** | Kills, coffres, exploration | Level-up → perks | — |
 | **Essence** | Kills (créatures fortes), coffres, veines cristallines | Upgrades aux Autels | — |
-| **Vestiges** | Score de fin de run | — | Déblocages permanents dans le Hub |
+| **Vestiges** | Éliminations de la run ÷ un taux (DECISIONS §155) | — | Déblocages permanents dans le Hub |
 
 Trois ressources au total. Pas d'inventaire de matériaux. Pas de gestion de stock. Le joueur se concentre sur le combat et les choix de build.
 

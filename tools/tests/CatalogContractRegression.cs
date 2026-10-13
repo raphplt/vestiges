@@ -79,20 +79,18 @@ public partial class CatalogContractRegression : Node
     private void CheckScore()
     {
         string valid = FileAccess.GetFileAsString("res://data/scaling/score.json");
-        Check(ScoreConfig.TryParse(valid, EnemyDataLoader.Exists, out _, out string error), $"barème du dépôt accepté {error}");
+        Check(ScoreConfig.TryParse(valid, out ScoreConfig parsed, out string error), $"barème du dépôt accepté {error}");
+        Check(parsed != null && parsed.VestigesFor(17) == Mathf.FloorToInt(17 / parsed.KillsPerVestige), "Vestiges = éliminations ÷ taux, arrondis en dessous");
         (string, Action<JsonObject>, string)[] cases =
         {
-            ("table absente", root => root.Remove("kill_points"), "section kill_points absente"),
-            ("défaut absent", root => root["kill_points"]!.AsObject().Remove("default"), "kill_points : default absent"),
-            ("créature inconnue", root => root["kill_points"]!["rodeurr"] = 15, "créature « rodeurr » inconnue"),
-            ("points négatifs", root => root["kill_points"]!["rodeur"] = -5, "rodeur : -5"),
-            ("points fractionnaires", root => root["kill_points"]!["rodeur"] = 15.5, "rodeur : 15.5"),
-            ("texte au lieu d'un nombre", root => root["kill_points"]!["rodeur"] = "quinze", "rodeur : nombre fini attendu"),
-            ("clé inconnue", root => root["points"] = 1, "clé « points » inconnue"),
+            ("taux absent", root => root.Remove("kills_per_vestige"), "kills_per_vestige absent"),
+            ("taux nul", root => root["kills_per_vestige"] = 0, "kills_per_vestige : 0"),
+            ("texte au lieu d'un nombre", root => root["kills_per_vestige"] = "un", "kills_per_vestige : nombre fini attendu"),
+            ("ancien barème", root => root["kill_points"] = new JsonObject(), "clé « kill_points » inconnue"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
-            bool rejected = !ScoreConfig.TryParse(Mutated(valid, mutate), EnemyDataLoader.Exists, out ScoreConfig config, out string message);
+            bool rejected = !ScoreConfig.TryParse(Mutated(valid, mutate), out ScoreConfig config, out string message);
             Check(rejected && config == null && message.Contains(expected, StringComparison.Ordinal), $"barème refusé ({label}) : {message}");
         }
     }
@@ -108,7 +106,7 @@ public partial class CatalogContractRegression : Node
             ("bloc absent", root => root.Remove("banish"), "section banish absente"),
             ("diviseur nul", root => root["banish"]!["peril_divisor"] = 0, "peril_divisor : 0 (entier de 1 à 1000 attendu)"),
             ("valeur négative", root => root["per_point"]!["enemy_hp"] = -0.1, "enemy_hp : -0.1 (positif ou nul attendu)"),
-            ("valeur absente", root => root["per_point"]!.AsObject().Remove("score"), "score absent"),
+            ("valeur absente", root => root["per_point"]!.AsObject().Remove("enemy_hp"), "enemy_hp absent"),
             ("clé inconnue", root => root["per_point"]!["xp"] = 0.1, "clé « xp » inconnue"),
             ("plafond de coût non entier", root => root["active_enemies_ceiling"] = 9.5, "active_enemies_ceiling : 9.5"),
             ("bonus de nombre négatif", root => root["enemy_count_bonus_max"] = -1, "enemy_count_bonus_max : -1"),

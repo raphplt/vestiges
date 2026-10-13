@@ -15,6 +15,7 @@ namespace Vestiges.Tests;
 /// avec le temps écoulé et la scène courante de chaque frame.
 /// --collection-focus ID : arrivée depuis le bilan, « Voir dans la Collection » sur l'arme ID.
 /// --quest-focus ID : ouvre la quête précise ; les actions suivantes exercent ses liens réels vers la Collection.
+/// --fake-leaderboard : l'écran Classement lit un faux service rempli (aucun appel à Steam).
 /// --claim-quests a,b : quêtes accomplies dans le profil isolé avant l'accueil (badge « Nouveau » de la Collection).
 /// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
 /// </summary>
@@ -47,6 +48,11 @@ public partial class HubCapture : Node
                 System.IO.File.WriteAllText(ProjectSettings.GlobalizePath(Vestiges.Infrastructure.DevelopmentMode.GetSavePath("meta_save.json")), fixture);
                 Vestiges.Infrastructure.MetaSaveManager.ReloadProfile();
             }
+
+            // --fake-leaderboard : classement rempli par un faux service, ta place 43ᵉ (plan 43 C2).
+            if (System.Array.IndexOf(args, "--fake-leaderboard") >= 0)
+                Vestiges.Infrastructure.Steam.SteamManager.UseLeaderboardsForTests(
+                    new Vestiges.Infrastructure.Steam.LeaderboardQueue(new DemoLeaderboardBackend()), DemoLeaderboardBackend.LocalId);
 
             // --claim-quests a,b : quêtes accomplies avant l'accueil, leurs pièces portent le badge « Nouveau ».
             foreach (string questId in Argument(args, "--claim-quests", "").Split(',', System.StringSplitOptions.RemoveEmptyEntries))
@@ -164,3 +170,36 @@ public partial class HubCapture : Node
         return index >= 0 && index + 1 < args.Length ? args[index + 1] : fallback;
     }
 }
+
+/// <summary>Faux classement de capture : dix noms en tête, puis la place du joueur et ses voisins.</summary>
+internal sealed class DemoLeaderboardBackend : Vestiges.Infrastructure.Steam.ILeaderboardBackend
+{
+    public const ulong LocalId = 7_000;
+    private static readonly string[] Names =
+    {
+        "Ombre_du_Phare", "marie.l", "Kestrel", "le_facteur_fou", "Nox", "Brume", "paul_r", "Sentinelle", "Atlas", "Ilsa",
+    };
+
+    public void Find(string board, System.Action<bool, ulong> done) => done(true, 1);
+
+    public void Upload(ulong handle, int score, System.Action<bool, bool, int> done) => done(true, true, 43);
+
+    public void Download(ulong handle, Vestiges.Infrastructure.Steam.LeaderboardQueue.EntryRange range, int count,
+        System.Action<bool, System.Collections.Generic.IReadOnlyList<Vestiges.Infrastructure.Steam.LeaderboardQueue.Entry>> done)
+    {
+        System.Collections.Generic.List<Vestiges.Infrastructure.Steam.LeaderboardQueue.Entry> entries = new();
+        bool around = range == Vestiges.Infrastructure.Steam.LeaderboardQueue.EntryRange.AroundUser;
+        for (int i = 0; i < count; i++)
+        {
+            int rank = around ? 41 + i : i + 1;
+            string name = around ? (rank == 43 ? "raph_plt" : $"joueur{rank}") : Names[i % Names.Length];
+            entries.Add(new(rank, name, 48_000 - rank * 900, around && rank == 43 ? LocalId : (ulong)rank));
+        }
+        done(true, entries);
+    }
+
+    public void Cancel()
+    {
+    }
+}
+

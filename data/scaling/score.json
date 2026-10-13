@@ -1,17 +1,4 @@
 {
-  "_doc": "Barème du score : les éliminations seulement (DECISIONS §40), points par identifiant de créature, default pour les autres ; une élimination en zone qui s'oublie rapporte davantage (plan 16 O5). Ni temps, ni lieux, ni coffres, ni Résurgences. Lu par Infrastructure/ScoreConfig.",
-  "kill_points": {
-    "default": 10,
-    "shadow_crawler": 10,
-    "fading_spitter": 15,
-    "presage": 15,
-    "void_brute": 30,
-    "shade": 5,
-    "wailing_sentinel": 25,
-    "hurleur": 30,
-    "tisseuse": 20,
-    "rampant": 15,
-    "rodeur": 15,
-    "indicible": 5000
-  }
+  "_doc": "Une seule mesure de run : les éliminations (DECISIONS §155). Classements, records et bilan les comptent telles quelles ; il n'y a plus de points par créature ni de multiplicateurs (Péril, personnage, oubli). Vestiges gagnés en fin de run = éliminations ÷ kills_per_vestige, arrondi en dessous. Taux calé le 13 octobre sur 40 runs de 10 min (méta milieu, cinq personnages) : 11,75 points de l'ancien score par élimination, soit 1,18 Vestige ; 0,85 garde la même économie. À recaler sur la matrice du plan 42 (runs de 30 min).",
+  "kills_per_vestige": 0.85
 }

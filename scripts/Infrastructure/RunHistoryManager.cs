@@ -25,9 +25,6 @@ public class RunRecord
     [JsonPropertyName("character_name")]
     public string CharacterName { get; set; }
 
-    [JsonPropertyName("score")]
-    public int Score { get; set; }
-
     [JsonPropertyName("total_kills")]
     public int TotalKills { get; set; }
 
@@ -73,9 +70,6 @@ public class RunRecord
     [JsonPropertyName("seed")]
     public ulong Seed { get; set; }
 
-    [JsonPropertyName("combat_score")]
-    public int CombatScoreDetail { get; set; }
-
     [JsonPropertyName("total_spawned")]
     public int TotalSpawned { get; set; }
 
@@ -93,9 +87,6 @@ public class RunRecord
 
     [JsonPropertyName("active_mutators")]
     public List<string> ActiveMutators { get; set; }
-
-    [JsonPropertyName("mutator_multiplier")]
-    public float MutatorMultiplier { get; set; } = 1f;
 
     [JsonPropertyName("boss_defeated")]
     public bool BossDefeated { get; set; }
@@ -236,7 +227,7 @@ public static class RunHistoryManager
             _history = previous;
             return result;
         }
-        GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — Score {record.Score}, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
+        GD.Print($"[RunHistoryManager] Saved run: {record.CharacterName} — {record.TotalKills} éliminations, {record.RunDurationSec:F0}s, {record.CrisesSurvived} crises");
         return result;
     }
 
@@ -259,72 +250,14 @@ public static class RunHistoryManager
         return new List<RunRecord>(_history);
     }
 
-    public static int GetBestScore()
+    /// <summary>Meilleur nombre d'éliminations de l'historique (DECISIONS §155).</summary>
+    public static int GetBestKills()
     {
         Load();
         int best = 0;
         foreach (RunRecord run in _history)
-        {
-            if (run.Score > best)
-                best = run.Score;
-        }
+            best = System.Math.Max(best, run.TotalKills);
         return best;
-    }
-
-    public static int GetMaxCrises()
-    {
-        Load();
-        int max = 0;
-        foreach (RunRecord run in _history)
-        {
-            if (run.CrisesSurvived > max)
-                max = run.CrisesSurvived;
-        }
-        return max;
-    }
-
-    public static float GetLongestRunDurationSec()
-    {
-        Load();
-        float max = 0f;
-        foreach (RunRecord run in _history)
-        {
-            if (run.RunDurationSec > max)
-                max = run.RunDurationSec;
-        }
-        return max;
-    }
-
-    public static List<RunRecord> GetTopByScore(int count = 10)
-    {
-        Load();
-        List<RunRecord> sorted = new(_history);
-        sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
-        return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
-    }
-
-    public static List<RunRecord> GetTopByCrises(int count = 10)
-    {
-        Load();
-        List<RunRecord> sorted = new(_history);
-        sorted.Sort((a, b) =>
-        {
-            int cmp = b.CrisesSurvived.CompareTo(a.CrisesSurvived);
-            return cmp != 0 ? cmp : b.Score.CompareTo(a.Score);
-        });
-        return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
-    }
-
-    public static List<RunRecord> GetTopByDuration(int count = 10)
-    {
-        Load();
-        List<RunRecord> sorted = new(_history);
-        sorted.Sort((a, b) =>
-        {
-            int cmp = b.RunDurationSec.CompareTo(a.RunDurationSec);
-            return cmp != 0 ? cmp : b.Score.CompareTo(a.Score);
-        });
-        return sorted.GetRange(0, System.Math.Min(count, sorted.Count));
     }
 
     public static void ForceReload()

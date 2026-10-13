@@ -20,6 +20,7 @@ public partial class LeaderboardQueueRegression : Node
 		{
 			CheckWeeklyBoards();
 			CheckRunSubmissions();
+		CheckResetCountdown();
 			CheckColdThenWarmCache();
 			CheckDownloadDuringUploads();
 			CheckFailuresRetried();
@@ -61,16 +62,27 @@ public partial class LeaderboardQueueRegression : Node
 		}
 	}
 
+	private void CheckResetCountdown()
+	{
+		// Remise à zéro le lundi 0 h UTC, début de la semaine ISO suivante (DECISIONS §155).
+		string wednesday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 14, 12, 0, 0, DateTimeKind.Utc));
+		Check(wednesday == "4 j 12 h", $"remise : mercredi midi → {wednesday}");
+		string sunday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 18, 22, 30, 0, DateTimeKind.Utc));
+		Check(sunday == "1 h 30 min", $"remise : dimanche 22 h 30 → {sunday}");
+		string monday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 19, 0, 0, 0, DateTimeKind.Utc));
+		Check(monday == "7 j 0 h", $"remise : lundi 0 h → {monday}");
+	}
+
 	private void CheckRunSubmissions()
 	{
 		DateTime date = new(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
-		List<RunLeaderboards.Submission> full = RunLeaderboards.ForRun(12_345, 4, "vagabond", date);
+		List<RunLeaderboards.Submission> full = RunLeaderboards.ForRun(12_345, "vagabond", date);
 		string actual = Describe(full);
-		const string expected = "Vestiges_Global=12345 Vestiges_Char_vagabond=12345 Vestiges_Crises=4 Vestiges_Weekly_2026-W40=12345";
-		Check(actual == expected, $"envois d'une run : {actual}");
+		const string expected = "Vestiges_Global=12345 Vestiges_Char_vagabond=12345 Vestiges_Weekly_2026-W40=12345";
+		Check(actual == expected, $"envois d'une run (éliminations, DECISIONS §155) : {actual}");
 
-		List<RunLeaderboards.Submission> noCharacter = RunLeaderboards.ForRun(10, 1, "", date);
-		Check(noCharacter.Count == 3 && !Describe(noCharacter).Contains("Char_"), $"personnage absent : {Describe(noCharacter)}");
+		List<RunLeaderboards.Submission> noCharacter = RunLeaderboards.ForRun(10, "", date);
+		Check(noCharacter.Count == 2 && !Describe(noCharacter).Contains("Char_"), $"personnage absent : {Describe(noCharacter)}");
 	}
 
 	private void CheckColdThenWarmCache()
@@ -80,23 +92,23 @@ public partial class LeaderboardQueueRegression : Node
 		List<LeaderboardQueue.UploadResult> results = new();
 		queue.UploadFinished += results.Add;
 
-		SubmitRun(queue, 900, 3);
+		SubmitRun(queue, 900);
 		Check(backend.InFlight == 1, $"cache froid : un seul appel en vol ({backend.InFlight})");
 		Drain(queue, backend);
-		Check(results.Count == 4 && results.TrueForAll(r => r.Succeeded), $"cache froid : 4 envois réussis ({results.Count})");
-		Check(backend.Log("find") == "Vestiges_Global Vestiges_Char_traqueur Vestiges_Crises Vestiges_Weekly_2026-W40",
+		Check(results.Count == 3 && results.TrueForAll(r => r.Succeeded), $"cache froid : 3 envois réussis ({results.Count})");
+		Check(backend.Log("find") == "Vestiges_Global Vestiges_Char_traqueur Vestiges_Weekly_2026-W40",
 			$"cache froid : une recherche par tableau ({backend.Log("find")})");
-		Check(backend.Log("upload") == "Vestiges_Global=900 Vestiges_Char_traqueur=900 Vestiges_Crises=3 Vestiges_Weekly_2026-W40=900",
+		Check(backend.Log("upload") == "Vestiges_Global=900 Vestiges_Char_traqueur=900 Vestiges_Weekly_2026-W40=900",
 			$"cache froid : chaque score sur son tableau ({backend.Log("upload")})");
 
 		backend.Calls.Clear();
 		results.Clear();
-		SubmitRun(queue, 1_200, 5);
+		SubmitRun(queue, 1_200);
 		Drain(queue, backend);
 		Check(backend.Log("find") == "", $"cache chaud : aucune recherche ({backend.Log("find")})");
-		Check(backend.Log("upload") == "Vestiges_Global=1200 Vestiges_Char_traqueur=1200 Vestiges_Crises=5 Vestiges_Weekly_2026-W40=1200",
-			$"cache chaud : quatre envois ({backend.Log("upload")})");
-		Check(results.Count == 4 && queue.PendingCount == 0, $"cache chaud : 4 résultats, file vide ({results.Count}, {queue.PendingCount})");
+		Check(backend.Log("upload") == "Vestiges_Global=1200 Vestiges_Char_traqueur=1200 Vestiges_Weekly_2026-W40=1200",
+			$"cache chaud : trois envois ({backend.Log("upload")})");
+		Check(results.Count == 3 && queue.PendingCount == 0, $"cache chaud : 3 résultats, file vide ({results.Count}, {queue.PendingCount})");
 	}
 
 	private void CheckDownloadDuringUploads()
@@ -200,9 +212,9 @@ public partial class LeaderboardQueueRegression : Node
 		List<LeaderboardQueue.UploadResult> results = new();
 		queue.UploadFinished += results.Add;
 
-		SubmitRun(queue, 40, 2);
+		SubmitRun(queue, 40);
 		Drain(queue, backend);
-		Check(results.Count == 4 && queue.PendingCount == 0, $"réponses immédiates : 4 envois, file vide ({results.Count})");
+		Check(results.Count == 3 && queue.PendingCount == 0, $"réponses immédiates : 3 envois, file vide ({results.Count})");
 		Check(backend.MaxInFlight == 1, $"réponses immédiates : jamais deux appels en vol ({backend.MaxInFlight})");
 	}
 
@@ -213,7 +225,7 @@ public partial class LeaderboardQueueRegression : Node
 		List<LeaderboardQueue.UploadResult> results = new();
 		queue.UploadFinished += results.Add;
 
-		SubmitRun(queue, 70, 1);
+		SubmitRun(queue, 70);
 		FakeBackend.Call stale = backend.Pending;
 		queue.Clear();
 		Check(queue.PendingCount == 0 && backend.Cancels == 1, "arrêt : file vidée, appel abandonné");
@@ -355,10 +367,10 @@ public partial class LeaderboardQueueRegression : Node
 		}
 	}
 
-	private static void SubmitRun(LeaderboardQueue queue, int score, int crises)
+	private static void SubmitRun(LeaderboardQueue queue, int kills)
 	{
 		DateTime date = new(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
-		foreach (RunLeaderboards.Submission submission in RunLeaderboards.ForRun(score, crises, "traqueur", date))
+		foreach (RunLeaderboards.Submission submission in RunLeaderboards.ForRun(kills, "traqueur", date))
 			queue.SubmitScore(submission.Board, submission.Score);
 	}
 

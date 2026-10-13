@@ -121,7 +121,6 @@ public static class PlayerSheet
         AddLine(container, "  " + Tr("PERIL_CREATURES"),
             $"{Bonus(PerilDataLoader.EnemyCountMultiplier(peril))} · PV {Bonus(PerilDataLoader.EnemyHpMultiplier(peril))} · {Tr("PERIL_DAMAGE")} {Bonus(PerilDataLoader.EnemyDamageMultiplier(peril))}",
             UITheme.TextDim, role);
-        AddLine(container, "  " + Tr("PERIL_REWARDS"), $"score {Bonus(PerilDataLoader.ScoreMultiplier(peril))}", UITheme.TextDim, role);
     }
 
     /// <summary>

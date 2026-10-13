@@ -73,7 +73,7 @@ vestiges/
 │   ├── Events/              # Résurgences (CrisisManager), micro-événements (RunEventDirector), endgame
 │   ├── Spawn/               # SpawnManager, EnemyPool
 │   ├── Meta/                # Souvenirs, persistance cross-run
-│   ├── Score/               # Calcul du score
+│   ├── Score/               # Mesure de run (éliminations), records et fin de run
 │   ├── UI/                  # HUD, Hub, level-up, paramètres, debug
 │   ├── Infrastructure/      # Loaders JSON, sauvegarde, audio, Steam, analytics, locale, input
 │   └── generate_blood.py    # Dernier générateur historique, seule source des sprites de sang

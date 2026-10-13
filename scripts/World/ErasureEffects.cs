@@ -5,14 +5,14 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Ce que l'oubli coûte et offre selon la phase d'une zone (plan 16 O4–O5). Coût pour le joueur qui s'y tient :
-/// vitesse, dégâts et voile d'écran, adoucis par rapport à la Stratégie V2 §8. Gain pour qui y combat : score majoré
-/// et chance d'Essence en plus à chaque créature abattue. Réglages : zone_effects dans data/scaling/erasure.json.
+/// vitesse, dégâts et voile d'écran, adoucis par rapport à la Stratégie V2 §8. Gain pour qui y combat : chance
+/// d'Essence en plus à chaque créature abattue (le bonus de score est parti avec le score, DECISIONS §155). Réglages : zone_effects dans data/scaling/erasure.json.
 /// </summary>
 public static class ErasureEffects
 {
-    public readonly record struct Effect(float Speed, float Damage, float Veil, float ScoreBonus, float EssenceChance)
+    public readonly record struct Effect(float Speed, float Damage, float Veil, float EssenceChance)
     {
-        public static readonly Effect None = new(1f, 1f, 0f, 0f, 0f);
+        public static readonly Effect None = new(1f, 1f, 0f, 0f);
     }
 
     private static readonly Dictionary<ErasureManager.ErasureZonePhase, Effect> ByPhase = new();
@@ -57,7 +57,6 @@ public static class ErasureEffects
             (float)entry.GetValueOrDefault("speed", 1f).AsDouble(),
             (float)entry.GetValueOrDefault("damage", 1f).AsDouble(),
             (float)entry.GetValueOrDefault("veil", 0f).AsDouble(),
-            (float)entry.GetValueOrDefault("score_bonus", 0f).AsDouble(),
             (float)entry.GetValueOrDefault("essence_chance", 0f).AsDouble());
     }
 }

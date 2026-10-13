@@ -16,7 +16,7 @@ public partial class HubScreen : Control
 {
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Characters, Camp, Quests, Collection, Credits }
+	private enum HubState { MainMenu, Characters, Camp, Quests, Collection, Leaderboard, Credits }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color Night = new(0.04f, 0.04f, 0.08f);
@@ -30,6 +30,7 @@ public partial class HubScreen : Control
 	private Control _mainMenuLayer;
 	private HubMenuButton _enterVoidButton;
 	private HubCollectionPanel _collectionPanel;
+	private HubLeaderboardPanel _leaderboardPanel;
 	private HubQuestsPanel _questsPanel;
 	private HubCharactersPanel _charactersPanel;
 	private HubCampUpgradesPanel _campPanel;
@@ -216,6 +217,7 @@ public partial class HubScreen : Control
 		_openers[HubState.Camp] = AddMenuButton(menu, Tr("UI_CAMP_TITLE"), TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Camp));
 		_openers[HubState.Quests] = AddMenuButton(menu, "Quêtes", TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Quests));
 		_openers[HubState.Collection] = AddMenuButton(menu, "Collection", TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Collection));
+		_openers[HubState.Leaderboard] = AddMenuButton(menu, "Classement", TextRole.Title, UITheme.TitleFont, () => OpenPage(HubState.Leaderboard));
 		HBoxContainer utilities = new() { Position = new Vector2(MenuLeft - 40, 970) };
 		utilities.AddThemeConstantOverride("separation", 16);
 		_mainMenuLayer.AddChild(utilities);
@@ -351,6 +353,8 @@ public partial class HubScreen : Control
 		_questsPanel.RewardRequested += OpenReward;
 		_collectionPanel = new HubCollectionPanel();
 		AddPage(HubState.Collection, "Collection", _collectionPanel);
+		_leaderboardPanel = new HubLeaderboardPanel();
+		AddPage(HubState.Leaderboard, "Classement", _leaderboardPanel);
 		_collectionPanel.QuestRequested += OpenQuest;
 		_creditsPanel = new HubCreditsPanel();
 		AddPage(HubState.Credits, Tr("UI_CREDITS_TITLE"), _creditsPanel);
@@ -434,6 +438,7 @@ public partial class HubScreen : Control
 				HubState.Camp => _campPanel.Refresh(),
 				HubState.Quests => _questsPanel.Refresh(_questFocus),
 				HubState.Collection => _collectionPanel.Refresh(_collectionFocus, _collectionKind),
+				HubState.Leaderboard => _leaderboardPanel.Refresh(),
 				HubState.Credits => _creditsPanel.Refresh(),
 				_ => null,
 			};

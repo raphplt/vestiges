@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Godot;
-using Vestiges.World;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -11,47 +10,36 @@ using Vestiges.Infrastructure.Steam;
 namespace Vestiges.Score;
 
 /// <summary>
-/// Score : les éliminations seulement, chacune selon la créature (DECISIONS §40), multipliées par le personnage,
-/// les mutateurs et le Péril. Ni temps, ni lieux, ni coffres. Sauvegarde du meilleur score en local.
+/// Mesure de la run : les éliminations, une seule mesure pour le bilan, les records et les classements (DECISIONS §155).
+/// Règle la fin de run : records du profil (global et par personnage), Vestiges gagnés, historique, analytics, Steam.
 /// </summary>
 public partial class ScoreManager : Node
 {
     private ScoreConfig _config;
-    private int _notifiedScore = -1;
     private bool _endSettled;
     private bool _endedWithRecord;
+    private bool _endedWithCharacterRecord;
     private int _previousBest;
-    // Nouveau fichier depuis le score aux seules éliminations (DECISIONS §40) : un record fait avec les points de temps,
-    // de lieux et de coffres ne serait plus jamais battu.
-    private static string HighScorePath => DevelopmentMode.GetSavePath("highscore_kills.save");
+    private int _previousCharacterBest;
 
-    private int _combatScore;
-    // Part du score de combat gagnée par le bonus des zones qui s'oublient : le bilan la montre à part.
-    private int _erasureBonusScore;
     private int _totalKills;
-    private int _bestScore;
-    private bool _bestScoreWritable = true;
-    private float _scoreMultiplier = 1f;
-    private float _mutatorMultiplier = 1f;
-    private float _perilMultiplier = 1f;
     private EventBus _eventBus;
     private bool _bossDefeated;
     private bool _endgameReached;
 
-    public int CurrentScore => (int)(_combatScore * _scoreMultiplier * _mutatorMultiplier * _perilMultiplier);
-    public int CombatScore => _combatScore;
-    public int ErasureBonusScore => _erasureBonusScore;
     public int TotalKills => _totalKills;
-    /// <summary>Meilleur score avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
-    public int BestScore => _endSettled ? _previousBest : _bestScore;
-    /// <summary>Verdict figé en fin de run, avant la sauvegarde qui écraserait la comparaison (plan 02 lot A).</summary>
-    public bool IsNewRecord => _endSettled ? _endedWithRecord : CurrentScore > _bestScore;
+    /// <summary>Record global avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
+    public int BestKills => _endSettled ? _previousBest : MetaSaveManager.GetBestKills();
+    /// <summary>Record du personnage joué avant cette run, figé de même.</summary>
+    public int CharacterBestKills => _endSettled ? _previousCharacterBest : MetaSaveManager.GetKillRecord(CharacterId)?.Kills ?? 0;
+    /// <summary>Verdicts figés en fin de run, avant la sauvegarde qui écraserait la comparaison (plan 02 lot A).</summary>
+    public bool IsNewRecord => _endSettled ? _endedWithRecord : _totalKills > BestKills;
+    public bool IsNewCharacterRecord => _endSettled ? _endedWithCharacterRecord : _totalKills > CharacterBestKills;
     public int VestigesEarned { get; private set; }
-    public float CharacterMultiplier => _scoreMultiplier;
-    public float MutatorMultiplier => _mutatorMultiplier;
-    public float PerilMultiplier => _perilMultiplier;
 
     private RunTracker _runTracker;
+
+    private string CharacterId => GetNode<GameManager>("/root/GameManager").SelectedCharacterId ?? "";
 
     public override void _Ready()
     {
@@ -60,18 +48,6 @@ public partial class ScoreManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
-        _eventBus.PerilChanged += OnPerilChanged;
-
-        LoadBestScore();
-    }
-
-    /// <summary>Seul point d'émission de ScoreChanged, à chaque élimination ou changement de multiplicateur.</summary>
-    private void NotifyScore()
-    {
-        if (CurrentScore == _notifiedScore)
-            return;
-        _notifiedScore = CurrentScore;
-        _eventBus.EmitSignal(EventBus.SignalName.ScoreChanged, _notifiedScore);
     }
 
     public override void _ExitTree()
@@ -80,14 +56,7 @@ public partial class ScoreManager : Node
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
-            _eventBus.PerilChanged -= OnPerilChanged;
         }
-    }
-
-    private void OnPerilChanged(int peril)
-    {
-        _perilMultiplier = PerilDataLoader.ScoreMultiplier(peril);
-        NotifyScore();
     }
 
     public void SetRunTracker(RunTracker runTracker)
@@ -95,20 +64,8 @@ public partial class ScoreManager : Node
         _runTracker = runTracker;
     }
 
-    public void SetCharacterMultiplier(float multiplier)
-    {
-        _scoreMultiplier = multiplier;
-        GD.Print($"[ScoreManager] Character multiplier set to x{multiplier}");
-    }
-
-    public void SetMutatorMultiplier(float multiplier)
-    {
-        _mutatorMultiplier = multiplier;
-        GD.Print($"[ScoreManager] Mutator multiplier set to x{multiplier:F2}");
-    }
-
     /// <summary>
-    /// Règle la run une seule fois : record, acquis méta et historique (plan 26 Q2b), puis analytics et Steam.
+    /// Règle la run une seule fois : records, acquis méta et historique (plan 26 Q2b), puis analytics et Steam.
     /// Un second appel ne fait rien ; un échec d'écriture est remis au bilan par <see cref="GameManager.LastRunSaveError"/>.
     /// </summary>
     public void SaveEndOfRun()
@@ -116,18 +73,15 @@ public partial class ScoreManager : Node
         if (_endSettled)
             return;
 
-        _previousBest = _bestScore;
-        _endedWithRecord = CurrentScore > _bestScore;
+        _previousBest = MetaSaveManager.GetBestKills();
+        _previousCharacterBest = MetaSaveManager.GetKillRecord(CharacterId)?.Kills ?? 0;
+        _endedWithRecord = _totalKills > _previousBest;
+        _endedWithCharacterRecord = _totalKills > _previousCharacterBest;
         _endSettled = true;
-        if (_endedWithRecord)
-        {
-            _bestScore = CurrentScore;
-            SaveBestScore();
-        }
 
         RunRecord record = BuildRunRecord();
         record.RunId = System.Guid.NewGuid().ToString("N");
-        VestigesEarned = CurrentScore / 10;
+        VestigesEarned = _config?.VestigesFor(_totalKills) ?? 0;
         RunSettlement.Outcome outcome = RunSettlement.Settle(record, VestigesEarned);
 
         GameManager gm = GetNode<GameManager>("/root/GameManager");
@@ -147,9 +101,8 @@ public partial class ScoreManager : Node
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void SubmitToSteam(string characterId)
     {
-        int crisesSurvived = _runTracker?.CrisesSurvived ?? 0;
-        GetNodeOrNull<SteamAchievements>("../SteamAchievements")?.OnRunEnd(CurrentScore, crisesSurvived, characterId);
-        SteamManager.SubmitRunScores(CurrentScore, crisesSurvived, characterId);
+        GetNodeOrNull<SteamAchievements>("../SteamAchievements")?.OnRunEnd(_totalKills, _runTracker?.CrisesSurvived ?? 0, characterId);
+        SteamManager.SubmitRunKills(_totalKills, characterId);
     }
 
     /// <summary>Construit un RunRecord enrichi depuis l'état courant + RunTracker.</summary>
@@ -168,17 +121,14 @@ public partial class ScoreManager : Node
             Provenance = DevelopmentMode.CurrentProvenance,
             CharacterId = characterId,
             CharacterName = charData?.Name ?? characterId,
-            Score = CurrentScore,
             CrisesSurvived = _runTracker?.CrisesSurvived ?? 0,
             TotalKills = _totalKills,
             Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
             WeaponId = weaponId == "unknown" ? null : weaponId,
-            CombatScoreDetail = _combatScore,
             Seed = gm.EffectiveSeed,
             ActiveMutators = gm.ActiveMutators != null && gm.ActiveMutators.Count > 0
                 ? new List<string>(gm.ActiveMutators)
                 : null,
-            MutatorMultiplier = _mutatorMultiplier,
             RunPhase = _runTracker?.CurrentPhase ?? GameManager.RunPhase.Exploration.ToString(),
             RunDurationSec = _runTracker?.RunDurationSeconds ?? 0f,
             BossDefeated = _bossDefeated,
@@ -232,61 +182,13 @@ public partial class ScoreManager : Node
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKills++;
-
-        int basePoints = _config?.KillPoints(enemyId) ?? 0;
-        // Combattre là où le monde s'oublie rapporte davantage.
-        int points = Mathf.RoundToInt(basePoints * (1f + ErasureEffectAt(position).ScoreBonus));
-        _combatScore += points;
-        _erasureBonusScore += points - basePoints;
-
         if (enemyId == EnemyGrammar.FinalBossId)
             _bossDefeated = true;
-
-        NotifyScore();
-    }
-
-    private ErasureManager _erasureManager;
-
-    /// <summary>Ce que l'oubli offre là où la créature est tombée (plan 16 O5).</summary>
-    private ErasureEffects.Effect ErasureEffectAt(Vector2 position)
-    {
-        if (_erasureManager == null || !IsInstanceValid(_erasureManager))
-            _erasureManager = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager");
-        return _erasureManager == null ? ErasureEffects.Effect.None : ErasureEffects.For(_erasureManager.GetZonePhaseAt(position));
     }
 
     private void OnRunPhaseChanged(string oldPhase, string newPhase)
     {
         if (newPhase == "Endgame")
             _endgameReached = true;
-    }
-
-    private void LoadBestScore()
-    {
-        SaveFile.ReadResult<int> read = SaveFile.Read<int>(HighScorePath, content =>
-            int.TryParse(content.StripEdges(), out int score) && score >= 0
-                ? SaveFile.Parse<int>.Valid(score)
-                : SaveFile.Parse<int>.Invalid("record non entier"));
-        _bestScore = read.Value;
-        _bestScoreWritable = !read.BlocksWrites;
-        if (read.Status is SaveFile.ReadStatus.Unreadable or SaveFile.ReadStatus.Inaccessible)
-            GD.PushError($"[ScoreManager] Record illisible ({read.Detail})");
-    }
-
-    private void SaveBestScore()
-    {
-        if (!_bestScoreWritable)
-        {
-            GD.PushWarning("[ScoreManager] Record laissé intact : fichier illisible pendant cette session");
-            return;
-        }
-
-        SaveFile.WriteResult result = SaveFile.Write(HighScorePath, _bestScore.ToString());
-        if (!result.Succeeded)
-        {
-            GD.PushError($"[ScoreManager] Cannot save high score: {result.Error}");
-            return;
-        }
-        GD.Print($"[ScoreManager] New record saved: {_bestScore}");
     }
 }
