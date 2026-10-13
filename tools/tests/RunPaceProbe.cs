@@ -16,7 +16,8 @@ namespace Vestiges.Tests;
 /// Rythme d'une run mesurée (plan 42 M0a), toujours relevé avec --density. Chaque seconde : chemin parcouru,
 /// éloignement du départ, phase d'oubli sous le joueur, PV, morts comptées et temps depuis la dernière décision.
 /// En continu : dégâts infligés par arme et par nature, temps pour tuer chaque créature (du premier coup du joueur à
-/// sa mort) et journal des décisions. La synthèse par minute est faite par <c>tools/summarize_pace.py</c>.
+/// sa mort), journal des décisions et combat de chaque Souverain (niveau du joueur et PV à l'apparition, durée jusqu'à
+/// sa mort, plan 42 S1). La synthèse par minute est faite par <c>tools/summarize_pace.py</c>.
 /// </summary>
 internal sealed class RunPaceProbe : IDisposable
 {
@@ -45,10 +46,23 @@ internal sealed class RunPaceProbe : IDisposable
     private readonly StringBuilder _rows = new("t,travelled_m,from_start_m,phase,hp,max_hp,deaths,since_decision_s,elite_near\n");
     private readonly StringBuilder _kills = new("t,enemy,elite,ttk_s\n");
     private readonly StringBuilder _decisions = new("t,kind\n");
+    // Chasses ouvertes, dans l'ordre : un Souverain meurt avant le suivant ou reste jusqu'à la fin de la run.
+    private readonly List<Hunt> _hunts = new();
+    private int _closedHunts;
     private readonly Dictionary<(int Minute, string Weapon, DamageKind Kind), double> _damage = new();
     private readonly Dictionary<EnemyLife, double> _firstHit = new();
     // Même compte que les parties de Raphaël, pour comparer un profil à un vrai joueur (plan 42 M0e).
     private readonly PlayTrace _trace;
+    private readonly PlayerProgression _progression;
+
+    private sealed class Hunt
+    {
+        public double Start;
+        public int Level;
+        public float MaxHp;
+        public double FirstHit = -1;
+        public double End = -1;
+    }
 
     public RunPaceProbe(string output, ulong seed, SceneTree tree, Player player, ErasureManager erasure, EventBus bus)
     {
@@ -62,6 +76,7 @@ internal sealed class RunPaceProbe : IDisposable
         _start = player.GlobalPosition;
         _last = _start;
         _trace = new PlayTrace(bus, player);
+        _progression = player.GetNodeOrNull<PlayerProgression>("PlayerProgression");
         _bus.EnemyDamageResolved += OnDamage;
         _bus.EnemyKillResolved += OnKill;
         _bus.PlayerDamageResolved += OnPlayerDamage;
@@ -141,6 +156,12 @@ internal sealed class RunPaceProbe : IDisposable
         if (!_firstHit.Remove(kill.Target, out double firstHit))
             return;
         _kills.Append(CultureInfo.InvariantCulture, $"{_time:F2},{kill.EnemyId},{(kill.Elite || kill.Sovereign ? 1 : 0)},{_time - firstHit:F2}\n");
+        if (kill.Sovereign && _closedHunts < _hunts.Count)
+        {
+            Hunt hunt = _hunts[_closedHunts++];
+            hunt.FirstHit = firstHit;
+            hunt.End = _time;
+        }
     }
 
     private void OnPlayerDamage(PlayerDamageResult result)
@@ -153,9 +174,20 @@ internal sealed class RunPaceProbe : IDisposable
     private void OnChest(string chestId, string rarity, Vector2 position) => Decide("coffre");
     private void OnPlace(string placeId, Vector2 position) => Decide("lieu");
     private void OnLandmark(Node2D landmark) => Decide("monument");
-    private void OnEvent(string eventId, string title, string objective, float duration) => Decide("evenement");
+    private void OnEvent(string eventId, string title, string objective, float duration)
+    {
+        Decide("evenement");
+        if (eventId == "hunt")
+            _hunts.Add(new Hunt { Start = _time, Level = _progression?.CurrentLevel ?? 0 });
+    }
     private void OnCrisis(int number, int intensity) => Decide("resurgence");
-    private void OnBoss(int encounterId, string bossName, float maxHp, int notches) => Decide("souverain");
+    private void OnBoss(int encounterId, string bossName, float maxHp, int notches)
+    {
+        Decide("souverain");
+        // La barre du Souverain s'ouvre dans l'image où sa chasse commence ; celle de la Barrière ou de l'Indicible, non.
+        if (_hunts.Count > 0 && _hunts[^1].MaxHp == 0f && _time - _hunts[^1].Start < 0.5)
+            _hunts[^1].MaxHp = maxHp;
+    }
 
     public void Dispose()
     {
@@ -181,6 +213,16 @@ internal sealed class RunPaceProbe : IDisposable
         File.WriteAllText(Path.Combine(root, $"damage-sources-{_seed}.csv"), damage.ToString());
         File.WriteAllText(Path.Combine(root, $"kills-{_seed}.csv"), _kills.ToString());
         File.WriteAllText(Path.Combine(root, $"decisions-{_seed}.csv"), _decisions.ToString());
+        StringBuilder hunts = new("start_s,level,max_hp,first_hit_s,end_s,ttk_s\n");
+        foreach (Hunt hunt in _hunts)
+        {
+            hunts.Append(CultureInfo.InvariantCulture, $"{hunt.Start:F1},{hunt.Level},{hunt.MaxHp:F0},");
+            if (hunt.End < 0)
+                hunts.Append(",,\n");
+            else
+                hunts.Append(CultureInfo.InvariantCulture, $"{hunt.FirstHit:F1},{hunt.End:F1},{hunt.End - hunt.FirstHit:F1}\n");
+        }
+        File.WriteAllText(Path.Combine(root, $"sovereigns-{_seed}.csv"), hunts.ToString());
         File.WriteAllText(Path.Combine(root, $"trace-{_seed}.csv"), _trace.ToCsv());
         File.WriteAllText(Path.Combine(root, $"trace-{_seed}.txt"),
             _trace.Summary(_player.CharacterId, _seed, _player.GetNodeOrNull<PlayerProgression>("PlayerProgression")?.CurrentLevel ?? 0) + "\n");
