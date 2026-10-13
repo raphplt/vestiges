@@ -1891,3 +1891,5 @@ Réponses sur la [planche](planches/25-s10-zones-au-sol.png) : annonces des cré
 **Choisi par l'agent :** famille `Gum` rose pour le Chewing-gum, translucide ; Écho des Gants gardé en cercle à l'écran, comme sa touche.
 
 **Livré :** [plan 25 S10](25-sprites-et-design.md). À juger en jeu.
+
+**Retour du soir, après livraison :** « je me suis trompé ptet que les ennemis peuvent avoir des formes plus régulières. le pb n'était pas tant la forme en vrai le cercle ca allait globalement mais plutot le rendu et le manque d'animation/ de détail ou de coté rugueux ect. » À reprendre le 14 octobre : les annonces des créatures peuvent revenir à une forme régulière (cercle ou ellipse) en gardant le nouveau rendu (sol assombri, contour, front, animation, grain rugueux). Il faut décider s'il en va de même pour les matières (flaques, feu).
