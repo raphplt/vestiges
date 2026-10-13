@@ -173,6 +173,24 @@ public partial class BadgeUsage : Node
             SetProcess(_countsMeters || _countsContact);
     }
 
+    /// <summary>Un Écusson oublié (plan 44) : son fil s'arrête et ne compte plus rien.</summary>
+    public void Untrack(string badgeId)
+    {
+        _threads.RemoveAll(thread => thread.Id == badgeId);
+#if TOOLS
+        if (_measureAll)
+            return;
+#endif
+        _countsMeters = _countsContact = false;
+        foreach (BadgeThread thread in _threads)
+        {
+            _countsMeters |= thread.Trigger == UsageTrigger.Meters;
+            _countsContact |= thread.Trigger == UsageTrigger.ContactSeconds;
+        }
+        if (IsInsideTree())
+            SetProcess(_countsMeters || _countsContact);
+    }
+
     /// <summary>Niveaux que cet Écusson a gagnés par l'usage (mesure au bot).</summary>
     public int UsageLevelsOf(string badgeId)
     {

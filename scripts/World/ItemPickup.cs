@@ -8,8 +8,8 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Objet posé au sol (plan 35 I3) : lâché par une élite ou un Souverain. Ramassé de lui-même s'il reste une place dans
-/// le sac ; sinon c'est un lieu activable : l'invite maintenue ouvre l'écran d'échange (<see cref="ItemExchange"/>), en
-/// pause. Il s'efface avec le temps, comme une arme laissée au sol.
+/// le sac ; sinon il attend au sol et l'invite renvoie à la Faille, seul endroit où l'on oublie un objet (plan 44). Il
+/// s'efface avec le temps, comme une arme laissée au sol.
 /// </summary>
 public partial class ItemPickup : Area2D, IInteractable
 {
@@ -18,39 +18,59 @@ public partial class ItemPickup : Area2D, IInteractable
     private const float BobSpeed = 2.2f;
     private const float DespawnTime = 120f;
     private const float RingRadius = 16f;
-    private const float ExchangeHoldSec = 0.35f;
+    private const float PickupHoldSec = 0.35f;
 
     private PassiveSouvenirData _item;
     private Node2D _visualRoot;
     private Sprite2D _visual;
     private float _bobTimer;
     private bool _collected;
-    private ItemExchange _exchange;
+    private EventBus _eventBus;
     private string _prompt;
     private GroupCache _groups;
     private ErasureManager _erasure;
     private float _age;
     private float _lifetimeCheck;
+    private bool _waiting;
 
     public string ItemId => _item?.Id;
     public bool CanInteract => !_collected;
     public Vector2 InteractPosition => GlobalPosition;
     public Vector2 PromptPosition => GlobalPosition + new Vector2(0f, -24f);
-    // Lu à chaque pas physique tant que le joueur est à portée : composé une fois, l'objet ne change pas.
-    public string PromptVerbKey => _prompt ??= string.Format(Tr("ITEM_EXCHANGE_PROMPT"), _item?.Name ?? "");
-    public float HoldTime => ExchangeHoldSec;
+    // Lu à chaque pas physique tant que le joueur est à portée : gardé jusqu'au prochain changement du sac.
+    public string PromptVerbKey => _prompt ??= string.Format(Tr(PromptKey()), _item?.Name ?? "");
+    public float HoldTime => PickupHoldSec;
     public Color GaugeColor => RarityPalette.Main(_item?.Rarity ?? "common");
 
-    public void Initialize(PassiveSouvenirData item, Vector2 position, ItemExchange exchange)
+    public void Initialize(PassiveSouvenirData item, Vector2 position)
     {
         _item = item;
-        _exchange = exchange;
         GlobalPosition = position;
     }
 
-    public override void _EnterTree() => Interactables.Register(this);
+    public override void _EnterTree()
+    {
+        Interactables.Register(this);
+        _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+        if (_eventBus != null)
+            _eventBus.PassiveSouvenirSlotsChanged += InvalidatePrompt;
+    }
 
-    public override void _ExitTree() => Interactables.Unregister(this);
+    public override void _ExitTree()
+    {
+        Interactables.Unregister(this);
+        if (_eventBus != null)
+            _eventBus.PassiveSouvenirSlotsChanged -= InvalidatePrompt;
+    }
+
+    private void InvalidatePrompt() => _prompt = null;
+
+    private string PromptKey()
+    {
+        if (_groups?.GetPlayer() is not Player player || _item == null || player.CanTakeItem(_item.Id))
+            return "ITEM_PICKUP_PROMPT";
+        return player.IsItemAtMax(_item.Id) ? "ITEM_AT_MAX_PROMPT" : "ITEM_BAG_FULL_PROMPT";
+    }
 
     public override void _Ready()
     {
@@ -79,11 +99,14 @@ public partial class ItemPickup : Area2D, IInteractable
     public override void _Process(double delta)
     {
         if (_collected) return;
-        _age += (float)delta;
+        // Tant qu'il ne peut pas entrer dans le sac, l'objet attend : on n'a que la Faille pour lui faire une place.
+        if (!_waiting)
+            _age += (float)delta;
         _lifetimeCheck -= (float)delta;
         if (_lifetimeCheck <= 0f)
         {
             _lifetimeCheck = .25f;
+            _waiting = _groups?.GetPlayer() is Player player && !player.CanTakeItem(_item?.Id ?? "");
             bool erased = _erasure != null && GodotObject.IsInstanceValid(_erasure)
                 && _erasure.GetZonePhaseAt(GlobalPosition) == ErasureManager.ErasureZonePhase.Void;
             if (erased || _age >= DespawnTime + WorldItemEffects.ExtraItemSeconds(_groups?.GetPlayer() as Player))
@@ -94,19 +117,16 @@ public partial class ItemPickup : Area2D, IInteractable
     }
 
     /// <summary>
-    /// Invite tenue : prendre s'il y a eu de la place entre-temps, sinon proposer l'échange. Un objet déjà à son maximum
-    /// d'exemplaires est refusé : l'objet rougit et reste au sol.
+    /// Invite tenue : prendre s'il y a eu de la place entre-temps. Sinon (sac plein, ou objet à son maximum
+    /// d'exemplaires) l'objet rougit et reste au sol.
     /// </summary>
     public void Interact(Player player)
     {
         if (_collected || _item == null)
             return;
         if (player.CanTakeItem(_item.Id))
-        {
             Take(player);
-            return;
-        }
-        if (_exchange == null || !_exchange.Open(player, _item, () => Take(player)))
+        else
             FlashRefused();
     }
 
@@ -116,18 +136,16 @@ public partial class ItemPickup : Area2D, IInteractable
             CallDeferred(MethodName.Take, player);
     }
 
-    private bool Take(Player player)
+    private void Take(Player player)
     {
         if (_collected || !IsInstanceValid(player) || !player.AddItemCopy(_item.Id))
-            return false;
+            return;
         _collected = true;
         Interactables.Unregister(this);
-        EventBus eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-        eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "object", _item.Id, 1);
-        eventBus?.EmitSignal(EventBus.SignalName.ItemPickedUp, _item.Id, _visual.GlobalPosition);
+        _eventBus?.EmitSignal(EventBus.SignalName.LootReceived, "object", _item.Id, 1);
+        _eventBus?.EmitSignal(EventBus.SignalName.ItemPickedUp, _item.Id, _visual.GlobalPosition);
         AudioManager.PlayUI("sfx_souvenir_trouve");
         QueueFree();
-        return true;
     }
 
     private void FlashRefused()

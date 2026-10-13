@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -15,7 +16,8 @@ namespace Vestiges.Tests;
 /// Inventaire du joueur (plan 35), dans un profil neuf et isolé. Lot I1 : réglages contrôlés, Écussons à part des objets,
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
 /// objets en exemplaires directs sans palier, oubli qui retire exactement un exemplaire, sac plein, butin « objet ».
-/// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol, écran d'échange quand le sac est plein.
+/// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol ; sac plein, l'objet attend au sol (plan 44).
+/// Plan 44 : oubli d'une arme, d'un Écusson ou d'une pile à la Faille, et ses traces.
 /// Lot I4 : surplus d'une arme au bout de sa progression. Lot I6 : Ticket de consigne, Plan de métro, Flacon de pharmacie,
 /// Trèfle plastifié, Montre arrêtée. Lot I7 : fils d'usage des Écussons.
 /// </summary>
@@ -41,6 +43,7 @@ public partial class InventoryRegression : Node
             CheckBag();
             await CheckChestItem();
             await CheckWorldItems();
+            await CheckRiftForgetting();
             CheckWeaponSurplus();
             CheckTicket();
             CheckMetroMap();
@@ -238,15 +241,10 @@ public partial class InventoryRegression : Node
             Check(valid, $"{chest.Id} : uniquement {chest.LootRolls} objet(s) débloqué(s), sur 30 ouvertures");
         }
 
-        ChoiceScreen choices = new();
-        AddChild(choices);
-        ItemExchange exchange = new();
-        exchange.Setup(choices);
-        AddChild(exchange);
         Node2D ground = new();
         AddChild(ground);
         ItemDropDirector drops = new();
-        drops.Setup(exchange, ground);
+        drops.Setup(ground);
         AddChild(drops);
         EventBus bus = GetNode<EventBus>("/root/EventBus");
         int otherLoot = 0;
@@ -285,9 +283,8 @@ public partial class InventoryRegression : Node
                 "sac plein : doublon empilé, nouveau type posé, aucune conversion en Essence");
 
             overflow?.Interact(_player);
-            Check(choices.IsOpen && GetTree().Paused, "objet du coffre : échange ouvert en pause");
-            choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
-            Check(_player.BagCount == 1 && IsInstanceValid(overflow), "refuser l'échange conserve l'objet au sol");
+            Check(_player.BagCount == 1 && IsInstanceValid(overflow) && !GetTree().Paused,
+                "objet du coffre à sac plein : l'invite refuse, l'objet reste au sol, rien ne s'ouvre (plan 44)");
             interaction.QueueFree();
             chest.QueueFree();
         }
@@ -296,8 +293,6 @@ public partial class InventoryRegression : Node
             bus.LootReceived -= OnLoot;
             drops.QueueFree();
             ground.QueueFree();
-            exchange.QueueFree();
-            choices.QueueFree();
         }
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
@@ -307,15 +302,10 @@ public partial class InventoryRegression : Node
         Setup();
         Check(Mathf.IsEqualApprox(InventoryConfig.EliteItemChance, 0.25f) && InventoryConfig.SovereignItems == 1,
             "une élite lâche un objet une fois sur quatre, un Souverain toujours");
-        ChoiceScreen choices = new();
-        AddChild(choices);
-        ItemExchange exchange = new();
-        exchange.Setup(choices);
-        AddChild(exchange);
         Node2D ground = new();
         AddChild(ground);
         ItemDropDirector drops = new();
-        drops.Setup(exchange, ground);
+        drops.Setup(ground);
         AddChild(drops);
         MethodInfo onKill = typeof(ItemDropDirector).GetMethod("OnEnemyKill", Private);
         onKill.Invoke(drops, new object[] { new Vestiges.Combat.EnemyKillResult(default, "rodeur", new Vector2(300f, 0f), default, default,
@@ -332,7 +322,7 @@ public partial class InventoryRegression : Node
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(_player.FindObject(dropped.Id)?.Copies == 1 && !IsInstanceValid(pickup), "ramassé : l'objet entre dans le sac et quitte le sol");
 
-        // Sac plein : l'invite ouvre l'échange ; oublier la première fiche fait la place et prend le nouvel objet.
+        // Sac plein : un doublon s'empile encore ; un nouveau type reste au sol, l'invite renvoie à la Faille (plan 44).
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
             if (!item.IsBadge && _player.HasBagRoom && _player.FindObject(item.Id) == null)
                 _player.AddItemCopy(item.Id);
@@ -341,55 +331,127 @@ public partial class InventoryRegression : Node
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         duplicate.Interact(_player);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(_player.BagCount == 10 && _player.FindObject("glacon").Copies == duplicateBefore + 1
-            && !choices.IsOpen && !IsInstanceValid(duplicate), "doublon au sol à sac plein : empilé sans échange");
-        string first = ItemSort.Order(_player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name)[0].Id;
-        _player.AddOrUpgradePassive(first, 3);
-        int firstCopies = _player.FindObject(first).Copies;
-        // Un objet que le joueur peut encore cumuler, absent du sac : le tirage au hasard pourrait tomber sur un objet au maximum.
+        Check(_player.BagCount == 10 && _player.FindObject("glacon").Copies == duplicateBefore + 1 && !IsInstanceValid(duplicate),
+            "doublon au sol à sac plein : empilé");
         PassiveSouvenirData absent = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
         ItemPickup full = drops.Drop(new Vector2(500f, 0f), absent);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        PassiveSouvenirData incoming = PassiveSouvenirDataLoader.Get(full.ItemId);
-        int incomingBefore = _player.FindObject(incoming.Id)?.Copies ?? 0;
-        int copiesBeforeExchange = _player.BagCopyCount;
+        int copies = _player.BagCopyCount;
         full.Interact(_player);
-        bool opened = choices.IsOpen && GetTree().Paused;
-        choices.Activate(_player.PassiveSlots.Count);
-        choices.Activate(_player.PassiveSlots.Count);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        bool leftAlone = IsInstanceValid(full) && _player.BagCount == 10 && !choices.IsOpen;
+        Check(IsInstanceValid(full) && !GetTree().Paused && _player.BagCount == 10 && _player.BagCopyCount == copies
+            && full.PromptVerbKey.Contains(absent.Name, StringComparison.Ordinal) && full.PromptVerbKey != string.Format(Tr("ITEM_PICKUP_PROMPT"), absent.Name),
+            $"nouveau type à sac plein : refusé, laissé au sol, invite vers la Faille ({full.PromptVerbKey})");
+        _player.ForgetItemStack(_player.PassiveSlots[0].Id);
         full.Interact(_player);
-        choices.Activate(0);
-        choices.Activate(0);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(opened && leftAlone, "sac plein : l'invite ouvre l'échange en pause ; « Laisser au sol » ne change rien");
-        Check(_player.FindObject(first) == null && (_player.FindObject(incoming.Id)?.Copies ?? 0) == incomingBefore + 1
-            && _player.BagCount == 10 && !IsInstanceValid(full) && !GetTree().Paused,
-            $"échange : pile de {first} oubliée, {incoming.Id} pris, la run reprend");
-        Check(_player.BagCopyCount == copiesBeforeExchange - firstCopies + 1,
-            "remplacer une pile retire tous ses exemplaires et ajoute la nouvelle copie");
-        ActivePassiveSouvenir rollback = ItemSort.Order(_player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name)[0];
-        int restoredCopies = rollback.Copies;
-        int restoredBagCopies = _player.BagCopyCount;
-        PassiveSouvenirData refused = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
-        exchange.Open(_player, refused, () => false);
+        Check(!IsInstanceValid(full) && _player.FindObject(absent.Id) != null, "une place libérée : l'objet au sol se prend à l'invite");
+        ground.QueueFree();
+        drops.QueueFree();
+    }
+
+    /// <summary>
+    /// Oubli à la Faille (plan 44) : prix qui monte, arme oubliée et sa trace sur la suivante, dernière arme gardée,
+    /// Écusson oublié (apport, palier, fil d'usage) et sa trace, pile d'objets oubliée, Essence insuffisante.
+    /// </summary>
+    private async Task CheckRiftForgetting()
+    {
+        Setup();
+        RiftConfig config = LandmarkDataLoader.Rift;
+        Check(config.ForgetCost == 100 && Mathf.IsEqualApprox(config.ForgetCostGrowth, 0.5f) && Mathf.IsEqualApprox(config.ForgetTraceRatio, 0.5f),
+            "réglages de l'oubli : 100 Essence, +50 % par oubli, moitié des niveaux en trace");
+        ChoiceScreen choices = new();
+        AddChild(choices);
+        EssenceTracker essence = new();
+        AddChild(essence);
+        essence.AddEssence(1000);
+        RiftForgetting forgetting = new();
+        forgetting.Setup(choices, essence);
+        AddChild(forgetting);
+        int backs = 0;
+
+        // Une arme au niveau 40 à côté de l'arme de départ.
+        _player.AddWeapon(WeaponDataLoader.Get("whip"));
+        WeaponInstance whip = _player.WeaponSlots[^1];
+        UpgradeRarity common = UpgradeRoller.Rarities[0];
+        RandomNumberGenerator rng = new() { Seed = 7 };
+        while (whip.Level < 40)
+            _player.UpgradeWeapon("whip", UpgradeRoller.RollWeaponGains(whip, common, rng), common.Id);
+        float speed = _player.SpeedMultiplier;
+        float dash = _player.Mobility.DistanceMultiplier;
+        _player.AddOrUpgradePassive("instinct", 30);
+        _player.AddItemCopy("glacon");
+        _player.AddItemCopy("glacon");
+        int weapons = _player.WeaponSlots.Count;
+        Check(RiftForgetting.HasForgettable(_player) && forgetting.Cost == 100 && _player.FindObject("instinct").Level == 30
+            && !Mathf.IsEqualApprox(_player.Mobility.DistanceMultiplier, dash), "avant l'oubli : fouet niveau 40, Instinct niveau 30 et son palier");
+
+        forgetting.Open(_player, () => backs++);
+        Check(choices.IsOpen && GetTree().Paused, "l'écran d'oubli s'ouvre en pause");
+        choices.Activate(weapons - 1);
+        choices.Activate(weapons - 1);
+        Check(_player.WeaponSlots.Count == weapons - 1 && _player.GetWeaponFragmentLevel("whip") == 0 && essence.CurrentEssence == 900
+            && backs == 1 && forgetting.Cost == 150 && forgetting.PendingWeaponTraces == 1,
+            $"fouet oublié : 100 Essence payées, prix suivant 150, une trace d'arme en attente ({essence.CurrentEssence}, {forgetting.Cost})");
+        _player.AddWeapon(WeaponDataLoader.Get("music_box"));
+        Check(_player.GetWeaponFragmentLevel("music_box") == forgetting.TraceLevel(40) && forgetting.TraceLevel(40) == 20
+            && forgetting.PendingWeaponTraces == 0, $"trace : la boîte à musique arrive au niveau 20 ({_player.GetWeaponFragmentLevel("music_box")})");
+
+        int badgeCard = _player.WeaponSlots.Count;
+        forgetting.Open(_player, () => backs++);
+        choices.Activate(badgeCard);
+        choices.Activate(badgeCard);
+        Check(_player.FindObject("instinct") == null && _player.BadgeSlots.Count == 0 && essence.CurrentEssence == 750
+            && Mathf.IsEqualApprox(_player.SpeedMultiplier, speed) && Mathf.IsEqualApprox(_player.Mobility.DistanceMultiplier, dash)
+            && _player.BadgeUsage.ProgressOf("instinct") == 0f && forgetting.PendingBadgeTraces == 1,
+            $"Instinct oublié : vitesse et dash rendus, fil d'usage arrêté, trace en attente ({_player.SpeedMultiplier:0.###}/{speed:0.###})");
+        _player.AddOrUpgradePassive("peau_dure");
+        Check(_player.FindObject("peau_dure")?.Level == 15 && forgetting.PendingBadgeTraces == 0,
+            $"trace : Peau dure arrive au niveau 15 ({_player.FindObject("peau_dure")?.Level})");
+
+        int itemCard = _player.WeaponSlots.Count + _player.BadgeSlots.Count;
+        forgetting.Open(_player, () => backs++);
+        choices.Activate(itemCard);
+        choices.Activate(itemCard);
+        Check(_player.FindObject("glacon") == null && _player.BagCount == 0 && essence.CurrentEssence == 550
+            && Mathf.IsZeroApprox(_player.ObjectTriggers.ChillChance), "pile du Glaçon oubliée en entier, son effet aussi");
+
+        // Ancrage oublié à PV bas : le maximum baisse, les PV portés restent (relecture du plan 44).
+        _player.AddOrUpgradePassive("ancrage", 20);
+        float maxWithAnchor = _player.EffectiveMaxHp;
+        typeof(Player).GetField("_currentHp", Private).SetValue(_player, 40f);
+        _player.ForgetBadge("ancrage");
+        Check(Mathf.IsEqualApprox(_player.CurrentHp, 40f) && _player.EffectiveMaxHp < maxWithAnchor,
+            $"Ancrage oublié à 40 PV : PV gardés, maximum {maxWithAnchor:0} → {_player.EffectiveMaxHp:0}");
+        typeof(Player).GetField("_currentHp", Private).SetValue(_player, _player.EffectiveMaxHp);
+        _player.AddOrUpgradePassive("ancrage", 20);
+        _player.ForgetBadge("ancrage");
+        Check(Mathf.IsEqualApprox(_player.CurrentHp, _player.EffectiveMaxHp), "Ancrage oublié à PV pleins : ramenés au nouveau maximum");
+
+        // Dernière arme : la carte est éteinte, rien ne se paie.
+        while (_player.WeaponSlots.Count > 1)
+            _player.RemoveWeapon(_player.WeaponSlots.Count - 1);
+        int before = essence.CurrentEssence;
+        forgetting.Open(_player, () => backs++);
         choices.Activate(0);
         choices.Activate(0);
-        Check(_player.FindObject(rollback.Id)?.Copies == restoredCopies && _player.BagCopyCount == restoredBagCopies && _player.BagCount == 10,
-            "un échange refusé restaure tous les exemplaires de la pile");
-        // Seuls les objets légendaires/uniques saturés refusent un échange.
-        if (_player.FindObject("ticket_de_consigne") == null)
-            _player.ForgetItemStack(_player.PassiveSlots[0].Id);
-        _player.AddOrUpgradePassive("ticket_de_consigne", 2);
-        int bag = _player.BagCount;
-        ItemPickup maxed = drops.Drop(new Vector2(600f, 0f), PassiveSouvenirDataLoader.Get("ticket_de_consigne"));
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        maxed.Interact(_player);
-        Check(!choices.IsOpen && _player.BagCount == bag && IsInstanceValid(maxed)
-            && !exchange.Open(_player, PassiveSouvenirDataLoader.Get("ticket_de_consigne"), () => true),
-            "légendaire déjà au maximum : aucun échange ni oubli");
+        bool stillOpen = choices.IsOpen;
+        choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        Check(_player.WeaponSlots.Count == 1 && essence.CurrentEssence == before && stillOpen && !choices.IsOpen && backs == 4,
+            "la dernière arme ne s'oublie pas ; « Retour » revient sans rien payer");
+
+        // Plus assez d'Essence : rien ne s'oublie.
+        _player.AddItemCopy("glacon");
+        essence.TrySpend(essence.CurrentEssence);
+        forgetting.Open(_player, () => backs++);
+        choices.Activate(1);
+        choices.Activate(1);
+        choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
+        Check(_player.FindObject("glacon") != null && essence.CurrentEssence == 0, "sans Essence, la pile reste");
+        forgetting.QueueFree();
+        essence.QueueFree();
         choices.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
 
     private void CheckWeaponSurplus()

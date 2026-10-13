@@ -17,8 +17,8 @@ public sealed class PerkSpecializationOffers
     public const string OptionType = "specialization";
 
     private static readonly HashSet<string> NoBanishedWeapons = new();
-    // Arsenal simulé d'un échange, réutilisé : l'invite d'échange le recalcule à chaque frame.
-    private static readonly List<WeaponInstance> SwapPreview = new();
+    // Arsenal simulé d'un oubli, réutilisé : l'écran d'oubli le recalcule pour chaque arme.
+    private static readonly List<WeaponInstance> ForgetPreview = new();
 
     private readonly PerkSpecializationConfig _config;
     private readonly HashSet<string> _banished = new();
@@ -144,22 +144,22 @@ public sealed class PerkSpecializationOffers
     private static bool ObjectsApplyControl(Player player) => player.ObjectTriggers?.ChillChance > 0f;
 
     /// <summary>
-    /// Perks aujourd'hui actifs qu'un échange de l'arme du premier emplacement contre <paramref name="incoming"/>
-    /// rendrait inactifs, séparés par des virgules ; vide sinon.
+    /// Perks aujourd'hui actifs que l'oubli de <paramref name="forgotten"/> rendrait inactifs (plan 44), séparés par des
+    /// virgules ; vide sinon.
     /// </summary>
-    public static string DeactivatedBySwap(Player player, WeaponInstance incoming)
+    public static string DeactivatedByForget(Player player, WeaponInstance forgotten)
     {
-        if (player.Specializations.Count == 0 || player.WeaponSlots.Count == 0)
+        if (player.Specializations.Count == 0)
             return "";
-        SwapPreview.Clear();
-        for (int i = 1; i < player.WeaponSlots.Count; i++)
-            SwapPreview.Add(player.WeaponSlots[i]);
-        SwapPreview.Add(incoming);
+        ForgetPreview.Clear();
+        foreach (WeaponInstance weapon in player.WeaponSlots)
+            if (weapon != forgotten)
+                ForgetPreview.Add(weapon);
         string names = "";
         bool objectControl = ObjectsApplyControl(player);
         foreach (PerkSpecializationData perk in player.Specializations)
         {
-            if (IsActive(perk, player) && !IsActive(perk, SwapPreview, objectControl))
+            if (IsActive(perk, player) && !IsActive(perk, ForgetPreview, objectControl))
                 names = names.Length == 0 ? perk.Name : $"{names}, {perk.Name}";
         }
         return names;

@@ -23,7 +23,6 @@ public partial class WorkshopDirector : Node
     private readonly WorkshopConfig _config = LandmarkDataLoader.Workshop;
     private readonly RandomNumberGenerator _rng = new();
     private ChoiceScreen _choices;
-    private ItemExchange _exchange;
     private EssenceTracker _essence;
     private ErasureManager _erasure;
     private EventBus _eventBus;
@@ -34,10 +33,9 @@ public partial class WorkshopDirector : Node
     // Flux à part : l'objet proposé ne dépend que de la graine et de l'ordre des visites, pas des Trempes déjà tirées.
     private readonly RandomNumberGenerator _itemRng = RunRandom.Create("workshop_items");
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure, ItemExchange exchange)
+    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure)
     {
         _choices = choices;
-        _exchange = exchange;
         _essence = essence;
         _erasure = erasure;
     }
@@ -173,7 +171,10 @@ public partial class WorkshopDirector : Node
         OpenServices(workshop, string.Format(Tr("WORKSHOP_RETEMPERED"), weapon.Name, RarityPalette.DisplayName(rarity.Id)), false);
     }
 
-    /// <summary>L'objet de l'Atelier : un seul, débloqué, tiré à la première visite ; on le prend s'il reste une place.</summary>
+    /// <summary>
+    /// L'objet de l'Atelier : un seul, débloqué, tiré à la première visite ; on le prend s'il reste une place. Sac plein,
+    /// la carte s'éteint : on oublie à la Faille (plan 44).
+    /// </summary>
     private void AddItemOffer(Workshop workshop, int essence, List<ChoiceCard> cards, List<System.Action> actions)
     {
         if (!_itemOffers.TryGetValue(workshop, out string itemId))
@@ -185,7 +186,6 @@ public partial class WorkshopDirector : Node
         if (item == null)
             return;
         int cost = Price(ItemLootConfig.WorkshopCost(item.Rarity), workshop.ServiceUses(ServiceItem));
-        // Sac plein : l'achat passe par l'écran d'échange, qui fait la place.
         bool bagFull = !_player.HasBagRoom && _player.FindObject(item.Id) == null;
         ChoiceCard card = new()
         {
@@ -193,7 +193,7 @@ public partial class WorkshopDirector : Node
             Frame = RarityPalette.Main("workshop"),
             Title = item.Name,
             Price = string.Format(Tr("MEMORIAL_PRICE"), cost),
-            Enabled = essence >= cost && !_player.IsItemAtMax(item.Id) && (_player.CanTakeItem(item.Id) || bagFull),
+            Enabled = essence >= cost && _player.CanTakeItem(item.Id),
             Icon = LoadIcon(item.Icon),
         };
         ItemPresentation.ConfigureCard(card, item);
@@ -206,28 +206,16 @@ public partial class WorkshopDirector : Node
 
     private void BuyItem(Workshop workshop, PassiveSouvenirData item, int cost)
     {
-        if ((_essence?.CurrentEssence ?? 0) < cost)
-            return;
-        if (!_player.CanTakeItem(item.Id))
+        if (!_player.CanTakeItem(item.Id) || !_essence.TrySpend(cost))
         {
-            if (_exchange == null || !_exchange.Open(_player, item, () => CompletePurchase(workshop, item, cost),
-                    () => OpenServices(workshop, null, false)))
-                OpenServices(workshop, null, false);
+            OpenServices(workshop, null, false);
             return;
         }
-        CompletePurchase(workshop, item, cost);
-    }
-
-    private bool CompletePurchase(Workshop workshop, PassiveSouvenirData item, int cost)
-    {
-        if (!_player.CanTakeItem(item.Id) || !_essence.TrySpend(cost))
-            return false;
         _player.AddItemCopy(item.Id);
         _itemOffers[workshop] = "";
         workshop.RecordServiceUse(ServiceItem);
         _eventBus.EmitSignal(EventBus.SignalName.LootReceived, "object", item.Id, 1);
         OpenServices(workshop, string.Format(Tr("WORKSHOP_ITEM_SOLD"), item.Name), false);
-        return true;
     }
 
     private int Price(int baseCost, int uses) => Mathf.RoundToInt(baseCost * (1f + _config.CostGrowth * uses));

@@ -36,6 +36,11 @@
 		"offers": 3,
 		"offer_min_rarity": "epic",
 		"peril_per_offer": 1,
+		"forget": {
+			"cost": 100,
+			"cost_growth": 0.5,
+			"trace_ratio": 0.5
+		},
 		"erased_spawn": {
 			"max_open": 6,
 			"chance": 0.08,

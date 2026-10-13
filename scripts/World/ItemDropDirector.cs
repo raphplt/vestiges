@@ -12,17 +12,12 @@ namespace Vestiges.World;
 public partial class ItemDropDirector : Node
 {
     private EventBus _eventBus;
-    private ItemExchange _exchange;
     private Node _container;
     private GroupCache _groupCache;
     // Flux à part : les élites abattues ne décalent pas le contenu des coffres.
     private readonly RandomNumberGenerator _rng = RunRandom.Create("item_drops");
 
-    public void Setup(ItemExchange exchange, Node container)
-    {
-        _exchange = exchange;
-        _container = container;
-    }
+    public void Setup(Node container) => _container = container;
 
     public override void _Ready()
     {
@@ -63,7 +58,7 @@ public partial class ItemDropDirector : Node
         if (item == null || _container == null)
             return null;
         ItemPickup pickup = new() { Name = "ItemPickup" };
-        pickup.Initialize(item, position, _exchange);
+        pickup.Initialize(item, position);
         _container.CallDeferred(Node.MethodName.AddChild, pickup);
         return pickup;
     }

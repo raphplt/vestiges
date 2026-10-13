@@ -10,31 +10,11 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-exchange : sac rempli, un objet tombe aux pieds du joueur ; captures de l'objet au sol, de l'invite, puis de
-/// l'écran d'échange ouvert (plan 35 I3). Rapport de mesure : niveaux d'Écussons gagnés, dont ceux du fil d'usage (I7).
+/// Objets du sac en vraie run (plan 35) : piles et doublons à sac plein. Rapport de mesure : niveaux d'Écussons gagnés,
+/// dont ceux du fil d'usage (I7).
 /// </summary>
 public partial class RunObservation
 {
-    private async Task CaptureExchange()
-    {
-        await PrepareCloseUpScene();
-        foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
-            if (!item.IsBadge && _player.HasBagRoom)
-                _player.AddItemCopy(item.Id);
-        await Frames(5);
-        SaveFrame("exchange-0-bag");
-        PassiveSouvenirData absent = PassiveSouvenirDataLoader.GetAll().Find(item => !item.IsBadge && _player.FindObject(item.Id) == null);
-        ItemPickup pickup = _world.GetNode<ItemDropDirector>("ItemDropDirector").Drop(_player.GlobalPosition + new Vector2(30f, 10f), absent);
-        await Frames(40);
-        SaveFrame("exchange-1-ground");
-        pickup.Interact(_player);
-        // La cadence peut dépasser 60 FPS : attendre la durée de révélation, pas un nombre d'images.
-        await ToSignal(GetTree().CreateTimer(2.5, processAlways: true), SceneTreeTimer.SignalName.Timeout);
-        await Frames(2);
-        SaveFrame("exchange-2-screen");
-        GD.Print($"[RunObservation] RESULT exchange objet={pickup.ItemId} sac={_player.BagCount}/{_player.BagCapacity} dossier={_output}");
-    }
-
     /// <summary>Vraie run : dix types et plus de dix copies, doublon ramassé à sac plein, puis vrai coffre payé.</summary>
     private async Task CaptureItemStacks()
     {

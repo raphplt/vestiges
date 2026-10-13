@@ -64,7 +64,7 @@ public partial class EventBus : Node
     // --- Coffres & Loot ---
     [Signal] public delegate void ChestOpenedEventHandler(string chestId, string rarity, Vector2 position);
     [Signal] public delegate void LootReceivedEventHandler(string itemType, string itemId, int amount);
-    /// <summary>Objet qui ne tient pas dans le sac : le poser au sol pour permettre un échange.</summary>
+    /// <summary>Objet qui ne tient pas dans le sac : le poser au sol, où il attend qu'une place se libère (plan 44).</summary>
     [Signal] public delegate void ItemDropRequestedEventHandler(string itemId, Vector2 position);
 
     // --- Armes ---

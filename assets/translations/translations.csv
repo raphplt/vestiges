@@ -121,7 +121,6 @@ STAT_WAYMARKS,Repères,Waymarks
 RIFT_PROMPT,Sonder,Reach in
 PERIL_STELE_PROMPT,Réveiller le Péril,Awaken the Peril
 PERIL_LINE,Péril +{0},Peril +{0}
-WEAPON_SWAP_PROMPT,Échanger : {0},Swap: {0}
 RIFT_TITLE,FAILLE,RIFT
 RIFT_SUBTITLE,L'Effacement rend ce qu'il a pris. Pas pour rien.,The Erasure gives back what it took. At a price.
 RIFT_REFUSE,Refuser,Refuse
@@ -275,8 +274,8 @@ UI_END_SCORE_CHARACTER,Personnage,Character
 UI_END_SCORE_MUTATORS,Mutateurs,Mutators
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
-EVENT_HUNT_OBJECTIVE,Abattez le {0} avant son effacement,Slay the {0} before it fades
-EVENT_HUNT_OBJECTIVE_F,Abattez la {0} avant son effacement,Slay the {0} before it fades
+EVENT_HUNT_OBJECTIVE,Abattez le {0},Slay the {0}
+EVENT_HUNT_OBJECTIVE_F,Abattez la {0},Slay the {0}
 EVENT_STAMPEDE_TITLE,La Harde,The Stampede
 EVENT_STAMPEDE_OBJECTIVE,Fauchez la harde avant qu'elle ne passe — {0} / {1},Cut down the stampede before it passes — {0} / {1}
 EVENT_RELIC_TITLE,Un vestige tombe,A relic falls
@@ -355,7 +354,6 @@ PERK_FAMILY_COMBAT,COMBAT,COMBAT
 PERK_FAMILY_SURVIVAL,SURVIE,SURVIVAL
 PERK_FAMILY_COLLECTION,COLLECTE,COLLECTION
 PERK_FAMILY_REWARDS,RÉCOMPENSES,REWARDS
-WEAPON_SWAP_PERK_WARNING,"{0}  ·  rend inactif : {1}","{0}  ·  disables: {1}"
 PAUSE_PERK_INACTIVE,Inactif : aucune arme compatible,Inactive: no compatible weapon
 PAUSE_PERK_RESERVE,"Réserve {0} / {1} PV","Reserve {0} / {1} HP"
 PAUSE_PERK_RALLY,"Récupérable {0} PV  ·  {1} s","Recoverable {0} HP  ·  {1} s"
@@ -535,14 +533,32 @@ INVENTORY_NONE_BADGE,Aucun pour l'instant.,None yet.
 CHEST_LOOT_OBJECT,Objet : {0},Item: {0}
 INVENTORY_BAG,Sac,Bag
 ITEM_MILESTONE,{0} exemplaires : {1},{0} copies: {1}
-ITEM_EXCHANGE_PROMPT,Sac plein — échanger contre {0},Bag full — swap for {0}
-ITEM_EXCHANGE_TITLE,Sac plein ({0}/{1} types),Bag full ({0}/{1} types)
-ITEM_EXCHANGE_SUBTITLE,Nouvel objet : {0} — {1} Choisis une pile entière à remplacer.,New item: {0} — {1} Choose an entire stack to replace.
-ITEM_EXCHANGE_FORGET,REMPLACER TOUTE LA PILE,REPLACE THE ENTIRE STACK
-ITEM_EXCHANGE_LEAVE,Laisser au sol,Leave it
 WORKSHOP_ITEM_TAG,OBJET,ITEM
 WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
-ITEM_BAG_FULL,"Sac plein : il faudra oublier un objet.","Bag full: you will forget an item."
+ITEM_BAG_FULL,"Sac plein : oublie un objet à une Faille.","Bag full: forget an item at a Rift."
+ITEM_PICKUP_PROMPT,Prendre : {0},Take: {0}
+ITEM_BAG_FULL_PROMPT,{0} : sac plein — oublier à une Faille,{0}: bag full — forget at a Rift
+ITEM_AT_MAX_PROMPT,{0} : déjà au maximum,{0}: already at maximum
+WEAPON_PICKUP_PROMPT,Prendre : {0},Take: {0}
+WEAPON_SLOTS_FULL_PROMPT,{0} : armes pleines — oublier à une Faille,{0}: weapons full — forget at a Rift
+WEAPON_OWNED_PROMPT,{0} : déjà portée,{0}: already equipped
+RIFT_FORGET_TAG,OUBLIER,FORGET
+RIFT_FORGET_CARD_TITLE,Jeter un souvenir,Cast a memory away
+RIFT_FORGET_CARD_LINE,"Une arme, un Écusson ou un objet quitte la run. La Faille reste ouverte.","A weapon, a Badge or an item leaves the run. The Rift stays open."
+RIFT_FORGET_TRACE_RULE,"Trace : la prochaine arme ou le prochain Écusson repart de {0} % des niveaux.","Trace: the next weapon or Badge starts from {0}% of the levels."
+RIFT_FORGET_TITLE,OUBLIER,FORGET
+RIFT_FORGET_SUBTITLE,Ce que la Faille avale ne revient pas. Il en reste une trace.,What the Rift swallows never returns. A trace remains.
+RIFT_FORGET_BACK,Retour,Back
+RIFT_FORGET_WEAPON_TAG,ARME · NIV. {0},WEAPON · LV. {0}
+RIFT_FORGET_BADGE_TAG,ÉCUSSON · NIV. {0},BADGE · LV. {0}
+RIFT_FORGET_ITEM_TAG,OBJET · {0},ITEM · {0}
+RIFT_FORGET_WEAPON_TRACE,Trace : la prochaine arme commencera au niveau {0},Trace: the next weapon will start at level {0}
+RIFT_FORGET_BADGE_TRACE,Trace : le prochain Écusson commencera au niveau {0},Trace: the next Badge will start at level {0}
+RIFT_FORGET_NO_TRACE,Trop jeune pour laisser une trace,Too young to leave a trace
+RIFT_FORGET_LAST_WEAPON,Ta dernière arme ne s'oublie pas,Your last weapon cannot be forgotten
+RIFT_FORGET_PERK_WARNING,Rend inactif : {0},Disables: {0}
+RIFT_FORGET_ITEM_LINE,"Toute la pile est oubliée, sa place se libère.","The whole stack is forgotten, freeing its slot."
+RIFT_TRACE_POPUP,Trace : {0} niv. {1},Trace: {0} lv. {1}
 LEVELUP_SURPLUS,SURPLUS,SURPLUS
 LEVELUP_SURPLUS_LINE,Dégâts de l'arme +{0} % → +{1} %,Weapon damage +{0}% → +{1}%
 PAUSE_WEAPON_SURPLUS,Surplus +{0} %,Surplus +{0}%

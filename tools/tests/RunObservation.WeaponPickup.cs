@@ -7,7 +7,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-weapon-pickup : arme au sol ramassée d'elle-même (vol de l'icône vers le HUD, trois vues), puis, les
-/// quatre emplacements pris, invite d'échange et échange. Ligne RESULT avec l'état des emplacements.
+/// quatre emplacements pris, invite qui renvoie à la Faille et arme refusée (plan 44). Ligne RESULT avec l'état des
+/// emplacements.
 /// </summary>
 public partial class RunObservation
 {
@@ -38,12 +39,12 @@ public partial class RunObservation
         second.Initialize(WeaponDataLoader.Get("music_box"), _player.GlobalPosition + new Vector2(20f, 10f));
         _world.AddChild(second);
         await Frames(40);
-        SaveFrame("pickup-4-swap-prompt");
-        bool stillOnGround = IsInstanceValid(second) && !second.IsQueuedForDeletion();
+        SaveFrame("pickup-4-full-prompt");
         second.Interact(_player);
         await Frames(40);
-        SaveFrame("pickup-5-swapped");
-        bool swapped = System.Linq.Enumerable.Any(_player.WeaponSlots, weapon => weapon.Id == "music_box");
-        GD.Print($"[RunObservation] RESULT weapon_pickup slots={slotsBefore}->{slotsAfterAuto} full_stays_on_ground={stillOnGround} swapped={swapped}");
+        SaveFrame("pickup-5-refused");
+        bool stillOnGround = IsInstanceValid(second) && !second.IsQueuedForDeletion();
+        bool taken = System.Linq.Enumerable.Any(_player.WeaponSlots, weapon => weapon.Id == "music_box");
+        GD.Print($"[RunObservation] RESULT weapon_pickup slots={slotsBefore}->{slotsAfterAuto} full_stays_on_ground={stillOnGround} taken={taken}");
     }
 }

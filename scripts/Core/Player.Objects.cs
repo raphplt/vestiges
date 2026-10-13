@@ -181,7 +181,7 @@ public partial class Player
         return (owned != null || HasBagRoom) && !data.IsCopyLimitReached(owned?.Copies ?? 0);
     }
 
-    /// <summary>Objet déjà à son maximum d'exemplaires : aucun échange ne peut le faire entrer.</summary>
+    /// <summary>Objet déjà à son maximum d'exemplaires : aucun oubli ne peut le faire entrer.</summary>
     public bool IsItemAtMax(string id)
     {
         ActivePassiveSouvenir owned = FindObject(id);
@@ -237,6 +237,37 @@ public partial class Player
     {
         ActivePassiveSouvenir owned = FindObject(id);
         return owned != null && !owned.Data.IsBadge && RemoveItemCopies(id, owned.Copies);
+    }
+
+    /// <summary>
+    /// Oublie un Écusson (plan 44) : son apport revient au neutre, ses paliers se débranchent, son fil d'usage s'arrête et
+    /// sa place se libère pour le level-up.
+    /// </summary>
+    public bool ForgetBadge(string id)
+    {
+        ActivePassiveSouvenir badge = _badgeSlots.Find(slot => slot.Id == id);
+        if (badge == null)
+            return false;
+        for (int i = 0; i < badge.Data.Effects.Count; i++)
+            _passiveValuesBefore[i] = badge.Value(i);
+        // Le retrait baisse le maximum de PV sans toucher aux PV portés, sauf pour les ramener sous le nouveau maximum :
+        // ApplyPerkModifier retirerait l'écart des PV courants, jusqu'à les rendre négatifs.
+        float hp = _currentHp;
+        badge.ClearBadgeGains();
+        ApplyPassiveEffects(badge, _passiveValuesBefore);
+        if (!Mathf.IsEqualApprox(hp, _currentHp))
+        {
+            _currentHp = Mathf.Min(hp, EffectiveMaxHp);
+            _eventBus?.EmitSignal(EventBus.SignalName.PlayerDamaged, _currentHp, EffectiveMaxHp);
+        }
+        foreach (ObjectMilestoneData milestone in badge.Data.Milestones)
+            if (badge.Reached(milestone) && ObjectMilestoneEffects.IsImplemented(milestone.Effect))
+                _objectMilestones?.Deactivate(milestone);
+        _badgeUsage?.Untrack(id);
+        _badgeSlots.Remove(badge);
+        _eventBus?.EmitSignal(EventBus.SignalName.PassiveSouvenirSlotsChanged);
+        GD.Print($"[Player] Badge forgotten: {badge.Data.Name} (level {badge.Level})");
+        return true;
     }
 
     private bool RemoveItemCopies(string id, int copies)

@@ -224,12 +224,9 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(choiceScreen);
         player.ConfigureLoot(chestLootScreen, essenceTracker, choiceScreen);
 
-        // Objets du monde (plan 35 I3) : échange quand le sac est plein, objets lâchés par les élites et les Souverains.
-        ItemExchange itemExchange = new() { Name = "ItemExchange" };
-        itemExchange.Setup(choiceScreen);
-        sceneRoot.AddChild(itemExchange);
+        // Objets du monde (plan 35 I3) : objets lâchés par les élites et les Souverains.
         ItemDropDirector itemDrops = new() { Name = "ItemDropDirector" };
-        itemDrops.Setup(itemExchange, GetNode("../PoiContainer"));
+        itemDrops.Setup(GetNode("../PoiContainer"));
         sceneRoot.AddChild(itemDrops);
 
         LandmarkReveal landmarkReveal = new() { Name = "LandmarkReveal" };
@@ -241,11 +238,14 @@ public partial class GameBootstrap : Node
         sceneRoot.AddChild(memorialDirector);
 
         WorkshopDirector workshopDirector = new() { Name = "WorkshopDirector" };
-        workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager, itemExchange);
+        workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager);
         sceneRoot.AddChild(workshopDirector);
 
+        RiftForgetting riftForgetting = new() { Name = "RiftForgetting" };
+        riftForgetting.Setup(choiceScreen, essenceTracker);
+        sceneRoot.AddChild(riftForgetting);
         RiftDirector riftDirector = new() { Name = "RiftDirector" };
-        riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager);
+        riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager, riftForgetting);
         sceneRoot.AddChild(riftDirector);
 
         // Petits lieux (plan 22, lot C1) : des décors déjà posés qui se souviennent.

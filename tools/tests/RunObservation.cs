@@ -59,7 +59,7 @@ namespace Vestiges.Tests;
 /// --check-orb-sleep : orbe d'XP endormie loin du joueur, réveillée et ramassée à son retour (RunObservation.OrbSleep.cs).
 /// --measure-indicible : Indicible forcé, trois postures de bot mesurées sans image (RunObservation.IndicibleMeasure.cs).
 /// --capture-endgame : Indicible forcé, combat, mort et passage en endgame (RunObservation.Endgame.cs).
-/// --capture-weapon-pickup : arme au sol ramassée (vol vers le HUD) puis échangée (RunObservation.WeaponPickup.cs).
+/// --capture-weapon-pickup : arme au sol ramassée (vol vers le HUD), puis refusée emplacements pleins (RunObservation.WeaponPickup.cs).
 /// --close-window : quitte par la demande de fermeture de la fenêtre au lieu de GameExit.
 /// --capture-rift : offre d'une Faille, Péril et Oubli dans la pause, Oubli levé au Mémorial (RunObservation.Landmarks.cs).
 /// --capture-steles : stèles du Péril, allumée puis éveillée, HUD et fiche de pause (RunObservation.Landmarks.cs).
@@ -73,7 +73,7 @@ namespace Vestiges.Tests;
 /// --capture-low-health : santé pleine, seuils, cœur, pause, soin et mort.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
-/// --capture-exchange : sac plein, un objet au sol et l'écran d'échange (RunObservation.Items.cs, plan 35 I3).
+/// --capture-sovereign : un Souverain laissé en vie 75 s, toujours là (RunObservation.Sovereign.cs, DECISIONS §157).
 /// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,
@@ -280,8 +280,8 @@ public partial class RunObservation : Node
                 await CapturePlayerHit();
             else if (Array.IndexOf(args, "--capture-bile") >= 0)
                 await CaptureBileLob();
-            else if (Array.IndexOf(args, "--capture-exchange") >= 0)
-                await CaptureExchange();
+            else if (Array.IndexOf(args, "--capture-sovereign") >= 0)
+                await CaptureSovereign();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)

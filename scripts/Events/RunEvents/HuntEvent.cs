@@ -5,14 +5,16 @@ namespace Vestiges.Events.RunEvents;
 
 /// <summary>
 /// Souverain : version « boss » d'une créature locale, escortée de sa meute.
-/// À abattre avant son effacement ; le coffre et l'Essence de la variante s'y ajoutent.
-/// Teste la puissance du build sur une cible unique et résistante.
+/// Il ne disparaît jamais de lui-même : il reste jusqu'à sa mort (DECISIONS §157). Le coffre et l'Essence de la
+/// variante s'ajoutent à la récompense. Teste la puissance du build sur une cible unique et résistante.
 /// </summary>
 public sealed class HuntEvent : RunEvent
 {
     private Enemy _champion;
     private BossBarFeed _bar;
     private string _objectiveTemplate;
+
+    protected override bool HasTimeLimit => false;
 
     protected override void OnStart()
     {
@@ -47,6 +49,15 @@ public sealed class HuntEvent : RunEvent
     {
         if (_champion == null)
             return;
+        // Garde-fou : un Souverain retiré sans mort (rendu au pool par un autre système) ne doit pas laisser une chasse
+        // sans fin, qui bloquerait tous les événements suivants ; le pool a pu déjà le rendre à une autre créature.
+        if (!_champion.IsActive || _champion.Modifiers.EventToken != Token)
+        {
+            _champion = null;
+            _bar?.End(false);
+            Fail(Tr("EVENT_FAIL_FADED"));
+            return;
+        }
         Target = _champion.GlobalPosition;
         Progress = 1f - _champion.HpRatio;
         _bar.Update(_champion.CurrentHp, _champion.MaxHp);
@@ -65,14 +76,6 @@ public sealed class HuntEvent : RunEvent
         // Le coffre rare et l'Essence propres au Souverain tombent à sa mort (variante).
         int variantEssence = Infrastructure.EnemyVariantDataLoader.GetVariant("champion")?.BonusEssence ?? 0;
         Succeed(RewardLine(essence + variantEssence, true, false, true));
-    }
-
-    protected override void OnTimeout()
-    {
-        _champion?.Vanish();
-        _champion = null;
-        _bar?.End(false);
-        Fail(Tr("EVENT_FAIL_FADED"));
     }
 
     public override void Cleanup()

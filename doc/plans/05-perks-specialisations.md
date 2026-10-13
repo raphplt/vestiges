@@ -276,7 +276,7 @@ Chaque étape active son effet dans `PerkSpecializationEffects` seulement une fo
 2. **Débordement** : réserve par arme alimentée par l'excédent natif d'un coup fatal direct, plafonnée à la référence de l'attaque qui charge, consommée par le premier impact direct d'un lancement ultérieur, durée 3 s, perdue si l'arme quitte l'inventaire. Retour : case d'arme marquée tant que la réserve est prête, éclat à la consommation.
 3. **Convergence** : les recherches de cible des armes qui visent préfèrent élites et Souverains à portée, en gardant la cible prioritaire déjà suivie. Retour : repère discret sur la cible suivie.
 4. **Propagation** : à une élimination attribuée, les ralentissements/désorientations natifs encore actifs passent au plus proche voisin vivant à 120 px, sans prolongation ni affaiblissement d'un contrôle plus fort. Retour : bref lien entre la victime et le receveur.
-5. **État inactif et pause** : un perk sans arme support est signalé inactif dans la pause, qui affiche aussi réserves et budgets ; l'échange d'arme au sol prévient avant de rendre un perk inactif.
+5. **État inactif et pause** : un perk sans arme support est signalé inactif dans la pause, qui affiche aussi réserves et budgets ; l'échange d'arme au sol prévient avant de rendre un perk inactif. *(13 octobre 2026 : l'échange au sol est retiré ; c'est l'écran d'oubli de la Faille qui prévient, [plan 44](44-oublier-a-la-faille.md).)*
 
 Validation : banc de régression par effet sur le vrai joueur et les vrais ennemis (cas limites des fiches §3), captures en run pour les retours visuels, banc dense avant/après pour vérifier l'absence de coût mesurable, smoke.
 

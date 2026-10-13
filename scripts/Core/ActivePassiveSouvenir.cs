@@ -62,6 +62,15 @@ public class ActivePassiveSouvenir
 			_gains[i] = Data.Effects[i].Step * Copies;
 	}
 
+	/// <summary>Écusson oublié (plan 44) : chaque effet revient au neutre. L'appelant retire l'écart au joueur.</summary>
+	public void ClearBadgeGains()
+	{
+		if (!Data.IsBadge)
+			return;
+		for (int i = 0; i < _gains.Length; i++)
+			_gains[i] = 0f;
+	}
+
 	/// <summary>Rendement d'un niveau : un pas entier, sauf pour un Écusson au-delà du seuil d'inventory.json.</summary>
 	private float StepFactor(int level) => Data.IsBadge ? InventoryConfig.BadgeStepFactor(level) : 1f;
 }

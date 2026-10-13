@@ -65,6 +65,10 @@ public class RiftConfig
     public float SpawnCooldown;
     public float SpawnDistanceMin;
     public float SpawnDistanceMax;
+    /// <summary>Oubli à la Faille (plan 44) : prix du premier oubli de la run, hausse par oubli, part des niveaux gardée en trace.</summary>
+    public int ForgetCost;
+    public float ForgetCostGrowth;
+    public float ForgetTraceRatio;
 }
 
 /// <summary>Réglages des stèles du Péril (section <c>peril_stele</c> de data/world/landmarks.json, plan 28 P2).</summary>
@@ -200,7 +204,9 @@ public static class LandmarkDataLoader
 
             JsonElement r = reader.Section("rift");
             reader.AllowOnly(r, "rift", "sprite_open", "sprite_closed", "placement", "min_spacing_px", "hold_time", "offers",
-                "offer_min_rarity", "peril_per_offer", "erased_spawn");
+                "offer_min_rarity", "peril_per_offer", "erased_spawn", "forget");
+            JsonElement forget = reader.Section(r, "forget");
+            reader.AllowOnly(forget, "rift.forget", "cost", "cost_growth", "trace_ratio");
             JsonElement spawn = reader.Section(r, "erased_spawn");
             reader.AllowOnly(spawn, "rift.erased_spawn", "max_open", "chance", "cooldown_s", "distance_px");
             (float spawnMin, float spawnMax) = reader.Range(spawn, "distance_px", 0f);
@@ -219,6 +225,9 @@ public static class LandmarkDataLoader
                 SpawnCooldown = reader.NonNegative(spawn, "cooldown_s"),
                 SpawnDistanceMin = spawnMin,
                 SpawnDistanceMax = spawnMax,
+                ForgetCost = reader.Integer(forget, "cost", 0, 100_000),
+                ForgetCostGrowth = reader.NonNegative(forget, "cost_growth"),
+                ForgetTraceRatio = reader.Ratio(forget, "trace_ratio"),
             };
 
             JsonElement w = reader.Section("workshop");

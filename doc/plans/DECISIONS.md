@@ -1778,3 +1778,16 @@ Cinq runs jouées par Raphaël (Traqueur ×2, Facteur ×2, Vagabond), toutes tra
 - **Vestiges gagnés = éliminations ÷ un taux**, calé pour qu'une run moyenne rapporte autant qu'aujourd'hui. Le Péril paie toujours, par plus d'ennemis donc plus d'éliminations.
 - **Steam** : Raphaël lance la démarche maintenant (Steam Direct, App ID) et demande d'être guidé.
 - **Ordre** : le classement se code tout de suite, à part de la mesure de nuit ; les quêtes viennent après la mesure.
+
+## 157. Oublier une arme, un Écusson ou un objet à la Faille — 13 octobre 2026
+
+Raphaël : « il faudrait avoir plus de mécaniques liées à l'oubli dans le jeu […] un point d'intérêt sur la map qui permette en échange d'essence […] d'oublier un objet comme ça on peut si on s'est trompé ou qu'on ne le veut plus on peut changer et prendre autre chose », puis, sur la recommandation de l'agent : « ouais ok ca me va ta recommandation. par contre je supprimerai les mécanismes suivants : [l'échange d'arme au sol et l'oubli du sac plein]. tout passera par ca. sinon le faire dans la faille ca me va. »
+
+**Acquis :**
+- oublier une arme, un Écusson ou une pile d'objets se fait **à la Faille, contre de l'Essence** ;
+- l'oubli **laisse une trace** : la prochaine arme ou le prochain Écusson repart d'une part des niveaux oubliés ;
+- l'échange d'arme au sol et l'écran d'échange du sac plein **disparaissent** : tout passe par la Faille.
+
+**Choisi par l'agent, à juger en jeu :** 100 Essence puis +50 % par oubli, moitié des niveaux gardée, la Faille reste ouverte après un oubli. Détail au [plan 44](44-oublier-a-la-faille.md).
+
+**Hors sujet, même jour :** les mini-boss à barre de vie en haut de l'écran ne doivent **jamais disparaître** s'ils ne sont pas tués.

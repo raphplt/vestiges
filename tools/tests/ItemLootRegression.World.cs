@@ -78,7 +78,7 @@ public partial class ItemLootRegression
 
     private ItemPickup GroundItem(Vector2 position)
     {
-        ItemPickup pickup = new(); pickup.Initialize(PassiveSouvenirDataLoader.Get("boite_de_pansements"), position, null);
+        ItemPickup pickup = new(); pickup.Initialize(PassiveSouvenirDataLoader.Get("boite_de_pansements"), position);
         AddChild(pickup); pickup.SetProcess(false); return pickup;
     }
 

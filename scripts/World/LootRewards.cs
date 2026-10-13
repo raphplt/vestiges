@@ -104,7 +104,7 @@ public static class LootRewards
                 eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 break;
             case "object":
-                // Le trop-plein reste échangeable au sol, y compris si le sac s'est rempli après le tirage.
+                // Le trop-plein attend au sol, y compris si le sac s'est rempli après le tirage.
                 if (player.AddItemCopy(loot.ItemId))
                     eventBus.EmitSignal(EventBus.SignalName.LootReceived, loot.Type, loot.ItemId, loot.Amount);
                 else
@@ -134,7 +134,7 @@ public static class LootRewards
 
     /// <summary>
     /// Objet débloqué au hasard que le joueur peut encore cumuler, exemplaires promis compris (plan 35) ; null si aucun.
-    /// La place dans le sac n'est pas exigée : un objet au sol ou en vente se prend par l'échange.
+    /// La place dans le sac n'est pas exigée : un objet au sol attend qu'une place se libère à la Faille.
     /// </summary>
     public static PassiveSouvenirData PickUnlockedItem(Player player, RandomNumberGenerator rng, Dictionary<string, int> promised = null,
         string source = "generic", float luck = 0f) => ItemLootPool.For(player).Pick(source, rng, luck, promised);

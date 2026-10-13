@@ -38,7 +38,7 @@ public partial class PerkEffectsRegression : Node2D
             CheckOverflow();
             await CheckPriorityTargeting();
             await CheckCarryControl();
-            CheckInactiveAfterSwap();
+            CheckInactiveAfterForget();
             await CheckXpTrail();
             CheckCarriedChoice();
             CheckRoundMomentum();
@@ -325,18 +325,21 @@ public partial class PerkEffectsRegression : Node2D
             Free(enemy, enemies);
     }
 
-    /// <summary>Un perk sans arme support devient inactif ; l'échange au sol l'annonce avant de le faire.</summary>
-    private void CheckInactiveAfterSwap()
+    /// <summary>Un perk sans arme support devient inactif ; l'oubli à la Faille l'annonce avant de le faire (plan 44).</summary>
+    private void CheckInactiveAfterForget()
     {
         Setup("priority_targeting", "carry_control", "overheal_reserve");
         foreach (string id in new[] { "teachers_bell", "whip", "music_box" })
             AddWeapon(id);
         PerkSpecializationData convergence = PerkSpecializationDataLoader.Get("priority_targeting");
-        string lost = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("cleaver")));
-        string lostToWave = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("chipped_blade")));
-        Check(lost.Length == 0 && lostToWave.Length == 0, "Échanger l'arc contre une arme qui vise : aucun perk perdu");
-        string lostToOrbit = PerkSpecializationOffers.DeactivatedBySwap(_player, new WeaponInstance(WeaponDataLoader.Get("whip")));
-        Check(lostToOrbit == convergence.Name, $"Échanger l'arc contre une onde : Convergence annoncée ({lostToOrbit})");
+        WeaponInstance whip = null;
+        foreach (WeaponInstance weapon in _player.WeaponSlots)
+            if (weapon.Id == "whip")
+                whip = weapon;
+        string lostToWhip = PerkSpecializationOffers.DeactivatedByForget(_player, whip);
+        Check(whip != null && lostToWhip.Length == 0, "Oublier le fouet : aucun perk perdu");
+        string lostToArc = PerkSpecializationOffers.DeactivatedByForget(_player, _player.WeaponSlots[0]);
+        Check(lostToArc == convergence.Name, $"Oublier l'arc : Convergence annoncée ({lostToArc})");
         _player.RemoveWeapon(0);
         Check(!PerkSpecializationOffers.IsActive(convergence, _player)
             && PerkSpecializationOffers.IsActive(PerkSpecializationDataLoader.Get("carry_control"), _player)

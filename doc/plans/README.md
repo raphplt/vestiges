@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**13 octobre — oublier à la Faille ([plan 44](44-oublier-a-la-faille.md), §157) :** une arme, un Écusson ou une pile d'objets s'oublie à la Faille contre de l'Essence (100, +50 % par oubli). La prochaine arme ou le prochain Écusson repart de la moitié des niveaux. L'échange d'arme au sol et l'écran d'échange du sac disparaissent : un objet qui n'entre pas attend au sol, sans expirer tant que le sac est plein. Les Souverains ne disparaissent plus avant d'être abattus. Lot F1 livré, à juger en jeu.
+
 **12 octobre — tirs à la chaîne ([plan 21 G6h](21-systeme-de-jeu.md), §130) :** les projectiles d'une attaque partent l'un après l'autre (0,08 s, la chaîne tenant dans 60 % de la recharge), comme dans Megabonk, au lieu de partir tous dans la même image ; les salves gardent leur éventail d'un coup ; un son par tir, plus doux après le premier. Suite d'armes verte. Questions de reprise (§131) : pas de critique de base, mais des objets de critique dès le départ et plus d'armes qui en gagnent au niveau.
 
 **12 octobre — direction « crade » ([plan 40](40-direction-crade.md), §122) :** Raphaël cherche l'esthétique des BD de son enfance (Métal Hurlant, Beksiński, Rain World). Maquette hors jeu en trois dosages, dosage léger retenu. **G1 livré** : palette salie et grain au pixel du monde dans le shader commun, sans toucher aux assets ; joueur et créatures en palette seule. **G2 livré** : taches d'eau et de moisissure au sol et sur les décors, tramées au pixel. Suite : hachures dans les ombres (G3).

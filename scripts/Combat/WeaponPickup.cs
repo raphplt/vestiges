@@ -7,9 +7,9 @@ using Vestiges.World;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Arme posée au sol par le Wagonnet, ou laissée par un échange d'arme. Ramassée d'elle-même
-/// si un emplacement est libre ; sinon c'est un lieu activable comme un coffre : l'invite commune propose de
-/// l'échanger contre l'arme équipée. Au ramassage, son icône vole jusqu'au HUD (plan 02 J3).
+/// Arme posée au sol par le Wagonnet. Ramassée d'elle-même si un emplacement est libre ; sinon elle attend au sol et
+/// l'invite renvoie à la Faille, seul endroit où l'on oublie une arme (plan 44). Au ramassage, son icône vole jusqu'au
+/// HUD (plan 02 J3).
 /// </summary>
 public partial class WeaponPickup : Area2D, IInteractable
 {
@@ -19,7 +19,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 	private const float SpawnScatterSpeed = 80f;
 	private const float DespawnTime = 120f;
 	private const float RingRadius = 13f;
-	private const float SwapHoldSec = 0.25f;
+	private const float PickupHoldSec = 0.25f;
 	private const string ResourcePrefix = "res://";
 
 	private WeaponInstance _weaponInstance;
@@ -40,22 +40,18 @@ public partial class WeaponPickup : Area2D, IInteractable
 	public bool CanInteract => !_collected;
 	public Vector2 InteractPosition => GlobalPosition;
 	public Vector2 PromptPosition => GlobalPosition + new Vector2(0f, -24f);
-	// L'invite traduit sa clé : un texte déjà composé s'affiche tel quel.
-	public string PromptVerbKey => _prompt ??= SwapPrompt();
-	public float HoldTime => SwapHoldSec;
+	// L'invite traduit sa clé : un texte déjà composé s'affiche tel quel. Lue à chaque pas physique, elle est gardée
+	// jusqu'au prochain changement d'arme.
+	public string PromptVerbKey => _prompt ??= PickupPrompt();
+	public float HoldTime => PickupHoldSec;
 	public Color GaugeColor => UITheme.GoldBright;
 
-	/// <summary>
-	/// L'échange prévient s'il laisserait un perk sans arme compatible (plan 05, B2). L'invite est lue à chaque pas
-	/// physique : le texte est gardé jusqu'au prochain changement d'arme ou de perk.
-	/// </summary>
-	private string SwapPrompt()
+	private string PickupPrompt()
 	{
-		string prompt = string.Format(Tr("WEAPON_SWAP_PROMPT"), _weaponInstance?.Name ?? "");
-		if (_weaponInstance == null || _groupCache?.GetPlayer() is not Player { HasFreeWeaponSlot: false } player)
-			return prompt;
-		string deactivated = Progression.PerkSpecializationOffers.DeactivatedBySwap(player, _weaponInstance);
-		return deactivated.Length == 0 ? prompt : string.Format(Tr("WEAPON_SWAP_PERK_WARNING"), prompt, deactivated);
+		string key = _groupCache?.GetPlayer() is not Player player || _weaponInstance == null ? "WEAPON_PICKUP_PROMPT"
+			: HasWeapon(player, _weaponInstance.Id) ? "WEAPON_OWNED_PROMPT"
+			: player.HasFreeWeaponSlot ? "WEAPON_PICKUP_PROMPT" : "WEAPON_SLOTS_FULL_PROMPT";
+		return string.Format(Tr(key), _weaponInstance?.Name ?? "");
 	}
 
 	public void Initialize(WeaponData weapon, Vector2 position)
@@ -77,24 +73,18 @@ public partial class WeaponPickup : Area2D, IInteractable
 	{
 		Interactables.Register(this);
 		_eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-		if (_eventBus == null)
-			return;
-		_eventBus.WeaponInventoryChanged += InvalidatePrompt;
-		_eventBus.SpecializationAcquired += OnSpecializationAcquired;
+		if (_eventBus != null)
+			_eventBus.WeaponInventoryChanged += InvalidatePrompt;
 	}
 
 	public override void _ExitTree()
 	{
 		Interactables.Unregister(this);
-		if (_eventBus == null)
-			return;
-		_eventBus.WeaponInventoryChanged -= InvalidatePrompt;
-		_eventBus.SpecializationAcquired -= OnSpecializationAcquired;
+		if (_eventBus != null)
+			_eventBus.WeaponInventoryChanged -= InvalidatePrompt;
 	}
 
 	private void InvalidatePrompt() => _prompt = null;
-
-	private void OnSpecializationAcquired(string specializationId) => _prompt = null;
 
 	public override void _Ready()
 	{
@@ -142,29 +132,22 @@ public partial class WeaponPickup : Area2D, IInteractable
 		_visualRoot.Position = new Vector2(0, Mathf.Round(Mathf.Sin(_bobTimer) * BobAmplitude));
 	}
 
-	/// <summary>Activation par l'invite : prendre si un emplacement s'est libéré, sinon échanger avec l'arme équipée.</summary>
+	/// <summary>Activation par l'invite : prendre si un emplacement s'est libéré, sinon refuser (oublier se fait à la Faille).</summary>
 	public void Interact(Player player)
 	{
 		if (_collected)
 			return;
-		if (HasWeapon(player, _weaponInstance.Id))
-		{
-			FlashRefused();
-			return;
-		}
-		if (player.HasFreeWeaponSlot)
-		{
+		if (player.HasFreeWeaponSlot && !HasWeapon(player, _weaponInstance.Id))
 			TryCollect(player);
-			return;
-		}
-		SwapWithEquippedWeapon(player);
+		else
+			FlashRefused();
 	}
 
 	private void OnBodyEntered(Node2D body)
 	{
 		if (_collected || body is not Player player)
 			return;
-		// Ramassage automatique seulement s'il reste un emplacement ; sinon l'invite propose l'échange.
+		// Ramassage automatique seulement s'il reste un emplacement ; sinon l'invite renvoie à la Faille.
 		if (player.HasFreeWeaponSlot && !HasWeapon(player, _weaponInstance.Id))
 			CallDeferred(MethodName.TryCollect, player);
 	}
@@ -176,25 +159,6 @@ public partial class WeaponPickup : Area2D, IInteractable
 		Collected(player);
 		GetNodeOrNull<EventBus>("/root/EventBus")?.EmitSignal(EventBus.SignalName.LootReceived, "weapon", _weaponInstance.Id, 1);
 		GD.Print($"[WeaponPickup] {_weaponInstance.Name} ramassée");
-	}
-
-	private void SwapWithEquippedWeapon(Player player)
-	{
-		WeaponInstance removed = player.RemoveWeapon(0);
-		if (removed == null)
-			return;
-
-		if (!player.AddWeapon(_weaponInstance))
-		{
-			player.AddWeapon(removed);
-			FlashRefused();
-			return;
-		}
-
-		WeaponPickup dropped = new();
-		dropped.Initialize(removed, GlobalPosition + new Vector2((float)GD.RandRange(-18, 18), (float)GD.RandRange(-10, 10)));
-		GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, dropped);
-		Collected(player);
 	}
 
 	/// <summary>L'arme quitte le sol : son icône part vers le HUD, le repère s'efface.</summary>

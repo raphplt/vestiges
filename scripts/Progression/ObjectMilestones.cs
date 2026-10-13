@@ -179,6 +179,71 @@ public partial class ObjectMilestones : Node
         }
     }
 
+    /// <summary>
+    /// Débranche le palier d'un Écusson oublié (plan 44) : chaque effet revient à son état de départ. Un palier n'a qu'un
+    /// Écusson, aucun autre ne le partage.
+    /// </summary>
+    public void Deactivate(ObjectMilestoneData milestone)
+    {
+        switch (milestone.Effect)
+        {
+            case SpreadTargetsEffect:
+                _spreadExtraProjectiles = false;
+                break;
+            case PierceDamageRampEffect:
+                _pierceDamageRamp = 0f;
+                break;
+            case StatusRenewEffect:
+                _renewChance = 0f;
+                break;
+            case RepeatAttackEffect:
+                _repeatEvery = 0;
+                _attackCounts.Clear();
+                _pendingRepeats.Clear();
+                break;
+            case ZoneEchoEffect:
+                _zoneEchoes?.Clear();
+                _zoneEchoes = null;
+                break;
+            case RangeEndBurstEffect:
+                _burstRatio = 0f;
+                break;
+            case FullHpCritEffect:
+                _fullHpCritMultiplier = 1f;
+                break;
+            case IgnoreSmallHitsEffect:
+                _ignoredHitRatio = 0f;
+                break;
+            case WoundRegenEffect:
+                _woundRegenMultiplier = 1f;
+                _woundRegenRemaining = 0f;
+                break;
+            case DashArmorEffect:
+                _dashArmorMultiplier = 1f;
+                _dashArmorSeconds = -1f;
+                break;
+            case ShieldBreakWaveEffect:
+                _waveRadius = 0f;
+                break;
+            case DashDistanceEffect:
+                _player.Mobility.DistanceMultiplier -= milestone.Parameter("bonus");
+                break;
+            case OrbHealEffect:
+                _orbHeal = 0f;
+                break;
+            case LowHpLifestealEffect:
+                _lowHpLifestealThreshold = 0f;
+                _lowHpLifestealMultiplier = 1f;
+                break;
+            case LevelEssenceEffect:
+                _levelEssence = 0;
+                break;
+            case LevelRerollEffect:
+                _rerollEveryLevels = 0;
+                break;
+        }
+    }
+
     public override void _Process(double delta)
     {
         if (_player.IsDead)

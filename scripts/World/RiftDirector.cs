@@ -10,7 +10,9 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Mène les Failles (plan 17 lot 3C) : offres d'améliorations Épiques ou Légendaires, chacune payée d'un Oubli et
-/// d'un point de Péril, toujours refusables ; ouverture de nouvelles Failles là où le monde s'efface.
+/// d'un point de Péril, toujours refusables ; l'oubli d'une arme, d'un Écusson ou d'un objet contre de l'Essence
+/// (<see cref="RiftForgetting"/>, plan 44), qui laisse la Faille ouverte ; ouverture de nouvelles Failles là où le
+/// monde s'efface.
 /// Réglages : section <c>rift</c> de data/world/landmarks.json.
 /// </summary>
 public partial class RiftDirector : Node
@@ -25,18 +27,20 @@ public partial class RiftDirector : Node
     private LandmarkReveal _reveal;
     private PerilManager _peril;
     private ErasureManager _erasure;
+    private RiftForgetting _forgetting;
     private WorldSetup _world;
     private EventBus _eventBus;
     private Player _player;
     private float _spawnCooldown;
     private int _spawned;
 
-    public void Setup(ChoiceScreen choices, LandmarkReveal reveal, PerilManager peril, ErasureManager erasure)
+    public void Setup(ChoiceScreen choices, LandmarkReveal reveal, PerilManager peril, ErasureManager erasure, RiftForgetting forgetting)
     {
         _choices = choices;
         _reveal = reveal;
         _peril = peril;
         _erasure = erasure;
+        _forgetting = forgetting;
     }
 
     public override void _Ready()
@@ -81,18 +85,18 @@ public partial class RiftDirector : Node
             if (!badge.IsMaxLevel)
                 candidates.Add(new FragmentOption(badge.Id, "passive_upgrade", badge.Data.Name));
 
-        if (candidates.Count == 0)
+        // Plus rien à améliorer : la Faille sert encore à oublier, si l'oubli est possible et payable.
+        if (candidates.Count == 0 && (_forgetting == null || !_forgetting.CanForget(_player)))
             return;
 
         ErasureManager.ErasureZonePhase phase = _erasure?.GetZonePhaseAt(rift.GlobalPosition) ?? ErasureManager.ErasureZonePhase.Anchored;
         float bump = UpgradeRoller.BumpSteps(_player.LuckBonus, phase);
         List<OubliData> oubliPool = new(OubliDataLoader.All);
         List<(FragmentOption Option, OubliData Oubli)> offers = new();
-        List<ChoiceCard> cards = new();
         // Peu de cibles (début de run : une arme) : la même revient, avec d'autres gains et un autre Oubli, pour
         // qu'il reste un vrai choix.
         List<FragmentOption> remaining = new(candidates);
-        for (int i = 0; i < _config.Offers && oubliPool.Count > 0; i++)
+        for (int i = 0; i < _config.Offers && oubliPool.Count > 0 && candidates.Count > 0; i++)
         {
             if (remaining.Count == 0)
                 remaining.AddRange(candidates);
@@ -103,27 +107,45 @@ public partial class RiftDirector : Node
             UpgradeRarity rarity = UpgradeRoller.RollRarityAtLeast(bump, _config.OfferMinRarity, _rng);
             FragmentOption option = UpgradeRoller.RollGains(candidate, _player, rarity, _rng);
             offers.Add((option, oubli));
-            cards.Add(BuildCard(option, oubli));
         }
 
         AudioManager.PlayUI("sfx_rift_wake");
         if (_reveal == null)
         {
-            OpenOffers(rift, offers, cards, true);
+            OpenOffers(rift, offers, true);
             return;
         }
         _reveal.Play(rift.GlobalPosition + RevealFocus, RarityPalette.Colors("rift").Light, RevealSec, rift.ShowReveal, skipped =>
         {
             rift.EndReveal();
-            OpenOffers(rift, offers, cards, !skipped);
+            OpenOffers(rift, offers, !skipped);
         });
     }
 
-    private void OpenOffers(Rift rift, List<(FragmentOption Option, OubliData Oubli)> offers, List<ChoiceCard> cards, bool animate)
+    /// <summary>
+    /// Offres encore valables, puis la carte « Oublier ». Après un oubli, l'écran revient ici sans les offres qui
+    /// visaient ce qui vient d'être oublié.
+    /// </summary>
+    private void OpenOffers(Rift rift, List<(FragmentOption Option, OubliData Oubli)> offers, bool animate)
     {
+        if (!CachePlayer() || !rift.IsOpen)
+            return;
+        offers.RemoveAll(offer => !StillOwned(offer.Option));
+        List<ChoiceCard> cards = new();
+        foreach ((FragmentOption option, OubliData oubli) in offers)
+            cards.Add(BuildCard(option, oubli));
+        if (_forgetting != null)
+            cards.Add(_forgetting.BuildEntryCard(_player));
         _choices.Open(Tr("RIFT_TITLE"), Tr("RIFT_SUBTITLE"), cards, Tr("RIFT_REFUSE"), choice =>
         {
-            if (choice < 0 || !CachePlayer() || !offers[choice].Option.ApplyTo(_player))
+            if (choice < 0 || !CachePlayer())
+                return;
+            if (choice == offers.Count)
+            {
+                _forgetting.Open(_player, () => OpenOffers(rift, offers, false));
+                return;
+            }
+            if (!offers[choice].Option.ApplyTo(_player))
                 return;
             _peril.AddOubli(offers[choice].Oubli);
             _peril.AddPeril(_config.PerilPerOffer);
@@ -132,6 +154,10 @@ public partial class RiftDirector : Node
             EmitSparks(rift.GlobalPosition);
         }, PixelBackdrop.RiftTint, animate);
     }
+
+    private bool StillOwned(FragmentOption option) => option.Type == "weapon_upgrade"
+        ? _player.GetWeaponFragmentLevel(option.Id) > 0
+        : _player.FindObject(option.Id) != null;
 
     private ChoiceCard BuildCard(FragmentOption option, OubliData oubli)
     {
