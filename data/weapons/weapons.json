@@ -1284,7 +1284,7 @@
       "family": "pale"
     },
     "summary": "Une lettre qui rebondit d'ennemi en ennemi, vers le plus éloigné.",
-    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "chain_range": 1, "chain_targets": 1.25 },
+    "growth": { "damage": 3, "attack_speed": 2, "projectile_speed": 1, "range": 1, "chain_range": 1, "chain_targets": 1.25, "projectile_count": 0.6 },
     "ascensions": [
       {
         "id": "registered_letter",
@@ -1310,7 +1310,7 @@
       }
     ],
     "stats": {
-      "damage": 7,
+      "damage": 9,
       "attack_speed": 1.1,
       "range": 220,
       "projectile_speed": 340,

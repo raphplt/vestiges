@@ -69,7 +69,7 @@
         "starting_weapon": "letter_satchel",
         "base_stats": {
             "speed": 215,
-            "attack_damage": 8,
+            "attack_damage": 10,
             "attack_speed": 1.1,
             "attack_range": 320,
             "max_hp": 85,

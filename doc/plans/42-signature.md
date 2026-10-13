@@ -278,6 +278,16 @@ Mesures (5 personnages, profils débutant et moyen, méta milieu, 3 graines, 11 
 
 Un Souverain jamais tué bloque les événements suivants (§157), ce qui pèse surtout sur les builds faibles.
 
+### Le Facteur remis à niveau (13 octobre au soir)
+
+M1 le montrait très en retard (2 400 éliminations en 30 min contre 13 000 à 19 000 pour les autres). À niveau égal, il faisait pourtant autant de dégâts que le Traqueur : c'est sa montée en niveau qui calait. Deux causes :
+- **frappe faible** : attaque 8 (×0,8 sur ses armes) et Sacoche à 7, soit 5,6 au premier coup contre 9,6 pour l'arc du Traqueur ; les rebonds étalent le reste sur la foule, si bien qu'une créature mettait 12 à 19 s à mourir (médiane) contre moins d'une seconde avec les autres armes : peu d'XP et une foule qui s'accumule ;
+- **croissance qui s'étale** : l'arc gagne des flèches en montant de niveau, la Sacoche ne gagnait que des rebonds.
+
+Correctif (données seules) : attaque du Facteur 8 → 10, dégâts de la Sacoche 7 → 9, et la Sacoche peut gagner des lettres (`projectile_count` 0,6 dans sa croissance ; 1,25 comme l'arc donnait niveau 54 à 10 min au profil fort, chaque lettre rebondissant aussi). La Lettre recommandée garde sa lettre unique, plus lourde.
+
+Mesure avant/après (Facteur, méta milieu, 12 min, 3 graines) : niveau à 10 min 17 → 30 (moyen), 19 → 30 (débutant), 25 → 46 (fort) ; durée de vie médiane d'une créature 18,7 → 6,2 s (moyen). Traqueur dans M1 : 38, 30 et 28. Le profil fort du bot n'est pas fiable (M1).
+
 ### Lecture (lot M2)
 
 - Une page de résultats : courbes de puissance joueur / ennemis par profil, morts, exposition à l'oubli, creux.
