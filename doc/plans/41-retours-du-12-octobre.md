@@ -54,3 +54,44 @@ Constat : « un peu trop simples » ; en ville, « juste des petits carrés qui 
 « Peut-être que je ferai en sorte que ce soit le Traqueur le personnage par défaut… à voir. » Si confirmé : Traqueur sélectionné par défaut sur un profil neuf, et premier de la liste.
 
 **Livré le 12 octobre** ([DECISIONS §129 ter](DECISIONS.md)) : le Traqueur et l'Arc du gymnase sont libres dès un profil neuf ; « Mener la chasse » débloque désormais le Vagabond et sa Lame ébréchée. Le Traqueur, déjà premier de la liste, est le personnage sélectionné par défaut (premier débloqué). L'arc rejoint la réserve des armes de départ, la lame la quitte : 17 armes à gagner, comme avant. Personnage de repli (`GameBootstrap`, bande de marche du chargement) : le Traqueur. Régressions mises à jour : quêtes (profil neuf, réserve de départ, déblocage par la chasse), mode dev (le Vagabond sert d'exemple de verrou normal) ; quêtes, écran de choix et Campement verts.
+
+## Retours du soir — 12 octobre, tranchés le 13 ([DECISIONS §150](DECISIONS.md))
+
+Trois lots, dans cet ordre ; l'outillage de mesure du [plan 42](42-signature.md) vient après L1 (§152).
+
+### L1 — Corrections rapides (≈ 1 j)
+
+- Pause : cases d'armes, d'Écussons et du sac centrées (niveau et icône dans la case) ; plus de sélecteur de tri, sac en rareté croissante fixe.
+- Choix du personnage : plus de cadre jaune autour du portrait ; plus de PV ni de vitesse dans les détails ; survol des boutons « Détails » (personnage et arme) dans la matière des menus, sans rectangle semi-transparent.
+- Voix des radios retirées (plan 39 C1), cabines qui sonnent gardées.
+- Repère au sol des petits lieux retiré (`InteractableAura`), l'invite « [E] » reste.
+- Orage sec : plus de particules de pluie hors Indicible.
+- Bandeau de quête accomplie : icône de la récompense.
+- Vérification : build, smoke, captures de la pause, du choix du personnage, d'un petit lieu et du bandeau.
+- Ajouts de Raphaël pendant le lot (13 octobre, §150) : HUD des objets sans « 4/10 types », sans icône de rareté, sans cadres carrés, dans l'ordre de ramassage.
+
+**Livré le 13 octobre :**
+
+- **Pause** : icône et niveau en colonne centrée à l'intérieur du liseré de pierre (cases de 96 px de haut, icône 44, niveau en petit texte) ; ils mordaient sur le cadre parce qu'ils étaient posés en position absolue. Plus de sélecteur de tri : le sac de la pause est en rareté croissante fixe (`ItemSort.Order` accepte un ordre imposé), la Collection garde son tri.
+- **HUD** : colonne du sac sans compte ni icône de rareté ni cadre, icône nue et nombre d'exemplaires teinté de la rareté ; ordre de ramassage, indépendant du tri de la Collection (un objet remplacé repart en bas).
+- **Choix du personnage** : médaillon du portrait toujours cerclé de gris (le cadre doré de la carte suffit) ; PV et vitesse retirés des détails ; liens « Détails du personnage » et arme : au survol et au focus, texte doré souligné d'un trait de pixels, sans fond (`MenuSkin.StyleLink`, le bouton prend la largeur de son texte).
+- **Radios retirées** : sources, voix, grésillement, bip, réglages (`radio` d'`abandoned_voices.json`, `radio_share` d'`exodus.json`), 23 sons, 12 sprites de voitures à radio et leur modèle ; le gestionnaire ne garde que les cabines qui sonnent. Générateur réduit à la sonnerie (`tools/generate_phone_sounds.py`, sonnerie identique à l'octet). Le dossier des sons garde son nom (`assets/audio/sfx/radio/`).
+- **Repère au sol** retiré des petits lieux et des POI (`InteractableAura` supprimé) ; l'invite et les étincelles à portée restent.
+- **Orage sec** : plus de particules de pluie ; le son de l'orage n'avait que du tonnerre.
+- **Bandeau de quête** : icône de la récompense (personnage, arme ou objet) à gauche du texte, aide commune avec la page Quêtes (`QuestRewardIcon`).
+
+**Vérifié** : build sans warning, smoke vert ; suites catalogues (331, dont « orage sec »), petits lieux, inventaire (le HUD suit l'ordre de ramassage, la pause reste en rareté croissante), quêtes (325, dont l'icône du bandeau), navigation des menus, Campement. Captures regardées : pause avant/après, choix du personnage (médaillon, lien souligné au focus, icône de l'arme), cabine sans repère, HUD du sac.
+
+**Non vérifié** : le bandeau de quête à l'écran (contrôlé par la régression, pas capturé) ; le survol à la souris (capturé au focus clavier, même style).
+
+**Point ouvert** : la pluie de cendres joue `sfx_pluie_legere`, un bruit de pluie continu ; à trancher.
+
+### L2 — Bilan et Recommencer (≈ 1 à 2 j)
+
+- Bilan : courbe de distance retirée ; score détaillé et build (armes, Écussons, objets) visibles sans clic ; gains en rangée compacte avec icônes, sans titre.
+- Pause : bouton Recommencer (même personnage, nouvelle graine, confirmation ; la run compte comme abandonnée).
+
+### L3 — Densité du monde (≈ 0,5 j)
+
+- Faune −30 %, pigeons qui s'envolent gardés.
+- Barrières : source mesurée (`measure_run.sh`, décors par type), puis divisée par deux.

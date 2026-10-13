@@ -1,37 +1,8 @@
 {
-    "_doc": "Radios et téléphones abandonnés (plan 39 C1, DECISIONS §143) : son seul, rien à l'écran. Sons générés par tools/generate_radio_sounds.py dans 'folder' (un fichier <id>.wav par entrée). max_heard : radios et cabines entendues à la fois, les plus proches. attenuation : courbe de baisse du son avec la distance (au-delà de 1, discret jusqu'à ce qu'on s'approche). radio : les radios posées sur une voiture d'embouteillage (part réglée par radio_share dans exodus.json) diffusent en boucle le bip 'chime' puis les messages, phrase par phrase et mot par mot, sur un grésillement 'static'. Entendues jusqu'à hearing_px. Un mot se perd d'autant plus que la zone s'oublie : tous entendus au-dessus de la mémoire memory_whole, aucun sous memory_silent ; un mot perdu laisse monter le grésillement à dropout_static_db pendant sa durée. Au Néant, la radio se tait. pitch_jitter : écart de hauteur tiré par poste. phone : une part 'share' des cabines activables (petit lieu 'booth_id') sonne (boucle 'ring', 1,5 s de sonnerie et 3,5 s de silence), entendue jusqu'à hearing_px, et se tait pour de bon quand le joueur arrive à silence_px.",
+    "_doc": "Téléphones abandonnés (plan 39 C1, DECISIONS §143) : son seul, rien à l'écran. Les radios et leurs voix ont été retirées (DECISIONS §150). Sonnerie générée par tools/generate_phone_sounds.py dans 'folder' (<id>.wav). max_heard : cabines entendues à la fois, les plus proches. attenuation : courbe de baisse du son avec la distance (au-delà de 1, discret jusqu'à ce qu'on s'approche). phone : une part 'share' des cabines activables (petit lieu 'booth_id') sonne (boucle 'ring', 1,5 s de sonnerie et 3,5 s de silence), entendue jusqu'à hearing_px, et se tait pour de bon quand le joueur arrive à silence_px.",
     "folder": "assets/audio/sfx/radio",
     "max_heard": 2,
     "attenuation": 1.6,
-    "radio": {
-        "hearing_px": 560,
-        "voice_db": -2,
-        "static_db": -16,
-        "dropout_static_db": -7,
-        "word_gap_s": 0.07,
-        "sentence_gap_s": 0.5,
-        "message_gap_s": 1.6,
-        "cycle_gap_s": 6,
-        "memory_whole": 0.75,
-        "memory_silent": 0.2,
-        "pitch_jitter": 0.04,
-        "chime": "radio_chime",
-        "static": "radio_static",
-        "messages": [
-            [
-                ["radio_avis", "radio_a_la", "radio_population"],
-                ["radio_ordre", "radio_evacuation", "radio_immediate"],
-                ["radio_quittez", "radio_la_ville", "radio_par_les", "radio_grands_axes"],
-                ["radio_ne_revenez_pas", "radio_en_arriere"]
-            ],
-            [
-                ["radio_ceci", "radio_n_est_pas", "radio_un_exercice"],
-                ["radio_rejoignez", "radio_les_points", "radio_de_rassemblement"],
-                ["radio_n_emportez", "radio_que", "radio_le_necessaire"],
-                ["radio_ne_vous", "radio_retournez_pas"]
-            ]
-        ]
-    },
     "phone": {
         "booth_id": "phone_booth",
         "share": 0.5,

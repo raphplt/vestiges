@@ -1698,6 +1698,7 @@ Retours dictés par Raphaël après une partie, puis tranchés par questions. Lo
 - **Faune** : un peu trop, **−30 %**, pigeons qui s'envolent gardés.
 - **Barrières** : beaucoup depuis peu, même en ville ; mesurer la source, puis **la diviser par deux**.
 - **Notification de quête accomplie** : montrer l'**icône de la récompense**.
+- **HUD des objets** (ajouté le 13 octobre pendant L1) : « ça ne me plaît pas l'affichage des objets. N'affiche pas 4/10 types. Aussi pas besoin de l'icône de rareté, et pas besoin de mettre dans des cadres carrés », puis « afficher les objets par ordre de récupération ».
 - **Pour plus tard** : rues de la ville un peu étroites ; routes toutes perpendiculaires alors que les bâtiments sont décalés. Pas assez d'Écussons comparé au reste (retour global, voir plan 42).
 
 ## 151. La signature de Vestiges — 13 octobre 2026
@@ -1717,3 +1718,9 @@ Raphaël veut un jeu aussi complet et poussé que Vampire Survivors, Megabonk et
 - **Méthode** : mesurer d'abord, **par scripts de simulation** plutôt qu'en lançant le jeu, avec les différents personnages, des configurations de build, plusieurs états de progression (peu d'armes et d'objets en début de jeu) et des profils de joueur (débutant, fort) ; écrire la promesse en une phrase ; **tout concevoir avant de coder**.
 
 **Doute ouvert** : les améliorations permanentes de puissance brute du Campement (vitesse, dégâts…) : « quand on a joué 20 heures au jeu, le début de partie n'est plus le même ». Taille du sac et gain de Vestiges lui conviennent. À trancher (plan 42 §4).
+
+## 152. Campement sans puissance brute, ordre de travail, builds de référence — 13 octobre 2026
+
+- **Campement** : « ça me va de retirer les bonus de puissance bruts permanents » (PV max, dégâts, cadence, vitesse, régénération, armure ; XP et Chance à trancher avec le gambling, plan 42 §4). **Aucune logique de remboursement** des Vestiges dépensés : « personne n'a de copie du jeu ». Les améliorations d'options et d'ampleur restent. Lot à découper au plan 36.
+- **Ordre** : lot 1 des retours du 12 octobre au soir (§150), puis l'outillage de mesure du plan 42 (M0a–M0c).
+- **Builds de référence** : les quatre proposés (une arme poussée, synergie d'objets, zone, critique), plus **un build tank** ; « de toute façon on en découvrira au fur et à mesure ».

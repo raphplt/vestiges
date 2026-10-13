@@ -95,12 +95,6 @@ public partial class SmallPlacesRegression : Node2D
 			int gained = essence.CurrentEssence - before;
 			Check(gained is >= 6 and <= 10, $"Veine de cristal : {gained} Essence (6 à 10)");
 
-						SmallPlace farWell = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "well" && place.CanInteract);
-			farWell.ShowSign(true);
-			bool shown = farWell.SignVisible;
-			well.ShowSign(true);
-			Check(shown && !well.SignVisible, "Signe : visible sur un lieu encore utile, jamais sur un lieu déjà utilisé");
-
 			await CheckC4(director, player, essence, luckBefore);
 
 			GD.Print($"[SmallPlacesRegression] RESULT failures={_failures}");

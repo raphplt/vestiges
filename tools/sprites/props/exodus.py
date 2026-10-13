@@ -366,47 +366,12 @@ def road_arrow(stem: str, yaw: float, stretch: float, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, yaw, canvas=(96, 72), smooth_slopes=True)
 
 
-def radio_car(stem: str, paint: str, yaw: float, seed: int) -> PropModel:
-    """
-    Voiture de la file avec une radio portative oubliée sur le capot (plan 39 C1), allumée : le message d'évacuation
-    joue encore. Même voiture que sa sœur sans radio ; un poste à peine plus grand que nature et son antenne tirée
-    pour se lire à une dizaine de pixels de large.
-    """
-    model = car(stem, paint, yaw, seed, open_doors=CAR_DOORS[paint])
-    BODY, GRILLE, DIAL, ANTENNA = range(len(model.materials), len(model.materials) + 4)
-    # Poste clair, sauf sur la peinture crème où il disparaîtrait : là, un poste sombre.
-    body_hex, grille_hex = ("#3A3431", "#B9B2A0") if paint == "cream" else ("#CDBF9F", "#3A3431")
-    materials = [*model.materials,
-                 make_material("radio_body", body_hex, contrast=0.5), make_material("radio_grille", grille_hex, contrast=0.6),
-                 make_material("radio_dial", "#D08A3C", contrast=0.4), make_material("radio_antenna", "#B8B6AE", contrast=0.4)]
-    turn = rotation_y(0.45)
-    center = np.array([-0.12 * M, 1.12 * M, 1.45 * M])
-
-    def parts() -> list[Part]:
-        radio = lambda p: rounded_box(p, center, (0.32 * M, 0.18 * M, 0.11 * M), 0.04 * M, turn)
-        local = lambda p: (p - center) @ turn
-        # Haut-parleur à gauche du poste, cadran à droite : visibles quelle que soit l'orientation de la voiture.
-        dial = lambda p: np.maximum(np.abs(local(p)[:, 0] - 0.16 * M) - 0.08 * M, np.abs(local(p)[:, 1] - 0.04 * M) - 0.045 * M)
-        tip = center + turn @ np.array([0.26 * M, 0.95 * M, -0.08 * M])
-        return [
-            *model.parts(),
-            Part(radio, BODY),
-            Part(painted(radio, lambda p: np.maximum(local(p)[:, 0] + 0.03 * M, np.abs(local(p)[:, 1]) - 0.12 * M), 0.012 * M),
-                 GRILLE, relief=False),
-            Part(painted(radio, dial, 0.012 * M), DIAL, relief=False),
-            Part(lambda p: capsule(p, center + turn @ np.array([0.25 * M, 0.16 * M, -0.06 * M]), tip, 0.035 * M, 0.025 * M), ANTENNA),
-        ]
-
-    return PropModel(stem, parts, materials, model.yaw, canvas=model.canvas, footprint=model.footprint)
-
-
 def catalog() -> list[PropModel]:
     models = []
     for paint, seed in (("red", 212), ("teal", 221), ("cream", 231)):
         for direction, yaw in CAR_YAWS.items():
             models.append(car(f"prop_exodus_car_{paint}_{direction}", paint, float(yaw), seed + ord(direction),
                               open_doors=CAR_DOORS[paint]))
-            models.append(radio_car(f"prop_exodus_car_{paint}_{direction}_radio", paint, float(yaw), seed + ord(direction)))
     models += [
         open_suitcase("prop_exodus_suitcase_open", 301),
         luggage("prop_exodus_luggage", 311),

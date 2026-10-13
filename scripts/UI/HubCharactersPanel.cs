@@ -24,9 +24,8 @@ public partial class HubCharactersPanel : MarginContainer
     private Button _weapon;
     private CharacterData _examined;
     private readonly Dictionary<string, Button> _rows = new();
-    private readonly Dictionary<string, Panel> _medallions = new();
-    private readonly StyleBoxFlat _medallionRest = Medallion(new Color("4a4550"));
-    private readonly StyleBoxFlat _medallionLit = Medallion(UITheme.GoldColor);
+    // Le médaillon ne s'allume pas à la sélection : le cadre doré de la carte suffit (DECISIONS §150).
+    private readonly StyleBoxFlat _medallion = Medallion(new Color("4a4550"));
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
     private int _idleCount;
     private float _idleTime;
@@ -137,8 +136,8 @@ public partial class HubCharactersPanel : MarginContainer
                 row.AccessibilityName = character.Name;
                 row.CustomMinimumSize = new Vector2(300, 112);
                 Panel medallion = new() { Position = new Vector2(14, 10), Size = new Vector2(68, 92), MouseFilter = MouseFilterEnum.Ignore };
+                medallion.AddThemeStyleboxOverride("panel", _medallion);
                 row.AddChild(medallion);
-                _medallions[character.Id] = medallion;
                 TextureRect sprite = new()
                 {
                     Texture = CharacterPortrait.Idle(character.Id), Position = new Vector2(16, 8), Size = new Vector2(64, 96),
@@ -190,13 +189,12 @@ public partial class HubCharactersPanel : MarginContainer
         WeaponData weapon = WeaponDataLoader.Get(character.StartingWeaponId);
         _weapon.Text = weapon?.Name ?? "";
         _weapon.Icon = weapon != null ? GD.Load<Texture2D>(weapon.Sprite) : null;
-        _weapon.ExpandIcon = true;
+        // Icône bornée plutôt qu'étirée : un lien prend la largeur de son contenu et doit compter l'icône.
         _weapon.AddThemeConstantOverride("icon_max_width", 48);
         _details.Visible = false;
         _detailsButton.Text = "Détails du personnage";
         MobilityConfig mobility = MobilityConfig.Load(character.MobilityProfile);
-        CharacterStats stats = character.BaseStats;
-        _details.Text = $"{passive?.Description}\n\n{weapon?.Summary}\n\n{mobility.Name} — {mobility.Description}\n\nPV {stats.MaxHp:0} · vitesse {stats.Speed:0}";
+        _details.Text = $"{passive?.Description}\n\n{weapon?.Summary}\n\n{mobility.Name} — {mobility.Description}";
         QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, character.Id);
         _condition.Text = CanDepart ? "" : QuestBook.LockText(UnlockKind.Character, character.Id);
         _condition.Visible = !CanDepart;
@@ -204,11 +202,7 @@ public partial class HubCharactersPanel : MarginContainer
         _depart.Disabled = !CanDepart;
         _depart.Text = CanDepart ? "Partir" : "Personnage verrouillé";
         foreach ((string id, Button row) in _rows)
-        {
-            bool examined = id == character.Id;
-            MenuSkin.StyleRosterCard(row, examined);
-            _medallions[id].AddThemeStyleboxOverride("panel", examined ? _medallionLit : _medallionRest);
-        }
+            MenuSkin.StyleRosterCard(row, id == character.Id);
     }
 
     public override void _Process(double delta)

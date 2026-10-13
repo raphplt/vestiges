@@ -192,15 +192,20 @@ public static class MenuSkin
         return button;
     }
 
+    /// <summary>
+    /// Lien de texte : au survol et au focus, le texte passe en or et se souligne d'un trait de pixels, sans fond ni bandeau.
+    /// Le bouton prend la largeur de son texte pour que le trait reste sous les mots.
+    /// </summary>
     public static void StyleLink(Button button, bool active = false)
     {
-        StyleBoxEmpty empty = new() { ContentMarginLeft = 16, ContentMarginRight = 16, ContentMarginTop = 8, ContentMarginBottom = 8 };
+        StyleBoxEmpty empty = new() { ContentMarginLeft = 0, ContentMarginRight = 0, ContentMarginTop = 8, ContentMarginBottom = 8 };
         foreach (string state in new[] { "normal", "pressed", "hover_pressed", "disabled" })
             button.AddThemeStyleboxOverride(state, empty);
-        StyleBoxFlat lit = new() { BgColor = new Color(0.83f, 0.66f, 0.26f, 0.07f), BorderWidthLeft = 3, BorderColor = UITheme.GoldBright,
-            ContentMarginLeft = 16, ContentMarginRight = 16, ContentMarginTop = 8, ContentMarginBottom = 8 };
-        button.AddThemeStyleboxOverride("hover", lit);
-        button.AddThemeStyleboxOverride("focus", lit);
+        StyleBoxFlat underline = new() { BgColor = Colors.Transparent, BorderWidthBottom = 2, BorderColor = UITheme.GoldBright,
+            AntiAliasing = false, ContentMarginLeft = 0, ContentMarginRight = 0, ContentMarginTop = 8, ContentMarginBottom = 8 };
+        button.AddThemeStyleboxOverride("hover", underline);
+        button.AddThemeStyleboxOverride("focus", underline);
+        button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         button.AddThemeFontOverride("font", UITheme.StrongFont);
         button.AddThemeColorOverride("font_color", active ? UITheme.GoldBright : UITheme.TextColor);
         button.AddThemeColorOverride("font_focus_color", UITheme.GoldBright);

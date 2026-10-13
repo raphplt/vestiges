@@ -32,11 +32,8 @@ public static class ExodusScenePlacer
 	// Le panneau fait 44 px de large : au bord d'une rue verticale, il s'écarte d'une demi-largeur de plus que les bagages.
 	private const float SignReachVerticalPx = 58f;
 
-	/// <summary>
-	/// Une scène posée : son ancrage (dernière voiture de la file ou barrière, coordonnées locales), sa nature, et si
-	/// la voiture d'ancrage porte une radio allumée (plan 39 C1).
-	/// </summary>
-	public readonly record struct Scene(Vector2 Position, bool Jam, bool Radio);
+	/// <summary>Une scène posée : son ancrage (dernière voiture de la file ou barrière, coordonnées locales) et sa nature.</summary>
+	public readonly record struct Scene(Vector2 Position, bool Jam);
 
 	/// <summary>Décors d'une scène prévus avant pose : une scène incomplète n'est pas posée du tout.</summary>
 	private readonly record struct Placement(string Sprite, Vector2I Cell, Vector2 Position);
@@ -78,7 +75,6 @@ public static class ExodusScenePlacer
 
 		int jams = 0;
 		int barricades = 0;
-		int radios = 0;
 		int props = 0;
 		List<Placement> plan = new();
 		float minSpacingSq = config.MinSpacingPx * config.MinSpacingPx;
@@ -102,11 +98,6 @@ public static class ExodusScenePlacer
 			if (!planned || IsTooClose(anchors, plan[0].Position, minSpacingSq))
 				continue;
 			Vector2 anchor = plan[0].Position;
-			// Radios réparties à intervalles réguliers parmi les embouteillages, sur la dernière voiture de la file.
-			bool radio = jam && Mathf.FloorToInt((jams + 1) * config.RadioShare) > Mathf.FloorToInt(jams * config.RadioShare);
-			if (radio)
-				plan[0] = plan[0] with { Sprite = plan[0].Sprite.Replace(".png", "_radio.png") };
-
 			for (int i = 0; i < plan.Count; i++)
 			{
 				Placement placement = plan[i];
@@ -116,23 +107,16 @@ public static class ExodusScenePlacer
 					props++;
 					Quiet(streetProps, placement.Cell, config.QuietRadiusCells);
 				}
-				else if (i == 0)
-				{
-					// Sans sa voiture, la radio ne joue pas dans le vide.
-					radio = false;
-				}
 			}
 			anchors.Add(anchor);
-			scenes.Add(new Scene(anchor, jam, radio));
-			if (radio)
-				radios++;
+			scenes.Add(new Scene(anchor, jam));
 			if (jam)
 				jams++;
 			else
 				barricades++;
 		}
 
-		GD.Print($"[ExodusScenePlacer] {anchors.Count}/{target} scènes ({jams} embouteillages dont {radios} à radio, {barricades} barrages), {props} décors");
+		GD.Print($"[ExodusScenePlacer] {anchors.Count}/{target} scènes ({jams} embouteillages, {barricades} barrages), {props} décors");
 		return scenes;
 	}
 

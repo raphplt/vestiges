@@ -166,9 +166,8 @@ public partial class SmallPlaceDirector : Node
 				place.Lose();
 				continue;
 			}
-			place.ShowSign(place.GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= rangeSq);
-			// Quelques étincelles montent du lieu : on le repère du coin de l'œil, sans marqueur d'interface.
-			if (place.SignVisible && _rng.Randf() < SignSparkChance)
+			// À portée, quelques étincelles montent du lieu : on le repère du coin de l'œil, sans marqueur d'interface.
+			if (place.GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= rangeSq && _rng.Randf() < SignSparkChance)
 				CombatPools.Instance?.EmitSparks(place.GlobalPosition + new Vector2(_rng.RandfRange(-14f, 14f), -8f), new SparkBurst
 				{
 					Family = place.Family,

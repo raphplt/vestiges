@@ -608,11 +608,13 @@ public partial class CatalogContractRegression : Node
                 Check(BiomeDataLoader.Get(biome) != null, $"météo {weather.Id} : biome « {biome} » connu");
         Check(config?.Find("storm")?.FlashExposure > 0f && config.Find("thick_fog")?.ViewOpacity > 0f,
             "orage avec éclairs, brouillard qui réduit la vue");
+        Check(config?.Find("storm")?.Particles == AtmosphereParticleKind.None,
+            "orage sec : pas de pluie avant l'Indicible (DECISIONS §150)");
         (string, Action<JsonObject>, string)[] cases =
         {
             ("aucune météo", root => root["weathers"] = new JsonObject(), "au moins une météo"),
             ("brouillard aveuglant", root => root["weathers"]!["thick_fog"]!["view"]!["clear_px"] = 60, "clear_px"),
-            ("particules inconnues", root => root["weathers"]!["storm"]!["particles"]!["kind"] = "snow", "kind"),
+            ("particules inconnues", root => root["weathers"]!["ash_rain"]!["particles"]!["kind"] = "snow", "kind"),
             ("éclair trop fort", root => root["weathers"]!["storm"]!["flashes"]!["exposure"] = 2, "flashes.exposure"),
             ("nuit en plein jour", root => root["weathers"]!["storm"]!["grade"]!["exposure"] = 0.2, "grade"),
             ("champ inconnu", root => root["weathers"]!["storm"]!["thunder"] = 1, "clé « thunder » inconnue"),
@@ -671,7 +673,6 @@ public partial class CatalogContractRegression : Node
             foreach (string paint in new[] { "red", "teal", "cream" })
             {
                 sprites.Add($"car_{paint}_{direction}");
-                sprites.Add($"car_{paint}_{direction}_radio");
             }
         }
         int missing = sprites.FindAll(id => !ResourceLoader.Exists($"res://assets/props/urban_ruins/prop_exodus_{id}.png")).Count;
@@ -697,24 +698,20 @@ public partial class CatalogContractRegression : Node
         string valid = FileAccess.GetFileAsString("res://data/world/abandoned_voices.json");
         Func<string, bool> exists = path => ResourceLoader.Exists(path);
         bool accepted = AbandonedVoicesConfig.TryParse(valid, exists, out AbandonedVoicesConfig config, out string error);
-        // Bip, puis les 23 mots des deux messages ; le dernier mot porte le silence de fin de boucle.
-        Check(accepted && config.RadioLoop.Count == 24 && !config.RadioLoop[0].Word
-            && config.RadioLoop[^1].GapAfterS == 6f, $"radios et téléphones du dépôt acceptés {error}");
+        Check(accepted && config.RingPath.EndsWith("/phone_ring.wav", StringComparison.Ordinal),
+            $"téléphones du dépôt acceptés {error}");
         (string, Action<JsonObject>, string)[] cases =
         {
-            ("son absent", root => root["radio"]!["messages"]![0]![0]![0] = "radio_inconnu", "radio_inconnu"),
-            ("phrase vide", root => root["radio"]!["messages"]![1]![2] = new JsonArray(), "liste non vide"),
-            ("mémoire inversée", root => root["radio"]!["memory_silent"] = 0.9, "memory_silent"),
+            ("son absent", root => root["phone"]!["ring"] = "sonnerie_inconnue", "sonnerie_inconnue"),
             ("téléphone muet d'avance", root => root["phone"]!["silence_px"] = 900, "silence_px"),
             ("niveau qui sature", root => root["phone"]!["ring_db"] = 3, "0 au plus"),
-            ("voix méconnaissable", root => root["radio"]!["pitch_jitter"] = 0.4, "pitch_jitter"),
-            ("clé inconnue", root => root["radio"]!["volume"] = 1, "volume"),
+            ("radio retirée", root => root["radio"] = new JsonObject(), "radio"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
             bool refused = !AbandonedVoicesConfig.TryParse(Mutated(valid, mutate), exists, out AbandonedVoicesConfig refusedConfig, out string message);
             Check(refused && refusedConfig == null && message.Contains(expected, StringComparison.Ordinal),
-                $"radios et téléphones refusés ({label}) : {message}");
+                $"téléphones refusés ({label}) : {message}");
         }
     }
 

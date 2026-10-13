@@ -3,7 +3,7 @@
 Demande de Raphaël, 11 octobre 2026 : « Comment rajouter plus d'atmosphère et de détail au jeu ? (pense large/vue d'ensemble) », puis « crée le plan ». Questions du §7 tranchées le même soir ([DECISIONS §119 bis](DECISIONS.md)) ; **phase A livrée** (§8 à §13), **B1 livré** (§14), B2 (§15), B3 (§16), **C1 livré** (§17), **B4a livré** (§18), **B4b livré** (§19), **B4c livré** (§20) : B4 complet.
 
 
-> **13 octobre 2026 : plan en pause** ([DECISIONS §151](DECISIONS.md)), le temps que la boucle de jeu trouve sa signature ([plan 42](42-signature.md)). **Voix de C1 à retirer** ([§150](DECISIONS.md)) : « c'est pas bien » ; les cabines qui sonnent restent.
+> **13 octobre 2026 : plan en pause** ([DECISIONS §151](DECISIONS.md)), le temps que la boucle de jeu trouve sa signature ([plan 42](42-signature.md)). **Voix de C1 retirées le 13 octobre** ([§150](DECISIONS.md), [plan 41 L1](41-retours-du-12-octobre.md)) : « c'est pas bien » ; radios, sons et voitures à radio supprimés, les cabines qui sonnent restent.
 Unité d'estimation : **1 j = une journée de travail d'agent**, implémentation et vérification par capture comprises. Ordres de grandeur.
 
 ## 1. Constat

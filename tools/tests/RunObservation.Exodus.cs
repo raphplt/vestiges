@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.World;
@@ -9,8 +8,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-exodus : scènes de l'exode dans les rues (plan 39 B3). Trois embouteillages et trois barrages, au zoom normal
 /// pour juger leur poids dans la rue, puis au zoom ×2 pour lire les décors.
-/// --listen-voices : radios et cabines qui sonnent (plan 39 C1). Le joueur s'approche de la radio la plus proche, puis
-/// l'écoute dans une zone à demi oubliée, enfin s'approche d'une cabine jusqu'à ce qu'elle se taise ; journal par étape.
+/// --listen-voices : cabines qui sonnent (plan 39 C1). Le joueur s'approche de la cabine qui sonne la plus proche
+/// jusqu'à ce qu'elle se taise, puis s'en éloigne ; journal par étape.
 /// Avec tools/record_run_audio.sh (RECORD_EXTRA_ARGS=--listen-voices), le son s'écoute dans run.mp4.
 /// </summary>
 public partial class RunObservation
@@ -65,47 +64,19 @@ public partial class RunObservation
         await Frames(300);
         _player.AIInputOverride = Vector2.Zero;
         AbandonedVoicesDirector voices = _world.GetNode<AbandonedVoicesDirector>("AbandonedVoicesDirector");
-        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
-
-        Vector2 radio = Vector2.Inf;
-        foreach (ExodusScenePlacer.Scene scene in _world.ExodusScenes)
-            if (scene.Radio && scene.Position.LengthSquared() < radio.LengthSquared())
-                radio = scene.Position;
-        GD.Print($"[RunObservation] RESULT voices radios_near={(radio == Vector2.Inf ? "aucune" : radio.ToString())} booths={voices.RingingBooths.Count}");
-        if (radio != Vector2.Inf)
+        GD.Print($"[RunObservation] RESULT voices booths={voices.RingingBooths.Count}");
+        if (voices.RingingBooths.Count == 0)
+            return;
+        Vector2 booth = voices.RingingBooths[0];
+        foreach (Vector2 other in voices.RingingBooths)
+            if (other.LengthSquared() < booth.LengthSquared())
+                booth = other;
+        foreach (float distance in new[] { 900f, 600f, 300f, 60f, 300f })
         {
-            foreach (float distance in new[] { 700f, 420f, 200f, 90f })
-                await ListenAt(voices, erasure, radio, distance, $"radio à {distance} px");
-            Vector2 initialZoom = _camera.Zoom;
-            _camera.Zoom = initialZoom * 2f;
-            await Frames(10);
-            Save("voices-radio-zoom.png");
-            _camera.Zoom = initialZoom;
-            // Zone à demi oubliée : la moitié des mots environ se perdent dans le grésillement.
-            Dictionary<Vector2I, float> memory = (Dictionary<Vector2I, float>)typeof(ErasureManager)
-                .GetField("_zoneMemory", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(erasure);
-            memory[new Vector2I(Mathf.FloorToInt(radio.X / erasure.CellSize), Mathf.FloorToInt(radio.Y / erasure.CellSize))] = 0.45f;
-            await ListenAt(voices, erasure, radio, 90f, "radio en zone à demi oubliée");
+            _player.GlobalPosition = booth + new Vector2(-distance * 0.8f, distance * 0.6f);
+            _camera.ResetSmoothing();
+            await Frames(480);
+            GD.Print($"[RunObservation] RESULT voices cabine à {distance} px : entendues={voices.Heard} cabines tues={voices.PhonesSilenced}");
         }
-        if (voices.RingingBooths.Count > 0)
-        {
-            Vector2 booth = voices.RingingBooths[0];
-            foreach (Vector2 other in voices.RingingBooths)
-                if (other.DistanceSquaredTo(_player.GlobalPosition) < booth.DistanceSquaredTo(_player.GlobalPosition))
-                    booth = other;
-            foreach (float distance in new[] { 900f, 600f, 300f, 60f, 300f })
-                await ListenAt(voices, erasure, booth, distance, $"cabine à {distance} px");
-        }
-    }
-
-    private async Task ListenAt(AbandonedVoicesDirector voices, ErasureManager erasure, Vector2 source, float distance, string label)
-    {
-        int played = voices.WordsPlayed;
-        int lost = voices.WordsLost;
-        _player.GlobalPosition = source + new Vector2(-distance * 0.8f, distance * 0.6f);
-        _camera.ResetSmoothing();
-        await Frames(480);
-        GD.Print($"[RunObservation] RESULT voices {label} : entendues={voices.Heard} mots joués={voices.WordsPlayed - played} "
-            + $"perdus={voices.WordsLost - lost} cabines tues={voices.PhonesSilenced} mémoire={erasure.GetMemoryAt(source):0.00}");
     }
 }

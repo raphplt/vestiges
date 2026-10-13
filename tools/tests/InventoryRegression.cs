@@ -633,35 +633,26 @@ public partial class InventoryRegression : Node
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Control common = hud.ItemIconOf("boite_de_pansements");
         Control uncommon = hud.ItemIconOf("glacon");
-        Check(common != null && uncommon != null && common.GlobalPosition.Y < uncommon.GlobalPosition.Y,
-            "HUD : objets communs avant inhabituels malgré l'ordre d'acquisition");
+        Check(common != null && uncommon != null && uncommon.GlobalPosition.Y < common.GlobalPosition.Y,
+            "HUD : objets dans l'ordre de ramassage, quelle que soit leur rareté (DECISIONS §150)");
         Check(common is TextureRect commonIcon && commonIcon.Texture.ResourcePath == PassiveSouvenirDataLoader.Get("boite_de_pansements").Icon
             && uncommon is TextureRect uncommonIcon && uncommonIcon.Texture.ResourcePath == PassiveSouvenirDataLoader.Get("glacon").Icon,
-            "Après tri, les vols de ramassage visent encore l'icône du bon objet");
+            "Les vols de ramassage visent l'icône du bon objet");
         PauseMenu pause = new();
         AddChild(pause);
         typeof(PauseMenu).GetMethod("Pause", Private).Invoke(pause, null);
-        GridContainer bag = (GridContainer)typeof(PauseMenu).GetField("_objectsGrid", Private).GetValue(pause);
-        bag.GetChild<Button>(0).GrabFocus();
-        ItemSortSelector selector = (ItemSortSelector)pause.FindChild("ItemSort", true, false);
-        selector.GrabFocus();
+        Check(pause.FindChild("ItemSort", true, false) == null, "La pause n'a plus de sélecteur de tri (DECISIONS §150)");
         ItemSort.Select(ItemSortMode.RarityDescending);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(hud.ItemIconOf("glacon").GlobalPosition.Y < hud.ItemIconOf("boite_de_pansements").GlobalPosition.Y,
-            "La préférence de tri réordonne immédiatement le HUD");
-        Check(hud.ItemIconOf("glacon") == uncommon && hud.ItemIconOf("boite_de_pansements") == common,
-            "Les contrôles d'icône gardent leur identité quand l'ordre change pendant un ramassage");
-        Check(bag.GetChild<Button>(0).Name == "glacon" && selector.Selected == (int)ItemSortMode.RarityDescending,
-            "La pause et son sélecteur suivent le même tri que le HUD");
-        Check((string)typeof(PauseMenu).GetField("_examinedItemId", Private).GetValue(pause) == "boite_de_pansements"
-            && GetViewport().GuiGetFocusOwner() == selector,
-            "Trier le sac conserve sa fiche examinée et le focus du sélecteur");
+            "Le tri de la Collection ne réordonne pas le HUD");
+        typeof(PauseMenu).GetMethod("Resume", Private).Invoke(pause, null);
+        typeof(PauseMenu).GetMethod("Pause", Private).Invoke(pause, null);
+        GridContainer bag = (GridContainer)typeof(PauseMenu).GetField("_objectsGrid", Private).GetValue(pause);
+        Check(bag.GetChild<Button>(0).Name == "boite_de_pansements",
+            "Le sac de la pause reste en rareté croissante quelle que soit la préférence de session");
         Check(_player.PassiveSlots[0].Id == "glacon" && _player.PassiveSlots[1].Id == "boite_de_pansements" && _player.BagCount == 2,
             "Le tri de présentation ne change ni les exemplaires ni l'inventaire réel");
-        ItemSort.Select(ItemSortMode.Original);
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(hud.ItemIconOf("glacon").GlobalPosition.Y < hud.ItemIconOf("boite_de_pansements").GlobalPosition.Y,
-            "Ordre initial du HUD : ordre d'acquisition retrouvé");
         typeof(PauseMenu).GetMethod("Resume", Private).Invoke(pause, null);
         pause.QueueFree();
         hud.QueueFree();

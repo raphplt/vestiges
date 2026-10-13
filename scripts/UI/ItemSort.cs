@@ -23,16 +23,20 @@ public static class ItemSort
     }
 
     public static List<T> Order<T>(IEnumerable<T> source, Func<T, string> rarity, Func<T, string> name,
+        Func<T, bool> available = null) => Order(Mode, source, rarity, name, available);
+
+    /// <summary>Ordre imposé, indépendant de la préférence de session (sac de la pause).</summary>
+    public static List<T> Order<T>(ItemSortMode mode, IEnumerable<T> source, Func<T, string> rarity, Func<T, string> name,
         Func<T, bool> available = null)
     {
-        if (Mode == ItemSortMode.Original)
+        if (mode == ItemSortMode.Original)
             return source.ToList();
         StringComparer names = StringComparer.Create(CultureInfo.GetCultureInfo(TranslationServer.GetLocale().Replace('_', '-')), true);
         // Les objets du monde sans rareté restent après les cinq rangs, dans les deux sens de tri.
         IOrderedEnumerable<T> ordered = source.OrderBy(item => RarityArt.Rank(rarity(item)) < 0);
-        if (Mode == ItemSortMode.Name)
+        if (mode == ItemSortMode.Name)
             return ordered.ThenBy(name, names).ToList();
-        ordered = Mode == ItemSortMode.RarityDescending
+        ordered = mode == ItemSortMode.RarityDescending
             ? ordered.ThenByDescending(item => RarityArt.Rank(rarity(item)))
             : ordered.ThenBy(item => RarityArt.Rank(rarity(item)));
         if (available != null)

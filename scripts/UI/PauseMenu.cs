@@ -40,7 +40,6 @@ public partial class PauseMenu : CanvasLayer
 	private VBoxContainer _loadoutContainer;
 	private VBoxContainer _inventoryContainer;
 	private GridContainer _objectsGrid;
-	private string _examinedItemId;
 	private Control _confirmation;
 	private Control _confirmReturnFocus;
 	private System.Action _confirmAction;
@@ -56,6 +55,9 @@ public partial class PauseMenu : CanvasLayer
 	// Colonnes Équipement et Fiche : sans contrôle focalisable, elles défilent au stick droit ou à Page haut/bas.
 	private readonly List<ScrollContainer> _columnScrolls = new();
 	private const float ColumnScrollSpeed = 900f;
+	// Liseré de pierre des cases d'inventaire (MenuSkin.Button) : le contenu se tient en deçà.
+	private const float TileInset = 12f;
+	private const float TileIconSize = 44f;
 
 	public override void _Ready()
 	{
@@ -70,23 +72,7 @@ public partial class PauseMenu : CanvasLayer
 		_settingsScreen.Closed += () => _root.Visible = _isPaused;
 
 		BuildUI();
-		ItemSort.Changed += OnItemSortChanged;
 		_root.Visible = false;
-	}
-
-	public override void _ExitTree() => ItemSort.Changed -= OnItemSortChanged;
-
-	private void OnItemSortChanged()
-	{
-		if (!_isPaused || GetTree().GetFirstNodeInGroup("player") is not Player player)
-			return;
-		FillObjects(player);
-		ActivePassiveSouvenir examined = _examinedItemId == null ? null : player.FindObject(_examinedItemId);
-		if (examined != null)
-		{
-			MenuSkin.Clear(_loadoutContainer);
-			AddPassiveRow(examined);
-		}
 	}
 
 	public override void _Process(double delta)
@@ -341,7 +327,7 @@ public partial class PauseMenu : CanvasLayer
 			AddInventoryTile(badges, badge.Data.Icon, badge.Data.Name, $"Niv {badge.Level}", () => AddPassiveRow(badge));
 		FillEmpty(badges, InventoryConfig.BadgeSlots);
 		// Le sac compte des exemplaires : une tuile par objet, et une rangée au moins pour qu'un sac vide se lise.
-		_objectsGrid = InventoryGroup($"{Tr("INVENTORY_BAG")}  {string.Format(Tr("INVENTORY_BAG_TYPES_COUNT"), player.BagCount, player.BagCapacity)}", 6, sortable: true);
+		_objectsGrid = InventoryGroup($"{Tr("INVENTORY_BAG")}  {string.Format(Tr("INVENTORY_BAG_TYPES_COUNT"), player.BagCount, player.BagCapacity)}", 6);
 		FillObjects(player);
 		GridContainer perks = InventoryGroup("Réminiscences", 4);
 		foreach (PerkSpecializationData perk in player.Specializations)
@@ -355,26 +341,15 @@ public partial class PauseMenu : CanvasLayer
 	private void FillObjects(Player player)
 	{
 		MenuSkin.Clear(_objectsGrid);
-		foreach (ActivePassiveSouvenir item in ItemSort.Order(player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name))
+		// Ordre fixe en pause, par rareté croissante (DECISIONS §150) : le tri au choix reste dans la Collection.
+		foreach (ActivePassiveSouvenir item in ItemSort.Order(ItemSortMode.RarityAscending, player.PassiveSlots, item => item.Data.Rarity, item => item.Data.Name))
 			AddInventoryTile(_objectsGrid, item.Data.Icon, item.Data.Name, $"×{item.Copies}", () => AddPassiveRow(item), item.Data.Rarity, item.Id);
 		FillEmpty(_objectsGrid, _objectsGrid.Columns);
 	}
 
-	private GridContainer InventoryGroup(string title, int columns, bool sortable = false)
+	private GridContainer InventoryGroup(string title, int columns)
 	{
-		if (sortable)
-		{
-			HBoxContainer header = new();
-			header.AddThemeConstantOverride("separation", 12);
-			Label label = UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor);
-			label.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-			header.AddChild(label);
-			header.AddChild(UITheme.MakeLabel(Tr("ITEM_SORT_LABEL"), TextRole.Small, UITheme.TextDim));
-			header.AddChild(new ItemSortSelector { Role = TextRole.Small, CustomMinimumSize = new Vector2(330, 48) });
-			_inventoryContainer.AddChild(header);
-		}
-		else
-			_inventoryContainer.AddChild(UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor));
+		_inventoryContainer.AddChild(UITheme.MakeLabel(title, TextRole.Body, UITheme.TextColor));
 		GridContainer grid = new() { Columns = columns, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		grid.AddThemeConstantOverride("h_separation", 8);
 		_inventoryContainer.AddChild(grid);
@@ -387,28 +362,35 @@ public partial class PauseMenu : CanvasLayer
 		if (itemId != null) tile.Name = itemId;
 		tile.TooltipText = rarityId == null ? name : $"{name} · {RarityPalette.DisplayName(rarityId)}";
 		tile.AccessibilityName = name;
-		tile.CustomMinimumSize = new Vector2(grid.Columns == 6 ? 110 : 169, 92);
-		TextureRect picture = new() { Texture = UITheme.LoadTex(icon), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+		tile.CustomMinimumSize = TileSize(grid);
+		// Icône et niveau en colonne centrée, à l'intérieur du liseré de pierre : rien ne mord sur le cadre.
+		VBoxContainer column = new() { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = Control.MouseFilterEnum.Ignore };
+		column.AddThemeConstantOverride("separation", 0);
+		tile.AddChild(column);
+		column.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		column.OffsetLeft = TileInset; column.OffsetRight = -TileInset;
+		column.OffsetTop = TileInset; column.OffsetBottom = -TileInset;
+		column.AddChild(new TextureRect { Texture = UITheme.LoadTex(icon), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
 			StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-			Position = new Vector2((tile.CustomMinimumSize.X - 48) / 2, 8), Size = new Vector2(48, 48), MouseFilter = Control.MouseFilterEnum.Ignore };
-		tile.AddChild(picture);
+			CustomMinimumSize = new Vector2(TileIconSize, TileIconSize), SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+			MouseFilter = Control.MouseFilterEnum.Ignore });
 		if (rarityId != null)
 		{
 			MenuSkin.StyleItemButton(tile, rarityId);
 			TextureRect rarity = new() { Texture = RarityArt.Icons(RarityArt.Rank(rarityId), 12)[0],
-				Position = new Vector2(6, 6), Size = new Vector2(12, 12), MouseFilter = Control.MouseFilterEnum.Ignore };
+				Position = new Vector2(TileInset, TileInset), Size = new Vector2(12, 12), MouseFilter = Control.MouseFilterEnum.Ignore };
 			tile.AddChild(rarity);
 		}
-		Label text = UITheme.MakeLabel(level, TextRole.Body, UITheme.TextLight, align: HorizontalAlignment.Center);
-		text.Position = new Vector2(0, 62);
-		text.Size = new Vector2(tile.CustomMinimumSize.X, 24);
-		tile.AddChild(text);
-		void Inspect() { _examinedItemId = itemId; MenuSkin.Clear(_loadoutContainer); detail(); }
+		if (level.Length > 0)
+			column.AddChild(UITheme.MakeLabel(level, TextRole.Small, UITheme.TextLight, align: HorizontalAlignment.Center));
+		void Inspect() { MenuSkin.Clear(_loadoutContainer); detail(); }
 		tile.MouseEntered += Inspect;
 		tile.FocusEntered += Inspect;
 		tile.Pressed += Inspect;
 		grid.AddChild(tile);
 	}
+
+	private static Vector2 TileSize(GridContainer grid) => new(grid.Columns == 6 ? 110 : 169, 96);
 
 	private static void FillEmpty(GridContainer grid, int count)
 	{

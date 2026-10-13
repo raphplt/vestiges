@@ -69,7 +69,7 @@ Proposition de l'agent : garder la famille « options et ampleur », retirer ou 
 - Les Vestiges déjà dépensés seraient remboursés.
 - XP et Chance sont à trancher : elles touchent au gambling.
 
-À décider par Raphaël. Ce choix change l'état méta à mesurer (§5).
+**Tranché le 13 octobre ([§152](DECISIONS.md))** : la puissance brute part (PV max, dégâts, cadence, vitesse, régénération, armure), sans remboursement (personne n'a de copie du jeu) ; XP et Chance à trancher avec le gambling. L'état « complet » se mesure sans elles.
 
 ## 5. Campagne de mesures
 
@@ -132,15 +132,15 @@ Inventaire du 13 octobre :
 
 ### Matrice (lot M1)
 
-Une run de référence est d'abord chronométrée, pour connaître le rapport entre temps de jeu et temps machine. Durée : 30 min de jeu, jusqu'à l'Indicible. Budget visé : une nuit de calcul, `MEASURE_JOBS=2`.
+Une run de référence est d'abord chronométrée, pour connaître le rapport entre temps de jeu et temps machine. Durée : 30 min de jeu, jusqu'à l'Indicible. Ordre (§152) : après le lot 1 des retours du 12 octobre au soir. Budget visé : une nuit de calcul, `MEASURE_JOBS=2`.
 
 | Bloc | Personnages | Méta | Profils | Builds | Graines | Runs |
 |---|---|---|---|---|---|---|
 | A — personnages | 5 | milieu | 3 | naturels | 3 | 45 |
 | B — progression | Traqueur | neuf, complet | 3 | naturels | 3 | 18 |
-| C — builds | Traqueur | complet | moyen, fort | 4 builds de référence (une arme poussée, synergie d'objets, zone, critique) | 3 | 24 |
+| C — builds | Traqueur | complet | moyen, fort | 5 builds de référence (une arme poussée, synergie d'objets, zone, critique, tank) | 3 | 30 |
 
-Les quatre builds de référence sont à proposer à Raphaël avant M1. La matrice suit sa réponse au §4 : si les stats brutes du Campement partent, l'état « complet » se mesure aussi sans elles.
+Builds de référence validés le 13 octobre (§152), tank ajouté ; leur composition exacte est fixée en M0c. L'état « complet » se mesure sans les stats brutes du Campement (§4).
 
 ### Lecture (lot M2)
 

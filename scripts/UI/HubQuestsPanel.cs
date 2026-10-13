@@ -162,7 +162,7 @@ public partial class HubQuestsPanel : MarginContainer
         row.AddChild(line);
         line.AddChild(new TextureRect
         {
-            Texture = RewardIcon(quest),
+            Texture = QuestRewardIcon.For(quest),
             CustomMinimumSize = new Vector2(IconSize, IconSize),
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
@@ -250,7 +250,7 @@ public partial class HubQuestsPanel : MarginContainer
             reward.Alignment = HorizontalAlignment.Left;
             reward.Disabled = unlock.Kind == UnlockKind.Character && CharacterDataLoader.Get(unlock.Id) == null;
             if (reward.Disabled) reward.Text = QuestBook.UnlockName(unlock) + " · À venir";
-            reward.Icon = UnlockIcon(unlock);
+            reward.Icon = QuestRewardIcon.Of(unlock);
             reward.ExpandIcon = true;
             reward.AddThemeConstantOverride("icon_max_width", 48);
             reward.Pressed += () => EmitSignal(SignalName.RewardRequested, (int)unlock.Kind, unlock.Id);
@@ -265,25 +265,6 @@ public partial class HubQuestsPanel : MarginContainer
             parent.RemoveChild(child);
             child.QueueFree();
         }
-    }
-
-    private static Texture2D RewardIcon(QuestDefinition quest)
-    {
-        foreach (QuestUnlock unlock in quest.Unlocks)
-        {
-            Texture2D icon = UnlockIcon(unlock);
-            if (icon != null)
-                return icon;
-        }
-        return null;
-    }
-
-    private static Texture2D UnlockIcon(QuestUnlock unlock)
-    {
-        if (unlock.Kind == UnlockKind.Character)
-            return CharacterPortrait.Idle(unlock.Id);
-        string path = QuestBook.UnlockIcon(unlock);
-        return !string.IsNullOrEmpty(path) && ResourceLoader.Exists(path) ? GD.Load<Texture2D>(path) : null;
     }
 
     private static string Stars(int difficulty) => new('★', difficulty);

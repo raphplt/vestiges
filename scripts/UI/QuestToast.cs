@@ -7,8 +7,8 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Notification d'une quête accomplie en pleine run (plan 06 §9.1) : un bandeau court sous la barre de boss, « Quête
-/// accomplie : » son nom, puis ce qu'elle débloque. Plusieurs quêtes passent l'une après l'autre ; pendant un écran de
+/// Notification d'une quête accomplie en pleine run (plan 06 §9.1) : un bandeau court sous la barre de boss, l'icône de
+/// la récompense (DECISIONS §150), « Quête accomplie : » son nom, puis ce qu'elle débloque. Plusieurs quêtes passent l'une après l'autre ; pendant un écran de
 /// choix (arbre en pause) le bandeau se retire et la file attend. Enfant de la racine mise à l'échelle du HUD :
 /// coordonnées en unités de référence 960×540.
 /// </summary>
@@ -18,6 +18,7 @@ public partial class QuestToast : Control
     private const float Width = 340f;
     private const float FadeSec = 0.3f;
     private const float HoldSec = 3.2f;
+    private const float IconSize = 24f;
 
     private static readonly Color Ink = new(0.06f, 0.05f, 0.1f, 0.9f);
     private static readonly Color Gold = new("d4a843");
@@ -28,6 +29,7 @@ public partial class QuestToast : Control
     private PanelContainer _panel;
     private Label _title;
     private Label _detail;
+    private TextureRect _icon;
     private Tween _tween;
     private bool _showing;
 
@@ -67,6 +69,7 @@ public partial class QuestToast : Control
     /// <summary>Bandeau en cours et quêtes en attente (bancs).</summary>
     public string ShownText => _showing ? $"{_title.Text} {_detail.Text}" : "";
     public int PendingCount => _pending.Count;
+    public Texture2D ShownIcon => _showing && _icon.Visible ? _icon.Texture : null;
 
     private void BuildPanel()
     {
@@ -86,9 +89,19 @@ public partial class QuestToast : Control
         _panel.Size = new Vector2(Width, 0f);
         AddChild(_panel);
 
-        VBoxContainer column = new() { MouseFilter = MouseFilterEnum.Ignore };
+        HBoxContainer row = new() { MouseFilter = MouseFilterEnum.Ignore };
+        row.AddThemeConstantOverride("separation", 8);
+        _panel.AddChild(row);
+        _icon = new TextureRect
+        {
+            CustomMinimumSize = new Vector2(IconSize, IconSize), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered, TextureFilter = TextureFilterEnum.Nearest,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter, MouseFilter = MouseFilterEnum.Ignore,
+        };
+        row.AddChild(_icon);
+        VBoxContainer column = new() { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         column.AddThemeConstantOverride("separation", 1);
-        _panel.AddChild(column);
+        row.AddChild(column);
         _title = MakeLabel(9, Gold);
         column.AddChild(_title);
         _detail = MakeLabel(11, Paper);
@@ -124,6 +137,8 @@ public partial class QuestToast : Control
 
         _title.Text = string.Format(Tr("QUEST_DONE_TOAST"), quest.Name);
         _detail.Text = QuestBook.RewardSummary(quest);
+        _icon.Texture = QuestRewardIcon.For(quest);
+        _icon.Visible = _icon.Texture != null;
         _panel.Visible = true;
         _tween?.Kill();
         _tween = CreateTween();

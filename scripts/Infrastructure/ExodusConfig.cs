@@ -14,8 +14,6 @@ public sealed class ExodusConfig
     public int RoadCellsPerScene { get; private init; }
     public float MinSpacingPx { get; private init; }
     public float JamShare { get; private init; }
-    /// <summary>Part des embouteillages dont une voiture porte une radio encore allumée (plan 39 C1).</summary>
-    public float RadioShare { get; private init; }
     public int JamCarsMin { get; private init; }
     public int JamCarsMax { get; private init; }
     public float CarSpacingHorizontalPx { get; private init; }
@@ -56,11 +54,10 @@ public sealed class ExodusConfig
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "racine", "road_cells_per_scene", "min_spacing_px", "jam_share", "jam_cars",
-                "car_spacing_px", "leftovers_per_jam", "leftovers_per_barricade", "quiet_radius_cells", "street_scatter", "radio_share");
+                "car_spacing_px", "leftovers_per_jam", "leftovers_per_barricade", "quiet_radius_cells", "street_scatter");
             int cellsPerScene = reader.Integer(root, "road_cells_per_scene", 40, 5000);
             float spacing = reader.Positive(root, "min_spacing_px");
             float jamShare = reader.Chance(root, "jam_share");
-            float radioShare = reader.Chance(root, "radio_share");
             (float carsMin, float carsMax) = reader.Range(root, "jam_cars", 2f, 6f);
             JsonElement carSpacing = reader.Section("car_spacing_px");
             reader.AllowOnly(carSpacing, "car_spacing_px", "horizontal", "vertical");
@@ -92,7 +89,7 @@ public sealed class ExodusConfig
                 return false;
             config = new ExodusConfig
             {
-                RoadCellsPerScene = cellsPerScene, MinSpacingPx = spacing, JamShare = jamShare, RadioShare = radioShare,
+                RoadCellsPerScene = cellsPerScene, MinSpacingPx = spacing, JamShare = jamShare,
                 JamCarsMin = Mathf.RoundToInt(carsMin), JamCarsMax = Mathf.RoundToInt(carsMax),
                 CarSpacingHorizontalPx = horizontal, CarSpacingVerticalPx = vertical,
                 LeftoversPerJamMin = Mathf.RoundToInt(jamLeftMin), LeftoversPerJamMax = Mathf.RoundToInt(jamLeftMax),

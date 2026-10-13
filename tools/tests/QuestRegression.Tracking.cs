@@ -373,6 +373,7 @@ public partial class QuestRegression
         _bus.EmitSignal(EventBus.SignalName.QuestCompleted, "fever");
         Check(toast.ShownText.Contains("Ratisser") && toast.ShownText.Contains("Râteau") && toast.PendingCount == 1,
             $"bandeau : la première quête affichée, la seconde en file ({toast.ShownText})");
+        Check(toast.ShownIcon != null, "bandeau : l'icône de la récompense accompagne la quête (DECISIONS §150)");
         RemoveChild(toast);
         toast.QueueFree();
     }

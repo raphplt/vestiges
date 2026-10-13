@@ -254,9 +254,9 @@ public partial class GameBootstrap : Node
         smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.Seed);
         sceneRoot.AddChild(smallPlaces);
         smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
-        // Radios des embouteillages et cabines qui sonnent (plan 39 C1) : après les petits lieux, dont les cabines.
+        // Cabines qui sonnent (plan 39 C1) : après les petits lieux, dont les cabines.
         AbandonedVoicesDirector abandonedVoices = new() { Name = "AbandonedVoicesDirector" };
-        abandonedVoices.Setup(worldSetup, smallPlaces, erasureManager, player);
+        abandonedVoices.Setup(smallPlaces, player);
         sceneRoot.AddChild(abandonedVoices);
         // Fausses lumières (plan 39 B4a) : sur les lampes des décors déjà posés.
         FalseLightDirector falseLights = new() { Name = "FalseLightDirector" };

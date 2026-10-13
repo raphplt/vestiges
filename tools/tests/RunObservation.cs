@@ -30,7 +30,7 @@ namespace Vestiges.Tests;
 /// --capture-farms : fermes des Champs Sauvages les plus proches du départ, normal et dézoomé (RunObservation.Farms.cs).
 /// --capture-exodus : scènes de l'exode dans les rues les plus proches du départ, normal et ×2 (RunObservation.Exodus.cs).
 /// --capture-lights : fausses lumières, une lampe de chaque sorte de jour puis sous l'orage, puis l'oubli (RunObservation.Lights.cs).
-/// --listen-voices : radio et cabine les plus proches écoutées à plusieurs distances, journal des mots joués et perdus (RunObservation.Exodus.cs).
+/// --listen-voices : cabine qui sonne la plus proche écoutée à plusieurs distances, journal des lecteurs et cabines tues (RunObservation.Exodus.cs).
 /// --capture-quarries : chantiers de la Carrière Effondrée les plus proches du départ, normal et dézoomé (idem).
 /// --capture-omen : présage d'une Résurgence, avant, pendant l'avertissement et pendant la crise (RunObservation.Omen.cs).
 /// --check-connectivity : coffres, Mémoriaux et Failles accessibles à pied depuis le départ (RunObservation.Connectivity.cs).
