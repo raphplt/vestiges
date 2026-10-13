@@ -616,6 +616,29 @@ Raphaël : les zones posées au sol, du joueur comme des créatures, sont « sou
 | Z3 | Chronomètre : cadran couché au sol, touche en ellipse au sol, rayon relevé de √2 (80 → 113) pour garder la surface. |
 | Z4 | Aura d'affixe et trou des mains de l'Indicible au même rendu. |
 
+**Livré (Z1 à Z4), [captures en jeu](planches/25-s10-zones-en-jeu.png) :**
+
+- **Shader** (`pixel_fx.gdshader`) : les formes 3 et 7 passent par `ground_color`, qui choisit une matière (`ZoneMatter`, uniforme `matter`). Bord en lobes : trois harmoniques déphasées par la graine de chaque zone. Bord et contour se lisent sur les texels voisins, d'un pixel d'écran partout, pôles compris. L'animation suit `TIME` quantifié à 8 poses/s.
+  - **Annonce** : sol assombri, bord net, contour sombre, front clair qui grandit avec la progression, éclair plein à l'impact, bord seul pour une limite de portée.
+  - **Liquide** : bord éclairé en haut à gauche et sombre en bas à droite, reflet, taches, bulles qui éclatent, gouttes autour ; `fill_density` règle l'opacité (bile 0,9, gomme 0,4).
+  - **Feu** : sol roussi, flammèches qui montent, langues au-dessus de la zone, braises.
+  - **Cadran** : douze graduations, cercle intérieur tramé, aiguille qui fait un tour.
+  - **Éclat** : éclaboussure en étoile qui s'ouvre, rayons, sol roussi tramé.
+  - Le couloir ondule en largeur. L'onde (forme 2) a un bord à peine irrégulier.
+- **Branchement :**
+  - annonces des créatures, des boss et des événements : `GroundTelegraph`, matière par défaut ;
+  - flaque de bile : `ShowCircle(..., ZoneMatter.Liquid)` ;
+  - feu de la Lampe ;
+  - explosions des Instables et du Pétard, Écho, éclat de portée : `PlayBurst`, `ShowExplosion` ;
+  - Chewing-gum : nouvelle famille `Gum`, rose de la craie du joueur.
+- **Chronomètre :** cadran couché ; la touche passe en distance au sol (`Iso.GroundDistanceSquared`) ; `slow_radius` de 80 à 113 pour garder la surface.
+- **`PixelBlob`** : la même tache en lobes pour les dessins en code.
+  - Aura d'affixe (`PixelGroundRing`) : lueur tramée plus dense près du bord, qui scintille d'une pose à l'autre ; elle remplace le damier.
+  - Trou des mains de l'Indicible : terre retournée en pixels, ou eau et remous.
+  - Les repères d'événements gardent l'ellipse exacte.
+
+**Vérification :** build sans avertissement ; captures en run de la bile, des armes à zone, des capacités ennemies, des statuts (annonce d'explosion) et du combat de l'Indicible, toutes inspectées, sans erreur de shader. Coût non mesuré au banc : le banc dense n'emploie aucune de ces armes. Le shader évalue désormais cinq fois la forme par pixel de zone, et jusqu'à six fois de plus pour les langues de feu.
+
 ### S2 à S4 — personnages joués repris et intégrés, 3 octobre
 
 Direction retenue par Raphaël entre « stylisé » et « grosse tête » (DECISIONS §61). [Planche avant/après](planches/25-s9-personnages.png), [animations](planches/25-s9-animations.png).

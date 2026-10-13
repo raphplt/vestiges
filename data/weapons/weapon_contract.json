@@ -60,7 +60,7 @@
   },
   "fx": {
     "styles": ["slash", "cleave", "smash", "thrust", "whirl", "bell", "clock", "void", "chain", "cone"],
-    "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris"],
+    "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris", "gum"],
     "projectile_aliases": ["orb"]
   }
 }

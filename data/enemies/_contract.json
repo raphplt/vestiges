@@ -20,7 +20,7 @@
   },
   "shapes": ["triangle", "square", "diamond", "boss"],
   "shakes": ["light", "medium", "heavy"],
-  "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris"],
+  "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris", "gum"],
   "abilities": {
     "omen_strike": {
       "numbers": {

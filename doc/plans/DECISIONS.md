@@ -1873,3 +1873,21 @@ Raphaël, sur le [plan 46](46-difficulte-choisie.md) : « steles ca me va, défi
 - **Alkhemikal partout dans le jeu** (demande de Raphaël) : textes, chiffres, titres, HUD, chiffres de dégâts, plaques d'élites, thème global. Pixel Operator n'est plus chargé. `UITheme` garde ses accès (`BodyFont`, `StrongFont`…) qui renvoient tous Alkhemikal ; la graisse ne change plus la police (Alkhemikal n'a pas de gras).
 - Métriques presque identiques à Pixel Operator à taille égale (226 px contre 228 pour la même phrase en 16) : les mises en page tiennent. Aucun texte sous 16 px (grille d'Alkhemikal) : les textes en 8 (Pixel Operator 8) passent en 16, même largeur, plus hauts.
 - **Vitals** : niveau dans un petit sceau (coins coupés, liseré de métal de la jauge, bandeau « NIV. », rivets d'or), chiffre en blanc papier, en 24 ; PV et jauge centrés sur la hauteur du sceau.
+
+## 164. Zones au sol au niveau du reste — 13 octobre 2026, soir
+
+Raphaël : « les armes qui mettent des zones au sol me posent probleme (que ce soit du joueur ou des ennemis). souvent c'est un cercle parfait avec une texture légère. c'est clairement pas au niveau du reste ».
+
+Réponses sur la [planche](planches/25-s10-zones-au-sol.png) : annonces des créatures « bord irrégulier aussi » (plutôt que bord exact mieux fini ou annonce à thème) ; matières « oui, comme la planche » ; Chronomètre en cadran couché ; tout ce qui est au sol dans ce lot.
+
+**Acquis :**
+- chaque zone a une matière : annonce, liquide, feu, cadran, éclat ;
+- toutes ont un bord irrégulier propre à chaque zone, annonces comprises ;
+- les zones s'animent pendant toute leur durée ;
+- le Chronomètre est un cadran couché au sol, avec une touche au sol et la même surface (rayon 80 → 113) ;
+- l'aura d'affixe et le trou des mains de l'Indicible ont le même rendu ;
+- le dessin d'une flaque s'écarte d'environ 10 % de son cercle de touche, accepté.
+
+**Choisi par l'agent :** famille `Gum` rose pour le Chewing-gum, translucide ; Écho des Gants gardé en cercle à l'écran, comme sa touche.
+
+**Livré :** [plan 25 S10](25-sprites-et-design.md). À juger en jeu.
