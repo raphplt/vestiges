@@ -1683,3 +1683,37 @@ Précision pendant I16 : « il ne faut surtout pas les probas du coffre affiché
 ## 149. Description des objets rétablie dans les coffres — 12 octobre 2026
 
 Raphaël revient sur la suppression d'I16 : « pour les coffres je pense qu'il faut quand meme la description de l'objet sous le titre ». Remettre l'effet de l'objet directement sous son nom, avec un texte courant clair et replié, conserver la rareté séparée et les probabilités masquées. Reprise [I17](35-raretes-des-objets.md#i17--description-de-lobjet-sous-le-titre-du-butin-12-octobre-2026).
+
+## 150. Retours du 12 octobre au soir : menus, bilan, monde — 12 et 13 octobre 2026
+
+Retours dictés par Raphaël après une partie, puis tranchés par questions. Lots à découper dans un plan de retours avant de coder ; priorité proposée : corrections rapides, puis bilan et Recommencer, puis densité du monde.
+
+- **Pause** : cases d'armes, d'Écussons et du sac mal centrées (niveau et icône qui débordent). **Pas de tri dans la pause** : le sac s'y montre en rareté croissante fixe ; la Collection garde son tri (revient sur §142 pour la pause seulement). **Bouton Recommencer** : même personnage, nouvelle graine, avec confirmation ; la run compte comme abandonnée.
+- **Pluie** : il ne doit pas pleuvoir avant l'Indicible. **Orage sec** : éclairs, vent et nuages, sans pluie ; la pluie de cendres reste.
+- **Bilan** : la courbe « Distance au départ au fil de la run » ne se comprend pas ; à la place, **score détaillé et build (armes, Écussons, objets) visibles sans clic**. « CE QUI DEMEURE » : plus de titre, une **rangée compacte de gains avec icônes**.
+- **Sous-titre du menu principal** : jugé trop explicite, propositions faites, puis « on va laisser telle quelle finalement ».
+- **Choix du personnage** : retirer le cadre jaune autour du portrait ; ne plus afficher PV et vitesse dans les détails ; le survol des boutons « Détails » du personnage et de l'arme (rectangle semi-transparent) est hors direction, à refaire.
+- **Voix humaines en ville** (plan 39 C1) : « c'est pas bien », **retirer les voix** ; les cabines qui sonnent restent.
+- **Repère au sol des petits lieux** (coins de losange dorés, plan 41 R4) : incompris, **retiré** ; l'invite « [E] » suffit.
+- **Faune** : un peu trop, **−30 %**, pigeons qui s'envolent gardés.
+- **Barrières** : beaucoup depuis peu, même en ville ; mesurer la source, puis **la diviser par deux**.
+- **Notification de quête accomplie** : montrer l'**icône de la récompense**.
+- **Pour plus tard** : rues de la ville un peu étroites ; routes toutes perpendiculaires alors que les bâtiments sont décalés. Pas assez d'Écussons comparé au reste (retour global, voir plan 42).
+
+## 151. La signature de Vestiges — 13 octobre 2026
+
+Raphaël veut un jeu aussi complet et poussé que Vampire Survivors, Megabonk et Risk of Rain 2, **avec des mécaniques uniques**, une boucle très satisfaisante et addictive. Megabonk l'a le plus happé : « un mélange du côté gambling, des scores explosifs, des quêtes et déblocages et qu'on s'ennuie jamais en run ». Méta-réflexion avec l'agent, consignée au [plan 42](42-signature.md).
+
+**Acquis :**
+- **Atmosphère en pause** (plans 39 et 40) tant que la boucle n'a pas sa signature.
+- Gestes de base gardés : « le tir automatique me plaît ».
+- **Effacement** : règles actuelles bonnes mais peu visibles, surtout en début de partie. Il doit **prendre quelque chose** : piste retenue, dans le Néant, **des stats tirées au hasard diminuées temporairement**, plus nombreuses au fil de la run (« plus marrant », aléatoire). Écartés : l'Essence non dépensée (des objets comptent l'Essence ramassée), les objets du sac ; préféré aux niveaux d'arme oubliés. **Instabilité croissante** au fil de la partie.
+- **Butin à sauver** de l'Effacement : « excellent » ; coffres et bonus qui s'effacent forcent à explorer vite et rendent le jeu « plus vif ».
+- **Contrer** : ni halo de couleur au sol (« va rendre mal ») ni geste supplémentaire ; l'ancrage passe par l'ouverture des coffres, les points d'intérêt et la marche, à rendre lisible.
+- **Emballement de puissance** : « 1000 % d'accord », c'est ce qui rend Megabonk addictif ; il ne doit pas arriver à chaque run (connaître le jeu, build en synergie). Se joue dans l'équilibrage, surtout la montée en puissance des ennemis face à celle du joueur.
+- **Systèmes** : pas plus nombreux que dans Megabonk ; plutôt mal expliqués, organisés et équilibrés.
+- **Mouvement** : à renforcer, à la manière d'un jeu 2D isométrique.
+- Retenus de l'analyse : « la pression » et « la gourmandise ». Non retenus : « l'élan », la formule « la distance comme moteur », l'idée A du plan 11 (trace offensive du mouvement).
+- **Méthode** : mesurer d'abord, **par scripts de simulation** plutôt qu'en lançant le jeu, avec les différents personnages, des configurations de build, plusieurs états de progression (peu d'armes et d'objets en début de jeu) et des profils de joueur (débutant, fort) ; écrire la promesse en une phrase ; **tout concevoir avant de coder**.
+
+**Doute ouvert** : les améliorations permanentes de puissance brute du Campement (vitesse, dégâts…) : « quand on a joué 20 heures au jeu, le début de partie n'est plus le même ». Taille du sac et gain de Vestiges lui conviennent. À trancher (plan 42 §4).
