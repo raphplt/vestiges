@@ -1078,7 +1078,6 @@ public partial class AudioManager : Node
 		float volumeDb = targetKey switch
 		{
 			"sfx_orage_proche" => -6f,
-			"sfx_pluie_legere" => -9f,
 			"sfx_foret_rafales" => -8f,
 			"sfx_brouillard" => -12f,
 			"sfx_tonnerre_lointain" => -11f,
@@ -1094,7 +1093,8 @@ public partial class AudioManager : Node
 		{
 			"thick_fog" => "sfx_brouillard",
 			"storm" => "sfx_orage_proche",
-			"ash_rain" => "sfx_pluie_legere",
+			// Cendres : un souffle étouffé, pas de bruit de pluie avant l'Indicible (DECISIONS §150).
+			"ash_rain" => "sfx_brouillard",
 			"forgotten_wind" => "sfx_foret_rafales",
 			_ when _currentPhase is "Crisis" or "LateGame" => "sfx_tonnerre_lointain",
 			_ => ""

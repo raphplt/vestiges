@@ -421,13 +421,6 @@
     "priority": 30,
     "max_voices": 2
   },
-  "sfx_pluie_legere": {
-    "path": "res://assets/audio/sfx/ambiance/sfx_pluie_legere.wav",
-    "volume_db": 0,
-    "min_interval_ms": 0,
-    "priority": 30,
-    "max_voices": 2
-  },
   "sfx_orage_proche": {
     "path": "res://assets/audio/sfx/ambiance/sfx_orage_proche.wav",
     "volume_db": 0,

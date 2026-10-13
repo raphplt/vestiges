@@ -84,13 +84,14 @@ Trois lots, dans cet ordre ; l'outillage de mesure du [plan 42](42-signature.md)
 
 **Non vérifié** : le bandeau de quête à l'écran (contrôlé par la régression, pas capturé) ; le survol à la souris (capturé au focus clavier, même style).
 
-**Point ouvert** : la pluie de cendres joue `sfx_pluie_legere`, un bruit de pluie continu ; à trancher.
+**Pluie de cendres** (tranché le 13 octobre, recommandation acceptée) : elle jouait `sfx_pluie_legere`, un bruit de pluie continu ; elle joue désormais `sfx_brouillard`, souffle grave et étouffé. Le son de pluie, sans autre usage, est retiré.
 
 **Reprise du 13 octobre** (retour de Raphaël sur L1, « sur tout le reste ça me va ») :
 
 - **Cartes de personnage** : médaillon et texte en conteneurs, en retrait de 20 px du liseré de pierre (le médaillon touchait le cadre), cartes de 124 px. **Verrouillé** : pierre éteinte, personnage en ombre, nom et « À débloquer » pâles ; jouable : nom seul, en clair (« Jouable » retiré).
 - **Focus des boutons** : le liseré jaune de 3 px à gauche du bouton choisi est remplacé par la pierre éclairée du survol, pour tous les boutons et onglets en pierre du jeu (`UITheme.ApplyButtonStyle`, `ApplyTabStyle`). Les défilements et curseurs gardent le liseré.
 - **Contour des icônes du sac au HUD** : un pixel à la couleur de la rareté (`outline.gdshader`, jusque-là inutilisé, ajouté au préchauffage des shaders).
+- **Sans cadre** (second retour, « soit tu n'en mets pas, c'est peut-être le mieux ») : le personnage est posé directement sur la pierre de sa carte, le médaillon est retiré.
 - Vérifié : build, suites navigation des menus, art de l'interface, inventaire, écrans de choix, préchauffage des shaders ; captures de la liste des personnages (profil neuf), du focus de la pause et du sac au HUD regardées.
 
 ### L2 — Bilan et Recommencer (≈ 1 à 2 j)

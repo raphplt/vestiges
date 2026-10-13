@@ -1700,6 +1700,7 @@ Retours dictés par Raphaël après une partie, puis tranchés par questions. Lo
 - **Notification de quête accomplie** : montrer l'**icône de la récompense**.
 - **HUD des objets** (ajouté le 13 octobre pendant L1) : « ça ne me plaît pas l'affichage des objets. N'affiche pas 4/10 types. Aussi pas besoin de l'icône de rareté, et pas besoin de mettre dans des cadres carrés », puis « afficher les objets par ordre de récupération ».
 - **Après L1** : « c'est mieux les cadres des personnages mais ils sont pas bien affichés… aussi on ne distingue pas assez bien la différence entre un personnage jouable et pas encore débloqué » ; « sur le menu pause il y a un trait jaune à côté de l'option choisie, c'est moche, faut faire mieux » ; contour des icônes du sac : « oui, on peut même faire un contour coloré en fonction de la rareté ». « Sur tout le reste de ce que tu as fait ça me va. »
+- **Cadre du portrait** : « soit tu n'en mets pas, c'est peut-être le mieux » : retiré. **Pluie de cendres** : la recommandation (son sec à la place du bruit de pluie) est acceptée.
 - **Pour plus tard** : rues de la ville un peu étroites ; routes toutes perpendiculaires alors que les bâtiments sont décalés. Pas assez d'Écussons comparé au reste (retour global, voir plan 42).
 
 ## 151. La signature de Vestiges — 13 octobre 2026

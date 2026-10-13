@@ -24,11 +24,10 @@ public partial class HubCharactersPanel : MarginContainer
     private Button _weapon;
     private CharacterData _examined;
     private readonly Dictionary<string, Button> _rows = new();
-    // Le médaillon ne s'allume pas à la sélection : le cadre doré de la carte suffit (DECISIONS §150).
-    private readonly StyleBoxFlat _medallion = Medallion(new Color("4a4550"));
     private const float RowHeight = 124f;
     private const float RowInset = 20f;
-    private const float MedallionWidth = 66f;
+    // Le personnage se pose sur la pierre, sans cadre : le cadre doré de la carte suffit (DECISIONS §150).
+    private const float SpriteWidth = 66f;
     private static readonly Color LockedStone = new(0.62f, 0.6f, 0.66f);
     private static readonly Color LockedSilhouette = new(0.2f, 0.19f, 0.24f);
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
@@ -112,14 +111,6 @@ public partial class HubCharactersPanel : MarginContainer
         column.AddChild(_depart);
     }
 
-    /// <summary>Creux sombre derrière le sprite, cerclé d'un trait plein : le personnage se lit sur un fond, pas sur la pierre.</summary>
-    private static StyleBoxFlat Medallion(Color rim)
-    {
-        StyleBoxFlat style = new() { BgColor = new Color("15141d"), BorderColor = rim, AntiAliasing = false };
-        style.SetBorderWidthAll(2);
-        return style;
-    }
-
     private static Label Label(Container parent, string text, TextRole role, Color color)
     {
         Label label = UITheme.MakeLabel(text, role, color);
@@ -142,27 +133,21 @@ public partial class HubCharactersPanel : MarginContainer
                 row.CustomMinimumSize = new Vector2(300, RowHeight);
                 // Verrouillé : la pierre s'éteint, le personnage n'est qu'une ombre, le nom pâlit (DECISIONS §150).
                 row.SelfModulate = unlocked ? Colors.White : LockedStone;
-                // Médaillon et texte en conteneurs, en retrait égal du liseré de pierre : rien ne touche le cadre.
+                // Sprite et texte en conteneurs, en retrait égal du liseré de pierre : rien ne touche le cadre.
                 HBoxContainer content = new() { MouseFilter = MouseFilterEnum.Ignore };
                 content.AddThemeConstantOverride("separation", 16);
                 row.AddChild(content);
                 content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
                 content.OffsetLeft = RowInset; content.OffsetRight = -RowInset;
                 content.OffsetTop = RowInset; content.OffsetBottom = -RowInset;
-                Panel medallion = new() { CustomMinimumSize = new Vector2(MedallionWidth, 0), MouseFilter = MouseFilterEnum.Ignore };
-                medallion.AddThemeStyleboxOverride("panel", _medallion);
-                content.AddChild(medallion);
                 TextureRect sprite = new()
                 {
-                    Texture = CharacterPortrait.Idle(character.Id),
+                    Texture = CharacterPortrait.Idle(character.Id), CustomMinimumSize = new Vector2(SpriteWidth, 0),
                     ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                     TextureFilter = TextureFilterEnum.Nearest, MouseFilter = MouseFilterEnum.Ignore,
                     Modulate = unlocked ? Colors.White : LockedSilhouette,
                 };
-                medallion.AddChild(sprite);
-                sprite.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-                sprite.OffsetLeft = sprite.OffsetTop = 4f;
-                sprite.OffsetRight = sprite.OffsetBottom = -4f;
+                content.AddChild(sprite);
                 VBoxContainer text = new() { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
                 text.AddThemeConstantOverride("separation", 2);
                 content.AddChild(text);
