@@ -90,6 +90,10 @@ public class MetaStats
     /// <summary>Meilleure run de chaque personnage, en éliminations (DECISIONS §155) ; le record global en découle.</summary>
     [JsonPropertyName("kill_records")]
     public Dictionary<string, KillRecord> KillRecords { get; set; } = new();
+
+    /// <summary>Les records par personnage ont été repris de l'historique des runs d'avant leur création (plan 43).</summary>
+    [JsonPropertyName("kill_records_seeded")]
+    public bool KillRecordsSeeded { get; set; }
 }
 
 /// <summary>Une meilleure run : éliminations, date et distance atteinte.</summary>
@@ -604,7 +608,29 @@ public static class MetaSaveManager
     public static KillRecord GetKillRecord(string characterId)
     {
         Load();
+        SeedKillRecords();
         return _data.Stats.KillRecords.GetValueOrDefault(characterId ?? "");
+    }
+
+    /// <summary>
+    /// Un profil d'avant les records par personnage (DECISIONS §155) les retrouve une fois dans son historique (les 50
+    /// dernières runs) : sans cela, sa première run ferait un faux « nouveau record » qui masquerait le vrai.
+    /// </summary>
+    private static void SeedKillRecords()
+    {
+        if (_data.Stats.KillRecordsSeeded)
+            return;
+        _data.Stats.KillRecordsSeeded = true;
+        foreach (RunRecord run in RunHistoryManager.GetHistory())
+        {
+            string id = run.CharacterId ?? "";
+            if (id.Length == 0 || run.TotalKills <= (_data.Stats.KillRecords.GetValueOrDefault(id)?.Kills ?? 0))
+                continue;
+            _data.Stats.KillRecords[id] = new KillRecord
+            {
+                Kills = run.TotalKills, Date = run.Date, MaxDistanceMeters = run.MaxDistanceMeters ?? 0f,
+            };
+        }
     }
 
     /// <summary>Record global d'éliminations, tous personnages confondus.</summary>

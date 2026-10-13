@@ -24,6 +24,7 @@ public partial class SaveFileRegression : Node
             RunMetaChecks();
             RunHistoryChecks();
             RunSettlementChecks();
+            RunKillRecordSeedChecks();
         }
         catch (Exception ex)
         {
@@ -193,6 +194,26 @@ public partial class SaveFileRegression : Node
     }
 
     /// <summary>Plan 26 Q2b : une run réglée une fois, méta en une écriture, historique réparable, échecs remontés.</summary>
+    /// <summary>Un profil d'avant les records par personnage les retrouve dans son historique (plan 43).</summary>
+    private void RunKillRecordSeedChecks()
+    {
+        string meta = Abs(DevelopmentMode.GetSavePath("meta_save.json"));
+        string history = Abs(DevelopmentMode.GetSavePath("run_history.json"));
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+        RunHistoryManager.SaveRun(new RunRecord { RunId = "ancienne", CharacterId = "vagabond", TotalKills = 500, Date = "2026-10-01 20:00" });
+        RunHistoryManager.SaveRun(new RunRecord { RunId = "moins-bonne", CharacterId = "vagabond", TotalKills = 120 });
+        KillRecord seeded = MetaSaveManager.GetKillRecord("vagabond");
+        Check(seeded?.Kills == 500 && seeded.Date == "2026-10-01 20:00", $"records : repris de l'historique ({seeded?.Kills})");
+        Check(MetaSaveManager.GetKillRecord("forgeuse") == null, "records : aucun pour un personnage jamais joué");
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+    }
+
     private void RunSettlementChecks()
     {
         string meta = Abs(DevelopmentMode.GetSavePath("meta_save.json"));

@@ -24,6 +24,8 @@ public partial class SteamManager : Node
 
 	/// <summary>Classements : file unique, qui survit aux changements de scène (plan 26 Q3). Null si Steam est inactif.</summary>
 	public static LeaderboardQueue Leaderboards => Instance?._leaderboards;
+	/// <summary>Identifiant Steam du joueur connecté (0 sans Steam) : sa ligne se reconnaît dans les classements.</summary>
+	public static ulong LocalSteamId { get; private set; }
 
 	private LeaderboardQueue _leaderboards;
 	private ulong _lastTickUsec;
@@ -116,6 +118,15 @@ public partial class SteamManager : Node
 			_leaderboards = new LeaderboardQueue(CreateLeaderboardBackend());
 	}
 
+#if TOOLS
+	/// <summary>Bancs et captures : un faux service de classements, sans Steam (plan 43 C2).</summary>
+	internal static void UseLeaderboardsForTests(LeaderboardQueue queue, ulong localSteamId)
+	{
+		Instance._leaderboards = queue;
+		LocalSteamId = localSteamId;
+	}
+#endif
+
 	private void StopLeaderboards()
 	{
 		_leaderboards?.Clear();
@@ -154,6 +165,7 @@ public partial class SteamManager : Node
 		string playerName = SteamFriends.GetPersonaName();
 		CSteamID steamId = SteamUser.GetSteamID();
 		GD.Print($"[SteamManager] Steam initialized. Player: {playerName} (ID: {steamId})");
+		LocalSteamId = steamId.m_SteamID;
 		return true;
 	}
 

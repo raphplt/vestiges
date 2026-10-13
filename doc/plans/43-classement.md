@@ -49,6 +49,17 @@ Retirés : le multiplicateur de score du Péril, du personnage, des mutateurs, e
 - **Sans Steam** (pas de client, mode dev, essais) : les onglets en ligne disent pourquoi ils sont vides, et les records personnels marchent toujours.
 - Vérification : capture de l'accueil avec un faux service rempli, et un test de la file de téléchargement.
 
+**C2 livré le 13 octobre** (même branche). Page « Classement » à l'accueil, avec trois onglets :
+- **Cette semaine** et **De tous les temps** : les dix premiers, une coupure, puis ta place et tes voisins, surlignée en doré ; le temps avant la remise à zéro du lundi pour la semaine ;
+- **Mes records** : par personnage, avec la distance et la date ; un profil d'avant les records les reprend une fois de son historique.
+
+Ailleurs :
+- au bilan, le rang de la semaine s'ajoute à la ligne du record dès que Steam répond ;
+- sans Steam ou en mode dev, les onglets en ligne disent pourquoi ils sont vides ;
+- un délai de garde finit l'attente si Steam s'arrête pendant la lecture.
+
+Vérifié en capture avec un faux service (`HubCapture --fake-leaderboard`). Suites vertes : smoke, classements Steam (remise à zéro comprise), menus, sauvegardes (reprise des records), mode dev. À vérifier avec Steam réel : le rang n'est peut-être renvoyé que si la run améliore ton meilleur score de la semaine (`m_nGlobalRankNew`).
+
 ### C3 — Premier test réel (après l'App ID)
 
 - Brancher l'App ID (`SteamManager.AppId`, `steam_appid.txt`) et la bibliothèque native.

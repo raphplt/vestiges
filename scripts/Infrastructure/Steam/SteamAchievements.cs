@@ -37,7 +37,6 @@ public partial class SteamAchievements : Node
 	public const string UnlockTraqueur = "ACH_UNLOCK_TRAQUEUR";
 	public const string PlayAllCharacters = "ACH_PLAY_ALL_CHARACTERS";
 
-
 	// Lore
 	public const string FirstSouvenir = "ACH_FIRST_SOUVENIR";
 	public const string CompleteConstellation = "ACH_COMPLETE_CONSTELLATION";

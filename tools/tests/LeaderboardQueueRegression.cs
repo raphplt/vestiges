@@ -20,6 +20,7 @@ public partial class LeaderboardQueueRegression : Node
 		{
 			CheckWeeklyBoards();
 			CheckRunSubmissions();
+		CheckResetCountdown();
 			CheckColdThenWarmCache();
 			CheckDownloadDuringUploads();
 			CheckFailuresRetried();
@@ -59,6 +60,17 @@ public partial class LeaderboardQueueRegression : Node
 			string actual = RunLeaderboards.WeeklyBoard(date);
 			Check(actual == expected, $"semaine du {date:yyyy-MM-dd} : {actual} (attendu {expected})");
 		}
+	}
+
+	private void CheckResetCountdown()
+	{
+		// Remise à zéro le lundi 0 h UTC, début de la semaine ISO suivante (DECISIONS §155).
+		string wednesday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 14, 12, 0, 0, DateTimeKind.Utc));
+		Check(wednesday == "4 j 12 h", $"remise : mercredi midi → {wednesday}");
+		string sunday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 18, 22, 30, 0, DateTimeKind.Utc));
+		Check(sunday == "1 h 30 min", $"remise : dimanche 22 h 30 → {sunday}");
+		string monday = Vestiges.UI.HubLeaderboardPanel.UntilReset(new DateTime(2026, 10, 19, 0, 0, 0, DateTimeKind.Utc));
+		Check(monday == "7 j 0 h", $"remise : lundi 0 h → {monday}");
 	}
 
 	private void CheckRunSubmissions()

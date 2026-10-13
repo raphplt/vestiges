@@ -3,6 +3,7 @@ using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Infrastructure.Steam;
 using Vestiges.Progression;
 using Vestiges.Score;
 
@@ -35,6 +36,10 @@ public partial class GameOverScreen : CanvasLayer
 
     private EventBus _eventBus;
     private ScoreManager _scoreManager;
+    // Place de la semaine renvoyée par Steam après l'envoi des éliminations (plan 43 C2), ajoutée à la ligne du record.
+    private LeaderboardQueue _rankQueue;
+    private string _weeklyBoard;
+    private int _weeklyRank;
     private Font _bodyFont;
     private Font _strongFont;
     private Font _boldFont;
@@ -115,6 +120,8 @@ public partial class GameOverScreen : CanvasLayer
             _eventBus.EntityDied -= OnEntityDied;
             _eventBus.QuestCompleted -= OnQuestCompleted;
         }
+        if (_rankQueue != null)
+            _rankQueue.UploadFinished -= OnUploadFinished;
         // La fenêtre survit au rechargement de la scène : elle ne doit pas garder ce bilan libéré.
         GetViewport().SizeChanged -= FitToViewport;
     }
@@ -277,6 +284,7 @@ public partial class GameOverScreen : CanvasLayer
         _build = Snapshot(player);
         GameManager gameManager = GetNode<GameManager>("/root/GameManager");
         gameManager.ChangeState(GameManager.GameState.Death);
+        ListenWeeklyRank();
         _scoreManager?.SaveEndOfRun();
         _newWeapons.Clear();
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
@@ -318,7 +326,7 @@ public partial class GameOverScreen : CanvasLayer
 
         _characterName.Text = _build?.CharacterName ?? "";
         _portrait.Texture = _build != null ? CharacterPortrait.Artwork(_build.CharacterId) ?? CharacterPortrait.Idle(_build.CharacterId) : null;
-        _record.Text = RecordText(_build?.CharacterName ?? "");
+        _record.Text = RecordLine();
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _seed.Text = gm.EffectiveSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed) : "";
         string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
@@ -429,6 +437,31 @@ public partial class GameOverScreen : CanvasLayer
                 ? RunSummaryPanels.Slot(carried[i].Icon, carried[i].Level, frame, BuildIconSize)
                 : RunSummaryPanels.Slot(null, 0, UITheme.TextVeryDim, BuildIconSize));
         }
+    }
+
+    /// <summary>L'envoi part à la mort, la réponse peut arriver avant comme après l'ouverture du bilan.</summary>
+    private void ListenWeeklyRank()
+    {
+        _rankQueue = SteamManager.Leaderboards;
+        if (_rankQueue == null)
+            return;
+        _weeklyBoard = RunLeaderboards.WeeklyBoard(System.DateTime.UtcNow);
+        _rankQueue.UploadFinished += OnUploadFinished;
+    }
+
+    private void OnUploadFinished(LeaderboardQueue.UploadResult result)
+    {
+        if (result.Board != _weeklyBoard || !result.Succeeded || result.GlobalRank <= 0)
+            return;
+        _weeklyRank = result.GlobalRank;
+        if (Visible)
+            _record.Text = RecordLine();
+    }
+
+    private string RecordLine()
+    {
+        string record = RecordText(_build?.CharacterName ?? "");
+        return _weeklyRank > 0 ? $"{record}  ·  {string.Format(Tr("UI_END_WEEKLY_RANK"), _weeklyRank.ToString("N0"))}" : record;
     }
 
     /// <summary>
