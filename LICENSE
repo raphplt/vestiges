@@ -18,10 +18,16 @@ textures, audio files, music, sound effects, fonts, written content,
 narrative texts, game design documents, and any other creative works
 contained in this repository or distributed alongside this license.
 
-"Licensor" refers to Raphaël [NOM DE FAMILLE], sole author and rights
+"Licensor" refers to Raphaël Plassart, sole author and rights
 holder of the Software and Assets, unless otherwise specified for
 individual Assets created by third-party contributors under separate
 agreements.
+
+"Third-Party Components" refers to the engine, libraries, fonts and
+sound effects made by others and listed in data/ui/credits.json and
+assets/audio/CREDITS.json. They remain under their own licenses (MIT,
+SIL Open Font License, CC BY 4.0, CC0), which prevail over this
+License for those components.
 
 "You" refers to any individual or legal entity accessing, viewing, or
 interacting with the Software or Assets.
@@ -164,7 +170,7 @@ BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 This License shall be governed by and construed in accordance with the
 laws of France. Any dispute arising out of or in connection with this
 License shall be submitted to the exclusive jurisdiction of the courts
-of [VILLE — ex: Paris, Évry, etc.], France.
+of Évry-Courcouronnes, France.
 
 =======================================================================
 
@@ -193,7 +199,7 @@ of [VILLE — ex: Paris, Évry, etc.], France.
 For licensing inquiries, commercial use requests, or any questions
 regarding this License, contact:
 
-Raphaël [NOM DE FAMILLE]
-[ADRESSE EMAIL]
+Raphaël Plassart
+raphael.plassart@gmail.com
 
 =======================================================================

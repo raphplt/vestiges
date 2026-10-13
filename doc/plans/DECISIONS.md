@@ -1779,6 +1779,18 @@ Cinq runs jouées par Raphaël (Traqueur ×2, Facteur ×2, Vagabond), toutes tra
 - **Steam** : Raphaël lance la démarche maintenant (Steam Direct, App ID) et demande d'être guidé.
 - **Ordre** : le classement se code tout de suite, à part de la mesure de nuit ; les quêtes viennent après la mesure.
 
+## 156. Conformité avant Steam : nom, IA, crédits — 13 octobre 2026, soir
+
+Audit des droits et des contenus (plan 31 §9 et §9 bis).
+- **Nom** : « Vestiges » est une marque INPI pour les jeux vidéo (n° 5181093, septembre 2025). Raphaël change de nom, à trouver « au moins aussi bien ». Le dépôt INPI se fera avant que le nom devienne public ; les dépôts plus chers (EUIPO, autres pays) selon les wishlists.
+- **Musiques** : générées sous abonnement Suno payant, mais **remplacées** quoi qu'il arrive.
+- **Sons** : ceux d'ElevenLabs sont remplacés, avec `shield_block`, `shield_break` et `level_up.wav`, dont l'origine est oubliée.
+- **IA générative** : le public y est très hostile. Les assets produits par IA générative sont remplacés (pixel art procédural, dessinateur et compositeur ami de Raphaël, UX/UI), et leurs traces retirées de la documentation. Le code écrit avec des agents gêne moins. Ce qui reste d'IA dans le jeu au moment de la page Steam se déclare.
+- **Commits de mars sous `raphael@tkorp.com`** : adresse liée au même compte GitHub personnel ; le projet appartient à 100 % à Raphaël.
+- **Fait le jour même** : page Crédits dans le Hub, arme Polaroïd renommée Instantané, `LICENSE` complété, logo Godot (`icon.svg`) retiré et remplacé par le halo de lumière dans les trois décors de lore qui l'utilisaient.
+- **Étude de marché** ([rapport](../reports/Étude%20de%20marché%20Vestiges.md)) : Raphaël valide le plan de validation en quatre étapes (clips sous nom de code, page Coming Soon, démo, Next Fest), sans s'interdire d'être ambitieux. Les tags post-apocalyptique et pixel isométrique peu porteurs ne condamnent pas le jeu, mais il doit être très propre et peaufiné. La mélancolie n'est pas le ressort principal : les parties doivent être nerveuses, stimulantes, avec du *juice*.
+- **Direction du nouveau nom** : un mot inventé, ou l'oubli.
+
 ## 157. Oublier une arme, un Écusson ou un objet à la Faille — 13 octobre 2026
 
 Raphaël : « il faudrait avoir plus de mécaniques liées à l'oubli dans le jeu […] un point d'intérêt sur la map qui permette en échange d'essence […] d'oublier un objet comme ça on peut si on s'est trompé ou qu'on ne le veut plus on peut changer et prendre autre chose », puis, sur la recommandation de l'agent : « ouais ok ca me va ta recommandation. par contre je supprimerai les mécanismes suivants : [l'échange d'arme au sol et l'oubli du sac plein]. tout passera par ca. sinon le faire dans la faille ca me va. »

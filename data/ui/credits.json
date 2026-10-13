@@ -1,0 +1,54 @@
+{
+  "created_by": "Raphaël Plassart",
+  "sections": [
+    {
+      "title": "UI_CREDITS_FONTS",
+      "entries": [
+        { "name": "Alkhemikal", "detail": "jeti — CC BY 4.0 — dafont.com/alkhemikal.font" },
+        { "name": "Pixel Operator", "detail": "Jayvee Enaguas (HarvettFox96) — CC0 1.0" },
+        { "name": "Saira", "detail": "The Saira Project Authors (Omnibus-Type) — SIL Open Font License 1.1" }
+      ]
+    },
+    {
+      "title": "UI_CREDITS_SOUNDS",
+      "note": "UI_CREDITS_SOUNDS_NOTE",
+      "entries": [
+        { "name": "Kenney", "detail": "kenney.nl" },
+        { "name": "Joseph Sardin", "detail": "BigSoundBank.com" },
+        { "name": "rubberduck", "detail": "OpenGameArt.org" },
+        { "name": "artisticdude", "detail": "OpenGameArt.org" },
+        { "name": "Ben Jaszczak & Brian Nelson", "detail": "OpenGameArt.org" },
+        { "name": "pauliuw", "detail": "OpenGameArt.org" },
+        { "name": "Ogrebane", "detail": "OpenGameArt.org" },
+        { "name": "TinyWorlds", "detail": "OpenGameArt.org" },
+        { "name": "PWL", "detail": "OpenGameArt.org" },
+        { "name": "ValentinPetiteau", "detail": "Freesound.org" },
+        { "name": "Xemptful", "detail": "Freesound.org" },
+        { "name": "RavenWolfProds", "detail": "Freesound.org" },
+        { "name": "sseletskyy", "detail": "Freesound.org" }
+      ]
+    },
+    {
+      "title": "UI_CREDITS_TECH",
+      "entries": [
+        { "name": "Godot Engine", "detail": "Juan Linietsky, Ariel Manzur & contributors — MIT" },
+        { "name": "Steamworks.NET", "detail": "Riley Labrecque — MIT" },
+        { "name": ".NET", "detail": ".NET Foundation & contributors — MIT" }
+      ]
+    }
+  ],
+  "licenses": [
+    {
+      "name": "Steamworks.NET",
+      "text": "MIT License\n\nCopyright (c) 2013-2022 Riley Labrecque\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+    },
+    {
+      "name": "Alkhemikal — CC BY 4.0",
+      "text": "Alkhemikal font by jeti, licensed under Creative Commons Attribution 4.0 International.\nhttps://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "name": "Saira — SIL Open Font License 1.1",
+      "text": "Copyright 2016 The Saira Project Authors (omnibus.type@gmail.com), with reserved font name \"Saira\".\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.\nhttps://openfontlicense.org"
+    }
+  ]
+}

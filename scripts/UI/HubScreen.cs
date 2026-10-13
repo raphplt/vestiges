@@ -16,7 +16,7 @@ public partial class HubScreen : Control
 {
 	private const float MenuLeft = 96f;
 
-	private enum HubState { MainMenu, Characters, Camp, Quests, Collection }
+	private enum HubState { MainMenu, Characters, Camp, Quests, Collection, Credits }
 	private HubState _currentState = HubState.MainMenu;
 
 	private static readonly Color Night = new(0.04f, 0.04f, 0.08f);
@@ -33,6 +33,7 @@ public partial class HubScreen : Control
 	private HubQuestsPanel _questsPanel;
 	private HubCharactersPanel _charactersPanel;
 	private HubCampUpgradesPanel _campPanel;
+	private HubCreditsPanel _creditsPanel;
 	private string _collectionFocus;
 	private string _characterFocus;
 	private string _questFocus;
@@ -223,6 +224,8 @@ public partial class HubScreen : Control
 			AudioManager.PlayUI("sfx_menu_confirmer");
 			_settingsScreen?.Open();
 		});
+		_openers[HubState.Credits] = AddMenuButton(utilities, Tr("UI_CREDITS_TITLE"), TextRole.Heading, UITheme.TitleFont,
+			() => OpenPage(HubState.Credits));
 		AddMenuButton(utilities, "Quitter", TextRole.Heading, UITheme.TitleFont, () => _ = GameExit.QuitAsync(GetTree()));
 	}
 
@@ -349,6 +352,8 @@ public partial class HubScreen : Control
 		_collectionPanel = new HubCollectionPanel();
 		AddPage(HubState.Collection, "Collection", _collectionPanel);
 		_collectionPanel.QuestRequested += OpenQuest;
+		_creditsPanel = new HubCreditsPanel();
+		AddPage(HubState.Credits, Tr("UI_CREDITS_TITLE"), _creditsPanel);
 	}
 
 	private void AddPage(HubState state, string title, Control panel)
@@ -429,6 +434,7 @@ public partial class HubScreen : Control
 				HubState.Camp => _campPanel.Refresh(),
 				HubState.Quests => _questsPanel.Refresh(_questFocus),
 				HubState.Collection => _collectionPanel.Refresh(_collectionFocus, _collectionKind),
+				HubState.Credits => _creditsPanel.Refresh(),
 				_ => null,
 			};
 			_collectionFocus = _characterFocus = _questFocus = null;

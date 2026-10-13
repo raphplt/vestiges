@@ -11,6 +11,8 @@ namespace Vestiges.World.Lore;
 /// </summary>
 public partial class CrazyClock : Node2D
 {
+	private const string LightHalo = "res://assets/vfx/lights/light_halo.png";
+
 	private bool _interacted;
 	private EventBus _eventBus;
 	private Node2D _hourHand;
@@ -149,8 +151,8 @@ public partial class CrazyClock : Node2D
 		{
 			Color = new Color(0.9f, 0.6f, 0.3f),
 			Energy = 0.3f,
-			TextureScale = 0.4f,
-			Texture = GD.Load<Texture2D>("res://icon.svg"),
+			TextureScale = 2f,
+			Texture = GD.Load<Texture2D>(LightHalo),
 			Position = new Vector2(0, -15)
 		};
 		AddChild(eerie);

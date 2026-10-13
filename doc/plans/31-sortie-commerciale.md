@@ -176,6 +176,30 @@ Conséquences :
 
 Options, à trancher avant la page Steam (§12) : garder « Vestiges » avec un sous-titre distinctif, ou trouver un autre nom. **Une fois la page publique et la communauté lancée, changer de nom coûte très cher.**
 
+**Vérification du 13 octobre 2026 : « Vestiges » est une marque déposée pour les jeux vidéo en France.**
+- INPI n° **5181093**, marque figurative (logo de quatre carrés et mot « vestiges »), déposée le 17/09/2025 par Jean-Paul Houssier (Limoges), enregistrée le 06/02/2026, jusqu'en 2035. Classes 9 et 41, avec « Jeux vidéos », « Jeux informatiques » et « services de jeu en ligne ».
+- Le projet a commencé en février 2026, après ce dépôt : aucun droit antérieur.
+- Un sous-titre ne suffit pas, « Vestiges » resterait l'élément dominant. **Décision (DECISIONS §156) : changer de nom.** « Vestiges » peut rester le nom de la monnaie en jeu.
+- Méthode pour le nouveau nom : recherche [TMview](https://www.tmdn.org/tmview) (classes 9, 28, 41, tous offices) et recherche Steam, puis dépôt INPI (environ 190 € pour une classe, 40 € par classe en plus) **avant que la page Steam ou une annonce ne le rende public**. L'EUIPO (environ 850 €) et les autres pays peuvent attendre les wishlists.
+
+## 9 bis. Conformité des contenus (audit du 13 octobre 2026)
+
+| Point | État | Suite |
+|---|---|---|
+| Musiques (7, Suno) | Abonnement payant au moment de la génération selon Raphaël | **Remplacées** par des compositions originales (ami compositeur) |
+| Sons ElevenLabs (~15, forfait gratuit) | Licence commerciale non acquise | **Remplacés** (sources CC0 ou compositeur) |
+| `shield_block`, `shield_break`, `sfx/selected/level_up.wav` | Origine oubliée | Remplacés avec les sons ElevenLabs |
+| Sons CC0 crédités (`assets/audio/CREDITS.json`) | En règle | Garder les preuves archivées |
+| Images IA : `ui/menus/stone/{loading,interior,panel}.png`, portraits `characters/*/portrait.webp`, `bg_menu_1920x1080.png` | À remplacer ou à déclarer | Refaites en pixel art procédural ou par le dessinateur ; ce qui reste au moment de la page Steam se déclare |
+| Textes et traduction écrits avec des agents | À déclarer s'ils restent tels quels | Relecture et réécriture humaine |
+| Crédits et licences tierces | **Fait le 13 octobre** : page Crédits du Hub (`data/ui/credits.json`, licences de Godot lues dans le moteur) | Tenir `credits.json` à jour à chaque ressource tierce |
+| Arme « Polaroïd » (marque) | **Renommée « Instantané »** | — |
+| `LICENSE` | **Complété** (nom, juridiction d'Évry, contact, composants tiers) | — |
+| App ID 480 en dur (`SteamManager.cs`) | En attente de l'App ID réel | À changer dès réception |
+| Export « toutes les ressources » | Embarquerait des fichiers inutilisés (images IA, sons non branchés, ~115 sprites V1) | Nettoyer `assets/` ou filtrer l'export avant le premier build Steam |
+
+**Déclaration IA de Steam.** Rien n'est généré pendant la partie. Le contenu pré-généré par IA qui reste dans le jeu au moment de la page Steam doit être déclaré, quel que soit l'état de la documentation interne : le but est de le remplacer, pas de le masquer. Le dépôt GitHub est **privé depuis le 13 octobre 2026** (sans réécriture d'historique : les copies faites quand il était public peuvent subsister).
+
 ---
 
 ## 10. Le jeu, côté produit
@@ -228,7 +252,7 @@ Pas de publicité payante au départ : son rendement en wishlists est mauvais po
 
 1. **Format** : accès anticipé ou 1.0 directement ? *Proposition : accès anticipé si le cœur est fun mais le contenu incomplet, avec une feuille de route publique.*
 2. **Date** : sortie à l'automne 2027 avec le Next Fest de juin 2027 ? *Proposition : oui ; on renonce à février 2027.*
-3. **Nom** : « Vestiges » avec un sous-titre, ou un autre nom ? *Proposition : vérifier la marque (INPI, EUIPO) cette semaine, et décider avant la page Steam.*
+3. **Nom** : tranché le 13 octobre, changer de nom (§9, DECISIONS §156). Reste à trouver le nouveau.
 4. **Visage** : Raphaël apparaît-il dans les vidéos (devlogs face caméra) ou seulement le jeu ? *Proposition : seulement le jeu et sa voix, au choix.*
 5. **Temps** : combien d'heures par semaine pour le marketing ? *Proposition : 20 à 30 % du temps à partir de la page Steam, davantage dans les six semaines autour de la démo, du Next Fest et de la sortie.*
 6. **Budget** : capsule pro et traductions (chinois simplifié en premier) ?

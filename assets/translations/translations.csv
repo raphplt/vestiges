@@ -594,3 +594,13 @@ ITEM_SORT_RARITY_DESC,Rareté décroissante,Rarity descending
 ITEM_SORT_NAME,Nom (A–Z),Name (A–Z)
 ITEM_SORT_ORIGINAL,Ordre initial,Original order
 INVENTORY_BAG_TYPES_COUNT,{0}/{1} types,{0}/{1} types
+UI_CREDITS_TITLE,Crédits,Credits
+UI_CREDITS_CREATED_BY,Un jeu de,A game by
+UI_CREDITS_FONTS,Polices,Fonts
+UI_CREDITS_SOUNDS,Sons,Sound effects
+UI_CREDITS_SOUNDS_NOTE,"Sons libres de droits (CC0), retravaillés pour le jeu. Merci à leurs auteurs.","Public domain sounds (CC0), reworked for the game. Thanks to their authors."
+UI_CREDITS_TECH,Technologies,Technology
+UI_CREDITS_LICENSES,Licences,Licenses
+UI_CREDITS_LICENSE,Licence,License
+UI_CREDITS_ENGINE_NOTICE,"Ce jeu utilise Godot Engine, distribué sous la licence MIT ci-dessous.","This game uses Godot Engine, available under the MIT license below."
+UI_CREDITS_COMPONENTS,Composants tiers de Godot Engine,Godot Engine third-party components

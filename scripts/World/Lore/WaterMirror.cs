@@ -12,6 +12,8 @@ namespace Vestiges.World.Lore;
 /// </summary>
 public partial class WaterMirror : Node2D
 {
+	private const string LightHalo = "res://assets/vfx/lights/light_halo.png";
+
 	private bool _discovered;
 	private EventBus _eventBus;
 	private bool _playerInside;
@@ -139,8 +141,8 @@ public partial class WaterMirror : Node2D
 		{
 			Color = new Color(0.3f, 0.5f, 0.8f),
 			Energy = 0.2f,
-			TextureScale = 0.3f,
-			Texture = GD.Load<Texture2D>("res://icon.svg")
+			TextureScale = 1.5f,
+			Texture = GD.Load<Texture2D>(LightHalo)
 		};
 		AddChild(waterGlow);
 	}

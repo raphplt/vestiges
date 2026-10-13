@@ -845,7 +845,7 @@
     "id": "photographers_flash",
     "impact_audio": "sfx_impact_glass",
     "attack_audio": "sfx_weapon_photographers_flash",
-    "name": "Polaroïd",
+    "name": "Instantané",
     "description": "Un appareil instantané et son flash.",
     "sprite": "assets/weapons/icons/weapon_icon_instant_camera.png",
     "tier": 3,

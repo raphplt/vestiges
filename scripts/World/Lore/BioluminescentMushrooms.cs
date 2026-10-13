@@ -10,6 +10,8 @@ namespace Vestiges.World.Lore;
 /// </summary>
 public partial class BioluminescentMushrooms : Node2D
 {
+	private const string LightHalo = "res://assets/vfx/lights/light_halo.png";
+
 	private bool _sporesApplied;
 	private readonly Polygon2D[] _caps = new Polygon2D[5];
 	private PointLight2D _nightLight;
@@ -86,8 +88,8 @@ public partial class BioluminescentMushrooms : Node2D
 		{
 			Color = new Color(0.2f, 0.85f, 0.65f),
 			Energy = 0.28f,
-			TextureScale = 0.3f,
-			Texture = GD.Load<Texture2D>("res://icon.svg")
+			TextureScale = 1.5f,
+			Texture = GD.Load<Texture2D>(LightHalo)
 		};
 		AddChild(_nightLight);
 
@@ -143,8 +145,8 @@ public partial class BioluminescentMushrooms : Node2D
 			Name = "SporeLight",
 			Color = new Color(0.2f, 0.85f, 0.65f),
 			Energy = 0.4f,
-			TextureScale = 0.4f,
-			Texture = GD.Load<Texture2D>("res://icon.svg")
+			TextureScale = 2f,
+			Texture = GD.Load<Texture2D>(LightHalo)
 		};
 		player.AddChild(playerGlow);
 
