@@ -263,6 +263,8 @@ Matrice complète : 31 configurations × 3 graines, 30 min de jeu, bot mortel qu
 - **Départ** (D1) : niveau 10 à 5 min tenu pour la méta milieu (niveau 9 à 15 à 5 min).
 - **Bot** : le profil fort fait parfois moins bien que le moyen (Traqueur 11 800 contre 19 200, Facteur 1 100 contre 2 400) : son esquive le garde trop loin pour les armes de moyenne portée. Le profil moyen sert de référence en attendant le recalage du bot sur les traces de Raphaël.
 
+**Run cassée à la Pelle à neige** (§154), remesurée le 13 octobre au soir. Dans l'historique, c'est le Traqueur de 14 h 49 : 834 s, niveau 66, 7 710 éliminations, **9,1 millions de dégâts** (23 fois l'autre Traqueur du jour). Après 7 min, il ne perdait plus de PV que contre les Présages, qui tirent de loin. Le build `pelle` (Pelle seule, Traqueur, 15 min, méta milieu et complète, 3 graines) reproduit la façon de survivre : la Pelle repousse les créatures au corps à corps (Déblayer : tout autour, recul ×2), et après 7 min les PV perdus viennent à 75–90 % des Présages. Il ne reproduit pas les dégâts : 1,3 à 1,5 million, autant que l'arc poussé (1,5 à 1,8). Ce qui a multiplié les dégâts venait donc du reste du build, que l'historique ne garde pas. Depuis, la trace des parties écrit aussi le build final et les dégâts par arme (`traces/<date>-<personnage>-build.txt`).
+
 ### Lecture (lot M2)
 
 - Une page de résultats : courbes de puissance joueur / ennemis par profil, morts, exposition à l'oubli, creux.

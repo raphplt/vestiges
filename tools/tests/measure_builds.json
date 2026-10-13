@@ -63,6 +63,13 @@
 				{ "id": "pastille_mentholee", "minute": 10 },
 				{ "id": "agrafe_rouillee", "minute": 13 }
 			]
+		},
+		"pelle": {
+			"nom": "Pelle à neige seule (run cassée du 13 octobre, DECISIONS §154)",
+			"armes": ["cleaver"],
+			"armes_fermees": true,
+			"cartes": ["cleaver"],
+			"objets": []
 		}
 	}
 }

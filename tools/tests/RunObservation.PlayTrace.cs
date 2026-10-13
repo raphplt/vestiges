@@ -37,16 +37,21 @@ public partial class RunObservation
         _world.RemoveChild(recorder);
         recorder.QueueFree();
         string[] files = DirAccess.GetFilesAt(folder);
-        string csv = null, summary = null;
+        string csv = null, summary = null, build = null;
         foreach (string file in files)
         {
             if (file.EndsWith(".csv"))
                 csv = FileAccess.GetFileAsString($"{folder}/{file}");
+            else if (file.EndsWith("-build.txt"))
+                build = FileAccess.GetFileAsString($"{folder}/{file}");
             else if (file.EndsWith(".txt"))
                 summary = FileAccess.GetFileAsString($"{folder}/{file}");
         }
         if (csv == null || summary == null || !summary.Contains("seconds=4") || csv.Split('\n').Length < 3)
             throw new System.InvalidOperationException($"Trace absente ou vide dans {folder} : {files.Length} fichiers, résumé « {summary} »");
+        if (build == null || !build.Contains("arme ") || !build.Contains("degats "))
+            throw new System.InvalidOperationException($"Build de la trace absent ou incomplet dans {folder} : « {build} »");
         GD.Print($"[RunObservation] RESULT play-trace {summary.Trim()} lignes={csv.Split('\n').Length - 2}");
+        GD.Print($"[RunObservation] build {build.Replace('\n', ' ').Trim()}");
     }
 }
