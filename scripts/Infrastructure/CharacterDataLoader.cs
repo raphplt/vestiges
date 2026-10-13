@@ -24,7 +24,6 @@ public class CharacterData
     public CharacterStats BaseStats { get; set; }
     public string PassivePerk { get; set; }
     public List<string> ExclusivePerks { get; set; } = new();
-    public float ScoreMultiplier { get; set; } = 1f;
     public Color VisualColor { get; set; }
     public string SpriteFolder { get; set; }
     /// <summary>Distance en pixels du centre de la frame aux pieds : ancre le sprite sur la position au sol.</summary>
@@ -94,7 +93,6 @@ public static class CharacterDataLoader
                 BaseStats = stats,
                 PassivePerk = dict["passive_perk"].AsString(),
                 ExclusivePerks = exclusivePerks,
-                ScoreMultiplier = (float)dict["score_multiplier"].AsDouble(),
                 VisualColor = new Color(
                     (float)colorArr[0].AsDouble(),
                     (float)colorArr[1].AsDouble(),

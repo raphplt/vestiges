@@ -16,7 +16,7 @@ namespace Vestiges.UI;
 public partial class GameOverScreen : CanvasLayer
 {
     private static readonly Vector2 DesignSize = new(1920f, 1080f);
-    private const int ScoreFontSize = 110;
+    private const int KillsFontSize = 110;
     private const float VeilSec = 0.5f;
     private const float ScoreStart = 0.4f;
     private const float ScoreSec = 0.9f;
@@ -43,7 +43,8 @@ public partial class GameOverScreen : CanvasLayer
     private Control _buttons;
     private Control _root;
     private Label _title;
-    private Label _score;
+    private Label _kills;
+    private Label _killsCaption;
     private Label _distance;
     private Label _distanceCaption;
     private Label _duration;
@@ -75,7 +76,7 @@ public partial class GameOverScreen : CanvasLayer
     // Fin de la révélation : après la dernière carte de gain, au plus tôt MinRevealEnd.
     private float _revealEnd = MinRevealEnd;
     private bool _skipped;
-    private int _finalScore;
+    private int _finalKills;
     private float _finalDistance;
     private float _finalDuration;
     private bool _isRecord;
@@ -138,9 +139,12 @@ public partial class GameOverScreen : CanvasLayer
 
         _title = MakeLabel("FIN D’EXPÉDITION", UITheme.TitleFont, TextRole.Title, UITheme.GoldDim, HorizontalAlignment.Center);
         Place(_title, 0, 34, DesignSize.X, 42);
-        _score = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 4);
-        _score.AddThemeFontSizeOverride("font_size", ScoreFontSize);
-        Place(_score, 660, 80, 600, 132);
+        // Une seule mesure de run, au centre (DECISIONS §155) ; distance et durée l'encadrent.
+        _kills = MakeLabel("0", _boldFont, TextRole.Display, UITheme.GoldBright, HorizontalAlignment.Center, 4);
+        _kills.AddThemeFontSizeOverride("font_size", KillsFontSize);
+        Place(_kills, 660, 64, 600, 120);
+        _killsCaption = MakeLabel(Tr("UI_END_KILLS_CAPTION"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 0);
+        Place(_killsCaption, 660, 176, 600, 34);
         _distance = MakeLabel("", _boldFont, TextRole.Display, UITheme.TextLight, HorizontalAlignment.Center, 4);
         Place(_distance, 180, 110, 480, 64);
         _distanceCaption = MakeLabel(Tr("UI_END_FARTHEST"), _bodyFont, TextRole.Heading, UITheme.TextDim, HorizontalAlignment.Center, 0);
@@ -306,14 +310,15 @@ public partial class GameOverScreen : CanvasLayer
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         RunRecord record = gm.LastRunData;
-        _finalScore = _scoreManager?.CurrentScore ?? 0;
-        _isRecord = _scoreManager?.IsNewRecord ?? false;
+        _finalKills = _scoreManager?.TotalKills ?? 0;
+        // Record global ou du personnage : les deux se célèbrent, le texte dit lequel.
+        _isRecord = (_scoreManager?.IsNewRecord ?? false) || (_scoreManager?.IsNewCharacterRecord ?? false);
         _finalDistance = record?.MaxDistanceMeters ?? 0f;
         _finalDuration = record?.RunDurationSec ?? 0f;
 
         _characterName.Text = _build?.CharacterName ?? "";
         _portrait.Texture = _build != null ? CharacterPortrait.Artwork(_build.CharacterId) ?? CharacterPortrait.Idle(_build.CharacterId) : null;
-        _record.Text = _isRecord ? Tr("UI_END_NEW_RECORD") : string.Format(Tr("UI_END_BEST"), (_scoreManager?.BestScore ?? 0).ToString("N0"));
+        _record.Text = RecordText(_build?.CharacterName ?? "");
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
         _seed.Text = gm.EffectiveSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed) : "";
         string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
@@ -328,7 +333,7 @@ public partial class GameOverScreen : CanvasLayer
         _equipmentScroll.ScrollVertical = 0;
         _gainsScroll.ScrollHorizontal = 0;
 
-        _score.Text = "0";
+        _kills.Text = "0";
         _elapsed = 0f;
         _skipped = false;
         _revealEnd = MinRevealEnd;
@@ -349,10 +354,7 @@ public partial class GameOverScreen : CanvasLayer
         Control killer = RunSummaryPanels.KillerCard(record?.DeathCause, _finalDuration);
         if (killer != null) _facts.AddChild(killer);
         int totalKills = _scoreManager?.TotalKills ?? 0;
-        _facts.AddChild(RunSummaryPanels.Facts(BuildScoreLines(), 1, 300f));
-        _facts.AddChild(new ColorRect { Color = new Color(0.23f, 0.24f, 0.28f), CustomMinimumSize = new Vector2(0, 1),
-            MouseFilter = Control.MouseFilterEnum.Ignore });
-        _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record, totalKills), 1, 300f));
+        _facts.AddChild(RunSummaryPanels.Facts(BuildFacts(record), 1, 300f));
 
         _equipment.AddChild(RunSummaryPanels.WeaponTable(record?.Weapons ?? new List<RunWeaponRecord>(), totalKills, _finalDuration));
         // Écussons et Réminiscences sur une même rangée, le sac dessous : tout le build tient sans défiler.
@@ -429,34 +431,28 @@ public partial class GameOverScreen : CanvasLayer
         }
     }
 
-    /// <summary>D'où vient le score : points des éliminations, part de l'oubli, puis les multiplicateurs qui jouent.</summary>
-    private List<(string Caption, string Value)> BuildScoreLines()
+    /// <summary>
+    /// Record global battu, sinon celui du personnage, sinon les deux records à battre (DECISIONS §155).
+    /// </summary>
+    private string RecordText(string characterName)
     {
-        List<(string, string)> lines = new();
         if (_scoreManager == null)
-            return lines;
-        int bonus = _scoreManager.ErasureBonusScore;
-        lines.Add((Tr("UI_END_SCORE_KILLS"), (_scoreManager.CombatScore - bonus).ToString("N0")));
-        if (bonus > 0)
-            lines.Add((Tr("UI_END_SCORE_ERASURE"), "+" + bonus.ToString("N0")));
-        AddMultiplier(lines, Tr("UI_END_SCORE_PERIL"), _scoreManager.PerilMultiplier);
-        AddMultiplier(lines, Tr("UI_END_SCORE_CHARACTER"), _scoreManager.CharacterMultiplier);
-        AddMultiplier(lines, Tr("UI_END_SCORE_MUTATORS"), _scoreManager.MutatorMultiplier);
-        return lines;
+            return "";
+        if (_scoreManager.IsNewRecord)
+            return Tr("UI_END_NEW_RECORD");
+        if (_scoreManager.IsNewCharacterRecord && characterName.Length > 0)
+            return string.Format(Tr("UI_END_CHARACTER_RECORD"), characterName);
+        string best = string.Format(Tr("UI_END_BEST"), _scoreManager.BestKills.ToString("N0"));
+        return characterName.Length > 0
+            ? $"{best}  ·  {characterName} : {_scoreManager.CharacterBestKills.ToString("N0")}"
+            : best;
     }
 
-    private static void AddMultiplier(List<(string, string)> lines, string caption, float multiplier)
-    {
-        if (Mathf.Abs(multiplier - 1f) > 0.001f)
-            lines.Add((caption, "×" + multiplier.ToString("0.00", PlayerSheet.French)));
-    }
-
-    private List<(string Caption, string Value)> BuildFacts(RunRecord record, int totalKills)
+    private List<(string Caption, string Value)> BuildFacts(RunRecord record)
     {
         List<(string, string)> facts = new()
         {
             (Tr("UI_END_LEVEL_REACHED"), Mathf.Max(1, record?.MaxLevel ?? 1).ToString()),
-            (Tr("UI_END_KILLS"), totalKills.ToString("N0")),
             (Tr("UI_END_ELITES"), (record?.ElitesKilled ?? 0).ToString("N0")),
             (Tr("UI_END_SOVEREIGNS"), (record?.SovereignsKilled ?? 0).ToString("N0")),
         };
@@ -582,15 +578,16 @@ public partial class GameOverScreen : CanvasLayer
         _veil.Color = new Color(VeilColor, VeilColor.A * veil);
         _title.Modulate = new Color(1f, 1f, 1f, veil);
 
-        // Score, distance et durée montent ensemble.
+        // Éliminations, distance et durée montent ensemble.
         float count = Mathf.Clamp((_elapsed - ScoreStart) / ScoreSec, 0f, 1f);
         float eased = 1f - Mathf.Pow(1f - count, 3f);
         float heroIn = Mathf.Clamp((_elapsed - ScoreStart) / 0.15f, 0f, 1f);
-        _score.Text = Mathf.RoundToInt(_finalScore * eased).ToString("N0");
+        _kills.Text = Mathf.RoundToInt(_finalKills * eased).ToString("N0");
         _distance.Text = FormatMeters(_finalDistance * eased);
         _duration.Text = RunSummaryPanels.FormatDuration(_finalDuration * eased);
         Color hero = new(1f, 1f, 1f, heroIn);
-        _score.Modulate = hero;
+        _kills.Modulate = hero;
+        _killsCaption.Modulate = hero;
         _distance.Modulate = hero;
         _distanceCaption.Modulate = hero;
         _duration.Modulate = hero;

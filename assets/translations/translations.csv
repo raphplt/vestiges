@@ -42,7 +42,6 @@ GAME_BUILD,Construction,Building
 GAME_EXPLORATION,Exploration,Exploration
 GAME_KILLS,Kills,Kills
 GAME_NEW_RECORD,NOUVEAU RECORD !,NEW RECORD!
-GAME_BEST_SCORE,Meilleur : {0},Best: {0}
 GAME_SEED,Seed : {0},Seed: {0}
 GAME_VESTIGES,+{0} Vestiges,+{0} Vestiges
 GAME_UNLOCKED,débloqué !,unlocked!
@@ -50,7 +49,6 @@ GAME_MULTIPLIER,Multiplicateur,Multiplier
 GAME_MUTATORS,modificateurs,modifiers
 HUD_WOOD,Bois,Wood
 HUD_STONE,Pierre,Stone
-HUD_NIGHT_SUMMARY,"Crise {0} survecue !\nKills : {1} — Score : +{2}","Crisis {0} survived!\nKills: {1} — Score: +{2}"
 CHEST_COMMON,COFFRE,CHEST
 CHEST_EPIC,COFFRE ÉPIQUE,EPIC CHEST
 CHEST_RARE,COFFRE RARE,RARE CHEST
@@ -185,7 +183,6 @@ STAT_PIERCE,Perçage,Pierce
 STAT_LUCK,Chance,Luck
 STAT_PERIL,Péril,Peril
 PERIL_CREATURES,Créatures,Creatures
-PERIL_REWARDS,Gains,Rewards
 PERIL_DAMAGE,dégâts,damage
 WEAPON_BOW,Arc,Bow
 WEAPON_LINE,Ligne,Line
@@ -224,14 +221,15 @@ UI_DEV_MODE,MODE DEV · Tout débloqué,DEV MODE · All unlocked
 UI_DEV_TOGGLE,Dev : tout débloqué,Dev: unlock everything
 UI_DEV_TOGGLE_HINT,Profil séparé. Recharge le Hub et mémorise le choix pour F5.,Separate profile. Reloads the Hub and remembers the choice for F5.
 UI_HUD_LEVEL,NIV.,LVL
-UI_HUD_SCORE,SCORE,SCORE
+UI_HUD_KILLS,ÉLIMINATIONS,KILLS
 UI_HUD_PERIL,Péril {0},Peril {0}
 UI_HUD_KILL_STREAK,EN RAFALE,STREAK
 UI_END_NEW_RECORD,NOUVEAU RECORD,NEW RECORD
-UI_END_BEST,Meilleur : {0},Best: {0}
+UI_END_BEST,Record : {0},Record: {0}
+UI_END_CHARACTER_RECORD,NOUVEAU RECORD POUR {0},NEW {0} RECORD
+UI_END_KILLS_CAPTION,éliminations,kills
 UI_END_WEAPONS,ARMES,WEAPONS
 UI_END_PASSIVES,ÉCUSSONS ET OBJETS,BADGES AND ITEMS
-UI_END_KILLS,Éliminations,Kills
 UI_END_CRISES,Résurgences,Resurgences
 UI_END_FELL_TO,Dernier coup,Last hit
 UI_END_VESTIGES,+{0} Vestiges,+{0} Vestiges
@@ -267,11 +265,6 @@ UI_END_CHESTS,Coffres ouverts,Chests opened
 UI_END_DAMAGE_TAKEN,Dégâts subis,Damage taken
 UI_END_EXPEDITION,EXPÉDITION,EXPEDITION
 UI_END_EQUIPMENT,ÉQUIPEMENT,EQUIPMENT
-UI_END_SCORE_KILLS,Points des éliminations,Kill points
-UI_END_SCORE_ERASURE,Bonus de l'oubli,Forgetting bonus
-UI_END_SCORE_PERIL,Péril,Peril
-UI_END_SCORE_CHARACTER,Personnage,Character
-UI_END_SCORE_MUTATORS,Mutateurs,Mutators
 UI_HUD_ESSENCE,{0} Essence,{0} Essence
 EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
 EVENT_HUNT_OBJECTIVE,Abattez le {0},Slay the {0}

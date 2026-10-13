@@ -74,12 +74,12 @@ public partial class DevelopmentModeRegression : Node
                 Check(!MetaSaveManager.IsWeaponUnlocked("lighthouse_shard") && !MetaSaveManager.IsObjectUnlocked("thermometre"), "verrous de quête conservés");
                 Check(!MetaSaveManager.IsObjectUnlocked("portrait_efface") && MetaSaveManager.IsObjectUnlocked("cassette_rembobinee"),
                     "accès normal : Portrait réservé à sa quête active, Cassette disponible dès le départ");
-                Check(MetaSaveManager.GetVestiges() == (seed ? 37 : 47), "monnaie normale conservée");
+                Check(MetaSaveManager.GetVestiges() == (seed ? 37 : NormalVestigesAfterRun), "monnaie normale conservée");
             }
 
             ScoreManager score = new();
             AddChild(score);
-            Check(score.BestScore == (seed || dev ? 0 : 100), "record du bon profil chargé");
+            Check(score.BestKills == (seed || dev ? 0 : 10), "record du bon profil chargé");
             if (seed || dev)
             {
                 GetNode<GameManager>("/root/GameManager").SelectedCharacterId = "vagabond";
@@ -91,11 +91,11 @@ public partial class DevelopmentModeRegression : Node
                 Check(RunHistoryManager.GetHistory().Count == 1, "fin de run sauvegardée");
                 Check(RunHistoryManager.GetHistory()[0].Provenance == (dev ? RunProvenance.Development : RunProvenance.Test), "provenance sauvegardée avec la run");
                 Check(!DevelopmentMode.CanSubmitResults && !SteamManager.CanSubmitResults, "session de test exclue de Steam");
-                Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("highscore_kills.save")), "record sauvegardé");
+                Check(MetaSaveManager.GetBestKills() == (dev ? 20 : 10) && MetaSaveManager.GetKillRecord("vagabond")?.Kills == (dev ? 20 : 10), "record global et du personnage sauvegardés");
                 Check(FileAccess.FileExists(DevelopmentMode.GetSavePath("analytics/aggregate.json")), "analytics sauvegardées");
             }
             else
-                Check(RunHistoryManager.GetHistory().Count == 1 && RunHistoryManager.GetBestScore() == 100, "historique normal intact après dev");
+                Check(RunHistoryManager.GetHistory().Count == 1 && RunHistoryManager.GetBestKills() == 10, "historique normal intact après dev");
 
             GD.Print("[DevelopmentModeRegression] PASS");
             GetTree().Quit();
@@ -106,6 +106,9 @@ public partial class DevelopmentModeRegression : Node
             GetTree().Quit(1);
         }
     }
+
+    // Le profil normal part de 37 Vestiges et gagne ceux de la run d'essai à 10 éliminations (DECISIONS §155).
+    private static int NormalVestigesAfterRun => 37 + ScoreConfig.Load().VestigesFor(10);
 
     private async Task LoadHub()
     {
@@ -139,19 +142,19 @@ public partial class DevelopmentModeRegression : Node
         {
             await ToggleHub(true);
             Check(MetaSaveManager.IsCharacterUnlocked("vagabond"), "accès dev actualisés sans relancer Godot");
-            Check(RunHistoryManager.GetBestScore() == 200, "historique dev rechargé");
+            Check(RunHistoryManager.GetBestKills() == 20, "historique dev rechargé");
             Check(!SteamManager.IsActive, "Steam désactivé par la bascule");
             MetaSaveManager.AddVestiges(1);
-            AnalyticsManager.Instance.RecordRunEnd(new RunRecord { CharacterId = "vagabond", Score = 300 });
+            AnalyticsManager.Instance.RecordRunEnd(new RunRecord { CharacterId = "vagabond", TotalKills = 30 });
             GetNode<GameManager>("/root/GameManager").SelectedCharacterId = "vagabond";
             await ToggleHub(false);
-            Check(!MetaSaveManager.IsCharacterUnlocked("vagabond") && MetaSaveManager.GetVestiges() == 47, "acquis et monnaie normaux conservés");
-            Check(RunHistoryManager.GetBestScore() == 100, "historique normal rechargé");
+            Check(!MetaSaveManager.IsCharacterUnlocked("vagabond") && MetaSaveManager.GetVestiges() == NormalVestigesAfterRun, "acquis et monnaie normaux conservés");
+            Check(RunHistoryManager.GetBestKills() == 10, "historique normal rechargé");
             Check(AnalyticsManager.Instance.GetReport().TotalRuns == 1, "analytics normales sans runs dev");
             Check(GetNode<GameManager>("/root/GameManager").SelectedCharacterId != "vagabond", "sélection dev invalidée au retour normal");
             ScoreManager score = new();
             GetTree().CurrentScene.AddChild(score);
-            Check(score.BestScore == 100, "record normal chargé après la bascule");
+            Check(score.BestKills == 10, "record normal chargé après la bascule");
             score.QueueFree();
         }
         await ToggleHub(true);

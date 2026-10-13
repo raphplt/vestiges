@@ -55,15 +55,19 @@ def measured_vestiges(folders: list[Path]) -> dict[int, list[int]]:
         for path in sorted(folder.glob("seed-*/density-*.csv")):
             with path.open() as handle:
                 rows = list(csv.DictReader(handle))
-            if not rows or "score" not in rows[0]:
-                print(f"{path} : pas de colonne score (mesure antérieure au plan 36)", file=sys.stderr)
+            # Colonne « vestiges » depuis le classement aux éliminations (DECISIONS §155) ; avant, score ÷ 10.
+            if rows and "vestiges" in rows[0]:
+                by_second = {int(float(row["t"])): int(row["vestiges"]) for row in rows}
+            elif rows and "score" in rows[0]:
+                by_second = {int(float(row["t"])): int(row["score"]) // 10 for row in rows}
+            else:
+                print(f"{path} : ni Vestiges ni score (mesure antérieure au plan 36)", file=sys.stderr)
                 continue
-            by_second = {int(float(row["t"])): int(row["score"]) for row in rows}
             for minute in MINUTES:
                 # La dernière ligne d'une mesure de d secondes porte t = d − 1.
-                score = by_second.get(minute * 60, by_second.get(minute * 60 - 1))
-                if score is not None:
-                    gains[minute].append(score // 10)
+                vestiges = by_second.get(minute * 60, by_second.get(minute * 60 - 1))
+                if vestiges is not None:
+                    gains[minute].append(vestiges)
     return gains
 
 

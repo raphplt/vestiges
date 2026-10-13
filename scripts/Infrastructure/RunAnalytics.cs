@@ -10,11 +10,11 @@ public static class RunAnalytics
 {
     public class CharacterRunStats
     {
-        public float AvgScore { get; set; }
+        public float AvgKills { get; set; }
         public float AvgDurationSec { get; set; }
         public float AvgCrises { get; set; }
         public int RunCount { get; set; }
-        public int BestScore { get; set; }
+        public int BestKills { get; set; }
     }
 
     public static float GetAverageCrises()
@@ -24,11 +24,11 @@ public static class RunAnalytics
         return (float)history.Average(r => r.CrisesSurvived);
     }
 
-    public static float GetAverageScore()
+    public static float GetAverageKills()
     {
         List<RunRecord> history = RunHistoryManager.GetHistory();
         if (history.Count == 0) return 0f;
-        return (float)history.Average(r => r.Score);
+        return (float)history.Average(r => r.TotalKills);
     }
 
     public static float GetAverageRunDuration()
@@ -81,20 +81,20 @@ public static class RunAnalytics
         {
             stats[group.Key] = new CharacterRunStats
             {
-                AvgScore = (float)group.Value.Average(r => r.Score),
+                AvgKills = (float)group.Value.Average(r => r.TotalKills),
                 AvgDurationSec = (float)group.Value.Average(r => r.RunDurationSec),
                 AvgCrises = (float)group.Value.Average(r => r.CrisesSurvived),
                 RunCount = group.Value.Count,
-                BestScore = group.Value.Max(r => r.Score)
+                BestKills = group.Value.Max(r => r.TotalKills)
             };
         }
         return stats;
     }
 
-    public static List<int> GetScoreTrend(int count = 10)
+    public static List<int> GetKillTrend(int count = 10)
     {
         List<RunRecord> history = RunHistoryManager.GetHistory();
-        return history.Take(count).Select(r => r.Score).ToList();
+        return history.Take(count).Select(r => r.TotalKills).ToList();
     }
 
     public static float GetAverageDps()

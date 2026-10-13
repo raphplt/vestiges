@@ -87,8 +87,22 @@ public class MetaStats
     [JsonPropertyName("total_crises_survived")]
     public int TotalCrisesSurvived { get; set; }
 
-    [JsonPropertyName("best_score")]
-    public int BestScore { get; set; }
+    /// <summary>Meilleure run de chaque personnage, en éliminations (DECISIONS §155) ; le record global en découle.</summary>
+    [JsonPropertyName("kill_records")]
+    public Dictionary<string, KillRecord> KillRecords { get; set; } = new();
+}
+
+/// <summary>Une meilleure run : éliminations, date et distance atteinte.</summary>
+public class KillRecord
+{
+    [JsonPropertyName("kills")]
+    public int Kills { get; set; }
+
+    [JsonPropertyName("date")]
+    public string Date { get; set; }
+
+    [JsonPropertyName("max_distance_m")]
+    public float MaxDistanceMeters { get; set; }
 }
 
 /// <summary>
@@ -577,8 +591,27 @@ public static class MetaSaveManager
         _data.Stats.MaxKillsInRun = Mathf.Max(_data.Stats.MaxKillsInRun, record.TotalKills);
         _data.Stats.BestRunDurationSec = Mathf.Max(_data.Stats.BestRunDurationSec, record.RunDurationSec);
         _data.Stats.TotalCrisesSurvived += record.CrisesSurvived;
-        _data.Stats.BestScore = Mathf.Max(_data.Stats.BestScore, record.Score);
+        string characterId = record.CharacterId ?? "";
+        if (characterId.Length > 0 && record.TotalKills > (GetKillRecord(characterId)?.Kills ?? 0))
+            _data.Stats.KillRecords[characterId] = new KillRecord
+            {
+                Kills = record.TotalKills, Date = record.Date, MaxDistanceMeters = record.MaxDistanceMeters ?? 0f,
+            };
         Save();
+    }
+
+    /// <summary>Record d'éliminations du personnage, ou null s'il n'a jamais fini de run.</summary>
+    public static KillRecord GetKillRecord(string characterId)
+    {
+        Load();
+        return _data.Stats.KillRecords.GetValueOrDefault(characterId ?? "");
+    }
+
+    /// <summary>Record global d'éliminations, tous personnages confondus.</summary>
+    public static int GetBestKills()
+    {
+        Load();
+        return _data.Stats.MaxKillsInRun;
     }
 
     public static MetaStats GetStats()
@@ -661,6 +694,7 @@ public static class MetaSaveManager
         _data ??= new MetaSaveData();
         _data.Version = CurrentVersion;
         _data.Stats ??= new MetaStats();
+        _data.Stats.KillRecords ??= new Dictionary<string, KillRecord>();
         _data.DiscoveredSouvenirs ??= new List<string>();
         _data.CompletedQuests ??= new List<string>();
         _data.QuestProgress ??= new Dictionary<string, List<float>>();
@@ -746,7 +780,6 @@ public static class MetaSaveManager
             migrated.Stats.MaxKillsInRun = TryGetInt(stats, "max_kills_in_run");
             migrated.Stats.TotalRuns = TryGetInt(stats, "total_runs");
             migrated.Stats.TotalCrisesSurvived = TryGetInt(stats, "total_crises_survived");
-            migrated.Stats.BestScore = TryGetInt(stats, "best_score");
             migrated.Stats.BestRunDurationSec = Mathf.Max(
                 TryGetFloat(stats, "best_run_duration_sec"),
                 legacyMaxNights * 240f);

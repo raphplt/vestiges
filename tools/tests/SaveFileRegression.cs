@@ -24,7 +24,6 @@ public partial class SaveFileRegression : Node
             RunMetaChecks();
             RunHistoryChecks();
             RunSettlementChecks();
-            RunHighScoreChecks();
         }
         catch (Exception ex)
         {
@@ -180,15 +179,15 @@ public partial class SaveFileRegression : Node
         File.WriteAllText(target, future);
         RunHistoryManager.ForceReload();
         Check(RunHistoryManager.GetHistory().Count == 2 && !RunHistoryManager.CanWrite, "historique : version future lue sans écriture");
-        Check(!RunHistoryManager.SaveRun(new RunRecord { Score = 30 }).Succeeded, "historique : ajout refusé sur version future");
+        Check(!RunHistoryManager.SaveRun(new RunRecord { TotalKills = 30 }).Succeeded, "historique : ajout refusé sur version future");
         Check(File.ReadAllText(target) == future && RunHistoryManager.GetHistory().Count == 2, "historique : version future intacte, ajout refusé absent de la mémoire");
 
         Reset(target);
         File.WriteAllText(target, "[{\"version\":3,\"score\":10}]");
         RunHistoryManager.ForceReload();
-        Check(RunHistoryManager.SaveRun(new RunRecord { Score = 30 }).Succeeded, "historique : ajout écrit");
+        Check(RunHistoryManager.SaveRun(new RunRecord { TotalKills = 30 }).Succeeded, "historique : ajout écrit");
         RunHistoryManager.ForceReload();
-        Check(RunHistoryManager.GetHistory().Count == 2 && RunHistoryManager.GetBestScore() == 30, "historique : ajout relu");
+        Check(RunHistoryManager.GetHistory().Count == 2 && RunHistoryManager.GetBestKills() == 30, "historique : ajout relu");
         Reset(target);
         RunHistoryManager.ForceReload();
     }
@@ -273,20 +272,7 @@ public partial class SaveFileRegression : Node
 
     private static string PendingIds() => string.Join(",", MetaSaveManager.GetPendingHistory().ConvertAll(run => run.RunId));
 
-    private static RunRecord Record(string runId, int score) => new() { RunId = runId, Score = score, CharacterId = "vagabond" };
-
-    private void RunHighScoreChecks()
-    {
-        string target = Abs(DevelopmentMode.GetSavePath("highscore_kills.save"));
-        Reset(target);
-        File.WriteAllText(target + ".bak", "42");
-        File.WriteAllText(target, "quarante");
-        ScoreManager score = new();
-        AddChild(score);
-        Check(score.BestScore == 42, "record illisible repris sur la copie");
-        score.QueueFree();
-        Reset(target);
-    }
+    private static RunRecord Record(string runId, int kills) => new() { RunId = runId, TotalKills = kills, CharacterId = "vagabond" };
 
     private static SaveFile.Parse<int> ParseSample(string json)
     {

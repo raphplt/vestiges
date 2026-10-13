@@ -31,6 +31,14 @@ Raphaël veut que le classement revienne, avec un affichage refait :
 - **Classements Steam** : envoi des éliminations aux tableaux de tous les temps, de la semaine et du personnage. Le tableau des Résurgences est retiré, puisqu'on garde une seule mesure.
 - **Restes du score** : succès, analytics, quêtes et historique qui lisent le score passent aux éliminations. L'ancien champ de l'historique reste lisible.
 
+**C1 livré le 13 octobre**, sur la branche `classement-eliminations` :
+- éliminations au centre du bilan et en grand dans le HUD ;
+- record global et record du personnage (ligne dédiée au bilan, célébrée dans les deux cas) ;
+- Vestiges = éliminations ÷ 0,85 ;
+- envois Steam : tous les temps, semaine, personnage ; tableau des Résurgences retiré.
+
+Retirés : le multiplicateur de score du Péril, du personnage, des mutateurs, et le bonus de score de l'oubli ; le fichier `highscore_kills.save` (records dans la sauvegarde méta) ; les succès Steam de score (V1). Suites vertes : smoke, catalogues, sauvegardes, mode dev, outils de dev, classements Steam, intégration du mouvement, Indicible, menus.
+
 ### C2 — L'écran Classement
 
 - Une entrée « Classement » à l'accueil, avec trois onglets :

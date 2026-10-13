@@ -5,13 +5,13 @@ using System.Globalization;
 namespace Vestiges.Infrastructure.Steam;
 
 /// <summary>
-/// Classements Steam alimentés par une fin de run (plan 26 Q3). Les noms sont des clés du service Steam :
-/// le jeu crée chaque tableau à son premier envoi. Sans type Steamworks, pour rester chargeable hors x86/x64.
+/// Classements Steam alimentés par une fin de run (plan 26 Q3), en éliminations (DECISIONS §155) : de tous les temps,
+/// de la semaine et du personnage. Les noms sont des clés du service Steam : le jeu crée chaque tableau à son premier
+/// envoi. Sans type Steamworks, pour rester chargeable hors x86/x64.
 /// </summary>
 public static class RunLeaderboards
 {
 	public const string BoardGlobal = "Vestiges_Global";
-	public const string BoardCrisesSurvived = "Vestiges_Crises";
 	public const string BoardCharacterPrefix = "Vestiges_Char_";
 	public const string BoardWeeklyPrefix = "Vestiges_Weekly_";
 
@@ -28,16 +28,15 @@ public static class RunLeaderboards
 		return string.Create(CultureInfo.InvariantCulture, $"{BoardWeeklyPrefix}{year}-W{week:00}");
 	}
 
-	public static List<Submission> ForRun(int score, int crisesSurvived, string characterId, DateTime utcNow)
+	public static List<Submission> ForRun(int kills, string characterId, DateTime utcNow)
 	{
 		List<Submission> submissions = new()
 		{
-			new Submission(BoardGlobal, score),
+			new Submission(BoardGlobal, kills),
 		};
 		if (!string.IsNullOrEmpty(characterId))
-			submissions.Add(new Submission(BoardCharacterPrefix + characterId, score));
-		submissions.Add(new Submission(BoardCrisesSurvived, crisesSurvived));
-		submissions.Add(new Submission(WeeklyBoard(utcNow), score));
+			submissions.Add(new Submission(BoardCharacterPrefix + characterId, kills));
+		submissions.Add(new Submission(WeeklyBoard(utcNow), kills));
 		return submissions;
 	}
 }

@@ -38,14 +38,14 @@ public partial class SteamManager : Node
 		SetProcess(false);
 	}
 
-	/// <summary>Envoie le score d'une run normale sur ses classements : global, personnage, crises, semaine.</summary>
-	public static void SubmitRunScores(int score, int crisesSurvived, string characterId)
+	/// <summary>Envoie les éliminations d'une run normale sur ses classements : tous les temps, personnage, semaine.</summary>
+	public static void SubmitRunKills(int kills, string characterId)
 	{
 		LeaderboardQueue leaderboards = Leaderboards;
 		if (!CanSubmitResults || leaderboards == null)
 			return;
 
-		foreach (RunLeaderboards.Submission submission in RunLeaderboards.ForRun(score, crisesSurvived, characterId, DateTime.UtcNow))
+		foreach (RunLeaderboards.Submission submission in RunLeaderboards.ForRun(kills, characterId, DateTime.UtcNow))
 			leaderboards.SubmitScore(submission.Board, submission.Score);
 	}
 

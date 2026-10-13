@@ -26,21 +26,11 @@ public partial class MovementRegression
         erasure.SetProcess(false);
         float after = _player.CurrentHp;
         ErasureEffects.Effect inVoid = ReadPlayerField<ErasureEffects.Effect>("_erasurePenalty");
-        // Ce que l'oubli offre : la même créature rapporte plus au Néant qu'en zone ancrée, loin de là.
-        Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
-        EventBus bus = GetNode<EventBus>("/root/EventBus");
-        int start = score.CurrentScore;
-        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", Vector2.Zero);
-        int inVoidPoints = score.CurrentScore - start;
-        start = score.CurrentScore;
-        bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", new Vector2(0f, -3000f));
-        int anchoredPoints = score.CurrentScore - start;
         _player.IsGodMode = true;
         for (int y = -2; y <= 2; y++)
             for (int x = -2; x <= 2; x++)
                 erasure.OverrideMemory(center + new Vector2I(x, y), 1f);
         Check(after < before && after > 0f, $"Néant : dégâts continus, PV {before} → {after} en 80 ticks");
-        Check(inVoidPoints > anchoredPoints && anchoredPoints > 0, $"Néant : kill à {inVoidPoints} points contre {anchoredPoints} en zone ancrée");
         Check(inVoid.Speed < 1f && inVoid.Damage < 1f, $"Néant : vitesse ×{inVoid.Speed} et dégâts ×{inVoid.Damage} appliqués au joueur");
         erasure.SetProcess(true);
         await Step(40);
@@ -52,6 +42,7 @@ public partial class MovementRegression
         Vector2 memorial = new(0f, -2 * erasure.CellSize * 4f);
         Vector2I memorialCell = new(Mathf.FloorToInt(memorial.X / erasure.CellSize), Mathf.FloorToInt(memorial.Y / erasure.CellSize));
         erasure.OverrideMemory(memorialCell, 0.1f);
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
         bus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial);
         Check(erasure.GetMemoryAt(memorial) >= 0.7f, $"Mémorial ravivé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(memorial):0.00}");
     }
@@ -95,27 +86,24 @@ public partial class MovementRegression
                 world.GetNode<Vestiges.Spawn.EnemyPool>("EnemyPool").Return(enemy);
     }
 
-    /// <summary>Plan 02 lot A : horloge de jeu actif, score immobile sans kill, verdict du record figé avant sauvegarde.</summary>
+    /// <summary>
+    /// Plan 02 lot A : horloge de jeu actif, éliminations immobiles sans kill, verdict du record figé avant sauvegarde
+    /// (la mesure de run est le nombre d'éliminations, DECISIONS §155).
+    /// </summary>
     private async Task CheckScoreClock(WorldSetup world)
     {
         Vestiges.Infrastructure.RunTracker tracker = world.GetNode<Vestiges.Infrastructure.RunTracker>("RunTracker");
         Vestiges.Score.ScoreManager score = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager");
         EventBus bus = GetNode<EventBus>("/root/EventBus");
-        int notified = 0;
-        void OnScore(int value) => notified++;
-        bus.ScoreChanged += OnScore;
         float start = tracker.RunDurationSeconds;
-        int scoreBefore = score.CurrentScore;
+        int killsBefore = score.TotalKills;
         int frames = 0;
         while (tracker.RunDurationSeconds - start < 1.2f && frames < 2000)
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             frames++;
         }
-        bus.ScoreChanged -= OnScore;
-        // Le score ne compte que les éliminations (DECISIONS §40) : sans kill, il ne bouge pas.
-        Check(notified == 0 && score.CurrentScore == scoreBefore,
-            $"Score : {notified} notification(s) sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu, score {score.CurrentScore}");
+        Check(score.TotalKills == killsBefore, $"Éliminations : immobiles sans kill en {tracker.RunDurationSeconds - start:0.0} s de jeu");
 
         float beforePause = tracker.RunDurationSeconds;
         GetTree().Paused = true;
@@ -125,17 +113,16 @@ public partial class MovementRegression
         Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, beforePause), "Score : la pause n'avance pas l'horloge de la run");
 
         bus.EmitSignal(EventBus.SignalName.EnemyKilled, "rodeur", _player.GlobalPosition);
-        Check(score.CurrentScore > scoreBefore, $"Score : une élimination rapporte ({scoreBefore} → {score.CurrentScore})");
-        FieldInfo best = typeof(Vestiges.Score.ScoreManager).GetField("_bestScore", BindingFlags.Instance | BindingFlags.NonPublic);
-        int previous = Math.Max(0, score.CurrentScore - 1);
-        best.SetValue(score, previous);
+        Check(score.TotalKills == killsBefore + 1, $"Éliminations : une élimination compte ({killsBefore} → {score.TotalKills})");
+        int previous = score.BestKills;
         _manager.ChangeState(GameManager.GameState.Death);
         score.SaveEndOfRun();
         float atDeath = tracker.RunDurationSeconds;
         for (int i = 0; i < 20; i++)
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(score.IsNewRecord && score.BestScore == previous,
-            $"Record : nouveau record encore lu après la sauvegarde (ancien {score.BestScore}, score {score.CurrentScore})");
+        bool expectRecord = score.TotalKills > previous;
+        Check(score.IsNewRecord == expectRecord && score.BestKills == previous,
+            $"Record : verdict figé après la sauvegarde (ancien {score.BestKills}, éliminations {score.TotalKills})");
         Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, atDeath), "Score : l'horloge s'arrête à la mort");
     }
 

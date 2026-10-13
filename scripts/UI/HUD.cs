@@ -47,7 +47,6 @@ public partial class HUD : CanvasLayer
     private const float BiomeFadeSec = 0.5f;
     private const float FpsUpdateInterval = 0.25f;
     private const float BiomeUpdateInterval = 0.5f;
-    private const float ScoreTickInterval = 0.05f;
 
     // --- Vitals ---
     private VitalsDisplay _vitals;
@@ -64,8 +63,7 @@ public partial class HUD : CanvasLayer
     private float _biomeAge = float.MaxValue;
     private Tween _timeColorTween;
 
-    // --- Score ---
-    private Label _scoreLabel;
+    // --- Éliminations, la mesure de la run (DECISIONS §155) ---
     private Label _killsLabel;
     private int _kills;
     private Label _essenceLabel;
@@ -93,19 +91,9 @@ public partial class HUD : CanvasLayer
     private string _lastBiomeName;
     private float _fpsTimer;
     private float _biomeTimer;
-    private float _scoreTimer;
     private float _runSeconds;
     private RunTracker _runTracker;
     private int _shownSeconds = -1;
-    private int _targetScore;
-    private Label _gainLabel;
-    private int _pendingGain;
-    private float _gainAge = float.MaxValue;
-    private const int MinShownGain = 5;
-    private const float GainGroupSec = 0.6f;
-    private const float GainShowSec = 0.9f;
-    private const float GainFadeSec = 0.4f;
-    private float _shownScore;
 
     // Palette de la charte graphique
     private static readonly Color PalGrayWarm = new(0x6B / 255f, 0x61 / 255f, 0x61 / 255f);
@@ -131,7 +119,6 @@ public partial class HUD : CanvasLayer
         _eventBus.PlayerShieldChanged += OnShieldChanged;
         _eventBus.XpGained += OnXpChanged;
         _eventBus.LevelUp += OnLevelUp;
-        _eventBus.ScoreChanged += OnScoreChanged;
         _eventBus.PerilChanged += OnPerilChanged;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
         _eventBus.EnemyKilled += OnEnemyKilled;
@@ -220,8 +207,6 @@ public partial class HUD : CanvasLayer
             _timeLabel.Text = $"{seconds / 60:00}:{seconds % 60:00}";
         }
 
-        UpdateScoreCounter(dt);
-        UpdateGainLabel(dt);
         if (_perilPulse > 0f)
         {
             _perilPulse = Mathf.Max(0f, _perilPulse - dt * 2f);
@@ -250,7 +235,6 @@ public partial class HUD : CanvasLayer
             _eventBus.PlayerShieldChanged -= OnShieldChanged;
             _eventBus.XpGained -= OnXpChanged;
             _eventBus.LevelUp -= OnLevelUp;
-            _eventBus.ScoreChanged -= OnScoreChanged;
             _eventBus.PerilChanged -= OnPerilChanged;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
             _eventBus.EnemyKilled -= OnEnemyKilled;
@@ -344,8 +328,9 @@ public partial class HUD : CanvasLayer
     }
 
     /// <summary>
-    /// Haut droit, sans plaque (plan 37 R2) : le score en grand, puis une colonne éliminations, Essence, Péril (plan 41
-    /// R2). Le Péril y reste toujours, 0 compris (plan 34 G0 : il se lit sans pause). Chaque texte porte son contour sombre.
+    /// Haut droit, sans plaque (plan 37 R2) : les éliminations en grand, la seule mesure de la run (DECISIONS §155), puis
+    /// une colonne Essence, Péril (plan 41 R2). Le Péril y reste toujours, 0 compris (plan 34 G0 : il se lit sans pause).
+    /// Chaque texte porte son contour sombre.
     /// </summary>
     private void BuildScoreArea()
     {
@@ -354,27 +339,17 @@ public partial class HUD : CanvasLayer
         anchor.AnchorRight = 1f;
         _hudRoot.AddChild(anchor);
 
-        HBoxContainer scoreRow = RightAlignedRow(anchor, PlateMargin - 4f, 6);
-        Label caption = MakeLabel(Tr("UI_HUD_SCORE"), 8, PalGrayLight, 3);
+        HBoxContainer killsRow = RightAlignedRow(anchor, PlateMargin - 4f, 6);
+        Label caption = MakeLabel(Tr("UI_HUD_KILLS"), 8, PalGrayLight, 3);
         caption.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        scoreRow.AddChild(caption);
-        _scoreLabel = MakeLabel("0", 22, PalGold, 4);
-        scoreRow.AddChild(_scoreLabel);
+        killsRow.AddChild(caption);
+        _killsLabel = MakeLabel("0", 22, PalGold, 4);
+        killsRow.AddChild(_killsLabel);
 
-        // Gains rapprochés regroupés (plan 02 lot A) : « +120 » à gauche du score, puis s'efface.
-        _gainLabel = MakeLabel("", 13, PalGold, 4);
-        // Placé juste à gauche d'un score de sept chiffres : il ne flotte pas loin du nombre qu'il nourrit.
-        _gainLabel.Position = new Vector2(-PlateMargin - 200f, PlateMargin + 2f);
-        _gainLabel.Size = new Vector2(80f, 20f);
-        _gainLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        _gainLabel.Modulate = new Color(1f, 1f, 1f, 0f);
-        anchor.AddChild(_gainLabel);
-
-        // Une colonne sous le score (plan 41 R2) : une valeur par ligne, même taille, chiffres alignés sur le bord droit.
-        // Seules les icônes portent une couleur ; le score reste la seule valeur dorée.
-        _killsLabel = AddTallyRow(anchor, PlateMargin + 26f, "res://assets/ui/hud/plan25/kill_skull.png");
-        _essenceLabel = AddTallyRow(anchor, PlateMargin + 46f, "res://assets/ui/hud/plan25/essence_crystal.png");
-        _perilLabel = AddTallyRow(anchor, PlateMargin + 66f, "res://assets/ui/hud/plan25/peril_stele.png");
+        // Une colonne sous les éliminations (plan 41 R2) : une valeur par ligne, même taille, chiffres alignés sur le
+        // bord droit. Seules les icônes portent une couleur ; les éliminations restent la seule valeur dorée.
+        _essenceLabel = AddTallyRow(anchor, PlateMargin + 26f, "res://assets/ui/hud/plan25/essence_crystal.png");
+        _perilLabel = AddTallyRow(anchor, PlateMargin + 46f, "res://assets/ui/hud/plan25/peril_stele.png");
     }
 
     /// <summary>Ligne de la colonne : icône de 10 px puis chiffre, le chiffre dans une case de largeur fixe.</summary>
@@ -513,44 +488,6 @@ public partial class HUD : CanvasLayer
         _xpBar.Flash();
         OnXpChanged(0);
 
-    }
-
-    private void OnScoreChanged(int newScore)
-    {
-        int gain = newScore - _targetScore;
-        _targetScore = newScore;
-        // Les petites créatures valent peu : seuls les gains notables s'affichent à côté de la plaque.
-        if (gain < MinShownGain)
-            return;
-        _pendingGain = _gainAge < GainGroupSec ? _pendingGain + gain : gain;
-        _gainAge = 0f;
-        _gainLabel.Text = $"+{_pendingGain:N0}";
-        _gainLabel.Modulate = Colors.White;
-    }
-
-    private void UpdateGainLabel(float dt)
-    {
-        if (_gainAge > GainShowSec + GainFadeSec)
-            return;
-        _gainAge += dt;
-        float fade = Mathf.Clamp((_gainAge - GainShowSec) / GainFadeSec, 0f, 1f);
-        _gainLabel.Modulate = new Color(1f, 1f, 1f, 1f - fade);
-    }
-
-    /// <summary>Le score défile vers sa cible : chaque gain se voit, sans reconstruire la chaîne à chaque frame.</summary>
-    private void UpdateScoreCounter(float dt)
-    {
-        if ((int)_shownScore == _targetScore)
-            return;
-        _scoreTimer += dt;
-        if (_scoreTimer < ScoreTickInterval)
-            return;
-        float step = Mathf.Max(1f, Mathf.Abs(_targetScore - _shownScore) * 0.25f);
-        _shownScore = _shownScore < _targetScore
-            ? Mathf.Min(_targetScore, _shownScore + step)
-            : Mathf.Max(_targetScore, _shownScore - step);
-        _scoreTimer = 0f;
-        _scoreLabel.Text = ((int)_shownScore).ToString("N0");
     }
 
     /// <summary>La phase ne s'écrit plus : seul le temps change de couleur (plan 24 A1, A3).</summary>

@@ -455,7 +455,6 @@ public partial class GameBootstrap : Node
         // a passé son _Ready (bannissements de base) lors des attentes du chargement : ses ajouts ne sont pas écrasés.
         CampUpgrades.Apply(player, fragmentManager, essenceTracker, MetaSaveManager.GetCampRanks(), DevelopmentMode.IsEnabled);
         perkManager.ApplyPassivePerks(data.Id);
-        scoreManager.SetCharacterMultiplier(data.ScoreMultiplier);
         scoreManager.SetRunTracker(runTracker);
         gm.ActiveMutators = new System.Collections.Generic.List<string>();
 

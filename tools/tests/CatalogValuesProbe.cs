@@ -20,13 +20,9 @@ public partial class CatalogValuesProbe : Node
         for (int level = 1; level <= 250; level++)
             lines.Add(Invariant($"xp {level} {curve.CostOf(level):R}"));
         EnemyDataLoader.Load();
-        ScoreConfig score = ScoreConfig.Load();
-        List<string> ids = new(EnemyDataLoader.GetAllIds()) { "inconnu" };
-        ids.Sort(StringComparer.Ordinal);
-        foreach (string id in ids)
-            lines.Add($"score {id} {score.KillPoints(id)}");
+        lines.Add(Invariant($"score kills_per_vestige {ScoreConfig.Load().KillsPerVestige:R}"));
         foreach (int peril in new[] { 0, 1, 5, 10, 20, 40 })
-            lines.Add(Invariant($"peril {peril} {PerilDataLoader.EnemyCountMultiplier(peril):R} {PerilDataLoader.EnemyHpMultiplier(peril):R} {PerilDataLoader.EnemyDamageMultiplier(peril):R} {PerilDataLoader.ScoreMultiplier(peril):R}"));
+            lines.Add(Invariant($"peril {peril} {PerilDataLoader.EnemyCountMultiplier(peril):R} {PerilDataLoader.EnemyHpMultiplier(peril):R} {PerilDataLoader.EnemyDamageMultiplier(peril):R}"));
         lines.Add($"peril ceiling {PerilDataLoader.ActiveEnemiesCeiling} banish {PerilDataLoader.BanishFree} {PerilDataLoader.BanishPerilDivisor}");
         // Q7b : objets (tous, désactivés compris), raretés d'amélioration, offre de niveau.
         List<string> objectIds = new() { "flamme_interieure", "fragment_deternite" };

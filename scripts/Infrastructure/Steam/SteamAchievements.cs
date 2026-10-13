@@ -37,10 +37,6 @@ public partial class SteamAchievements : Node
 	public const string UnlockTraqueur = "ACH_UNLOCK_TRAQUEUR";
 	public const string PlayAllCharacters = "ACH_PLAY_ALL_CHARACTERS";
 
-	// Score
-	public const string Score10000 = "ACH_SCORE_10000";
-	public const string Score50000 = "ACH_SCORE_50000";
-	public const string Score100000 = "ACH_SCORE_100000";
 
 	// Lore
 	public const string FirstSouvenir = "ACH_FIRST_SOUVENIR";
@@ -53,14 +49,13 @@ public partial class SteamAchievements : Node
 	public const string StatTotalChests = "STAT_TOTAL_CHESTS";
 	public const string StatTotalStructures = "STAT_TOTAL_STRUCTURES";
 	public const string StatMaxCrisesSurvived = "STAT_MAX_CRISES";
-	public const string StatBestScore = "STAT_BEST_SCORE";
+	public const string StatBestRunKills = "STAT_BEST_RUN_KILLS";
 
 	// --- Compteurs de session ---
 	private int _sessionKills;
 	private int _sessionPois;
 	private int _sessionChests;
 	private int _sessionStructures;
-	private int _sessionScore;
 
 	private EventBus _eventBus;
 
@@ -82,9 +77,6 @@ public partial class SteamAchievements : Node
 		// Lore
 		_eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
 
-		// Score
-		_eventBus.ScoreChanged += OnScoreChanged;
-
 		// Chargement des stats Steam accumulées
 		SteamUserStats.RequestCurrentStats();
 	}
@@ -99,14 +91,13 @@ public partial class SteamAchievements : Node
 		_eventBus.ChestOpened -= OnChestOpened;
 		_eventBus.ZoneDiscovered -= OnZoneDiscovered;
 		_eventBus.SouvenirDiscovered -= OnSouvenirDiscovered;
-		_eventBus.ScoreChanged -= OnScoreChanged;
 	}
 
 	/// <summary>
 	/// Appelé en fin de run par ScoreManager.SaveEndOfRun() pour flush les stats et
 	/// vérifier les achievements basés sur les cumuls cross-run.
 	/// </summary>
-	public void OnRunEnd(int finalScore, int crisesSurvived, string characterId)
+	public void OnRunEnd(int runKills, int crisesSurvived, string characterId)
 	{
 		if (!SteamManager.CanSubmitResults)
 			return;
@@ -118,18 +109,13 @@ public partial class SteamAchievements : Node
 		IncrementStat(StatTotalChests, _sessionChests);
 		IncrementStat(StatTotalStructures, _sessionStructures);
 		SetStatIfHigher(StatMaxCrisesSurvived, crisesSurvived);
-		SetStatIfHigher(StatBestScore, finalScore);
+		SetStatIfHigher(StatBestRunKills, runKills);
 
 		// Achievements de survie/endurance - remappés sur les crises V2.
 		if (crisesSurvived >= 1) TryUnlock(SurviveCrisis1);
 		if (crisesSurvived >= 3) TryUnlock(SurviveCrisis3);
 		if (crisesSurvived >= 5) TryUnlock(SurviveCrisis5);
 		if (crisesSurvived >= 10) TryUnlock(SurviveCrisis10);
-
-		// Achievements de score
-		if (finalScore >= 10_000) TryUnlock(Score10000);
-		if (finalScore >= 50_000) TryUnlock(Score50000);
-		if (finalScore >= 100_000) TryUnlock(Score100000);
 
 		// Achievements de cumul (basés sur les stats Steam)
 		CheckCumulativeAchievements();
@@ -141,7 +127,6 @@ public partial class SteamAchievements : Node
 		_sessionPois = 0;
 		_sessionChests = 0;
 		_sessionStructures = 0;
-		_sessionScore = 0;
 	}
 
 	/// <summary>Signale un unlock de personnage (appelé par MetaSaveManager).</summary>
@@ -186,11 +171,6 @@ public partial class SteamAchievements : Node
 	private void OnSouvenirDiscovered(string souvenirId, string souvenirName, string constellationId)
 	{
 		TryUnlock(FirstSouvenir);
-	}
-
-	private void OnScoreChanged(int newScore)
-	{
-		_sessionScore = newScore;
 	}
 
 	private void CheckCumulativeAchievements()

@@ -12,7 +12,7 @@ namespace Vestiges.Infrastructure.Analytics;
 /// Métriques collectées :
 /// - Taux de pick des perks (quels perks les joueurs choisissent)
 /// - Causes de mort et phase de fin
-/// - Distribution des scores
+/// - Distribution des éliminations par run
 /// - Temps de run moyen
 /// - Crises moyennes survécues
 /// - Événements custom (boss kill, souvenir discovered, etc.)
@@ -28,7 +28,7 @@ public partial class AnalyticsManager : Node
 	// Session courante
 	private readonly Dictionary<string, int> _perkPicks = new();
 	private readonly Dictionary<string, int> _deathCauses = new();
-	private readonly List<int> _scores = new();
+	private readonly List<int> _kills = new();
 	private readonly List<int> _crisesSurvived = new();
 	private readonly List<float> _runDurations = new();
 	private readonly List<CustomEvent> _events = new();
@@ -43,7 +43,7 @@ public partial class AnalyticsManager : Node
 	{
 		_perkPicks.Clear();
 		_deathCauses.Clear();
-		_scores.Clear();
+		_kills.Clear();
 		_crisesSurvived.Clear();
 		_runDurations.Clear();
 		_events.Clear();
@@ -83,7 +83,7 @@ public partial class AnalyticsManager : Node
 			return;
 
 		_totalRuns++;
-		_scores.Add(record.Score);
+		_kills.Add(record.TotalKills);
 		_crisesSurvived.Add(record.CrisesSurvived);
 		_runDurations.Add(record.RunDurationSec);
 
@@ -93,7 +93,7 @@ public partial class AnalyticsManager : Node
 		TrackEvent("run_end", new Dictionary<string, string>
 		{
 			["character"] = record.CharacterId,
-			["score"] = record.Score.ToString(),
+			["kills"] = record.TotalKills.ToString(),
 			["crises"] = record.CrisesSurvived.ToString(),
 			["run_phase"] = record.RunPhase ?? "Exploration",
 			["death_cause"] = record.DeathCause ?? "unknown",
@@ -122,14 +122,14 @@ public partial class AnalyticsManager : Node
 	/// <summary>Retourne un rapport de métriques pour le debug overlay ou l'export.</summary>
 	public AnalyticsReport GetReport()
 	{
-		float avgScore = _scores.Count > 0 ? Average(_scores) : 0;
+		float avgKills = _kills.Count > 0 ? Average(_kills) : 0;
 		float avgCrises = _crisesSurvived.Count > 0 ? Average(_crisesSurvived) : 0;
 		float avgDuration = _runDurations.Count > 0 ? AverageF(_runDurations) : 0;
 
 		return new AnalyticsReport
 		{
 			TotalRuns = _totalRuns,
-			AverageScore = avgScore,
+			AverageKills = avgKills,
 			AverageCrisesSurvived = avgCrises,
 			AverageRunDurationSec = avgDuration,
 			TopPerks = GetTopN(_perkPicks, 10),
@@ -174,7 +174,7 @@ public partial class AnalyticsManager : Node
 			["total_runs"] = _totalRuns,
 			["perk_picks"] = ToGodotDict(_perkPicks),
 			["death_causes"] = ToGodotDict(_deathCauses),
-			["scores"] = ToGodotArray(_scores),
+			["kills"] = ToGodotArray(_kills),
 			["crises_survived"] = ToGodotArray(_crisesSurvived),
 			["run_durations"] = ToGodotArrayF(_runDurations),
 		};
@@ -203,7 +203,7 @@ public partial class AnalyticsManager : Node
 		_totalRuns = data.TryGetValue("total_runs", out Variant tr) ? tr.AsInt32() : 0;
 		LoadDict(_perkPicks, data, "perk_picks");
 		LoadDict(_deathCauses, data, "death_causes");
-		LoadList(_scores, data, "scores");
+		LoadList(_kills, data, "kills");
 		LoadList(_crisesSurvived, data, "crises_survived");
 		LoadListF(_runDurations, data, "run_durations");
 
@@ -296,7 +296,7 @@ public partial class AnalyticsManager : Node
 	public record AnalyticsReport
 	{
 		public int TotalRuns { get; init; }
-		public float AverageScore { get; init; }
+		public float AverageKills { get; init; }
 		public float AverageCrisesSurvived { get; init; }
 		public float AverageRunDurationSec { get; init; }
 		public List<KeyValuePair<string, int>> TopPerks { get; init; }
