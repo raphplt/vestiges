@@ -3,6 +3,26 @@ using Godot;
 
 namespace Vestiges.Infrastructure;
 
+/// <summary>
+/// PV et dégâts d'une variante selon le niveau du joueur à son apparition (plan 42 S1, DECISIONS §160). Les dégâts par
+/// seconde d'un joueur suivent son niveau bien mieux que le temps de run (matrice M1 : corrélation 0,97 contre 0,78) ;
+/// les PV visent donc une durée de combat face au joueur moyen de ce niveau.
+/// </summary>
+public sealed class VariantLevelScaling
+{
+    /// <summary>Durée de combat visée face aux dégâts par seconde médians du niveau.</summary>
+    public float FightSeconds;
+    public float DpsCoefficient;
+    public float DpsExponent;
+    /// <summary>Échelle des dégâts, à la place de celle du temps : base + pente × niveau.</summary>
+    public float DamageBase;
+    public float DamagePerLevel;
+
+    public float Hp(int level) => FightSeconds * DpsCoefficient * Mathf.Pow(Mathf.Max(1, level), DpsExponent);
+
+    public float DamageScale(int level) => DamageBase + DamagePerLevel * Mathf.Max(1, level);
+}
+
 /// <summary>Version renforcée d'une créature de base (élite, Souverain, Aberration).</summary>
 public class EnemyVariantData
 {
@@ -15,6 +35,8 @@ public class EnemyVariantData
     public string TitleFeminine;
     /// <summary>PV visés avant mise à l'échelle du temps ; 0 = multiplicateur fixe <see cref="HpMult"/>.</summary>
     public float HpTarget;
+    /// <summary>PV et dégâts calés sur le niveau du joueur plutôt que sur le temps (Souverain, plan 42 S1) ; null sinon.</summary>
+    public VariantLevelScaling LevelScaling;
     public float HpMultMin = 1f;
     public float HpMult = 1f;
     public float DamageMult = 1f;
@@ -172,9 +194,21 @@ public static class EnemyVariantDataLoader
             DeathShake = String(dict, "death_shake", "medium"),
             Nameplate = dict.ContainsKey("nameplate") && dict["nameplate"].AsBool(),
             AberrationShader = dict.ContainsKey("aberration_shader") && dict["aberration_shader"].AsBool(),
-            AffixPool = Strings(dict, "affix_pool")
+            AffixPool = Strings(dict, "affix_pool"),
+            LevelScaling = dict.TryGetValue("level_scaling", out Variant scaling) && scaling.VariantType == Variant.Type.Dictionary
+                ? ParseLevelScaling(scaling.AsGodotDictionary())
+                : null
         };
     }
+
+    private static VariantLevelScaling ParseLevelScaling(Godot.Collections.Dictionary dict) => new()
+    {
+        FightSeconds = Float(dict, "fight_seconds", 30f),
+        DpsCoefficient = Float(dict, "dps_coefficient", 0.38f),
+        DpsExponent = Float(dict, "dps_exponent", 2.28f),
+        DamageBase = Float(dict, "damage_base", 1f),
+        DamagePerLevel = Float(dict, "damage_per_level", 0f)
+    };
 
     private static EnemyAffixData ParseAffix(string id, Godot.Collections.Dictionary dict)
     {

@@ -105,6 +105,8 @@ public partial class SpawnManager : Node2D
 
 	private EnemyPool _pool;
 	private Player _player;
+	// Niveau du joueur, suivi par l'EventBus : les variantes calées sur lui (Souverains) le lisent à leur apparition.
+	private int _playerLevel = 1;
 	private WorldSetup _worldSetup;
 	private Node _enemyContainer;
 	private EventBus _eventBus;
@@ -131,6 +133,7 @@ public partial class SpawnManager : Node2D
 		_eventBus.CrisisStarted += OnCrisisStarted;
 		_eventBus.PerilChanged += OnPerilChanged;
 		_eventBus.OubliEffectChanged += OnOubliEffectChanged;
+		_eventBus.LevelUp += OnLevelUp;
 		EnemyTracking.SetDetectionScale(1f);
 	}
 
@@ -142,6 +145,7 @@ public partial class SpawnManager : Node2D
 			_eventBus.CrisisStarted -= OnCrisisStarted;
 			_eventBus.PerilChanged -= OnPerilChanged;
 			_eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+			_eventBus.LevelUp -= OnLevelUp;
 		}
 	}
 
@@ -164,6 +168,8 @@ public partial class SpawnManager : Node2D
 				break;
 		}
 	}
+
+	private void OnLevelUp(int newLevel) => _playerLevel = Mathf.Max(_playerLevel, newLevel);
 
 	private void OnPerilChanged(int peril)
 	{
@@ -318,7 +324,15 @@ public partial class SpawnManager : Node2D
 			if (affix != null)
 				_affixPick.Add(affix);
 		}
-		enemy.ApplyVariant(variant, _affixPick);
+		VariantLevelScaling scaling = variant.LevelScaling;
+		if (scaling == null)
+		{
+			enemy.ApplyVariant(variant, _affixPick);
+			return;
+		}
+		float peril = PerilPoints(_elapsedTime / 60f);
+		enemy.ApplyVariant(variant, _affixPick, scaling.Hp(_playerLevel) * PerilDataLoader.EnemyHpMultiplier(peril),
+			scaling.DamageScale(_playerLevel) * PerilDataLoader.EnemyDamageMultiplier(peril));
 	}
 
 	/// <summary>Créature du biome local, de rang normal, en préférant la liste fournie si elle y figure.</summary>

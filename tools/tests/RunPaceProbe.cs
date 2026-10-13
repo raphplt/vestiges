@@ -49,8 +49,12 @@ internal sealed class RunPaceProbe : IDisposable
     // Chasses ouvertes, dans l'ordre : un Souverain meurt avant le suivant ou reste jusqu'à la fin de la run.
     private readonly List<Hunt> _hunts = new();
     private int _closedHunts;
+    private float _lastBossHp;
+    private double _lastBossTime = -1;
     private readonly Dictionary<(int Minute, string Weapon, DamageKind Kind), double> _damage = new();
     private readonly Dictionary<EnemyLife, double> _firstHit = new();
+    // Secondes distinctes où chaque créature a pris des coups : le temps de combat réel d'un Souverain, hors poursuite.
+    private readonly Dictionary<EnemyLife, (int Last, int Count)> _hitSeconds = new();
     // Même compte que les parties de Raphaël, pour comparer un profil à un vrai joueur (plan 42 M0e).
     private readonly PlayTrace _trace;
     private readonly PlayerProgression _progression;
@@ -62,6 +66,7 @@ internal sealed class RunPaceProbe : IDisposable
         public float MaxHp;
         public double FirstHit = -1;
         public double End = -1;
+        public int EngagedSeconds;
     }
 
     public RunPaceProbe(string output, ulong seed, SceneTree tree, Player player, ErasureManager erasure, EventBus bus)
@@ -149,10 +154,15 @@ internal sealed class RunPaceProbe : IDisposable
         (int, string, DamageKind) key = ((int)(_time / 60.0), result.Source.Weapon?.Id ?? "-", result.Source.Kind);
         _damage[key] = _damage.GetValueOrDefault(key) + result.HpLost;
         _firstHit.TryAdd(result.Target, _time);
+        int second = (int)_time;
+        (int last, int count) = _hitSeconds.GetValueOrDefault(result.Target, (-1, 0));
+        if (last != second)
+            _hitSeconds[result.Target] = (second, count + 1);
     }
 
     private void OnKill(EnemyKillResult kill)
     {
+        _hitSeconds.Remove(kill.Target, out (int Last, int Count) engaged);
         if (!_firstHit.Remove(kill.Target, out double firstHit))
             return;
         _kills.Append(CultureInfo.InvariantCulture, $"{_time:F2},{kill.EnemyId},{(kill.Elite || kill.Sovereign ? 1 : 0)},{_time - firstHit:F2}\n");
@@ -161,6 +171,7 @@ internal sealed class RunPaceProbe : IDisposable
             Hunt hunt = _hunts[_closedHunts++];
             hunt.FirstHit = firstHit;
             hunt.End = _time;
+            hunt.EngagedSeconds = engaged.Count;
         }
     }
 
@@ -177,16 +188,16 @@ internal sealed class RunPaceProbe : IDisposable
     private void OnEvent(string eventId, string title, string objective, float duration)
     {
         Decide("evenement");
+        // La barre du Souverain s'ouvre dans l'image où sa chasse commence, juste avant l'annonce de la chasse.
         if (eventId == "hunt")
-            _hunts.Add(new Hunt { Start = _time, Level = _progression?.CurrentLevel ?? 0 });
+            _hunts.Add(new Hunt { Start = _time, Level = _progression?.CurrentLevel ?? 0, MaxHp = _time - _lastBossTime < 0.5 ? _lastBossHp : 0f });
     }
     private void OnCrisis(int number, int intensity) => Decide("resurgence");
     private void OnBoss(int encounterId, string bossName, float maxHp, int notches)
     {
         Decide("souverain");
-        // La barre du Souverain s'ouvre dans l'image où sa chasse commence ; celle de la Barrière ou de l'Indicible, non.
-        if (_hunts.Count > 0 && _hunts[^1].MaxHp == 0f && _time - _hunts[^1].Start < 0.5)
-            _hunts[^1].MaxHp = maxHp;
+        _lastBossHp = maxHp;
+        _lastBossTime = _time;
     }
 
     public void Dispose()
@@ -213,14 +224,14 @@ internal sealed class RunPaceProbe : IDisposable
         File.WriteAllText(Path.Combine(root, $"damage-sources-{_seed}.csv"), damage.ToString());
         File.WriteAllText(Path.Combine(root, $"kills-{_seed}.csv"), _kills.ToString());
         File.WriteAllText(Path.Combine(root, $"decisions-{_seed}.csv"), _decisions.ToString());
-        StringBuilder hunts = new("start_s,level,max_hp,first_hit_s,end_s,ttk_s\n");
+        StringBuilder hunts = new("start_s,level,max_hp,first_hit_s,end_s,ttk_s,engaged_s\n");
         foreach (Hunt hunt in _hunts)
         {
             hunts.Append(CultureInfo.InvariantCulture, $"{hunt.Start:F1},{hunt.Level},{hunt.MaxHp:F0},");
             if (hunt.End < 0)
-                hunts.Append(",,\n");
+                hunts.Append(",,,\n");
             else
-                hunts.Append(CultureInfo.InvariantCulture, $"{hunt.FirstHit:F1},{hunt.End:F1},{hunt.End - hunt.FirstHit:F1}\n");
+                hunts.Append(CultureInfo.InvariantCulture, $"{hunt.FirstHit:F1},{hunt.End:F1},{hunt.End - hunt.FirstHit:F1},{hunt.EngagedSeconds}\n");
         }
         File.WriteAllText(Path.Combine(root, $"sovereigns-{_seed}.csv"), hunts.ToString());
         File.WriteAllText(Path.Combine(root, $"trace-{_seed}.csv"), _trace.ToCsv());

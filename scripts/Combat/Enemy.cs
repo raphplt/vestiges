@@ -407,12 +407,14 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// <summary>
 	/// Transforme la créature en variante renforcée (élite, Souverain, Aberration) avec ses affixes.
 	/// Appelé après Initialize et ApplySpawnTuning : les multiplicateurs s'appliquent aux valeurs déjà mises à l'échelle.
+	/// Une variante calée sur le niveau du joueur reçoit ses PV et son échelle de dégâts déjà calculés (Péril compris) :
+	/// ils remplacent ceux du temps, avant affixes.
 	/// </summary>
-	public void ApplyVariant(EnemyVariantData variant, IReadOnlyList<EnemyAffixData> affixes)
+	public void ApplyVariant(EnemyVariantData variant, IReadOnlyList<EnemyAffixData> affixes, float levelHp = 0f, float levelDamageScale = 0f)
 	{
 		_mods.SetVariant(variant);
-		float hpMult = variant.HpMultiplierFor(_baseHp);
-		float damageMult = variant.DamageMult;
+		float hpMult = levelHp > 0f && _maxHp > 0f ? levelHp / _maxHp : variant.HpMultiplierFor(_baseHp);
+		float damageMult = variant.DamageMult * (levelDamageScale > 0f && DamageScale > 0f ? levelDamageScale / DamageScale : 1f);
 		float speedMult = variant.SpeedMult;
 		foreach (EnemyAffixData affix in affixes)
 		{

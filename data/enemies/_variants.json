@@ -23,6 +23,14 @@
             "title_f": "Souveraine",
             "_doc_hp": "Plan 30 T2 (DECISIONS §84) : deux Souverains à heure fixe qui doivent tenir 20 à 40 s face au build de référence. PV ×4 (cible 300 → 1 200, bornes 2,5–12 → 10–48 pour garder l'écart entre créatures) ; Tenace retiré de leurs affixes : 3 % de PV rendus par seconde annulent un combat de 30 s.",
             "hp_target": 1200,
+            "_doc_level_scaling": "Plan 42 S1 (DECISIONS §160) : PV et dégâts selon le niveau du joueur à l'apparition, à la place du temps (hp_target et la montée des créatures ne servent plus au Souverain). PV = fight_seconds × dps_coefficient × niveau^dps_exponent, × Péril et affixes ; dps_coefficient et dps_exponent : dégâts par seconde que le joueur met sur le Souverain selon son niveau, relevés sur ses combats (13 octobre : ≈ 36 au niveau 8, ≈ 240 au niveau 30). Les dégâts totaux croissent plus vite (niveau^2,28, matrice M1), mais se répartissent sur la foule. Dégâts : échelle damage_base + damage_per_level × niveau (proche de celle du temps au niveau moyen de chaque minute), × damage_mult.",
+            "level_scaling": {
+                "fight_seconds": 30,
+                "dps_coefficient": 1.8,
+                "dps_exponent": 1.45,
+                "damage_base": 1.27,
+                "damage_per_level": 0.032
+            },
             "hp_mult_min": 10.0,
             "hp_mult": 48.0,
             "damage_mult": 1.45,
