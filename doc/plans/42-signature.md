@@ -252,6 +252,17 @@ Une run de référence est d'abord chronométrée, pour connaître le rapport en
 
 Builds de référence validés le 13 octobre (§152), tank ajouté ; leur composition exacte est fixée en M0c. L'état « complet » se mesure sans les stats brutes du Campement (§4).
 
+### Résultats de M1 (13 octobre au soir)
+
+Matrice complète : 31 configurations × 3 graines, 30 min de jeu, bot mortel qui se relève (`tools/measure_plans/m1-matrice.txt`, synthèse `tools/summarize_matrix.py`). Le bloc C a été remesuré à part : sa première passe avait lu des images non importées d'une autre session. Les écarts entre graines restent larges (Éveillée fort : 1 400 à 23 000 éliminations) : lire les moyennes avec leurs étendues.
+
+- **Personnages** (méta milieu, profil moyen ; éliminations, niveau à 29 min) : Traqueur 19 200 (117), Forgeuse 14 500 (99), Vagabond 13 100 (94), Éveillée 9 200 (67), **Facteur 2 400 (37)**. Le corps à corps n'est pas en retard sur le bot ; le Facteur l'est très nettement, l'Éveillée un peu.
+- **Progression** (Traqueur moyen) : neuf 13 500 éliminations, niveau 26 à 10 min ; complet 22 000, niveau 50, et plus aucun dégât subi après 15 min (10 PV/min). Avec la méta complète, la seconde moitié de run ne menace plus.
+- **Builds** (Traqueur, méta complet) : arme poussée, critique et zone 20 000 à 24 000 éliminations, 0 à 2 PV perdus par minute après 15 min ; synergie d'objets 17 000 à 18 000, encore touchée ; tank 12 000, survit sans tuer. Aucun build ne se détache des autres, mais tous rendent la fin de run sans danger. La Pelle à neige (run cassée du §154) n'est pas dans ces builds.
+- **Effacement** : 3 à 7 % du temps passé Effacé ou dans le Néant, quel que soit le profil. Il ne presse presque jamais.
+- **Départ** (D1) : niveau 10 à 5 min tenu pour la méta milieu (niveau 9 à 15 à 5 min).
+- **Bot** : le profil fort fait parfois moins bien que le moyen (Traqueur 11 800 contre 19 200, Facteur 1 100 contre 2 400) : son esquive le garde trop loin pour les armes de moyenne portée. Le profil moyen sert de référence en attendant le recalage du bot sur les traces de Raphaël.
+
 ### Lecture (lot M2)
 
 - Une page de résultats : courbes de puissance joueur / ennemis par profil, morts, exposition à l'oubli, creux.
