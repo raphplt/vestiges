@@ -71,6 +71,7 @@ internal sealed class RunPaceProbe : IDisposable
         _bus.MemorialInteracted += OnLandmark;
         _bus.WorkshopInteracted += OnLandmark;
         _bus.RiftInteracted += OnLandmark;
+        _bus.WellInteracted += OnLandmark;
         _bus.RunEventStarted += OnEvent;
         _bus.CrisisStarted += OnCrisis;
         _bus.BossEncounterStarted += OnBoss;
@@ -168,6 +169,7 @@ internal sealed class RunPaceProbe : IDisposable
         _bus.MemorialInteracted -= OnLandmark;
         _bus.WorkshopInteracted -= OnLandmark;
         _bus.RiftInteracted -= OnLandmark;
+        _bus.WellInteracted -= OnLandmark;
         _bus.RunEventStarted -= OnEvent;
         _bus.CrisisStarted -= OnCrisis;
         _bus.BossEncounterStarted -= OnBoss;

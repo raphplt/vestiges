@@ -46,7 +46,7 @@ Un geste court (maintien de 0,5 à 1 s), une récompense immédiate, aucune inte
 | Lieu | Décor | Ce qu'il donne | Lien au lore |
 |---|---|---|---|
 | Boîte aux lettres | Urbain, fermes | XP (une lettre jamais lue) | L'obsession du Facteur |
-| Puits | Fermes (déjà généré) | Soin de 15 % | L'eau se souvient de la soif |
+| ~~Puits~~ | Fermes (déjà généré) | ~~Soin de 15 %~~ retiré le 13 octobre 2026 : le Puits devient le lieu de l'oubli ([plan 44](44-oublier-a-la-faille.md)) | L'eau se souvient de la soif |
 | Veine de cristal | Carrières (déjà générée) | Essence, à briser | Les « veines cristallines » de la Stratégie V2 §12 |
 | Wagonnet | Carrières (déjà généré) | Essence, ou une arme au sol | Ce qu'on n'a pas eu le temps de remonter |
 | Épouvantail | Fermes (déjà généré) | Petite embuscade, puis Essence | Il garde encore le champ |
@@ -66,6 +66,7 @@ Six sont des décors déjà générés ou faciles à placer sur les routes exist
 | Faille | Existe (3, plus celles des zones effacées) | Amélioration forte contre un Oubli et du Péril |
 | **Reliquaire** | Nouveau (6 à 8) | **Les objets** : trois alcôves, une prise, deux effacées. Une fois les 6 objets pris, il propose des niveaux d'objets ou un remplacement (plan 21 §18) |
 | **Atelier** | Nouveau (4) | **Les armes** : voir §5 |
+| **Puits** | Ajouté le 13 octobre 2026 (6) | **L'oubli** : une arme, un Écusson ou un objet contre de l'Essence ([plan 44](44-oublier-a-la-faille.md)) |
 | Épreuves | Existent (5 micro-événements, Souverains) | Combat, puis coffre, Essence, parfois une Réminiscence (nom provisoire des ex-perks) |
 
 Total visé : environ 70 lieux au lieu de 31, dont 25 petits. La carte fait 164 millions de px² : cela laisse environ 1 500 px entre deux lieux en moyenne, soit 7 à 8 s de marche. Un écran en montre rarement plus de deux.

@@ -4,7 +4,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Place les Mémoriaux, les Failles, les Ateliers et les stèles du Péril du départ (data/world/landmarks.json), après les coffres et par le même
+/// Place les Mémoriaux, les Failles, les Ateliers, les stèles du Péril et les Puits du départ (data/world/landmarks.json), après les coffres et par le même
 /// <see cref="SitePlacer"/> : ils s'écartent des coffres et réservent leur dégagement avant les décors.
 /// </summary>
 public static class LandmarkSpawner
@@ -84,5 +84,24 @@ public static class LandmarkSpawner
             }
         }
         GD.Print($"[LandmarkSpawner] Spawned {steles} peril steles");
+
+        // Puits de l'oubli (plan 44) : placés en dernier, pour la même raison.
+        WellConfig well = LandmarkDataLoader.Well;
+        int wells = 0;
+        foreach (LandmarkBand band in well.Placement)
+        {
+            for (int i = 0; i < band.Count; i++)
+            {
+                if (!placer.TryPlace(band.Min, band.Max, well.MinSpacingPx, out Vector2 position))
+                {
+                    GD.PushWarning($"[LandmarkSpawner] No room for a well in band {band.Min}-{band.Max}");
+                    continue;
+                }
+                Well node = new() { Name = $"Well{++wells}", GlobalPosition = position };
+                node.Initialize(well);
+                container.AddChild(node);
+            }
+        }
+        GD.Print($"[LandmarkSpawner] Spawned {wells} wells");
     }
 }

@@ -140,6 +140,9 @@ public partial class RunObservation
             // de la mesure reste celui qu'elle impose (--peril) et que le trajet du bot ne change pas.
             foreach (PerilStele stele in PerilStele.All)
                 _places.Add((stele, "peril_stele"));
+            // Puits (plan 44) : comptés de même, jamais visés : oublier reste un choix de build, pas un détour du bot.
+            foreach (Well well in Well.All)
+                _places.Add((well, "well"));
 
             foreach ((Node2D node, string kind) in _places)
             {
@@ -258,7 +261,7 @@ public partial class RunObservation
             // Petits lieux seuls, tous types confondus : la cible du plan 22 §2 (un toutes les 20 à 30 s de marche).
             int small = 0;
             foreach ((string kind, int count) in _seenByKind)
-                if (kind is not ("chest" or "memorial" or "rift" or "workshop" or "peril_stele"))
+                if (kind is not ("chest" or "memorial" or "rift" or "workshop" or "peril_stele" or "well"))
                     small += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" small_places_seen={small} small_place_every_s={(small > 0 ? seconds / small : 0):F0}");

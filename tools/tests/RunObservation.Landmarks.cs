@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
-using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.UI;
 using Vestiges.World;
@@ -13,9 +12,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-steles : la stèle du Péril la plus proche, allumée puis éveillée (texte, HUD), une seconde stèle, la fiche
 /// de pause. RESULT : stèles placées, distance au départ en fraction du rayon, Péril après chaque stèle.
-/// --capture-rift : la Faille la plus proche, son offre, l'écran d'oubli (plan 44) et l'oubli d'un Écusson, la trace sur
-/// le suivant, la fiche de pause (Péril, Oubli), puis l'Oubli levé au Mémorial le plus proche. RESULT : Failles placées,
-/// Péril et Oublis avant et après, Écusson oublié et niveau de la trace.
+/// --capture-rift : la Faille la plus proche, son offre, la fiche de pause (Péril, Oubli), puis l'Oubli levé au
+/// Mémorial le plus proche. RESULT : Failles placées, Péril et Oublis avant et après.
 /// --capture-memorial : le Mémorial le plus proche du départ, parcouru en entier. Endormi (invite), éclats à ramasser,
 /// réveil dans le monde (six instants), bénédictions, services avant et après un achat, puis ravivé. Une ligne RESULT donne le nombre de
 /// Mémoriaux, leur distance au départ en fraction du rayon et l'effet de la bénédiction prise.
@@ -208,13 +206,6 @@ public partial class RunObservation
         await Frames(25);
         SaveCrop("rift-1-open", rift.GlobalPosition + new Vector2(0f, -40f), new Vector2(240f, 135f));
 
-        // De quoi oublier : une seconde arme, un Écusson monté, deux objets, et l'Essence du premier oubli.
-        _player.AddWeapon(WeaponDataLoader.Get(_player.GetWeaponFragmentLevel("whip") > 0 ? "music_box" : "whip"));
-        _player.AddOrUpgradePassive("instinct", 24);
-        _player.AddItemCopy("glacon");
-        _player.AddItemCopy("glacon");
-        _player.AddItemCopy("thermos");
-        _world.GetNode<EssenceTracker>("EssenceTracker").AddEssence(300);
         float speedBefore = _player.SpeedMultiplier;
         float damageBefore = _player.DamageMultiplier;
         rift.Interact(_player);
@@ -223,19 +214,6 @@ public partial class RunObservation
         await ToSignal(GetTree().CreateTimer(2.3, processAlways: true), SceneTreeTimer.SignalName.Timeout);
         bool offerShown = choices.IsOpen;
         SaveFrame("rift-2-offers");
-        // La carte « Oublier » suit les offres ; dans l'écran d'oubli, l'Écusson suit les armes.
-        choices.Activate(LandmarkDataLoader.Rift.Offers);
-        await Frames(10);
-        SaveFrame("rift-2b-forget");
-        int badgeLevel = _player.FindObject("instinct")?.Level ?? 0;
-        choices.Activate(_player.WeaponSlots.Count);
-        await Frames(10);
-        bool forgotten = _player.FindObject("instinct") == null;
-        SaveFrame("rift-2c-back-to-offers");
-        _player.AddOrUpgradePassive("peau_dure");
-        int traceLevel = _player.FindObject("peau_dure")?.Level ?? 0;
-        await Frames(20);
-        SaveFrame("rift-2d-trace");
         choices.Activate(0);
         await Frames(20);
         SaveCrop("rift-3-closed", rift.GlobalPosition + new Vector2(0f, -40f), new Vector2(240f, 135f));
@@ -266,7 +244,7 @@ public partial class RunObservation
         await Frames(5);
 
         GD.Print(string.Create(CultureInfo.InvariantCulture,
-            $"[RunObservation] RESULT rift count={rifts.Count} offer_shown={offerShown} badge_forgotten={forgotten} badge_level={badgeLevel} trace_level={traceLevel} peril=0->{perilAfter} oublis=0->{oublisAfter}->{peril.Oublis.Count} oubli={oubli} speed={speedBefore:F2}->{_player.SpeedMultiplier:F2} damage={damageBefore:F2}->{_player.DamageMultiplier:F2}"));
+            $"[RunObservation] RESULT rift count={rifts.Count} offer_shown={offerShown} peril=0->{perilAfter} oublis=0->{oublisAfter}->{peril.Oublis.Count} oubli={oubli} speed={speedBefore:F2}->{_player.SpeedMultiplier:F2} damage={damageBefore:F2}->{_player.DamageMultiplier:F2}"));
     }
 
     /// <summary>

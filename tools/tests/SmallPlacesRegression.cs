@@ -11,7 +11,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Petits lieux (plan 22, lots C1 et C4) sur de vrais décors : placement (types reconnus, quota, écart, graine), signe à
-/// portée, usage unique et récompenses (soin, Essence, XP, arme, révélation, vitesse, lore).
+/// portée, usage unique et récompenses (Essence, XP, arme, révélation, vitesse, lore). Le puits de décor n'est plus un
+/// petit lieu depuis le plan 44 : l'oubli a son propre Puits.
 /// </summary>
 public partial class SmallPlacesRegression : Node2D
 {
@@ -24,13 +25,16 @@ public partial class SmallPlacesRegression : Node2D
 			GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
 			Node2D props = new() { Name = "PropContainer" };
 			AddChild(props);
-			// Quatre puits de plus que le quota, en ligne tous les 700 px ; deux veines trop proches l'une de l'autre, un épouvantail.
-			int wellQuota = SmallPlaceDataLoader.Load().Places.Find(data => data.Id == "well").MaxPerMap;
-			for (int i = 0; i < wellQuota + 4; i++)
-				AddProp(props, "wild_fields/prop_abandoned_well", new Vector2(i * 700f, 0f));
+			// Quatre épouvantails de plus que le quota, en ligne tous les 700 px ; deux veines trop proches l'une de l'autre et
+			// une troisième à l'écart ; un puits de décor, qui ne doit plus porter de lieu.
+			int scarecrowQuota = SmallPlaceDataLoader.Load().Places.Find(data => data.Id == "scarecrow").MaxPerMap;
+			for (int i = 0; i < scarecrowQuota + 4; i++)
+				AddProp(props, "wild_fields/prop_scarecrow_broken", new Vector2(i * 700f, 0f));
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(0f, 2000f));
 			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(100f, 2000f));
-			AddProp(props, "wild_fields/prop_scarecrow_broken", new Vector2(5000f, 5000f));
+			AddProp(props, "collapsed_quarry/prop_crystal_vein", new Vector2(3000f, 2000f));
+			Vector2 decorWell = new(5000f, 5000f);
+			AddProp(props, "wild_fields/prop_abandoned_well", decorWell);
 			// Les six lieux du lot C4, un de chaque, en ligne tous les 700 px.
 			string[] c4 = { "urban_ruins/prop_mailbox", "collapsed_quarry/prop_mine_cart", "urban_ruins/prop_urban_car_red_x",
 				"urban_ruins/prop_phone_booth", "urban_ruins/prop_bus_shelter", "wild_fields/prop_scene_picnic" };
@@ -39,17 +43,18 @@ public partial class SmallPlacesRegression : Node2D
 
 			List<Vector2> first = Place(props, out SmallPlaceDirector director, 7);
 			List<Vector2> again = Place(props, out _, 7);
-			int wells = 0, veins = 0, scarecrows = 0;
-			bool spaced = true;
+			int veins = 0, scarecrows = 0;
+			bool spaced = true, wellFree = true;
 			foreach (SmallPlace place in director.Places)
 			{
-				wells += place.Data.Id == "well" ? 1 : 0;
+				wellFree &= place.GlobalPosition.DistanceTo(decorWell) > 100f;
 				veins += place.Data.Id == "crystal_vein" ? 1 : 0;
 				scarecrows += place.Data.Id == "scarecrow" ? 1 : 0;
 				foreach (SmallPlace other in director.Places)
 					spaced &= other == place || other.GlobalPosition.DistanceTo(place.GlobalPosition) >= 600f;
 			}
-			Check(wells == wellQuota && veins == 1 && scarecrows == 1 && spaced, $"Placement : {wells} puits (quota {wellQuota}), {veins} veine (écart 600 px), {scarecrows} épouvantail");
+			Check(scarecrows == scarecrowQuota && veins == 2 && spaced && wellFree,
+				$"Placement : {scarecrows} épouvantails (quota {scarecrowQuota}), {veins} veines (écart 600 px), aucun lieu sur le puits de décor");
 			Check(first.Count == again.Count && first.TrueForAll(again.Contains), "Placement : même graine, mêmes lieux");
 			bool allKinds = true;
 			foreach (string kind in new[] { "mailbox", "mine_cart", "abandoned_car", "phone_booth", "bus_shelter", "picnic" })
@@ -65,10 +70,6 @@ public partial class SmallPlacesRegression : Node2D
 			EssenceTracker essence = new() { Name = "EssenceTracker" };
 			AddChild(essence);
 
-			SmallPlace well = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "well");
-			player.TakeDamage(40f);
-			float hp = player.CurrentHp;
-			float maxBefore = player.EffectiveMaxHp;
 			// Le son de confirmation part à l'usage, pas à une seconde tentative sur un lieu épuisé.
 			AudioManager audio = GetNode<AudioManager>("/root/AudioManager");
 			int confirmations = 0;
@@ -78,22 +79,15 @@ public partial class SmallPlacesRegression : Node2D
 					confirmations++;
 			}
 			audio.SoundRequested += OnSound;
-			well.Interact(player);
-			// Le Repère du puits ajoute aussi des PV max, et autant de PV (plan 24 D3).
-			float waymarkHp = player.EffectiveMaxHp - maxBefore;
-			bool healed = waymarkHp > 0f && Mathf.IsEqualApprox(player.CurrentHp - hp - waymarkHp, Mathf.Min(40f, player.EffectiveMaxHp * 0.15f));
-			float after = player.CurrentHp;
-			well.Interact(player);
-			Check(healed && Mathf.IsEqualApprox(player.CurrentHp, after) && !well.CanInteract,
-				$"Puits : soigne 15 % des PV max, une seule fois ({hp:0.0} → {after:0.0}, PV max {maxBefore:0} → {player.EffectiveMaxHp:0})");
-			audio.SoundRequested -= OnSound;
-			Check(confirmations == 1, $"Puits : un son de confirmation à l'usage, aucun sur le lieu épuisé ({confirmations})");
-
 			SmallPlace vein = new List<SmallPlace>(director.Places).Find(place => place.Data.Id == "crystal_vein");
 			int before = essence.CurrentEssence;
 			vein.Interact(player);
 			int gained = essence.CurrentEssence - before;
-			Check(gained is >= 6 and <= 10, $"Veine de cristal : {gained} Essence (6 à 10)");
+			vein.Interact(player);
+			audio.SoundRequested -= OnSound;
+			Check(gained is >= 6 and <= 10 && essence.CurrentEssence - before == gained && !vein.CanInteract,
+				$"Veine de cristal : {gained} Essence (6 à 10), une seule fois");
+			Check(confirmations == 1, $"Veine de cristal : un son de confirmation à l'usage, aucun sur le lieu épuisé ({confirmations})");
 
 			await CheckC4(director, player, essence, luckBefore);
 
@@ -197,12 +191,12 @@ public partial class SmallPlacesRegression : Node2D
 				expectedLuck += reward.Amount;
 		float luck = player.LuckBonus;
 		float maxHp = player.EffectiveMaxHp;
-		SmallPlace secondWell = places.Find(place => place.Data.Id == "well" && !place.Used);
-		secondWell?.Interact(player);
-		Check(secondWell != null && usedTypes.Contains("well") && player.Waymarks.Found == usedTypes.Count
+		SmallPlace secondVein = places.Find(place => place.Data.Id == "crystal_vein" && !place.Used);
+		secondVein?.Interact(player);
+		Check(secondVein != null && usedTypes.Contains("crystal_vein") && player.Waymarks.Found == usedTypes.Count
 				&& Mathf.IsEqualApprox(luck - luckBefore, expectedLuck) && Mathf.IsEqualApprox(player.LuckBonus, luck)
 				&& Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp),
-			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{(luck - luckBefore) * 100f:0} %, un deuxième puits n'ajoute rien");
+			$"Repères : {player.Waymarks.Found} types utilisés, Chance +{(luck - luckBefore) * 100f:0} %, une deuxième veine n'ajoute rien");
 		Check(waymarks.Rewards.Count == 13 && waymarks.Rewards["well"].Stat == "max_hp" && waymarks.Rewards["memorial"].Rerolls == 1
 				&& waymarks.Rewards["workshop"].Stat == "attack_speed"
 				&& waymarks.Rewards["rift"].Banishes == 1,

@@ -235,7 +235,7 @@ Aujourd'hui : 4 cases d'armes (36 unités) au-dessus de 6 petites cases d'objets
 
 ### 9.3 L'écran d'échange quand le sac est plein
 
-> **13 octobre 2026 :** retiré, remplacé par l'oubli à la Faille ([plan 44](44-oublier-a-la-faille.md)).
+> **13 octobre 2026 :** retiré, remplacé par l'oubli au Puits ([plan 44](44-oublier-a-la-faille.md)).
 
 On ne fige pas le combat sans le vouloir. Le ramassage marche comme l'échange d'armes d'aujourd'hui (`WeaponPickup`) :
 1. On passe sur l'objet. Le sac a de la place : il entre, son icône vole vers le sac (comme les armes).
@@ -417,7 +417,7 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
 
 ## 13. Lot I3 livré : le monde donne les objets, l'écran d'échange — 11 octobre 2026
 
-> **13 octobre 2026 :** l'écran d'échange est retiré. Un objet qui n'entre pas reste au sol, et l'on oublie à la Faille ([plan 44](44-oublier-a-la-faille.md)).
+> **13 octobre 2026 :** l'écran d'échange est retiré. Un objet qui n'entre pas reste au sol, et l'on oublie au Puits ([plan 44](44-oublier-a-la-faille.md)).
 
 **Sources** (réglages dans `inventory.json` et `landmarks.json`) :
 - **Coffres** : butin « objet » (depuis I2).

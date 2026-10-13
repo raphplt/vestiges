@@ -73,6 +73,7 @@ namespace Vestiges.Tests;
 /// --capture-low-health : santé pleine, seuils, cœur, pause, soin et mort.
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
+/// --capture-well : le Puits le plus proche, son écran, un oubli et sa trace (RunObservation.Well.cs, plan 44).
 /// --capture-sovereign : un Souverain laissé en vie 75 s, toujours là (RunObservation.Sovereign.cs, DECISIONS §157).
 /// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
@@ -282,6 +283,8 @@ public partial class RunObservation : Node
                 await CaptureBileLob();
             else if (Array.IndexOf(args, "--capture-sovereign") >= 0)
                 await CaptureSovereign();
+            else if (Array.IndexOf(args, "--capture-well") >= 0)
+                await CaptureWell();
             else if (Array.IndexOf(args, "--capture-bestiary") >= 0)
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-character") >= 0)

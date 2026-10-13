@@ -8,7 +8,7 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Objet posé au sol (plan 35 I3) : lâché par une élite ou un Souverain. Ramassé de lui-même s'il reste une place dans
-/// le sac ; sinon il attend au sol et l'invite renvoie à la Faille, seul endroit où l'on oublie un objet (plan 44). Il
+/// le sac ; sinon il attend au sol et l'invite renvoie au Puits, seul endroit où l'on oublie un objet (plan 44). Il
 /// s'efface avec le temps, comme une arme laissée au sol.
 /// </summary>
 public partial class ItemPickup : Area2D, IInteractable
@@ -99,7 +99,7 @@ public partial class ItemPickup : Area2D, IInteractable
     public override void _Process(double delta)
     {
         if (_collected) return;
-        // Tant qu'il ne peut pas entrer dans le sac, l'objet attend : on n'a que la Faille pour lui faire une place.
+        // Tant qu'il ne peut pas entrer dans le sac, l'objet attend : on n'a que le Puits pour lui faire une place.
         if (!_waiting)
             _age += (float)delta;
         _lifetimeCheck -= (float)delta;

@@ -134,7 +134,7 @@ public static class LootRewards
 
     /// <summary>
     /// Objet débloqué au hasard que le joueur peut encore cumuler, exemplaires promis compris (plan 35) ; null si aucun.
-    /// La place dans le sac n'est pas exigée : un objet au sol attend qu'une place se libère à la Faille.
+    /// La place dans le sac n'est pas exigée : un objet au sol attend qu'une place se libère au Puits.
     /// </summary>
     public static PassiveSouvenirData PickUnlockedItem(Player player, RandomNumberGenerator rng, Dictionary<string, int> promised = null,
         string source = "generic", float luck = 0f) => ItemLootPool.For(player).Pick(source, rng, luck, promised);

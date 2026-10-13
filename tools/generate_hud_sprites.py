@@ -24,7 +24,7 @@ def main() -> None:
     bar.alpha_composite(images["xp_tip_00"], (80, 0))
     rows = [("XP : métal patiné et mémoire dorée", [bar]),
             ("XP : 4 poses de remplissage, pointe, éclat", [images[f"xp_fill_{f:02}"] for f in range(4)] + [images["xp_tip_00"], images["xp_burst_01"]]),
-            ("Éliminations 10 px / minimap 5 px", [images["kill_skull"]] + [images[f"minimap_{name}"] for name in ("chest", "memorial", "rift", "place", "player")]),
+            ("Éliminations 10 px / minimap 5 px", [images["kill_skull"]] + [images[f"minimap_{name}"] for name in ("chest", "memorial", "rift", "place", "player", "workshop", "well")]),
             ("Essence et Péril 10 px (plan 41 R2)", [images["essence_crystal"], images["peril_stele"]])]
     board(rows, args.sheet)
     if not args.dry_run:
@@ -34,7 +34,7 @@ def main() -> None:
                     "kills": {"file": "kill_skull.png", "size": [10, 10]},
                     "essence": {"file": "essence_crystal.png", "size": [10, 10]},
                     "peril": {"file": "peril_stele.png", "size": [10, 10]},
-                    "minimap": {"size": [5, 5], "ids": ["chest", "memorial", "rift", "place", "player", "workshop", "peril_stele"]}}
+                    "minimap": {"size": [5, 5], "ids": ["chest", "memorial", "rift", "place", "player", "workshop", "peril_stele", "well"]}}
         (output / "hud_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     print(f"[generate_hud_sprites] {len(images)} textures ; planche : {args.sheet}")
 

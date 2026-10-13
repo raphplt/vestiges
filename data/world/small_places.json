@@ -5,23 +5,6 @@
     "sign_range_px": 400,
     "places": [
         {
-            "id": "well",
-            "sprites": [
-                "prop_abandoned_well"
-            ],
-            "prompt": "PLACE_WELL_PROMPT",
-            "hold_seconds": 0.6,
-            "reward": "heal",
-            "amount": 0.15,
-            "max_per_map": 10,
-            "color": [
-                0.45,
-                0.75,
-                0.95
-            ],
-            "family": "pale"
-        },
-        {
             "id": "crystal_vein",
             "sprites": [
                 "prop_crystal_vein"

@@ -8,7 +8,7 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Arme posée au sol par le Wagonnet. Ramassée d'elle-même si un emplacement est libre ; sinon elle attend au sol et
-/// l'invite renvoie à la Faille, seul endroit où l'on oublie une arme (plan 44). Au ramassage, son icône vole jusqu'au
+/// l'invite renvoie au Puits, seul endroit où l'on oublie une arme (plan 44). Au ramassage, son icône vole jusqu'au
 /// HUD (plan 02 J3).
 /// </summary>
 public partial class WeaponPickup : Area2D, IInteractable
@@ -132,7 +132,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 		_visualRoot.Position = new Vector2(0, Mathf.Round(Mathf.Sin(_bobTimer) * BobAmplitude));
 	}
 
-	/// <summary>Activation par l'invite : prendre si un emplacement s'est libéré, sinon refuser (oublier se fait à la Faille).</summary>
+	/// <summary>Activation par l'invite : prendre si un emplacement s'est libéré, sinon refuser (oublier se fait au Puits).</summary>
 	public void Interact(Player player)
 	{
 		if (_collected)
@@ -147,7 +147,7 @@ public partial class WeaponPickup : Area2D, IInteractable
 	{
 		if (_collected || body is not Player player)
 			return;
-		// Ramassage automatique seulement s'il reste un emplacement ; sinon l'invite renvoie à la Faille.
+		// Ramassage automatique seulement s'il reste un emplacement ; sinon l'invite renvoie au Puits.
 		if (player.HasFreeWeaponSlot && !HasWeapon(player, _weaponInstance.Id))
 			CallDeferred(MethodName.TryCollect, player);
 	}

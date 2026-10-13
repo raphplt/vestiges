@@ -47,7 +47,8 @@
       "place",
       "player",
       "workshop",
-      "peril_stele"
+      "peril_stele",
+      "well"
     ]
   }
 }

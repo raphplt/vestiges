@@ -41,6 +41,7 @@ public partial class Minimap : Control
     private static readonly Color MemorialColor = new(0.95f, 0.82f, 0.45f);
     private static readonly Color RiftColor = new(0.7f, 0.35f, 0.85f);
     private static readonly Color WorkshopColor = new(0.91f, 0.52f, 0.24f);
+    private static readonly Color WellColor = new(0.55f, 0.72f, 0.83f);
     private static readonly Color PlaceColor = new(0.78f, 0.86f, 0.92f);
     private ErasureManager _erasure;
     private WorldSetup _world;
@@ -71,6 +72,7 @@ public partial class Minimap : Control
     private Texture2D _riftIcon;
     private Texture2D _steleIcon;
     private Texture2D _workshopIcon;
+    private Texture2D _wellIcon;
     private Texture2D _playerIcon;
     private MinimapLayer _lens;
     private MinimapLayer _content;
@@ -92,6 +94,7 @@ public partial class Minimap : Control
         _riftIcon = GD.Load<Texture2D>(iconFolder + "minimap_rift.png");
         _steleIcon = GD.Load<Texture2D>(iconFolder + "minimap_peril_stele.png");
         _workshopIcon = GD.Load<Texture2D>(iconFolder + "minimap_workshop.png");
+        _wellIcon = GD.Load<Texture2D>(iconFolder + "minimap_well.png");
         _playerIcon = GD.Load<Texture2D>(iconFolder + "minimap_player.png");
         _fogDisc ??= BuildFogDisc();
         _ring ??= BuildRing();
@@ -195,6 +198,7 @@ public partial class Minimap : Control
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
             (_steleIcon, PlayerSheet.PerilColor, "MAP_LEGEND_PERIL_STELE"),
             (_workshopIcon, WorkshopColor, "MAP_LEGEND_WORKSHOP"),
+            (_wellIcon, WellColor, "MAP_LEGEND_WELL"),
             (_placeIcon, PlaceColor, "MAP_LEGEND_PLACE"),
             (null, _palette.Terrain("forest_reclaimed", TerrainType.Forest), "MAP_BIOME_FOREST"),
             (null, _palette.Terrain("urban_ruins", TerrainType.Concrete), "MAP_BIOME_URBAN"),
@@ -374,6 +378,9 @@ public partial class Minimap : Control
         for (int i = 0; i < Workshop.All.Count; i++)
             if (!Workshop.All[i].IsLost && InView(Workshop.All[i].GlobalPosition) && Known(Workshop.All[i].GlobalPosition))
                 DrawIcon(layer, Workshop.All[i].GlobalPosition, _workshopIcon, WorkshopColor);
+        for (int i = 0; i < Well.All.Count; i++)
+            if (!Well.All[i].IsLost && InView(Well.All[i].GlobalPosition) && Known(Well.All[i].GlobalPosition))
+                DrawIcon(layer, Well.All[i].GlobalPosition, _wellIcon, WellColor);
         DrawIcon(layer, _playerPosition, _playerIcon, PlayerColor);
     }
 

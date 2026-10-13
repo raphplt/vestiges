@@ -35,6 +35,7 @@ public partial class Waymarks : Node
         _eventBus.MemorialAwakened += OnMemorialAwakened;
         _eventBus.RiftUsed += OnRiftUsed;
         _eventBus.WorkshopVisited += OnWorkshopVisited;
+        _eventBus.WellUsed += OnWellUsed;
     }
 
     public override void _ExitTree()
@@ -46,6 +47,7 @@ public partial class Waymarks : Node
         _eventBus.MemorialAwakened -= OnMemorialAwakened;
         _eventBus.RiftUsed -= OnRiftUsed;
         _eventBus.WorkshopVisited -= OnWorkshopVisited;
+        _eventBus.WellUsed -= OnWellUsed;
     }
 
     private void OnSmallPlaceUsed(string placeId, Vector2 position) => Mark(placeId);
@@ -53,6 +55,7 @@ public partial class Waymarks : Node
     private void OnMemorialAwakened(Vector2 position) => Mark("memorial");
     private void OnRiftUsed(Vector2 position) => Mark("rift");
     private void OnWorkshopVisited(Vector2 position) => Mark("workshop");
+    private void OnWellUsed(Vector2 position) => Mark("well");
 
     private void Mark(string type)
     {

@@ -10,35 +10,42 @@ using Vestiges.UI;
 namespace Vestiges.World;
 
 /// <summary>
-/// Oubli à la Faille (plan 44) : contre de l'Essence, une arme, un Écusson ou une pile d'objets quitte la run et libère
-/// sa place. Seul endroit du jeu où l'on se défait de ce qu'on a pris. Une arme ou un Écusson oublié laisse une trace :
-/// le prochain arrivé sur cette étagère repart d'une part de ses niveaux, en améliorations communes. Le prix monte à
-/// chaque oubli de la run. Réglages : <c>rift.forget</c> de data/world/landmarks.json.
+/// Mène les Puits (plan 44) : contre de l'Essence, une arme, un Écusson ou une pile d'objets quitte la run et libère sa
+/// place. Seul endroit du jeu où l'on se défait de ce qu'on a pris. Une arme ou un Écusson oublié laisse une trace : le
+/// prochain arrivé sur cette étagère repart d'une part de ses niveaux, en améliorations communes. Le prix monte à chaque
+/// oubli de la run, tous Puits confondus. Un Puits que le Néant engloutit ne sert plus. Réglages : section <c>well</c>
+/// de data/world/landmarks.json.
 /// </summary>
-public partial class RiftForgetting : Node
+public partial class WellDirector : Node
 {
-    private readonly RiftConfig _config = LandmarkDataLoader.Rift;
-    // Flux à part : les gains des traces ne décalent ni les offres des Failles ni les level-ups.
-    private readonly RandomNumberGenerator _rng = RunRandom.Create("rift_traces");
+    private const float LossCheckInterval = 1f;
+
+    private readonly WellConfig _config = LandmarkDataLoader.Well;
+    // Flux à part : les gains des traces ne décalent ni les offres des lieux ni les level-ups.
+    private readonly RandomNumberGenerator _rng = RunRandom.Create("well_traces");
     // Niveaux visés par les traces en attente, dans l'ordre des oublis.
     private readonly Queue<int> _weaponTraces = new();
     private readonly Queue<int> _badgeTraces = new();
     private ChoiceScreen _choices;
     private EssenceTracker _essence;
+    private ErasureManager _erasure;
     private EventBus _eventBus;
     private GroupCache _groups;
     private int _forgotten;
+    private float _lossTimer = LossCheckInterval;
 
-    public void Setup(ChoiceScreen choices, EssenceTracker essence)
+    public void Setup(ChoiceScreen choices, EssenceTracker essence, ErasureManager erasure)
     {
         _choices = choices;
         _essence = essence;
+        _erasure = erasure;
     }
 
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _groups = GetNodeOrNull<GroupCache>("/root/GroupCache");
+        _eventBus.WellInteracted += OnWellInteracted;
         _eventBus.WeaponEquipped += OnWeaponEquipped;
         _eventBus.PassiveSouvenirAdded += OnPassiveAdded;
     }
@@ -47,8 +54,23 @@ public partial class RiftForgetting : Node
     {
         if (_eventBus == null)
             return;
+        _eventBus.WellInteracted -= OnWellInteracted;
         _eventBus.WeaponEquipped -= OnWeaponEquipped;
         _eventBus.PassiveSouvenirAdded -= OnPassiveAdded;
+    }
+
+    public override void _Process(double delta)
+    {
+        _lossTimer -= (float)delta;
+        if (_lossTimer > 0f)
+            return;
+        _lossTimer = LossCheckInterval;
+        if (_erasure == null)
+            return;
+        IReadOnlyList<Well> all = Well.All;
+        for (int i = 0; i < all.Count; i++)
+            if (!all[i].IsLost && _erasure.GetZonePhaseAt(all[i].GlobalPosition) == ErasureManager.ErasureZonePhase.Void)
+                all[i].MarkLost();
     }
 
     /// <summary>Prix du prochain oubli.</summary>
@@ -57,37 +79,20 @@ public partial class RiftForgetting : Node
     public int PendingWeaponTraces => _weaponTraces.Count;
     public int PendingBadgeTraces => _badgeTraces.Count;
 
-    /// <summary>Quelque chose à oublier : une arme hors la dernière, un Écusson ou un objet.</summary>
-    public static bool HasForgettable(Player player) =>
-        player.WeaponSlots.Count > 1 || player.BadgeSlots.Count > 0 || player.PassiveSlots.Count > 0;
-
-    /// <summary>Un oubli possible maintenant : quelque chose à oublier, et l'Essence pour le payer.</summary>
-    public bool CanForget(Player player) => CanAfford() && HasForgettable(player);
-
     /// <summary>Niveau de départ que laisse un oubli au niveau <paramref name="level"/>.</summary>
     public int TraceLevel(int level) => Mathf.Max(1, Mathf.FloorToInt(level * _config.ForgetTraceRatio));
 
-    /// <summary>Carte « Oublier » de l'écran de la Faille.</summary>
-    public ChoiceCard BuildEntryCard(Player player)
+    private void OnWellInteracted(Node2D node)
     {
-        ChoiceCard card = new()
-        {
-            Tag = Tr("RIFT_FORGET_TAG"),
-            Frame = RarityPalette.Main("rift"),
-            Title = Tr("RIFT_FORGET_CARD_TITLE"),
-            Price = string.Format(Tr("MEMORIAL_PRICE"), Cost),
-            Enabled = CanForget(player),
-        };
-        card.Lines.Add((Tr("RIFT_FORGET_CARD_LINE"), ChoiceStyle.TextColor));
-        card.Lines.Add((string.Format(Tr("RIFT_FORGET_TRACE_RULE"), Mathf.RoundToInt(_config.ForgetTraceRatio * 100f)), ChoiceStyle.TextDim));
-        return card;
+        if (node is Well { CanInteract: true } well && _groups?.GetPlayer() is Player player)
+            Open(player, well.GlobalPosition);
     }
 
     /// <summary>
-    /// Liste de ce que porte le joueur : armes, Écussons, puis piles du sac. Choisir paie et oublie ;
-    /// <paramref name="onBack"/> suit dans tous les cas, pour revenir aux offres de la Faille.
+    /// Liste de ce que porte le joueur : armes, Écussons, puis piles du sac. Choisir paie et oublie, puis la liste se
+    /// rouvre au nouveau prix ; « Partir » ferme. <paramref name="position"/> est celle du Puits (Repère).
     /// </summary>
-    public void Open(Player player, Action onBack)
+    public void Open(Player player, Vector2 position, bool animate = true)
     {
         int cost = Cost;
         bool affordable = CanAfford();
@@ -100,20 +105,20 @@ public partial class RiftForgetting : Node
             bool last = player.WeaponSlots.Count <= 1;
             ChoiceCard card = new()
             {
-                Tag = string.Format(Tr("RIFT_FORGET_WEAPON_TAG"), weapon.Level),
-                Frame = RarityPalette.Main("rift"),
+                Tag = string.Format(Tr("WELL_WEAPON_TAG"), weapon.Level),
+                Frame = RarityPalette.Main("well"),
                 Title = weapon.Name,
                 Icon = LoadIcon(weapon.Sprite),
                 Price = string.Format(Tr("MEMORIAL_PRICE"), cost),
                 Enabled = affordable && !last,
             };
             if (last)
-                card.Lines.Add((Tr("RIFT_FORGET_LAST_WEAPON"), ChoiceStyle.TextDim));
+                card.Lines.Add((Tr("WELL_LAST_WEAPON"), ChoiceStyle.TextDim));
             else
-                AddTraceLine(card, "RIFT_FORGET_WEAPON_TRACE", weapon.Level);
+                AddTraceLine(card, "WELL_WEAPON_TRACE", weapon.Level);
             string deactivated = PerkSpecializationOffers.DeactivatedByForget(player, weapon);
             if (!last && deactivated.Length > 0)
-                card.Lines.Add((string.Format(Tr("RIFT_FORGET_PERK_WARNING"), deactivated), ChoiceStyle.LossColor));
+                card.Lines.Add((string.Format(Tr("WELL_PERK_WARNING"), deactivated), ChoiceStyle.LossColor));
             cards.Add(card);
             actions.Add(() => ForgetWeapon(player, target));
         }
@@ -124,14 +129,14 @@ public partial class RiftForgetting : Node
             int level = badge.Level;
             ChoiceCard card = new()
             {
-                Tag = string.Format(Tr("RIFT_FORGET_BADGE_TAG"), badge.Level),
-                Frame = RarityPalette.Main("rift"),
+                Tag = string.Format(Tr("WELL_BADGE_TAG"), badge.Level),
+                Frame = RarityPalette.Main("well"),
                 Title = badge.Data.Name,
                 Icon = LoadIcon(badge.Data.Icon),
                 Price = string.Format(Tr("MEMORIAL_PRICE"), cost),
                 Enabled = affordable,
             };
-            AddTraceLine(card, "RIFT_FORGET_BADGE_TRACE", badge.Level);
+            AddTraceLine(card, "WELL_BADGE_TRACE", badge.Level);
             cards.Add(card);
             actions.Add(() => ForgetBadge(player, id, level));
         }
@@ -141,31 +146,33 @@ public partial class RiftForgetting : Node
             string id = item.Id;
             ChoiceCard card = new() { Title = $"{item.Data.Name}  {ItemPresentation.CopiesText(item.Data, item.Copies)}" };
             ItemPresentation.ConfigureCard(card, item.Data);
-            card.Tag = string.Format(Tr("RIFT_FORGET_ITEM_TAG"), ItemPresentation.RarityText(item.Data));
+            card.Tag = string.Format(Tr("WELL_ITEM_TAG"), ItemPresentation.RarityText(item.Data));
             card.Price = string.Format(Tr("MEMORIAL_PRICE"), cost);
             card.Enabled = affordable;
             card.Lines.Add((ItemPresentation.Describe(item.Data, item.Copies), ChoiceStyle.TextColor));
-            card.Lines.Add((Tr("RIFT_FORGET_ITEM_LINE"), ChoiceStyle.TextDim));
+            card.Lines.Add((Tr("WELL_ITEM_LINE"), ChoiceStyle.TextDim));
             cards.Add(card);
             actions.Add(() => player.ForgetItemStack(id));
         }
 
-        _choices.Open(Tr("RIFT_FORGET_TITLE"), Tr("RIFT_FORGET_SUBTITLE"), cards, Tr("RIFT_FORGET_BACK"), choice =>
+        string subtitle = string.Format(Tr("WELL_SUBTITLE"), Mathf.RoundToInt(_config.ForgetTraceRatio * 100f));
+        _choices.Open(Tr("WELL_TITLE"), subtitle, cards, Tr("WELL_LEAVE"), choice =>
         {
-            if (choice >= 0 && choice < actions.Count && GodotObject.IsInstanceValid(player) && _essence.TrySpend(cost))
+            if (choice < 0 || choice >= actions.Count || !GodotObject.IsInstanceValid(player) || !_essence.TrySpend(cost))
+                return;
+            if (actions[choice]())
             {
-                if (actions[choice]())
-                {
-                    _forgotten++;
-                    AudioManager.PlayUI("sfx_rift_wake");
-                }
-                else
-                {
-                    _essence.AddEssence(cost);
-                }
+                _forgotten++;
+                AudioManager.PlayUI("sfx_poi_activate");
+                _eventBus.EmitSignal(EventBus.SignalName.WellUsed, position);
             }
-            onBack?.Invoke();
-        }, PixelBackdrop.RiftTint, false);
+            else
+            {
+                _essence.AddEssence(cost);
+                AudioManager.PlayUI("sfx_perk_refuse");
+            }
+            Open(player, position, false);
+        }, PixelBackdrop.WellTint, animate);
     }
 
     private bool CanAfford() => (_essence?.CurrentEssence ?? 0) >= Cost;
@@ -176,7 +183,7 @@ public partial class RiftForgetting : Node
         if (trace > 1)
             card.Lines.Add((string.Format(Tr(key), trace), ChoiceStyle.GainColor));
         else
-            card.Lines.Add((Tr("RIFT_FORGET_NO_TRACE"), ChoiceStyle.TextDim));
+            card.Lines.Add((Tr("WELL_NO_TRACE"), ChoiceStyle.TextDim));
     }
 
     private bool ForgetWeapon(Player player, WeaponInstance weapon)
@@ -219,7 +226,7 @@ public partial class RiftForgetting : Node
         while (weapon.Level < target && weapon.CanLevelUp)
             if (!player.UpgradeWeapon(weaponId, UpgradeRoller.RollWeaponGains(weapon, common, _rng), common.Id))
                 break;
-        player.ShowPopup(string.Format(Tr("RIFT_TRACE_POPUP"), weapon.Name, weapon.Level), RarityPalette.Main("rift"));
+        player.ShowPopup(string.Format(Tr("WELL_TRACE_POPUP"), weapon.Name, weapon.Level), RarityPalette.Main("well"));
     }
 
     /// <summary>
@@ -235,7 +242,7 @@ public partial class RiftForgetting : Node
         int current = player.GetPassiveLevel(passiveId);
         if (target > current)
             player.AddOrUpgradePassive(passiveId, target - current);
-        player.ShowPopup(string.Format(Tr("RIFT_TRACE_POPUP"), data.Name, player.GetPassiveLevel(passiveId)), RarityPalette.Main("rift"));
+        player.ShowPopup(string.Format(Tr("WELL_TRACE_POPUP"), data.Name, player.GetPassiveLevel(passiveId)), RarityPalette.Main("well"));
     }
 
     private static Texture2D LoadIcon(string path)

@@ -1,6 +1,7 @@
 """
 Lieux du plan 17, vague 3 : le Mémorial (stèle de mémoire, dormante puis éveillée), ses éclats, et la Faille
-(déchirure de l'Effacement dans le sol, ouverte puis refermée), l'Atelier du plan 22 et la stèle du Péril du plan 28.
+(déchirure de l'Effacement dans le sol, ouverte puis refermée), l'Atelier du plan 22, la stèle du Péril du plan 28 et
+le Puits du plan 44, où l'on jette ce qu'on veut oublier.
 
 Même échelle que les décors (1 m ≈ 27,5 unités). La lumière de mémoire est dorée, celle de l'oubli violette :
 les deux lieux se lisent comme un miroir.
@@ -13,6 +14,7 @@ from ..palette import make_emissive, make_material
 from ..render import Part
 from ..sdf import capsule, cylinder, ellipsoid, rounded_box, rotation_y, rotation_z, sphere
 from ._kit import AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
+from ._surface import bricks, painted
 
 
 # Un lieu à trouver se voit de loin : la stèle est plus grande que nature, comme les coffres.
@@ -20,6 +22,8 @@ MEMORIAL_SCALE = 1.35
 SHARD_SCALE = 1.6
 # L'établi est bas : un peu plus grand que la stèle pour se voir d'aussi loin.
 WORKSHOP_SCALE = 1.6
+# Puits : plus grand que le puits de décor des champs, sans toit ni seau, pour ne pas s'y confondre.
+WELL_SCALE = 1.55
 # Stèle du Péril : haute et étroite, elle se distingue du Mémorial par sa silhouette avant sa couleur.
 PERIL_STELE_SCALE = 1.5
 
@@ -207,6 +211,50 @@ def peril_stele(stem: str, lit: bool, seed: int) -> PropModel:
                      footprint=box_footprint(0.45 * M * PERIL_STELE_SCALE, 0.38 * M * PERIL_STELE_SCALE))
 
 
+def forget_well(stem: str, seed: int) -> PropModel:
+    """
+    Puits (plan 44) : margelle de moellons à demi écroulée, montants brisés sans toit ni treuil ; l'eau a la pâleur
+    blanc-bleuté de l'Effacement et luit, quelques lueurs en montent.
+    """
+    STONE, JOINT, WOOD, WATER, MOTE, RUBBLE = range(6)
+    materials = [
+        make_material("stone", "#857F74"),
+        make_material("joint", "#4A463F", contrast=0.5),
+        make_material("wood", "#5E4E3E"),
+        make_emissive("water", "#A9CBE0"),
+        make_emissive("mote", "#EEF4F8"),
+        make_material("rubble", "#6C675E"),
+    ]
+
+    def parts() -> list[Part]:
+        return [Part(_scaled(part.distance, WELL_SCALE), part.material, relief=part.relief) for part in base_parts()]
+
+    def base_parts() -> list[Part]:
+        w = Weathering(seed)
+        # Margelle creuse, entaillée à l'avant-droite : quelques moellons sont tombés au pied.
+        notch = lambda p: rounded_box(p, (0.45 * M, 0.75 * M, 0.45 * M), (0.22 * M, 0.2 * M, 0.3 * M), 0.04 * M, rotation_y(0.8))
+        ring = lambda p: np.maximum(np.maximum(cylinder(p, (0, 0.4 * M, 0), 0.62 * M, 0.4 * M, 0.05 * M),
+                                               -cylinder(p, (0, 0.45 * M, 0), 0.45 * M, 0.45 * M)), -notch(p))
+        unrolled = lambda q: np.stack([np.arctan2(q[:, 2], q[:, 0]) * 0.62 * M, q[:, 1], np.zeros(len(q))], axis=1)
+        rubble = [((0.75 + w.uniform(-0.08, 0.08)) * M, 0.07 * M, (0.6 + w.uniform(-0.1, 0.1)) * M) for _ in range(3)]
+        motes = [(w.uniform(-0.2, 0.2) * M, (0.95 + 0.3 * i) * M, w.uniform(-0.2, 0.2) * M) for i in range(3)]
+        lean = rotation_z(w.uniform(0.12, 0.2))
+        return [
+            Part(ring, STONE),
+            Part(painted(ring, bricks(0.2 * M, 0.36 * M, 0.04 * M, frame=unrolled)), JOINT, relief=False),
+            Part(lambda p: cylinder(p, (0, 0.62 * M, 0), 0.44 * M, 0.02 * M), WATER),
+            # Montants brisés à hauteurs inégales, l'un penché : le toit et le treuil sont tombés depuis longtemps.
+            Part(lambda p: _union(rounded_box(p, (-0.55 * M, 0.95 * M, 0), (0.06 * M, 0.55 * M, 0.06 * M), 0.015 * M),
+                                  rounded_box(p @ lean, (0.55 * M, 0.75 * M, 0), (0.06 * M, 0.35 * M, 0.06 * M), 0.015 * M)), WOOD),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.1 * M, 0.07 * M, 0.08 * M), 0.03 * M, rotation_y(w.uniform(0, 3)))
+                                    for c in rubble)), RUBBLE),
+            Part(lambda p: _union(*(sphere(p, c, (0.05 - 0.01 * i) * M) for i, c in enumerate(motes))), MOTE),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(110, 120),
+                     footprint=box_footprint(0.62 * M * WELL_SCALE, 0.62 * M * WELL_SCALE))
+
+
 def catalog() -> list[PropModel]:
     return [
         memorial("memorial_dormant", False, 7),
@@ -215,6 +263,7 @@ def catalog() -> list[PropModel]:
         rift("rift_open", True, 13),
         rift("rift_closed", False, 13),
         workshop("workshop", 17),
+        forget_well("forget_well", 29),
         peril_stele("peril_stele_lit", True, 23),
         peril_stele("peril_stele_spent", False, 23),
     ]

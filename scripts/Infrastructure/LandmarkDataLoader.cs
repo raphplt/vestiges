@@ -65,7 +65,17 @@ public class RiftConfig
     public float SpawnCooldown;
     public float SpawnDistanceMin;
     public float SpawnDistanceMax;
-    /// <summary>Oubli à la Faille (plan 44) : prix du premier oubli de la run, hausse par oubli, part des niveaux gardée en trace.</summary>
+}
+
+/// <summary>
+/// Réglages des Puits (section <c>well</c> de data/world/landmarks.json, plan 44) : placement, prix du premier oubli de la
+/// run, hausse par oubli, part des niveaux gardée en trace.
+/// </summary>
+public class WellConfig
+{
+    public string Sprite;
+    public List<LandmarkBand> Placement = new();
+    public float MinSpacingPx;
     public int ForgetCost;
     public float ForgetCostGrowth;
     public float ForgetTraceRatio;
@@ -83,7 +93,7 @@ public class PerilSteleConfig
 }
 
 /// <summary>
-/// Lieux du monde à trouver hors coffres : Mémoriaux, Ateliers, Failles et stèles du Péril (data/world/landmarks.json), contrôlés en
+/// Lieux du monde à trouver hors coffres : Mémoriaux, Ateliers, Failles, Puits et stèles du Péril (data/world/landmarks.json), contrôlés en
 /// entier (plan 26 Q7c) : tous les champs sont obligatoires, les raretés minimales existent, les images aussi.
 /// </summary>
 public static class LandmarkDataLoader
@@ -92,6 +102,7 @@ public static class LandmarkDataLoader
     private static MemorialConfig _memorial;
     private static RiftConfig _rift;
     private static WorkshopConfig _workshop;
+    private static WellConfig _well;
     private static PerilSteleConfig _perilStele;
     private static string _loadError;
 
@@ -110,6 +121,15 @@ public static class LandmarkDataLoader
         {
             Load();
             return _workshop;
+        }
+    }
+
+    public static WellConfig Well
+    {
+        get
+        {
+            Load();
+            return _well;
         }
     }
 
@@ -147,6 +167,7 @@ public static class LandmarkDataLoader
         _memorial = new MemorialConfig();
         _rift = new RiftConfig();
         _workshop = new WorkshopConfig();
+        _well = new WellConfig();
         _perilStele = new PerilSteleConfig();
         string error = FileAccess.FileExists(ConfigPath)
             ? Apply(FileAccess.GetFileAsString(ConfigPath), path => ResourceLoader.Exists(path), RarityIds())
@@ -168,7 +189,7 @@ public static class LandmarkDataLoader
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "lieux", "memorial", "rift", "workshop", "peril_stele");
+            reader.AllowOnly(reader.Root, "lieux", "memorial", "rift", "workshop", "well", "peril_stele");
 
             JsonElement m = reader.Section("memorial");
             reader.AllowOnly(m, "memorial", "sprite_dormant", "sprite_awake", "sprite_shard", "placement", "min_spacing_px",
@@ -204,9 +225,7 @@ public static class LandmarkDataLoader
 
             JsonElement r = reader.Section("rift");
             reader.AllowOnly(r, "rift", "sprite_open", "sprite_closed", "placement", "min_spacing_px", "hold_time", "offers",
-                "offer_min_rarity", "peril_per_offer", "erased_spawn", "forget");
-            JsonElement forget = reader.Section(r, "forget");
-            reader.AllowOnly(forget, "rift.forget", "cost", "cost_growth", "trace_ratio");
+                "offer_min_rarity", "peril_per_offer", "erased_spawn");
             JsonElement spawn = reader.Section(r, "erased_spawn");
             reader.AllowOnly(spawn, "rift.erased_spawn", "max_open", "chance", "cooldown_s", "distance_px");
             (float spawnMin, float spawnMax) = reader.Range(spawn, "distance_px", 0f);
@@ -225,9 +244,6 @@ public static class LandmarkDataLoader
                 SpawnCooldown = reader.NonNegative(spawn, "cooldown_s"),
                 SpawnDistanceMin = spawnMin,
                 SpawnDistanceMax = spawnMax,
-                ForgetCost = reader.Integer(forget, "cost", 0, 100_000),
-                ForgetCostGrowth = reader.NonNegative(forget, "cost_growth"),
-                ForgetTraceRatio = reader.Ratio(forget, "trace_ratio"),
             };
 
             JsonElement w = reader.Section("workshop");
@@ -247,6 +263,19 @@ public static class LandmarkDataLoader
                 TemperUpgrades = reader.Integer(ws, "temper_upgrades", 0, 100),
                 CostGrowth = reader.NonNegative(ws, "cost_growth"),
             };
+            JsonElement wl = reader.Section("well");
+            reader.AllowOnly(wl, "well", "sprite", "placement", "min_spacing_px", "forget");
+            JsonElement forget = reader.Section(wl, "forget");
+            reader.AllowOnly(forget, "well.forget", "cost", "cost_growth", "trace_ratio");
+            WellConfig well = new()
+            {
+                Sprite = reader.Resource(wl, "sprite", exists),
+                Placement = Bands(reader, wl),
+                MinSpacingPx = reader.Positive(wl, "min_spacing_px"),
+                ForgetCost = reader.Integer(forget, "cost", 0, 100_000),
+                ForgetCostGrowth = reader.NonNegative(forget, "cost_growth"),
+                ForgetTraceRatio = reader.Ratio(forget, "trace_ratio"),
+            };
             JsonElement st = reader.Section("peril_stele");
             reader.AllowOnly(st, "peril_stele", "sprite_lit", "sprite_spent", "placement", "min_spacing_px", "hold_time", "peril");
             PerilSteleConfig perilStele = new()
@@ -263,6 +292,7 @@ public static class LandmarkDataLoader
             _memorial = memorial;
             _rift = rift;
             _workshop = workshop;
+            _well = well;
             _perilStele = perilStele;
             _loadError = null;
             return null;

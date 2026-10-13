@@ -33,8 +33,8 @@ public static class WaymarkDataLoader
 {
 	private const string ConfigPath = "res://data/world/waymarks.json";
 
-	/// <summary>Lieux qui ne sont pas des petits lieux et que Waymarks marque : coffre, Mémorial, Faille, Atelier.</summary>
-	private static readonly string[] LandmarkTypes = { "chest", "memorial", "rift", "workshop" };
+	/// <summary>Lieux qui ne sont pas des petits lieux et que Waymarks marque : coffre, Mémorial, Faille, Atelier, Puits.</summary>
+	private static readonly string[] LandmarkTypes = { "chest", "memorial", "rift", "workshop", "well" };
 
 	private static WaymarkConfig _config;
 	private static string _loadError;

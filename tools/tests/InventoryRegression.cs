@@ -17,7 +17,7 @@ namespace Vestiges.Tests;
 /// rendement au-delà du seuil (aperçu de carte et valeur réelle identiques), déblocage d'un Écusson par sa quête. Lot I2 :
 /// objets en exemplaires directs sans palier, oubli qui retire exactement un exemplaire, sac plein, butin « objet ».
 /// Lot I3 : objets lâchés par les Souverains et les élites, ramassage au sol ; sac plein, l'objet attend au sol (plan 44).
-/// Plan 44 : oubli d'une arme, d'un Écusson ou d'une pile à la Faille, et ses traces.
+/// Plan 44 : oubli d'une arme, d'un Écusson ou d'une pile au Puits, et ses traces.
 /// Lot I4 : surplus d'une arme au bout de sa progression. Lot I6 : Ticket de consigne, Plan de métro, Flacon de pharmacie,
 /// Trèfle plastifié, Montre arrêtée. Lot I7 : fils d'usage des Écussons.
 /// </summary>
@@ -43,7 +43,7 @@ public partial class InventoryRegression : Node
             CheckBag();
             await CheckChestItem();
             await CheckWorldItems();
-            await CheckRiftForgetting();
+            await CheckWellForgetting();
             CheckWeaponSurplus();
             CheckTicket();
             CheckMetroMap();
@@ -322,7 +322,7 @@ public partial class InventoryRegression : Node
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(_player.FindObject(dropped.Id)?.Copies == 1 && !IsInstanceValid(pickup), "ramassé : l'objet entre dans le sac et quitte le sol");
 
-        // Sac plein : un doublon s'empile encore ; un nouveau type reste au sol, l'invite renvoie à la Faille (plan 44).
+        // Sac plein : un doublon s'empile encore ; un nouveau type reste au sol, l'invite renvoie au Puits (plan 44).
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
             if (!item.IsBadge && _player.HasBagRoom && _player.FindObject(item.Id) == null)
                 _player.AddItemCopy(item.Id);
@@ -341,7 +341,7 @@ public partial class InventoryRegression : Node
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Check(IsInstanceValid(full) && !GetTree().Paused && _player.BagCount == 10 && _player.BagCopyCount == copies
             && full.PromptVerbKey.Contains(absent.Name, StringComparison.Ordinal) && full.PromptVerbKey != string.Format(Tr("ITEM_PICKUP_PROMPT"), absent.Name),
-            $"nouveau type à sac plein : refusé, laissé au sol, invite vers la Faille ({full.PromptVerbKey})");
+            $"nouveau type à sac plein : refusé, laissé au sol, invite vers le Puits ({full.PromptVerbKey})");
         _player.ForgetItemStack(_player.PassiveSlots[0].Id);
         full.Interact(_player);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -351,13 +351,13 @@ public partial class InventoryRegression : Node
     }
 
     /// <summary>
-    /// Oubli à la Faille (plan 44) : prix qui monte, arme oubliée et sa trace sur la suivante, dernière arme gardée,
+    /// Oubli au Puits (plan 44) : prix qui monte, arme oubliée et sa trace sur la suivante, dernière arme gardée,
     /// Écusson oublié (apport, palier, fil d'usage) et sa trace, pile d'objets oubliée, Essence insuffisante.
     /// </summary>
-    private async Task CheckRiftForgetting()
+    private async Task CheckWellForgetting()
     {
         Setup();
-        RiftConfig config = LandmarkDataLoader.Rift;
+        WellConfig config = LandmarkDataLoader.Well;
         Check(config.ForgetCost == 100 && Mathf.IsEqualApprox(config.ForgetCostGrowth, 0.5f) && Mathf.IsEqualApprox(config.ForgetTraceRatio, 0.5f),
             "réglages de l'oubli : 100 Essence, +50 % par oubli, moitié des niveaux en trace");
         ChoiceScreen choices = new();
@@ -365,10 +365,14 @@ public partial class InventoryRegression : Node
         EssenceTracker essence = new();
         AddChild(essence);
         essence.AddEssence(1000);
-        RiftForgetting forgetting = new();
-        forgetting.Setup(choices, essence);
-        AddChild(forgetting);
-        int backs = 0;
+        WellDirector wells = new();
+        wells.Setup(choices, essence, null);
+        AddChild(wells);
+        int uses = 0;
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        void OnWellUsed(Vector2 position) => uses++;
+        bus.WellUsed += OnWellUsed;
+        void Leave() => choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
 
         // Une arme au niveau 40 à côté de l'arme de départ.
         _player.AddWeapon(WeaponDataLoader.Get("whip"));
@@ -383,36 +387,36 @@ public partial class InventoryRegression : Node
         _player.AddItemCopy("glacon");
         _player.AddItemCopy("glacon");
         int weapons = _player.WeaponSlots.Count;
-        Check(RiftForgetting.HasForgettable(_player) && forgetting.Cost == 100 && _player.FindObject("instinct").Level == 30
+        Check(wells.Cost == 100 && _player.FindObject("instinct").Level == 30
             && !Mathf.IsEqualApprox(_player.Mobility.DistanceMultiplier, dash), "avant l'oubli : fouet niveau 40, Instinct niveau 30 et son palier");
 
-        forgetting.Open(_player, () => backs++);
-        Check(choices.IsOpen && GetTree().Paused, "l'écran d'oubli s'ouvre en pause");
-        choices.Activate(weapons - 1);
+        wells.Open(_player, Vector2.Zero, false);
+        Check(choices.IsOpen && GetTree().Paused, "l'écran du Puits s'ouvre en pause");
         choices.Activate(weapons - 1);
         Check(_player.WeaponSlots.Count == weapons - 1 && _player.GetWeaponFragmentLevel("whip") == 0 && essence.CurrentEssence == 900
-            && backs == 1 && forgetting.Cost == 150 && forgetting.PendingWeaponTraces == 1,
-            $"fouet oublié : 100 Essence payées, prix suivant 150, une trace d'arme en attente ({essence.CurrentEssence}, {forgetting.Cost})");
+            && uses == 1 && wells.Cost == 150 && wells.PendingWeaponTraces == 1 && choices.IsOpen,
+            $"fouet oublié : 100 Essence payées, prix suivant 150, une trace d'arme en attente, la liste se rouvre ({essence.CurrentEssence}, {wells.Cost})");
+        Leave();
         _player.AddWeapon(WeaponDataLoader.Get("music_box"));
-        Check(_player.GetWeaponFragmentLevel("music_box") == forgetting.TraceLevel(40) && forgetting.TraceLevel(40) == 20
-            && forgetting.PendingWeaponTraces == 0, $"trace : la boîte à musique arrive au niveau 20 ({_player.GetWeaponFragmentLevel("music_box")})");
+        Check(_player.GetWeaponFragmentLevel("music_box") == wells.TraceLevel(40) && wells.TraceLevel(40) == 20
+            && wells.PendingWeaponTraces == 0, $"trace : la boîte à musique arrive au niveau 20 ({_player.GetWeaponFragmentLevel("music_box")})");
 
         int badgeCard = _player.WeaponSlots.Count;
-        forgetting.Open(_player, () => backs++);
+        wells.Open(_player, Vector2.Zero, false);
         choices.Activate(badgeCard);
-        choices.Activate(badgeCard);
+        Leave();
         Check(_player.FindObject("instinct") == null && _player.BadgeSlots.Count == 0 && essence.CurrentEssence == 750
             && Mathf.IsEqualApprox(_player.SpeedMultiplier, speed) && Mathf.IsEqualApprox(_player.Mobility.DistanceMultiplier, dash)
-            && _player.BadgeUsage.ProgressOf("instinct") == 0f && forgetting.PendingBadgeTraces == 1,
+            && _player.BadgeUsage.ProgressOf("instinct") == 0f && wells.PendingBadgeTraces == 1,
             $"Instinct oublié : vitesse et dash rendus, fil d'usage arrêté, trace en attente ({_player.SpeedMultiplier:0.###}/{speed:0.###})");
         _player.AddOrUpgradePassive("peau_dure");
-        Check(_player.FindObject("peau_dure")?.Level == 15 && forgetting.PendingBadgeTraces == 0,
+        Check(_player.FindObject("peau_dure")?.Level == 15 && wells.PendingBadgeTraces == 0,
             $"trace : Peau dure arrive au niveau 15 ({_player.FindObject("peau_dure")?.Level})");
 
         int itemCard = _player.WeaponSlots.Count + _player.BadgeSlots.Count;
-        forgetting.Open(_player, () => backs++);
+        wells.Open(_player, Vector2.Zero, false);
         choices.Activate(itemCard);
-        choices.Activate(itemCard);
+        Leave();
         Check(_player.FindObject("glacon") == null && _player.BagCount == 0 && essence.CurrentEssence == 550
             && Mathf.IsZeroApprox(_player.ObjectTriggers.ChillChance), "pile du Glaçon oubliée en entier, son effet aussi");
 
@@ -432,23 +436,22 @@ public partial class InventoryRegression : Node
         while (_player.WeaponSlots.Count > 1)
             _player.RemoveWeapon(_player.WeaponSlots.Count - 1);
         int before = essence.CurrentEssence;
-        forgetting.Open(_player, () => backs++);
-        choices.Activate(0);
+        wells.Open(_player, Vector2.Zero, false);
         choices.Activate(0);
         bool stillOpen = choices.IsOpen;
-        choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
-        Check(_player.WeaponSlots.Count == 1 && essence.CurrentEssence == before && stillOpen && !choices.IsOpen && backs == 4,
-            "la dernière arme ne s'oublie pas ; « Retour » revient sans rien payer");
+        Leave();
+        Check(_player.WeaponSlots.Count == 1 && essence.CurrentEssence == before && stillOpen && !choices.IsOpen && uses == 3
+            && !GetTree().Paused, "la dernière arme ne s'oublie pas ; « Partir » ferme sans rien payer");
 
         // Plus assez d'Essence : rien ne s'oublie.
         _player.AddItemCopy("glacon");
         essence.TrySpend(essence.CurrentEssence);
-        forgetting.Open(_player, () => backs++);
+        wells.Open(_player, Vector2.Zero, false);
         choices.Activate(1);
-        choices.Activate(1);
-        choices._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
-        Check(_player.FindObject("glacon") != null && essence.CurrentEssence == 0, "sans Essence, la pile reste");
-        forgetting.QueueFree();
+        Leave();
+        Check(_player.FindObject("glacon") != null && essence.CurrentEssence == 0 && uses == 3, "sans Essence, la pile reste");
+        bus.WellUsed -= OnWellUsed;
+        wells.QueueFree();
         essence.QueueFree();
         choices.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

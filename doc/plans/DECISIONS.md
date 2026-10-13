@@ -1791,3 +1791,14 @@ Raphaël : « il faudrait avoir plus de mécaniques liées à l'oubli dans le je
 **Choisi par l'agent, à juger en jeu :** 100 Essence puis +50 % par oubli, moitié des niveaux gardée, la Faille reste ouverte après un oubli. Détail au [plan 44](44-oublier-a-la-faille.md).
 
 **Hors sujet, même jour :** les mini-boss à barre de vie en haut de l'écran ne doivent **jamais disparaître** s'ils ne sont pas tués.
+
+## 158. L'oubli quitte la Faille pour un Puits ; les puits à boire disparaissent — 13 octobre 2026
+
+Raphaël, découvrant que la Faille est le lieu des améliorations contre Péril : « je trouve ca confusant d'avoir un POI qui fait 2 choses apres réflexion ca ne me plait pas il va falloir trouver autre chose. » Il choisit un **nouveau lieu dédié en forme de puits**. Prévenu que des puits à boire existent déjà (petits lieux, soin de 15 %) : « retirer le POI puits existant (ou remplacer son effet par le nouveau). »
+
+**Acquis :**
+- la Faille redevient ce qu'elle était : améliorations contre Oubli et Péril, rien d'autre ;
+- l'oubli (règles du §157 inchangées) se fait à un **Puits**, lieu à part entière présent dans tous les biomes ;
+- le puits à boire n'est plus un petit lieu : le décor des champs reste, sans interaction.
+
+**Choisi par l'agent :** 6 Puits par carte ; le Repère « Puits » (+10 PV max) passe au premier oubli à un Puits, ce qui garde 13 types de Repères.

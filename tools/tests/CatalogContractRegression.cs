@@ -250,6 +250,8 @@ public partial class CatalogContractRegression : Node
             ("prix fractionnaire", root => root["memorial"]!["services"]!["heal_cost"] = 20.5, "heal_cost : 20.5"),
             ("part de soin nulle", root => root["memorial"]!["services"]!["heal_percent"] = 0, "heal_percent : 0"),
             ("chance au-delà de 1", root => root["rift"]!["erased_spawn"]!["chance"] = 1.5, "chance : 1.5 (chance dans [0 ; 1] attendue)"),
+            ("Puits absent", root => root.Remove("well"), "section well absente"),
+            ("trace nulle", root => root["well"]!["forget"]!["trace_ratio"] = 0, "trace_ratio : 0"),
             ("clé inconnue", root => root["memorial"]!["shard_count"] = 3, "clé « shard_count » inconnue"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
@@ -386,15 +388,15 @@ public partial class CatalogContractRegression : Node
         (string, Action<JsonObject>, string)[] cases =
         {
             ("récompense inconnue", root => Entry(root, "places", 0)["reward"] = "treasure", "reward : « treasure » inconnu"),
-            ("réglage exigé absent", root => Entry(root, "places", 1).Remove("amount_max"), "amount_max absent"),
+            ("réglage exigé absent", root => Entry(root, "places", 0).Remove("amount_max"), "amount_max absent"),
             ("réglage d'une autre récompense", root => Entry(root, "places", 0)["duration_s"] = 5, "clé « duration_s » inconnue"),
-            ("fourchette inversée", root => { Entry(root, "places", 1)["amount_min"] = 12; Entry(root, "places", 1)["amount_max"] = 6; }, "amount_max : 6 inférieur à amount_min 12"),
+            ("fourchette inversée", root => { Entry(root, "places", 0)["amount_min"] = 12; Entry(root, "places", 0)["amount_max"] = 6; }, "amount_max : 6 inférieur à amount_min 12"),
             ("décor inconnu", root => Entry(root, "places", 0)["sprites"] = new JsonArray("prop_puits_magique"), "décor « prop_puits_magique » inconnu des manifestes"),
             ("famille inconnue", root => Entry(root, "places", 0)["family"] = "eau", "family : « eau » inconnu"),
             ("invite non traduite", root => Entry(root, "places", 0)["prompt"] = "PLACE_ABSENT_PROMPT", "clé « PLACE_ABSENT_PROMPT » absente des traductions"),
-            ("ligne de lore non traduite", root => Entry(root, "places", 8)["lore"] = new JsonArray("PLACE_PICNIC_LORE_99"), "clé « PLACE_PICNIC_LORE_99 » absente des traductions"),
-            ("chance au-delà de 1", root => Entry(root, "places", 4)["chance"] = 1.5, "chance : 1.5"),
-            ("identifiant en double", root => Entry(root, "places", 1)["id"] = "well", "identifiant en double"),
+            ("ligne de lore non traduite", root => Entry(root, "places", 7)["lore"] = new JsonArray("PLACE_PICNIC_LORE_99"), "clé « PLACE_PICNIC_LORE_99 » absente des traductions"),
+            ("chance au-delà de 1", root => Entry(root, "places", 3)["chance"] = 1.5, "chance : 1.5"),
+            ("identifiant en double", root => Entry(root, "places", 1)["id"] = "crystal_vein", "identifiant en double"),
         };
         foreach ((string label, Action<JsonObject> mutate, string expected) in cases)
         {
@@ -407,7 +409,7 @@ public partial class CatalogContractRegression : Node
     {
         string valid = FileAccess.GetFileAsString("res://data/world/waymarks.json");
         ObjectDataValidator.TryParseContract(FileAccess.GetFileAsString(ObjectDataValidator.ContractPath), out ObjectDataValidator.Contract contract, out _);
-        List<string> types = new(SmallPlaceDataLoader.PlaceIds()) { "chest", "memorial", "rift", "workshop" };
+        List<string> types = new(SmallPlaceDataLoader.PlaceIds()) { "chest", "memorial", "rift", "workshop", "well" };
         Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
         Check(WaymarkDataLoader.Apply(valid, types, contract, translated) == null, "Repères du dépôt acceptés");
         (string, Action<JsonObject>, string)[] cases =

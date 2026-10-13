@@ -14,6 +14,7 @@ public partial class PixelBackdrop : TextureRect
     public static readonly Color MemorialTint = new(0.55f, 0.88f, 0.86f);
     public static readonly Color RiftTint = new(0.72f, 0.45f, 0.92f);
     public static readonly Color WorkshopTint = new(0.92f, 0.56f, 0.3f);
+    public static readonly Color WellTint = new(0.6f, 0.76f, 0.86f);
     public static readonly Color NeutralTint = new(0.55f, 0.52f, 0.46f);
 
     private static Shader _stoneShader;

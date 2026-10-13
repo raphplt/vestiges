@@ -173,7 +173,7 @@ public partial class WorkshopDirector : Node
 
     /// <summary>
     /// L'objet de l'Atelier : un seul, débloqué, tiré à la première visite ; on le prend s'il reste une place. Sac plein,
-    /// la carte s'éteint : on oublie à la Faille (plan 44).
+    /// la carte s'éteint : on oublie au Puits (plan 44).
     /// </summary>
     private void AddItemOffer(Workshop workshop, int essence, List<ChoiceCard> cards, List<System.Action> actions)
     {

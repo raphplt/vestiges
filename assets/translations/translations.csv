@@ -77,7 +77,6 @@ MEMORIAL_ESSENCE,Essence : {0},Essence: {0}
 MEMORIAL_LEAVE,Partir,Leave
 MEMORIAL_HEALED,Le corps se souvient,The body remembers
 LANDMARK_RIFT,Faille,Rift
-PLACE_WELL_PROMPT,Boire,Drink
 PLACE_CRYSTAL_PROMPT,Briser,Break
 PLACE_SCARECROW_PROMPT,Secouer,Shake
 PLACE_MAILBOX_PROMPT,Lire le courrier,Read the mail
@@ -106,6 +105,7 @@ WAYMARK_CHEST,Coffre,Chest
 WAYMARK_MEMORIAL,Mémorial,Memorial
 WAYMARK_RIFT,Faille,Rift
 LANDMARK_WORKSHOP,Atelier,Workshop
+LANDMARK_WELL,Puits,Well
 WORKSHOP_PROMPT,Travailler,Work
 WORKSHOP_TITLE,ATELIER,WORKSHOP
 WORKSHOP_WEAPON_TAG,Amélioration {0} au moins,{0} upgrade or better
@@ -401,6 +401,7 @@ MAP_LEGEND_MEMORIAL,Mémorial,Memorial
 MAP_LEGEND_RIFT,Faille,Rift
 MAP_LEGEND_PERIL_STELE,Stèle du Péril,Peril stele
 MAP_LEGEND_WORKSHOP,Atelier,Workshop
+MAP_LEGEND_WELL,Puits,Well
 MAP_LEGEND_PLACE,Petit lieu à visiter,Place to visit
 BONUS_CANTEEN,Gourde · soin,Canteen · heal
 BONUS_MAGNET,Fer à cheval · aimant,Horseshoe · magnet
@@ -535,30 +536,27 @@ INVENTORY_BAG,Sac,Bag
 ITEM_MILESTONE,{0} exemplaires : {1},{0} copies: {1}
 WORKSHOP_ITEM_TAG,OBJET,ITEM
 WORKSHOP_ITEM_SOLD,{0} rejoint ton sac.,{0} joins your bag.
-ITEM_BAG_FULL,"Sac plein : oublie un objet à une Faille.","Bag full: forget an item at a Rift."
+ITEM_BAG_FULL,"Sac plein : oublie un objet à un Puits.","Bag full: forget an item at a Well."
 ITEM_PICKUP_PROMPT,Prendre : {0},Take: {0}
-ITEM_BAG_FULL_PROMPT,{0} : sac plein — oublier à une Faille,{0}: bag full — forget at a Rift
+ITEM_BAG_FULL_PROMPT,{0} : sac plein — oublier à un Puits,{0}: bag full — forget at a Well
 ITEM_AT_MAX_PROMPT,{0} : déjà au maximum,{0}: already at maximum
 WEAPON_PICKUP_PROMPT,Prendre : {0},Take: {0}
-WEAPON_SLOTS_FULL_PROMPT,{0} : armes pleines — oublier à une Faille,{0}: weapons full — forget at a Rift
+WEAPON_SLOTS_FULL_PROMPT,{0} : armes pleines — oublier à un Puits,{0}: weapons full — forget at a Well
 WEAPON_OWNED_PROMPT,{0} : déjà portée,{0}: already equipped
-RIFT_FORGET_TAG,OUBLIER,FORGET
-RIFT_FORGET_CARD_TITLE,Jeter un souvenir,Cast a memory away
-RIFT_FORGET_CARD_LINE,"Une arme, un Écusson ou un objet quitte la run. La Faille reste ouverte.","A weapon, a Badge or an item leaves the run. The Rift stays open."
-RIFT_FORGET_TRACE_RULE,"Trace : la prochaine arme ou le prochain Écusson repart de {0} % des niveaux.","Trace: the next weapon or Badge starts from {0}% of the levels."
-RIFT_FORGET_TITLE,OUBLIER,FORGET
-RIFT_FORGET_SUBTITLE,Ce que la Faille avale ne revient pas. Il en reste une trace.,What the Rift swallows never returns. A trace remains.
-RIFT_FORGET_BACK,Retour,Back
-RIFT_FORGET_WEAPON_TAG,ARME · NIV. {0},WEAPON · LV. {0}
-RIFT_FORGET_BADGE_TAG,ÉCUSSON · NIV. {0},BADGE · LV. {0}
-RIFT_FORGET_ITEM_TAG,OBJET · {0},ITEM · {0}
-RIFT_FORGET_WEAPON_TRACE,Trace : la prochaine arme commencera au niveau {0},Trace: the next weapon will start at level {0}
-RIFT_FORGET_BADGE_TRACE,Trace : le prochain Écusson commencera au niveau {0},Trace: the next Badge will start at level {0}
-RIFT_FORGET_NO_TRACE,Trop jeune pour laisser une trace,Too young to leave a trace
-RIFT_FORGET_LAST_WEAPON,Ta dernière arme ne s'oublie pas,Your last weapon cannot be forgotten
-RIFT_FORGET_PERK_WARNING,Rend inactif : {0},Disables: {0}
-RIFT_FORGET_ITEM_LINE,"Toute la pile est oubliée, sa place se libère.","The whole stack is forgotten, freeing its slot."
-RIFT_TRACE_POPUP,Trace : {0} niv. {1},Trace: {0} lv. {1}
+WELL_PROMPT,Jeter un souvenir,Cast a memory away
+WELL_TITLE,PUITS,WELL
+WELL_SUBTITLE,"Ce que le puits avale ne revient pas. Il en reste une trace : la prochaine arme ou le prochain Écusson repart de {0} % des niveaux.","What the well swallows never returns. A trace remains: the next weapon or Badge starts from {0}% of the levels."
+WELL_LEAVE,Partir,Leave
+WELL_WEAPON_TAG,ARME · NIV. {0},WEAPON · LV. {0}
+WELL_BADGE_TAG,ÉCUSSON · NIV. {0},BADGE · LV. {0}
+WELL_ITEM_TAG,OBJET · {0},ITEM · {0}
+WELL_WEAPON_TRACE,Trace : la prochaine arme commencera au niveau {0},Trace: the next weapon will start at level {0}
+WELL_BADGE_TRACE,Trace : le prochain Écusson commencera au niveau {0},Trace: the next Badge will start at level {0}
+WELL_NO_TRACE,Trop jeune pour laisser une trace,Too young to leave a trace
+WELL_LAST_WEAPON,Ta dernière arme ne s'oublie pas,Your last weapon cannot be forgotten
+WELL_PERK_WARNING,Rend inactif : {0},Disables: {0}
+WELL_ITEM_LINE,"Toute la pile est oubliée, sa place se libère.","The whole stack is forgotten, freeing its slot."
+WELL_TRACE_POPUP,Trace : {0} niv. {1},Trace: {0} lv. {1}
 LEVELUP_SURPLUS,SURPLUS,SURPLUS
 LEVELUP_SURPLUS_LINE,Dégâts de l'arme +{0} % → +{1} %,Weapon damage +{0}% → +{1}%
 PAUSE_WEAPON_SURPLUS,Surplus +{0} %,Surplus +{0}%

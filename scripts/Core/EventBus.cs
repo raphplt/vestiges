@@ -145,6 +145,11 @@ public partial class EventBus : Node
     /// <summary>Première visite d'un Atelier : la zone se souvient et le Repère se gagne.</summary>
     [Signal] public delegate void WorkshopVisitedEventHandler(Vector2 position);
 
+    // --- Puits de l'oubli (plan 44) ---
+    [Signal] public delegate void WellInteractedEventHandler(Node2D well);
+    /// <summary>Un oubli vient d'être payé à un Puits (Repères).</summary>
+    [Signal] public delegate void WellUsedEventHandler(Vector2 position);
+
     // --- Failles (plan 17 lot 3C) ---
     [Signal] public delegate void RiftInteractedEventHandler(Node2D rift);
     /// <summary>Une offre de Faille vient d'être acceptée : la Faille se referme (Repères, plan 23 R9).</summary>

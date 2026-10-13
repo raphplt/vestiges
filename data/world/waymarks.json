@@ -1,5 +1,5 @@
 {
-    "_doc": "Repères (plan 22 §3 B, plan 23 R9, plan 24 D3) : le premier usage de chaque type de lieu dans la run donne un petit gain permanent, propre au lieu, de la taille d'une carte commune d'objet. Explorer la variété des lieux construit un petit build de départ. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift), clé de son nom, et gain : soit une stat ('stat', 'amount', 'modifier_type' : additive ajoute, multiplicative donne ×(1 + amount)), soit des jetons de choix ('rerolls' relances, 'banishes' bannissements gratuits).",
+    "_doc": "Repères (plan 22 §3 B, plan 23 R9, plan 24 D3) : le premier usage de chaque type de lieu dans la run donne un petit gain permanent, propre au lieu, de la taille d'une carte commune d'objet. Explorer la variété des lieux construit un petit build de départ. 'types' : identifiant du lieu (petits lieux de small_places.json, et chest, memorial, rift, workshop, well : le Puits du plan 44, au premier oubli), clé de son nom, et gain : soit une stat ('stat', 'amount', 'modifier_type' : additive ajoute, multiplicative donne ×(1 + amount)), soit des jetons de choix ('rerolls' relances, 'banishes' bannissements gratuits).",
     "enabled": true,
     "types": [
         {

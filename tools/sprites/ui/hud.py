@@ -90,6 +90,7 @@ def assets() -> dict[str, Image.Image]:
                 "rift": ("  l s", " sll ", " ll  ", " lls ", "s l  "),
                 "place": ("  l  ", " sss ", "lsosl", " sss ", "  l  "),
                 "workshop": ("lllls", " lll ", "  l  ", " lll ", "sssss"),
+                "well": ("l   l", "lllll", "l o l", "sssss", " sss "),
                 "peril_stele": ("  l  ", " lll ", " lsl ", "llsll", "lllll"),
                 "player": ("  l  ", " lll ", "lllll", "  l  ", "  l  ")}
     for name, rows in patterns.items():

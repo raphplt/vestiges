@@ -1,6 +1,6 @@
-# Plan 44 — Oublier à la Faille
+# Plan 44 — Oublier au Puits
 
-Statut : **validé le 13 octobre 2026** ([DECISIONS §157](DECISIONS.md)).
+Statut : **validé le 13 octobre 2026** ([DECISIONS §157](DECISIONS.md)). **Le soir même, l'oubli quitte la Faille pour un Puits dédié ([§158](DECISIONS.md), §9 ci-dessous)** : les sections 1 à 8 décrivent la première version, à la Faille : `rift.forget`, `RiftForgetting` et la carte « Oublier » n'existent plus. Les règles d'oubli (§3) et les retraits (§4) restent valables, au Puits.
 
 ## 1. La demande
 
@@ -102,3 +102,23 @@ Il a retenu la recommandation de l'agent :
 - S'il est retiré sans être abattu (englouti par le Néant), l'événement échoue proprement.
 - L'objectif devient « Abattez le … ».
 - **Vérification** : nouveau mode `--capture-sovereign` (joueur désarmé, immobile, invincible). Le Souverain est toujours là au bout de 75 s : même créature, PV pleins, barre en haut de l'écran (capture regardée).
+
+## 9. Lot F2 — le Puits (DECISIONS §158)
+
+Raphaël trouve confus qu'un même lieu, la Faille, fasse deux choses. L'oubli part dans un lieu à lui, un **Puits**. Les puits à boire (petits lieux, soin de 15 %) disparaissent pour ne pas s'y confondre.
+
+**Fait :**
+- **Puits** (`Well`, `WellDirector`) :
+  - 6 par carte, couronne 0,15 à 0,9 ;
+  - placé après tous les autres lieux, pour ne déplacer ni coffres ni Mémoriaux, Failles, Ateliers ou stèles d'une graine ;
+  - section `well` de `landmarks.json`, avec les mêmes règles d'oubli qu'au §3 (100 Essence, +50 % par oubli, moitié des niveaux en trace) ;
+  - englouti par le Néant, il s'éteint.
+- **Écran** : l'écran du Puits est directement la liste à oublier. Après un oubli, elle se rouvre au nouveau prix ; « Partir » ferme.
+- **Sprite** `forget_well` (`tools/sprites/props/landmarks.py`) : margelle de moellons à demi écroulée, montants brisés sans toit ni seau, eau pâle de l'Effacement qui luit, lueurs qui montent. Plus grand que le puits de décor des champs. Colonne de lumière bleu pâle (`well` dans `rarities.json`), icône et légende de minimap.
+- **Repère « Puits »** (+10 PV max) : il se gagne au premier oubli à un Puits. Le nombre de Repères reste 13.
+- **Faille** : rendue telle qu'avant le §157.
+- **Puits à boire** retiré de `small_places.json` : le décor des champs reste, sans interaction. Clé `PLACE_WELL_PROMPT` retirée.
+- **Bot de mesure** : il compte les Puits vus mais ne les vise pas. Oublier reste un choix de build.
+- **Mode de capture** `--capture-well`.
+
+**Point pour Raphaël :** les puits à boire donnaient jusqu'à 10 soins de 15 % par carte. Restent les soins de la voiture abandonnée, de la table de pique-nique et du Mémorial.

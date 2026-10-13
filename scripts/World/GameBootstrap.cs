@@ -241,11 +241,13 @@ public partial class GameBootstrap : Node
         workshopDirector.Setup(choiceScreen, essenceTracker, erasureManager);
         sceneRoot.AddChild(workshopDirector);
 
-        RiftForgetting riftForgetting = new() { Name = "RiftForgetting" };
-        riftForgetting.Setup(choiceScreen, essenceTracker);
-        sceneRoot.AddChild(riftForgetting);
         RiftDirector riftDirector = new() { Name = "RiftDirector" };
-        riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager, riftForgetting);
+        riftDirector.Setup(choiceScreen, landmarkReveal, perilManager, erasureManager);
+
+        // Puits (plan 44) : le seul lieu où l'on oublie une arme, un Écusson ou un objet.
+        WellDirector wellDirector = new() { Name = "WellDirector" };
+        wellDirector.Setup(choiceScreen, essenceTracker, erasureManager);
+        sceneRoot.AddChild(wellDirector);
         sceneRoot.AddChild(riftDirector);
 
         // Petits lieux (plan 22, lot C1) : des décors déjà posés qui se souviennent.
