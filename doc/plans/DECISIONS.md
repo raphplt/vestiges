@@ -1758,3 +1758,23 @@ Cinq runs jouées par Raphaël (Traqueur ×2, Facteur ×2, Vagabond), toutes tra
   - badge « Nouveau » sur les cases de la Collection débloquées par une quête, tant qu'on ne les a pas regardées, et point d'or sur l'onglet ;
   - compte à rebours des éclats au-dessus du joueur, à la place de celui du Mémorial, qui sortait de l'écran pendant le ramassage ; tic-tac à chaque seconde, pressé (deux par seconde) et en rouge dans les 5 dernières (`shard_urgent_time`) ;
   - la trace de survie note la vraie graine de la run.
+
+## 155. Quêtes trop faciles, classement aux éliminations — 13 octobre 2026, fin d'après-midi
+
+**Quêtes.** Constat : en une seule run, sans y prêter attention, Raphaël en a accompli 5 à 10, ce qui leur ôte leur intérêt.
+- Une partie des déblocages (la moitié des pièces ou un peu moins, toutes familles confondues : personnages, armes, objets…) vient de quêtes qui se font d'elles-mêmes. Elles demandent 5 à 20 parties moyennes ou longues, soit environ 1 h à 4–5 h de jeu sans rien faire de spécial.
+- Les autres demandent de **le vouloir** : on regarde comment faire la quête, et elle se fait difficilement par hasard, sans être impossible. Formes possibles :
+  - jouer une arme précise ;
+  - faire quelque chose de spécial sur la carte ;
+  - survivre d'une certaine manière, par exemple sans prendre de dégâts pendant un temps ;
+  - relever des défis : aller loin sans tel objet, ou avec une seule arme.
+- Les quêtes de compteur qui restent (tant de dégâts, tant de coffres) voient leurs paliers « pas mal » relevés.
+- **Ordre** : après la mesure de nuit, pour caler les paliers sur les chiffres par run. Le catalogue revu est proposé à Raphaël avant de coder.
+
+**Classement.**
+- Il revient avec un affichage refait : records personnels (meilleur au global et par personnage) et surtout un **classement global de tous les joueurs, remis à zéro chaque semaine**. Le classement de tous les temps est gardé.
+- **Une seule mesure, les éliminations, partout** : classements, records et bilan. Le score composé disparaît de l'affichage.
+- Graines aléatoires (aucune graine imposée pour concourir), tous personnages confondus.
+- **Vestiges gagnés = éliminations ÷ un taux**, calé pour qu'une run moyenne rapporte autant qu'aujourd'hui. Le Péril paie toujours, par plus d'ennemis donc plus d'éliminations.
+- **Steam** : Raphaël lance la démarche maintenant (Steam Direct, App ID) et demande d'être guidé.
+- **Ordre** : le classement se code tout de suite, à part de la mesure de nuit ; les quêtes viennent après la mesure.
