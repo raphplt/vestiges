@@ -1962,4 +1962,4 @@ Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lir
 - zones au sol (suite du §164) : « il faut que les contours soient plus réguliers en cercle, mais que ca soit bcp plus travaillé et créatif en terme d'effet (je parle de tout ce qui fait des zones au sol) » ;
 - ordre : les textes d'abord ; la revue du tableau de bord attendra.
 
-**Livré :** textes ([plan 35 I18](35-raretes-des-objets.md#i18--textes-lisibles-14-octobre-2026)). Aimant et zones au sol restent à faire.
+**Livré :** textes ([plan 35 I18](35-raretes-des-objets.md#i18--textes-lisibles-14-octobre-2026)) ; aimant à 80 px sans dérive, réglé dans `data/scaling/progression.json` (`attraction_radius`), à juger en jouant. Raphaël ne veut pas de mesure pour ce réglage (« pas besoin de mesurer pour ca »). Les zones au sol restent à faire.

@@ -27,11 +27,8 @@ public partial class XpOrb : Area2D, ITicked
     private static readonly TickRoster<XpOrb> Roster = new("XpOrbs");
     public int TickSlot { get; set; } = -1;
 
-    private const float BaseAttractionRadius = 150f;
-    private const float BaseDriftRadius = 250f;
     private const float MaxSpeed = 500f;
     private const float Acceleration = 800f;
-    private const float DriftSpeed = 40f;
     // Saut du butin (plan 02 J2) : l'orbe jaillit du corps et retombe à côté, avant de pouvoir être attirée.
     private const float HopSec = 0.35f;
     private const float HopHeightPx = 14f;
@@ -69,12 +66,14 @@ public partial class XpOrb : Area2D, ITicked
     /// <summary>Change à chaque endormissement : une entrée de CombatPools d'un sommeil précédent est périmée.</summary>
     public int SleepToken { get; private set; }
 
-    /// <summary>Distance au joueur au-delà de laquelle l'orbe dort, attraction du joueur comprise.</summary>
-    /// <summary>Rayon dans lequel l'orbe fonce vers le joueur ; il donne aussi la demi-largeur du couloir de Sillage.</summary>
-    public static float AttractionRadius(Player player) => BaseAttractionRadius * player.XpMagnetMultiplier;
+    /// <summary>
+    /// Rayon dans lequel l'orbe fonce vers le joueur ; il donne aussi la demi-largeur du couloir de Sillage. Hors de ce
+    /// rayon, l'orbe ne bouge pas : il faut aller la chercher (DECISIONS §172).
+    /// </summary>
+    public static float AttractionRadius(Player player) => XpCurveConfig.Load().AttractionRadius * player.XpMagnetMultiplier;
 
-    public static float SleepRadius(Player player) =>
-        Mathf.Max(SleepDistance, BaseDriftRadius * player.XpMagnetMultiplier + SleepAttractionMargin);
+    /// <summary>Distance au joueur au-delà de laquelle l'orbe dort, attraction du joueur comprise.</summary>
+    public static float SleepRadius(Player player) => Mathf.Max(SleepDistance, AttractionRadius(player) + SleepAttractionMargin);
 
     // Textures statiques pour l'animation 2 frames
     private static Texture2D _orbFrame1;
@@ -200,9 +199,8 @@ public partial class XpOrb : Area2D, ITicked
         if (_player == null || !IsInstanceValid(_player))
             return;
 
-        float magnetMult = _player.XpMagnetMultiplier;
-        float attractionRadiusSq = BaseAttractionRadius * magnetMult * BaseAttractionRadius * magnetMult;
-        float driftRadiusSq = BaseDriftRadius * magnetMult * BaseDriftRadius * magnetMult;
+        float attractionRadius = AttractionRadius(_player);
+        float attractionRadiusSq = attractionRadius * attractionRadius;
         float distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
         if (!_trailBound && distSq >= attractionRadiusSq && XpTrail.Any)
         {
@@ -213,7 +211,7 @@ public partial class XpOrb : Area2D, ITicked
                 _trailBound = XpTrail.Covers(GlobalPosition);
             }
         }
-        float sleepRadius = SleepRadius(_player);
+        float sleepRadius = Mathf.Max(SleepDistance, attractionRadius + SleepAttractionMargin);
         if (!_trailBound && distSq > sleepRadius * sleepRadius)
         {
             Sleep();
@@ -227,11 +225,6 @@ public partial class XpOrb : Area2D, ITicked
             Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
             GlobalPosition += direction * _currentSpeed * dt;
             Stretch(direction, dt);
-        }
-        else if (distSq < driftRadiusSq)
-        {
-            Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-            GlobalPosition += direction * DriftSpeed * dt;
         }
     }
 

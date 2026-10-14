@@ -5,8 +5,9 @@ using Godot;
 namespace Vestiges.Infrastructure;
 
 /// <summary>
-/// Courbe d'XP du joueur, lue dans data/scaling/progression.json (plan 20 §6.6) et contrôlée en entier (plan 26 Q7a) :
-/// tous les champs sont obligatoires et un coût nul, qui rendrait la montée de niveau sans fin, est refusé.
+/// Courbe d'XP du joueur et portée de l'aimant d'XP, lues dans data/scaling/progression.json (plan 20 §6.6) et contrôlées
+/// en entier (plan 26 Q7a) : tous les champs sont obligatoires et un coût nul, qui rendrait la montée de niveau sans fin,
+/// est refusé.
 /// </summary>
 public sealed class XpCurveConfig
 {
@@ -19,6 +20,8 @@ public sealed class XpCurveConfig
     public float EarlyMultiplierStart { get; private init; }
     public float EarlyMultiplierEnd { get; private init; }
     public float MaxXpPerLevel { get; private init; }
+    /// <summary>Distance en px à laquelle une orbe d'XP fonce vers le joueur, avant les bonus d'aimant (DECISIONS §172).</summary>
+    public float AttractionRadius { get; private init; }
 
     /// <summary>XP pour passer du niveau <paramref name="level"/> au suivant.</summary>
     public float CostOf(int level)
@@ -70,7 +73,7 @@ public sealed class XpCurveConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
             reader.AllowOnly(root, "courbe d'XP", "base_xp", "exponent", "early_levels", "early_multiplier_start",
-                "early_multiplier_end", "max_xp_per_level");
+                "early_multiplier_end", "max_xp_per_level", "attraction_radius");
             XpCurveConfig parsed = new()
             {
                 BaseXp = reader.Positive(root, "base_xp"),
@@ -79,6 +82,7 @@ public sealed class XpCurveConfig
                 EarlyMultiplierStart = reader.Positive(root, "early_multiplier_start"),
                 EarlyMultiplierEnd = reader.Positive(root, "early_multiplier_end"),
                 MaxXpPerLevel = reader.Positive(root, "max_xp_per_level"),
+                AttractionRadius = reader.Positive(root, "attraction_radius"),
             };
             error = reader.Error;
             config = error == null ? parsed : null;

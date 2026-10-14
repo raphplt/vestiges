@@ -71,7 +71,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 | Campement | [42 §4](42-signature.md), [§152](DECISIONS.md) | Puissance brute retirée (tranché le 13 octobre). Reste : XP et Chance, à trancher avec le gambling (plan 42 §6). |
 | Zones au sol | [25 S10](25-sprites-et-design.md), §164, §172 | **Tranché le 14 octobre** : contours plus réguliers, en cercle, pour toutes les zones au sol (créatures et joueur), mais un effet beaucoup plus travaillé et créatif (animation, détail, matière). Lot à découper au plan 25. |
 | Lisibilité des effets d'objets et d'Écussons | [35 I18](35-raretes-des-objets.md), §172 | **Livré le 14 octobre, à juger en jouant** : une phrase courte par objet, ligne de stat et phrase d'ambiance pour les objets de stat, limites dans la Collection seulement. Relire les 72 textes en jeu. |
-| Portée de ramassage de l'XP | 33, §172 | **Tranché le 14 octobre, à implémenter** : attraction de base 150 → 80 px, sans dérive (aujourd'hui 250 px à l'arrêt), rayons passés en JSON ; bonus d'aimant gardés en pourcentage ; bonus Aimant au sol inchangé. Mesurer le rythme des niveaux avant/après (référence prise le 14 octobre, avant la courbe §171 : à refaire). |
+| Portée de ramassage de l'XP | 33, §172 | **Livré le 14 octobre, à juger en jouant** : attraction de base 150 → 80 px, sans dérive (avant : 250 px à l'arrêt), réglée dans `data/scaling/progression.json` ; bonus d'aimant gardés en pourcentage ; bonus Aimant au sol inchangé. |
 | Points à vérifier en jeu | `A-VERIFIER.md` | 63 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
 
 ## 3. Validé, pas encore fait
