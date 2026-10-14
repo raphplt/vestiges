@@ -1963,3 +1963,9 @@ Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lir
 - ordre : les textes d'abord ; la revue du tableau de bord attendra.
 
 **Livré :** textes ([plan 35 I18](35-raretes-des-objets.md#i18--textes-lisibles-14-octobre-2026)) ; aimant à 80 px sans dérive, réglé dans `data/scaling/progression.json` (`attraction_radius`), à juger en jouant. Raphaël ne veut pas de mesure pour ce réglage (« pas besoin de mesurer pour ca »). Les zones au sol restent à faire.
+
+## 174. Projectiles du joueur plus lents — 14 octobre 2026
+
+Retour de jeu : « le bullet time des projectile est trop rapide en général ». Précisé : il s'agit de la vitesse de vol, pas de la cadence ; projectiles ennemis inchangés.
+
+**Réglage :** `projectile_speed` −30 % sur les armes à distance du joueur (Arc du gymnase 280, Lance-billes 210, Cloueuse 350, Assiettes 245, Lentille de phare 560, Instantané 420, Sacoche de lettres 240, Fusil-harpon 180). Les armes déjà lentes baissent de 15 % seulement, pour garder le virage des têtes chercheuses : Boussole 170, Baguette de sourcier 210, Lampe à pétrole 155, Craies 130. La portée ne change pas : le trajet dure plus longtemps. `tools/test_weapons.sh` vert.

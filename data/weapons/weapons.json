@@ -151,7 +151,7 @@
       "damage": 8,
       "attack_speed": 1.2,
       "range": 150,
-      "projectile_speed": 400,
+      "projectile_speed": 280,
       "projectile_count": 1
     },
     "default_for": "traqueur",
@@ -203,7 +203,7 @@
       "damage": 4,
       "attack_speed": 1.8,
       "range": 120,
-      "projectile_speed": 300,
+      "projectile_speed": 210,
       "projectile_count": 3,
       "spread_angle": 30
     },
@@ -311,7 +311,7 @@
       "damage": 22,
       "attack_speed": 0.6,
       "range": 180,
-      "projectile_speed": 500,
+      "projectile_speed": 350,
       "projectile_count": 1,
       "projectile_pierce": 3
     },
@@ -459,7 +459,7 @@
       "damage": 11,
       "attack_speed": 1.1,
       "range": 140,
-      "projectile_speed": 350,
+      "projectile_speed": 245,
       "projectile_count": 2,
       "spread_angle": 25
     },
@@ -680,7 +680,7 @@
       "damage": 30,
       "attack_speed": 0.4,
       "range": 250,
-      "projectile_speed": 800,
+      "projectile_speed": 560,
       "projectile_count": 1,
       "projectile_pierce": 999
     },
@@ -834,7 +834,7 @@
       "damage": 13,
       "attack_speed": 1.0,
       "range": 180,
-      "projectile_speed": 200,
+      "projectile_speed": 170,
       "projectile_count": 1,
       "homing_strength": 0.9
     },
@@ -884,7 +884,7 @@
       "range": 130,
       "projectile_count": 5,
       "spread_angle": 45,
-      "projectile_speed": 600
+      "projectile_speed": 420
     },
     "on_hit_effect": {
       "type": "disorient",
@@ -932,7 +932,7 @@
       "damage": 20,
       "attack_speed": 0.8,
       "range": 200,
-      "projectile_speed": 250,
+      "projectile_speed": 210,
       "projectile_count": 1,
       "homing_strength": 0.85
     },
@@ -1034,7 +1034,7 @@
       "damage": 10,
       "attack_speed": 0.6,
       "range": 170,
-      "projectile_speed": 180,
+      "projectile_speed": 155,
       "projectile_count": 1
     },
     "special_effect": {
@@ -1138,7 +1138,7 @@
       "damage": 25,
       "attack_speed": 0.6,
       "range": 200,
-      "projectile_speed": 150,
+      "projectile_speed": 130,
       "projectile_count": 2,
       "homing_strength": 1.0
     },
@@ -1313,7 +1313,7 @@
       "damage": 9,
       "attack_speed": 1.1,
       "range": 220,
-      "projectile_speed": 340,
+      "projectile_speed": 240,
       "projectile_count": 1,
       "chain_targets": 2,
       "chain_range": 150,
@@ -1391,7 +1391,7 @@
       "damage": 24,
       "attack_speed": 0.65,
       "range": 340,
-      "projectile_speed": 260,
+      "projectile_speed": 180,
       "projectile_count": 1,
       "projectile_pierce": 2
     },
