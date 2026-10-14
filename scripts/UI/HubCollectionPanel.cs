@@ -434,7 +434,7 @@ public partial class HubCollectionPanel : MarginContainer
             string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
             if (!unlocked && condition.Length == 0 && !passive.InitialUnlock)
                 condition = "Déblocage à venir.";
-            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.IsBadge ? passive.RuleText() : ItemPresentation.Describe(passive), stats, unlocked, condition));
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, ItemPresentation.CollectionText(passive), stats, unlocked, condition));
         }
         if (badges)
             return entries.OrderByDescending(entry => entry.Unlocked).ToList();

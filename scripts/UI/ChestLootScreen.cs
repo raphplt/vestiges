@@ -259,7 +259,8 @@ public partial class ChestLootScreen : CanvasLayer
         contents.AddChild(identity);
         identity.AddChild(label);
         PassiveSouvenirData data = loot.Type == "object" ? PassiveSouvenirDataLoader.Get(loot.ItemId) : null;
-        Label description = UITheme.MakeLabel(data != null ? ItemPresentation.Describe(data) : "",
+        string text = data == null ? "" : data.Flavor.Length > 0 ? $"{ItemPresentation.Describe(data)}\n{data.Flavor}" : ItemPresentation.Describe(data);
+        Label description = UITheme.MakeLabel(text,
             TextRole.Small, UITheme.TextColor);
         description.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         description.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;

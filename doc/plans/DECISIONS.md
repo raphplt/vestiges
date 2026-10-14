@@ -1948,3 +1948,18 @@ Trois runs de Raphaël (profil dev, tout débloqué, quatre armes, mode actuel �
 - XP : courbe ralentie (exposant 1,4 → 1,5). Les bonus d'XP de la méta ne baissent pas, ils pourraient même monter un peu : monter vite doit demander de construire pour l'XP, ce qui fait aussi une marche pour les débutants.
 
 **Mesure** (bot moyen, 15 min, trois graines), avant → après : créatures visibles en moyenne de 1 à 10 min, Traqueur méta complète 28 → 12, Vagabond 31 → 20, Facteur 31 → 16, Traqueur méta milieu 34 → 18 ; niveau à 10 min 47 → 40, 42 → 26, 42 → 37, 37 → 34 ; à 14 min 70 → 59, 64 → 43, 58 → 52, 58 → 49.
+
+## 172. Textes d'objets lisibles, aimant d'XP plus court, zones au sol rondes mais travaillées — 14 octobre 2026
+
+Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lire (par exemple alumette humide) mais en réalité ca en touche bcp » ; « on ramasse l'xp de bcp trop loin par défaut ce qui facilite bcp le level up ».
+
+**Constat de l'agent :** 32 objets avaient deux textes, celui du JSON jamais affiché et un texte écrit en dur dans `ItemPresentation.cs`, chargé de mécanique interne (« coefficient de l'arme (au plus 1) », « applications/s », « répit », « sans récursion ») ; 40 répétaient leur ligne de stat en phrase. L'aimant attire à 150 px (56 % de la demi-hauteur d'écran, plus que la portée des armes de mêlée) et fait dériver les orbes depuis 250 px quand on s'arrête.
+
+**Réponses de Raphaël (14 octobre) :**
+- textes : une phrase courte, dans les mots du joueur ; les limites techniques à part, **dans la Collection seulement** ;
+- objets de stat : la ligne de stat, puis une phrase d'ambiance ;
+- aimant d'XP : **80 px, sans dérive** ; bonus d'aimant (Campement, Bande magnétique, Écusson, bénédiction, chariot) gardés en pourcentage ; bonus Aimant au sol inchangé (« rien en fait ») ;
+- zones au sol (suite du §164) : « il faut que les contours soient plus réguliers en cercle, mais que ca soit bcp plus travaillé et créatif en terme d'effet (je parle de tout ce qui fait des zones au sol) » ;
+- ordre : les textes d'abord ; la revue du tableau de bord attendra.
+
+**Livré :** textes ([plan 35 I18](35-raretes-des-objets.md#i18--textes-lisibles-14-octobre-2026)). Aimant et zones au sol restent à faire.

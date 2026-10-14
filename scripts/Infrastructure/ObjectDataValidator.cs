@@ -16,13 +16,12 @@ public static class ObjectDataValidator
 
     private static readonly string[] ObjectKeys =
     {
-        "id", "kind", "name", "subtitle", "description", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
+        "id", "kind", "name", "subtitle", "description", "details", "flavor", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
         "survival", "offer_weight", "params", "enabled", "rarity", "max_copies", "unique", "usage", "initial_unlock",
     };
     private static readonly string[] UsageKeys = { "trigger", "threshold" };
     private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
     private static readonly string[] MilestoneKeys = { "level", "effect", "text", "params" };
-    private static readonly Regex ParameterToken = new(@"\{(\w+)%?\}");
 
     /// <summary>Le contrat lu : statistiques (modificateurs, réglages), statistiques inactives, effets de palier.</summary>
     public sealed class Contract
@@ -126,9 +125,13 @@ public static class ObjectDataValidator
             return $"{where}, subtitle : texte non vide attendu";
         if (hasSubtitle != (Text(item, "kind") == "badge"))
             return $"{where}, subtitle : {(hasSubtitle ? "réservé aux Écussons" : "attendu pour un Écusson")}";
-        // Un objet désactivé, gardé pour les sauvegardes, n'est jamais montré : il peut rester sans description.
-        if (Text(item, "description") == null || (enabled && Text(item, "description").Length == 0))
-            return $"{where} : description absente{(enabled ? " ou vide" : "")}";
+        // Un objet de stat peut se passer de règle (sa ligne de stat la dit), pas de toute phrase. Un objet désactivé,
+        // gardé pour les sauvegardes, n'est jamais montré.
+        foreach (string field in new[] { "description", "details", "flavor" })
+            if (item.TryGetProperty(field, out JsonElement text) && text.ValueKind != JsonValueKind.String)
+                return $"{where}, {field} : texte attendu";
+        if (enabled && string.IsNullOrEmpty(Text(item, "description")) && string.IsNullOrEmpty(Text(item, "flavor")))
+            return $"{where} : description ou flavor attendue";
         foreach (string field in new[] { "icon", "icon_small" })
         {
             if (item.TryGetProperty(field, out JsonElement icon)
@@ -207,11 +210,11 @@ public static class ObjectDataValidator
         string effectsError = ValidateEffects(item, where, enabled, maxLevel, contract, parameters);
         if (effectsError != null)
             return effectsError;
-        foreach (Match token in ParameterToken.Matches(Text(item, "description")))
-        {
-            if (!parameters.Contains(token.Groups[1].Value))
-                return $"{where}, description : réglage « {token.Groups[1].Value} » absent de params";
-        }
+        string stat = item.GetProperty("effects")[0].TryGetProperty("stat", out JsonElement first) ? first.GetString() : "";
+        foreach (string field in new[] { "description", "details" })
+            foreach (Match token in ObjectText.Token.Matches(Text(item, field) ?? ""))
+                if (!ObjectText.IsKnownToken(stat, token.Groups[1].Value, parameters))
+                    return $"{where}, {field} : jeton « {token.Groups[1].Value} » absent de params et des valeurs calculées";
         return item.TryGetProperty("milestones", out JsonElement milestones)
             ? ValidateMilestones(milestones, where, maxLevel, contract)
             : null;

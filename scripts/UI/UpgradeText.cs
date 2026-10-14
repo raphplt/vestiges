@@ -75,8 +75,11 @@ public static class UpgradeText
                         others.Add(line);
                 }
                 AddOthers(lines, others);
-                // La règle, chiffres compris : la ligne de stat seule ne dit pas quand l'objet agit (DECISIONS §53).
-                lines.Add((passive.RuleText(), ChoiceStyle.TextColor));
+                // La règle, chiffres compris, quand la ligne de stat ne suffit pas (DECISIONS §53), puis l'ambiance.
+                if (passive.Description.Length > 0)
+                    lines.Add((passive.RuleText(), ChoiceStyle.TextColor));
+                if (passive.Flavor.Length > 0)
+                    lines.Add((passive.Flavor, ChoiceStyle.TextDim));
                 break;
             }
             case PerkSpecializationOffers.OptionType:

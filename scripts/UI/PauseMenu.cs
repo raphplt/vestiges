@@ -541,6 +541,12 @@ public partial class PauseMenu : CanvasLayer
 		heading.AddChild(name);
 		_loadoutContainer.AddChild(heading);
 		_loadoutContainer.AddChild(PlayerSheet.MakeLabel(ItemPresentation.RarityText(item.Data), TextRole.Body, ItemPresentation.Color(item.Data)));
+		if (item.Data.Flavor.Length > 0)
+		{
+			Label flavor = PlayerSheet.MakeLabel(item.Data.Flavor, TextRole.Small, TextVeryDim);
+			flavor.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			_loadoutContainer.AddChild(flavor);
+		}
 		void Detail(string label, int copies, Color color)
 		{
 			Label line = PlayerSheet.MakeLabel(label + ItemPresentation.Describe(item.Data, copies, player), TextRole.Body, color);
@@ -579,13 +585,16 @@ public partial class PauseMenu : CanvasLayer
 		}
 		row.AddChild(PlayerSheet.MakeLabel(effects, TextRole.Small, StatBonusColor, HorizontalAlignment.Right));
 		_loadoutContainer.AddChild(row);
-		// La règle de l'objet, chiffres compris (DECISIONS §53), puis ses paliers.
-		MarginContainer ruleIndent = new();
-		ruleIndent.AddThemeConstantOverride("margin_left", 42);
-		Label rule = PlayerSheet.MakeLabel(passive.Data.RuleText(), TextRole.Small, StatLabelColor);
-		rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-		ruleIndent.AddChild(rule);
-		_loadoutContainer.AddChild(ruleIndent);
+		// La règle de l'Écusson quand sa stat ne suffit pas (DECISIONS §53), puis ses paliers.
+		if (passive.Data.Description.Length > 0)
+		{
+			MarginContainer ruleIndent = new();
+			ruleIndent.AddThemeConstantOverride("margin_left", 42);
+			Label rule = PlayerSheet.MakeLabel(passive.Data.RuleText(), TextRole.Small, StatLabelColor);
+			rule.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			ruleIndent.AddChild(rule);
+			_loadoutContainer.AddChild(ruleIndent);
+		}
 		// Paliers codés, sous l'objet : dorés une fois atteints, grisés avant.
 		foreach (ObjectMilestoneData milestone in passive.Data.Milestones)
 		{

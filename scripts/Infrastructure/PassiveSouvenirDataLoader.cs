@@ -33,7 +33,12 @@ public class PassiveSouvenirData
 	/// <summary>Quantité de <see cref="UsageTrigger"/> qui remplit le fil et donne un niveau.</summary>
 	public float UsageThreshold;
 
-	public string Description;
+	/// <summary>Ce que fait l'objet, en une phrase ; vide pour un objet de stat, que sa ligne de stat suffit à dire.</summary>
+	public string Description = "";
+	/// <summary>Limites et exceptions, montrées dans la Collection seulement.</summary>
+	public string Details = "";
+	/// <summary>Phrase d'ambiance, sous la règle.</summary>
+	public string Flavor = "";
 	public string Icon;
 	public string IconSmall;
 	public Color IconColor;
@@ -56,24 +61,10 @@ public class PassiveSouvenirData
 	/// <summary>Type de déblocage qui garde cette fiche dans les quêtes.</summary>
 	public UnlockKind UnlockKind => IsBadge ? UnlockKind.Badge : UnlockKind.Object;
 
-	private static readonly System.Text.RegularExpressions.Regex ParameterToken = new(@"\{(\w+)(%?)\}");
-	private static readonly System.Globalization.CultureInfo French = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+	/// <summary>Règle de l'objet, chiffres compris (DECISIONS §53), pour une copie ou un niveau.</summary>
+	public string RuleText() => ObjectText.Format(Description, ObjectText.Values(this, 1), Id);
 
-	/// <summary>
-	/// Règle de l'objet, chiffres compris : {param} affiche un réglage de <see cref="Parameters"/>, {param%} le même en
-	/// pourcentage (DECISIONS §53). Le texte suit ainsi les réglages sans être réécrit.
-	/// </summary>
-	public string RuleText() => ParameterToken.Replace(Description, match =>
-	{
-		if (!Parameters.TryGetValue(match.Groups[1].Value, out float value))
-		{
-			GD.PushError($"[PassiveSouvenirData] Paramètre {match.Groups[1].Value} absent de {Id}.");
-			return match.Value;
-		}
-		return match.Groups[2].Value == "%"
-			? (value * 100f).ToString("0.#", French) + " %"
-			: value.ToString("0.##", French);
-	});
+	public string DetailsText(int copies = 1) => ObjectText.Format(Details, ObjectText.Values(this, copies), Id);
 }
 
 public static class PassiveSouvenirDataLoader
@@ -151,7 +142,9 @@ public static class PassiveSouvenirDataLoader
 			Kind = dict["kind"].AsString() == "badge" ? ObjectKind.Badge : ObjectKind.Item,
 			Name = dict["name"].AsString(),
 			Subtitle = dict.ContainsKey("subtitle") ? dict["subtitle"].AsString() : "",
-			Description = dict["description"].AsString(),
+			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
+			Details = dict.ContainsKey("details") ? dict["details"].AsString() : "",
+			Flavor = dict.ContainsKey("flavor") ? dict["flavor"].AsString() : "",
 			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
 			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",
 			IconColor = new Color((float)color[0].AsDouble(), (float)color[1].AsDouble(), (float)color[2].AsDouble()),

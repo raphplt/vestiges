@@ -1279,9 +1279,11 @@ public partial class ObjectsRegression : Node2D
             "Régénération : 0,15 PV/s internes sont annoncés +9 PV/min partout");
         PassiveSouvenirData match = PassiveSouvenirDataLoader.Get("allumette_humide");
         string one = ItemPresentation.Describe(match, 1), eight = ItemPresentation.Describe(match, 8);
-        Check(one.Contains("8 %", StringComparison.Ordinal) && eight.Contains("8 %", StringComparison.Ordinal)
-            && one.Contains("2 applications/s", StringComparison.Ordinal) && eight.Contains("16 applications/s", StringComparison.Ordinal),
-            "Fiche Allumette : la chance reste 8 %, les copies augmentent seulement le budget montré");
+        Check(one.StartsWith("8 %", StringComparison.Ordinal) && eight.StartsWith("8 %", StringComparison.Ordinal)
+            && !one.Contains("par seconde, toutes", StringComparison.Ordinal)
+            && ItemPresentation.Details(match, 1).Contains("Au plus 2 brûlures", StringComparison.Ordinal)
+            && ItemPresentation.Details(match, 8).Contains("Au plus 16 brûlures", StringComparison.Ordinal),
+            "Fiche Allumette : la chance reste 8 %, la limite par seconde suit les copies et reste dans les détails");
         ChoiceCard card = new();
         ItemPresentation.ConfigureCard(card, match);
         Check(card.Rank == 1 && card.Frame == RarityPalette.Main("uncommon") && card.Tag == RarityPalette.DisplayName("uncommon"),
@@ -1299,8 +1301,8 @@ public partial class ObjectsRegression : Node2D
         Check(Near(_player.GetWeaponStatForDisplay(volley, "projectile_count"), volley.GetStat("projectile_count") + 2f * _player.BonusProjectiles)
             && Near(_player.GetWeaponStatForDisplay(piercing, "projectile_count"), 1f),
             "Fiches d’ascension : Volée double le bonus de projectiles, Transpercer reste à un tir");
-        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("plan_de_metro"), 8).Contains("×4,5", StringComparison.Ordinal)
-            && ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("chewing_gum"), 8).Contains("durée 6 s", StringComparison.Ordinal),
+        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("plan_de_metro"), 8).Contains("450 %", StringComparison.Ordinal)
+            && ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("chewing_gum"), 8).Contains("pendant 6 s", StringComparison.Ordinal),
             "Fiches à huit copies : distance réelle du Métro et plafond de traînée respectés");
     }
 
