@@ -229,6 +229,10 @@ public partial class HUD : CanvasLayer
 
     public override void _ExitTree()
     {
+#if TOOLS
+        if (_progression != null)
+            _progression.DevelopmentLevelChanged -= RefreshDevelopmentLevel;
+#endif
         if (_eventBus != null)
         {
             _eventBus.PlayerDamaged -= OnPlayerDamaged;
@@ -249,7 +253,26 @@ public partial class HUD : CanvasLayer
             GetViewport().SizeChanged -= OnViewportResized;
     }
 
-    public void SetProgression(PlayerProgression progression) => _progression = progression;
+    public void SetProgression(PlayerProgression progression)
+    {
+#if TOOLS
+        if (_progression != null)
+            _progression.DevelopmentLevelChanged -= RefreshDevelopmentLevel;
+#endif
+        _progression = progression;
+#if TOOLS
+        if (_progression != null)
+            _progression.DevelopmentLevelChanged += RefreshDevelopmentLevel;
+#endif
+    }
+
+#if TOOLS
+    private void RefreshDevelopmentLevel()
+    {
+        _vitals.SetLevel(_progression.CurrentLevel);
+        _xpBar.SetRatio(_progression.XpProgress, false);
+    }
+#endif
 
     public void SetEssenceTracker(EssenceTracker tracker)
     {

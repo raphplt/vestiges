@@ -2097,6 +2097,14 @@ Raphaël : « l'arc a été trop nerfé ainsi que le traqueur […] augmente le 
 
 **Réglage :** attaque du Traqueur 10 → 11 ; Arc du gymnase dégâts 8 → 9 et cadence 0,96 → 1,08 (0,93 s entre deux attaques au lieu de 1,04). La vitesse de vol reste à 280 : le §174 vaut pour tous les projectiles. `tools/test_weapons.sh` vert.
 
+## 181. Atelier de test du mode dev — 14 octobre 2026
+
+Raphaël : « Le mode admin / dev mode de test manque cruellement d'outil : pouvoir toggle un god mod, pouvoir choisir à sa guise les niveaux, les armes, le temps… ça pourrait être très pratique même pour les agents qui débuggent et qui font ça à la main avec des scripts ».
+
+**Lot D1 :** panneau F4 enrichi et visible en run, commandes communes à l'interface et aux lancements automatisés ; invincibilité, progression exacte, composition d'armes et contrôle du temps. Détail et validation au [plan 49](49-outils-dev.md). Aucun changement de progression du profil normal ni de règle du gameplay distribué.
+
+**D1 livré et vérifié :** build sans avertissement, smoke, profils et armes, commandes en vraie Main et exclusion des exports Debug/Release ; captures 720p/1080p. F4 et bouton en run, fermeture par F4/Échap, commandes répétables par `--dev-command`. L'horloge de difficulté règle les futurs spawns ; accélérer fait avancer la simulation entière. Fixer le niveau du joueur ne distribue pas de cartes et reconstruire une arme remplace ses gains.
+
 ## 182. Level-up « au fil », pour ne plus ressembler à Megabonk — 14 octobre 2026
 
 Raphaël, captures de Megabonk et de Vestiges côte à côte : « à la réflexion je trouve que notre level up ressemble trop à celui de megabonk tu en dis quoi ? ca passe ou ca fait copie ». Avis de l'agent : trop proche, la même composition en trois colonnes (inventaire, offres, stats) et la même carte élément par élément ; légal, mais lu « clone » sur une vignette Steam. Raphaël : « au lieu des rectangles horizontaux ptet les mettre en vertical ? et disposer autrement les menus de gauche et de droite. franchement soit créatif surprend moi, ca doit etre différent de mégabonk ». Trois maquettes proposées (A le fil, B la ronde, C les stèles). Raphaël : « la A me plait beaucoup. implémente la. »

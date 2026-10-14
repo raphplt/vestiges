@@ -321,7 +321,7 @@ public partial class GameBootstrap : Node
         GetNode("..").CallDeferred("add_child", new GrassTrample { Name = "GrassTrample" });
 
 #if TOOLS
-        if (DevelopmentMode.IsEnabled)
+        if (DevelopmentMode.IsEnabled || DevelopmentMode.IsTestSession)
             AddDevelopmentTools();
         // Trace de survie des vraies parties (plan 42 M0e) ; les bancs ont leur propre relevé.
         if (!DevelopmentMode.IsTestSession)
@@ -422,6 +422,9 @@ public partial class GameBootstrap : Node
 #if TOOLS
     private void AddDevelopmentTools()
     {
+        GetNode("..").CallDeferred("add_child", new Development.DevelopmentRunTools { Name = "DevelopmentRunTools" });
+        if (!DevelopmentMode.IsEnabled)
+            return;
         GetNode("..").CallDeferred("add_child", new DebugOverlay { Name = "DebugOverlay" });
         GetNode("..").CallDeferred("add_child", new DebugActionPanel { Name = "DebugActionPanel" });
     }

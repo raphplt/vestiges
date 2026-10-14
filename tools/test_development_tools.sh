@@ -14,7 +14,7 @@ for stage in normal test dev; do
     scene=res://tools/tests/DevelopmentToolsRegression.tscn
     args=()
     if [[ "$stage" == normal ]]; then scene="$TEST_DIR/NormalEntry.tscn"; args+=(--normal-entry); fi
-    if [[ "$stage" == dev ]]; then args+=(--dev); fi
+    if [[ "$stage" == dev ]]; then args+=(--dev --dev-command "level 7" --dev-command "time 600" --dev-command "god on"); fi
     validation_run "${VALIDATION_RUN_TIMEOUT:-180}" "$TEST_DIR/$stage.log" '^\[DevelopmentToolsRegression\] RESULT failures=0 checks=[0-9]+ provenance=(Normal|Test|Development)$' \
         "${GODOT_BIN:-godot-mono}" --headless --path . "$scene" -- ${args[@]+"${args[@]}"}
     rg '^\[DevelopmentToolsRegression\]' "$TEST_DIR/$stage.log"

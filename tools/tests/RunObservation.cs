@@ -159,7 +159,9 @@ public partial class RunObservation : Node
                 await Frames(30);
             }
 
-            if (captureMap)
+            if (Array.IndexOf(args, "--capture-dev-tools") >= 0)
+                await CaptureDevelopmentTools();
+            else if (captureMap)
                 await CaptureWorldOverview();
             else if (Array.IndexOf(args, "--capture-cartography") >= 0)
                 await CaptureCartography();
@@ -373,6 +375,22 @@ public partial class RunObservation : Node
         _camera = _player.GetNode<Camera2D>("Camera");
         _player.IsGodMode = true;
         _player.IsAIControlled = true;
+    }
+
+    private async Task CaptureDevelopmentTools()
+    {
+        Vestiges.UI.DebugActionPanel panel = _world.GetNode<Vestiges.UI.DebugActionPanel>("DebugActionPanel");
+        panel.TogglePanel();
+        await Frames(5);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        SaveFrame("development-player-weapons");
+        Godot.ScrollContainer scroll = panel.FindChild("WorkshopScroll", true, false) as Godot.ScrollContainer;
+        scroll.ScrollVertical = (int)scroll.GetVScrollBar().MaxValue;
+        await Frames(5);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        SaveFrame("development-time-console");
+        panel.TogglePanel();
+        GD.Print("[RunObservation] RESULT development-tools captures=2");
     }
 
     /// <summary>Objet au sol le plus proche que le sac peut recevoir, ou null.</summary>

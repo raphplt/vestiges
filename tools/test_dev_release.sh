@@ -46,7 +46,7 @@ using PEReader pe = new(File.OpenRead(Path.Combine(assemblyDirectory, "Vestiges.
 MetadataReader metadata = pe.GetMetadataReader();
 string[] forbidden = metadata.TypeDefinitions.Select(handle => metadata.GetTypeDefinition(handle))
     .Select(type => metadata.GetString(type.Namespace) + "." + metadata.GetString(type.Name))
-    .Where(name => name.StartsWith("Vestiges.Tests.") || name is "Vestiges.UI.DebugActionPanel" or "Vestiges.UI.DebugOverlay").ToArray();
+    .Where(name => name.StartsWith("Vestiges.Tests.") || name.StartsWith("Vestiges.Development.") || name is "Vestiges.UI.DebugActionPanel" or "Vestiges.UI.DebugOverlay").ToArray();
 if (forbidden.Length != 0)
     throw new Exception("Types de développement distribués : " + string.Join(", ", forbidden));
 void RequireAbsentMember(string typeName, params string[] members)
@@ -56,11 +56,12 @@ void RequireAbsentMember(string typeName, params string[] members)
         if (type.GetMember(member, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static).Length != 0)
             throw new Exception($"Hook distribué : {typeName}.{member}");
 }
-RequireAbsentMember("Vestiges.Core.Player", "IsGodMode", "IsAIControlled", "AIInputOverride", "AITriggerInteract", "SurviveFatalHitsForTests", "DisableDefenseForTests");
+RequireAbsentMember("Vestiges.Core.Player", "IsGodMode", "IsAIControlled", "AIInputOverride", "AITriggerInteract", "SurviveFatalHitsForTests", "DisableDefenseForTests", "ReplaceWeaponForDevelopment");
+RequireAbsentMember("Vestiges.Progression.PlayerProgression", "SetLevelForDevelopment", "DevelopmentLevelChanged");
 RequireAbsentMember("Vestiges.Core.PlayerMobility", "UseInvulnerabilityTrial");
 RequireAbsentMember("Vestiges.Core.PlayerDefense", "Disable");
 RequireAbsentMember("Vestiges.World.ErasureManager", "OverrideMemory", "RefreshGroundMemory");
-RequireAbsentMember("Vestiges.Spawn.SpawnManager", "ForceSpawnEnemy");
+RequireAbsentMember("Vestiges.Spawn.SpawnManager", "ForceSpawnEnemy", "SetDifficultyTimeForDevelopment");
 RequireAbsentMember("Vestiges.World.GameBootstrap", "AddDevelopmentTools");
 RequireAbsentMember("Vestiges.Infrastructure.DevelopmentMode", "IsTestLaunch", "RequireTestAccess");
 Type mode = game.GetType("Vestiges.Infrastructure.DevelopmentMode", true)!;

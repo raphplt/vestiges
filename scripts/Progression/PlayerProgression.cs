@@ -37,6 +37,22 @@ public partial class PlayerProgression : Node
             _eventBus.XpGained -= OnXpGained;
     }
 
+#if TOOLS
+    internal event System.Action DevelopmentLevelChanged;
+
+    /// <summary>Place le niveau pour un essai, sans distribuer de cartes ni modifier les acquis du build.</summary>
+    internal void SetLevelForDevelopment(int level)
+    {
+        DevelopmentMode.RequireTestAccess();
+        if (level < 1 || level > 9999)
+            throw new System.ArgumentOutOfRangeException(nameof(level));
+        _currentLevel = level;
+        _currentXp = 0f;
+        _xpToNextLevel = _curve.CostOf(level);
+        DevelopmentLevelChanged?.Invoke();
+    }
+#endif
+
     private void OnXpGained(float amount)
     {
         _currentXp += amount * (_player?.XpGainMultiplier ?? 1f);

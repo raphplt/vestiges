@@ -598,6 +598,18 @@ public partial class SpawnManager : Node2D
 	}
 
 #if TOOLS
+	/// <summary>Change uniquement l'horloge des tables et courbes de spawn ; aucun événement passé n'est rejoué.</summary>
+	internal void SetDifficultyTimeForDevelopment(float seconds)
+	{
+		DevelopmentMode.RequireTestAccess();
+		if (!float.IsFinite(seconds) || seconds < 0f || seconds > 86400f)
+			throw new System.ArgumentOutOfRangeException(nameof(seconds));
+		_elapsedTime = seconds;
+		_spawnTimer = 0f;
+		_localDensityTimer = 0f;
+		_nextEliteAtSec = seconds + EnemyVariantDataLoader.NaturalElites.IntervalMinSec;
+	}
+
 	public void ForceSpawnEnemy(string enemyId, Vector2 spawnPos)
 	{
 		DevelopmentMode.RequireTestAccess();

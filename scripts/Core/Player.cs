@@ -438,6 +438,34 @@ public partial class Player : CharacterBody2D
         }
     }
 
+#if TOOLS
+    /// <summary>Remplace un emplacement sans déplacer les autres armes ni perdre leurs recharges.</summary>
+    internal void ReplaceWeaponForDevelopment(int slotIndex, WeaponInstance instance)
+    {
+        DevelopmentMode.RequireTestAccess();
+        if (instance == null || slotIndex < 0 || slotIndex >= _weaponSlots.Count)
+            throw new System.ArgumentOutOfRangeException(nameof(slotIndex));
+        for (int i = 0; i < _weaponSlots.Count; i++)
+            if (i != slotIndex && _weaponSlots[i].Id == instance.Id)
+                throw new System.InvalidOperationException("Cette arme occupe déjà un autre emplacement.");
+        WeaponInstance removed = _weaponSlots[slotIndex];
+        _weaponHitCounters.Remove(removed.Id);
+        _readyWeaponSlots &= ~(1 << slotIndex);
+        if (_coneWeapon == removed && _isConeActive)
+            DeactivateSustainedCone();
+        if (_orbitalWeapon == removed)
+            ClearOrbitals();
+        _weaponSlots[slotIndex] = instance;
+        _equippedWeapon = instance;
+        _weaponTimers[slotIndex].Start(AttackIntervalOf(instance));
+        if (instance.AttackPattern == AttackPatternKind.Orbital)
+            SetupOrbitalWeapon(instance);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponDropped, removed.Id);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponEquipped, instance.Id, slotIndex);
+        _eventBus?.EmitSignal(EventBus.SignalName.WeaponInventoryChanged);
+    }
+#endif
+
     public WeaponInstance GetWeaponInstance(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _weaponSlots.Count)
