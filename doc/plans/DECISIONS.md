@@ -1902,3 +1902,13 @@ Réponses sur la [planche](planches/25-s10-zones-au-sol.png) : annonces des cré
 - Vérifié : `--capture-sovereign`, Souverain présent après 100 s, chasse close, événement suivant lancé.
 
 **Fin de run sans danger.** Raphaël est « 100 % d'accord » avec deux constats de la matrice M1 (plan 42 §5), qu'il a lui-même faits en jouant : avec la méta complète, passé 15 min, le bot ne perd presque plus de PV ; aucun build de référence ne casse le jeu plus qu'un autre, mais tous rendent la fin de run sans danger. « c'est un sujet super méga important. » Pistes proposées le jour même, à trancher.
+
+## 167. Fin de run : des créatures plus fortes, des défenses freinées, une cible de difficulté — 14 octobre 2026
+
+Réponses de Raphaël aux pistes du §165 :
+- **Ce qui doit menacer** : « les ennemis doivent devenir encore plus forts (PV/dégâts au fil du temps c'est le facteur principal et ils peuvent être plus nombreux. le monde peut devenir plus "instable". Pour survivre jusqu'au boss de 30 min il faut le vouloir (avoir un bon build et bien jouer. si n'importe qui peut y arriver du premier coup = échec. les armes, objets, écussons et améliorations permanentes à débloquer doivent aussi servir la progression). »
+- **Cible** : un joueur moyen avec la méta complète **meurt souvent entre 20 et 30 min**.
+- **Défenses** : « le vol de vie est trop fort actuellement et il faut aussi baisser la régen et probablement aussi l'armure ».
+- **Niveaux de difficulté** (nouvelle idée) : « plusieurs niveaux de difficulté à choisir dès le début avant de commencer la run, de simple à impossible. cela aura un impact sur les ennemis leur fréquence puissance les boss etc. mais ça a aussi pas mal d'impact sur le jeu qu'il faut penser en amont (classement global par exemple, et sinon juste le pourquoi un joueur irait sur des niveaux plus élevés à part pour le défi personnel) ». À concevoir avec les paliers de départ du plan 46.
+
+Découpage proposé au [plan 47](47-fin-de-run-menacante.md) : L1 défenses freinées, L2 créatures qui suivent après 15 min (avec mesure), L3 monde instable (plan 42), L4 niveaux de difficulté (avec le plan 46).
