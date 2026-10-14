@@ -2080,3 +2080,9 @@ Raphaël : « les sons de sélection des menus ne sont pas assez dans l'ambiance
 **Survol dans le Campement et dans Partir :** « quand on hover un élément […] il faut l'afficher ». Raphaël choisit l'aperçu : survoler une amélioration ou un personnage affiche sa fiche le temps du survol (et du focus dans Partir), puis la fiche revient à l'élément choisi. Le choix ne change toujours qu'au clic : cela précise le §154, sans l'annuler.
 
 **Mix et doublons, même jour :** survol baissé (−3 dB), clic monté (+4 dB). Les sons « en double » venaient du survol joué à chaque focus donné par le jeu ou par le clic : le focus ne sonne plus qu'au déplacement du joueur.
+
+## 179. Paramètres : curseurs dans la matière des menus, fermer carré — 14 octobre 2026
+
+Raphaël : « améliore après les sliders des paramètres, donne-leur un aspect plus beau et dans la DA du jeu, et le bouton fermer n'est pas carré… mets une vraie croix au lieu d'un x ».
+
+**Fait :** rainure de pierre, incrustation et poignée de bronze, bouton fermer carré à croix dessinée ([plan 04 §10](04-interfaces-et-hub.md#10-paramètres--curseurs-et-bouton-fermer--14-octobre-2026)). À juger en jeu.

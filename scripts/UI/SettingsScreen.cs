@@ -223,15 +223,26 @@ public partial class SettingsScreen : CanvasLayer
 		Control rightSpace = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 		row.AddChild(rightSpace);
 
-		// Close button
+		// Fermer : dalle carrée, croix dessinée ; la hauteur de la rangée ne l'étire pas.
 		Button closeBtn = new()
 		{
-			Text = "X",
-			CustomMinimumSize = new Vector2(36, 36),
-			FocusMode = Control.FocusModeEnum.All
+			Icon = MenuSkin.CloseCross(),
+			IconAlignment = HorizontalAlignment.Center,
+			CustomMinimumSize = new Vector2(48, 48),
+			SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+			FocusMode = Control.FocusModeEnum.All,
+			TooltipText = "Fermer (Échap)",
+			AccessibilityName = "Fermer"
 		};
-		UITheme.SetTextRole(closeBtn, TextRole.Lead);
 		UITheme.ApplyButtonStyle(closeBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+		{
+			StyleBox style = closeBtn.GetThemeStylebox(state);
+			style.ContentMarginLeft = style.ContentMarginRight = style.ContentMarginTop = style.ContentMarginBottom = 0;
+		}
+		closeBtn.AddThemeColorOverride("icon_normal_color", UITheme.TextColor);
+		foreach (string state in new[] { "icon_hover_color", "icon_focus_color", "icon_pressed_color", "icon_hover_pressed_color" })
+			closeBtn.AddThemeColorOverride(state, UITheme.GoldBright);
 		UITheme.SetPressSound(closeBtn, null);
 		closeBtn.Pressed += Close;
 		row.AddChild(closeBtn);
@@ -412,7 +423,7 @@ public partial class SettingsScreen : CanvasLayer
 			MaxValue = 1.0,
 			// Pas de 5 % : au clavier et au stick, un appui déplace d'un cran lisible (1 % demandait cent appuis).
 			Step = 0.05,
-			CustomMinimumSize = new Vector2(0, 24),
+			CustomMinimumSize = new Vector2(0, 40),
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
 		};
 		slider.ProcessMode = ProcessModeEnum.Always;
@@ -432,32 +443,30 @@ public partial class SettingsScreen : CanvasLayer
 		return container;
 	}
 
-	private void StyleSlider(HSlider slider)
+	private static void StyleSlider(HSlider slider)
 	{
-		// Track : StyleBoxFlat pixel art (sombre, pas de radius)
-		StyleBoxFlat track = new()
-		{
-			BgColor = new Color(0.1f, 0.1f, 0.15f),
-			BorderColor = new Color(0.25f, 0.22f, 0.18f),
-		};
-		track.SetBorderWidthAll(1);
-		track.SetCornerRadiusAll(0);
-		track.ContentMarginTop = 4;
-		track.ContentMarginBottom = 4;
-		slider.AddThemeStyleboxOverride("slider", track);
-
-		// Grabber area (rempli en gold discret)
-		StyleBoxFlat grabberArea = new()
-		{
-			BgColor = new Color(UITheme.GoldColor, 0.25f)
-		};
-		grabberArea.SetCornerRadiusAll(0);
-		slider.AddThemeStyleboxOverride("grabber_area", grabberArea);
-		slider.AddThemeStyleboxOverride("grabber_area_highlight", grabberArea);
-
+		// Rainure de pierre, incrustation de bronze jusqu'à la poignée, taquet de bronze : la matière des menus.
+		slider.TextureFilter = CanvasItem.TextureFilterEnum.Nearest;
+		slider.AddThemeStyleboxOverride("slider", Groove(MenuSkin.SliderTrack()));
+		StyleBoxTexture fill = Groove(MenuSkin.SliderFill());
+		slider.AddThemeStyleboxOverride("grabber_area", fill);
+		slider.AddThemeStyleboxOverride("grabber_area_highlight", fill);
 		slider.AddThemeIconOverride("grabber", MenuSkin.SliderThumb(false));
 		slider.AddThemeIconOverride("grabber_highlight", MenuSkin.SliderThumb(true));
 		slider.AddThemeIconOverride("grabber_disabled", MenuSkin.SliderThumb(false));
+	}
+
+	/// <summary>Bande à bouts fixes : sa hauteur minimale est celle de la texture, que le curseur ne doit pas étirer.</summary>
+	private static StyleBoxTexture Groove(Texture2D texture)
+	{
+		int half = MenuSkin.SliderHeight / 2;
+		return new StyleBoxTexture
+		{
+			Texture = texture,
+			AxisStretchHorizontal = StyleBoxTexture.AxisStretchMode.Tile,
+			TextureMarginLeft = 4, TextureMarginRight = 4, TextureMarginTop = half, TextureMarginBottom = half,
+			ContentMarginLeft = 4, ContentMarginRight = 4, ContentMarginTop = half, ContentMarginBottom = half,
+		};
 	}
 
 	// ================================================================
@@ -838,7 +847,7 @@ public partial class SettingsScreen : CanvasLayer
 
 		Label hint = new()
 		{
-			Text = "[Échap] ou [X] Fermer",
+			Text = "[Échap] Fermer",
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 		UITheme.SetTextRole(hint, TextRole.Caption);

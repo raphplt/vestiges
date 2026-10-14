@@ -663,3 +663,11 @@ Huit scénarios dans Main puis cinq reprises visuelles ont passé : pause, casca
 ### 9.3 Préparation de la PR — 11 octobre 2026
 
 À la demande de Raphaël, PR préparée depuis la même branche. Synchronisation avec `origin/main` (`6a353705`) : conflits limités à quatre documents, autres chantiers conservés et décisions des menus renumérotées §114–115. Après synchronisation : **16/16 suites** (quinze suites générales et audio), build **0 warning, 0 erreur**, aucune source modifiée pendant les tests. [Preuves](../audits/menus-2026-10-11/README.md#vérification-avant-pr-après-synchronisation-avec-main). Cette préparation n'intègre pas la refonte dans main.
+
+## 10. Paramètres : curseurs et bouton fermer — 14 octobre 2026
+
+Demande de Raphaël ([DECISIONS §179](DECISIONS.md)) : des curseurs plus beaux et dans la DA, un bouton fermer carré avec une vraie croix.
+
+- **Curseurs** (`MenuSkin.SliderTrack`, `SliderFill`, `SliderThumb`) : rainure creusée dans la pierre (lèvre haute dans l'ombre, paroi basse éclairée), incrustation de bronze jusqu'à la poignée, taquet de bronze à pans coupés modelé en quatre tons et gravé d'un trait, plus clair au survol et au focus. Pixels doublés comme les dalles, contour `1a1a2e`, lumière en haut à gauche. Hauteur de la rainure 18 px, poignée 26 × 38 px.
+- **Fermer** : dalle carrée de 48 px qui ne s'étire plus avec sa rangée, croix dessinée (`MenuSkin.CloseCross`) teintée par l'état du bouton (texte au repos, or au survol et au focus) ; l'aide du bas devient « [Échap] Fermer ».
+- Vérifié par capture (`HUB_EXTRA_ARGS="--open-settings" tools/capture_hub.sh`, option ajoutée à `HubCapture`) : avant, piste d'un trait à peine visible et bouton « X » étroit ; après, images regardées à 1080p et agrandies.

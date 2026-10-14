@@ -19,6 +19,7 @@ namespace Vestiges.Tests;
 /// --character ID : personnage sélectionné avant ouverture de la page Characters.
 /// --claim-quests a,b : quêtes accomplies dans le profil isolé avant l'accueil (badge « Nouveau » de la Collection).
 /// --meta-fixture TEXTE : contenu déposé dans la sauvegarde méta avant l'accueil (avis de sauvegarde, plan 26 Q2b).
+/// --open-settings : ouvre les Paramètres de l'accueil.
 /// </summary>
 public partial class HubCapture : Node
 {
@@ -89,6 +90,13 @@ public partial class HubCapture : Node
                 System.Type stateType = typeof(Vestiges.UI.HubScreen).GetNestedType("HubState", BindingFlags.NonPublic);
                 hub.GetType().GetMethod("OpenPage", BindingFlags.NonPublic | BindingFlags.Instance)
                     .Invoke(hub, new[] { System.Enum.Parse(stateType, page) });
+                await Frames(30);
+            }
+            // --open-settings : ouvre les Paramètres de l'accueil (curseurs, bouton fermer).
+            if (System.Array.IndexOf(args, "--open-settings") >= 0)
+            {
+                ((Vestiges.UI.SettingsScreen)hub.GetType().GetField("_settingsScreen", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetValue(hub)).Open();
                 await Frames(30);
             }
             string tab = Argument(args, "--collection-tab", "");

@@ -242,24 +242,98 @@ public static class MenuSkin
         return backdrop;
     }
 
-    public static Texture2D SliderThumb(bool active)
+    // Pixels de menu doublés, comme les dalles de pierre (MenuStoneTextures).
+    private const int PixelScale = 2;
+    private static readonly Color Ink = new("1a1a2e");
+    private static readonly Color[] Bronze = { new("f6dc92"), new("e2c06e"), new("b08a3e"), new("8a6629"), new("5e4219") };
+    private const int SliderNativeHeight = 9;
+
+    /// <summary>Hauteur affichée de la rainure et de son incrustation : marges hautes et basses de leur StyleBox.</summary>
+    public const int SliderHeight = SliderNativeHeight * PixelScale;
+
+    private static Texture2D Pixels(int width, int height, System.Func<int, int, Color> paint)
     {
-        string key = active ? "thumb-active" : "thumb";
-        if (Textures.TryGetValue(key, out Texture2D texture)) return texture;
-        using Image image = Image.CreateEmpty(24, 32, false, Image.Format.Rgba8);
-        for (int y = 0; y < 32; y++)
-        for (int x = 0; x < 24; x++)
-        {
-            if (Mathf.Abs(x - 12) + Mathf.Abs(y - 16) * 0.55f > 12) continue;
-            Color color = active ? UITheme.GoldBright : UITheme.GoldColor;
-            if (x > 12) color = color.Darkened(0.35f);
-            if (y > 25) color = color.Darkened(0.35f);
-            image.SetPixel(x, y, color);
-        }
-        texture = ImageTexture.CreateFromImage(image);
-        Textures[key] = texture;
-        return texture;
+        using Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+        for (int y = 0; y < height; y++)
+        for (int x = 0; x < width; x++)
+            image.SetPixel(x, y, paint(x, y));
+        image.Resize(width * PixelScale, height * PixelScale, Image.Interpolation.Nearest);
+        return ImageTexture.CreateFromImage(image);
     }
+
+    /// <summary>
+    /// Rainure creusée dans la pierre : la lèvre du haut tombe dans l'ombre, le fond est sombre, la paroi du bas prend
+    /// la lumière venue d'en haut à gauche.
+    /// </summary>
+    public static Texture2D SliderTrack() => Cached("slider-track", () => Pixels(16, SliderNativeHeight, (x, y) =>
+    {
+        bool end = x == 0 || x == 15;
+        if (end && (y == 0 || y == SliderNativeHeight - 1)) return Colors.Transparent;
+        if (end || y == 0) return Ink;
+        return y switch
+        {
+            1 => new Color("0c0a11"),
+            2 => new Color("131119"),
+            7 => new Color("4a4240"),
+            8 => new Color("736868"),
+            _ => (x * 7 + y * 3) % 5 == 0 ? new Color("211e29") : new Color("1a1821"),
+        };
+    }));
+
+    /// <summary>Incrustation de bronze au fond de la rainure, jusqu'à la poignée ; même hauteur que la rainure.</summary>
+    public static Texture2D SliderFill() => Cached("slider-fill", () => Pixels(16, SliderNativeHeight, (x, y) =>
+    {
+        if (x == 0 || x == 15 || y == 0 || y == SliderNativeHeight - 1) return Colors.Transparent;
+        return y switch
+        {
+            1 => new Color("3b2a12"),
+            2 => Bronze[0],
+            3 => Bronze[1],
+            4 or 5 => Bronze[2],
+            6 => Bronze[3],
+            _ => Bronze[4],
+        };
+    }));
+
+    /// <summary>
+    /// Poignée : taquet de bronze à pans coupés, modelé en quatre tons depuis le haut à gauche et gravé d'un trait
+    /// vertical ; au survol et au focus, le métal s'éclaircit d'un ton.
+    /// </summary>
+    public static Texture2D SliderThumb(bool active) => Cached(active ? "thumb-active" : "thumb", () =>
+    {
+        const int width = 13, height = 19, cut = 3;
+        bool Inside(int x, int y) => x >= 0 && y >= 0 && x < width && y < height
+            && x + y >= cut && (width - 1 - x) + y >= cut && x + (height - 1 - y) >= cut && (width - 1 - x) + (height - 1 - y) >= cut;
+        int shift = active ? 0 : 1;
+        return Pixels(width, height, (x, y) =>
+        {
+            if (!Inside(x, y)) return Colors.Transparent;
+            if (!Inside(x - 1, y) || !Inside(x + 1, y) || !Inside(x, y - 1) || !Inside(x, y + 1)) return Ink;
+            // Arêtes : le pan du haut et celui de gauche accrochent la lumière, ceux du bas et de droite tombent dans l'ombre.
+            if (!Inside(x, y - 2) || !Inside(x - 2, y)) return Bronze[shift];
+            if (!Inside(x, y + 2) || !Inside(x + 2, y)) return Bronze[4];
+            if (x == width / 2 && y >= 5 && y <= height - 6) return Bronze[4];
+            if (x == width / 2 + 1 && y >= 5 && y <= height - 6) return Bronze[shift];
+            float light = (x / (float)width + y / (float)height) * 0.5f;
+            return Bronze[Mathf.Min(4, shift + (light < 0.4f ? 1 : light < 0.6f ? 2 : 3))];
+        });
+    });
+
+    /// <summary>Croix de fermeture : deux traits épais au contour sombre ; la couleur d'icône du bouton la teinte.</summary>
+    public static Texture2D CloseCross() => Cached("close-cross", () =>
+    {
+        const int size = 11;
+        bool Stroke(int x, int y) => x >= 1 && y >= 1 && x < size - 1 && y < size - 1
+            && (Mathf.Abs(x - y) <= 1 || Mathf.Abs(x + y - (size - 1)) <= 1);
+        return Pixels(size, size, (x, y) =>
+        {
+            if (Stroke(x, y)) return new Color("f2ead8");
+            for (int dy = -1; dy <= 1; dy++)
+            for (int dx = -1; dx <= 1; dx++)
+                if (Stroke(x + dx, y + dy)) return Ink;
+            return Colors.Transparent;
+        });
+    });
 
     public static void Clear(Node parent)
     {
