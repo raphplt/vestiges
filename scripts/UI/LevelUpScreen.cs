@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Godot;
-using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -8,60 +7,65 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Écran du level-up (plan 17 lot 1B, forme Megabonk du plan 23 R2) : trois cartes au centre, l'inventaire à gauche
-/// et les stats du joueur à droite. Une carte montre sa rareté en petit, son nom, son niveau à droite et une ligne de
-/// gain en valeur (deux au plus) ; un palier atteint se signale par un badge. Souris, clavier et manette : haut/bas
-/// entre les cartes et les actions, validation pour choisir.
+/// Écran du level-up au fil (plan 04 §11, DECISIONS §182) : les fragments pendent à un fil tendu entre deux clous,
+/// l'inventaire est une ceinture en bas de l'écran, une étiquette sous le fragment survolé dit ce qui change.
+/// Relancer, Bannir et Passer sont des étiquettes pendues aux clous ; toutes les stats restent à la touche du journal.
+/// Souris, clavier et manette : gauche/droite entre fragments et étiquettes, bas vers les actions, haut vers les
+/// fragments, validation pour choisir.
 /// </summary>
 public partial class LevelUpScreen : CanvasLayer
 {
-    private const string MenusPath = "res://assets/ui/menus/";
-    private const float CardWidth = ChoiceStyle.CardWidth;
-
-    private static readonly Color GoldBright = ChoiceStyle.GoldBright;
-    private static readonly Color TextLight = ChoiceStyle.TextLight;
-    private static readonly Color TextColor = ChoiceStyle.TextColor;
-    private static readonly Color TextDim = ChoiceStyle.TextDim;
-    private static readonly Color NeutralBorder = ChoiceStyle.NeutralBorder;
-    private static readonly Color OverlayColor = ChoiceStyle.InRunOverlayColor;
-    private const float PanelEntranceScale = 0.82f;
-    private const float InventoryWidth = 340f;
-    private const float StatsWidth = 380f;
-    private const float SideMinHeight = 0f;
-    private Tween _entranceTween;
+    private const float NailInset = 150f;
+    private const float ThreadTop = 186f;
+    private const float ThreadSag = 34f;
+    private const float CardSpacing = PaperFragment.Width + 90f;
+    // Largeur laissée de chaque côté aux étiquettes des clous : au-delà de trois fragments, ils se chevauchent.
+    private const float ActionZone = 270f;
+    private const float TightGap = 44f;
+    private const float StageDrop = -720f;
+    private const float MaxTilt = 2.6f;
+    private static readonly float[] Jitter = { 0.7f, -0.9f, 0.4f, -0.5f, 1f };
+    private static readonly Color OverlayColor = new(0.03f, 0.025f, 0.05f, 0.45f);
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
-
-    private Texture2D _separatorTex;
+    private const float StatsScrollSpeed = 900f;
 
     private ColorRect _overlay;
-    private PixelBackdrop _rays;
-    private HBoxContainer _layout;
-    private PanelContainer _panel;
-    private VBoxContainer _inventoryContainer;
-    private VBoxContainer _statsContainer;
-    // Colonnes latérales : sans contrôle focalisable, elles défilent au stick droit ou à Page haut/bas, comme la pause.
-    private readonly List<ScrollContainer> _sideScrolls = new();
-    private const float SideScrollSpeed = 900f;
-    private VBoxContainer _cardsContainer;
-    private ScrollContainer _choiceScroll;
-    private ScrollContainer _activeSideScroll;
-    private HBoxContainer _actionButtons;
+    private PixelBackdrop _veil;
+    private Control _stage;
+    private ClothesLine _line;
+    private Control _cardLayer;
+    private Control _pegLayer;
+    private Control _actionLayer;
+    private Control _fallLayer;
+    private PanelContainer _changeTag;
+    private Label _changeLabel;
+    private TextureRect _changeEyelet;
+    private InventoryBelt _belt;
     private Label _title;
     private Label _hint;
-    private readonly List<PanelContainer> _cards = new();
+    private Label _statsHint;
+    private ColorRect _statsShade;
+    private PanelContainer _statsPanel;
+    private ScrollContainer _statsScroll;
+    private VBoxContainer _statsContainer;
+    private Tween _entranceTween;
+
+    private readonly List<PaperFragment> _cards = new();
     private readonly List<FragmentOption> _cardOptions = new();
-    private readonly List<Color> _cardColors = new();
     private readonly List<Button> _buttons = new();
+    private readonly List<Vector2> _strings = new();
     private Button _banishButton;
     private int _focusIndex;
+    private int _lastCardFocus;
     private bool _banishMode;
+    private int _banishedIndex = -1;
+    private int _offerSeed;
 
     private FragmentManager _fragmentManager;
     private EventBus _eventBus;
 
     public override void _Ready()
     {
-        _separatorTex = LoadTex(MenusPath + "ui_separator_simple.png");
         BuildUI();
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
@@ -97,8 +101,6 @@ public partial class LevelUpScreen : CanvasLayer
 
     public void SetFragmentManager(FragmentManager fragmentManager) => _fragmentManager = fragmentManager;
 
-    private static Texture2D LoadTex(string path) => UITheme.LoadTex(path);
-
     // ==============================
     // Construction
     // ==============================
@@ -109,122 +111,129 @@ public partial class LevelUpScreen : CanvasLayer
         _overlay.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         AddChild(_overlay);
 
-        // Fond en gros pixels, rayons tramés et poussière d'oubli (plan 24 B1).
-        _rays = new PixelBackdrop(PixelBackdrop.GoldTint);
-        _rays.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        AddChild(_rays);
+        // Le jeu se devine derrière, assombri, avec la poussière d'oubli (plan 24 B1, plan 37 R1).
+        _veil = new PixelBackdrop(PixelBackdrop.NeutralTint);
+        _veil.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        AddChild(_veil);
 
-        // Inventaire à gauche, cartes au centre, stats à droite : on choisit en voyant ce qu'on a (plan 23 R2).
-        _layout = new HBoxContainer { CustomMinimumSize = new Vector2(0, 850) };
-        _layout.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.Center);
-        _layout.GrowHorizontal = Control.GrowDirection.Both;
-        _layout.GrowVertical = Control.GrowDirection.Both;
-        _layout.AddThemeConstantOverride("separation", 18);
-        AddChild(_layout);
+        _stage = FullRect(this);
+        _line = new ClothesLine();
+        _stage.AddChild(_line);
+        _line.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        // Les fragments qui tombent passent derrière ceux qu'on vient d'accrocher.
+        _fallLayer = FullRect(_stage);
+        _cardLayer = FullRect(_stage);
+        // Le fragment survolé passe devant ses voisins (ZIndex 1) : pinces et étiquettes restent devant lui.
+        _pegLayer = FullRect(_stage);
+        _pegLayer.ZIndex = 2;
+        _actionLayer = FullRect(_stage);
+        _actionLayer.ZIndex = 2;
 
-        _inventoryContainer = BuildSidePanel(Tr("LEVELUP_INVENTORY"), InventoryWidth);
-        _panel = new PanelContainer { CustomMinimumSize = new Vector2(CardWidth + 40f, 100) };
-        StylePanel(_panel);
-        _layout.AddChild(_panel);
+        _changeTag = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false, ZIndex = 2 };
+        StyleBoxTexture tagStyle = PaperArt.TagStyle(PaperArt.Kraft);
+        tagStyle.ContentMarginLeft = tagStyle.ContentMarginRight = 24;
+        tagStyle.ContentMarginTop = 22;
+        tagStyle.ContentMarginBottom = 10;
+        _changeTag.AddThemeStyleboxOverride("panel", tagStyle);
+        _changeLabel = UITheme.MakeLabel("", TextRole.Small, PaperArt.Ink, TextWeight.Regular, HorizontalAlignment.Center, outline: 0);
+        _changeTag.AddChild(_changeLabel);
+        _stage.AddChild(_changeTag);
+        _changeEyelet = Eyelet(_stage);
+        _changeEyelet.ZIndex = 2;
 
-        VBoxContainer inner = new();
-        inner.AddThemeConstantOverride("separation", 10);
-        _panel.AddChild(inner);
-
-        _title = new Label { HorizontalAlignment = HorizontalAlignment.Center, Text = Tr("LEVELUP_TITLE") };
-        UITheme.SetTextRole(_title, TextRole.Title);
-        _title.AddThemeColorOverride("font_color", GoldBright);
-        inner.AddChild(_title);
-
-        if (_separatorTex != null)
+        _belt = new InventoryBelt();
+        AddChild(_belt);
+        _belt.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterBottom);
+        _belt.GrowHorizontal = Control.GrowDirection.Both;
+        _belt.GrowVertical = Control.GrowDirection.Begin;
+        _belt.OffsetBottom = -22f;
+        _belt.Resized += () =>
         {
-            inner.AddChild(new TextureRect
-            {
-                Texture = _separatorTex,
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-                CustomMinimumSize = new Vector2(0, 6),
-                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            });
-        }
-
-        _cardsContainer = new VBoxContainer();
-        _cardsContainer.AddThemeConstantOverride("separation", 8);
-        _choiceScroll = new ScrollContainer
-        {
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            if (Visible && _cards.Count > 0)
+                UpdateChangeTag();
         };
-        _cardsContainer.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        _choiceScroll.AddChild(_cardsContainer);
-        inner.AddChild(_choiceScroll);
 
-        _hint = new Label { HorizontalAlignment = HorizontalAlignment.Center, Visible = false, Text = Tr("LEVELUP_BANISH_HINT") };
-        UITheme.SetTextRole(_hint, TextRole.Caption);
-        _hint.AddThemeColorOverride("font_color", BanishColor);
-        inner.AddChild(_hint);
+        _title = UITheme.MakeLabel(Tr("LEVELUP_TITLE"), TextRole.Title, UITheme.GoldBright, TextWeight.Regular, HorizontalAlignment.Center);
+        AddChild(_title);
+        _title.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
+        _title.GrowHorizontal = Control.GrowDirection.Both;
+        _title.OffsetTop = 28f;
 
-        _actionButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
-        _actionButtons.AddThemeConstantOverride("separation", 14);
-        inner.AddChild(_actionButtons);
+        _hint = UITheme.MakeLabel(Tr("LEVELUP_BANISH_HINT"), TextRole.Small, BanishColor, TextWeight.Regular, HorizontalAlignment.Center);
+        _hint.Visible = false;
+        AddChild(_hint);
+        _hint.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.CenterTop);
+        _hint.GrowHorizontal = Control.GrowDirection.Both;
+        _hint.OffsetTop = 96f;
 
-        _statsContainer = BuildSidePanel(Tr("LEVELUP_STATS"), StatsWidth);
+        _statsHint = UITheme.MakeLabel("", TextRole.Small, UITheme.TextDim, TextWeight.Regular, HorizontalAlignment.Right);
+        AddChild(_statsHint);
+        _statsHint.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight);
+        _statsHint.GrowHorizontal = Control.GrowDirection.Begin;
+        _statsHint.OffsetRight = -40f;
+        _statsHint.OffsetTop = 40f;
+
+        BuildStatsPanel();
     }
 
-    private void StylePanel(PanelContainer panel)
+    /// <summary>Toutes les stats, en surimpression à la touche du journal : la ceinture ne dit que ce que l'on porte.</summary>
+    private void BuildStatsPanel()
     {
-        panel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
-    }
-
-    /// <summary>Colonne latérale : titre, puis un contenu qui défile s'il dépasse la hauteur des cartes.</summary>
-    private VBoxContainer BuildSidePanel(string title, float width)
-    {
-        PanelContainer panel = new() { CustomMinimumSize = new Vector2(width, 0) };
-        StylePanel(panel);
-        _layout.AddChild(panel);
+        // Au-dessus du fragment survolé, qui passe devant ses voisins ; le voile retient les clics sur les fragments.
+        _statsShade = new ColorRect { Color = new Color(0f, 0f, 0f, 0.45f), Visible = false, ZIndex = 5,
+            MouseFilter = Control.MouseFilterEnum.Stop };
+        _statsShade.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _statsShade.GuiInput += @event =>
+        {
+            if (@event is InputEventMouseButton { Pressed: true })
+                SetStatsVisible(false);
+        };
+        AddChild(_statsShade);
+        _statsPanel = new PanelContainer { Visible = false, MouseFilter = Control.MouseFilterEnum.Stop, ZIndex = 5 };
+        _statsPanel.AddThemeStyleboxOverride("panel", MenuSkin.Panel());
+        AddChild(_statsPanel);
+        _statsPanel.SetAnchorsPreset(Control.LayoutPreset.Center);
+        MenuSkin.CenterPanel(_statsPanel, 620f, 820f);
         VBoxContainer inner = new();
         inner.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(inner);
-        Label label = new() { Text = title };
-        UITheme.SetTextRole(label, TextRole.Section);
-        label.AddThemeColorOverride("font_color", GoldBright);
-        inner.AddChild(label);
-        ScrollContainer scroll = new()
+        _statsPanel.AddChild(inner);
+        inner.AddChild(UITheme.MakeLabel(Tr("LEVELUP_STATS"), TextRole.Section, UITheme.GoldBright));
+        _statsScroll = new ScrollContainer
         {
             SizeFlagsVertical = Control.SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            CustomMinimumSize = new Vector2(0, SideMinHeight),
         };
-        inner.AddChild(scroll);
-        _sideScrolls.Add(scroll);
-        _activeSideScroll ??= scroll;
-        scroll.MouseEntered += () => _activeSideScroll = scroll;
-        scroll.FocusMode = Control.FocusModeEnum.All;
-        scroll.FocusEntered += () => _activeSideScroll = scroll;
-        // La barre de défilement se pose sur le bord droit : la colonne des valeurs garde sa marge.
+        inner.AddChild(_statsScroll);
         MarginContainer gutter = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         gutter.AddThemeConstantOverride("margin_right", 14);
-        scroll.AddChild(gutter);
-        VBoxContainer content = new();
-        content.AddThemeConstantOverride("separation", 4);
-        gutter.AddChild(content);
-        return content;
+        _statsScroll.AddChild(gutter);
+        _statsContainer = new VBoxContainer();
+        _statsContainer.AddThemeConstantOverride("separation", 4);
+        gutter.AddChild(_statsContainer);
     }
 
-    /// <summary>Inventaire et stats du moment : reconstruits à chaque offre, un choix précédent a pu les changer.</summary>
-    private void RefreshSidePanels(Player player)
+    private static Control FullRect(Node parent)
     {
-        MenuSkin.Clear(_inventoryContainer);
-        MenuSkin.Clear(_statsContainer);
-        if (player == null)
-            return;
-        PlayerSheet.AddCompactInventory(_inventoryContainer, player, _fragmentManager?.SpecializationCapacity ?? 0);
-        PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
-            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
+        Control layer = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        parent.AddChild(layer);
+        layer.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        return layer;
+    }
+
+    private static TextureRect Eyelet(Control parent)
+    {
+        TextureRect eyelet = new()
+        {
+            Texture = PaperArt.Eyelet(),
+            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+        };
+        parent.AddChild(eyelet);
+        return eyelet;
     }
 
     // ==============================
-    // Cartes
+    // Offre
     // ==============================
 
     private void OnFragmentChoicesReady(int count)
@@ -232,176 +241,87 @@ public partial class LevelUpScreen : CanvasLayer
         if (count <= 0 || _fragmentManager == null || _fragmentManager.PendingChoices.Count == 0)
             return;
 
+        bool replacing = Visible && _cards.Count > 0;
+        DropCards(replacing);
         ClearCards();
         Player player = GetTree().GetFirstNodeInGroup("player") as Player;
-        RefreshSidePanels(player);
-        int bestRank = -1;
+        _belt.Build(player, _fragmentManager.SpecializationCapacity);
+        RefreshStats(player);
+        _offerSeed++;
         foreach (FragmentOption choice in _fragmentManager.PendingChoices)
-        {
-            _cardOptions.Add(choice);
             BuildCard(choice, player);
-            bestRank = Mathf.Max(bestRank, choice.Rarity?.Rank ?? -1);
-        }
+        LayoutStage();
         BuildActionButtons();
+        _lastCardFocus = 0;
         SetFocus(0);
         RefreshTitle();
 
-        // Choix suivant d'une même réserve : l'écran reste ouvert, seules les cartes changent (plan 20 §6.7).
+        // Choix suivant d'une même réserve : l'écran reste ouvert, de nouveaux fragments sont accrochés (plan 20 §6.7).
         if (!Visible)
             ShowScreen();
+        else
+            SwingCards(0f);
+        int bestRank = -1;
+        foreach (FragmentOption choice in _cardOptions)
+            bestRank = Mathf.Max(bestRank, choice.Rarity?.Rank ?? -1);
         if (bestRank >= UpgradeRoller.Get("rare").Rank)
             AudioManager.PlayUI("sfx_rare_fragment");
     }
 
     private void BuildCard(FragmentOption choice, Player player)
     {
-        bool isAscension = choice.Type == FragmentOption.AscensionType;
-        bool isWeapon = isAscension || choice.Type is "weapon_new" or "weapon_upgrade" or FragmentOption.SurplusType;
-        bool isPerk = choice.Type == PerkSpecializationOffers.OptionType;
-        bool isNew = isPerk || isAscension || choice.Type is "weapon_new" or "passive_new";
-        Color frame = choice.Rarity != null ? RarityPalette.Main(choice.Rarity.Id)
-            : isAscension ? ChoiceStyle.GoldBright : isPerk ? ChoiceStyle.PerkBorder : NeutralBorder;
-
-        PanelContainer card = new() { CustomMinimumSize = new Vector2(CardWidth, 172), MouseFilter = Control.MouseFilterEnum.Stop };
         int index = _cards.Count;
-        card.GuiInput += @event =>
+        PaperFragment card = new();
+        // Les fragments des bords penchent vers l'extérieur, pour que deux voisins s'écartent par le bas ; serrés
+        // au-delà de trois, ils penchent moitié moins.
+        int count = _fragmentManager.PendingChoices.Count;
+        float side = count <= 1 ? 0f : (index - (count - 1) / 2f) / ((count - 1) / 2f);
+        float tilt = count > 3 ? 0.5f : 1f;
+        float angle = (-side * MaxTilt + Jitter[(index + _offerSeed) % Jitter.Length]) * tilt;
+        card.Setup(choice, player, angle, _offerSeed * 7 + index);
+        card.Pressed += () => Activate(index);
+        card.Hovered += () => SetFocus(index);
+        // Le texte replié change la hauteur du papier après coup : l'étiquette suit le bas du fragment survolé.
+        card.Resized += () =>
         {
-            if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
-            {
-                Activate(index);
-                card.AcceptEvent();
-            }
+            if (_focusIndex == index)
+                UpdateChangeTag();
         };
-        card.MouseEntered += () => SetFocus(index);
-
-        MarginContainer margin = new();
-        foreach (string side in new[] { "left", "right", "top", "bottom" })
-            margin.AddThemeConstantOverride($"margin_{side}", side is "left" or "right" ? 12 : 8);
-        card.AddChild(margin);
-        VBoxContainer body = new();
-        body.AddThemeConstantOverride("separation", 8);
-        margin.AddChild(body);
-
-        HBoxContainer row = new();
-        row.AddThemeConstantOverride("separation", 18);
-        body.AddChild(row);
-        Texture2D icon = LoadIcon(choice, isWeapon);
-        PanelContainer iconFrame = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-            MouseFilter = Control.MouseFilterEnum.Ignore };
-        iconFrame.AddThemeStyleboxOverride("panel", MenuSkin.Choice(frame, false, choice.Rarity?.Rank ?? -1));
-        iconFrame.AddChild(new TextureRect
-        {
-            Texture = icon,
-            CustomMinimumSize = new Vector2(96, 96),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        });
-        row.AddChild(iconFrame);
-        VBoxContainer text = new() { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-        text.AddThemeConstantOverride("separation", 6);
-        row.AddChild(text);
-
-        // La rareté occupe son bandeau ; le niveau appartient à la ligne du nom.
-        HBoxContainer header = new();
-        header.AddThemeConstantOverride("separation", 8);
-        text.AddChild(header);
-        string tag = choice.Rarity != null
-            ? RarityPalette.DisplayName(choice.Rarity.Id).ToUpper()
-            : isPerk ? PerkTag(choice.Id)
-            : isAscension ? Tr("LEVELUP_ASCENSION")
-            : Tr(isWeapon ? "LEVELUP_KIND_WEAPON"
-                : PassiveSouvenirDataLoader.Get(choice.Id)?.IsBadge == true ? "LEVELUP_KIND_BADGE" : "LEVELUP_KIND_OBJECT");
-        if (choice.IsCarried)
-            tag = $"{tag}  ·  {Tr("LEVELUP_CARRIED")}";
-        Label tagLabel = MakeLabel(tag, TextRole.Small, frame, true);
-        RarityIcon rarityIcon = choice.Rarity != null ? new RarityIcon(choice.Rarity.Rank) : null;
-        if (rarityIcon != null)
-            header.AddChild(rarityIcon);
-        header.AddChild(tagLabel);
-        if (choice.RarityRaised && !choice.IsCarried)
-            ShowRarityRaise(header, tagLabel, rarityIcon, choice, tag, frame, _cards.Count);
-
-        HBoxContainer title = new();
-        title.AddThemeConstantOverride("separation", 10);
-        text.AddChild(title);
-        Color titleColor = choice.Rarity != null ? RarityPalette.Colors(choice.Rarity.Id).Light : TextLight;
-        Label name = MakeLabel(choice.DisplayName, TextRole.Section, titleColor, true);
-        name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        title.AddChild(name);
-        if (UpgradeText.ReachesMilestone(choice, player))
-            title.AddChild(MilestoneBadge());
-        Label level = MakeLabel(LevelText(choice, player, isWeapon, isAscension, isPerk, isNew), TextRole.Body,
-            GoldBright, false);
-        level.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
-        title.AddChild(level);
-        int lineIndex = 0;
-        foreach ((string line, Color color) in UpgradeText.Describe(choice, player))
-        {
-            text.AddChild(ChoiceStyle.MakeGainLabel(line, color, lineIndex++ == 0 ? TextRole.Subhead : TextRole.Small));
-        }
-
+        _cardLayer.AddChild(card);
         _cards.Add(card);
-        _cardColors.Add(frame);
-        _cardsContainer.AddChild(card);
-        StyleCard(index, false);
+        _cardOptions.Add(choice);
+        if (choice.RarityRaised && !choice.IsCarried)
+            card.PlayRarityRaise(0.35f + 0.15f * index);
     }
 
-    /// <summary>« Niv 3 → 4 » pour une amélioration, « NOUVEAU » pour une arme ou un objet, « DÉFINITIVE » pour une voie.</summary>
-    private string LevelText(FragmentOption choice, Player player, bool isWeapon, bool isAscension, bool isPerk, bool isNew)
+    /// <summary>Clous aux bords, fragments répartis au milieu du fil, une pince par fragment.</summary>
+    private void LayoutStage()
     {
-        if (isAscension)
-            return Tr("LEVELUP_ASCENSION_FINAL");
-        if (isPerk)
-            return "";
-        if (isNew)
-            return Tr("LEVELUP_NEW");
-        if (choice.Type == FragmentOption.SurplusType)
-            return Tr("LEVELUP_SURPLUS");
-        int level = isWeapon ? player?.GetWeaponFragmentLevel(choice.Id) ?? 0 : player?.GetPassiveLevel(choice.Id) ?? 0;
-        return string.Format(Tr("LEVELUP_LEVEL"), level, level + 1);
+        Vector2 view = _stage.GetViewportRect().Size;
+        _line.Stretch(NailInset, view.X - NailInset, ThreadTop, ThreadSag);
+        MenuSkin.Clear(_pegLayer);
+        int count = _cards.Count;
+        // Au-delà de trois (Trèfle plastifié), les fragments rapetissent pour tenir entre les étiquettes des clous.
+        float available = view.X - ActionZone * 2f;
+        float scale = Mathf.Min(1f, (available - (count - 1) * TightGap) / (count * PaperFragment.Width));
+        float spacing = Mathf.Min(CardSpacing, PaperFragment.Width * scale + TightGap);
+        Texture2D pegTexture = PaperArt.Peg();
+        for (int i = 0; i < count; i++)
+        {
+            float x = view.X / 2f + (i - (count - 1) / 2f) * spacing;
+            float y = _line.ThreadY(x);
+            _cards[i].Scale = Vector2.One * scale;
+            _cards[i].HangAt(new Vector2(x, y + 6f));
+            TextureRect peg = new()
+            {
+                Texture = pegTexture,
+                TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                MouseFilter = Control.MouseFilterEnum.Ignore,
+                Position = new Vector2(x - pegTexture.GetWidth() / 2f, y - 26f),
+            };
+            _pegLayer.AddChild(peg);
+        }
     }
-
-    /// <summary>Badge doré « Palier ! » : la carte fait atteindre à l'objet un effet qui change la manière de jouer.</summary>
-    private Control MilestoneBadge()
-    {
-        PanelContainer badge = new() { SizeFlagsVertical = Control.SizeFlags.ShrinkCenter };
-        StyleBoxFlat style = new() { BgColor = GoldBright with { A = 0.18f }, BorderColor = GoldBright };
-        style.SetBorderWidthAll(1);
-
-        style.ContentMarginLeft = 6;
-        style.ContentMarginRight = 6;
-        badge.AddThemeStyleboxOverride("panel", style);
-        badge.AddChild(MakeLabel(Tr("LEVELUP_MILESTONE_BADGE"), TextRole.Caption, GoldBright, false));
-        return badge;
-    }
-
-    private string PerkTag(string id)
-    {
-        string family = PerkSpecializationDataLoader.Get(id)?.Family ?? "";
-        return $"{Tr("LEVELUP_NEW_PERK")}  ·  {Tr($"PERK_FAMILY_{family.ToUpperInvariant()}")}";
-    }
-
-    private static Texture2D LoadIcon(FragmentOption choice, bool isWeapon)
-    {
-        string path = choice.Type == PerkSpecializationOffers.OptionType
-            ? PerkSpecializationDataLoader.Get(choice.Id)?.Icon
-            : isWeapon
-            ? WeaponDataLoader.Get(choice.Id)?.Sprite
-            : PassiveSouvenirDataLoader.Get(choice.Id)?.Icon;
-        if (string.IsNullOrEmpty(path))
-            return null;
-        string resPath = path.StartsWith("res://") ? path : $"res://{path}";
-        return ResourceLoader.Exists(resPath) ? GD.Load<Texture2D>(resPath) : null;
-    }
-
-    private static Label MakeLabel(string text, TextRole role, Color color, bool expand, HorizontalAlignment align = HorizontalAlignment.Left) =>
-        ChoiceStyle.MakeLabel(text, role, color, expand, align);
-
-    private void StyleCard(int index, bool focused) =>
-        ChoiceStyle.StyleCard(_cards[index], _banishMode ? BanishColor : _cardColors[index], _cardOptions[index].Rarity?.Rank ?? -1, focused);
 
     // ==============================
     // Actions et navigation
@@ -410,50 +330,103 @@ public partial class LevelUpScreen : CanvasLayer
     private void BuildActionButtons()
     {
         _buttons.Add(CreateActionButton(string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
-            _fragmentManager.RerollsRemaining > 0, () =>
+            _fragmentManager.RerollsRemaining > 0, PaperArt.Ink, () =>
             {
                 _fragmentManager.Reroll();
                 CloseIfDone();
             }));
-        _banishButton = CreateActionButton(BanishLabel(), true, ToggleBanish);
+        _banishButton = CreateActionButton(BanishLabel(), true, PaperArt.InkRed, ToggleBanish);
         _buttons.Add(_banishButton);
-        _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, Skip));
-        foreach (Button button in _buttons)
-            _actionButtons.AddChild(button);
+        _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, PaperArt.Ink, Skip));
+        Callable.From(LayoutActions).CallDeferred();
     }
 
-    private Button CreateActionButton(string text, bool enabled, System.Action onPressed)
+    /// <summary>Relancer pend au clou de gauche ; Bannir au clou de droite, Passer sous Bannir.</summary>
+    private void LayoutActions()
+    {
+        if (_buttons.Count < 3)
+            return;
+        float left = _line.Left;
+        float right = _line.Right;
+        float top = _line.Top + 70f;
+        HangButton(_buttons[0], left, top, 2f);
+        HangButton(_buttons[1], right, top, -2f);
+        HangButton(_buttons[2], right, top + _buttons[1].Size.Y + 34f, 1.5f);
+        _strings.Clear();
+        _strings.Add(new Vector2(left, _line.Top));
+        _strings.Add(new Vector2(left, top + 10f));
+        _strings.Add(new Vector2(right, _line.Top));
+        _strings.Add(new Vector2(right, top + 10f));
+        _strings.Add(new Vector2(right, top + _buttons[1].Size.Y - 6f));
+        _strings.Add(new Vector2(right, top + _buttons[1].Size.Y + 44f));
+        UpdateChangeTag();
+    }
+
+    private static void HangButton(Button button, float x, float top, float degrees)
+    {
+        button.Size = button.GetCombinedMinimumSize();
+        button.Position = new Vector2(x - button.Size.X / 2f, top);
+        button.PivotOffset = new Vector2(button.Size.X / 2f, 0f);
+        button.Rotation = Mathf.DegToRad(degrees);
+    }
+
+    private Button CreateActionButton(string text, bool enabled, Color ink, System.Action onPressed)
     {
         Button button = new()
         {
             Text = text,
             Disabled = !enabled,
-            CustomMinimumSize = new Vector2(190, 54),
             FocusMode = Control.FocusModeEnum.None,
             ProcessMode = ProcessModeEnum.Always,
         };
-        UITheme.SetTextRole(button, TextRole.Subhead);
-        button.AddThemeColorOverride("font_color", enabled ? TextColor : TextDim);
+        UITheme.SetTextRole(button, TextRole.Body);
+        button.AddThemeColorOverride("font_color", enabled ? ink : PaperArt.InkDim);
+        button.AddThemeColorOverride("font_hover_color", ink);
+        button.AddThemeColorOverride("font_pressed_color", ink);
+        button.AddThemeColorOverride("font_disabled_color", new Color(PaperArt.InkDim, 0.6f));
+        button.AddThemeConstantOverride("outline_size", 0);
         StyleButton(button, false);
         UITheme.WireButtonAudio(button);
         button.Pressed += () => onPressed();
         int index = _cards.Count + _buttons.Count;
         button.MouseEntered += () => SetFocus(index);
+        _actionLayer.AddChild(button);
+        Eyelet(button).Position = new Vector2(0f, 6f);
+        button.Resized += () => CenterEyelet(button);
         return button;
     }
 
-    private static void StyleButton(Button button, bool focused) => ChoiceStyle.StyleButton(button, focused);
+    private static void CenterEyelet(Button button)
+    {
+        if (button.GetChildCount() > 0 && button.GetChild(0) is TextureRect eyelet)
+            eyelet.Position = new Vector2((button.Size.X - eyelet.Size.X) / 2f, 6f);
+    }
+
+    /// <summary>Étiquette pâle au repos ; survolée, elle prend le kraft et le liseré, comme le fragment survolé.</summary>
+    private static void StyleButton(Button button, bool focused)
+    {
+        Color tint = button.Disabled ? PaperArt.PaleTag.Darkened(0.25f) : focused ? PaperArt.Kraft.Lightened(0.15f) : PaperArt.PaleTag;
+        StyleBoxTexture style = PaperArt.TagStyle(tint);
+        style.ContentMarginLeft = style.ContentMarginRight = 26;
+        style.ContentMarginTop = 24;
+        style.ContentMarginBottom = 10;
+        foreach (string state in new[] { "normal", "hover", "pressed", "disabled", "focus" })
+            button.AddThemeStyleboxOverride(state, style);
+    }
+
+    /// <summary>Le défilement au stick ou à Page haut/bas ne tourne que panneau des stats ouvert.</summary>
+    private void SetStatsVisible(bool visible)
+    {
+        _statsPanel.Visible = visible;
+        _statsShade.Visible = visible;
+        SetProcess(visible);
+    }
 
     public override void _Process(double delta)
     {
-        if (!Visible)
-            return;
         float axis = Input.GetAxis("scroll_up", "scroll_down");
-        if (axis == 0f)
-            return;
-        int step = Mathf.RoundToInt(axis * SideScrollSpeed * (float)delta);
-        if (_activeSideScroll != null)
-            _activeSideScroll.ScrollVertical += step;
+        if (axis != 0f)
+            _statsScroll.ScrollVertical += Mathf.RoundToInt(axis * StatsScrollSpeed * (float)delta);
     }
 
     public override void _Input(InputEvent @event)
@@ -461,17 +434,30 @@ public partial class LevelUpScreen : CanvasLayer
         if (!Visible || _cards.Count == 0)
             return;
 
-        int total = _cards.Count + _buttons.Count;
+        if (@event.IsActionPressed("journal") || _statsPanel.Visible && @event.IsActionPressed("ui_cancel"))
+        {
+            SetStatsVisible(!_statsPanel.Visible);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (_statsPanel.Visible)
+            return;
         if (@event.IsActionPressed("ui_cancel") && _banishMode)
         {
             ToggleBanish();
             GetViewport().SetInputAsHandled();
             return;
         }
-        if (@event.IsActionPressed("ui_down") || @event.IsActionPressed("ui_right") && _focusIndex >= _cards.Count)
+        int total = _cards.Count + _buttons.Count;
+        bool onCard = _focusIndex < _cards.Count;
+        if (@event.IsActionPressed("ui_right"))
             SetFocus((_focusIndex + 1) % total);
-        else if (@event.IsActionPressed("ui_up") || @event.IsActionPressed("ui_left") && _focusIndex >= _cards.Count)
+        else if (@event.IsActionPressed("ui_left"))
             SetFocus((_focusIndex - 1 + total) % total);
+        else if (@event.IsActionPressed("ui_down"))
+            SetFocus(onCard ? _cards.Count : Mathf.Min(_focusIndex + 1, total - 1));
+        else if (@event.IsActionPressed("ui_up"))
+            SetFocus(onCard ? _focusIndex : _focusIndex == _cards.Count ? _lastCardFocus : _focusIndex - 1);
         else if (@event.IsActionPressed("ui_accept"))
             Activate(_focusIndex);
         else
@@ -483,11 +469,77 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _focusIndex = index;
         if (index < _cards.Count)
-            _choiceScroll.EnsureControlVisible(_cards[index]);
+            _lastCardFocus = index;
         for (int i = 0; i < _cards.Count; i++)
-            StyleCard(i, i == index);
+            _cards[i].SetFocused(i == index, _banishMode);
         for (int i = 0; i < _buttons.Count; i++)
             StyleButton(_buttons[i], _cards.Count + i == index);
+        FragmentOption focused = index < _cards.Count ? _cardOptions[index] : null;
+        _belt.Highlight(focused, focused != null ? _cards[index].Icon : null);
+        UpdateChangeTag();
+    }
+
+    /// <summary>L'étiquette de ce qui change pend sous le fragment survolé, sans descendre sur la ceinture.</summary>
+    private void UpdateChangeTag()
+    {
+        string change = _focusIndex < _cards.Count ? ChangeText(_cardOptions[_focusIndex]) : "";
+        _changeTag.Visible = change.Length > 0;
+        _changeEyelet.Visible = _changeTag.Visible;
+        List<Vector2> strings = new(_strings);
+        if (_changeTag.Visible)
+        {
+            _changeLabel.Text = change;
+            _changeTag.Size = _changeTag.GetCombinedMinimumSize();
+            PaperFragment card = _cards[_focusIndex];
+            Vector2 bottom = card.BottomCenter;
+            // Repère de la scène au repos : pendant l'entrée, la scène descend mais pas la ceinture.
+            float beltTop = _belt.Position.Y;
+            float top = Mathf.Min(bottom.Y + 24f, beltTop - _changeTag.Size.Y - 10f);
+            _changeTag.Position = new Vector2(bottom.X - _changeTag.Size.X / 2f, top);
+            _changeTag.PivotOffset = new Vector2(_changeTag.Size.X / 2f, 0f);
+            _changeTag.Rotation = Mathf.DegToRad(1.5f);
+            _changeEyelet.Position = new Vector2(bottom.X - _changeEyelet.Size.X / 2f, top + 6f);
+            if (top > bottom.Y)
+            {
+                strings.Add(new Vector2(bottom.X, bottom.Y - 4f));
+                strings.Add(new Vector2(bottom.X, top + 10f));
+            }
+        }
+        _line.SetStrings(strings);
+    }
+
+    /// <summary>
+    /// Ce qui change, dit sur l'étiquette : l'avant → après d'une amélioration, la valeur actuelle de la stat qu'un
+    /// nouvel objet touche, l'emplacement que prend une arme ou une Réminiscence.
+    /// </summary>
+    private string ChangeText(FragmentOption option)
+    {
+        Player player = GetTree().GetFirstNodeInGroup("player") as Player;
+        if (player == null)
+            return "";
+        UpgradeParts parts = UpgradeText.Parts(option, player);
+        if (parts.Before.Length > 0)
+            return $"{parts.Label}   {parts.Before} → {parts.After}";
+        switch (option.Type)
+        {
+            case "weapon_new":
+                return string.Format(Tr("LEVELUP_CHANGE_WEAPON_SLOT"), player.WeaponSlots.Count + 1, player.WeaponSlotLimit);
+            case PerkSpecializationOffers.OptionType:
+                return string.Format(Tr("LEVELUP_CHANGE_REMINISCENCE"), player.Specializations.Count + 1, _fragmentManager.SpecializationCapacity);
+            case "passive_new":
+            {
+                PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(option.Id);
+                if (data == null || data.Effects.Count == 0)
+                    return "";
+                string stat = data.Effects[0].Stat;
+                foreach (PlayerSheet.StatLine line in PlayerSheet.StatLines(player))
+                    if (line.Id == stat)
+                        return string.Format(Tr("LEVELUP_CHANGE_NOW"), line.Label, line.Value);
+                return "";
+            }
+            default:
+                return "";
+        }
     }
 
     private void Activate(int index)
@@ -506,10 +558,9 @@ public partial class LevelUpScreen : CanvasLayer
     {
         _banishMode = !_banishMode;
         _hint.Visible = _banishMode;
-        _banishButton.Text = _banishMode
-            ? Tr("LEVELUP_BANISH_CANCEL")
-            : BanishLabel();
+        _banishButton.Text = _banishMode ? Tr("LEVELUP_BANISH_CANCEL") : BanishLabel();
         SetFocus(_banishMode ? 0 : _focusIndex);
+        Callable.From(LayoutActions).CallDeferred();
     }
 
     /// <summary>Gratuits restants, puis le Péril que coûtera le prochain bannissement, en fractions (⅓, ⅔, 1⅓…).</summary>
@@ -533,7 +584,9 @@ public partial class LevelUpScreen : CanvasLayer
             // Une voie d'ascension ne s'oublie pas : on la choisit, ou on passe.
             if (option.Type == FragmentOption.AscensionType)
                 return;
+            _banishedIndex = _cardOptions.IndexOf(option);
             _fragmentManager?.BanishFragment(option.Id);
+            _banishedIndex = -1;
             CloseIfDone();
             return;
         }
@@ -561,27 +614,53 @@ public partial class LevelUpScreen : CanvasLayer
     // Affichage
     // ==============================
 
+    /// <summary>
+    /// Une nouvelle offre arrive écran ouvert (relance, bannissement, niveau suivant) : les anciens fragments quittent
+    /// leur pince et tombent derrière les nouveaux ; le fragment banni, oublié, s'éteint en tombant.
+    /// </summary>
+    private void DropCards(bool animate)
+    {
+        if (!animate)
+            return;
+        for (int i = 0; i < _cards.Count; i++)
+            _cards[i].Fall(_fallLayer, i % 2 == 0 ? 1f : -1f, i == _banishedIndex);
+    }
+
     private void ClearCards()
     {
-        MenuSkin.Clear(_cardsContainer);
-        MenuSkin.Clear(_actionButtons);
-        _choiceScroll.ScrollVertical = 0;
+        foreach (PaperFragment card in _cards)
+            if (card.GetParent() == _cardLayer)
+                card.QueueFree();
+        foreach (Button button in _buttons)
+            button.QueueFree();
         _cards.Clear();
         _cardOptions.Clear();
-        _cardColors.Clear();
         _buttons.Clear();
         _banishMode = false;
         _hint.Visible = false;
     }
 
+    private void RefreshStats(Player player)
+    {
+        MenuSkin.Clear(_statsContainer);
+        if (player == null)
+            return;
+        PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
+            GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
+        string key = InputRemapManager.Instance is { GamepadConnected: true }
+            ? InputRemapManager.GetJoyButtonName("journal")
+            : InputRemapManager.GetKeyName("journal");
+        _statsHint.Text = string.Format(Tr("LEVELUP_STATS_HINT"), key);
+    }
+
     private void ShowScreen()
     {
         _overlay.Visible = true;
-        _rays.Visible = true;
-        _rays.SetTint(_cardOptions.Count > 0 && _cardOptions[0].Type == PerkSpecializationOffers.OptionType
+        _veil.Visible = true;
+        _veil.SetTint(_cardOptions.Count > 0 && _cardOptions[0].Type == PerkSpecializationOffers.OptionType
             ? PixelBackdrop.NeutralTint : PixelBackdrop.GoldTint);
-        _rays.FadeIn(0.3f);
-        _layout.Visible = true;
+        _veil.FadeIn(0.3f);
+        SetStatsVisible(false);
         Visible = true;
         GetTree().Paused = true;
         ProcessMode = ProcessModeEnum.Always;
@@ -597,74 +676,40 @@ public partial class LevelUpScreen : CanvasLayer
     }
 
     /// <summary>
-    /// Entrée avec du punch (plan 02 J4) : le voile tombe en 0,12 s, le panneau jaillit de 82 % avec un léger
-    /// dépassement. Les cartes sont cliquables dès la première frame : le délai jusqu'au choix ne change pas.
+    /// Le fil descend d'en haut avec ses fragments et se pose avec un léger rebond, puis les fragments se balancent.
+    /// Ils sont cliquables dès la première image : le délai jusqu'au choix ne change pas (plan 02 J4).
     /// </summary>
     private void PlayEntrance()
     {
         _entranceTween?.Kill();
         _overlay.Color = new Color(OverlayColor, 0f);
-        SetPanelScale(PanelEntranceScale);
+        _stage.Position = new Vector2(0f, StageDrop);
+        _belt.Modulate = new Color(1f, 1f, 1f, 0f);
         _entranceTween = CreateTween();
         _entranceTween.SetPauseMode(Tween.TweenPauseMode.Process);
         _entranceTween.SetParallel();
         _entranceTween.TweenProperty(_overlay, "color", OverlayColor, 0.12f);
-        _entranceTween.TweenMethod(Callable.From<float>(SetPanelScale), PanelEntranceScale, 1f, 0.22f)
-            .SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        _entranceTween.TweenProperty(_stage, "position:y", 0f, 0.32f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+        _entranceTween.TweenProperty(_belt, "modulate:a", 1f, 0.2f);
+        SwingCards(0.2f);
     }
 
-    /// <summary>
-    /// La Chance (ou l'oubli, le Péril) a monté la rareté : la carte montre d'abord la rareté tirée, puis elle saute au
-    /// rang gagné avec un trèfle et un son (plan 24 D2). Les cartes d'une offre sautent l'une après l'autre.
-    /// </summary>
-    private void ShowRarityRaise(HBoxContainer header, Label tagLabel, RarityIcon rarityIcon, FragmentOption choice, string finalTag, Color finalColor, int cardIndex)
+    private void SwingCards(float delay)
     {
-        UpgradeRarity rolled = choice.RolledRarity;
-        tagLabel.Text = RarityPalette.DisplayName(rolled.Id).ToUpper();
-        tagLabel.AddThemeColorOverride("font_color", RarityPalette.Main(rolled.Id));
-        float delay = 0.35f + 0.15f * cardIndex;
-        rarityIcon.RevealFrom(rolled.Rank, choice.Rarity.Rank, delay);
-        TextureRect clover = new()
-        {
-            Texture = GD.Load<Texture2D>("res://assets/ui/rarities/rarity_clover.png"),
-            CustomMinimumSize = new Vector2(16, 16), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            TextureFilter = CanvasItem.TextureFilterEnum.Nearest, SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-        };
-        clover.Modulate = Colors.Transparent;
-        header.AddChild(clover);
-        header.MoveChild(clover, tagLabel.GetIndex() + 1);
-
-        Tween tween = tagLabel.CreateTween();
-        tween.TweenInterval(delay + (choice.Rarity.Rank - rolled.Rank) * 6f / RarityArt.Fps);
-        tween.TweenCallback(Callable.From(() =>
-        {
-            tagLabel.Text = finalTag;
-            tagLabel.AddThemeColorOverride("font_color", finalColor);
-            tagLabel.PivotOffset = tagLabel.Size / 2f;
-            tagLabel.Scale = new Vector2(1.5f, 1.5f);
-            clover.Modulate = Colors.White;
-            AudioManager.PlayUI("sfx_rare_fragment", 0.08f, -6f);
-        }));
-        tween.TweenProperty(tagLabel, "scale", Vector2.One, 0.25f).SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-    }
-
-    private void SetPanelScale(float scale)
-    {
-        // Les colonnes viennent d'être remplies et leur mise en page est différée : la taille minimale, calculée sur
-        // demande, donne déjà le bon centre dès la première frame.
-        _layout.PivotOffset = _layout.GetCombinedMinimumSize() / 2f;
-        _layout.Scale = Vector2.One * scale;
+        for (int i = 0; i < _cards.Count; i++)
+            _cards[i].Swing(delay + 0.05f * i, i % 2 == 0 ? 7f : -6f);
     }
 
     private void HideScreen()
     {
         _entranceTween?.Kill();
-        _layout.Scale = Vector2.One;
+        _stage.Position = Vector2.Zero;
+        _belt.Modulate = Colors.White;
         _overlay.Color = OverlayColor;
         _overlay.Visible = false;
-        _rays.Visible = false;
-        _layout.Visible = false;
+        _veil.Visible = false;
+        SetStatsVisible(false);
+        MenuSkin.Clear(_fallLayer);
         Visible = false;
         AudioManager.StopLoop();
         AudioManager.PlayUI("sfx_level_up_after");

@@ -8,8 +8,7 @@ using Vestiges.Progression;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Texte des cartes d'amélioration (level-up, Faille), à la manière de Megabonk (plan 23 R2) : une ligne de gain
-/// en valeur, deux au plus. La deuxième regroupe les autres stats d'une amélioration à plusieurs stats.
+/// Texte des cartes d'amélioration (level-up, Faille) : une ligne de gain en valeur, deux au plus (plan 23 R2). La deuxième regroupe les autres stats d'une amélioration à plusieurs stats.
 /// Ni propriété, ni armes concernées, ni texte de palier : un palier atteint se signale par un badge.
 /// </summary>
 public static class UpgradeText
@@ -17,14 +16,39 @@ public static class UpgradeText
     /// <summary>Lignes de la carte, deux au plus : ce qui change (amélioration) ou ce que fait la nouveauté.</summary>
     public static List<(string, Color)> Describe(FragmentOption choice, Player player)
     {
+        UpgradeParts parts = Parts(choice, player);
         List<(string, Color)> lines = new();
+        if (parts.Label.Length > 0)
+        {
+            // Les objets espacent leur flèche, comme avant le découpage en morceaux.
+            string arrow = choice.Type == "passive_upgrade" ? "  →  " : " → ";
+            string value = parts.Before.Length > 0 ? $"{parts.Before}{arrow}{parts.After}" : parts.Gain;
+            lines.Add((value.Length > 0 ? $"{parts.Label}  {value}" : parts.Label, ChoiceStyle.GainColor));
+        }
+        if (parts.Others.Length > 0)
+            lines.Add((parts.Others, ChoiceStyle.GainColor));
+        if (parts.Detail.Length > 0)
+            lines.Add((parts.Detail, ChoiceStyle.TextColor));
+        if (parts.Flavor.Length > 0)
+            lines.Add((parts.Flavor, ChoiceStyle.TextDim));
+        return lines;
+    }
+
+    /// <summary>
+    /// Contenu de la carte en morceaux : la stat qui bouge (libellé, gain, valeurs avant et après quand elles se
+    /// lisent), le regroupement des autres stats, la règle ou la description, l'ambiance. Le level-up au fil
+    /// (plan 04 §11) montre le gain en grand et l'avant → après sur l'étiquette ; la Faille en fait des lignes.
+    /// </summary>
+    public static UpgradeParts Parts(FragmentOption choice, Player player)
+    {
+        UpgradeParts parts = new();
         switch (choice.Type)
         {
             case "weapon_new":
             {
                 WeaponData weapon = WeaponDataLoader.Get(choice.Id);
                 string family = weapon == null ? "" : TranslationServer.Translate(WeaponGrammar.LabelKey(weapon.Category));
-                lines.Add(($"{weapon?.Summary}   ▸ {family}", ChoiceStyle.TextColor));
+                parts.Detail = $"{weapon?.Summary}   ▸ {family}";
                 break;
             }
             case "weapon_upgrade":
@@ -43,23 +67,32 @@ public static class UpgradeText
                     float before = own ? weapon.GetStat(stat) : player.GetWeaponStatForDisplay(weapon, stat);
                     float next = own ? after.GetStat(stat) : player.GetWeaponStatForDisplay(after, stat);
                     if (i == 0)
-                        lines.Add((FullGain(stat, weapon.Base, before, next), ChoiceStyle.GainColor));
+                    {
+                        parts.Label = StatCatalog.Name(stat, weapon.Base);
+                        parts.Gain = ShortGain(stat, before, next);
+                        // Une stat qui ne se lit qu'en pourcentage n'a pas de valeur à montrer avant et après.
+                        if (StatCatalog.Display(stat) != StatDisplay.Percent)
+                        {
+                            parts.Before = StatCatalog.Format(stat, before);
+                            parts.After = StatCatalog.Format(stat, next);
+                        }
+                    }
                     else
-                        others.Add(ShortGain(stat, weapon.Base, before, next));
+                        others.Add($"{StatCatalog.Name(stat, weapon.Base)} {ShortGain(stat, before, next)}");
                 }
-                AddOthers(lines, others);
+                parts.Others = OthersLine(others);
                 break;
             }
             case FragmentOption.AscensionType:
-                lines.Add((choice.Ascension.Description, ChoiceStyle.GainColor));
+                parts.Label = choice.Ascension.Description;
                 break;
             case FragmentOption.SurplusType:
             {
                 WeaponInstance weapon = FindWeapon(player, choice.Id);
                 float gain = LevelUpOfferConfig.Load().WeaponSurplusDamage;
                 float now = weapon?.SurplusDamage ?? 0f;
-                lines.Add((string.Format(TranslationServer.Translate("LEVELUP_SURPLUS_LINE"), Mathf.RoundToInt(now * 100f),
-                    Mathf.RoundToInt((now + gain) * 100f)), ChoiceStyle.GainColor));
+                parts.Label = string.Format(TranslationServer.Translate("LEVELUP_SURPLUS_LINE"), Mathf.RoundToInt(now * 100f),
+                    Mathf.RoundToInt((now + gain) * 100f));
                 break;
             }
             case "passive_new":
@@ -71,18 +104,20 @@ public static class UpgradeText
                 for (int i = 0; i < passive.Effects.Count; i++)
                 {
                     PassiveEffectData effect = passive.Effects[i];
-                    string line = $"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, effect.Neutral + effect.Step, effect.Multiplicative)}";
+                    string bonus = StatCatalog.FormatBonus(effect.Stat, effect.Neutral + effect.Step, effect.Multiplicative);
                     if (i == 0)
-                        lines.Add((line, ChoiceStyle.GainColor));
+                    {
+                        parts.Label = StatCatalog.Name(effect.Stat);
+                        parts.Gain = bonus;
+                    }
                     else
-                        others.Add(line);
+                        others.Add($"{StatCatalog.Name(effect.Stat)}  {bonus}");
                 }
-                AddOthers(lines, others);
+                parts.Others = OthersLine(others);
                 // La règle, chiffres compris, quand la ligne de stat ne suffit pas (DECISIONS §53), puis l'ambiance.
                 if (passive.Description.Length > 0)
-                    lines.Add((passive.RuleText(), ChoiceStyle.TextColor));
-                if (passive.Flavor.Length > 0)
-                    lines.Add((passive.Flavor, ChoiceStyle.TextDim));
+                    parts.Detail = passive.RuleText();
+                parts.Flavor = passive.Flavor;
                 break;
             }
             case PerkSpecializationOffers.OptionType:
@@ -90,9 +125,9 @@ public static class UpgradeText
                 PerkSpecializationData perk = PerkSpecializationDataLoader.Get(choice.Id);
                 if (perk == null)
                     break;
-                lines.Add((perk.Description, ChoiceStyle.TextColor));
+                parts.Detail = perk.Description;
                 if (!PerkSpecializationEffects.IsImplemented(perk.Effect))
-                    lines.Add((TranslationServer.Translate("LEVELUP_PERK_PREVIEW"), ChoiceStyle.TextDim));
+                    parts.Flavor = TranslationServer.Translate("LEVELUP_PERK_PREVIEW");
                 break;
             }
             case "passive_upgrade":
@@ -101,7 +136,7 @@ public static class UpgradeText
                 if (passive == null)
                     break;
                 List<string> others = new();
-                // La ligne en valeur montre le premier effet qui bouge ; un effet inchangé ne s'affiche pas.
+                // Le gain en valeur montre le premier effet qui bouge ; un effet inchangé ne s'affiche pas.
                 bool first = true;
                 for (int i = 0; i < passive.Data.Effects.Count; i++)
                 {
@@ -110,18 +145,23 @@ public static class UpgradeText
                     float after = passive.ValueAfter(i, choice.PassiveGain, choice.IntegerGain);
                     if (Mathf.IsEqualApprox(before, after))
                         continue;
+                    string gain = StatCatalog.FormatBonus(effect.Stat, (effect.Multiplicative ? 1f : 0f) + after - before, effect.Multiplicative);
                     if (first)
-                        lines.Add(($"{StatCatalog.Name(effect.Stat)}  {StatCatalog.FormatBonus(effect.Stat, before, effect.Multiplicative)}"
-                            + $"  →  {StatCatalog.FormatBonus(effect.Stat, after, effect.Multiplicative)}", ChoiceStyle.GainColor));
+                    {
+                        parts.Label = StatCatalog.Name(effect.Stat);
+                        parts.Gain = gain;
+                        parts.Before = StatCatalog.FormatBonus(effect.Stat, before, effect.Multiplicative);
+                        parts.After = StatCatalog.FormatBonus(effect.Stat, after, effect.Multiplicative);
+                    }
                     else
-                        others.Add($"{StatCatalog.Name(effect.Stat)} {StatCatalog.FormatBonus(effect.Stat, (effect.Multiplicative ? 1f : 0f) + after - before, effect.Multiplicative)}");
+                        others.Add($"{StatCatalog.Name(effect.Stat)} {gain}");
                     first = false;
                 }
-                AddOthers(lines, others);
+                parts.Others = OthersLine(others);
                 break;
             }
         }
-        return lines;
+        return parts;
     }
 
     /// <summary>Vrai si la carte fait atteindre à l'objet un palier codé : la carte le signale d'un badge doré.</summary>
@@ -136,21 +176,14 @@ public static class UpgradeText
         return false;
     }
 
-    private static void AddOthers(List<(string, Color)> lines, List<string> others)
-    {
-        if (others.Count > 0)
-            lines.Add((string.Format(TranslationServer.Translate("LEVELUP_AND"), string.Join(", ", others)), ChoiceStyle.GainColor));
-    }
+    private static string OthersLine(List<string> others) => others.Count > 0
+        ? string.Format(TranslationServer.Translate("LEVELUP_AND"), string.Join(", ", others))
+        : "";
 
-    /// <summary>« Dégâts  14,2 → 16,8 » ; « Portée  +6 % » pour une stat qui ne se lit qu'en pourcentage.</summary>
-    private static string FullGain(string stat, WeaponData weapon, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Percent
-        ? $"{StatCatalog.Name(stat, weapon)}  {StatCatalog.FormatGain(before, after)}"
-        : $"{StatCatalog.Name(stat, weapon)}  {StatCatalog.Format(stat, before)} → {StatCatalog.Format(stat, after)}";
-
-    /// <summary>Gain seul, pour la ligne qui regroupe : « Cadence +10 % », « Perforation +1 ».</summary>
-    private static string ShortGain(string stat, WeaponData weapon, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Count
-        ? $"{StatCatalog.Name(stat, weapon)} {StatCatalog.FormatBonus(stat, after - before, false)}"
-        : $"{StatCatalog.Name(stat, weapon)} {StatCatalog.FormatGain(before, after)}";
+    /// <summary>Gain seul : « +10 % » de cadence, « +1 » perforation ; une stat en valeur se lit en écart, « +18 % ».</summary>
+    private static string ShortGain(string stat, float before, float after) => StatCatalog.Display(stat) == StatDisplay.Count
+        ? StatCatalog.FormatBonus(stat, after - before, false)
+        : StatCatalog.FormatGain(before, after);
 
     private static WeaponInstance FindWeapon(Player player, string id)
     {

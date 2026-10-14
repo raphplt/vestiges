@@ -51,7 +51,10 @@ public partial class RunObservation
         activate.Invoke(screen, new object[] { 0 });
         await Frames(3);
         Check(fragments.BanishesRemaining == banishes - 1 && fragments.QueuedLevels == 4 && ScreenOpen(), "bannir renouvelle l'offre et conserve la pause");
-        AssertMenuFits((Control)screen.GetType().GetField("_layout", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen), "montée de niveau");
+        // Level-up au fil (plan 04 §11) : la ceinture et chaque fragment tiennent dans l'écran.
+        AssertMenuFits((Control)screen.GetType().GetField("_belt", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen), "montée de niveau, ceinture");
+        foreach (Control card in (System.Collections.IEnumerable)screen.GetType().GetField("_cards", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen))
+            AssertMenuFits(card, "montée de niveau, fragment");
         for (int choice = 0; choice < 5; choice++)
         {
             SaveFrame($"cascade-{choice}");

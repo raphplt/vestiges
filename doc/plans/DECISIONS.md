@@ -2096,3 +2096,15 @@ Raphaël : « améliore après les sliders des paramètres, donne-leur un aspect
 Raphaël : « l'arc a été trop nerfé ainsi que le traqueur […] augmente le légèrement ». L'arc avait pris trois baisses le même jour : attaque du Traqueur 12 → 10 (§169), vitesse de vol 400 → 280 (§174), cadence 1,2 → 0,96 (§175).
 
 **Réglage :** attaque du Traqueur 10 → 11 ; Arc du gymnase dégâts 8 → 9 et cadence 0,96 → 1,08 (0,93 s entre deux attaques au lieu de 1,04). La vitesse de vol reste à 280 : le §174 vaut pour tous les projectiles. `tools/test_weapons.sh` vert.
+
+## 182. Level-up « au fil », pour ne plus ressembler à Megabonk — 14 octobre 2026
+
+Raphaël, captures de Megabonk et de Vestiges côte à côte : « à la réflexion je trouve que notre level up ressemble trop à celui de megabonk tu en dis quoi ? ca passe ou ca fait copie ». Avis de l'agent : trop proche, la même composition en trois colonnes (inventaire, offres, stats) et la même carte élément par élément ; légal, mais lu « clone » sur une vignette Steam. Raphaël : « au lieu des rectangles horizontaux ptet les mettre en vertical ? et disposer autrement les menus de gauche et de droite. franchement soit créatif surprend moi, ca doit etre différent de mégabonk ». Trois maquettes proposées (A le fil, B la ronde, C les stèles). Raphaël : « la A me plait beaucoup. implémente la. »
+
+**Tranché :**
+- Trois fragments de papier verticaux suspendus par des pinces à un fil tendu entre deux clous ; papier jauni teinté par la rareté, photo de l'objet scotchée, « NOUVEAU » et « Niv 7 → 8 » en coups de tampon.
+- Plus de colonnes d'inventaire et de stats : l'inventaire devient une ceinture de cuir en bas de l'écran (armes, Écussons, sac, Réminiscences), la poche que touche le fragment survolé s'allume ; une étiquette pend sous le fragment survolé et dit ce qui change ; toutes les stats restent à une touche.
+- Relancer, Bannir et Passer sont des étiquettes pendues aux clous. Bannir fait tomber le fragment, qui s'efface (l'oubli du §30).
+- Remplace la forme Megabonk du §36 pour l'écran de level-up seulement ; la règle « une ligne de gain » reste. Lot au [plan 04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026).
+
+**Retour du soir, après la première version :** « alors c'est bien mais rajoute plus de détails ! et en particuliers les fonds derriere les icons des armes/objets pourraient etre bcp plus travaillés mais aussi le reste ! » Lot F2 : tirages photo détaillés et papiers, pinces, fil et ceinture plus fouillés ([plan 04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026)).

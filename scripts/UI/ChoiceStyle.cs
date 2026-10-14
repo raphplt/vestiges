@@ -8,8 +8,6 @@ namespace Vestiges.UI;
 /// </summary>
 public static class ChoiceStyle
 {
-    public const float CardWidth = 760f;
-
     public static readonly Color GoldBright = UITheme.GoldBright;
     public static readonly Color GoldDim = UITheme.GoldDim;
     public static readonly Color TextLight = UITheme.TextLight;

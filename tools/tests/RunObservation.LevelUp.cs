@@ -13,7 +13,8 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-levelup : l'écran de level-up montré une fois par rareté (Commun à Légendaire), avec une amélioration
 /// d'arme, une amélioration d'objet qui franchit son palier 15 et un objet nouveau, puis une fois avec
-/// le focus sur les actions, puis sur la carte d'objet (armes concernées allumées dans l'inventaire) ; ascension, puis
+/// le focus sur les actions, puis sur la carte d'objet (poche concernée allumée dans la ceinture), toutes les stats, le
+/// mode bannir et un fragment banni en pleine chute ; ascension, puis
 /// quatre cartes avec le Trèfle plastifié.
 /// --capture-pause : le HUD sans bouclier, puis la pause après 20 s de combat, quatre armes, quatre Écussons et un sac garni
 /// (dont l'Écusson de pompier, seule source de bouclier), dont un au-delà de son palier.
@@ -64,6 +65,23 @@ public partial class RunObservation
                 screen.GetType().GetMethod("SetFocus", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, new object[] { 1 });
                 await Frames(4);
                 SaveFrame("levelup-focus-object");
+                // Toutes les stats à la touche du journal, puis un fragment banni saisi en pleine chute (plan 04 §11).
+                InputEventAction journal = new() { Action = "journal", Pressed = true };
+                screen.GetType().GetMethod("_Input").Invoke(screen, new object[] { journal });
+                await Frames(4);
+                SaveFrame("levelup-stats");
+                screen.GetType().GetMethod("_Input").Invoke(screen, new object[] { journal });
+                screen.GetType().GetMethod("ToggleBanish", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
+                await Frames(2);
+                SaveFrame("levelup-banish-mode");
+                // L'offre de ce banc est posée à la main : le bannissement est rejoué par une nouvelle offre, le
+                // fragment de droite marqué banni, sans passer par FragmentManager.
+                FieldInfo banished = screen.GetType().GetField("_banishedIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+                banished.SetValue(screen, 2);
+                eventBus.EmitSignal(EventBus.SignalName.FragmentChoicesReady, pending.Count);
+                banished.SetValue(screen, -1);
+                await Frames(14);
+                SaveFrame("levelup-banish-fall");
             }
             screen.GetType().GetMethod("Skip", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(screen, null);
             await Frames(4);
