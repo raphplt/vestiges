@@ -136,10 +136,10 @@
     "max_voices": 2
   },
   "sfx_perk_refuse": {
-    "path": "res://assets/audio/sfx/selected/perk_refuse.wav",
+    "path": "res://assets/audio/sfx/ui/menu_refuse.wav",
     "volume_db": 0,
     "min_interval_ms": 120,
-    "effect_id": "perk_refuse",
+    "effect_id": "menu_refuse",
     "priority": 30,
     "max_voices": 2
   },
@@ -260,26 +260,32 @@
     "effect_id": "crawler_emerge"
   },
   "sfx_menu_clic": {
-    "path": "res://assets/audio/sfx/selected/ui_click.wav",
+    "path": "res://assets/audio/sfx/ui/menu_click.wav",
     "volume_db": 0,
     "min_interval_ms": 120,
-    "effect_id": "ui_click",
+    "effect_id": "menu_click",
     "priority": 30,
     "max_voices": 1
   },
   "sfx_menu_survol": {
-    "path": "res://assets/audio/sfx/selected/ui_hover.wav",
+    "path": "res://assets/audio/sfx/ui/menu_hover_1.wav",
     "volume_db": 0,
     "min_interval_ms": 120,
-    "effect_id": "ui_hover",
+    "effect_id": "menu_hover",
     "priority": 10,
-    "max_voices": 1
+    "max_voices": 1,
+    "variants": [
+      "res://assets/audio/sfx/ui/menu_hover_1.wav",
+      "res://assets/audio/sfx/ui/menu_hover_2.wav",
+      "res://assets/audio/sfx/ui/menu_hover_3.wav",
+      "res://assets/audio/sfx/ui/menu_hover_4.wav"
+    ]
   },
   "sfx_menu_confirmer": {
-    "path": "res://assets/audio/sfx/selected/ui_confirm.wav",
+    "path": "res://assets/audio/sfx/ui/menu_confirm.wav",
     "volume_db": 0,
     "min_interval_ms": 120,
-    "effect_id": "ui_confirm",
+    "effect_id": "menu_confirm",
     "priority": 60,
     "max_voices": 2
   },

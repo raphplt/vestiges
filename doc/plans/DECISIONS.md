@@ -2002,3 +2002,13 @@ Retour de jeu après le §175, avec la Rallonge : une créature arrive à porté
 **Correction :** une recharge finie sans cible met l'arme **prête** : son minuteur s'arrête, et chaque image elle vérifie, sans allocation, si une créature est à portée, mesurée comme son attaque la mesure (ellipse du coup de mêlée, cercle agrandi par la taille). Elle frappe dès qu'une créature entre à portée, et sa recharge repart de ce coup. La règle vaut pour toutes les armes à coups (mêlée, tirs, chaîne), pas pour l'orbite ni le cône continu. Le Ressort de sommier ne compte plus que les attaques qui partent. Code : `Player.WeaponReadiness.cs`.
 
 **Vérification :** build sans avertissement ; suites smoke, armes (nouveau contrôle : Rallonge prête, frappe aussitôt à l'arrivée d'une créature, recharge relancée), objets, effets de perks et combat d'objets vertes.
+
+## 178. Sons de menu dans l'ambiance du jeu — 14 octobre 2026
+
+Raphaël : « les sons de sélection des menus ne sont pas assez dans l'ambiance du jeu, comment remédier à ça ».
+
+**Diagnostic (mesuré, non écouté) :** survol, clic et confirmation viennent du paquet Kenney Interface Sounds, choisis le 7 octobre parmi des candidats du même genre. Le survol dure 20 ms et centre sa brillance à 10,7 kHz, le clic à 4,8 kHz, alors que les sons du monde sont coupés vers 3,5–4,5 kHz et faits de matières (bois, craie, papier, cloche, piano patiné). Le survol, joué à chaque déplacement du focus, est le plus en cause.
+
+**Acquis :** Raphaël retient la piste proposée, une famille de sons faits des matières du jeu, en synthèse originale, plutôt qu'un simple adoucissement des fichiers actuels. Lot U1 au [plan 15](15-audio.md#u1--sons-de-menu-faits-des-matières-du-jeu--14-octobre-2026) : planche d'écoute hors dépôt, rien n'est intégré avant son choix.
+
+**Choix du même jour :** survol B (papier), clic A (pierre), confirmer C (petite cloche de bronze), refus C (corde étouffée), intégrés ([plan 15 U1](15-audio.md#u1-livré--choix-du-14-octobre)). Sur le survol : « B mais aucun des 3 proposés ne me plait vraiment » ; B est gardé en attendant une seconde planche.

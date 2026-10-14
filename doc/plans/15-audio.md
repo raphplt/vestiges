@@ -673,3 +673,35 @@ Demande de Raphaël ([DECISIONS §111](DECISIONS.md)) : chercher ou créer les q
 ## Correctif du 12 octobre — son des petits lieux
 
 Retour de Raphaël : pas de son en validant la cabine téléphonique, le wagonnet de la mine, etc. Les petits lieux (plan 22) passaient par `SmallPlaceUsed`, que l'`AudioManager` n'écoutait pas. Ils jouent désormais `sfx_poi_activate`, la même confirmation que les POI explorés ; aucune nouvelle entrée de banque. Contrôle automatique dans `SmallPlacesRegression` (une demande à l'usage, aucune sur un lieu épuisé). À écouter en jeu ; un son propre par lieu reste un besoin possible.
+
+## U1 — sons de menu faits des matières du jeu — 14 octobre 2026
+
+Demande de Raphaël ([DECISIONS §178](DECISIONS.md)) : les sons de menu ne sont pas dans l'ambiance du jeu. Survol, clic et confirmation sortent de Kenney Interface Sounds ; le survol (20 ms, centroïde 10,7 kHz) est de loin le plus brillant de la banque.
+
+**Planche :** `~/.local/share/vestiges-audio/2026-10-14/menus/index.html` (hors dépôt, autonome : sons intégrés à la page). Trois synthèses originales par rôle, plus le son actuel en référence :
+
+| Rôle (clé) | A | B | C |
+|---|---|---|---|
+| Survol et focus (`sfx_menu_survol`), 4 variantes chacun | pierre frôlée | papier | bois effleuré |
+| Clic (`sfx_menu_clic`) | pierre | bois | bronze étouffé |
+| Confirmer (`sfx_menu_confirmer`) | piano patiné | corde pincée | petite cloche |
+| Refus (`sfx_perk_refuse`, aussi joué au level-up) | pierre sourde | bois mat, deux coups | corde étouffée |
+
+- Confirmation accordée en fa mineur, tonalité mesurée du thème du Hub (chroma : fa, do, ré bémol) : fa puis do, suivis d'échos qui s'assourdissent, baissent un peu et se trouent (signature de l'Effacement).
+- Survols entre 1,2 et 2 kHz de centroïde, contre 10,7 kHz aujourd'hui ; variantes tirées sans répétition immédiate en jeu (`variants` de `sounds.json`).
+- Chaque candidat est au niveau du son actuel qu'il remplacerait (même sonie momentanée maximale), pour comparer le timbre au niveau du jeu.
+- Scène « en situation » : la sélection cochée jouée sur le thème du Hub à −6 dB (`MusicMixDb`), en navigation (survols, clic, refus, confirmation) et en défilement rapide (12 survols à 130 ms, au-dessus de la cadence de 120 ms).
+- `synth.py` (NumPy, graine fixe) régénère les fichiers à l'identique (empreintes vérifiées sur deux passes) ; `manifest.json` garde empreintes et niveaux. Contrôles par mesure et spectrogramme : pas de silence de tête, pas de composante continue, fins en fondu. Aucun son n'a été écouté par l'agent.
+
+**Après le choix :** copier les fichiers retenus dans `assets/audio/sfx/selected/`, mettre à jour `sounds.json` (variantes du survol) et `CREDITS.json` (synthèse originale), passer `tools/audio_bank_audit.py`, `tools/test_audio.sh` et le smoke test. Un mélange entre candidats (survol A, clic B…) est possible ; une même matière pour survol, clic et refus donnera la famille la plus cohérente.
+
+### U1 livré — choix du 14 octobre
+
+Choix de Raphaël (export de la planche) : **survol B** (papier), **clic A** (pierre), **confirmer C** (petite cloche), **refus C** (corde étouffée). Remarque sur le survol : « B mais aucun des 3 proposés ne me plait vraiment ».
+
+- `tools/generate_menu_sounds.py` régénère les sept fichiers retenus dans `assets/audio/sfx/ui/` (`menu_hover_1` à `4`, `menu_click`, `menu_confirm`, `menu_refuse`), identiques octet pour octet à ceux de la planche (mêmes graines, mêmes niveaux que les sons Kenney remplacés).
+- `sounds.json` : mêmes clés, nouveaux fichiers ; le survol tire ses quatre variantes sans répétition immédiate. `sfx_perk_refuse` change aussi au level-up et aux écrans de choix en run.
+- Anciens `ui_hover`, `ui_confirm` et `perk_refuse` retirés avec leurs crédits ; `ui_click` reste, source de cinq sons d'armes (`prepare_weapon_audio.py`).
+- Contrôles : `audio_bank_audit.py` 0 échec, smoke test, `test_audio.sh` (0 échec). Aucun son écouté par l'agent ; à juger en jeu.
+
+**Reste :** le survol B est un pis-aller ; une seconde planche de survol est à proposer selon ce qui gêne Raphaël dans les trois premières.
