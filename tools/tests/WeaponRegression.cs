@@ -49,6 +49,7 @@ public partial class WeaponRegression : Node2D
             CheckRangeAndZone();
             await CheckGroundFireOnGround();
             await CheckMeleeStrikeShape();
+            await CheckReadyWeapon();
             CheckAscensions();
             CheckGrammarRejectsUnknownKeys();
             CheckContractRejectsBadData();

@@ -394,6 +394,7 @@ public partial class Player : CharacterBody2D
         _weaponSlots.RemoveAt(slotIndex);
         // Le Scalpel repris plus tard repart de zéro coup.
         _weaponHitCounters.Remove(removed.Id);
+        RemoveReadySlot(slotIndex);
         if (_isConeActive && removed.SpecialEffect?.Kind == SpecialEffectKind.SustainedCone)
             DeactivateSustainedCone();
         if (removed == _orbitalWeapon)
@@ -523,6 +524,7 @@ public partial class Player : CharacterBody2D
 
         float dt = (float)delta;
         _attackFx.Tick(dt);
+        TickReadyWeapons();
         bool inputAllowed = _gameManager.CurrentState == GameManager.GameState.Run;
         Vector2 inputDir = inputAllowed ? Input.GetVector("move_left", "move_right", "move_up", "move_down") : Vector2.Zero;
 #if TOOLS
@@ -1857,6 +1859,7 @@ public partial class Player : CharacterBody2D
         Velocity = Vector2.Zero;
         foreach (Timer timer in _weaponTimers)
             timer.Stop();
+        _readyWeaponSlots = 0;
         DeactivateSustainedCone();
         RemoveFromGroup("player");
 
@@ -2068,9 +2071,13 @@ public partial class Player : CharacterBody2D
             return;
         }
 
-        PerformDiscreteAttack(_equippedWeapon.Category, pattern);
+        // Rien à portée : l'arme reste prête et frappera la première créature qui arrive (TickReadyWeapons).
+        bool attacked = PerformDiscreteAttack(_equippedWeapon.Category, pattern);
+        if (!attacked)
+            HoldWeaponReady(slotIndex);
         RepeatFromEcho(_equippedWeapon.Category, pattern);
-        _objectMilestones?.CountAttack(_equippedWeapon);
+        if (attacked)
+            _objectMilestones?.CountAttack(_equippedWeapon);
     }
 
     /// <summary>Attaque ponctuelle de l'arme active : chaîne, mêlée ou tir (ni cône continu ni orbite).</summary>

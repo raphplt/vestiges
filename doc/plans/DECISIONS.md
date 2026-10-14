@@ -1988,3 +1988,13 @@ Retours de jeu de Raphaël après le §174 :
 **À faire :** les courbes de difficulté doivent suivre une puissance qui ne plafonne plus (plan 47, fin de run sans danger). Une commune sur la Boîte à musique donne +0,5 orbe, visible seulement à la carte suivante, car les orbes ne comptent que la partie entière : à revoir si cela gêne.
 
 **Vérification :** build sans avertissement ; suites smoke, objets, armes, inventaire, combat d'objets, effets de perks, écran de choix, catalogues, quêtes et navigation des menus vertes (validation headless sur une copie propre). Relecture `godot-reviewer` : rien de bloquant.
+
+## 176. Arme prête : un coup gardé jusqu'à ce qu'une créature arrive à portée — 14 octobre 2026
+
+Retour de jeu après le §175, avec la Rallonge : une créature arrive à portée d'une arme de mêlée, et le coup ne part que plus tard ; « pour les armes corps à corps, c'est pas du tout logique », « hyper désagréable comme sensation ».
+
+**Cause :** le minuteur de chaque arme tournait en continu. Une recharge finie sans cible à portée perdait son coup, et l'arme attendait une recharge entière de plus. Une créature qui arrivait au contact attendait donc entre 0 et une recharge complète avant le premier coup. Le défaut existait déjà ; la cadence plus lente du §175 l'a rendu flagrant (Rallonge : jusqu'à 1,23 s).
+
+**Correction :** une recharge finie sans cible met l'arme **prête** : son minuteur s'arrête, et chaque image elle vérifie, sans allocation, si une créature est à portée, mesurée comme son attaque la mesure (ellipse du coup de mêlée, cercle agrandi par la taille). Elle frappe dès qu'une créature entre à portée, et sa recharge repart de ce coup. La règle vaut pour toutes les armes à coups (mêlée, tirs, chaîne), pas pour l'orbite ni le cône continu. Le Ressort de sommier ne compte plus que les attaques qui partent. Code : `Player.WeaponReadiness.cs`.
+
+**Vérification :** build sans avertissement ; suites smoke, armes (nouveau contrôle : Rallonge prête, frappe aussitôt à l'arrivée d'une créature, recharge relancée), objets, effets de perks et combat d'objets vertes.
