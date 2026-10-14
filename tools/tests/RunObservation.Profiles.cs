@@ -14,9 +14,11 @@ namespace Vestiges.Tests;
 /// restent comparables.
 /// - Débutant : erre autour du départ, ne se détourne que vers les lieux tout proches, prend une carte au hasard,
 ///   n'esquive pas, ne dashe pas.
-/// - Moyen : garde un cap, visite les lieux vus (détour habituel), prend d'abord ce qu'il possède déjà.
+/// - Moyen : garde un cap, visite les lieux vus (détour habituel), prend d'abord ce qu'il possède déjà, va abattre
+///   les Souverains proches.
 /// - Fort : garde un cap, fait de longs détours, choisit par score, relance une offre sans intérêt et bannit
-///   gratuitement ce qui ne sert pas, s'écarte de la foule et dashe hors d'un encerclement (trois créatures au contact) ou pour fuir, PV bas.
+///   gratuitement ce qui ne sert pas, va abattre les Souverains proches, s'écarte de la foule et dashe hors d'un
+///   encerclement (trois créatures au contact) ou pour fuir, PV bas.
 /// Le profil fort n'esquive pas les projectiles : aucun index des tirs ennemis n'existe, il ne lit que la foule.
 /// </summary>
 public partial class RunObservation
@@ -26,7 +28,8 @@ public partial class RunObservation
     private const float BeginnerDetourRange = 220f;
     private const float StrongDetourRange = 1100f;
     // Foule lue par le profil fort : distance d'écart, rayon et effectif d'un encerclement qui déclenche le dash.
-    private const float DodgeRadius = 170f;
+    // 170 px gardaient trop loin les armes de moyenne portée (matrice M1 : Facteur et Éveillée forts sous le débutant).
+    private const float DodgeRadius = 120f;
     // Un build de corps à corps reste au contact : il ne s'écarte que de ce qui le colle (mesure du 13 octobre : à
     // 170 px, le Vagabond fort fuyait tout et plafonnait au niveau 3 à 5 min).
     private const float MeleeDodgeRadius = 60f;
@@ -39,7 +42,19 @@ public partial class RunObservation
     private const int MeleeEncircledCount = 7;
     private const float FleeHpRatio = 0.4f;
 
+    // Souverains : un joueur va les abattre, même après la fin de leur chasse (DECISIONS §165) ; une arme à distance
+    // tire à bonne distance. Un Souverain hors d'atteinte (eau, décors) est abandonné après un temps.
+    private const float SovereignChaseRange = 1200f;
+    private const float SovereignStandoff = 120f;
+    private const float MeleeSovereignStandoff = 30f;
+    private const double SovereignCheckSeconds = 0.5;
+    private const double SovereignGiveUpSeconds = 90.0;
+
     private BotProfile _profile = BotProfile.Legacy;
+    private Enemy _chasedSovereign;
+    private double _chaseStart;
+    private double _nextSovereignCheck;
+    private readonly HashSet<ulong> _abandonedSovereigns = new();
     private RandomNumberGenerator _profileRng;
     private int _profileRerolls;
     private int _profileBanishes;
@@ -244,5 +259,54 @@ public partial class RunObservation
         if (threatened && _player.Mobility.SecondsSinceDash >= _player.Mobility.Config.CooldownSeconds)
             _player.Mobility.Request();
         return steered;
+    }
+
+    /// <summary>Point de passage vers le Souverain le plus proche, à distance de tir ; faux sans Souverain à chasser.</summary>
+    private bool TryChaseSovereign(double time, out Vector2 waypoint)
+    {
+        waypoint = default;
+        if (_profile is BotProfile.Legacy or BotProfile.Beginner)
+            return false;
+        if (time >= _nextSovereignCheck)
+        {
+            _nextSovereignCheck = time + SovereignCheckSeconds;
+            Enemy nearest = NearestSovereign();
+            if (nearest != _chasedSovereign)
+                _chaseStart = time;
+            _chasedSovereign = nearest;
+        }
+        if (_chasedSovereign == null || !IsInstanceValid(_chasedSovereign) || !_chasedSovereign.IsActive || _chasedSovereign.IsDying)
+            return false;
+        if (time - _chaseStart > SovereignGiveUpSeconds)
+        {
+            _abandonedSovereigns.Add(_chasedSovereign.GetInstanceId());
+            _chasedSovereign = null;
+            return false;
+        }
+        Vector2 from = _chasedSovereign.GlobalPosition;
+        Vector2 offset = _player.GlobalPosition - from;
+        float standoff = IsMeleeBuild() ? MeleeSovereignStandoff : SovereignStandoff;
+        waypoint = offset.Length() > standoff ? from + offset.Normalized() * standoff : _player.GlobalPosition;
+        return true;
+    }
+
+    private Enemy NearestSovereign()
+    {
+        Enemy best = null;
+        float bestDistance = float.MaxValue;
+        using CrowdQuery crowd = CrowdIndex.Near(_player.GlobalPosition, SovereignChaseRange);
+        foreach (Node2D target in crowd.Targets)
+        {
+            if (target is not Enemy { IsActive: true, IsDying: false, VariantId: "champion" } enemy
+                || _abandonedSovereigns.Contains(enemy.GetInstanceId()))
+                continue;
+            float distance = _player.GlobalPosition.DistanceSquaredTo(enemy.GlobalPosition);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = enemy;
+            }
+        }
+        return best;
     }
 }

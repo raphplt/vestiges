@@ -809,6 +809,12 @@ public partial class RunObservation : Node
             // Comme un joueur, le bot suit la cible d'un micro-événement en cours (vestige, veille, Souverain).
             if (t >= eventDetourUntil && director.TryGetActiveTarget(out Vector2 eventTarget))
                 waypoint = eventTarget;
+            // Un Souverain à portée, chasse finie ou non : les profils moyen et fort vont l'abattre (plan 47).
+            if (TryChaseSovereign(t, out Vector2 sovereignWaypoint))
+            {
+                waypoint = sovereignWaypoint;
+                lastProgressTime = t;
+            }
             // Comme un joueur devant la Barrière : il va au battant debout le plus proche et le frappe de près.
             if (barrierDirector?.Barrier is { IsEnded: false } barrier && barrier.NearestStandingLeaf(_player.GlobalPosition) is Vector2 leaf)
             {
