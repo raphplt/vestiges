@@ -734,3 +734,7 @@ Retours : « baisse le hover et monte le clic » ; « que ce soit clic ou retour
 - Le focus ne sonne plus qu'au déplacement du joueur (`UITheme.IsNavigationInput` : flèches, manette, Tab) ; le survol à la souris sonne toujours à l'entrée du pointeur.
 - Mix : `sfx_menu_survol` à −3 dB, `sfx_menu_clic` à +4 dB dans `sounds.json` (le retour garde son niveau).
 - Contrôles : build sans avertissement, `audio_bank_audit.py` 0 échec ; `MenuNavigationRegression` vérifie qu'une flèche sonne le survol et qu'un focus donné par le code reste muet (la suite s'arrête plus loin sur la vérification du portrait de la Scaphandrière, hors de ce lot). Suites audio et Campement non relancées sur ce dernier changement, à la demande de Raphaël.
+
+### U1d livré — clic en loquet, 14 octobre
+
+Choix de Raphaël sur la planche U1d : **C, loquet** (le pêne claque, puis tombe dans la gâche 9 ms plus tard). `menu_click.wav` régénéré par `tools/generate_menu_sounds.py`, identique octet pour octet au candidat écouté, 3 dB au-dessus de l'ancien clic de pierre. Gain de banque ramené de +4 à +1 dB : le clic garde le niveau effectif demandé au U1e (−30 LUFS momentané) au lieu de dépasser de 4 dB celui de la planche. `ui_click.wav` (Kenney) reste, source de sons d'armes. Audit de la banque : 0 échec. À juger en jeu.

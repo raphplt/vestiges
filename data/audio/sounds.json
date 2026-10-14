@@ -261,7 +261,7 @@
   },
   "sfx_menu_clic": {
     "path": "res://assets/audio/sfx/ui/menu_click.wav",
-    "volume_db": 4,
+    "volume_db": 1,
     "min_interval_ms": 120,
     "effect_id": "menu_click",
     "priority": 30,

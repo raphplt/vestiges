@@ -2086,3 +2086,5 @@ Raphaël : « les sons de sélection des menus ne sont pas assez dans l'ambiance
 Raphaël : « améliore après les sliders des paramètres, donne-leur un aspect plus beau et dans la DA du jeu, et le bouton fermer n'est pas carré… mets une vraie croix au lieu d'un x ».
 
 **Fait :** rainure de pierre, incrustation et poignée de bronze, bouton fermer carré à croix dessinée ([plan 04 §10](04-interfaces-et-hub.md#10-paramètres--curseurs-et-bouton-fermer--14-octobre-2026)). À juger en jeu.
+
+**§178, clic retenu, même jour :** loquet (C de la planche U1d), au niveau de clic demandé ([plan 15](15-audio.md#u1d-livré--clic-en-loquet-14-octobre)).

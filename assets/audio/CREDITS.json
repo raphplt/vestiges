@@ -2563,14 +2563,14 @@
   },
   {
     "effect_id": "menu_click",
-    "candidate_id": "menu_20261014_u1_menu_click",
+    "candidate_id": "menu_20261014_u1d_click",
     "file": "assets/audio/sfx/ui/menu_click.wav",
-    "sha256": "c58836f46d4ef9c6c3668295e4ca0a1a3425c16e24b911fcd4a7d7d06f4b4848",
+    "sha256": "75728bea45b2e255ffd246f6105725cd7862fc6b0a58706b9792b73ad2169e5d",
     "author": "VESTIGES",
     "license": "Original",
-    "source_url": "Synthèse originale VESTIGES — planche U1",
-    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : clic A",
-    "processing": "tools/generate_menu_sounds.py : Clic de pierre ; mono 48 kHz, au niveau du son Kenney remplacé.",
+    "source_url": "Synthèse originale VESTIGES — planche U1d",
+    "attribution": "Synthèse originale VESTIGES ; choix explicite de Raphaël : loquet (C)",
+    "processing": "tools/generate_menu_sounds.py : loquet, le pêne claque puis tombe dans la gâche 9 ms plus tard ; mono 48 kHz, 3 dB au-dessus de l'ancien clic de pierre.",
     "selection_date": "2026-10-14"
   },
   {
