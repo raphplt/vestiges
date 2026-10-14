@@ -14,7 +14,11 @@
         { "from_minute": 8, "per_minute": 1.13 },
         { "from_minute": 15, "per_minute": 1.18 }
     ],
-    "damage_scaling_per_minute": 1.045,
+    "_doc_damage_scaling": "Dégâts des créatures : × flat_dmg_multiplier, puis × per_minute par minute dans chaque segment (comme les PV). 1,045 par minute jusqu'au 14 octobre ; plan 47 (DECISIONS §169) : 1,09 après 15 min, soit environ ×12 à 30 min par rapport au début (×5 avant), avant Péril du temps et phase de fin.",
+    "damage_scaling_segments": [
+        { "from_minute": 0, "per_minute": 1.045 },
+        { "from_minute": 15, "per_minute": 1.09 }
+    ],
     "_doc_ranged_damage_growth_share": "Part de la croissance des dégâts que reçoivent les créatures à distance (type ranged) : 0,57 donne ×1,02 par minute au lieu de ×1,035 (plan 20 §7.1).",
     "ranged_damage_growth_share": 0.57,
     "_doc_xp": "XP d'une créature fixée à son apparition (plan 20 §6.9, R1-A) : × (1 + xp_growth_per_minute × minute) × (1 + xp_oblivion_bonus × oubli du lieu), et × xp_crisis_multiplier si elle apparaît pendant une Résurgence.",

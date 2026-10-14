@@ -79,6 +79,21 @@ public class NaturalEliteConfig
     public float IntervalMaxSec = 55f;
     public int MaxAlive = 2;
     public List<string> AffixPool = new();
+    /// <summary>Fin de run (plan 47) : de LateFromMinute à LateFullMinute, les élites passent progressivement aux valeurs Late*.</summary>
+    public float LateFromMinute = float.MaxValue;
+    public float LateFullMinute = float.MaxValue;
+    public float LateIntervalMinSec;
+    public float LateIntervalMaxSec;
+    public int LateMaxAlive;
+    public float LateHpMult = 1f;
+    public float LateDamageMult = 1f;
+    /// <summary>Part de la montée (0 à 1) à partir de laquelle une élite porte un affixe de plus.</summary>
+    public float LateExtraAffixAt = 2f;
+
+    /// <summary>Avancement de la montée de fin de run, de 0 (avant LateFromMinute) à 1 (après LateFullMinute).</summary>
+    public float LateRamp(float elapsedMinutes) => LateFullMinute <= LateFromMinute
+        ? (elapsedMinutes >= LateFromMinute ? 1f : 0f)
+        : Mathf.Clamp((elapsedMinutes - LateFromMinute) / (LateFullMinute - LateFromMinute), 0f, 1f);
 }
 
 public class PhaseModifierConfig
@@ -139,6 +154,18 @@ public static class EnemyVariantDataLoader
             MaxAlive = (int)Float(natural, "max_alive", 2f),
             AffixPool = Strings(natural, "affix_pool")
         };
+        if (natural.TryGetValue("late", out Variant lateValue) && lateValue.VariantType == Variant.Type.Dictionary)
+        {
+            Godot.Collections.Dictionary late = lateValue.AsGodotDictionary();
+            NaturalElites.LateFromMinute = Float(late, "from_minute", float.MaxValue);
+            NaturalElites.LateFullMinute = Float(late, "full_minute", NaturalElites.LateFromMinute);
+            NaturalElites.LateIntervalMinSec = Float(late, "interval_min_sec", NaturalElites.IntervalMinSec);
+            NaturalElites.LateIntervalMaxSec = Float(late, "interval_max_sec", NaturalElites.IntervalMaxSec);
+            NaturalElites.LateMaxAlive = (int)Float(late, "max_alive", NaturalElites.MaxAlive);
+            NaturalElites.LateHpMult = Float(late, "hp_mult", 1f);
+            NaturalElites.LateDamageMult = Float(late, "damage_mult", 1f);
+            NaturalElites.LateExtraAffixAt = Float(late, "extra_affix_at", 2f);
+        }
 
         Godot.Collections.Dictionary phase = root["phase_modifiers"].AsGodotDictionary();
         PhaseModifiers = new PhaseModifierConfig

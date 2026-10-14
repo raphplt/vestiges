@@ -106,6 +106,17 @@
         "interval_min_sec": 50,
         "interval_max_sec": 75,
         "max_alive": 2,
+        "_doc_late": "Fin de run (plan 47, DECISIONS §169) : de from_minute à full_minute, les élites passent progressivement à ces valeurs : apparition toutes les 12 à 20 s au lieu de 50 à 75, jusqu'à 8 en même temps au lieu de 2, PV ×3 et dégâts ×1,8 en plus de la variante, un affixe de plus passé la moitié de la montée.",
+        "late": {
+            "from_minute": 15,
+            "full_minute": 30,
+            "interval_min_sec": 12,
+            "interval_max_sec": 20,
+            "max_alive": 8,
+            "hp_mult": 3.0,
+            "damage_mult": 1.8,
+            "extra_affix_at": 0.5
+        },
         "affix_pool": ["enraged", "armored", "regenerant", "explosive", "swift"]
     },
     "phase_modifiers": {

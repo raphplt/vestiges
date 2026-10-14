@@ -1921,3 +1921,11 @@ Réponses de Raphaël sur le plan 47 :
 - **Pourquoi monter** : « les vestiges auront peu d'intérêt une fois tout débloqué. donc je dirais peut-être quand même le choix + de vestiges pour les nouveaux joueurs le temps de tout débloquer (il faut aussi diminuer drastiquement le gain de vestiges au moins d'un facteur 2 ou 3, et en gros prendre ce nouveau facteur qui sera entre 0.2 et 0.4 x le nombre de kills et ça sera pour les runs "simples" et ça monte avec les runs plus dures ». Les autres motifs (déblocages réservés, marques de victoire) restent ouverts.
 - **Fait le jour même** : 0,4 Vestige par élimination (`kills_per_vestige` 0,85 → 2,5), soit un gain divisé par environ 3. La matrice M1 donnait le Campement plein en 11 runs moyennes (cible 30 à 50). Le multiplicateur par niveau viendra avec le lot L4.
 - **L1 et L2** : feu vert. D'abord recaler le bot (aller chercher les Souverains, esquiver moins loin), puis défenses et créatures réglées ensemble sur la cible du §167, avec mesure.
+
+## 169. Vol de vie : l'ancien plafond, une montée plus lente ; plus d'élites, vraiment plus fortes — 14 octobre 2026
+
+Retours de Raphaël sur le premier réglage du plan 47 :
+- **Vol de vie** : « je ne plafonnerais pas le vol de vie [à 2 %] mais par contre le scaling doit être plus long. » Choix : l'ancien plafond de 8 % des PV max par seconde revient, et le vol de vie monte trois fois plus lentement (0,15 % par niveau de l'Écusson du barbier ou par Ampoule, au lieu de 0,5 %).
+- **PV et dégâts des créatures** : le ×1,375 du Péril du temps lui semblait « très léger ». Mis au clair : il s'ajoute à la croissance existante ; à 30 min, les PV valent déjà environ ×130 à ×180 du début, les dégâts seulement ×5 à ×6. Choix : dégâts ×12 à ×15 à 30 min (1,09 par minute après 15 min, `damage_scaling_segments`), « mais ce qui fait la diff c'est d'avoir plus d'élites qui elles sont vraiment plus fortes ».
+- **Élites de fin de run** : de 15 à 30 min, elles apparaissent toutes les 12 à 20 s au lieu de 50 à 75, jusqu'à 8 en même temps au lieu de 2, avec PV ×3 et dégâts ×1,8 en plus de la variante, et un affixe de plus passé 22 min 30.
+- **Traqueur** : « ok le traqueur on va le régler aussi ». Son attaque passe de 12 à 10, comme le Vagabond et le Facteur ; son passif (portée +20 %, cadence +10 %) reste son identité.

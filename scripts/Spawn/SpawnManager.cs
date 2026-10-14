@@ -18,10 +18,11 @@ public partial class SpawnManager : Node2D
 	private float _baseSpawnInterval;
 	private float _minSpawnInterval;
 	private float _spawnIntervalDecay;
-	// Croissance des PV par segments (minute de début, facteur par minute), triés par minute de début.
+	// Croissance des PV et des dégâts par segments (minute de début, facteur par minute), triés par minute de début.
 	private readonly List<float> _hpSegmentFromMinute = new();
 	private readonly List<float> _hpSegmentPerMinute = new();
-	private float _dmgScalingPerMinute;
+	private readonly List<float> _dmgSegmentFromMinute = new();
+	private readonly List<float> _dmgSegmentPerMinute = new();
 	private float _rangedDamageGrowthShare = 1f;
 	private float _xpGrowthPerMinute;
 	private float _xpOblivionBonus;
@@ -238,19 +239,13 @@ public partial class SpawnManager : Node2D
 	private void ComputeScaling(EnemyData data, float elapsedMinutes, out float hpScale, out float dmgScale)
 	{
 		// Une pente par segment, quelle que soit la phase : la puissance du joueur décolle par à-coups (plan 21 H3).
-		hpScale = _flatHpMultiplier;
-		for (int i = 0; i < _hpSegmentFromMinute.Count; i++)
-		{
-			float end = i + 1 < _hpSegmentFromMinute.Count ? _hpSegmentFromMinute[i + 1] : float.MaxValue;
-			float minutes = Mathf.Min(elapsedMinutes, end) - _hpSegmentFromMinute[i];
-			if (minutes <= 0f)
-				break;
-			hpScale *= Mathf.Pow(_hpSegmentPerMinute[i], minutes);
-		}
+		hpScale = _flatHpMultiplier * SegmentedGrowth(_hpSegmentFromMinute, _hpSegmentPerMinute, elapsedMinutes);
 		// Les tirs et les zones touchent de loin, en nombre, et leurs créatures meurent peu : leurs dégâts ne suivent
 		// qu'une part de la croissance commune (plan 20 §7.1).
-		float damageGrowthMinutes = data.CombatType == EnemyCombatType.Ranged ? elapsedMinutes * _rangedDamageGrowthShare : elapsedMinutes;
-		dmgScale = Mathf.Pow(_dmgScalingPerMinute, damageGrowthMinutes) * _flatDmgMultiplier;
+		float damageGrowth = SegmentedGrowth(_dmgSegmentFromMinute, _dmgSegmentPerMinute, elapsedMinutes);
+		if (data.CombatType == EnemyCombatType.Ranged)
+			damageGrowth = Mathf.Pow(damageGrowth, _rangedDamageGrowthShare);
+		dmgScale = damageGrowth * _flatDmgMultiplier;
 
 		if (_currentRunPhase == GameManager.RunPhase.Crisis)
 		{
@@ -307,7 +302,7 @@ public partial class SpawnManager : Node2D
 	// =========================================================
 
 	/// <summary>Transforme une créature en variante avec des affixes tirés sans doublon.</summary>
-	public void MakeVariant(Enemy enemy, string variantId)
+	public void MakeVariant(Enemy enemy, string variantId, int extraAffixes = 0)
 	{
 		EnemyVariantData variant = EnemyVariantDataLoader.GetVariant(variantId);
 		if (variant == null)
@@ -316,7 +311,7 @@ public partial class SpawnManager : Node2D
 		_affixScratch.Clear();
 		_affixScratch.AddRange(variant.AffixPool.Count > 0 ? variant.AffixPool : EnemyVariantDataLoader.NaturalElites.AffixPool);
 		_affixPick.Clear();
-		for (int i = 0; i < variant.AffixCount && _affixScratch.Count > 0; i++)
+		for (int i = 0; i < variant.AffixCount + extraAffixes && _affixScratch.Count > 0; i++)
 		{
 			int index = (int)(RunRandom.Spawn.Randi() % _affixScratch.Count);
 			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(_affixScratch[index]);
@@ -387,7 +382,11 @@ public partial class SpawnManager : Node2D
 	private void TrySpawnNaturalElite(float elapsedMinutes)
 	{
 		NaturalEliteConfig config = EnemyVariantDataLoader.NaturalElites;
-		_nextEliteAtSec = _elapsedTime + RunRandom.Spawn.RandfRange((float)config.IntervalMinSec, (float)config.IntervalMaxSec);
+		// Fin de run (plan 47) : élites plus fréquentes, plus nombreuses et plus fortes, progressivement.
+		float ramp = config.LateRamp(elapsedMinutes);
+		_nextEliteAtSec = _elapsedTime + RunRandom.Spawn.RandfRange(Mathf.Lerp(config.IntervalMinSec, config.LateIntervalMinSec, ramp),
+			Mathf.Lerp(config.IntervalMaxSec, config.LateIntervalMaxSec, ramp));
+		int maxAlive = Mathf.RoundToInt(Mathf.Lerp(config.MaxAlive, config.LateMaxAlive, ramp));
 
 		for (int i = _naturalElites.Count - 1; i >= 0; i--)
 		{
@@ -395,7 +394,7 @@ public partial class SpawnManager : Node2D
 			if (!IsInstanceValid(tracked) || !tracked.IsActive || tracked.IsDying || tracked.Modifiers.Variant?.Id != "elite")
 				_naturalElites.RemoveAt(i);
 		}
-		if (_naturalElites.Count >= config.MaxAlive + _extraElites || _currentRunPhase == GameManager.RunPhase.Death)
+		if (_naturalElites.Count >= maxAlive + _extraElites || _currentRunPhase == GameManager.RunPhase.Death)
 			return;
 
 		Vector2 spawnPos = GetSpawnPosition();
@@ -404,7 +403,9 @@ public partial class SpawnManager : Node2D
 		if (data == null)
 			return;
 		Enemy enemy = SpawnAt(data, spawnPos, elapsedMinutes);
-		MakeVariant(enemy, "elite");
+		MakeVariant(enemy, "elite", ramp >= config.LateExtraAffixAt ? 1 : 0);
+		if (ramp > 0f)
+			enemy.Empower(Mathf.Lerp(1f, config.LateHpMult, ramp), Mathf.Lerp(1f, config.LateDamageMult, ramp));
 		_naturalElites.Add(enemy);
 		GD.Print($"[SpawnManager] Élite : {enemy.DisplayName} à {_elapsedTime:F0} s");
 	}
@@ -832,23 +833,9 @@ public partial class SpawnManager : Node2D
 		_baseSpawnInterval = (float)dict["base_spawn_interval"].AsDouble();
 		_minSpawnInterval = (float)dict["min_spawn_interval"].AsDouble();
 		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
-		_hpSegmentFromMinute.Clear();
-		_hpSegmentPerMinute.Clear();
-		foreach (Variant segment in dict["hp_scaling_segments"].AsGodotArray())
-		{
-			Godot.Collections.Dictionary entry = segment.AsGodotDictionary();
-			_hpSegmentFromMinute.Add((float)entry["from_minute"].AsDouble());
-			_hpSegmentPerMinute.Add((float)entry["per_minute"].AsDouble());
-		}
-		if (_hpSegmentFromMinute.Count == 0)
-		{
-			GD.PushWarning("[SpawnManager] hp_scaling_segments vide : PV constants après flat_hp_multiplier");
-			_hpSegmentFromMinute.Add(0f);
-			_hpSegmentPerMinute.Add(1f);
-		}
-		SortHpSegments();
+		ReadSegments(dict, "hp_scaling_segments", _hpSegmentFromMinute, _hpSegmentPerMinute);
+		ReadSegments(dict, "damage_scaling_segments", _dmgSegmentFromMinute, _dmgSegmentPerMinute);
 		_flatHpMultiplier = dict.ContainsKey("flat_hp_multiplier") ? (float)dict["flat_hp_multiplier"].AsDouble() : 1f;
-		_dmgScalingPerMinute = (float)dict["damage_scaling_per_minute"].AsDouble();
 		_flatDmgMultiplier = dict.ContainsKey("flat_dmg_multiplier") ? (float)dict["flat_dmg_multiplier"].AsDouble() : 1f;
 		_rangedDamageGrowthShare = dict.ContainsKey("ranged_damage_growth_share") ? (float)dict["ranged_damage_growth_share"].AsDouble() : 1f;
 		_xpGrowthPerMinute = dict.ContainsKey("xp_growth_per_minute") ? (float)dict["xp_growth_per_minute"].AsDouble() : 0f;
@@ -922,7 +909,10 @@ public partial class SpawnManager : Node2D
 		_hpSegmentPerMinute.Clear();
 		_hpSegmentFromMinute.Add(0f);
 		_hpSegmentPerMinute.Add(1.06f);
-		_dmgScalingPerMinute = 1.04f;
+		_dmgSegmentFromMinute.Clear();
+		_dmgSegmentPerMinute.Clear();
+		_dmgSegmentFromMinute.Add(0f);
+		_dmgSegmentPerMinute.Add(1.04f);
 		_maxEnemies = 120;
 		_maxEnemiesGrowthPerMinute = 4f;
 		_enemySpeedBaseMultiplier = 1.10f;
@@ -969,7 +959,6 @@ public partial class SpawnManager : Node2D
 				case "xp_growth_per_minute": _xpGrowthPerMinute = kv.Value; break;
 				case "xp_oblivion_bonus": _xpOblivionBonus = kv.Value; break;
 				case "xp_crisis_multiplier": _xpCrisisMultiplier = kv.Value; break;
-				case "damage_scaling_per_minute": _dmgScalingPerMinute = kv.Value; break;
 				case "ranged_damage_growth_share": _rangedDamageGrowthShare = kv.Value; break;
 				case "max_enemies_on_screen": _maxEnemies = (int)kv.Value; break;
 				// Mesure au-delà du plafond de coût (plan 29) : sans elle, le plafond de peril.json borne l'essai.
@@ -1006,41 +995,85 @@ public partial class SpawnManager : Node2D
 				case "time_peril_from_minute": _timePerilFromMinute = kv.Value; break;
 				case "time_peril_per_minute": _timePerilPerMinute = kv.Value; break;
 				default:
-					if (!TryOverrideHpSegment(kv.Key, kv.Value))
+					if (!TryOverrideSegment(kv.Key, kv.Value))
 						GD.PushWarning($"[SpawnManager] Unknown scaling override '{kv.Key}'");
 					break;
 			}
 		}
-		SortHpSegments();
+		SortSegments(_hpSegmentFromMinute, _hpSegmentPerMinute);
+		SortSegments(_dmgSegmentFromMinute, _dmgSegmentPerMinute);
 		GD.Print($"[SpawnManager] Applied {overrides.Count} scaling override(s)");
 	}
 
-	/// <summary>hp_segment_N_per_minute ou hp_segment_N_from_minute : segment existant de hp_scaling_segments.</summary>
-	private bool TryOverrideHpSegment(string key, float value)
+	/// <summary>
+	/// hp_segment_N_per_minute, hp_segment_N_from_minute (segment existant de hp_scaling_segments) ou leurs pendants
+	/// damage_segment_N_… pour damage_scaling_segments.
+	/// </summary>
+	private bool TryOverrideSegment(string key, float value) =>
+		TryOverrideSegment(key, value, "hp_segment_", _hpSegmentFromMinute, _hpSegmentPerMinute)
+		|| TryOverrideSegment(key, value, "damage_segment_", _dmgSegmentFromMinute, _dmgSegmentPerMinute);
+
+	private static bool TryOverrideSegment(string key, float value, string prefix, List<float> fromMinute, List<float> perMinute)
 	{
-		const string prefix = "hp_segment_";
 		if (!key.StartsWith(prefix, System.StringComparison.Ordinal))
 			return false;
 		string[] parts = key[prefix.Length..].Split('_', 2);
-		if (parts.Length != 2 || !int.TryParse(parts[0], out int index) || index < 0 || index >= _hpSegmentFromMinute.Count)
+		if (parts.Length != 2 || !int.TryParse(parts[0], out int index) || index < 0 || index >= fromMinute.Count)
 			return false;
 		switch (parts[1])
 		{
-			case "per_minute": _hpSegmentPerMinute[index] = value; return true;
-			case "from_minute": _hpSegmentFromMinute[index] = value; return true;
+			case "per_minute": perMinute[index] = value; return true;
+			case "from_minute": fromMinute[index] = value; return true;
 			default: return false;
 		}
 	}
 
-	/// <summary>ComputeScaling parcourt les segments dans l'ordre : un JSON ou une surcharge en désordre est retrié.</summary>
-	private void SortHpSegments()
+	/// <summary>Produit des pentes de chaque segment sur les minutes passées dedans.</summary>
+	private static float SegmentedGrowth(List<float> fromMinute, List<float> perMinute, float elapsedMinutes)
 	{
-		for (int i = 1; i < _hpSegmentFromMinute.Count; i++)
+		float growth = 1f;
+		for (int i = 0; i < fromMinute.Count; i++)
 		{
-			for (int j = i; j > 0 && _hpSegmentFromMinute[j] < _hpSegmentFromMinute[j - 1]; j--)
+			float end = i + 1 < fromMinute.Count ? fromMinute[i + 1] : float.MaxValue;
+			float minutes = Mathf.Min(elapsedMinutes, end) - fromMinute[i];
+			if (minutes <= 0f)
+				break;
+			growth *= Mathf.Pow(perMinute[i], minutes);
+		}
+		return growth;
+	}
+
+	private static void ReadSegments(Godot.Collections.Dictionary dict, string key, List<float> fromMinute, List<float> perMinute)
+	{
+		fromMinute.Clear();
+		perMinute.Clear();
+		if (dict.TryGetValue(key, out Variant segments))
+		{
+			foreach (Variant segment in segments.AsGodotArray())
 			{
-				(_hpSegmentFromMinute[j], _hpSegmentFromMinute[j - 1]) = (_hpSegmentFromMinute[j - 1], _hpSegmentFromMinute[j]);
-				(_hpSegmentPerMinute[j], _hpSegmentPerMinute[j - 1]) = (_hpSegmentPerMinute[j - 1], _hpSegmentPerMinute[j]);
+				Godot.Collections.Dictionary entry = segment.AsGodotDictionary();
+				fromMinute.Add((float)entry["from_minute"].AsDouble());
+				perMinute.Add((float)entry["per_minute"].AsDouble());
+			}
+		}
+		if (fromMinute.Count == 0)
+		{
+			GD.PushWarning($"[SpawnManager] {key} vide : pas de croissance avec le temps");
+			fromMinute.Add(0f);
+			perMinute.Add(1f);
+		}
+		SortSegments(fromMinute, perMinute);
+	}
+
+	/// <summary>ComputeScaling parcourt les segments dans l'ordre : un JSON ou une surcharge en désordre est retrié.</summary>
+	private static void SortSegments(List<float> fromMinute, List<float> perMinute)
+	{
+		for (int i = 1; i < fromMinute.Count; i++)
+		{
+			for (int j = i; j > 0 && fromMinute[j] < fromMinute[j - 1]; j--)
+			{
+				(fromMinute[j], fromMinute[j - 1]) = (fromMinute[j - 1], fromMinute[j]);
+				(perMinute[j], perMinute[j - 1]) = (perMinute[j - 1], perMinute[j]);
 			}
 		}
 	}

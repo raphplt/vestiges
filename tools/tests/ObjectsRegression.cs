@@ -563,7 +563,7 @@ public partial class ObjectsRegression : Node2D
         Check(Near(_player.CurrentHp - hp, 0.2f), "Aimant de frigo palier 15 : une orbe ramassée rend 0,2 PV");
     }
 
-    /// <summary>Paille tordue (plan 21 G6b) : 0,3 % des dégâts rendus (plan 47 L1), plafond par seconde (defense.json), doublé sous la moitié des PV au palier.</summary>
+    /// <summary>Paille tordue (plan 21 G6b) : 0,15 % des dégâts rendus (plan 47), plafond par seconde (defense.json), doublé sous la moitié des PV au palier.</summary>
     private void CheckLifesteal()
     {
         Setup();
@@ -584,9 +584,9 @@ public partial class ObjectsRegression : Node2D
         step.Invoke(_player, new object[] { 0.25f });
         float capped = _player.CurrentHp - hp;
         float cap = DefenseConfig.Load().LifestealMaxHpPerSecond;
-        Check(Near(_player.Lifesteal, 0.003f) && Near(small, 0.06f) && Near(cap, 0.02f)
+        Check(Near(_player.Lifesteal, 0.0015f) && Near(small, 0.03f) && Near(cap, 0.08f)
             && Near(capped, maxHp * cap * 0.25f),
-            $"Vol de vie réel : 20 PV perdus rendent {small:0.00} ; plafond à 2 % des PV max/s ({capped:0.00} en 0,25 s)");
+            $"Vol de vie réel : 20 PV perdus rendent {small:0.00} ; plafond à 8 % des PV max/s ({capped:0.00} en 0,25 s)");
         _player.AddOrUpgradePassive("paille_tordue", 14);
         hp = _player.CurrentHp;
         enemy.TakeDamage(5000f, source: _player.BeginAttack(_player.EquippedWeapon, 5000f));

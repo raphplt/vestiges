@@ -83,6 +83,24 @@ Mesure (méta complète, profil moyen, 30 min, graines 7, 42 et 1002), coups fat
 
 Vagabond et Facteur entrent dans la cible ; le Traqueur reste intouchable dans deux graines sur trois. Son arc dominait déjà la matrice M1 : c'est un réglage du Traqueur, à faire à part comme celui du Facteur, pas une courbe générale à pousser encore, qui écraserait les autres. Effet de bord à surveiller : plus de créatures, c'est plus d'XP (Traqueur niveau 195 à 30 min dans une graine).
 
+## 4 bis. Second réglage (14 octobre, DECISIONS §169)
+
+Retours de Raphaël sur le premier réglage :
+- le plafond du vol de vie revient à 8 % des PV max par seconde, mais le vol de vie monte trois fois plus lentement (0,15 % par niveau de l'Écusson du barbier ou par Ampoule) ;
+- dégâts des créatures ×1,09 par minute après 15 min (`damage_scaling_segments`, segments comme ceux des PV), soit environ ×12 à 30 min par rapport au début, contre ×5 avant ;
+- élites de fin de run (`natural_elites.late`) : de 15 à 30 min, elles passent progressivement à une apparition toutes les 12 à 20 s (50 à 75 avant), 8 en même temps (2 avant), PV ×3 et dégâts ×1,8 en plus de la variante, un affixe de plus après 22 min 30 ;
+- Traqueur : attaque 12 → 10, comme le Vagabond et le Facteur ; son passif reste.
+
+Mesure (méta complète, profil moyen, 30 min, graines 7, 42 et 1002), coups fatals entre 20 et 30 min :
+
+| Personnage | Avant tout | Premier réglage | Second réglage |
+|---|---|---|---|
+| Vagabond | 23, 0, 0 | 6, 71, 42 | 21, 4, 8 |
+| Facteur | 8, 7, 4 | 249, 57, 462 | 148, 293, 196 |
+| Traqueur | 1, 73, 0 | 42, 0, 0 | 718, 0, 93 |
+
+Le Traqueur est menacé dans deux graines sur trois ; la troisième part en boule de neige (niveau 155 à 30 min). Le Vagabond reste le plus à l'aise, aidé par le retour du plafond de vol de vie. Les écarts entre graines restent énormes : le jugement final se fait en jouant. Données brutes dans `~/.cache/vestiges-mesures/` (le dossier temporaire de session est vidé quand l'application redémarre).
+
 ## 5. Ordre proposé
 
 1. L1 (petit, données seules), avec L2 et sa mesure : défenses et créatures se règlent ensemble.

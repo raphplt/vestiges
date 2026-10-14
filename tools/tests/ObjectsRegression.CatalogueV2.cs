@@ -31,7 +31,7 @@ public partial class ObjectsRegression
             ("yoyo", p => p.Mobility.RechargeMultiplier, 0.08f),
             ("bocal_de_conserve", p => p.StatusDurationMultiplier, 0.12f),
             ("peigne_casse", p => p.ProjectilePierce, 1f),
-            ("ampoule_rouge", p => p.Lifesteal, 0.003f),
+            ("ampoule_rouge", p => p.Lifesteal, 0.0015f),
             ("bille_irisee", p => p.CritMultiplier, 0.25f),
             ("boucle_cabossee", p => p.MaxShield, 15f),
             ("diapositive_en_double", p => p.BonusProjectiles, 1f),
@@ -158,7 +158,7 @@ public partial class ObjectsRegression
         hp = _player.CurrentHp;
         target.TakeDamage(20f, source: _player.BeginAttack(_player.EquippedWeapon, 20f));
         typeof(Player).GetMethod("StepLifesteal", Private).Invoke(_player, new object[] { 0.25f });
-        Check(Near(_player.CurrentHp - hp, 0.12f), "Ampoules : deux copies soignent réellement 0,12 PV sur un coup de 20, loin du plafond de haut build");
+        Check(Near(_player.CurrentHp - hp, 0.06f), "Ampoules : deux copies soignent réellement 0,06 PV sur un coup de 20, loin du plafond de haut build");
         target.QueueFree();
     }
 

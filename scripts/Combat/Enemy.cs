@@ -502,6 +502,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		tween.TweenCallback(Callable.From(OnDeathComplete));
 	}
 
+	/// <summary>Renforce une créature déjà lancée (élites de fin de run, plan 47) : PV pleins au nouveau maximum.</summary>
+	public void Empower(float hpMult, float damageMult) => ScaleStats(hpMult, damageMult, 1f);
+
 	private void ScaleStats(float hpMult, float damageMult, float speedMult)
 	{
 		_maxHp *= hpMult;
