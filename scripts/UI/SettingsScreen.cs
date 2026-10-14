@@ -109,7 +109,7 @@ public partial class SettingsScreen : CanvasLayer
 
 	public void Close()
 	{
-		AudioManager.PlayUI("sfx_menu_retour");
+		AudioManager.PlayUI("sfx_menu_clic");
 		CancelListening();
 		IsOpen = false;
 		_root.Visible = false;

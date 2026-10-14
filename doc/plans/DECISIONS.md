@@ -2088,3 +2088,5 @@ Raphaël : « améliore après les sliders des paramètres, donne-leur un aspect
 **Fait :** rainure de pierre, incrustation et poignée de bronze, bouton fermer carré à croix dessinée ([plan 04 §10](04-interfaces-et-hub.md#10-paramètres--curseurs-et-bouton-fermer--14-octobre-2026)). À juger en jeu.
 
 **§178, clic retenu, même jour :** loquet (C de la planche U1d), au niveau de clic demandé ([plan 15](15-audio.md#u1d-livré--clic-en-loquet-14-octobre)).
+
+**§178, famille finale du même jour :** plus de son au survol ; un même clic pour les boutons et le retour (caillou sur planche, +1 dB) ; un son de sélection à part (lamelle) pour choisir un personnage, un objet, une quête ou une amélioration dans une liste ; cloche pour les validations, corde étouffée pour les refus ([plan 15 U1f](15-audio.md#u1f-livré--survol-muet-clic-partagé-avec-le-retour-son-de-sélection-14-octobre)).

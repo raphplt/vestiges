@@ -331,6 +331,7 @@ public partial class HubCollectionPanel : MarginContainer
         tile.MouseEntered += () => ShowDetail(entry);
         tile.Pressed += () => { ShowDetail(entry); if (_questLink.Visible) _questLink.GrabFocus(); };
         UITheme.WireButtonAudio(tile);
+        UITheme.SetPressSound(tile, "sfx_menu_select");
         return tile;
     }
 

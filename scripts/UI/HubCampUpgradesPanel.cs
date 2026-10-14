@@ -117,7 +117,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
     public override void _Input(InputEvent @event)
     {
         if (_confirmation == null || !@event.IsActionPressed("ui_cancel")) return;
-        AudioManager.PlayUI("sfx_menu_retour");
+        AudioManager.PlayUI("sfx_menu_clic");
         CloseRefundConfirmation();
         GetViewport().SetInputAsHandled();
     }
@@ -168,6 +168,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
     {
         Row row = new() { Upgrade = upgrade, Icon = UITheme.LoadTex($"res://assets/ui/camp/{upgrade.Id}.png") };
         row.Select = MakeButton("", new Vector2(ListWidth, RowHeight));
+        UITheme.SetPressSound(row.Select, "sfx_menu_select");
         row.Select.Name = upgrade.Id;
         row.Select.MouseDefaultCursorShape = Control.CursorShape.PointingHand;
         MarginContainer inset = new() { MouseFilter = MouseFilterEnum.Ignore };
@@ -392,7 +393,6 @@ public partial class HubCampUpgradesPanel : MarginContainer
         _confirmCancel = MenuSkin.Button(Tr("UI_CAMP_REFUND_CANCEL"), true);
         _confirmCancel.Name = "CancelCampRefund";
         _confirmCancel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        UITheme.SetPressSound(_confirmCancel, "sfx_menu_retour");
         _confirmCancel.Pressed += () => CloseRefundConfirmation();
         actions.AddChild(_confirmCancel);
         _confirmRefund = MenuSkin.Button(Tr("UI_CAMP_REFUND_ALL"));

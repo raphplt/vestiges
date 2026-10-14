@@ -738,3 +738,13 @@ Retours : « baisse le hover et monte le clic » ; « que ce soit clic ou retour
 ### U1d livré — clic en loquet, 14 octobre
 
 Choix de Raphaël sur la planche U1d : **C, loquet** (le pêne claque, puis tombe dans la gâche 9 ms plus tard). `menu_click.wav` régénéré par `tools/generate_menu_sounds.py`, identique octet pour octet au candidat écouté, 3 dB au-dessus de l'ancien clic de pierre. Gain de banque ramené de +4 à +1 dB : le clic garde le niveau effectif demandé au U1e (−30 LUFS momentané) au lieu de dépasser de 4 dB celui de la planche. `ui_click.wav` (Kenney) reste, source de sons d'armes. Audit de la banque : 0 échec. À juger en jeu.
+
+### U1f livré — survol muet, clic partagé avec le retour, son de sélection, 14 octobre
+
+Demande de Raphaël : « pas de bruit au hover ; un bruit au clic, qui est le même que retour et qui doit être différent, j'aime pas celui qui a été pris ; et un autre son au choix "sélect", par exemple quand on clique sur un personnage pour le choisir ou sur un objet dans la liste ».
+
+- **Survol muet** dans tous les menus, à la souris comme au focus (`UITheme.WireButtonAudio` ne branche plus que l'appui) ; `GrabFocusSilently` et `IsNavigationInput`, devenus inutiles, sont retirés. Les crans `menu_hover_*` ne servent plus qu'à l'apparition des cartes de choix en run (`ChoiceScreen`).
+- **Clic** : caillou sur planche (planche U1f, `~/.local/share/vestiges-audio/2026-10-14/menus-clic-select/`, E), +1 dB comme réglé sur la planche. Le retour joue ce même clic ; `sfx_menu_retour` et le cran inversé sont supprimés.
+- **Sélection** : nouveau `sfx_menu_select`, lamelle en do (A), joué à la place du clic quand on choisit un élément d'une liste : personnages de Partir, objets et armes de la Collection, quêtes, améliorations du Campement.
+- Cloche de validation et refus inchangés. Fichiers régénérés par `tools/generate_menu_sounds.py`, identiques octet pour octet à la planche.
+- Contrôles : build sans avertissement, audit de la banque 0 échec, smoke test vert ; `MenuNavigationRegression` vérifie qu'un déplacement au clavier et un focus donné par le code ne jouent aucun son (la suite s'arrête plus loin sur la vérification du portrait de la Scaphandrière, hors de ce lot). Suite audio non relancée.

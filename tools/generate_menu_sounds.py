@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Sons de menu faits des matières du jeu (plan 15 U1, DECISIONS §178) : survol en cran mécanique (quatre variantes),
-clic en loquet, retour en cran inversé, confirmation à la petite cloche de bronze, refus en corde étouffée.
+clic en caillou sur planche (joué aussi au retour), sélection d'un élément de liste en lamelle, confirmation à la
+petite cloche de bronze, refus en corde étouffée. Le survol des menus est muet ; ses crans ne servent plus qu'à
+l'apparition des cartes de choix en run.
 
 Synthèses originales retenues par Raphaël sur les planches du 14 octobre. Graines et niveaux des planches : regénérer
 donne les mêmes octets que ceux écoutés. La cloche sonne fa, tonalité du thème du Hub (fa mineur), et ses échos
@@ -18,13 +20,12 @@ from audio_bank_audit import momentary_max
 
 RATE = 48000
 OUT = Path(__file__).resolve().parents[1] / "assets/audio/sfx/ui"
-F5, C3 = 698.46, 130.81
+F5, C5, C3 = 698.46, 523.25, 130.81
 # Sonie momentanée maximale des sons Kenney remplacés : les nouveaux restent au niveau du mix. Le survol, jugé trop
 # présent, est 3 dB plus bas.
 LEVEL_HOVER, LEVEL_CLICK, LEVEL_CONFIRM, LEVEL_REFUSE = -32.033 - 3.0, -34.006, -24.023, -29.518
-LEVEL_BACK = LEVEL_CLICK - 2.0
-# Le loquet, retenu sur la planche U1d, y était 3 dB au-dessus de l'ancien clic de pierre.
-LEVEL_LATCH = LEVEL_CLICK + 3.0
+# Clic et sélection de la planche U1f, au niveau du clic en jeu à ce moment-là.
+LEVEL_MENU = -30.0
 
 
 def t_axis(duration):
@@ -148,32 +149,29 @@ def detent(rng, pitch):
     return fade_tail(biquad(out, "lp", 3400), 6)
 
 
-def back_detent(rng):
-    """Cran inversé : un cran léger et aigu, puis le cran principal plus grave, comme une molette ramenée en arrière."""
-    out = np.zeros(round(RATE * 0.08))
-    mix_at(out, detent(rng, 1750) * 0.45, 0.0)
-    mix_at(out, detent(rng, 1250), 0.024)
-    return fade_tail(out, 6)
-
-
 def snap(rng, cutoff=5000, length=0.004):
     """Front d'attaque : quelques millisecondes de bruit très court, ce qui fait « claquer » sans laisser de souffle."""
     t = t_axis(length)
     return biquad(noise(len(t), rng), "lp", cutoff) * np.exp(-t * 1400)
 
 
-def latch(rng):
-    """Loquet : le pêne claque, puis tombe dans la gâche 9 ms plus tard, plus grave."""
-    out = np.zeros(round(RATE * 0.09))
-    t = t_axis(0.05)
-    first = modes(t, [2300, 3600], [260, 380], [1, 0.4], rng) * env(t, 0.0004, 0)
-    mix_at(out, first * 0.7, 0.0)
-    mix_at(out, snap(rng) * 0.8, 0.0)
-    t2 = t_axis(0.07)
-    second = (np.sin(2 * math.pi * 210 * t2) * np.exp(-t2 * 60) * 0.9
-              + modes(t2, [980, 1720], [120, 180], [0.7, 0.35], rng)) * env(t2, 0.0005, 0)
-    mix_at(out, second, 0.009)
+def pebble_on_wood(rng):
+    """Caillou sur planche : le bois répond sourd, la pierre ajoute un tic sec."""
+    t = t_axis(0.08)
+    wood = modes(t, [410, 1120], [60, 110], [1, 0.4], rng)
+    tick = modes(t, [2600], [320], [0.6], rng)
+    out = (wood + tick) * env(t, 0.0005, 0)
+    mix_at(out, snap(rng, 3800) * 0.8, 0.0)
     return fade_tail(out, 6)
+
+
+def lamella(rng):
+    """Lamelle : note de do pincée sur une lame de métal, comme une boîte à musique proche."""
+    t = t_axis(0.32)
+    out = (np.sin(2 * math.pi * C5 * t) * np.exp(-t * 11) + 0.25 * np.sin(2 * math.pi * C5 * 5.4 * t) * np.exp(-t * 40)
+           + 0.15 * np.sin(2 * math.pi * C5 * 2 * t) * np.exp(-t * 20)) * env(t, 0.002, 0)
+    mix_at(out, snap(rng, 3000) * 0.3, 0.0)
+    return fade_tail(out, 30)
 
 
 def confirm_bell(rng):
@@ -215,8 +213,8 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     jobs = [(f"menu_hover_{v + 1}.wav", detent(rng_for(f"survol2C{v}"), 1700 * (1 + 0.02 * (v - 1.5))), LEVEL_HOVER)
             for v in range(4)]
-    jobs += [("menu_click.wav", latch(rng_for("clic2C")), LEVEL_LATCH),
-             ("menu_back.wav", back_detent(rng_for("retourA")), LEVEL_BACK),
+    jobs += [("menu_click.wav", pebble_on_wood(rng_for("u1fclicE")), LEVEL_MENU),
+             ("menu_select.wav", lamella(rng_for("u1fselectA")), LEVEL_MENU),
              ("menu_confirm.wav", confirm_bell(rng_for("confirmerC0")), LEVEL_CONFIRM),
              ("menu_refuse.wav", refuse_pluck(rng_for("refusC0")), LEVEL_REFUSE)]
     for name, samples, level in jobs:

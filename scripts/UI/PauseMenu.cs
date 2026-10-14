@@ -103,7 +103,7 @@ public partial class PauseMenu : CanvasLayer
 
 		if (_confirmation != null)
 		{
-			AudioManager.PlayUI("sfx_menu_retour");
+			AudioManager.PlayUI("sfx_menu_clic");
 			CloseConfirmation();
 			GetViewport().SetInputAsHandled();
 			return;
@@ -143,7 +143,7 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
-		AudioManager.PlayUI("sfx_menu_retour");
+		AudioManager.PlayUI("sfx_menu_clic");
 	}
 
 	private void OpenSettings()
@@ -454,7 +454,6 @@ public partial class PauseMenu : CanvasLayer
 		content.AddChild(description);
 		HBoxContainer actions = new(); actions.AddThemeConstantOverride("separation", 20); content.AddChild(actions);
 		Button cancel = MenuSkin.Button("Continuer la partie", true);
-		UITheme.SetPressSound(cancel, "sfx_menu_retour");
 		cancel.Pressed += CloseConfirmation; actions.AddChild(cancel);
 		Button accept = MenuSkin.Button(acceptText);
 		// L'action acceptée sonne sa propre validation.

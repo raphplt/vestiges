@@ -105,7 +105,7 @@ public partial class HubScreen : Control
 
 		if (@event.IsActionPressed("ui_cancel") && _currentState != HubState.MainMenu)
 		{
-			AudioManager.PlayUI("sfx_menu_retour");
+			AudioManager.PlayUI("sfx_menu_clic");
 			ReturnToPrevious();
 			GetViewport().SetInputAsHandled();
 			return;
@@ -115,7 +115,7 @@ public partial class HubScreen : Control
 		if (_currentState == HubState.MainMenu && GetViewport().GuiGetFocusOwner() == null
 			&& (@event.IsActionPressed("ui_up") || @event.IsActionPressed("ui_down") || @event.IsActionPressed("ui_accept")))
 		{
-			_enterVoidButton.GrabFocusSilently();
+			_enterVoidButton.GrabFocus();
 			GetViewport().SetInputAsHandled();
 		}
 	}
@@ -327,7 +327,7 @@ public partial class HubScreen : Control
 		};
 		_seedInput.AddThemeStyleboxOverride("normal", seedStyle);
 		_seedInput.AddThemeStyleboxOverride("focus", seedStyle);
-		_seedInput.TextSubmitted += _ => _enterVoidButton.GrabFocusSilently();
+		_seedInput.TextSubmitted += _ => _enterVoidButton.GrabFocus();
 		seedRow.AddChild(_seedInput);
 	}
 
@@ -383,7 +383,6 @@ public partial class HubScreen : Control
 		backButton.CustomMinimumSize = new Vector2(220f, 56f);
 		backButton.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		UITheme.ApplyTypography(backButton, TextRole.Heading);
-		UITheme.SetPressSound(backButton, "sfx_menu_retour");
 		backButton.Pressed += ReturnToPrevious;
 		header.AddChild(backButton);
 		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -444,7 +443,7 @@ public partial class HubScreen : Control
 
 		UpdateVestigesDisplay();
 		if (_pages.TryGetValue(from, out (Control Layer, Button Back, HubMenuButton Opener) previous))
-			previous.Opener?.GrabFocusSilently();
+			previous.Opener?.GrabFocus();
 	}
 
 	/// <summary>Le camp sort du noir, puis le titre et le menu arrivent l'un après l'autre.</summary>
@@ -470,7 +469,7 @@ public partial class HubScreen : Control
 			delay += 0.08f;
 		}
 
-		_enterVoidButton.GrabFocusSilently();
+		_enterVoidButton.GrabFocus();
 	}
 
 	private void OpenQuest(string questId)

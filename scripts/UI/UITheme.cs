@@ -231,27 +231,13 @@ public static class UITheme
 		WireButtonAudio(btn);
 	}
 
-	/// <summary>Branche les SFX de survol/clic une seule fois par bouton.</summary>
-	public static void WireButtonAudio(Button btn, bool hoverOnlyIfEnabled = true)
+	/// <summary>Branche le son d'appui une seule fois par bouton ; le survol et le focus restent muets (DECISIONS §178).</summary>
+	public static void WireButtonAudio(Button btn)
 	{
 		if (btn == null || btn.HasMeta("ui_sfx_wired"))
 			return;
 
 		btn.SetMeta("ui_sfx_wired", true);
-
-		btn.MouseEntered += () =>
-		{
-			if (!hoverOnlyIfEnabled || !btn.Disabled)
-				AudioManager.PlayUI("sfx_menu_survol");
-		};
-		// Même repère au clavier et à la manette, mais seulement quand le joueur déplace le curseur : un focus donné par
-		// le jeu (page ouverte, retour) ou par un clic de souris doublerait le clic ou le retour.
-		btn.FocusEntered += () =>
-		{
-			if ((!hoverOnlyIfEnabled || !btn.Disabled) && IsNavigationInput())
-				AudioManager.PlayUI("sfx_menu_survol");
-		};
-
 		btn.ButtonDown += () =>
 		{
 			if (btn.Disabled)
@@ -261,21 +247,10 @@ public static class UITheme
 	}
 
 	private const string PressSoundMeta = "ui_sfx_press";
-	private static readonly StringName[] NavigationActions =
-		{ "ui_up", "ui_down", "ui_left", "ui_right", "ui_focus_next", "ui_focus_prev" };
-
-	/// <summary>Vrai pendant une action de navigation du joueur (flèches, manette, Tab), faux pour un focus donné par le code ou la souris.</summary>
-	public static bool IsNavigationInput()
-	{
-		foreach (StringName action in NavigationActions)
-			if (Input.IsActionPressed(action))
-				return true;
-		return false;
-	}
 
 	/// <summary>
-	/// Remplace le clic d'appui : son de retour pour revenir en arrière, ou rien (<c>null</c>) quand l'action joue
-	/// elle-même sa validation, pour ne pas empiler clic et cloche.
+	/// Remplace le clic d'appui : son de sélection pour choisir un élément d'une liste, ou rien (<c>null</c>) quand
+	/// l'action joue elle-même son issue, pour ne pas empiler clic et cloche.
 	/// </summary>
 	public static void SetPressSound(Button btn, string key) => btn.SetMeta(PressSoundMeta, key ?? "");
 

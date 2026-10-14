@@ -187,6 +187,7 @@ public partial class HubQuestsPanel : MarginContainer
         row.MouseEntered += () => ShowDetail(quest);
         row.Pressed += () => { ShowDetail(quest); if (_detailRewards.GetChildCount() > 1) (_detailRewards.GetChild(1) as Control)?.GrabFocus(); };
         UITheme.WireButtonAudio(row);
+        UITheme.SetPressSound(row, "sfx_menu_select");
         _list.AddChild(row);
         _rows.Add(row);
     }

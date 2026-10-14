@@ -21,7 +21,6 @@ public partial class HubMenuButton : Button
 
 	private readonly StyleBoxEmpty _style = new();
 	private float _glow;
-	private bool _silentFocus;
 	private Tween _tween;
 
 	public void Setup(string text, TextRole role, Font font)
@@ -47,29 +46,12 @@ public partial class HubMenuButton : Button
 	{
 		MouseEntered += () =>
 		{
-			if (Disabled)
-				return;
-			if (!HasFocus())
-				AudioManager.PlayUI("sfx_menu_survol");
-			GrabFocus();
+			if (!Disabled)
+				GrabFocus();
 		};
-		// Au clavier et à la manette seulement : le survol à la souris a déjà sonné, et un focus donné par le jeu se tait.
-		FocusEntered += () =>
-		{
-			if (!_silentFocus && UITheme.IsNavigationInput())
-				AudioManager.PlayUI("sfx_menu_survol");
-			Animate(1f);
-		};
+		FocusEntered += () => Animate(1f);
 		FocusExited += () => Animate(0f);
 		ButtonDown += () => UITheme.PlayPressSound(this);
-	}
-
-	/// <summary>Donne le focus sans son de survol (arrivée sur l'écran, retour d'un sous-écran).</summary>
-	public void GrabFocusSilently()
-	{
-		_silentFocus = true;
-		GrabFocus();
-		_silentFocus = false;
 	}
 
 	public override void _Draw()

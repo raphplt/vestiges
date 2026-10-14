@@ -132,6 +132,8 @@ public partial class HubCharactersPanel : MarginContainer
                 bool unlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
                 Button row = MenuSkin.Button("");
                 MenuSkin.StyleRosterCard(row, false);
+                // Choisir un élément d'une liste a son propre son, distinct du clic des boutons (DECISIONS §178).
+                UITheme.SetPressSound(row, "sfx_menu_select");
                 row.Name = character.Id;
                 row.AccessibilityName = character.Name;
                 row.CustomMinimumSize = new Vector2(300, RowHeight);

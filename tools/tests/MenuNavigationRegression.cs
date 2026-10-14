@@ -254,22 +254,19 @@ public partial class MenuNavigationRegression : Node
         GetViewport().PushInput(new InputEventKey { Keycode = Key.Tab, Pressed = false });
         await Frames(2);
     }
-    /// <summary>Le survol ne sonne qu'au déplacement du joueur : un focus donné par le jeu doublerait le clic ou le retour (DECISIONS §178).</summary>
+    /// <summary>Survol et focus restent muets, au clavier comme par le code : seul l'appui sonne (DECISIONS §178).</summary>
     private async Task CheckFocusSound(HubScreen hub)
     {
         int requests = 0;
-        void Count(string key, AudioManager.SoundOutcome outcome)
-        {
-            if (key == "sfx_menu_survol") requests++;
-        }
+        void Count(string key, AudioManager.SoundOutcome outcome) => requests++;
         AudioManager.Instance.SoundRequested += Count;
         HubMenuButton enter = Field<HubMenuButton>(hub, "_enterVoidButton");
-        enter.GrabFocusSilently();
+        enter.GrabFocus();
         await Press("ui_down");
-        Check(requests == 1 && !enter.HasFocus(), "Descendre dans le menu sonne le survol");
+        Check(requests == 0 && !enter.HasFocus(), "Descendre dans le menu ne joue aucun son");
         enter.GrabFocus();
         await Frames(2);
-        Check(requests == 1 && enter.HasFocus(), "Un focus donné par le jeu reste muet");
+        Check(requests == 0 && enter.HasFocus(), "Un focus donné par le jeu reste muet");
         AudioManager.Instance.SoundRequested -= Count;
     }
 
