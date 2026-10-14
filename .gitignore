@@ -41,3 +41,6 @@ steam_appid.txt
 .claude/settings.local.json
 CLAUDE.local.md
 __pycache__/
+
+# Exports du jeu (doc/EXPORT.md)
+build/

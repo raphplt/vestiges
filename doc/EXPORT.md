@@ -1,6 +1,6 @@
 # Exporter Vestiges
 
-9 octobre 2026. Rien de ce guide n'a encore été exécuté sur ce dépôt : il n'y a ni modèles d'export installés ni `export_presets.cfg`. Les étapes marquées **à vérifier** le seront au premier export.
+9 octobre 2026. Premiers exports Windows et macOS le 14 octobre 2026 ; les étapes encore marquées **à vérifier** ne l'ont pas été.
 
 ## Pourquoi c'est utile tout de suite
 
@@ -35,6 +35,23 @@ godot-mono --headless --path . --export-release "Windows Desktop" build/windows/
 ```
 
 Le nom entre guillemets est celui du preset. `--export-debug` produit une version avec les vérifications de débogage, utile pour lire des erreurs mais pas pour mesurer. Ne pas versionner `build/`.
+
+On distribue le dossier entier (exécutable, `.pck`, dossier `data_…` du runtime .NET), jamais l'exécutable seul.
+
+### macOS signé et notarisé
+
+```bash
+tools/export_macos.sh
+```
+
+Le preset « macOS » exporte en `universal` avec la signature « Built-in (ad-hoc only) » : Godot refuse de signer avec rcodesign une app qui embarque des bibliothèques, ce qui est le cas du runtime .NET. Le script re-signe donc tout le bundle avec rcodesign (runtime renforcé, permissions de [macos_entitlements.plist](../tools/macos_entitlements.plist) pour le JIT .NET), l'envoie à la notarisation d'Apple, agrafe le ticket et rezippe dans `build/macos/Vestiges.zip`. Il demande le mot de passe du certificat.
+
+Mise en place, une fois :
+
+- Projet : *Rendu → Textures → Compression VRAM → Importer ETC2 ASTC* activé (exigé pour l'arm64).
+- rcodesign : `cargo install apple-codesign`.
+- `~/apple-signing/` (hors dépôt, droits 600) : `devid.p12`, certificat « Developer ID Application » (G2) avec sa clé, et `api-key.json`, clé d'API App Store Connect (accès Developer) encodée par `rcodesign encode-app-store-connect-api-key -o api-key.json <issuer-id> <key-id> AuthKey_<key-id>.p8`.
+- Le certificat Developer ID expire le 13 novembre 2027 : en refaire un avant, les versions déjà signées restent valides.
 
 ## 4. Mesurer les performances en export
 
