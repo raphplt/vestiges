@@ -5,16 +5,16 @@ namespace Vestiges.Events.RunEvents;
 
 /// <summary>
 /// Souverain : version « boss » d'une créature locale, escortée de sa meute.
-/// Il ne disparaît jamais de lui-même : il reste jusqu'à sa mort (DECISIONS §157). Le coffre et l'Essence de la
-/// variante s'ajoutent à la récompense. Teste la puissance du build sur une cible unique et résistante.
+/// Il ne disparaît jamais de lui-même : il reste jusqu'à sa mort (DECISIONS §157). Mais la chasse ne bloque pas la
+/// suite (§165) : à son terme, l'événement se clôt et le Souverain reste sur la carte, toujours à ta poursuite, avec le
+/// coffre et l'Essence de sa variante ; seule la récompense de la chasse est perdue. Teste la puissance du build sur une
+/// cible unique et résistante.
 /// </summary>
 public sealed class HuntEvent : RunEvent
 {
     private Enemy _champion;
     private BossBarFeed _bar;
     private string _objectiveTemplate;
-
-    protected override bool HasTimeLimit => false;
 
     protected override void OnStart()
     {
@@ -61,6 +61,20 @@ public sealed class HuntEvent : RunEvent
         Target = _champion.GlobalPosition;
         Progress = 1f - _champion.HpRatio;
         _bar.Update(_champion.CurrentHp, _champion.MaxHp);
+    }
+
+    protected override void OnTimeout()
+    {
+        if (_champion == null)
+            return;
+        // Il reste lié à un événement (il ne perd jamais la trace du joueur), mais plus à celui-ci : la chasse laisse
+        // place aux suivantes.
+        string name = _champion.DisplayName;
+        bool feminine = _champion.IsFeminine;
+        _champion.Modifiers.EventToken = 0;
+        _champion = null;
+        _bar?.End(false);
+        Fail(string.Format(Tr(feminine ? "EVENT_HUNT_LINGERS_F" : "EVENT_HUNT_LINGERS"), name));
     }
 
     public override void OnEnemyKilled(Vector2 position)

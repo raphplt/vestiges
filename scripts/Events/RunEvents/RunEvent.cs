@@ -25,12 +25,6 @@ public abstract class RunEvent
 
     public string Title => RunEventContext.Tr(Data.TitleKey);
 
-    /// <summary>
-    /// Faux pour un événement qui ne finit qu'à son terme (le Souverain reste jusqu'à sa mort) : sa durée ne sert plus
-    /// qu'à le placer entre deux Résurgences.
-    /// </summary>
-    protected virtual bool HasTimeLimit => true;
-
     public void Begin(RunEventContext context, RunEventData data, int token)
     {
         Context = context;
@@ -46,7 +40,7 @@ public abstract class RunEvent
             return;
         TimeRemaining -= delta;
         OnTick(delta);
-        if (!IsFinished && HasTimeLimit && TimeRemaining <= 0f)
+        if (!IsFinished && TimeRemaining <= 0f)
             OnTimeout();
     }
 

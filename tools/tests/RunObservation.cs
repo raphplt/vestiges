@@ -74,7 +74,7 @@ namespace Vestiges.Tests;
 /// --capture-player-hit : joueur blessé, bouclier, toile, soin (RunObservation.Statuses.cs).
 /// --capture-bile : trois Cracheurs crachent en cloche autour du joueur immobile (RunObservation.Bile.cs).
 /// --capture-well : le Puits le plus proche, son écran, un oubli et sa trace (RunObservation.Well.cs, plan 44).
-/// --capture-sovereign : un Souverain laissé en vie 75 s, toujours là (RunObservation.Sovereign.cs, DECISIONS §157).
+/// --capture-sovereign : un Souverain laissé en vie 100 s, toujours là, sa chasse close (RunObservation.Sovereign.cs, DECISIONS §157, §165).
 /// --capture-vitals : plaque PV/niveau, états limites et effets de survie (présentation seule).
 /// --capture-bestiary : gros plans des créatures du pilote de sprites procéduraux, autour du joueur immobile.
 /// --density : mesure de densité en spawn naturel (ennemis visibles, temps sans ennemi, débits, niveaux,

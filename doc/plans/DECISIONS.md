@@ -1893,3 +1893,12 @@ Réponses sur la [planche](planches/25-s10-zones-au-sol.png) : annonces des cré
 **Livré :** [plan 25 S10](25-sprites-et-design.md). À juger en jeu.
 
 **Retour du soir, après livraison :** « je me suis trompé ptet que les ennemis peuvent avoir des formes plus régulières. le pb n'était pas tant la forme en vrai le cercle ca allait globalement mais plutot le rendu et le manque d'animation/ de détail ou de coté rugueux ect. » À reprendre le 14 octobre : les annonces des créatures peuvent revenir à une forme régulière (cercle ou ellipse) en gardant le nouveau rendu (sol assombri, contour, front, animation, grain rugueux). Il faut décider s'il en va de même pour les matières (flaques, feu).
+
+## 165. Un Souverain jamais tué ne bloque plus la suite ; la fin de run sans danger est prioritaire — 14 octobre 2026
+
+**Souverain.** Raphaël : « il ne doit pas bloquer la suite. ce n'est pas grave s'il reste sur la map ca fait une difficulté en plus (le truc c'est que sinon on peut juste l'ignorer). »
+- La chasse dure 90 s (`duration_sec`). À son terme, l'événement se clôt (« Le … rôde toujours ») et laisse place aux suivants ; le Souverain reste sur la carte et continue de poursuivre le joueur (§157 tient : il ne disparaît pas).
+- Tué plus tard, il rapporte encore le coffre et l'Essence de sa variante, pas la récompense de la chasse.
+- Vérifié : `--capture-sovereign`, Souverain présent après 100 s, chasse close, événement suivant lancé.
+
+**Fin de run sans danger.** Raphaël est « 100 % d'accord » avec deux constats de la matrice M1 (plan 42 §5), qu'il a lui-même faits en jouant : avec la méta complète, passé 15 min, le bot ne perd presque plus de PV ; aucun build de référence ne casse le jeu plus qu'un autre, mais tous rendent la fin de run sans danger. « c'est un sujet super méga important. » Pistes proposées le jour même, à trancher.

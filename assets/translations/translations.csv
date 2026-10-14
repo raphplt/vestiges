@@ -269,6 +269,8 @@ UI_HUD_ESSENCE,{0} Essence,{0} Essence
 EVENT_HUNT_TITLE,Un Souverain approche,A Sovereign approaches
 EVENT_HUNT_OBJECTIVE,Abattez le {0},Slay the {0}
 EVENT_HUNT_OBJECTIVE_F,Abattez la {0},Slay the {0}
+EVENT_HUNT_LINGERS,Le {0} rôde toujours,The {0} still roams
+EVENT_HUNT_LINGERS_F,La {0} rôde toujours,The {0} still roams
 EVENT_STAMPEDE_TITLE,La Harde,The Stampede
 EVENT_STAMPEDE_OBJECTIVE,Fauchez la harde avant qu'elle ne passe — {0} / {1},Cut down the stampede before it passes — {0} / {1}
 EVENT_RELIC_TITLE,Un vestige tombe,A relic falls
