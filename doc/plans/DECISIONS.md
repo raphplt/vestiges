@@ -1964,6 +1964,10 @@ Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lir
 
 **Livré :** textes ([plan 35 I18](35-raretes-des-objets.md#i18--textes-lisibles-14-octobre-2026)) ; aimant à 80 px sans dérive, réglé dans `data/scaling/progression.json` (`attraction_radius`), à juger en jouant. Raphaël ne veut pas de mesure pour ce réglage (« pas besoin de mesurer pour ca »). Les zones au sol restent à faire.
 
+**Retour sur la Collection, le soir même :** trop de lignes sous un objet ; la règle courte est « correcte », mais l'ambiance avait la même taille, la même couleur et la même police qu'elle, alors qu'elles « n'ont pas la même importance » ; la ligne grise (« Doublons sans limite… ») n'a « pas du tout besoin » d'être montrée. Pour les détails (limites techniques), Raphaël hésite, puis choisit de **les supprimer partout**.
+
+**Appliqué :** ambiance en plus petit et en gris sous la règle ; ligne grise retirée pour les objets et les Écussons (plafond de copies, « Cousu en souvenir de… ») ; le champ `details` et ses textes disparaissent. Un Écusson montre sa ligne de stat au niveau 1, puis sa règle s'il en a une.
+
 ## 174. Projectiles du joueur plus lents — 14 octobre 2026
 
 Retour de jeu : « le bullet time des projectile est trop rapide en général ». Précisé : il s'agit de la vitesse de vol, pas de la cadence ; projectiles ennemis inchangés.

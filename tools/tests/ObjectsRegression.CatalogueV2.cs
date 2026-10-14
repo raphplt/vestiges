@@ -170,8 +170,7 @@ public partial class ObjectsRegression
         {
             if (data.IsBadge) continue;
             int copies = data.HasCopyLimit ? data.MaxCopies : 8;
-            string text = ItemPresentation.Describe(data, copies, _player) + ItemPresentation.Details(data, copies)
-                + ItemPresentation.CollectionText(data);
+            string text = ItemPresentation.Describe(data, copies, _player) + data.Flavor;
             described &= text.Length > 0 && !text.Contains('{') && !text.Contains("STAT_", StringComparison.Ordinal);
         }
         Check(described, "Les 56 fiches décrivent leurs copies sans clé brute ni paramètre manquant");

@@ -561,10 +561,6 @@ STAT_DASH_BLINK,Saut instantané,Instant blink
 STAT_POISON,Poison,Poison
 STAT_EXTRA_CARDS,Cartes de level-up en plus,Extra level-up cards
 STAT_SOVEREIGN_SLOW,Temps arrêté,Stopped time
-COLLECTION_BADGE_RULE,"Cousu en souvenir de : {0}. Monte au level-up jusqu'au niveau {1}.","Sewn in memory of: {0}. Rises on level-up up to level {1}."
-COLLECTION_ITEM_RULE,Jusqu'à {0} exemplaires dans le sac ; palier au {1}ᵉ.,Up to {0} copies in the bag; tier at copy {1}.
-COLLECTION_ITEM_RULE_PLAIN,Jusqu'à {0} exemplaires dans le sac.,Up to {0} copies in the bag.
-COLLECTION_ITEM_UNLIMITED,"Doublons sans limite, sans place supplémentaire.","Unlimited duplicates, no extra slot needed."
 STAT_STILL_DAMAGE,Dégâts immobile,Stationary damage
 STAT_ELITE_SLOW,Ralentissement des élites,Elite slow
 STAT_CRIT_MULTIPLIER,Multiplicateur critique,Critical multiplier

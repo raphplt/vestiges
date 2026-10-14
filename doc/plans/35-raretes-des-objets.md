@@ -357,13 +357,14 @@ Retour de Raphaël et réponses : DECISIONS §172.
 
 **Grammaire des textes**, une seule source, `data/progression/passive_souvenirs.json` :
 - `description` : ce que fait l'objet, en une phrase, dans les mots du joueur (« l'ennemi touché », pas « impact direct ») ; les chiffres qui comptent (chance, effet, durée). Absente pour un objet de stat : sa ligne de stat suffit.
-- `details` : limites et exceptions (plafonds par seconde, répits, recharges, ce que l'objet ne fait pas). Montrés dans la Collection seulement.
 - `flavor` : phrase d'ambiance des objets de stat et des Écussons, sous la règle, en gris.
-- Jetons : un réglage de `params`, `{n}` (copies), `{amount}` (pas × copies) ou une valeur calculée selon les copies (`ObjectText.DerivedTokens` : limite par seconde, distance du Plan de métro, chance plafonnée du Pied-de-biche…). Les durées de statut suivent la stat du joueur en pause. Le validateur refuse un jeton inconnu et un objet sans `description` ni `flavor`.
+- Jetons : un réglage de `params`, `{n}` (copies), `{amount}` (pas × copies) ou une valeur calculée selon les copies (`ObjectText.DerivedTokens` : distance du Plan de métro, chance plafonnée du Pied-de-biche…). Les durées de statut suivent la stat du joueur en pause. Le validateur refuse un jeton inconnu et un objet sans `description` ni `flavor`.
 
 - [x] Textes en dur retirés d'`ItemPresentation` ; la pause garde l'état du moment (charge prête, bonus d'immobilité, ennemis proches) et les armes concernées.
 - [x] 72 fiches réécrites (56 objets, 16 Écussons) : phrases de 67 caractères en moyenne, 112 au plus ; Écussons sans phrase quand leur stat suffit.
 - [x] Cartes de coffre, d'Atelier, de Carnet et de level-up, fiche de pause, butin et Collection raccordés.
 - [x] Build zéro warning ; suites smoke, objets, inventaire et catalogues vertes en copie isolée.
+
+**Reprise du soir (DECISIONS §172) :** les limites techniques (`details`) ne s'affichent plus nulle part ; dans la Collection, l'ambiance passe en plus petit et en gris, et la ligne grise des copies et de montée des Écussons disparaît. Suites smoke, objets et catalogues vertes.
 
 Reste : relire les textes en jeu (rendu non capturé, les textes sont plus courts qu'avant) ; les noms et textes d'objets restent en français dans le JSON, sans traduction, comme avant.

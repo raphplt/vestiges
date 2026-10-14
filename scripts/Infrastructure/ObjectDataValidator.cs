@@ -16,7 +16,7 @@ public static class ObjectDataValidator
 
     private static readonly string[] ObjectKeys =
     {
-        "id", "kind", "name", "subtitle", "description", "details", "flavor", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
+        "id", "kind", "name", "subtitle", "description", "flavor", "icon", "icon_small", "icon_color", "max_level", "effects", "milestones",
         "survival", "offer_weight", "params", "enabled", "rarity", "max_copies", "unique", "usage", "initial_unlock",
     };
     private static readonly string[] UsageKeys = { "trigger", "threshold" };
@@ -127,7 +127,7 @@ public static class ObjectDataValidator
             return $"{where}, subtitle : {(hasSubtitle ? "réservé aux Écussons" : "attendu pour un Écusson")}";
         // Un objet de stat peut se passer de règle (sa ligne de stat la dit), pas de toute phrase. Un objet désactivé,
         // gardé pour les sauvegardes, n'est jamais montré.
-        foreach (string field in new[] { "description", "details", "flavor" })
+        foreach (string field in new[] { "description", "flavor" })
             if (item.TryGetProperty(field, out JsonElement text) && text.ValueKind != JsonValueKind.String)
                 return $"{where}, {field} : texte attendu";
         if (enabled && string.IsNullOrEmpty(Text(item, "description")) && string.IsNullOrEmpty(Text(item, "flavor")))
@@ -211,10 +211,9 @@ public static class ObjectDataValidator
         if (effectsError != null)
             return effectsError;
         string stat = item.GetProperty("effects")[0].TryGetProperty("stat", out JsonElement first) ? first.GetString() : "";
-        foreach (string field in new[] { "description", "details" })
-            foreach (Match token in ObjectText.Token.Matches(Text(item, field) ?? ""))
-                if (!ObjectText.IsKnownToken(stat, token.Groups[1].Value, parameters))
-                    return $"{where}, {field} : jeton « {token.Groups[1].Value} » absent de params et des valeurs calculées";
+        foreach (Match token in ObjectText.Token.Matches(Text(item, "description") ?? ""))
+            if (!ObjectText.IsKnownToken(stat, token.Groups[1].Value, parameters))
+                return $"{where}, description : jeton « {token.Groups[1].Value} » absent de params et des valeurs calculées";
         return item.TryGetProperty("milestones", out JsonElement milestones)
             ? ValidateMilestones(milestones, where, maxLevel, contract)
             : null;

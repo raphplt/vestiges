@@ -18,11 +18,8 @@ public static class ObjectText
 	/// <summary>Jetons calculés selon les copies, par stat ; les autres jetons viennent des réglages.</summary>
 	public static readonly IReadOnlyDictionary<string, string[]> DerivedTokens = new Dictionary<string, string[]>
 	{
-		["burn_chance"] = new[] { "applications" },
-		["chill_chance"] = new[] { "slow", "applications" },
-		["poison"] = new[] { "applications", "doses" },
+		["chill_chance"] = new[] { "slow" },
 		["elite_slow"] = new[] { "slow" },
-		["still_damage"] = new[] { "cap_seconds" },
 		["dash_trail"] = new[] { "slow", "trail_seconds" },
 		["dash_blink"] = new[] { "distance" },
 		["chest_pointers"] = new[] { "pointers" },
@@ -41,8 +38,8 @@ public static class ObjectText
 		token is "n" or "amount" || parameters.Contains(token)
 		|| (DerivedTokens.TryGetValue(stat, out string[] derived) && System.Array.IndexOf(derived, token) >= 0);
 
-	/// <summary>Valeurs des jetons pour <paramref name="copies"/> copies ; les multiplicateurs du joueur valent 1 hors run.</summary>
-	public static Dictionary<string, float> Values(PassiveSouvenirData data, int copies, float statusDuration = 1f, float aoe = 1f)
+	/// <summary>Valeurs des jetons pour <paramref name="copies"/> copies ; la durée des statuts du joueur vaut 1 hors run.</summary>
+	public static Dictionary<string, float> Values(PassiveSouvenirData data, int copies, float statusDuration = 1f)
 	{
 		Dictionary<string, float> values = new(data.Parameters);
 		float P(string key) => data.Parameters.GetValueOrDefault(key);
@@ -54,26 +51,12 @@ public static class ObjectText
 				values[key] = P(key) * statusDuration;
 		switch (data.Stat)
 		{
-			case "burn_chance":
-				values["applications"] = P("applications_per_second") * copies;
-				break;
 			case "chill_chance":
 				values["slow"] = 1f - P("slow_factor");
-				values["applications"] = P("applications_per_second") * copies;
-				break;
-			case "poison":
-				values["applications"] = P("applications_per_second") * copies;
-				values["doses"] = P("doses_per_copy") * copies;
 				break;
 			case "elite_slow":
 				values["slow"] = 1f - P("slow_factor");
 				values["seconds"] = Mathf.Min(P("max_seconds"), P("seconds") * statusDuration);
-				break;
-			case "kill_explosion":
-				values["radius"] = P("radius") * aoe;
-				break;
-			case "still_damage":
-				values["cap_seconds"] = P("damage_cap") / Mathf.Max(amount, 0.001f);
 				break;
 			case "dash_trail":
 				values["slow"] = 1f - P("slow_factor");

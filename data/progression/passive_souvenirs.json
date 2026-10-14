@@ -1,6 +1,6 @@
 [
   {
-    "_comment": "Catalogue du joueur : badge = niveaux, gains de cartes et paliers ; item = rareté fixe, step par copie, sans palier. max_copies 0 signifie illimité ; seuls légendaires/uniques ont une limite. Les IDs désactivés restent pour les sauvegardes. params alimente les textes et les effets. Textes (plan 35 I18) : description = ce que fait l'objet en une phrase (absente pour un objet de stat), details = limites, montrées dans la Collection seulement, flavor = phrase d'ambiance.",
+    "_comment": "Catalogue du joueur : badge = niveaux, gains de cartes et paliers ; item = rareté fixe, step par copie, sans palier. max_copies 0 signifie illimité ; seuls légendaires/uniques ont une limite. Les IDs désactivés restent pour les sauvegardes. params alimente les textes et les effets. Textes (plan 35 I18) : description = ce que fait l'objet en une phrase (absente pour un objet de stat), flavor = phrase d'ambiance ; les limites techniques ne sont pas affichées (DECISIONS §172).",
     "id": "memoire_vive",
     "kind": "badge",
     "icon": "res://assets/items/icons/item_memoire_vive.png",
@@ -197,7 +197,6 @@
     "icon_small": "res://assets/items/icons/item_regeneration_16.png",
     "name": "Écusson de la couturière",
     "subtitle": "Bobine de fil",
-    "details": "La régénération s’arrête 2 s après chaque blessure.",
     "flavor": "Assez de fil pour tout recoudre, presque.",
     "icon_color": [
       0.4,
@@ -501,7 +500,6 @@
     "name": "Écusson du barbier",
     "subtitle": "Paille tordue",
     "description": "Une part des dégâts de tes armes te revient en PV.",
-    "details": "Le soin rendu est limité chaque seconde.",
     "flavor": "Elle aspire encore, à vide.",
     "icon_color": [
       0.85,
@@ -577,7 +575,6 @@
     "icon_small": "res://assets/items/icons/item_allumette_humide_16.png",
     "name": "Allumette humide",
     "description": "{chance%} de chance d’enflammer l’ennemi touché : il perd {burn_damage_ratio%} du coup chaque seconde pendant {burn_seconds} s.",
-    "details": "Au plus {applications} brûlures par seconde, toutes armes confondues. Une seule chance par attaque et par ennemi ; les armes qui touchent très souvent en ont moins.",
     "icon_color": [
       1.0,
       0.55,
@@ -607,7 +604,6 @@
     "icon_small": "res://assets/items/icons/item_glacon_16.png",
     "name": "Glaçon dans un mouchoir",
     "description": "{chance%} de chance de ralentir de {slow%} l’ennemi touché, pendant {slow_seconds} s.",
-    "details": "Au plus {applications} par seconde, toutes armes confondues. Un ennemi ralenti ne peut l’être de nouveau qu’après {reprieve_seconds} s de répit ({elite_reprieve_seconds} s pour une élite). Les armes qui touchent très souvent ont moins de chance.",
     "icon_color": [
       0.6,
       0.85,
@@ -685,7 +681,6 @@
     "icon_small": "res://assets/items/icons/item_petard_mouille_16.png",
     "name": "Pétard mouillé",
     "description": "Un ennemi tué par une arme explose : {amount%} du coup fatal autour de lui.",
-    "details": "Rayon de {radius} px. Une explosion n’en déclenche pas d’autre.",
     "icon_color": [
       0.95,
       0.45,
@@ -712,7 +707,6 @@
     "icon_small": "res://assets/items/icons/item_de_a_coudre_16.png",
     "name": "Dé à coudre",
     "description": "Chaque ennemi tué par une arme te rend {heal_per_kill} PV, au plus {amount} PV par seconde.",
-    "details": "Le soin au-delà de cette limite est perdu.",
     "icon_color": [
       0.8,
       0.8,
@@ -740,7 +734,6 @@
     "icon_small": "res://assets/items/icons/item_semelle_usee_16.png",
     "name": "Semelle usée",
     "description": "Après un dash, ta prochaine attaque fait +{amount%} de dégâts.",
-    "details": "Le bonus attend {charge_seconds} s au plus et vaut pour toute la salve.",
     "icon_color": [
       0.6,
       0.45,
@@ -817,7 +810,6 @@
     "icon_small": "res://assets/items/icons/item_stylo_quatre_couleurs_16.png",
     "name": "Stylo à quatre couleurs",
     "description": "Un coup critique renvoie {amount%} de ses dégâts sur un autre ennemi proche.",
-    "details": "Un seul ennemi, à moins de {radius} px.",
     "icon_color": [
       0.4,
       0.55,
@@ -844,7 +836,6 @@
     "icon_small": "res://assets/items/icons/item_tabouret_de_camping_16.png",
     "name": "Tabouret de camping",
     "description": "Immobile, tes dégâts montent de {amount%} par seconde, jusqu’à +{damage_cap%}. Bouger les remet à zéro.",
-    "details": "Plafond atteint en {cap_seconds} s. Un dash remet aussi le bonus à zéro.",
     "icon_color": [
       0.6,
       0.45,
@@ -871,7 +862,6 @@
     "icon_small": "res://assets/items/icons/item_chewing_gum_16.png",
     "name": "Chewing-gum",
     "description": "Ton dash laisse une traînée collante pendant {trail_seconds} s : les ennemis qui la traversent sont ralentis de {slow%}.",
-    "details": "Durée plafonnée à {max_seconds} s.",
     "icon_color": [
       0.95,
       0.55,
@@ -902,7 +892,6 @@
     "icon_small": "res://assets/items/icons/item_gilet_reflechissant_16.png",
     "name": "Gilet réfléchissant",
     "description": "+{amount%} de dégâts par ennemi proche, jusqu’à {max_enemies} ennemis.",
-    "details": "Ennemis comptés à moins de {radius} px.",
     "icon_color": [
       0.95,
       0.85,
@@ -1070,7 +1059,6 @@
     "icon_small": "res://assets/items/icons/item_sifflet_d_arbitre_16.png",
     "name": "Sifflet d'arbitre",
     "description": "+{amount} Péril : des ennemis plus nombreux et plus forts, donc plus d’XP à prendre.",
-    "details": "Le Péril pris reste, même si l’objet est oublié au Puits.",
     "icon_color": [
       0.85,
       0.38,
@@ -1094,7 +1082,6 @@
     "icon_small": "res://assets/items/icons/item_ticket_de_consigne_16.png",
     "name": "Ticket de consigne",
     "description": "{n} fois, un coup mortel ne te tue pas : tu te relèves avec {hp_ratio%} de tes PV.",
-    "details": "{invulnerability_seconds} s d’invulnérabilité en te relevant. Chaque ticket ne sert qu’une fois. Ne protège pas dans le Néant, au-delà de l’Effacement.",
     "icon_color": [
       0.85,
       0.78,
@@ -1122,7 +1109,6 @@
     "icon_small": "res://assets/items/icons/item_plan_de_metro_16.png",
     "name": "Plan de métro",
     "description": "Ton dash devient un saut instantané, sur {distance%} de sa distance normale.",
-    "details": "Les murs restent infranchissables. Chaque copie après la première ajoute {distance_per_copy%} de distance.",
     "icon_color": [
       0.45,
       0.6,
@@ -1150,7 +1136,6 @@
     "icon_small": "res://assets/items/icons/item_flacon_de_pharmacie_16.png",
     "name": "Flacon de pharmacie",
     "description": "{chance%} de chance d’empoisonner l’ennemi touché : il perd {damage_ratio%} du coup en {seconds} s.",
-    "details": "Jusqu’à {doses} doses à la fois sur un même ennemi, chacune avec sa durée. Au plus {applications} doses posées par seconde, toutes armes confondues ; les armes qui touchent très souvent ont moins de chance.",
     "icon_color": [
       0.4,
       0.75,
@@ -1205,7 +1190,6 @@
     "icon_small": "res://assets/items/icons/item_montre_arretee_16.png",
     "name": "Montre arrêtée",
     "description": "{chance%} de chance de ralentir de {slow%} une élite touchée, pendant {seconds} s.",
-    "details": "Au plus {n} fois toutes les {window_seconds} s ; une même élite attend {target_cooldown_seconds} s entre deux ralentissements. Les armes qui touchent très souvent ont moins de chance.",
     "icon_color": [
       0.8,
       0.65,
@@ -1282,7 +1266,6 @@
     "icon": "res://assets/items/icons/item_pastille_mentholee.png",
     "icon_small": "res://assets/items/icons/item_pastille_mentholee_16.png",
     "name": "Pastille mentholée",
-    "details": "La régénération s’arrête 2 s après chaque blessure.",
     "flavor": "Fraîche comme un matin d’avant.",
     "icon_color": [
       0.95,
@@ -1308,7 +1291,6 @@
     "icon": "res://assets/items/icons/item_bouillotte.png",
     "icon_small": "res://assets/items/icons/item_bouillotte_16.png",
     "name": "Bouillotte",
-    "details": "Les PV ajoutés arrivent vides : elle ne soigne pas.",
     "flavor": "Encore tiède.",
     "icon_color": [
       0.3,
@@ -1334,7 +1316,6 @@
     "icon": "res://assets/items/icons/item_agrafe_rouillee.png",
     "icon_small": "res://assets/items/icons/item_agrafe_rouillee_16.png",
     "name": "Agrafe rouillée",
-    "details": "Chaque point d’armure retire une part de chaque coup reçu, jusqu’à un plafond.",
     "flavor": "Ça tient encore, à peu près.",
     "icon_color": [
       0.95,
@@ -1384,7 +1365,6 @@
     "icon": "res://assets/items/icons/item_capsule_porte_bonheur.png",
     "icon_small": "res://assets/items/icons/item_capsule_porte_bonheur_16.png",
     "name": "Capsule porte-bonheur",
-    "details": "La Chance fait sortir plus souvent les cartes et les objets rares. Elle ne change pas la rareté d’un objet déjà tiré.",
     "flavor": "Elle tombait toujours du bon côté.",
     "icon_color": [
       1.0,
@@ -1457,7 +1437,6 @@
     "icon": "res://assets/items/icons/item_compas.png",
     "icon_small": "res://assets/items/icons/item_compas_16.png",
     "name": "Compas",
-    "details": "Agrandit les zones, arcs et cônes des armes.",
     "flavor": "Ses cercles sont un peu plus larges qu’avant.",
     "icon_color": [
       0.6,
@@ -1482,7 +1461,6 @@
     "icon": "res://assets/items/icons/item_longue_vue.png",
     "icon_small": "res://assets/items/icons/item_longue_vue_16.png",
     "name": "Longue-vue",
-    "details": "Allonge la portée des armes qui en ont une.",
     "flavor": "Ce qui était loin se rapproche.",
     "icon_color": [
       0.5,
@@ -1555,7 +1533,6 @@
     "icon": "res://assets/items/icons/item_bocal_de_conserve.png",
     "icon_small": "res://assets/items/icons/item_bocal_de_conserve_16.png",
     "name": "Bocal de conserve",
-    "details": "Prolonge brûlures, ralentissements, poisons et zones au sol, dans leurs limites.",
     "flavor": "Ce qu’on met en bocal dure.",
     "icon_color": [
       0.85,
@@ -1580,7 +1557,6 @@
     "icon": "res://assets/items/icons/item_peigne_casse.png",
     "icon_small": "res://assets/items/icons/item_peigne_casse_16.png",
     "name": "Peigne cassé",
-    "details": "Chaque tir traverse un ennemi de plus avant de s’arrêter.",
     "flavor": "Il lui manque des dents, il passe partout.",
     "icon_color": [
       0.75,
@@ -1605,7 +1581,6 @@
     "icon": "res://assets/items/icons/item_ampoule_rouge.png",
     "icon_small": "res://assets/items/icons/item_ampoule_rouge_16.png",
     "name": "Ampoule rouge",
-    "details": "Une part des dégâts de tes armes te revient en PV ; le soin rendu est limité chaque seconde.",
     "flavor": "Elle s’allume quand on saigne.",
     "icon_color": [
       0.4,
@@ -1655,7 +1630,6 @@
     "icon": "res://assets/items/icons/item_boucle_cabossee.png",
     "icon_small": "res://assets/items/icons/item_boucle_cabossee_16.png",
     "name": "Boucle cabossée",
-    "details": "Le bouclier encaisse les coups avant tes PV et se recharge quand on ne te touche plus.",
     "flavor": "Elle a déjà pris un coup pour quelqu’un.",
     "icon_color": [
       0.4,
@@ -1681,7 +1655,6 @@
     "icon": "res://assets/items/icons/item_diapositive_en_double.png",
     "icon_small": "res://assets/items/icons/item_diapositive_en_double_16.png",
     "name": "Diapositive en double",
-    "details": "Un projectile de plus par attaque, satellites des armes orbitales compris.",
     "flavor": "Un souvenir photographié deux fois.",
     "icon_color": [
       0.7,
@@ -1706,7 +1679,6 @@
     "icon": "res://assets/items/icons/item_tampon_elastique.png",
     "icon_small": "res://assets/items/icons/item_tampon_elastique_16.png",
     "name": "Tampon élastique",
-    "details": "Les boss résistent au recul.",
     "flavor": "Il rebondit plus haut qu’il ne devrait.",
     "icon_color": [
       0.95,
@@ -1731,7 +1703,6 @@
     "icon": "res://assets/items/icons/item_flechette_mousse.png",
     "icon_small": "res://assets/items/icons/item_flechette_mousse_16.png",
     "name": "Fléchette mousse",
-    "details": "Ni plus de tirs ni plus de cadence.",
     "flavor": "Elle ne fait mal à personne, mais elle file.",
     "icon_color": [
       0.6,
@@ -1756,7 +1727,6 @@
     "icon": "res://assets/items/icons/item_roulement_lisse.png",
     "icon_small": "res://assets/items/icons/item_roulement_lisse_16.png",
     "name": "Roulement lisse",
-    "details": "Armes orbitales seulement ; un même ennemi n’est pas touché plus souvent.",
     "flavor": "Il tourne encore quand tout s’est arrêté.",
     "icon_color": [
       0.8,
@@ -1781,7 +1751,6 @@
     "icon": "res://assets/items/icons/item_cordon_spirale.png",
     "icon_small": "res://assets/items/icons/item_cordon_spirale_16.png",
     "name": "Cordon spiralé",
-    "details": "Armes à chaîne et à rebond seulement.",
     "flavor": "Il s’étire sans jamais casser.",
     "icon_color": [
       0.85,
@@ -1806,7 +1775,6 @@
     "icon": "res://assets/items/icons/item_fer_a_cheval_miniature.png",
     "icon_small": "res://assets/items/icons/item_fer_a_cheval_miniature_16.png",
     "name": "Fer à cheval miniature",
-    "details": "Seulement pour les tirs déjà guidés ; un tir droit le reste.",
     "flavor": "Il ramène toujours au même endroit.",
     "icon_color": [
       0.45,
@@ -1831,7 +1799,6 @@
     "icon": "res://assets/items/icons/item_domino_ebreche.png",
     "icon_small": "res://assets/items/icons/item_domino_ebreche_16.png",
     "name": "Domino ébréché",
-    "details": "Armes à chaîne et à rebond seulement.",
     "flavor": "Un qui tombe, et les autres suivent.",
     "icon_color": [
       0.4,
@@ -1857,7 +1824,6 @@
     "icon_small": "res://assets/items/icons/item_etiquette_perdue_16.png",
     "name": "Étiquette perdue",
     "description": "Des flèches montrent les coffres fermés les plus proches, hors de l’écran : jusqu’à {pointers} à la fois.",
-    "details": "{max_pointers} flèches au plus. L’Oubli des repères, un malus de Faille, les cache.",
     "icon_color": [
       0.45,
       0.6,
@@ -1886,7 +1852,6 @@
     "icon_small": "res://assets/items/icons/item_ticket_de_vestiaire_16.png",
     "name": "Ticket de vestiaire",
     "description": "Les objets au sol restent {extra_seconds} s de plus avant de disparaître.",
-    "details": "L’Effacement les détruit quand même.",
     "icon_color": [
       0.85,
       0.78,
@@ -1914,7 +1879,6 @@
     "icon_small": "res://assets/items/icons/item_pied_de_biche_16.png",
     "name": "Pied-de-biche",
     "description": "{chance%} de chance d’ouvrir un coffre sans payer d’Essence.",
-    "details": "Plafond de {max_chance%}. Un seul essai par coffre : annuler et revenir ne relance pas. Marche même sans assez d’Essence ; la Chance n’agit pas dessus.",
     "icon_color": [
       0.75,
       0.8,
@@ -1943,7 +1907,6 @@
     "icon_small": "res://assets/items/icons/item_sonnette_16.png",
     "name": "Sonnette",
     "description": "Quand tu refermes un coffre neuf, l’XP au sol à moins de {radius} px de lui vient à toi.",
-    "details": "Une fois par coffre.",
     "icon_color": [
       0.85,
       0.38,
@@ -1971,7 +1934,6 @@
     "icon_small": "res://assets/items/icons/item_registre_biffe_16.png",
     "name": "Registre biffé",
     "description": "Toucher un ennemi avec deux armes différentes en {window_seconds} s lui inflige en plus {amount%} des deux coups.",
-    "details": "Au plus une fois toutes les {cooldown_seconds} s. Les dégâts d’objets ne comptent pas comme une arme.",
     "icon_color": [
       0.45,
       0.6,
@@ -2000,7 +1962,6 @@
     "icon_small": "res://assets/items/icons/item_pelote_rouge_16.png",
     "name": "Pelote rouge",
     "description": "Après un dash, les deux derniers ennemis touchés sont liés {duration_seconds} s : {ratio%} des dégâts de l’un frappent aussi l’autre.",
-    "details": "Ennemis à moins de {radius} px l’un de l’autre. Plafond de {max_ratio%}. Recharge de {cooldown_seconds} s. Les dégâts transmis ne repartent pas.",
     "icon_color": [
       0.95,
       0.55,
@@ -2031,7 +1992,6 @@
     "icon_small": "res://assets/items/icons/item_tampon_annule_16.png",
     "name": "Tampon ANNULÉ",
     "description": "Ton dash efface les projectiles ennemis sur son passage, {amount} au plus.",
-    "details": "Ne protège ni du contact, ni des rayons, ni des zones au sol, ni du Néant.",
     "icon_color": [
       0.95,
       0.85,
@@ -2056,7 +2016,6 @@
     "icon_small": "res://assets/items/icons/item_carnet_dadresses_16.png",
     "name": "Carnet d’adresses",
     "description": "Chaque objet d’un coffre devient un choix entre {choices} objets de même rareté.",
-    "details": "Tu n’en reçois qu’un.",
     "icon_color": [
       0.45,
       0.6,
@@ -2084,7 +2043,6 @@
     "icon_small": "res://assets/items/icons/item_cassette_rembobinee_16.png",
     "name": "Cassette rembobinée",
     "description": "À la fin d’un dash, tu récupères {amount%} des PV perdus dans les {history_seconds} dernières secondes.",
-    "details": "Recharge de {cooldown_seconds} s. Une perte n’est rendue qu’une fois. Ne rend rien de ce que prend le Néant.",
     "icon_color": [
       0.8,
       0.65,
@@ -2114,7 +2072,6 @@
     "icon_small": "res://assets/items/icons/item_portrait_efface_16.png",
     "name": "Portrait effacé",
     "description": "Après un dash, un souvenir de toi reste au départ {decoy_seconds} s et attire les ennemis proches.",
-    "details": "Ennemis ordinaires à moins de {radius} px ; les élites et les boss l’ignorent, les attaques déjà lancées partent quand même. Recharge de {cooldown_seconds} s.",
     "icon_color": [
       0.95,
       0.85,

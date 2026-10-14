@@ -44,6 +44,7 @@ public partial class HubCollectionPanel : MarginContainer
     private Label _detailName;
     private Label _detailState;
     private Label _detailText;
+    private Label _detailFlavor;
     private Label _detailStats;
     private Label _detailCondition;
     private Label _count;
@@ -54,17 +55,20 @@ public partial class HubCollectionPanel : MarginContainer
         public readonly string Name;
         public readonly string Icon;
         public readonly string Description;
+        public readonly string Flavor;
         public readonly string Stats;
         public readonly bool Unlocked;
         public readonly bool Preview;
         public readonly string Condition;
 
-        public Entry(string id, string name, string icon, string description, string stats, bool unlocked, string condition, bool preview = false)
+        public Entry(string id, string name, string icon, string description, string stats, bool unlocked, string condition,
+            bool preview = false, string flavor = "")
         {
             Id = id;
             Name = name;
             Icon = icon;
             Description = description;
+            Flavor = flavor;
             Stats = stats;
             Unlocked = unlocked;
             Preview = preview;
@@ -134,6 +138,8 @@ public partial class HubCollectionPanel : MarginContainer
         _detailRarity = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.TextLight);
         _detailState = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailText = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextColor);
+        // L'ambiance se lit après la règle et ne lui dispute pas l'attention (DECISIONS §172).
+        _detailFlavor = AddDetailLabel(detail, _bodyFont, TextRole.Body, UITheme.TextDim);
         // Règles et chiffres toujours affichés : souvent une ligne, jamais derrière un bouton (DECISIONS §117).
         _detailStats = AddDetailLabel(detail, _bodyFont, TextRole.Heading, UITheme.TextDim);
         _detailCondition = AddDetailLabel(detail, _strongFont, TextRole.Heading, UITheme.CyanEssence);
@@ -386,6 +392,8 @@ public partial class HubCollectionPanel : MarginContainer
         _detailState.Text = entry.Unlocked ? (isNew ? "Nouveau · disponible en run" : "Disponible en run")
             : entry.Preview ? "À venir" : "Pas encore disponible";
         _detailText.Text = entry.Description;
+        _detailFlavor.Text = entry.Flavor;
+        _detailFlavor.Visible = entry.Flavor.Length > 0;
         _detailStats.Text = entry.Stats;
         _detailCondition.Text = entry.Unlocked ? "" : entry.Condition;
     }
@@ -422,19 +430,15 @@ public partial class HubCollectionPanel : MarginContainer
         {
             if (passive.IsBadge != badges)
                 continue;
-            string stats;
-            if (passive.IsBadge)
-                stats = string.Format(TranslationServer.Translate("COLLECTION_BADGE_RULE"), passive.Subtitle,
-                    passive.MaxLevel);
-            else
-                stats = (passive.HasCopyLimit
-                    ? string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies)
-                    : TranslationServer.Translate("COLLECTION_ITEM_UNLIMITED").ToString());
             bool unlocked = MetaSaveManager.IsObjectUnlocked(passive.Id);
             string condition = unlocked ? "" : QuestBook.LockText(passive.UnlockKind, passive.Id);
             if (!unlocked && condition.Length == 0 && !passive.InitialUnlock)
                 condition = "Déblocage à venir.";
-            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, ItemPresentation.CollectionText(passive), stats, unlocked, condition));
+            // Ni plafond de copies ni règle de montée : la fiche s'en tient à la règle et à l'ambiance (DECISIONS §172).
+            entries.Add(new Entry(passive.Id, passive.Name, passive.Icon, passive.IsBadge
+                ? ItemPresentation.StatLine(passive, 1) + (passive.Description.Length > 0 ? "\n" + passive.RuleText() : "")
+                : ItemPresentation.Describe(passive),
+                "", unlocked, condition, flavor: passive.Flavor));
         }
         if (badges)
             return entries.OrderByDescending(entry => entry.Unlocked).ToList();

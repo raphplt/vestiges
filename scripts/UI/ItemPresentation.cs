@@ -38,7 +38,7 @@ public static class ItemPresentation
 
     /// <summary>
     /// Ce que fait l'objet à <paramref name="copies"/> copies : sa phrase du JSON, ou sa ligne de stat pour un objet de
-    /// stat. Les limites restent dans <see cref="Details"/> (Collection) ; en pause, l'état du moment s'ajoute.
+    /// stat. Les limites techniques ne sont pas affichées (DECISIONS §172) ; en pause, l'état du moment s'ajoute.
     /// </summary>
     public static string Describe(PassiveSouvenirData data, int copies = 1, Player player = null)
     {
@@ -58,22 +58,8 @@ public static class ItemPresentation
         };
     }
 
-    /// <summary>Limites et exceptions de l'objet, pour la Collection ; vide s'il n'en a pas.</summary>
-    public static string Details(PassiveSouvenirData data, int copies = 1) =>
-        data.Details.Length == 0 ? "" : ObjectText.Format(data.Details, Values(data, copies, null), data.Id);
-
-    /// <summary>Fiche complète de la Collection : règle, ambiance, puis limites.</summary>
-    public static string CollectionText(PassiveSouvenirData data)
-    {
-        string text = data.IsBadge ? data.RuleText() : Describe(data);
-        if (data.Flavor.Length > 0)
-            text = text.Length > 0 ? $"{text}\n{data.Flavor}" : data.Flavor;
-        string details = Details(data);
-        return details.Length > 0 ? $"{text}\n\n{details}" : text;
-    }
-
     private static Dictionary<string, float> Values(PassiveSouvenirData data, int copies, Player player) =>
-        ObjectText.Values(data, copies, player?.StatusDurationMultiplier ?? 1f, player?.AoeMultiplier ?? 1f);
+        ObjectText.Values(data, copies, player?.StatusDurationMultiplier ?? 1f);
 
     private static string CompatibleWeapons(string stat, Player player)
     {
@@ -98,7 +84,8 @@ public static class ItemPresentation
         return names.Count == 0 ? " Aucune arme équipée compatible." : " Armes équipées concernées : " + string.Join(", ", names) + ".";
     }
 
-    private static string StatLine(PassiveSouvenirData data, int copies)
+    /// <summary>Stats de l'objet à <paramref name="copies"/> copies, ou d'un Écusson à ce niveau.</summary>
+    public static string StatLine(PassiveSouvenirData data, int copies)
     {
         List<string> values = new();
         foreach (PassiveEffectData effect in data.Effects)

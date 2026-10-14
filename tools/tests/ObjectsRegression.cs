@@ -1288,10 +1288,8 @@ public partial class ObjectsRegression : Node2D
         PassiveSouvenirData match = PassiveSouvenirDataLoader.Get("allumette_humide");
         string one = ItemPresentation.Describe(match, 1), eight = ItemPresentation.Describe(match, 8);
         Check(one.StartsWith("8 %", StringComparison.Ordinal) && eight.StartsWith("8 %", StringComparison.Ordinal)
-            && !one.Contains("par seconde, toutes", StringComparison.Ordinal)
-            && ItemPresentation.Details(match, 1).Contains("Au plus 2 brûlures", StringComparison.Ordinal)
-            && ItemPresentation.Details(match, 8).Contains("Au plus 16 brûlures", StringComparison.Ordinal),
-            "Fiche Allumette : la chance reste 8 %, la limite par seconde suit les copies et reste dans les détails");
+            && !one.Contains("par seconde, toutes", StringComparison.Ordinal),
+            "Fiche Allumette : la chance reste 8 % à toutes les copies, sans limite technique affichée");
         ChoiceCard card = new();
         ItemPresentation.ConfigureCard(card, match);
         Check(card.Rank == 1 && card.Frame == RarityPalette.Main("uncommon") && card.Tag == RarityPalette.DisplayName("uncommon"),

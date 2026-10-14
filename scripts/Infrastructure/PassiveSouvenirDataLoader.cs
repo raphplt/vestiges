@@ -35,8 +35,6 @@ public class PassiveSouvenirData
 
 	/// <summary>Ce que fait l'objet, en une phrase ; vide pour un objet de stat, que sa ligne de stat suffit à dire.</summary>
 	public string Description = "";
-	/// <summary>Limites et exceptions, montrées dans la Collection seulement.</summary>
-	public string Details = "";
 	/// <summary>Phrase d'ambiance, sous la règle.</summary>
 	public string Flavor = "";
 	public string Icon;
@@ -63,8 +61,6 @@ public class PassiveSouvenirData
 
 	/// <summary>Règle de l'objet, chiffres compris (DECISIONS §53), pour une copie ou un niveau.</summary>
 	public string RuleText() => ObjectText.Format(Description, ObjectText.Values(this, 1), Id);
-
-	public string DetailsText(int copies = 1) => ObjectText.Format(Details, ObjectText.Values(this, copies), Id);
 }
 
 public static class PassiveSouvenirDataLoader
@@ -143,7 +139,6 @@ public static class PassiveSouvenirDataLoader
 			Name = dict["name"].AsString(),
 			Subtitle = dict.ContainsKey("subtitle") ? dict["subtitle"].AsString() : "",
 			Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
-			Details = dict.ContainsKey("details") ? dict["details"].AsString() : "",
 			Flavor = dict.ContainsKey("flavor") ? dict["flavor"].AsString() : "",
 			Icon = dict.ContainsKey("icon") ? dict["icon"].AsString() : "",
 			IconSmall = dict.ContainsKey("icon_small") ? dict["icon_small"].AsString() : "",
