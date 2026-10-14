@@ -148,8 +148,8 @@
       }
     ],
     "stats": {
-      "damage": 8,
-      "attack_speed": 0.96,
+      "damage": 9,
+      "attack_speed": 1.08,
       "range": 150,
       "projectile_speed": 280,
       "projectile_count": 1

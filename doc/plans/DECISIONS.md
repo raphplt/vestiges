@@ -2090,3 +2090,9 @@ Raphaël : « améliore après les sliders des paramètres, donne-leur un aspect
 **§178, clic retenu, même jour :** loquet (C de la planche U1d), au niveau de clic demandé ([plan 15](15-audio.md#u1d-livré--clic-en-loquet-14-octobre)).
 
 **§178, famille finale du même jour :** plus de son au survol ; un même clic pour les boutons et le retour (caillou sur planche, +1 dB) ; un son de sélection à part (lamelle) pour choisir un personnage, un objet, une quête ou une amélioration dans une liste ; cloche pour les validations, corde étouffée pour les refus ([plan 15 U1f](15-audio.md#u1f-livré--survol-muet-clic-partagé-avec-le-retour-son-de-sélection-14-octobre)).
+
+## 180. Arc du gymnase et Traqueur relevés à mi-chemin — 14 octobre 2026
+
+Raphaël : « l'arc a été trop nerfé ainsi que le traqueur […] augmente le légèrement ». L'arc avait pris trois baisses le même jour : attaque du Traqueur 12 → 10 (§169), vitesse de vol 400 → 280 (§174), cadence 1,2 → 0,96 (§175).
+
+**Réglage :** attaque du Traqueur 10 → 11 ; Arc du gymnase dégâts 8 → 9 et cadence 0,96 → 1,08 (0,93 s entre deux attaques au lieu de 1,04). La vitesse de vol reste à 280 : le §174 vaut pour tous les projectiles. `tools/test_weapons.sh` vert.

@@ -6,7 +6,7 @@
         "starting_weapon": "makeshift_bow",
         "base_stats": {
             "speed": 240,
-            "attack_damage": 10,
+            "attack_damage": 11,
             "attack_speed": 1.2,
             "attack_range": 380,
             "max_hp": 70,
