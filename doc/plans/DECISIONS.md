@@ -1929,3 +1929,8 @@ Retours de Raphaël sur le premier réglage du plan 47 :
 - **PV et dégâts des créatures** : le ×1,375 du Péril du temps lui semblait « très léger ». Mis au clair : il s'ajoute à la croissance existante ; à 30 min, les PV valent déjà environ ×130 à ×180 du début, les dégâts seulement ×5 à ×6. Choix : dégâts ×12 à ×15 à 30 min (1,09 par minute après 15 min, `damage_scaling_segments`), « mais ce qui fait la diff c'est d'avoir plus d'élites qui elles sont vraiment plus fortes ».
 - **Élites de fin de run** : de 15 à 30 min, elles apparaissent toutes les 12 à 20 s au lieu de 50 à 75, jusqu'à 8 en même temps au lieu de 2, avec PV ×3 et dégâts ×1,8 en plus de la variante, et un affixe de plus passé 22 min 30.
 - **Traqueur** : « ok le traqueur on va le régler aussi ». Son attaque passe de 12 à 10, comme le Vagabond et le Facteur ; son passif (portée +20 %, cadence +10 %) reste son identité.
+
+## 170. Vol de vie plafonné à 5 % ; les boules de neige gênent — 14 octobre 2026
+
+- Raphaël : « vol de vie met 5 % pas 8 en plafond ». Plafond à 5 % des PV max par seconde, montée lente inchangée (0,15 % par niveau ou par Ampoule).
+- « ça me gêne qu'il y ait encore des boules de neige. je vais tester ça » : une graine sur trois emmène encore le Traqueur au niveau 155 à 30 min, intouchable (plan 47 §4 bis). Raphaël teste en jeu avant la suite.

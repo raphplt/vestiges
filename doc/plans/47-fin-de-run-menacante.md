@@ -86,7 +86,7 @@ Vagabond et Facteur entrent dans la cible ; le Traqueur reste intouchable dans d
 ## 4 bis. Second réglage (14 octobre, DECISIONS §169)
 
 Retours de Raphaël sur le premier réglage :
-- le plafond du vol de vie revient à 8 % des PV max par seconde, mais le vol de vie monte trois fois plus lentement (0,15 % par niveau de l'Écusson du barbier ou par Ampoule) ;
+- le plafond du vol de vie passe à 5 % des PV max par seconde (8 % au départ, puis 5 % à la demande de Raphaël, §170), et le vol de vie monte trois fois plus lentement (0,15 % par niveau de l'Écusson du barbier ou par Ampoule) ;
 - dégâts des créatures ×1,09 par minute après 15 min (`damage_scaling_segments`, segments comme ceux des PV), soit environ ×12 à 30 min par rapport au début, contre ×5 avant ;
 - élites de fin de run (`natural_elites.late`) : de 15 à 30 min, elles passent progressivement à une apparition toutes les 12 à 20 s (50 à 75 avant), 8 en même temps (2 avant), PV ×3 et dégâts ×1,8 en plus de la variante, un affixe de plus après 22 min 30 ;
 - Traqueur : attaque 12 → 10, comme le Vagabond et le Facteur ; son passif reste.

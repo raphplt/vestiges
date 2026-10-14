@@ -584,9 +584,9 @@ public partial class ObjectsRegression : Node2D
         step.Invoke(_player, new object[] { 0.25f });
         float capped = _player.CurrentHp - hp;
         float cap = DefenseConfig.Load().LifestealMaxHpPerSecond;
-        Check(Near(_player.Lifesteal, 0.0015f) && Near(small, 0.03f) && Near(cap, 0.08f)
+        Check(Near(_player.Lifesteal, 0.0015f) && Near(small, 0.03f) && Near(cap, 0.05f)
             && Near(capped, maxHp * cap * 0.25f),
-            $"Vol de vie réel : 20 PV perdus rendent {small:0.00} ; plafond à 8 % des PV max/s ({capped:0.00} en 0,25 s)");
+            $"Vol de vie réel : 20 PV perdus rendent {small:0.00} ; plafond à 5 % des PV max/s ({capped:0.00} en 0,25 s)");
         _player.AddOrUpgradePassive("paille_tordue", 14);
         hp = _player.CurrentHp;
         enemy.TakeDamage(5000f, source: _player.BeginAttack(_player.EquippedWeapon, 5000f));
