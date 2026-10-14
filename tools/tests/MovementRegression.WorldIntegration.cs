@@ -126,29 +126,70 @@ public partial class MovementRegression
         Check(Mathf.IsEqualApprox(tracker.RunDurationSeconds, atDeath), "Score : l'horloge s'arrête à la mort");
     }
 
-    /// <summary>Marche vers l'est jusqu'au bord de la carte générée : le joueur ne quitte jamais le sol.</summary>
+    /// <summary>
+    /// Bord de la carte générée : la marche s'arrête au mur avant le sol effiloché, une poussée en diagonale y glisse
+    /// comme le long d'un décor, et aucun losange dissous n'est à portée derrière le mur.
+    /// </summary>
     private async Task CheckWorldEdge(WorldSetup world)
     {
         TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
         int edgeX = 0;
         while (edgeX < world.Generator.MapRadiusX + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
             edgeX++;
-        Vector2 start = ground.MapToLocal(new Vector2I(edgeX - 3, 0));
+        Vector2 start = ground.MapToLocal(new Vector2I(edgeX - 10, 0));
         _player.Position = start;
-        SetActions(Vector2.Right);
+        bool leftGround = await WalkAlongEdge(world, ground, Vector2.Right, 360);
+        Check(!leftGround && _player.Position.X > start.X && world.IsWaterAt(_player.Position + new Vector2(20f, 0f)),
+            $"bord du monde : la marche s'arrête au mur, bord x={edgeX}, position={_player.Position}");
+
+        Vector2 pressed = _player.Position;
+        bool leftGroundSliding = await WalkAlongEdge(world, ground, new Vector2(1f, -1f).Normalized(), 150);
+        float slid = pressed.Y - _player.Position.Y;
+        Check(!leftGroundSliding && slid > 300f,
+            $"bord du monde : la poussée en diagonale glisse le long du mur, {slid:0} px, position={_player.Position}");
+
+        Vector2 center = (Vector2)typeof(WorldSetup).GetField("_edgeCenter", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(world);
+        Vector2 semiAxes = (Vector2)typeof(WorldSetup).GetField("_edgeSemiAxes", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(world);
+        // Rayon du joueur : un centre plaqué au mur reste à 12 px de tout losange dissous.
+        Vector2 reach = semiAxes - new Vector2(12f, 12f);
+        Vector2 half = (Vector2)ground.TileSet.TileSize * 0.5f;
+        Vector2[] corners = [new(0f, -half.Y), new(half.X, 0f), new(0f, half.Y), new(-half.X, 0f)];
+        int reachable = 0;
+        for (int x = -world.Generator.MapRadiusX - 1; x <= world.Generator.MapRadiusX + 1; x++)
+        {
+            for (int y = -world.Generator.MapRadiusY - 1; y <= world.Generator.MapRadiusY + 1; y++)
+            {
+                if (!world.Generator.IsErased(x, y))
+                    continue;
+                Vector2 cellCenter = ground.MapToLocal(new Vector2I(x, y));
+                foreach (Vector2 corner in corners)
+                {
+                    if (!WorldEdgeCollision.IsBeyond(cellCenter + corner, center, reach))
+                    {
+                        reachable++;
+                        break;
+                    }
+                }
+            }
+        }
+        Check(semiAxes != Vector2.Zero && reachable == 0,
+            $"bord du monde : aucun losange dissous à portée derrière le mur ({reachable})");
+        _player.Position = Vector2.Zero;
+        await Step(10);
+    }
+
+    private async Task<bool> WalkAlongEdge(WorldSetup world, TileMapLayer ground, Vector2 direction, int frames)
+    {
+        SetActions(direction);
         bool leftGround = false;
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < frames; i++)
         {
             await Step(1);
             Vector2I cell = ground.LocalToMap(ground.ToLocal(_player.GlobalPosition));
             leftGround |= !world.Generator.IsWithinBounds(cell.X, cell.Y) || world.Generator.IsErased(cell.X, cell.Y);
         }
         SetActions(Vector2.Zero);
-        Check(!leftGround && _player.Position.X > start.X,
-            $"bord du monde : la marche s'arrête au sol, bord x={edgeX}, position={_player.Position}");
-        Vector2 origin = Vector2.Zero;
-        _player.Position = origin;
-        await Step(10);
+        return leftGround;
     }
 
     /// <summary>Vraie initialisation Main ; seul l'état local du Néant est rendu déterministe.</summary>

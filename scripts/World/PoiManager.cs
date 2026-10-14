@@ -25,6 +25,7 @@ public partial class PoiManager : Node
     private WorldGenerator _generator;
     private TileMapLayer _ground;
     private int _minDistanceBetween = 8;
+    private float _maxDistance;
     private EnemyPool _enemyPool;
     private Node _enemyContainer;
 
@@ -40,12 +41,14 @@ public partial class PoiManager : Node
         Node2D container,
         HashSet<Vector2I> occupiedCells,
         int minDistanceBetween,
+        float maxDistance,
         EnemyPool enemyPool = null,
         Node enemyContainer = null)
     {
         _generator = generator;
         _ground = ground;
         _minDistanceBetween = minDistanceBetween;
+        _maxDistance = maxDistance;
         _enemyPool = enemyPool;
         _enemyContainer = enemyContainer;
         _poiScene = GD.Load<PackedScene>("res://scenes/world/PointOfInterest.tscn");
@@ -151,8 +154,9 @@ public partial class PoiManager : Node
 
     private Vector2I PickPoiCell(string biomeId, PoiData data)
     {
-        int safeRadius = _generator.MapRadiusX - 5; // Pas dans la zone de décomposition
-        int safeRadiusY = _generator.MapRadiusY - 5;
+        // En deçà du mur du bord : la bande de décomposition est hors d'atteinte.
+        int safeRadius = Mathf.FloorToInt(_maxDistance);
+        int safeRadiusY = Mathf.FloorToInt(_maxDistance * _generator.MapRadiusY / _generator.MapRadiusX);
 
         for (int attempt = 0; attempt < 50; attempt++)
         {
@@ -162,7 +166,7 @@ public partial class PoiManager : Node
             float distFromCenter = _generator.EllipseDistance(x, y);
 
             // Hors du cercle de la map
-            if (distFromCenter > safeRadius)
+            if (distFromCenter > _maxDistance)
                 continue;
 
             // Respecter la distance min/max par rapport à la zone de spawn

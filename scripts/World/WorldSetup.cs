@@ -28,6 +28,9 @@ public partial class WorldSetup : Node2D
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
+    // Ellipse du mur du bord, en coordonnées locales du sol ; nulle avant la pose des tuiles.
+    private Vector2 _edgeCenter;
+    private Vector2 _edgeSemiAxes;
     private BiomeTileMapper _tileMapper;
 
     /// <summary>Seed de la run : celle du Hub, ou tirée à l'entrée dans l'arbre (voir <see cref="_EnterTree"/>).</summary>
@@ -41,12 +44,15 @@ public partial class WorldSetup : Node2D
     /// <summary>Emprise des chemins, réutilisée par la cartographie sans parcourir les décors.</summary>
     public IReadOnlySet<Vector2I> PathCells => _pathNetwork?.Cells;
 
-    /// <summary>Checks if a world position is impassable (water or erased void).</summary>
+    /// <summary>Position infranchissable : eau, vide dissous, ou au-delà du mur du bord du monde.</summary>
     public bool IsWaterAt(Vector2 worldPos)
     {
         if (_generator == null || _ground == null)
             return false;
-        Vector2I cell = _ground.LocalToMap(_ground.ToLocal(worldPos));
+        Vector2 local = _ground.ToLocal(worldPos);
+        if (_edgeSemiAxes != Vector2.Zero && WorldEdgeCollision.IsBeyond(local, _edgeCenter, _edgeSemiAxes))
+            return true;
+        Vector2I cell = _ground.LocalToMap(local);
         if (_generator.IsErased(cell.X, cell.Y))
             return true;
         return _generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water;
@@ -272,7 +278,10 @@ public partial class WorldSetup : Node2D
         PrepareTiles();
         LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
-        LoadProfiler.Mark("tuiles");
+        _edgeCenter = _ground.MapToLocal(Vector2I.Zero);
+        _edgeSemiAxes = WorldEdgeCollision.SemiAxes(_ground, _generator, _config.WalkableRadius);
+        WorldEdgeCollision.Build(this, _ground, _edgeCenter, _edgeSemiAxes);
+        LoadProfiler.Mark("tuiles et bord du monde");
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, new Vector2I(_config.MapRadius, _config.MapRadiusY), _config.GroundBlend);
         AddPaths();
         LoadProfiler.Mark("matériau du sol et chemins");
@@ -511,7 +520,7 @@ public partial class WorldSetup : Node2D
         Node enemyContainer = GetNodeOrNull("EnemyContainer");
 
         _poiManager.SpawnPois(
-            _generator, _ground, _poiContainer, _usedCells, _config.PoiMinDistanceBetween,
+            _generator, _ground, _poiContainer, _usedCells, _config.PoiMinDistanceBetween, _config.WalkableRadius - 1f,
             enemyPool, enemyContainer);
     }
 
@@ -929,7 +938,7 @@ public partial class WorldSetup : Node2D
 
     private bool IsValidLoreCell(Vector2I cell)
     {
-        if (_generator.EllipseDistance(cell.X, cell.Y) > _config.MapRadius - _config.EdgeFadeWidth)
+        if (_generator.EllipseDistance(cell.X, cell.Y) > _config.WalkableRadius - 1f)
             return false;
         if (_usedCells.Contains(cell))
             return false;
@@ -967,6 +976,10 @@ public class WorldGenConfig
     public List<WorldGenerator.ZoneConfig> Zones = new();
     public int BiomeCount = 3;
     public int EdgeFadeWidth = 5;
+    /// <summary>Retrait du mur du bord avant la bande effilochée, en colonnes : aucun coin de cellule dissoute à portée.</summary>
+    public float EdgeWallInset = 1.25f;
+    /// <summary>Distance du mur du bord (unités de <see cref="WorldGenerator.EllipseDistance"/>) : au-delà, hors d'atteinte.</summary>
+    public float WalkableRadius => MapRadius - EdgeFadeWidth - EdgeWallInset;
     public int PoiMinDistanceBetween = 8;
     /// <summary>POI et éléments de lore V1, désactivés jusqu'à leur refonte (plan 18 §5, plan 17 lot 0B).</summary>
     public bool PoisEnabled = true;
@@ -1017,6 +1030,8 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("edge_fade_width"))
             config.EdgeFadeWidth = (int)dict["edge_fade_width"].AsDouble();
+        if (dict.ContainsKey("edge_wall_inset"))
+            config.EdgeWallInset = (float)dict["edge_wall_inset"].AsDouble();
 
         if (dict.ContainsKey("poi_min_distance_between"))
             config.PoiMinDistanceBetween = (int)dict["poi_min_distance_between"].AsDouble();
