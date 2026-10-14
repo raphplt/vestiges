@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Sons de menu faits des matières du jeu (plan 15 U1, DECISIONS §178) : survol en papier (quatre variantes), clic de
-pierre, confirmation à la petite cloche de bronze, refus en corde étouffée.
+"""Sons de menu faits des matières du jeu (plan 15 U1, DECISIONS §178) : survol en cran mécanique (quatre variantes),
+clic de pierre, retour en cran inversé, confirmation à la petite cloche de bronze, refus en corde étouffée.
 
-Synthèses originales retenues par Raphaël sur la planche du 14 octobre. Graines et niveaux de la planche : regénérer
+Synthèses originales retenues par Raphaël sur les planches du 14 octobre. Graines et niveaux des planches : regénérer
 donne les mêmes octets que ceux écoutés. La cloche sonne fa, tonalité du thème du Hub (fa mineur), et ses échos
 s'assourdissent et se trouent, signature de l'Effacement.
 Usage : python3 tools/generate_menu_sounds.py
@@ -19,8 +19,10 @@ from audio_bank_audit import momentary_max
 RATE = 48000
 OUT = Path(__file__).resolve().parents[1] / "assets/audio/sfx/ui"
 F5, C3 = 698.46, 130.81
-# Sonie momentanée maximale des sons Kenney remplacés : les nouveaux restent au niveau du mix.
-LEVEL_HOVER, LEVEL_CLICK, LEVEL_CONFIRM, LEVEL_REFUSE = -32.033, -34.006, -24.023, -29.518
+# Sonie momentanée maximale des sons Kenney remplacés : les nouveaux restent au niveau du mix. Le survol, jugé trop
+# présent, est 3 dB plus bas.
+LEVEL_HOVER, LEVEL_CLICK, LEVEL_CONFIRM, LEVEL_REFUSE = -32.033 - 3.0, -34.006, -24.023, -29.518
+LEVEL_BACK = LEVEL_CLICK - 2.0
 
 
 def t_axis(duration):
@@ -133,13 +135,23 @@ def tape(x, rng, cutoff, wow=0.0015):
     return biquad(np.interp(warp * RATE, np.arange(len(x)), x), "lp", cutoff)
 
 
-def hover_paper(rng, variant):
-    t = t_axis(0.06)
-    base = biquad(biquad(noise(len(t), rng), "hp", 650), "lp", 3000 + 120 * variant)
-    crackle = np.zeros(len(t))
-    for at in sorted(rng.uniform(0.004, 0.035, 3)):
-        crackle = mix_at(crackle, biquad(noise(200, rng), "bp", 2200, 2) * np.exp(-np.arange(200) / 40), at)
-    return fade_tail(biquad(biquad(base * 0.6 + crackle * 1.4, "lp", 2800), "lp", 2800) * env(t, 0.005, 60))
+def detent(rng, pitch):
+    """Cran de métal patiné : impulsion brève sur des modes très amortis, sans souffle."""
+    out = np.zeros(round(RATE * 0.05))
+    t = t_axis(0.035)
+    body = sum(a * np.sin(2 * math.pi * pitch * r * t + rng.uniform(0, 6)) * np.exp(-t * d)
+               for r, a, d in ((1.0, 1.0, 260), (1.63, 0.5, 340), (2.71, 0.25, 480)))
+    thock = np.sin(2 * math.pi * 380 * t) * np.exp(-t * 220) * 0.5
+    mix_at(out, (body + thock) * env(t, 0.0007, 0), 0.0)
+    return fade_tail(biquad(out, "lp", 3400), 6)
+
+
+def back_detent(rng):
+    """Cran inversé : un cran léger et aigu, puis le cran principal plus grave, comme une molette ramenée en arrière."""
+    out = np.zeros(round(RATE * 0.08))
+    mix_at(out, detent(rng, 1750) * 0.45, 0.0)
+    mix_at(out, detent(rng, 1250), 0.024)
+    return fade_tail(out, 6)
 
 
 def click_stone(rng):
@@ -187,8 +199,10 @@ def rng_for(label):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    jobs = [(f"menu_hover_{v + 1}.wav", hover_paper(rng_for(f"survolB{v}"), v), LEVEL_HOVER) for v in range(4)]
+    jobs = [(f"menu_hover_{v + 1}.wav", detent(rng_for(f"survol2C{v}"), 1700 * (1 + 0.02 * (v - 1.5))), LEVEL_HOVER)
+            for v in range(4)]
     jobs += [("menu_click.wav", click_stone(rng_for("clicA0")), LEVEL_CLICK),
+             ("menu_back.wav", back_detent(rng_for("retourA")), LEVEL_BACK),
              ("menu_confirm.wav", confirm_bell(rng_for("confirmerC0")), LEVEL_CONFIRM),
              ("menu_refuse.wav", refuse_pluck(rng_for("refusC0")), LEVEL_REFUSE)]
     for name, samples, level in jobs:

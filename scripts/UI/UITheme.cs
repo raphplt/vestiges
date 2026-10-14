@@ -253,7 +253,22 @@ public static class UITheme
 		{
 			if (btn.Disabled)
 				return;
-			AudioManager.PlayUI("sfx_menu_clic");
+			PlayPressSound(btn);
 		};
+	}
+
+	private const string PressSoundMeta = "ui_sfx_press";
+
+	/// <summary>
+	/// Remplace le clic d'appui : son de retour pour revenir en arrière, ou rien (<c>null</c>) quand l'action joue
+	/// elle-même sa validation, pour ne pas empiler clic et cloche.
+	/// </summary>
+	public static void SetPressSound(Button btn, string key) => btn.SetMeta(PressSoundMeta, key ?? "");
+
+	public static void PlayPressSound(Button btn)
+	{
+		string key = btn.HasMeta(PressSoundMeta) ? btn.GetMeta(PressSoundMeta).AsString() : "sfx_menu_clic";
+		if (key.Length > 0)
+			AudioManager.PlayUI(key);
 	}
 }

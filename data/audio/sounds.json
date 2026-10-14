@@ -267,6 +267,14 @@
     "priority": 30,
     "max_voices": 1
   },
+  "sfx_menu_retour": {
+    "path": "res://assets/audio/sfx/ui/menu_back.wav",
+    "volume_db": 0,
+    "min_interval_ms": 120,
+    "effect_id": "menu_back",
+    "priority": 30,
+    "max_voices": 1
+  },
   "sfx_menu_survol": {
     "path": "res://assets/audio/sfx/ui/menu_hover_1.wav",
     "volume_db": 0,

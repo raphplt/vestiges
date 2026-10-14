@@ -22,7 +22,9 @@ public partial class HubCharactersPanel : MarginContainer
     private Button _depart;
     private Button _quest;
     private Button _weapon;
+    // Fiche affichée ; elle suit le survol et le focus, puis revient au personnage choisi (_chosen) à la sortie de la liste.
     private CharacterData _examined;
+    private CharacterData _chosen;
     private readonly Dictionary<string, Button> _rows = new();
     private const float RowHeight = 124f;
     private const float RowInset = 20f;
@@ -33,7 +35,7 @@ public partial class HubCharactersPanel : MarginContainer
     private readonly Texture2D[] _idle = new Texture2D[CharacterPortrait.IdleFrames];
     private int _idleCount;
     private float _idleTime;
-    public string ExaminedCharacterId => _examined?.Id;
+    public string ExaminedCharacterId => _chosen?.Id;
     public bool CanDepart => _examined != null && MetaSaveManager.IsCharacterUnlocked(_examined.Id);
 
     public override void _Ready()
@@ -107,6 +109,8 @@ public partial class HubCharactersPanel : MarginContainer
         MenuSkin.StyleCallToAction(_depart);
         _depart.Name = "DepartButton";
         _depart.CustomMinimumSize = new Vector2(0, 92);
+        // Le départ sonne la cloche de validation (HubScreen.StartRun) : pas de clic d'appui en plus.
+        UITheme.SetPressSound(_depart, null);
         _depart.Pressed += () => { if (CanDepart) EmitSignal(SignalName.DepartRequested, _examined.Id); };
         column.AddChild(_depart);
     }
@@ -169,17 +173,37 @@ public partial class HubCharactersPanel : MarginContainer
                 text.AddChild(name);
                 if (!unlocked)
                     text.AddChild(UITheme.MakeLabel("À débloquer", TextRole.Small, UITheme.TextVeryDim));
-                // Seul un clic (ou la validation à la manette) change le personnage choisi : survol et focus ne font que
-                // surligner la carte (DECISIONS §154).
-                row.Pressed += () => { ShowSheet(character); if (unlocked) _depart.GrabFocus(); else if (_quest.Visible) _quest.GrabFocus(); };
+                // Seul un clic (ou la validation à la manette) change le personnage choisi (DECISIONS §154) ; survol et
+                // focus en montrent un aperçu, qui revient au choisi à la sortie de la liste (DECISIONS §178).
+                row.Pressed += () =>
+                {
+                    _chosen = character;
+                    ShowSheet(character);
+                    if (unlocked) _depart.GrabFocus(); else if (_quest.Visible) _quest.GrabFocus();
+                };
+                row.MouseEntered += () => ShowSheet(character);
+                row.FocusEntered += () => ShowSheet(character);
+                row.MouseExited += () => Callable.From(RestoreChosen).CallDeferred();
+                row.FocusExited += () => Callable.From(RestoreChosen).CallDeferred();
                 _list.AddChild(row);
                 _rows[character.Id] = row;
             }
         }
-        string id = selectedCharacterId ?? _examined?.Id;
+        string id = selectedCharacterId ?? _chosen?.Id;
         CharacterData selected = (id != null ? CharacterDataLoader.Get(id) : null) ?? CharacterDataLoader.GetAll()[0];
+        _chosen = selected;
         ShowSheet(selected);
         return _rows.GetValueOrDefault(selected.Id);
+    }
+
+    /// <summary>Fin d'un aperçu : la fiche revient au choisi, sauf si le survol ou le focus est passé sur une autre carte.</summary>
+    private void RestoreChosen()
+    {
+        foreach (Button row in _rows.Values)
+            if (row.IsHovered() || row.HasFocus())
+                return;
+        if (_chosen != null)
+            ShowSheet(_chosen);
     }
 
     private void ShowSheet(CharacterData character)

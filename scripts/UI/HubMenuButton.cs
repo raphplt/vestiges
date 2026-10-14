@@ -57,7 +57,7 @@ public partial class HubMenuButton : Button
 			Animate(1f);
 		};
 		FocusExited += () => Animate(0f);
-		ButtonDown += () => AudioManager.PlayUI("sfx_menu_clic");
+		ButtonDown += () => UITheme.PlayPressSound(this);
 	}
 
 	/// <summary>Donne le focus sans son de survol (arrivée sur l'écran, retour d'un sous-écran).</summary>

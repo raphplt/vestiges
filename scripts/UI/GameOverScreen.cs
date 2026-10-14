@@ -200,14 +200,18 @@ public partial class GameOverScreen : CanvasLayer
         _restartButton = MenuSkin.Button(Tr("UI_END_REPLAY"), true);
         _restartButton.CustomMinimumSize = new Vector2(350, 58);
         _restartButton.Pressed += OnRestartPressed;
+        // Ces départs sonnent leur propre validation : pas de clic par-dessus la cloche.
+        UITheme.SetPressSound(_restartButton, null);
         buttons.AddChild(_restartButton);
         _hubButton = MenuSkin.Button(Tr("UI_END_HUB"));
         _hubButton.CustomMinimumSize = new Vector2(300, 58);
         _hubButton.Pressed += OnHubPressed;
+        UITheme.SetPressSound(_hubButton, null);
         buttons.AddChild(_hubButton);
         _collectionButton = MenuSkin.Button(Tr("UI_END_COLLECTION"));
         _collectionButton.Visible = false;
         _collectionButton.Pressed += OnCollectionPressed;
+        UITheme.SetPressSound(_collectionButton, null);
         buttons.AddChild(_collectionButton);
         _restartButton.FocusNeighborRight = _hubButton.GetPath();
         _hubButton.FocusNeighborLeft = _restartButton.GetPath();

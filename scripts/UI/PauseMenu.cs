@@ -103,6 +103,7 @@ public partial class PauseMenu : CanvasLayer
 
 		if (_confirmation != null)
 		{
+			AudioManager.PlayUI("sfx_menu_retour");
 			CloseConfirmation();
 			GetViewport().SetInputAsHandled();
 			return;
@@ -142,12 +143,11 @@ public partial class PauseMenu : CanvasLayer
 		_isPaused = false;
 		_root.Visible = false;
 		GetTree().Paused = false;
-		AudioManager.PlayUI("sfx_menu_confirmer");
+		AudioManager.PlayUI("sfx_menu_retour");
 	}
 
 	private void OpenSettings()
 	{
-		AudioManager.PlayUI("sfx_menu_confirmer");
 		_settingsScreen.Open();
 	}
 
@@ -214,6 +214,8 @@ public partial class PauseMenu : CanvasLayer
 
 		Button resumeBtn = CreateButton("Reprendre");
 		_resumeButton = resumeBtn;
+		// Reprendre joue le retour, comme Échap : pas de clic par-dessus.
+		UITheme.SetPressSound(resumeBtn, null);
 		resumeBtn.Pressed += Resume;
 		vbox.AddChild(resumeBtn);
 
@@ -452,8 +454,11 @@ public partial class PauseMenu : CanvasLayer
 		content.AddChild(description);
 		HBoxContainer actions = new(); actions.AddThemeConstantOverride("separation", 20); content.AddChild(actions);
 		Button cancel = MenuSkin.Button("Continuer la partie", true);
+		UITheme.SetPressSound(cancel, "sfx_menu_retour");
 		cancel.Pressed += CloseConfirmation; actions.AddChild(cancel);
 		Button accept = MenuSkin.Button(acceptText);
+		// L'action acceptée sonne sa propre validation.
+		UITheme.SetPressSound(accept, null);
 		accept.Pressed += () => { System.Action action = _confirmAction; CloseConfirmation(); action?.Invoke(); };
 		actions.AddChild(accept);
 		cancel.FocusNeighborLeft = cancel.GetPath(); cancel.FocusNeighborRight = accept.GetPath();

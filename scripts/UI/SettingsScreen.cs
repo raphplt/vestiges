@@ -109,6 +109,7 @@ public partial class SettingsScreen : CanvasLayer
 
 	public void Close()
 	{
+		AudioManager.PlayUI("sfx_menu_retour");
 		CancelListening();
 		IsOpen = false;
 		_root.Visible = false;
@@ -231,6 +232,7 @@ public partial class SettingsScreen : CanvasLayer
 		};
 		UITheme.SetTextRole(closeBtn, TextRole.Lead);
 		UITheme.ApplyButtonStyle(closeBtn, _btnNormalTex, _btnHoverTex, _btnPressedTex, _btnDisabledTex);
+		UITheme.SetPressSound(closeBtn, null);
 		closeBtn.Pressed += Close;
 		row.AddChild(closeBtn);
 

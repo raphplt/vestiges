@@ -117,6 +117,7 @@ public partial class HubCampUpgradesPanel : MarginContainer
     public override void _Input(InputEvent @event)
     {
         if (_confirmation == null || !@event.IsActionPressed("ui_cancel")) return;
+        AudioManager.PlayUI("sfx_menu_retour");
         CloseRefundConfirmation();
         GetViewport().SetInputAsHandled();
     }
@@ -214,6 +215,9 @@ public partial class HubCampUpgradesPanel : MarginContainer
         text.AddChild(hint);
         row.Select.FocusEntered += () => SelectRow(row);
         row.Select.Pressed += () => SelectRow(row);
+        // Survol à la souris : aperçu de la fiche, sans changer l'amélioration choisie ; elle revient à la sortie.
+        row.Select.MouseEntered += () => ShowDetail(row);
+        row.Select.MouseExited += () => Callable.From(RestoreDetail).CallDeferred();
         _rows.Add(row);
         return row.Select;
     }
@@ -259,12 +263,15 @@ public partial class HubCampUpgradesPanel : MarginContainer
         _buySelected.Name = "BuyCampUpgrade";
         UITheme.ApplyTypography(_buySelected, TextRole.Heading, TextWeight.Strong);
         _buySelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        // Achat et remboursement sonnent leur issue (cloche, clic ou refus) : pas de clic d'appui en plus.
+        UITheme.SetPressSound(_buySelected, null);
         _buySelected.Pressed += () => { if (_selected != null) OnBuy(_selected); };
         actions.AddChild(_buySelected);
         _refundSelected = MenuSkin.Button(Tr("UI_CAMP_REFUND"));
         _refundSelected.Name = "RefundCampUpgrade";
         UITheme.ApplyTypography(_refundSelected, TextRole.Heading, TextWeight.Strong);
         _refundSelected.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        UITheme.SetPressSound(_refundSelected, null);
         _refundSelected.Pressed += () => { if (_selected != null) OnRefund(_selected); };
         actions.AddChild(_refundSelected);
         return panel;
@@ -283,11 +290,18 @@ public partial class HubCampUpgradesPanel : MarginContainer
         _selected = row;
         foreach (Row other in _rows)
             MenuSkin.StyleRosterCard(other.Select, other == row);
-        _detailIcon.Texture = row.Icon;
-        _detailName.Text = Tr(row.Upgrade.NameKey);
-        _detailHint.Text = Tr(row.Upgrade.NameKey + "_HINT");
         SetStatus(_defaultStatus, _catalogFailed ? MissingColor : UITheme.TextColor);
         UpdateDetail();
+    }
+
+    /// <summary>Fin d'un aperçu : la fiche revient à l'amélioration choisie, sauf si la souris est passée sur une autre carte.</summary>
+    private void RestoreDetail()
+    {
+        foreach (Row row in _rows)
+            if (row.Select.IsHovered())
+                return;
+        if (_selected != null)
+            ShowDetail(_selected);
     }
 
     private static Button MakeButton(string text, Vector2 size)
@@ -378,11 +392,13 @@ public partial class HubCampUpgradesPanel : MarginContainer
         _confirmCancel = MenuSkin.Button(Tr("UI_CAMP_REFUND_CANCEL"), true);
         _confirmCancel.Name = "CancelCampRefund";
         _confirmCancel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        UITheme.SetPressSound(_confirmCancel, "sfx_menu_retour");
         _confirmCancel.Pressed += () => CloseRefundConfirmation();
         actions.AddChild(_confirmCancel);
         _confirmRefund = MenuSkin.Button(Tr("UI_CAMP_REFUND_ALL"));
         _confirmRefund.Name = "ConfirmCampRefund";
         _confirmRefund.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        UITheme.SetPressSound(_confirmRefund, null);
         _confirmRefund.Pressed += ConfirmRefundAll;
         actions.AddChild(_confirmRefund);
         _confirmCancel.FocusNeighborLeft = _confirmCancel.GetPath();
@@ -396,7 +412,6 @@ public partial class HubCampUpgradesPanel : MarginContainer
             button.FocusNext = button.FocusPrevious = other.GetPath();
         }
         _confirmCancel.GrabFocus();
-        AudioManager.PlayUI("sfx_menu_confirmer");
     }
 
     private void CloseRefundConfirmation(bool restoreFocus = true)
@@ -462,19 +477,31 @@ public partial class HubCampUpgradesPanel : MarginContainer
             _buySelected.Disabled = _refundSelected.Disabled = true;
             return;
         }
+        ShowDetail(_selected);
         CampUpgradeData upgrade = _selected.Upgrade;
         int rank = MetaSaveManager.GetCampRank(upgrade.Id);
         bool maxed = rank >= upgrade.MaxRank;
+        _buySelected.Disabled = maxed;
+        _refundSelected.Disabled = rank == 0;
+        _buySelected.FocusNeighborLeft = _refundSelected.FocusNeighborLeft = _selected.Select.GetPath();
+        _selected.Select.FocusNeighborRight = (maxed ? _refundSelected : _buySelected).GetPath();
+    }
+
+    /// <summary>Remplit la fiche ; les boutons d'achat restent attachés à l'amélioration choisie (<see cref="UpdateDetail"/>).</summary>
+    private void ShowDetail(Row row)
+    {
+        CampUpgradeData upgrade = row.Upgrade;
+        int rank = MetaSaveManager.GetCampRank(upgrade.Id);
+        bool maxed = rank >= upgrade.MaxRank;
+        _detailIcon.Texture = row.Icon;
+        _detailName.Text = Tr(upgrade.NameKey);
+        _detailHint.Text = Tr(upgrade.NameKey + "_HINT");
         _detailRank.Text = string.Format(Tr("UI_CAMP_RANK"), rank, upgrade.MaxRank);
         _detailEffect.Text = EffectText(upgrade, rank);
         _detailPrice.Text = maxed ? Tr("UI_CAMP_MAXED") : upgrade.PriceOfRank(rank + 1).ToString("N0", PlayerSheet.French);
         _priceCurrency.Visible = !maxed;
         _detailPrice.AddThemeColorOverride("font_color", maxed ? MaxedColor
             : upgrade.PriceOfRank(rank + 1) <= MetaSaveManager.GetVestiges() ? UITheme.GoldBright : MissingColor);
-        _buySelected.Disabled = maxed;
-        _refundSelected.Disabled = rank == 0;
-        _buySelected.FocusNeighborLeft = _refundSelected.FocusNeighborLeft = _selected.Select.GetPath();
-        _selected.Select.FocusNeighborRight = (maxed ? _refundSelected : _buySelected).GetPath();
     }
 
     /// <summary>Gain du prochain achat ; au maximum, bonus total acquis. Les unités viennent du catalogue localisé.</summary>

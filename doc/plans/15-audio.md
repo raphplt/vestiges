@@ -711,3 +711,18 @@ Choix de Raphaël (export de la planche) : **survol B** (papier), **clic A** (pi
 Retour de Raphaël sur les trois premiers survols : trop de souffle, trop présents. Directions demandées : bronze effleuré et cran mécanique.
 
 `~/.local/share/vestiges-audio/2026-10-14/menus-survol/index.html` (hors dépôt) : quatre candidats sans bruit large, à 3 dB sous le survol en jeu, quatre variantes chacun. A bronze effleuré en fa (partiels de la cloche de confirmation), B bronze effleuré sur quatre notes de fa mineur (fa, la bémol, do, mi bémol), C cran de métal patiné vers 1,7 kHz, D le même cran en double (entrée et sortie, 11 ms). Le papier en jeu reste en référence. Un curseur règle le niveau de tous les survols et part dans l'export ; la scène en situation utilise le clic, le refus et la confirmation intégrés. Aucun son écouté par l'agent.
+
+### U1b et U1c livrés — survol, retour et navigation, 14 octobre
+
+Retours de Raphaël après essai en jeu : le son de retour et le clic de bouton « c'est les mêmes je crois », le survol en papier reste trop présent. Diagnostic : l'ouverture de chaque page et le retour jouaient la cloche de confirmation, par-dessus le clic d'appui ; un clic du menu empilait survol, pierre et cloche.
+
+- **Survol :** cran mécanique simple (U1b, C), 3 dB sous l'ancien niveau, quatre variantes.
+- **Retour :** nouveau `sfx_menu_retour`, cran inversé (planche U1c, `~/.local/share/vestiges-audio/2026-10-14/menus-retour/`, A), choix provisoire (« prends n'importe lequel pour l'instant »). Joué seul, sans clic : bouton Retour et Échap du Hub, Reprendre et Échap de la pause, « Continuer la partie », fermeture des Paramètres, annulation du remboursement au Campement.
+- **Cloche réservée aux validations :** Partir, Rejouer et Hub du bilan, Abandonner, Recommencer, Quitter, achat au Campement, éclats du Mémorial. Ouvrir une page ou les Paramètres ne joue plus que le clic.
+- **Pas d'empilement :** `UITheme.SetPressSound` remplace ou coupe le clic d'appui d'un bouton ; les boutons qui sonnent leur propre issue (validations, achat et remboursement, Reprendre) n'ont plus de clic dessous.
+- `tools/generate_menu_sounds.py` produit aussi le survol en cran et le retour, identiques octet pour octet aux planches.
+- Contrôles : build sans avertissement, `audio_bank_audit.py` 0 échec, suites smoke, audio, camp, choice_screen vertes. `menu_navigation` vérifie l'aperçu au focus et le retour au choisi, puis échoue plus loin sur une vérification qui ne relève pas de ce lot : elle attend la Scaphandrière sans portrait, alors que `c46e20e2` lui en a ajouté un.
+
+### U1d — clic de bouton, 14 octobre (à écouter)
+
+Retour : « le clic bouton n'est pas assez reconnaissable ni percutant ». `~/.local/share/vestiges-audio/2026-10-14/menus-clic/index.html` (hors dépôt) : quatre candidats à attaque sèche, présence entre 2 et 4 kHz sans bruit large, queues de 70 à 90 ms, 3 dB au-dessus du clic en jeu, avec un curseur de niveau exporté. A pierre sèche, B pierre sur métal (même matière que le survol), C loquet en deux temps, D interrupteur ancien. La scène joue survols, clic, retour et cloche du jeu. Aucun son écouté par l'agent.

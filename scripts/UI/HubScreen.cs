@@ -105,7 +105,7 @@ public partial class HubScreen : Control
 
 		if (@event.IsActionPressed("ui_cancel") && _currentState != HubState.MainMenu)
 		{
-			AudioManager.PlayUI("sfx_menu_confirmer");
+			AudioManager.PlayUI("sfx_menu_retour");
 			ReturnToPrevious();
 			GetViewport().SetInputAsHandled();
 			return;
@@ -221,11 +221,7 @@ public partial class HubScreen : Control
 		HBoxContainer utilities = new() { Position = new Vector2(MenuLeft - 40, 970) };
 		utilities.AddThemeConstantOverride("separation", 16);
 		_mainMenuLayer.AddChild(utilities);
-		AddMenuButton(utilities, "Paramètres", TextRole.Heading, UITheme.TitleFont, () =>
-		{
-			AudioManager.PlayUI("sfx_menu_confirmer");
-			_settingsScreen?.Open();
-		});
+		AddMenuButton(utilities, "Paramètres", TextRole.Heading, UITheme.TitleFont, () => _settingsScreen?.Open());
 		_openers[HubState.Credits] = AddMenuButton(utilities, Tr("UI_CREDITS_TITLE"), TextRole.Heading, UITheme.TitleFont,
 			() => OpenPage(HubState.Credits));
 		AddMenuButton(utilities, "Quitter", TextRole.Heading, UITheme.TitleFont, () => _ = GameExit.QuitAsync(GetTree()));
@@ -387,11 +383,8 @@ public partial class HubScreen : Control
 		backButton.CustomMinimumSize = new Vector2(220f, 56f);
 		backButton.SizeFlagsVertical = SizeFlags.ShrinkCenter;
 		UITheme.ApplyTypography(backButton, TextRole.Heading);
-		backButton.Pressed += () =>
-		{
-			AudioManager.PlayUI("sfx_menu_confirmer");
-			ReturnToPrevious();
-		};
+		UITheme.SetPressSound(backButton, "sfx_menu_retour");
+		backButton.Pressed += ReturnToPrevious;
 		header.AddChild(backButton);
 		panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		panel.OffsetLeft = 132f;
@@ -405,7 +398,6 @@ public partial class HubScreen : Control
 	private void OpenPage(HubState state)
 	{
 		_returnStack.Clear();
-		AudioManager.PlayUI("sfx_menu_confirmer");
 		SetState(state);
 	}
 

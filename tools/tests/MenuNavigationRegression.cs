@@ -39,7 +39,13 @@ public partial class MenuNavigationRegression : Node
             string examined = characters.ExaminedCharacterId;
             lockedRow.GrabFocus();
             await Frames(2);
-            Check(characters.ExaminedCharacterId == examined, "Le focus seul ne change pas la fiche (DECISIONS §154)");
+            Check(characters.ExaminedCharacterId == examined && Field<CharacterData>(characters, "_examined") == locked,
+                "Le focus montre la fiche en aperçu sans changer le choix (DECISIONS §154, §178)");
+            Field<Button>(characters, "_detailsButton").GrabFocus();
+            await Frames(2);
+            Check(Field<CharacterData>(characters, "_examined").Id == examined, "Hors de la liste, la fiche revient au choisi");
+            lockedRow.GrabFocus();
+            await Frames(2);
             lockedRow.EmitSignal(BaseButton.SignalName.Pressed);
             await Frames(2);
             Check(!characters.CanDepart && Field<Button>(characters, "_depart").Disabled, "Le héros verrouillé ne peut pas partir");
