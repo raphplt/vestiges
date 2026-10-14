@@ -281,19 +281,19 @@ public partial class ObjectsRegression : Node2D
     {
         Setup();
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool one = Near(_player.BonusProjectiles, 0.5f) && _player.ObjectMilestones == null;
+        bool one = Near(_player.BonusProjectiles, 1f) && _player.ObjectMilestones == null;
         _player.AddOrUpgradePassive("souffle_du_neant", 13);
-        bool before = Near(_player.BonusProjectiles, 7f) && _player.GetPassiveLevel("souffle_du_neant") == 14 && _player.ObjectMilestones == null;
+        bool before = Near(_player.BonusProjectiles, 14f) && _player.GetPassiveLevel("souffle_du_neant") == 14 && _player.ObjectMilestones == null;
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool reached = _player.ObjectMilestones is { SpreadsExtraProjectiles: true } && Near(_player.BonusProjectiles, 7.5f);
+        bool reached = _player.ObjectMilestones is { SpreadsExtraProjectiles: true } && Near(_player.BonusProjectiles, 15f);
         Check(one && before && reached,
-            "Papier carbone : +0,5 projectile par carte commune ; au palier 15, les projectiles en plus visent chacun leur cible");
+            "Papier carbone : +1 projectile par carte commune ; au palier 15, les projectiles en plus visent chacun leur cible");
 
         Setup();
         _player.AddOrUpgradePassive("reflet_brise");
         _player.AddOrUpgradePassive("reflet_brise", 14, 2f);
-        Check(Near(_player.ProjectilePierce, 0.5f + 14f) && _player.ObjectMilestones is { } milestones && Near(milestones.PierceDamageRamp, 0.1f),
-            "Reflet brisé : +0,5 perforation par carte commune (× 2 en rare) ; au palier 15, +10 % de dégâts par ennemi traversé");
+        Check(Near(_player.ProjectilePierce, 1f + 28f) && _player.ObjectMilestones is { } milestones && Near(milestones.PierceDamageRamp, 0.1f),
+            "Reflet brisé : +1 perforation par carte commune (× 2 en rare) ; au palier 15, +10 % de dégâts par ennemi traversé");
 
         // Un tir qui perfore trois ennemis : le deuxième encaisse 110 %, le troisième 120 %.
         Projectile shot = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn").Instantiate<Projectile>();
@@ -358,7 +358,8 @@ public partial class ObjectsRegression : Node2D
         Check(rolls, "Stat fractionnaire : la partie entière toujours, la décimale en chance");
 
         Setup();
-        _player.AddOrUpgradePassive("souffle_du_neant", 5);
+        // L'Écusson pris (1), puis cinq cartes inhabituelles (×1,5) : 8,5 projectiles en plus, la demie en chance.
+        _player.AddOrUpgradePassive("souffle_du_neant", 6, 1.5f);
         MethodInfo roll = typeof(Player).GetMethod("RollBonusProjectiles", Private);
         WeaponInstance bow = _player.WeaponSlots[0];
         int total = 0, low = int.MaxValue, high = 0;
@@ -371,8 +372,8 @@ public partial class ObjectsRegression : Node2D
             high = Math.Max(high, extra);
         }
         float mean = total / (float)attacks;
-        Check(low == 2 && high == 3 && mean > 2.42f && mean < 2.58f,
-            $"Papier carbone niveau 5 : 2,5 projectiles en plus, soit 2 ou 3 par attaque ({mean:0.00} en moyenne sur {attacks})");
+        Check(low == 8 && high == 9 && mean > 8.42f && mean < 8.58f,
+            $"Papier carbone niveau 6 en inhabituel : 8,5 projectiles en plus, soit 8 ou 9 par attaque ({mean:0.00} en moyenne sur {attacks})");
     }
 
     private void CheckStatusDuration()

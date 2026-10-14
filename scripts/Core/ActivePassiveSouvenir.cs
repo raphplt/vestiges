@@ -44,7 +44,14 @@ public class ActivePassiveSouvenir
 		Level++;
 		float factor = StepFactor(Level);
 		for (int i = 0; i < _gains.Length; i++)
-			_gains[i] += Data.Effects[i].Step * gain * factor;
+		{
+			float delta = Data.Effects[i].Step * gain * factor;
+			// Une stat qui se compte (projectiles, perforations, armure…) ne gagne jamais moins d'une unité par niveau,
+			// rendement décroissant compris (DECISIONS §171).
+			if (delta > 0f && StatCatalog.Display(Data.Effects[i].Stat) == StatDisplay.Count)
+				delta = System.MathF.Max(1f, delta);
+			_gains[i] += delta;
+		}
 		return true;
 	}
 

@@ -459,7 +459,7 @@
     "icon_small": "res://assets/items/icons/item_souffle_du_neant_16.png",
     "name": "Écusson du jongleur",
     "subtitle": "Papier carbone",
-    "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts. Une fraction est une chance d'en avoir un de plus.",
+    "description": "Tes armes tirent plus de projectiles et frappent plus de fois, à pleins dégâts.",
     "icon_color": [
       0.7,
       0.3,
@@ -468,14 +468,14 @@
     "max_level": 99,
     "usage": {
       "trigger": "projectile_hits",
-      "threshold": 750
+      "threshold": 2500
     },
-    "offer_weight": 2,
+    "offer_weight": 1,
     "effects": [
       {
         "stat": "projectile_bonus",
         "modifier_type": "additive",
-        "step": 0.5
+        "step": 1
       }
     ],
     "milestones": [
@@ -1022,13 +1022,13 @@
     "max_level": 99,
     "usage": {
       "trigger": "pierces",
-      "threshold": 300
+      "threshold": 1000
     },
     "effects": [
       {
         "stat": "projectile_pierce",
         "modifier_type": "additive",
-        "step": 0.5
+        "step": 1
       }
     ],
     "milestones": [

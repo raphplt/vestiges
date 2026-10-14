@@ -101,6 +101,10 @@ Mesure (méta complète, profil moyen, 30 min, graines 7, 42 et 1002), coups fat
 
 Le Traqueur est menacé dans deux graines sur trois ; la troisième part en boule de neige (niveau 155 à 30 min). Le Vagabond reste le plus à l'aise, aidé par le retour du plafond de vol de vie. Les écarts entre graines restent énormes : le jugement final se fait en jouant. Données brutes dans `~/.cache/vestiges-mesures/` (le dossier temporaire de session est vidé quand l'application redémarre).
 
+## 4 ter. Début de run (14 octobre, DECISIONS §171)
+
+Après trois runs de Raphaël : débit des créatures −40 % jusqu'à 10 min (retour progressif à 14 min, `early_density_*` dans `spawn_flow.json`), stats entières d'au moins 1 par carte d'arme et par niveau d'Écusson (règle commune : une stat qui se compte ne gagne jamais moins d'une unité par niveau, `ActivePassiveSouvenir.Upgrade`), jongleur et Reflet brisé à 1 par niveau, jongleur non favorisé, seuils d'usage relevés, exposant d'XP 1,4 → 1,5. Mesure avant/après au §171 du registre : créatures visibles à peu près divisées par deux de 1 à 10 min, niveau à 14 min −6 à −21.
+
 ## 5. Ordre proposé
 
 1. L1 (petit, données seules), avec L2 et sa mesure : défenses et créatures se règlent ensemble.

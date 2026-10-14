@@ -1934,3 +1934,17 @@ Retours de Raphaël sur le premier réglage du plan 47 :
 
 - Raphaël : « vol de vie met 5 % pas 8 en plafond ». Plafond à 5 % des PV max par seconde, montée lente inchangée (0,15 % par niveau ou par Ampoule).
 - « ça me gêne qu'il y ait encore des boules de neige. je vais tester ça » : une graine sur trois emmène encore le Traqueur au niveau 155 à 30 min, intouchable (plan 47 §4 bis). Raphaël teste en jeu avant la suite.
+
+## 171. Début de run moins saturé, projectiles entiers, XP plus lente — 14 octobre 2026
+
+Trois runs de Raphaël (profil dev, tout débloqué, quatre armes, mode actuel « relativement simple ») après le plan 47 :
+- **Équilibrage** : « beaucoup mieux » ; aucune run où il s'est senti trop fort et intouchable.
+- **Trop de créatures** les dix premières minutes, « peut-être deux fois trop » : « spammé d'ennemis en permanence », elles foncent toutes dessus, on est « sur-stimulé » ; Megabonk en a beaucoup sans que ce soit ingérable. Peut-être aussi la cause d'une montée de niveau encore trop rapide.
+- **Projectiles** : plus il montait l'Écusson du jongleur, moins un niveau en donnait (+21,5 → +21,88 au niveau 38, rendement décroissant après 30). « On n'est pas censé recevoir moins d'un projectile par niveau » : 1, 1,x ou 2,x, jamais 0,5. L'amélioration de projectiles est très forte et sortait presque à chaque offre (poids d'offre doublé, et l'Écusson monte aussi tout seul en touchant).
+
+**Choix :**
+- débit −40 % (cible de créatures proches et intervalle d'apparition) jusqu'à 10 min, retour progressif au réglage normal à 14 min ;
+- stats entières : au moins 1 par carte d'arme (1 / 1,5 / 2 / 2,5 / 3 selon la rareté) et par niveau d'Écusson. Règle commune à tous les Écussons : un niveau ne donne jamais moins d'une unité sur une stat qui se compte, rendement décroissant compris. Pas de plafond propre au jongleur (« c'est bizarre d'avoir des règles différentes selon les écussons »). Le jongleur et le Reflet brisé passent à 1 par niveau ; le jongleur n'est plus favorisé (poids 1) ; leurs seuils d'usage sont relevés (2 500 touches, 1 000 perforations) ;
+- XP : courbe ralentie (exposant 1,4 → 1,5). Les bonus d'XP de la méta ne baissent pas, ils pourraient même monter un peu : monter vite doit demander de construire pour l'XP, ce qui fait aussi une marche pour les débutants.
+
+**Mesure** (bot moyen, 15 min, trois graines), avant → après : créatures visibles en moyenne de 1 à 10 min, Traqueur méta complète 28 → 12, Vagabond 31 → 20, Facteur 31 → 16, Traqueur méta milieu 34 → 18 ; niveau à 10 min 47 → 40, 42 → 26, 42 → 37, 37 → 34 ; à 14 min 70 → 59, 64 → 43, 58 → 52, 58 → 49.

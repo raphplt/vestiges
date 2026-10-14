@@ -47,6 +47,9 @@ public partial class SpawnManager : Node2D
 	private float _openingRampSec;
 	private float _openingLocalTargetStart;
 	private float _openingIntervalMultiplierStart = 1f;
+	private float _earlyDensityMultiplier = 1f;
+	private float _earlyDensityUntilMinute;
+	private float _earlyDensityRampMinutes;
 	private float _dayLocalEnemyTargetGrowthPerMinute;
 	private int _dayLocalSpawnBurstMax;
 	private int _dayInvasionLocalBonus;
@@ -426,7 +429,7 @@ public partial class SpawnManager : Node2D
 		};
 		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
 		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
-		int target = Mathf.RoundToInt(openingTarget * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
+		int target = Mathf.RoundToInt(openingTarget * EarlyDensity(elapsedMinutes) * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
 		target = Mathf.RoundToInt(target * phaseMult * EncounterDensityMultiplier);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
@@ -474,7 +477,17 @@ public partial class SpawnManager : Node2D
 		};
 
 		float openingFactor = Mathf.Lerp(_openingIntervalMultiplierStart, 1f, OpeningProgress);
-		return Mathf.Max(baseInterval * phaseFactor * openingFactor, _minSpawnInterval);
+		return Mathf.Max(baseInterval * phaseFactor * openingFactor / EarlyDensity(elapsedMinutes), _minSpawnInterval);
+	}
+
+	/// <summary>Densité du début de run (DECISIONS §171) : réduite jusqu'à une minute donnée, puis rendue progressivement.</summary>
+	private float EarlyDensity(float elapsedMinutes)
+	{
+		if (elapsedMinutes <= _earlyDensityUntilMinute)
+			return _earlyDensityMultiplier;
+		if (_earlyDensityRampMinutes <= 0f)
+			return 1f;
+		return Mathf.Lerp(_earlyDensityMultiplier, 1f, Mathf.Clamp((elapsedMinutes - _earlyDensityUntilMinute) / _earlyDensityRampMinutes, 0f, 1f));
 	}
 
 	/// <summary>0 à la fin du répit, 1 une fois la montée d'ouverture terminée.</summary>
@@ -860,6 +873,9 @@ public partial class SpawnManager : Node2D
 		_openingRampSec = dict.ContainsKey("opening_ramp_seconds") ? (float)dict["opening_ramp_seconds"].AsDouble() : 0f;
 		_openingLocalTargetStart = dict.ContainsKey("opening_local_target_start") ? (float)dict["opening_local_target_start"].AsDouble() : _dayLocalEnemyTargetBase;
 		_openingIntervalMultiplierStart = dict.ContainsKey("opening_interval_multiplier_start") ? (float)dict["opening_interval_multiplier_start"].AsDouble() : 1f;
+		_earlyDensityMultiplier = dict.ContainsKey("early_density_multiplier") ? (float)dict["early_density_multiplier"].AsDouble() : 1f;
+		_earlyDensityUntilMinute = dict.ContainsKey("early_density_until_minute") ? (float)dict["early_density_until_minute"].AsDouble() : 0f;
+		_earlyDensityRampMinutes = dict.ContainsKey("early_density_ramp_minutes") ? (float)dict["early_density_ramp_minutes"].AsDouble() : 0f;
 		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("local_enemy_target_growth_per_minute") ? (float)dict["local_enemy_target_growth_per_minute"].AsDouble() : 6f;
 		_dayLocalSpawnBurstMax = dict.ContainsKey("local_spawn_burst_max") ? (int)dict["local_spawn_burst_max"].AsDouble() : 4;
 		_sameTypeClusterChance = dict.ContainsKey("same_type_cluster_chance") ? (float)dict["same_type_cluster_chance"].AsDouble() : 0.4f;

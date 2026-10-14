@@ -600,15 +600,15 @@ public partial class WeaponRegression : Node2D
               && Mathf.IsEqualApprox(WeaponUpgradeDataLoader.GetStatConfig("damage").Step, 0.18f),
             $"Légendaire sur la Cloueuse : {gains.Count} stats au double du pas (dégâts +18 % par commune), +3 pour une stat entière");
 
-        // Une commune finit par tirer la perforation, stat entière de la Cloueuse : +0,5.
+        // Une commune finit par tirer la perforation, stat entière de la Cloueuse : +1 (DECISIONS §171).
         WeaponInstance nailer = new(WeaponDataLoader.Get("crossbow"));
         float pierceBefore = nailer.GetStat("projectile_pierce");
         StatGain pierce = default;
         for (int i = 0; i < 200 && pierce.Stat == null; i++)
             pierce = UpgradeRoller.RollWeaponGains(nailer, UpgradeRoller.Get("common"), rng).Find(g => g.Stat == "projectile_pierce");
         nailer.ApplyUpgrade(new[] { pierce });
-        Check(pierce.Stat != null && Mathf.IsEqualApprox(nailer.GetStat("projectile_pierce"), pierceBefore + 0.5f)
-              && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce")) == "3,5",
+        Check(pierce.Stat != null && Mathf.IsEqualApprox(nailer.GetStat("projectile_pierce"), pierceBefore + 1f)
+              && StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce")) == "4",
             $"Commune sur la Cloueuse : perforation {pierceBefore} → {StatCatalog.Format("projectile_pierce", nailer.GetStat("projectile_pierce"))}");
 
         // Parcmètre monté à 360° (120° + 200 %) : l'arc au plafond n'est plus tiré, pas de carte « Zone +0 % ».
@@ -1230,9 +1230,9 @@ public partial class WeaponRegression : Node2D
             $"Transistor à 2 ondes : cône de {oneWave:0.#} à {twoWaves:0.#} dégâts de base");
         crit.SetValue(_player, critBefore);
 
-        Check(Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("souffle_du_neant").OfferWeight, 2f)
+        Check(Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("souffle_du_neant").OfferWeight, 1f)
               && Mathf.IsEqualApprox(PassiveSouvenirDataLoader.Get("ancrage").OfferWeight, 1f),
-            "Papier carbone pèse 2 dans les offres, les autres objets 1");
+            "Papier carbone n'est plus favorisé : il pèse 1 dans les offres, comme les autres objets (DECISIONS §171)");
 
         WeaponVisualConfig visuals = WeaponVisualConfig.Load();
         Check(Mathf.IsEqualApprox(visuals.ScaleFor(1f), 1f) && Mathf.IsEqualApprox(visuals.ScaleFor(1.5f), 1.5f)
