@@ -539,7 +539,7 @@ public partial class Player
     /// </summary>
     internal void OnProjectileSpent(Vector2 position, float damage, AttackContext context, FxFamily family, Vector2 direction)
     {
-        if (!_isDead && _objectMilestones?.HasRangeEndBurst == true)
+        if (!_isDead && !context.IsEcho && _objectMilestones?.HasRangeEndBurst == true)
             _objectMilestones.BurstAtRangeEnd(position, damage, context);
         else
             _attackFx.PlayFizzle(position, family, direction);

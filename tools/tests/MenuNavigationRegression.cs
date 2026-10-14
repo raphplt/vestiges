@@ -49,9 +49,9 @@ public partial class MenuNavigationRegression : Node
                 "La Scaphandrière emploie son sprite animé existant en l'absence de portrait");
             Field<Button>(characters, "_detailsButton").EmitSignal(BaseButton.SignalName.Pressed);
             string details = Field<Label>(characters, "_details").Text;
-            Check(details.Contains("6 s d'air") && details.Contains("Perfore") && details.Contains("Saut flottant")
+            Check(details.Contains("+25% de dégâts") && details.Contains("+50% en zone effacée") && details.Contains("Perfore") && details.Contains("Saut flottant")
                 && Field<Button>(characters, "_weapon").Text == "Fusil-harpon",
-                "La fiche relie réserve d'air, harpon et saut aux textes du catalogue");
+                "La fiche relie Pression, harpon et saut aux textes du catalogue");
             Check(manager.SelectedCharacterId == selected, "Examiner un héros ne change pas le choix confirmé");
             QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, locked.Id);
             Field<Button>(characters, "_quest").EmitSignal(BaseButton.SignalName.Pressed);

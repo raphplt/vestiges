@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Captures plein écran d'une vraie run (joueur nomade piloté, invincible, spawn naturel) pour juger HUD et événements.
 # Usage : tools/capture_run.sh <répertoire> [secondes=60] [intervalle=10] [résolution=1920x1080] [seed]
+# Galerie Double : CAPTURE_EXTRA_ARGS="--capture-weapons --character eveillee --weapons last_broadcast --dash-before-attack".
 # CAPTURE_PROFILE=normal (ou CAPTURE_DEV=" ") : profil neuf sans mode dev (deux emplacements d'armes, réserve de départ), au lieu du profil dev.
 set -euo pipefail
 cd "$(dirname "$0")/.."

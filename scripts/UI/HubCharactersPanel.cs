@@ -148,10 +148,25 @@ public partial class HubCharactersPanel : MarginContainer
                     Modulate = unlocked ? Colors.White : LockedSilhouette,
                 };
                 content.AddChild(sprite);
-                VBoxContainer text = new() { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore };
+                VBoxContainer text = new()
+                {
+                    Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = MouseFilterEnum.Ignore,
+                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                };
                 text.AddThemeConstantOverride("separation", 2);
                 content.AddChild(text);
-                text.AddChild(UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextVeryDim));
+                Label name = UITheme.MakeLabel(character.Name, TextRole.Subhead, unlocked ? UITheme.TextLight : UITheme.TextVeryDim);
+                name.ClipText = true;
+                // Les noms longs respectent la largeur de la carte, sur la grille typographique du menu.
+                name.Resized += () =>
+                {
+                    int size = UITheme.FontSize(TextRole.Subhead);
+                    Font font = name.GetThemeFont("font");
+                    while (size > 16 && font.GetStringSize(name.Text, fontSize: size).X > name.Size.X - 4f)
+                        size -= 8;
+                    name.AddThemeFontSizeOverride("font_size", size);
+                };
+                text.AddChild(name);
                 if (!unlocked)
                     text.AddChild(UITheme.MakeLabel("À débloquer", TextRole.Small, UITheme.TextVeryDim));
                 // Seul un clic (ou la validation à la manette) change le personnage choisi : survol et focus ne font que

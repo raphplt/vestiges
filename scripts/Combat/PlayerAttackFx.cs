@@ -38,6 +38,7 @@ public sealed class PlayerAttackFx
         public float Range;
         public float ArcAngle;
         public float Delay;
+        public Vector2? Origin;
     }
 
     public PlayerAttackFx(Node2D owner, AnimatedSprite2D sprite)
@@ -58,7 +59,7 @@ public sealed class PlayerAttackFx
     }
 
     /// <summary>Coup de mêlée rejoué après <paramref name="delay"/> secondes : ondes successives d'une frappe en cercle.</summary>
-    public void PlayMeleeLater(WeaponData weapon, AttackPatternKind pattern, Vector2 direction, float range, float arcAngle, float delay)
+    public void PlayMeleeLater(WeaponData weapon, AttackPatternKind pattern, Vector2 direction, float range, float arcAngle, float delay, Vector2? origin = null)
     {
         _pendingMelee.Add(new PendingMelee
         {
@@ -68,6 +69,7 @@ public sealed class PlayerAttackFx
             Range = range,
             ArcAngle = arcAngle,
             Delay = delay,
+            Origin = origin,
         });
     }
 
@@ -84,7 +86,7 @@ public sealed class PlayerAttackFx
                 continue;
             }
             _pendingMelee.RemoveAt(i);
-            PlayMelee(pending.Weapon, pending.Pattern, pending.Direction, pending.Range, pending.ArcAngle);
+            PlayMelee(pending.Weapon, pending.Pattern, pending.Direction, pending.Range, pending.ArcAngle, pending.Origin);
         }
     }
 
@@ -94,48 +96,50 @@ public sealed class PlayerAttackFx
     /// l'onde. Son bord passe à l'allonge (<paramref name="range"/>) et son ouverture à <paramref name="arcAngle"/>,
     /// sans plafond : la frappe ne touche jamais hors de ce qui est dessiné (<see cref="MeleeStrikeShape"/>).
     /// </summary>
-    public void PlayMelee(WeaponData weapon, AttackPatternKind pattern, Vector2 direction, float range, float arcAngle)
+    public void PlayMelee(WeaponData weapon, AttackPatternKind pattern, Vector2 direction, float range, float arcAngle, Vector2? origin = null)
     {
         if (Pools == null || !CombatFxSettings.PlayerAttackFx)
             return;
         FxFamily family = FamilyOf(weapon);
         // Les coups partent du buste et la touche se mesure aux pieds : le buste d'une cible est à la même distance.
-        Vector2 torso = _owner.GlobalPosition + new Vector2(0f, -TorsoHeight);
+        Vector2 ground = origin ?? _owner.GlobalPosition;
+        bool followOwner = origin == null;
+        Vector2 torso = ground + new Vector2(0f, -TorsoHeight);
         float radius = Mathf.Max(range, 22f);
         float halfArc = Mathf.DegToRad(Mathf.Clamp(arcAngle, 40f, 360f) * 0.5f);
         if (MeleeStrikeShape.IsThrust(pattern))
         {
-            PlayThrust(torso, direction, Mathf.Max(range, 26f), family);
+            PlayThrust(torso, direction, Mathf.Max(range, 26f), family, followOwner);
             return;
         }
 
         switch (weapon?.Fx.Style)
         {
             case "cleave":
-                PlayArc(torso, direction, radius, radius * 0.55f, halfArc * 1.15f, family, 0.26f);
+                PlayArc(torso, direction, radius, radius * 0.55f, halfArc * 1.15f, family, 0.26f, followOwner: followOwner);
                 EmitDebris(torso + direction * radius * 0.8f, direction, family, 5);
                 break;
             case "smash":
-                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, family, 0.18f);
-                PlaySmashImpact(_owner.GlobalPosition + direction * radius * 0.75f, family, radius);
+                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, family, 0.18f, followOwner: followOwner);
+                PlaySmashImpact(ground + direction * radius * 0.75f, family, radius);
                 break;
             case "whirl":
-                PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f);
+                PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f, followOwner: followOwner);
                 break;
             case "bell":
                 // L'anneau extérieur, 1,35 fois le premier, marque l'allonge.
-                PlayBell(family, radius / 1.35f);
+                PlayBell(family, radius / 1.35f, ground);
                 break;
             case "clock":
-                PlayArc(torso, direction, radius, radius * 0.42f, halfArc, family, 0.22f);
-                PlayGroundRing(_owner.GlobalPosition, family, radius * 0.8f, 3f, 0.32f);
+                PlayArc(torso, direction, radius, radius * 0.42f, halfArc, family, 0.22f, followOwner: followOwner);
+                PlayGroundRing(ground, family, radius * 0.8f, 3f, 0.32f);
                 break;
             case "void":
-                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, FxFamily.Void, 0.24f);
+                PlayArc(torso, direction, radius, radius * 0.5f, halfArc, FxFamily.Void, 0.24f, followOwner: followOwner);
                 EmitSparks(torso + direction * radius * 0.7f, direction, FxFamily.Void, 6, 0.9f, 60f, 130f, 2);
                 break;
             default:
-                PlayArc(torso, direction, radius, radius * 0.42f, halfArc, family, 0.22f);
+                PlayArc(torso, direction, radius, radius * 0.42f, halfArc, family, 0.22f, followOwner: followOwner);
                 break;
         }
     }
@@ -160,7 +164,7 @@ public sealed class PlayerAttackFx
     /// Cône entretenu de la Dernière Émission : bandes d'onde qui s'éloignent, ouverture croissante ; chaque onde en plus
     /// ajoute un front qui le parcourt (<paramref name="waves"/>, plafonné par <see cref="WeaponVisualConfig.ConeMaxFronts"/>).
     /// </summary>
-    public void UpdateCone(WeaponData weapon, Vector2 direction, float range, float halfAngle, int waves)
+    public void UpdateCone(WeaponData weapon, Vector2 direction, float range, float halfAngle, int waves, Vector2? origin = null)
     {
         if (Pools == null)
             return;
@@ -177,7 +181,7 @@ public sealed class PlayerAttackFx
             spec.FadeTail = 0f;
             spec.Loop = true;
             spec.ZIndex = -1;
-            _cone = Pools.PlayFx(_owner.GlobalPosition, spec, FxOwner.Player, _owner);
+            _cone = Pools.PlayFx(origin ?? _owner.GlobalPosition, spec, FxOwner.Player, origin == null ? _owner : null);
             return;
         }
         _cone.Aim(Iso.ToGround(direction).Angle(), halfAngle);
@@ -275,11 +279,11 @@ public sealed class PlayerAttackFx
 
     /// <summary>
     /// Écho des Gants : zone tramée, anneau et gerbe à l'endroit de la frappe répétée, au rayon réel du contrôle des
-    /// dégâts (un cercle à l'écran, sans écrasement au sol), à la couleur de l'arme.
+    /// dégâts (couchée au sol, comme la zone touchée), à la couleur de l'arme.
     /// </summary>
     public void PlayEcho(WeaponData weapon, Vector2 position, float radius)
     {
-        PlayBurst(position, FamilyOf(weapon), radius, 1f);
+        PlayBurst(position, FamilyOf(weapon), radius);
     }
 
     /// <summary>Anneau au sol d'un palier d'objet : zone qui refrappe, onde du bouclier cassé.</summary>
@@ -367,7 +371,7 @@ public sealed class PlayerAttackFx
     }
 
     private void PlayArc(Vector2 center, Vector2 direction, float radius, float thickness, float halfArc,
-                         FxFamily family, float duration, float squash = Iso.SlashSquash)
+                         FxFamily family, float duration, float squash = Iso.SlashSquash, bool followOwner = true)
     {
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Arc, family, radius, thickness, duration);
         spec.Angle = GroundAngle(direction, squash);
@@ -375,16 +379,16 @@ public sealed class PlayerAttackFx
         spec.Squash = squash;
         spec.Steps = 7;
         spec.FadeTail = 0.2f;
-        Pools.PlayFx(center, spec, FxOwner.Player, _owner);
+        Pools.PlayFx(center, spec, FxOwner.Player, followOwner ? _owner : null);
     }
 
-    private void PlayThrust(Vector2 origin, Vector2 direction, float length, FxFamily family)
+    private void PlayThrust(Vector2 origin, Vector2 direction, float length, FxFamily family, bool followOwner = true)
     {
         PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Thrust, family, length, MeleeStrikeShape.ThrustHalfWidth * 2f, 0.16f);
         spec.Angle = direction.Angle();
         spec.Steps = 5;
         spec.FadeTail = 0.2f;
-        Pools.PlayFx(origin, spec, FxOwner.Player, _owner);
+        Pools.PlayFx(origin, spec, FxOwner.Player, followOwner ? _owner : null);
         EmitSparks(origin + direction * length, direction, family, 3, 0.5f, 80f, 140f, 1);
     }
 
@@ -395,9 +399,8 @@ public sealed class PlayerAttackFx
         ScreenShake.Instance?.ShakeLight();
     }
 
-    private void PlayBell(FxFamily family, float radius)
+    private void PlayBell(FxFamily family, float radius, Vector2 ground)
     {
-        Vector2 ground = _owner.GlobalPosition;
         // Ondes aplaties comme les traînées : la Cloche touche dans la même ellipse (MeleeStrikeShape).
         PlayGroundRing(ground, family, radius, 3f, 0.3f, Iso.SlashSquash);
         PlayGroundRing(ground, family, radius * 1.35f, 2f, 0.45f, Iso.SlashSquash);

@@ -105,7 +105,6 @@ public partial class Player : CharacterBody2D
     private float _speedMultiplier = 1f;
     // Ce que l'oubli coûte là où se tient le joueur (plan 16 O4), à part des bonus pour rester réversible.
     private ErasureEffects.Effect _erasurePenalty = ErasureEffects.Effect.None;
-    private bool _erasurePenaltyProtected;
     internal ErasureManager.ErasureZonePhase ErasurePhase { get; private set; } = ErasureManager.ErasureZonePhase.Anchored;
     internal event System.Action<ErasureManager.ErasureZonePhase> ErasurePhaseChanged;
     private float _attackSpeedMultiplier = 1f;
@@ -257,6 +256,7 @@ public partial class Player : CharacterBody2D
 
     public void InitializeCharacter(CharacterData data)
     {
+        ResetAttackEcho();
         Harpoon.Cancel();
         // Le bootstrap crée les services du monde après _Ready, avant cette initialisation.
         // Refaire la liaison ici couvre aussi une nouvelle scène lorsque l'état est déjà Run.
@@ -627,6 +627,7 @@ public partial class Player : CharacterBody2D
         _interaction.Step(dt, !_isExploringPoi && !Mobility.IsDashing);
         ProcessOrbitalWeapons(dt);
         ProcessSustainedCone(dt);
+        ProcessEchoCone(dt);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -956,7 +957,7 @@ public partial class Player : CharacterBody2D
     /// <paramref name="rawDamage"/> le coup d'avant, dont partent les coups secondaires de l'arme.
     /// </summary>
     private void OnAttackHit(Enemy enemy, float damage, float rawDamage, bool isCrit, WeaponInstance source, int triggerCount = 1,
-        bool showImpact = true, AttackContext context = default)
+        bool showImpact = true, AttackContext context = default, bool continuousContact = false)
     {
         if (_isDead)
             return;
@@ -964,8 +965,27 @@ public partial class Player : CharacterBody2D
         if (!IsInstanceValid(enemy) || enemy.IsQueuedForDeletion())
             return;
 
+        // Le critique d'ouverture est résolu par la cible, après le vol du projectile. Les effets au contact,
+        // les répliques natives et le registre de l'arme utilisent ce résultat, comme les quêtes de critique.
+        DamageResult impact = enemy.LastDamageResult;
+        if (impact.Applied && impact.Target == enemy.Life && context.OwnerId != 0
+            && impact.Source.OwnerId == context.OwnerId && impact.Source.LaunchId == context.LaunchId
+            && impact.Source.Kind == context.Kind && impact.Source.IsEcho == context.IsEcho)
+        {
+            if (context.ReferenceDamage > 0f)
+                rawDamage *= impact.Source.ReferenceDamage / context.ReferenceDamage;
+            damage = enemy.LastImpactDamage;
+            isCrit = impact.Critical;
+            context = impact.Source;
+        }
+
         if (showImpact)
-            _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
+        {
+            if (context.IsEcho)
+                _attackFx.PlayHit(PlayerAttackFx.FamilyOf(source?.Base), enemy.GlobalPosition, isCrit, context.Origin);
+            else
+                _attackFx.PlayHit(source?.Base, enemy.GlobalPosition, isCrit);
+        }
         if (source != null)
             _weaponLedger.AddDamage(source.Id, damage);
         if (context.OwnerId == 0)
@@ -998,14 +1018,14 @@ public partial class Player : CharacterBody2D
 
         // Objets à l'impact : après l'effet de l'arme (un ralentissement de la Cloche compte pour le Glaçon), seulement
         // sur un coup direct, et au rythme des impacts visibles pour un cône continu.
-        if (_objectTriggers != null && showImpact && context.Kind == DamageKind.DirectWeapon)
-            _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context, isCrit, damage);
+        if (_objectTriggers != null && showImpact && context.Kind == DamageKind.DirectWeapon && !context.IsEcho)
+            _objectTriggers.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, triggerCount, context, isCrit, damage, continuousContact);
 
         // --- Weapon knockback ---
         float knockback = source == null ? 0f : GetModifiedWeaponStat(source, "knockback");
         if (knockback > 0f)
         {
-            Vector2 knockDir = (enemy.GlobalPosition - GlobalPosition).Normalized();
+            Vector2 knockDir = (enemy.GlobalPosition - context.Origin).Normalized();
             enemy.ApplyKnockback(knockDir, knockback);
         }
 
@@ -1035,7 +1055,8 @@ public partial class Player : CharacterBody2D
             if (enemy.ClaimKillCredit())
                 _weaponLedger.AddKill(source.Id);
         }
-        _objectTriggers?.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, 1, secondary, dealt: damage);
+        if (!context.IsEcho)
+            _objectTriggers?.OnWeaponImpact(enemy, ComputeBaseAttackDamage(source), source, 1, secondary, dealt: damage);
     }
 
     private float GetCombinedProcChance(float perHitChance, int triggerCount)
@@ -1097,14 +1118,13 @@ public partial class Player : CharacterBody2D
                             using CrowdQuery crowd = CrowdIndex.Near(echoPos, echoRadius);
                             foreach (Node node in crowd.Targets)
                             {
-                                if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e))
-                                {
-                                    if (e.GlobalPosition.DistanceTo(echoPos) < echoRadius)
-                                        SecondaryHit(e, echoRaw, source, context, echoPos);
-                                }
+                                // Onde couchée au sol : distance au sol, la zone touche sur l'ellipse dessinée.
+                                if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e)
+                                    && Iso.GroundDistanceSquared(e.GlobalPosition, echoPos) < echoRadius * echoRadius)
+                                    SecondaryHit(e, echoRaw, source, context, echoPos);
                             }
                             _attackFx.PlayEcho(source?.Base, echoPos, echoRadius);
-                            if (_objectMilestones?.HasZoneEcho == true)
+                            if (!context.IsEcho && _objectMilestones?.HasZoneEcho == true)
                                 _objectMilestones.QueueCircleEcho(echoPos, echoRadius, echoDamage, source, context);
                         };
                     }
@@ -1146,14 +1166,13 @@ public partial class Player : CharacterBody2D
                     using CrowdQuery crowd = CrowdIndex.Near(impactPos, aoeRadius);
                     foreach (Node node in crowd.Targets)
                     {
-                        if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy)
-                        {
-                            if (e.GlobalPosition.DistanceTo(impactPos) < aoeRadius)
-                                SecondaryHit(e, shapeRaw, source, context, impactPos);
-                        }
+                        // Tracée à la craie sur le sol : distance au sol, la zone touche sur l'ellipse dessinée.
+                        if (node is Enemy { IsActive: true, IsDying: false } e && IsInstanceValid(e) && e != enemy
+                            && Iso.GroundDistanceSquared(e.GlobalPosition, impactPos) < aoeRadius * aoeRadius)
+                            SecondaryHit(e, shapeRaw, source, context, impactPos);
                     }
                     Combat.CombatPools.Instance?.ShowChalkShape(impactPos, aoeRadius);
-                    if (_objectMilestones?.HasZoneEcho == true)
+                    if (!context.IsEcho && _objectMilestones?.HasZoneEcho == true)
                         _objectMilestones.QueueCircleEcho(impactPos, aoeRadius, shapeDamage, source, context);
                     break;
                 }
@@ -1326,7 +1345,7 @@ public partial class Player : CharacterBody2D
 
             float hitDamage = ResolveHitDamage(enemy, damage, false);
             bool showImpact = enemy.TakeContinuousDamage(hitDamage, delta, _coneContext);
-            OnAttackHit(enemy, hitDamage, damage, false, _coneWeapon, showImpact: showImpact, context: _coneContext);
+            OnAttackHit(enemy, hitDamage, damage, false, _coneWeapon, showImpact: showImpact, context: _coneContext, continuousContact: true);
         }
     }
 
@@ -1350,7 +1369,7 @@ public partial class Player : CharacterBody2D
 
     // --- Chain Attack ---
 
-    private void PerformChainAttack()
+    private bool PerformChainAttack()
     {
         float range = GetEffectiveWeaponRange();
         // Stat entière fractionnaire (plan 23 R4) : la décimale est une chance, à chaque attaque, d'un saut de plus.
@@ -1361,21 +1380,22 @@ public partial class Player : CharacterBody2D
         // Premier hit : ennemi le plus proche (melee)
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, 360f);
         if (enemies.Count == 0)
-            return;
+            return false;
 
         Enemy firstTarget = enemies[0];
         float baseDamage = ComputeBaseAttackDamage();
-        Vector2 attackDir = (firstTarget.GlobalPosition - GlobalPosition).Normalized();
-        PlayAttackFeedback(isMelee: true, attackDir);
+        Vector2 attackDir = (firstTarget.GlobalPosition - AttackOrigin).Normalized();
+        if (!_isEchoAttack)
+            PlayAttackFeedback(isMelee: true, attackDir);
 
-        bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
+        bool isCrit = RollAttackCrit();
         float currentDamage = isCrit ? baseDamage * _critMultiplier : baseDamage;
         AttackContext context = BeginAttack(_equippedWeapon, currentDamage);
         float firstDamage = ResolveHitDamage(firstTarget, currentDamage, isCrit);
         firstTarget.TakeDamage(firstDamage, isCrit, source: context);
         OnAttackHit(firstTarget, firstDamage, currentDamage, isCrit, _equippedWeapon, context: context);
         // Le premier maillon part du joueur (plan 27 V2c) : on voit d'où vient la chaîne.
-        SpawnChainVisual(GlobalPosition, firstTarget.GlobalPosition);
+        SpawnChainVisual(AttackOrigin, firstTarget.GlobalPosition);
 
         // Chain vers les ennemis adjacents
         HashSet<ulong> hitIds = new() { firstTarget.GetInstanceId() };
@@ -1395,6 +1415,7 @@ public partial class Player : CharacterBody2D
             OnAttackHit(nextTarget, linkDamage, currentDamage, false, _equippedWeapon, context: context);
             current = nextTarget;
         }
+        return true;
     }
 
     private Enemy FindNearestEnemyExcluding(Vector2 from, float maxRange, HashSet<ulong> excludeIds)
@@ -1444,6 +1465,8 @@ public partial class Player : CharacterBody2D
     /// <param name="from">Position de ce qui frappe, quand elle est connue : la vignette de blessure se tourne vers elle.</param>
     public PlayerDamageResult TakeDamage(float damage, Vector2? from = null)
     {
+        if (!float.IsFinite(damage) || damage <= 0f)
+            return default;
 #if TOOLS
         if (IsGodMode)
             return default;
@@ -1493,6 +1516,8 @@ public partial class Player : CharacterBody2D
 
     private PlayerDamageResult LoseHp(float damage, PlayerDamageKind kind, Vector2 fromDirection = default)
     {
+        if (kind == PlayerDamageKind.Combat)
+            damage = RouteEndurance?.ReduceDamage(damage) ?? damage;
         float before = _currentHp;
         _currentHp -= damage;
         PlayerDamageResult result = new(GetInstanceId(), kind, before,
@@ -1619,22 +1644,7 @@ public partial class Player : CharacterBody2D
             OnErasurePhaseChanged((int)_erasureManager.GetZonePhaseAt(GlobalPosition));
     }
 
-    /// <summary>Protection de l'air, distincte des bonus de stats et sans effet sur le Néant.</summary>
-    internal void SetErasurePenaltyProtection(bool active)
-    {
-        if (_erasurePenaltyProtected == active)
-            return;
-        _erasurePenaltyProtected = active;
-        RefreshErasurePenalty();
-    }
-
-    private void RefreshErasurePenalty()
-    {
-        ErasureEffects.Effect raw = ErasureEffects.For(ErasurePhase);
-        _erasurePenalty = _erasurePenaltyProtected && ErasurePhase is ErasureManager.ErasureZonePhase.Frayed or ErasureManager.ErasureZonePhase.Erased
-            ? raw with { Speed = 1f, Damage = 1f }
-            : raw;
-    }
+    private void RefreshErasurePenalty() => _erasurePenalty = ErasureEffects.For(ErasurePhase);
 
     /// <summary>Multiplie le speed multiplier courant (pour buffs événementiels temporaires).</summary>
     public void ApplySpeedMultiplier(float factor)
@@ -1861,6 +1871,7 @@ public partial class Player : CharacterBody2D
             timer.Stop();
         _readyWeaponSlots = 0;
         DeactivateSustainedCone();
+        ResetAttackEcho();
         RemoveFromGroup("player");
 
         if (_hasSprite)
@@ -2060,7 +2071,10 @@ public partial class Player : CharacterBody2D
         if (specialEffect?.Kind == SpecialEffectKind.SustainedCone)
         {
             if (!_isConeActive)
+            {
                 ActivateSustainedCone(specialEffect);
+                RepeatConeFromEcho();
+            }
             return;
         }
 
@@ -2081,15 +2095,15 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>Attaque ponctuelle de l'arme active : chaîne, mêlée ou tir (ni cône continu ni orbite).</summary>
-    private void PerformDiscreteAttack(WeaponCategory category, AttackPatternKind pattern)
+    private bool PerformDiscreteAttack(WeaponCategory category, AttackPatternKind pattern)
     {
         // Chain melee : attaque spéciale avec rebond
         if (pattern == AttackPatternKind.Chain)
-            PerformChainAttack();
+            return PerformChainAttack();
         else if (category == WeaponCategory.Melee)
-            PerformMeleeAttack(pattern);
+            return PerformMeleeAttack(pattern);
         else
-            PerformRangedAttack(pattern);
+            return PerformRangedAttack(pattern);
     }
 
     /// <summary>
@@ -2161,7 +2175,7 @@ public partial class Player : CharacterBody2D
         float range, int pierce, float offsetDegrees = 0f, float launchDelay = 0f)
     {
         Vector2 direction = (target.GlobalPosition - AttackOrigin).Normalized().Rotated(Mathf.DegToRad(offsetDegrees));
-        bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
+        bool isCrit = RollAttackCrit();
         Projectile proj = SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), speed, range, pierce, isCrit, launchDelay);
         if (proj != null && launchDelay > 0f)
         {
@@ -2196,7 +2210,7 @@ public partial class Player : CharacterBody2D
         return step * (index / 2 + 1) * (index % 2 == 0 ? 1f : -1f);
     }
 
-    private void PerformMeleeAttack(AttackPatternKind pattern)
+    private bool PerformMeleeAttack(AttackPatternKind pattern)
     {
         // Onde circulaire : son rayon est une zone. Arc : la portée donne l'allonge, la zone l'ouverture.
         float range = pattern == AttackPatternKind.Circular ? ZoneScale(GetEffectiveWeaponRange()) : GetEffectiveWeaponRange();
@@ -2211,10 +2225,11 @@ public partial class Player : CharacterBody2D
 
         System.Collections.Generic.List<Enemy> enemies = FindEnemiesInArc(range, arcAngle, squash: squash);
         if (enemies.Count == 0)
-            return;
+            return false;
 
-        Vector2 attackDirection = (enemies[0].GlobalPosition - GlobalPosition).Normalized();
-        PlayAttackFeedback(isMelee: true, attackDirection);
+        Vector2 attackDirection = (enemies[0].GlobalPosition - AttackOrigin).Normalized();
+        if (!_isEchoAttack)
+            PlayAttackFeedback(isMelee: true, attackDirection);
 
         float baseDamage = ComputeBaseAttackDamage();
         AttackContext context = BeginAttack(_equippedWeapon, baseDamage);
@@ -2233,11 +2248,12 @@ public partial class Player : CharacterBody2D
         float coverageArc = fullCircle || thrust ? 360f : Mathf.Clamp(arcAngle + spreadAngle, arcAngle, 360f);
         System.Collections.Generic.List<Enemy> strikeCandidates = FindEnemiesInArc(range, coverageArc, attackDirection, squash);
         if (strikeCandidates.Count == 0)
-            return;
+            return false;
 
-        float clampedCritChance = Mathf.Clamp(_critChance, 0f, 1f);
+        float clampedCritChance = OpeningStrike != null && !_isEchoAttack ? 0f : Mathf.Clamp(_critChance, 0f, 1f);
         float critDamageFactor = 1f + clampedCritChance * Mathf.Max(0f, _critMultiplier - 1f);
 
+        bool hit = false;
         foreach (Enemy enemy in strikeCandidates)
         {
             if (!IsInstanceValid(enemy) || enemy.IsDying)
@@ -2250,7 +2266,7 @@ public partial class Player : CharacterBody2D
             }
             else
             {
-                Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
+                Vector2 toEnemy = enemy.GlobalPosition - AttackOrigin;
                 if (toEnemy.LengthSquared() <= 0.0001f)
                     continue;
 
@@ -2282,6 +2298,7 @@ public partial class Player : CharacterBody2D
             if (hitCount <= 0)
                 continue;
 
+            hit = true;
             bool hasCrit = clampedCritChance > 0f && RunRandom.Combat.Randf() < GetCombinedProcChance(clampedCritChance, hitCount);
             float rawDamage = baseDamage * hitCount * critDamageFactor;
             float totalDamage = ResolveHitDamage(enemy, rawDamage, hasCrit);
@@ -2289,8 +2306,9 @@ public partial class Player : CharacterBody2D
             enemy.TakeDamage(totalDamage, hasCrit, source: hitContext);
             OnAttackHit(enemy, totalDamage, rawDamage, hasCrit, _equippedWeapon, triggerCount: hitCount, context: hitContext);
         }
-        if (_objectMilestones?.HasZoneEcho == true)
+        if (!_isEchoAttack && _objectMilestones?.HasZoneEcho == true)
             QueueMeleeEchoes(attackDirection, range, arcAngle, squash, strikeCount, startOffset, step, baseDamage * critDamageFactor, context);
+        return hit;
     }
 
     private void SpawnMeleeSlashVisuals(AttackPatternKind pattern, Vector2 baseDirection, float range, float arcAngle, int strikeCount, float spreadAngle)
@@ -2300,10 +2318,10 @@ public partial class Player : CharacterBody2D
         // Onde en cercle (plan 21 G6g) : tourner l'onde ne la distingue pas ; chaque frappe en plus repart un peu après.
         if (arcAngle >= 359f)
         {
-            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle);
+            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle, _attackOriginOverride);
             float interval = WeaponVisualConfig.Load().WaveInterval;
             for (int visualIndex = 1; visualIndex < visualCount; visualIndex++)
-                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle, visualIndex * interval);
+                _attackFx.PlayMeleeLater(_equippedWeapon?.Base, pattern, baseDirection, range, arcAngle, visualIndex * interval, _attackOriginOverride);
             return;
         }
         float visualStart = visualCount == 1 ? 0f : -spreadAngle * 0.5f;
@@ -2314,7 +2332,7 @@ public partial class Player : CharacterBody2D
             float angleOffset = visualStart + (visualStep * visualIndex);
             // Même rotation que la touche : sur l'ellipse de la traînée, à l'écran pour le trait (MeleeStrikeShape).
             Vector2 visualDirection = MeleeStrikeShape.RotateOnSlash(baseDirection, angleOffset, MeleeStrikeShape.Squash(pattern));
-            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, visualDirection, range, arcAngle);
+            _attackFx.PlayMelee(_equippedWeapon?.Base, pattern, visualDirection, range, arcAngle, _attackOriginOverride);
         }
     }
 
@@ -2327,7 +2345,7 @@ public partial class Player : CharacterBody2D
         for (int i = 0; i < count; i++)
         {
             Vector2 direction = baseDirection.Rotated(Mathf.DegToRad(start + step * i)).Normalized();
-            bool isCrit = _critChance > 0f && RunRandom.Combat.Randf() < _critChance;
+            bool isCrit = RollAttackCrit();
             SpawnProjectile(direction, ProjectileDamage(baseDamage, isCrit), projectileSpeed, range, pierce, isCrit);
         }
     }
@@ -2384,7 +2402,7 @@ public partial class Player : CharacterBody2D
     private System.Collections.Generic.List<Enemy> FindEnemiesInArc(float maxRange, float arcAngle, Vector2? forwardOverride = null,
         float squash = 1f)
     {
-        using CrowdQuery crowd = CrowdIndex.Near(GlobalPosition, maxRange + Enemy.LargestPartRadius);
+        using CrowdQuery crowd = CrowdIndex.Near(AttackOrigin, maxRange + Enemy.LargestPartRadius);
         System.Collections.Generic.List<(Enemy enemy, float dist, Vector2 dir)> candidates = new();
 
         foreach (Node node in crowd.Targets)
@@ -2393,7 +2411,7 @@ public partial class Player : CharacterBody2D
                 continue;
 
             // Distance et direction mesurées sur l'ellipse du coup dessiné (squash 1 : cercle écran).
-            Vector2 toEnemy = enemy.GlobalPosition - GlobalPosition;
+            Vector2 toEnemy = enemy.GlobalPosition - AttackOrigin;
             Vector2 measured = new(toEnemy.X, toEnemy.Y * squash);
             float dist = measured.Length();
             if (dist <= 0.001f || dist - enemy.StrikeMargin > maxRange)
@@ -2439,7 +2457,7 @@ public partial class Player : CharacterBody2D
     {
         float weaponDamage = weapon?.GetStat("damage") ?? AttackDamage;
         float characterDamageFactor = AttackDamage / 10f;
-        float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage;
+        float damage = weaponDamage * characterDamageFactor * _damageMultiplier * _erasurePenalty.Damage * PressureDamageMultiplier;
         return damage;
     }
 

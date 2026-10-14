@@ -2,61 +2,49 @@
     "_comment: signatures de départ des personnages (is_passive), appliquées une fois au début de la run par PerkManager. Les anciens Dons des coffres et leurs synergies sont retirés (plan 21, lot G2b) ; les affinités des personnages remplaceront ces signatures au lot G4.",
     {
         "id": "vagabond_harvest",
-        "name": "Instinct Nomade",
-        "description": "+8% vitesse et +0.2 régénération",
+        "name": "Endurci par la route",
+        "description": "Explorer du terrain inédit recharge jusqu’à 3 charges. Chaque charge réduit de moitié une blessure. Le Néant conserve ses dangers.",
         "icon": "assets/ui/icons/ui_icon_perk_vagabond_harvest.png",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,
         "is_passive": true,
         "character_id": "vagabond",
-        "effects": [
-            {
-                "stat": "speed",
-                "modifier": 1.08,
-                "modifier_type": "multiplicative"
-            },
-            {
-                "stat": "regen_rate",
-                "modifier": 0.2,
-                "modifier_type": "additive"
-            }
-        ],
         "tags": [
-            "mobility",
-            "sustain"
-        ]
+            "exploration",
+            "defense"
+        ],
+        "route_endurance": {
+            "cells_per_charge": 2000,
+            "max_charges": 3,
+            "damage_reduction": 0.5
+        }
     },
     {
         "id": "forgeuse_fortify",
-        "name": "Masse Vivante",
-        "description": "+25 HP max et +2 armure",
+        "name": "Redresser",
+        "description": "Chaque quatrième attaque réussie déclenche une onde au point touché : 60% de dégâts supplémentaires autour de l’impact, avec recul.",
         "icon": "assets/ui/icons/ui_icon_perk_forgeuse_fortify.png",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,
         "is_passive": true,
         "character_id": "forgeuse",
-        "effects": [
-            {
-                "stat": "max_hp",
-                "modifier": 25,
-                "modifier_type": "additive"
-            },
-            {
-                "stat": "armor",
-                "modifier": 2,
-                "modifier_type": "additive"
-            }
-        ],
         "tags": [
-            "defense"
-        ]
+            "damage",
+            "area"
+        ],
+        "shockwave": {
+            "attacks_per_wave": 4,
+            "radius": 90,
+            "damage_ratio": 0.6,
+            "knockback": 25
+        }
     },
     {
         "id": "traqueur_precision",
         "name": "Œil d'Aigle",
-        "description": "Portée +20%, vitesse d'attaque +10%",
+        "description": "Premier impact direct contre une cible indemne : +10 points de chance de critique au niveau 1, +0,25 point par niveau, jusqu’à +50 points.",
         "icon": "assets/ui/icons/ui_icon_perk_traqueur_precision.png",
         "category": "passive",
         "rarity": "passive",
@@ -66,18 +54,11 @@
         "tags": [
             "damage"
         ],
-        "effects": [
-            {
-                "stat": "attack_range",
-                "modifier": 1.2,
-                "modifier_type": "multiplicative"
-            },
-            {
-                "stat": "attack_speed",
-                "modifier": 1.1,
-                "modifier_type": "multiplicative"
-            }
-        ]
+        "opening_strike": {
+            "base_chance": 0.1,
+            "gain_per_level": 0.0025,
+            "max_chance": 0.5
+        }
     },
     {
         "id": "facteur_round",
@@ -102,7 +83,7 @@
     {
         "id": "eveillee_double",
         "name": "Double",
-        "description": "Après sa mobilité, une rémanence reste 1,5 s à son point de départ et répète son prochain tir à 50% des dégâts.",
+        "description": "Après sa mobilité, une rémanence reste 1,5 s à son point de départ et répète sa prochaine attaque à 50% des dégâts (hors orbitales continues).",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,
@@ -119,22 +100,20 @@
     },
     {
         "id": "scaphandriere_air",
-        "name": "Réserve d'air",
-        "description": "6 s d'air suspendent les malus de vitesse et de dégâts en zone effilochée ou effacée. Recharge complète en 10 s hors de ces zones. Le Néant conserve ses dangers et ne recharge pas l'air.",
+        "name": "Pression",
+        "description": "+25% de dégâts en zone effilochée, +50% en zone effacée, après les malus de zone. Aucun bonus dans le Néant.",
         "category": "passive",
         "rarity": "passive",
         "max_stacks": 1,
         "is_passive": true,
         "character_id": "scaphandriere",
-        "air": {
-            "seconds": 6,
-            "recharge_seconds": 10,
-            "audio": {
-                "consume": "sfx_air_consume",
-                "empty": "sfx_air_empty",
-                "min_interval_seconds": 1.5
-            }
-        },
-        "tags": ["mobility", "erasure"]
+        "tags": [
+            "damage",
+            "erasure"
+        ],
+        "pressure": {
+            "frayed_bonus": 0.25,
+            "erased_bonus": 0.5
+        }
     }
 ]

@@ -56,7 +56,7 @@ Ce registre intègre les retours structurants après la première lecture des pl
 | Plan 17, arbitrages du soir (26 septembre) | Rareté « seulement sur les améliorations » ; « le mot don me va » ; décors urbains jamais placés : « tu peux les virer » ; style des icônes et fréquence des coffres à juger en recette | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-soir) ; vague 1 débloquée |
 | Recette des planches du plan 17 (26 septembre) | « Tu peux faire mieux pour les armes » ; coffres « un peu plus détaillés / avoir des motifs » ; « pour le reste c'est parfait. Go » | Coffres et icônes v2 ([17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-soir)) ; vague 1 lancée |
 | Vague 3 du plan 17, retours (26 septembre, nuit) | Pause des écrans Mémorial et Faille : « garder la pause, pas de soucis ». Malus des Failles : « je préfère des malus sur la map que des malus de stats », liste à revoir avant validation | [17, vague 3](17-armes-coffres-modificateurs.md#vague-3-détaillée--26-septembre-soir) ; Stratégie V2 §11 amendée ; Oublis à refaire en effets de carte après son choix |
-| Recette des noms, icônes et Oublis (26 septembre, nuit) | Noms du catalogue 4.6 validés sauf « Dessin d'enfant » et « Aiguille d'horloge » (« j'aime pas trop le nom ») ; les trois icônes v2 validées ; les neuf Oublis de carte validés, leurs noms « un détail » | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-nuit) ; vague 2 (2A, 2B) et Oublis de carte lancés ; noms provisoires Craies et Chronomètre |
+| Recette des noms, icônes et Oublis (26 septembre, nuit) | Noms du catalogue 4.6 validés sauf « Craies » et « Aiguille d'horloge » (« j'aime pas trop le nom ») ; les trois icônes v2 validées ; les neuf Oublis de carte validés, leurs noms « un détail » | [17 §6](17-armes-coffres-modificateurs.md#réponses-de-raphaël--26-septembre-nuit) ; vague 2 (2A, 2B) et Oublis de carte lancés ; noms provisoires Craies et Chronomètre |
 | Ordre des chantiers (26 septembre) | « Oui je valide l'ordre » : relecture en suspens, puis sol (T2 jonctions → T1 → T3) et oubli (O1 → O3 → O4/O5 → O2/O6). Raphaël, absent, délègue les autres arbitrages : « prends les décisions les plus rationnelles […] implémente-les » | Arbitrages délégués en §7, **provisoires jusqu'à sa relecture** |
 | Lore (27 septembre) | L'histoire se raconte par le jeu, fine, jamais imposée ; beaucoup de textes actuels sont « trop directs » et à reprendre ; poésie, drame, histoires cachées entremêlées ; éléments présents dès le début compris longtemps après ; puzzle de fond qui ne gêne pas le jeu ; interruptions de run possibles si ni frustrantes ni répétitives ; pas flou ni métaphorique en permanence, « une vraie histoire, tangible » ; une révélation forte bienvenue, sans trope facile ; le lore des docs n'est pas une référence absolue | [19](19-lore.md) : étape A livrée ; rien d'écrit ni de modifié en jeu |
 | Lore, réponses à l'étape A (27 septembre) | Vérité centrale aux bords ouverts ; cause entre « oubli choisi » et « jamais expliquée » ; personnages = des gens que le monde a oubliés, **une dizaine** avec personnages cachés ou versions alternatives ; une vraie logique de boucle « à penser en profondeur » ; Hub hors de la fiction, son intérêt à revoir ; créatures faites de ce qui a été oublié ; Essence = mémoire des autres, XP simple système de jeu ; monde presque-nôtre ou lieu inventé, **sans noms de lieux liés à la mémoire** ; documents bruts sans narrateur ; décor et mécaniques d'abord ; interruptions rares ; révélation et fin non tranchées | [19 §7](19-lore.md#7-réponses-de-raphaël--27-septembre) ; architectures à comparer en [§8](19-lore.md#8-architectures-à-comparer) |
@@ -1903,6 +1903,37 @@ Réponses sur la [planche](planches/25-s10-zones-au-sol.png) : annonces des cré
 
 **Fin de run sans danger.** Raphaël est « 100 % d'accord » avec deux constats de la matrice M1 (plan 42 §5), qu'il a lui-même faits en jouant : avec la méta complète, passé 15 min, le bot ne perd presque plus de PV ; aucun build de référence ne casse le jeu plus qu'un autre, mais tous rendent la fin de run sans danger. « c'est un sujet super méga important. » Pistes proposées le jour même, à trancher.
 
+## 166. Un passif unique et plus identitaire par personnage — 14 octobre 2026
+
+**Suite P6 :** Raphaël accepte Endurci par la route (terrain inédit → trois charges réduisant les blessures) pour le Vagabond et Redresser (chaque quatrième attaque réussie → onde avec recul au point touché) pour la Forgeuse : « OK les deux me vont implémente les. ne déploie pas plein dagents ect et ne fait pas 100 tests plzz ». Implémentation directe sans sous-agents, build/smoke obligatoires, une régression ciblée et une capture commune ; paramètres d’essai au plan 06 P6.
+
+**Livraison P6 :** deux modules composés et paramètres JSON, anciennes signatures remplacées ; trois charges à −50 % sur les blessures de combat, onde toutes les quatre émissions réussies à 60 % de référence, 90 px et recul de 25 px. Build zéro warning, smoke et régression limitée verts ; capture commune relue dans Main. Aucun sous-agent ni mesure de densité/performance. Coefficients d’essai, équilibrage humain ouvert.
+
+Raphaël veut un passif propre à chaque personnage, en plus de sa mobilité et de son arme de départ. Après examen des signatures existantes : « je verrai bien un passif plus marqué et identitaire que ceux déjà présents qui sont peut etre à revoir (en vrai ca peut aller mais je mettrai pas 2 bonus, un seul par personnage suffit). » Il demande de regarder [les personnages de Megabonk](https://megabonk.fandom.com/wiki/Characters).
+
+**Acquis :**
+- un passif identitaire par personnage ; les signatures existantes peuvent être revues, sans obligation de toutes les remplacer ; plusieurs effets sont autorisés (précision ci-dessous) ;
+- le passif doit porter une identité forte et influencer la façon de jouer ou de construire son build ;
+- les quatre points d'intégration proposés sont acceptés : paramètres JSON, module composé par mécanique, événements existants, présentation explicite Passif / Mobilité / Arme de départ et feedback utile en run.
+
+**Propositions de l'agent, non validées :** [plan 06 §14](06-personnages-quetes-defis.md#14-révision-des-passifs--14-octobre-2026). Une progression de statistique peut être identitaire si son ampleur et ses synergies sont significatives ; aucune règle de Megabonk ni aucun coefficient par niveau n'est repris automatiquement. Les six effets, leurs coefficients et leur ordre d'implémentation restent à arbitrer. Aucun changement de gameplay ni case de roadmap cochée sur cet accord de conception.
+
+**Précision de Raphaël :** « cumuler des effets me dérange pas en fait » ; « je calquerai pas les effets comme tu l'as fait avec la chance sur vagabond car c'est aussi ce que fait le premier personnage de megabonk […] il faut etre différent ». La restriction à un seul effet est levée. L'association Vagabond / chance est rejetée comme trop proche de la référence ; la proposition Fortune de route est retirée. S'inspirer de la lisibilité et de l'impact des passifs, en construisant leurs effets à partir du lore et des systèmes de Vestiges. La simplification du Facteur à la cadence seule n'est plus une nécessité. Aucun des autres effets proposés n'est validé par cette correction.
+
+**Retour suivant de Raphaël :**
+- Traqueur : « un truc + simple pour les crits car les tirs sont automatiques ». Remplacer la proposition Acharnement, qui dépend d'une continuité de cible ; le nouveau mécanisme reste à choisir.
+- Facteur : le passif Tournée est accepté dans son principe ; un effet sur la vitesse est envisagé (« ptet laisser un truc sur la vitesse aussi ? a voir »), sans arbitrage de son maintien ni de son montant.
+- Éveillée : Double accepté dans son principe ; les coefficients et l'extension au-delà des tirs actuels restent à préciser.
+- Scaphandrière : Pression, bonus de dégâts en zones effilochées et effacées, accepté dans son principe ; valeurs à calibrer. Cette validation concerne la proposition offensive, pas une nouvelle validation de la réserve d'air actuelle.
+
+**Proposition de remplacement pour le Traqueur, non validée :** Œil d'aigle, critique garanti sur le premier impact direct contre une cible indemne. Le ciblage automatique suffit ; aucun maintien manuel d'une proie. Vagabond et Forgeuse restent à discuter. Ces retours valident des directions de conception ; aucun lancement d'implémentation ni équilibrage vérifié n'en découle.
+
+**Dernier retour — lancement autorisé :** « trop fort en vrai, on peut faire ca mais dire qu'il y a une proba de crit sur le premier coup et qui monte avec les niveaux. ok go du reste, implémente moi ca. » Œil d’aigle devient une probabilité croissante avec le niveau, appliquée au premier impact direct contre une cible indemne, sans garantie. Implémenter le lot P5 du plan 06 : conserver vitesse + cadence de Tournée ; Double accepté, extension aux émissions de mêlée/chaîne/cône ; Pression remplace la réserve d’air, dégâts renforcés en Effiloché/Effacé, aucun effet dans le Néant. Vagabond et Forgeuse restent à concevoir, exclus du lot. Valeurs d’essai de l’agent : Traqueur 10 % au niveau 1, +0,25 point par niveau, plafond 50 % ; Pression +25/+50 %, multiplicatif après les malus de zone ; valeurs actuelles Facteur et Double conservées. Validation technique et captures requises ; ces chiffres ne constituent pas un équilibrage validé par Raphaël.
+
+**P5 livré et vérifié :** Traqueur probabiliste (+10 points, +0,25 point/niveau, plafond +50 points), Facteur vitesse + cadence conservées, Double étendu hors orbitales continues, Pression +25/+50 % après malus. Snapshot isolé : 14/14 suites, build zéro warning ; captures des quatre personnages et fiches du Hub. Détails et limites au plan 06 §14 ; Vagabond/Forgeuse et équilibrage humain restent ouverts.
+
+**Consigne de Raphaël pour les vérifications suivantes :** éviter trop de mesures et de vérifications, coûteuses en tokens. Préférer un build, les tests ciblés nécessaires et une capture utile ; réduire répétitions, matrices et mesures. Les contrôles obligatoires d’AGENTS.md restent applicables.
+
 ## 167. Fin de run : des créatures plus fortes, des défenses freinées, une cible de difficulté — 14 octobre 2026
 
 Réponses de Raphaël aux pistes du §165 :
@@ -1968,11 +1999,28 @@ Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lir
 
 **Appliqué :** ambiance en plus petit et en gris sous la règle ; ligne grise retirée pour les objets et les Écussons (plafond de copies, « Cousu en souvenir de… ») ; le champ `details` et ses textes disparaissent. Un Écusson montre sa ligne de stat au niveau 1, puis sa règle s'il en a une.
 
+## 173. Almanac : un outil maison et public pour suivre le jeu — 14 octobre 2026
+
+Demande : un outil de gestion de projet de jeu vidéo, open source et installé sur son serveur, qui regroupe moodboards, listes et documentation, parce que « plein de systèmes s'entremêlent », que les docs partent « vraiment dans tous les sens » et que « les données du jeu ne sont pas accessibles facilement alors que ça devrait l'être ».
+
+**Réponses de Raphaël :**
+- **fait maison**, dans un **dépôt public** à part, réutilisé ensuite en interne ; nom : **Almanac** ;
+- suivre **toutes les stats** (objets, personnages, effets, variables), **toute la documentation** ; si possible gestionnaire de **sprites et de sons**, **moodboards**, **outil de mesure** de runs et d'équilibrage ;
+- **agentique** : MCP, faciliter la vie des agents, **minimiser les tokens** ; **une seule source de vérité**, « un gros danger » sur un projet de cette taille ;
+- le contenu **reste dans le dépôt du jeu**, l'outil le lit et y écrit ;
+- stack « la plus rapide et la plus légère », TypeScript ;
+- hébergement : Proxmox, Docker Compose dans une VM Debian 13, convention `~/apps/<projet>/` avec `docker-compose.yml` et `.env` ;
+- ensuite, **grand ménage** du dépôt (docs, scripts) et migration.
+
+**Suite :** plan de l'outil dans `~/dev/perso/almanac/PLAN.md` ; ménage et migration de Vestiges au [plan 48](48-almanac.md), à démarrer au premier jalon d'Almanac. Plan à valider.
+
 ## 174. Projectiles du joueur plus lents — 14 octobre 2026
 
 Retour de jeu : « le bullet time des projectile est trop rapide en général ». Précisé : il s'agit de la vitesse de vol, pas de la cadence ; projectiles ennemis inchangés.
 
 **Réglage :** `projectile_speed` −30 % sur les armes à distance du joueur (Arc du gymnase 280, Lance-billes 210, Cloueuse 350, Assiettes 245, Lentille de phare 560, Instantané 420, Sacoche de lettres 240, Fusil-harpon 180). Les armes déjà lentes baissent de 15 % seulement, pour garder le virage des têtes chercheuses : Boussole 170, Baguette de sourcier 210, Lampe à pétrole 155, Craies 130. La portée ne change pas : le trajet dure plus longtemps. `tools/test_weapons.sh` vert.
+
+**Questions tranchées le même jour :** dépôt d'Almanac en anglais avec interface bilingue français/anglais ; licence MIT ; dépôt **privé jusqu'à la fin de la phase B**, puis public ; contrats de Vestiges lus par adaptateur, sans conversion ; instance du NAS en lecture seule en V1 ; Godot sur le NAS plus tard, si besoin ; un schéma pour **toutes** les collections de `data/` pendant la migration ; mises à jour datées du README gardées écrites à la main.
 
 ## 175. Tirs étalés sur la recharge, cadence plus lente, stats entières sous l'unité en commune, plus aucun rendement décroissant — 14 octobre 2026
 
@@ -2003,6 +2051,18 @@ Retour de jeu après le §175, avec la Rallonge : une créature arrive à porté
 
 **Vérification :** build sans avertissement ; suites smoke, armes (nouveau contrôle : Rallonge prête, frappe aussitôt à l'arrivée d'une créature, recharge relancée), objets, effets de perks et combat d'objets vertes.
 
+## 177. Formes des Craies et écho des Gants couchés au sol — 14 octobre 2026
+
+Retour de jeu : les dessins au sol des Craies « ne semblent pas être en vue isométrique comme le jeu » ; « corrige ça en les aplatissant et aplatis aussi la zone ».
+
+**Correction :** la forme (étoile, cercle, maison, soleil) se calcule au sol puis se projette (`Iso.ToScreen`) : une ellipse deux fois plus large que haute, de même largeur qu'avant. La zone de dégâts se mesure sur cette même ellipse (`Iso.GroundDistanceSquared`), comme le Chronomètre, le Mètre ou les échos de zone d'objets. Cela lève le point ouvert du plan 27 pour les Craies. Conséquence : à rayon égal, la surface touchée est divisée par deux (même largeur, moitié de hauteur).
+
+**Au passage :** la craie en vol tournait dressée vers l'écran, une pose sur deux ; elle tourne maintenant couchée autour de la verticale, en 8 frames à 20 images/s (`tools/sprites/projectiles.py`, planche régénérée).
+
+**Écho des Gants de boxe** (demandé ensuite) : même correction, la zone et son dessin (zone tramée, anneau) sont couchés au sol, mesurés par `Iso.GroundDistanceSquared` ; même division par deux de la surface à rayon égal (`echo_radius`).
+
+**Vérification :** aucun test lancé, Raphaël vérifie en jeu.
+
 ## 178. Sons de menu dans l'ambiance du jeu — 14 octobre 2026
 
 Raphaël : « les sons de sélection des menus ne sont pas assez dans l'ambiance du jeu, comment remédier à ça ».
@@ -2012,3 +2072,5 @@ Raphaël : « les sons de sélection des menus ne sont pas assez dans l'ambiance
 **Acquis :** Raphaël retient la piste proposée, une famille de sons faits des matières du jeu, en synthèse originale, plutôt qu'un simple adoucissement des fichiers actuels. Lot U1 au [plan 15](15-audio.md#u1--sons-de-menu-faits-des-matières-du-jeu--14-octobre-2026) : planche d'écoute hors dépôt, rien n'est intégré avant son choix.
 
 **Choix du même jour :** survol B (papier), clic A (pierre), confirmer C (petite cloche de bronze), refus C (corde étouffée), intégrés ([plan 15 U1](15-audio.md#u1-livré--choix-du-14-octobre)). Sur le survol : « B mais aucun des 3 proposés ne me plait vraiment » ; B est gardé en attendant une seconde planche.
+
+**Survol, même jour :** ce qui gêne dans les trois premiers, « trop présent » et « trop de souffle » ; directions retenues pour la seconde planche : bronze effleuré et cran mécanique ([plan 15 U1b](15-audio.md#u1b--seconde-planche-du-survol-14-octobre-à-écouter)).

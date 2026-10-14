@@ -284,19 +284,23 @@ public partial class ObjectTriggers : Node
     }
 
     public void OnWeaponImpact(Enemy enemy, float hitDamage, WeaponInstance weapon, int hits, AttackContext context,
-        bool isCrit = false, float dealt = 0f)
+        bool isCrit = false, float dealt = 0f, bool continuousContact = false)
     {
-        if (!context.IsDirectWeapon || context.OwnerId != _playerId || !GodotObject.IsInstanceValid(enemy)) return;
+        if (context.IsEcho || !context.IsDirectWeapon || context.OwnerId != _playerId || !GodotObject.IsInstanceValid(enemy)) return;
         if (isCrit) OnCrit(enemy, dealt, context);
         if (enemy.IsDying || (_burnCopies <= 0f && _chillCopies <= 0f && _poisonCopies <= 0f && _eliteCopies <= 0f)) return;
-        if (!_attempts.TryGetValue(enemy.Life, out AttemptHistory history))
+        // Un cône natif offre une tentative à chaque impulsion visible ; ses ticks intermédiaires
+        // n'arrivent pas ici. Une salve conserve un seul essai par lancement et par vie de cible.
+        if (!continuousContact)
         {
-            history = _attemptPool.TryPop(out AttemptHistory reused) ? reused : new AttemptHistory();
-            history.Target = enemy;
-            _attempts.Add(enemy.Life, history);
+            if (!_attempts.TryGetValue(enemy.Life, out AttemptHistory history))
+            {
+                history = _attemptPool.TryPop(out AttemptHistory reused) ? reused : new AttemptHistory();
+                history.Target = enemy;
+                _attempts.Add(enemy.Life, history);
+            }
+            if (!history.Launches.Add(context.LaunchId)) return;
         }
-
-        if (!history.Launches.Add(context.LaunchId)) return;
         float coefficient = Mathf.Clamp(weapon?.Base.TriggerCoefficient ?? 1f, 0f, 1f);
         if (_burnCopies > 0f && Roll(_burnChance * coefficient) && _burnBudget.Take(_clock, 1f, _burnRate * _burnCopies, 1f) >= 1f)
         {
@@ -452,7 +456,7 @@ public partial class ObjectTriggers : Node
     private void OnEnemyKill(EnemyKillResult kill)
     {
         ForgetAttempts(kill.Target);
-        if (kill.Damage.Source.OwnerId != _playerId || !kill.Damage.Source.IsWeaponWork || _player.IsDead) return;
+        if (kill.Damage.Source.IsEcho || kill.Damage.Source.OwnerId != _playerId || !kill.Damage.Source.IsWeaponWork || _player.IsDead) return;
         if (_killExplosion > 0f) Explode(kill.Position, FatalBlow(kill.Damage) * _killExplosion, kill.Damage.Source.As(DamageKind.Passive));
         if (_killHeal > 0f && _player.CurrentHp < _player.EffectiveMaxHp)
         {

@@ -48,6 +48,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _maxHp;
 	private float _baseHp;
 	private float _currentHp;
+	private bool _hasTakenDamage;
+	/// <summary>Le soin ne réarme pas Œil d'aigle ; seule une nouvelle vie dans le pool le fait.</summary>
+	public bool IsUndamaged => !_hasTakenDamage && _currentHp >= _maxHp;
+	internal DamageResult LastDamageResult { get; private set; }
+	internal float LastImpactDamage { get; private set; }
 	private float _baseSpeed;
 	private float _speed;
 	private float _damage;
@@ -295,6 +300,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		HarpoonOwner = 0;
 		IsHarpoonHeavy = data.GetStat("traction_weight") >= 1f;
 		_lifeGeneration++;
+		_hasTakenDamage = false;
+		LastDamageResult = default;
+		LastImpactDamage = 0f;
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
 		_statusVisual.Attach(null);
@@ -1093,11 +1101,22 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_currentHp <= 0 || _isDying || _isBurrowed)
 			return default;
 
+		// La résolution commune couvre projectiles, arcs, liens, contacts orbitaux et cônes. La provenance
+		// exclut les objets, DOT et répliques ; l'autre joueur reste identifiable sans recherche dans l'arbre.
+		if (source.IsDirectWeapon && !source.IsEcho)
+		{
+			Player owner = _player != null && IsInstanceValid(_player) && _player.GetInstanceId() == source.OwnerId
+				? _player : InstanceFromId(source.OwnerId) as Player;
+			owner?.ResolveOpeningStrike(this, ref damage, ref isCrit, ref source);
+		}
+
 		// Débordement : le premier impact direct d'un lancement ultérieur emporte la réserve de son arme.
 		if (carriedDamage <= 0f)
 			carriedDamage = OverflowLedger.Take(source);
 		float taken = _fragileTimer > 0f ? _mods.DamageTakenMultiplier * (1f + _fragileBonus) : _mods.DamageTakenMultiplier;
+		LastImpactDamage = damage;
 		DamageResult result = DamageResult.Resolve(Life, source, _currentHp, damage, carriedDamage, taken) with { Critical = isCrit };
+		LastDamageResult = result;
 		damage = result.NativeDamage + result.CarriedDamage;
 		_mods.NotifyDamaged();
 		LoseHp(damage);
@@ -1112,8 +1131,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			Infrastructure.AudioManager.PlayAt(isCrit ? "sfx_hit_critique" : impactAudio ?? "sfx_hit_ennemi", GlobalPosition, 0.07f);
 		}
 
-		// Screen shake + hitstop selon l'intensité
-		if (isCrit)
+		// Les touches continues suivent le même espacement que leur flash et leur son.
+		if (showImpact && isCrit)
 		{
 			ScreenShake.Instance?.ShakeHeavy();
 			ScreenShake.Instance?.Hitstop(0.045f);
@@ -1133,6 +1152,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private void LoseHp(float damage)
 	{
 		float lost = Mathf.Min(damage, Mathf.Max(0f, _currentHp));
+		// Tous les chemins de perte de PV passent ici, les ticks de statuts compris.
+		_hasTakenDamage |= lost > 0f;
 		_currentHp -= damage;
 		_boss?.Absorb(this, lost, _bossShared);
 	}

@@ -219,5 +219,25 @@ public partial class ConeRegression : Node2D
         await Frame();
         _cone(1f / 60);
         Check(_hits == fatalHits + 1 && (float)Read(Read(enemy, "_hitFeedback"), "_elapsed") == 0, "premier impact visible après recyclage");
+
+        _player.ObjectTriggers.Add(ObjectTriggers.BurnChanceStat, 1f);
+        _player.ObjectTriggers.Rng.Seed = 11;
+        _activate(_weapon.Base.SpecialEffect);
+        _player.ArmAttackEcho(_player.GlobalPosition, 0.5f);
+        Method<Action>(_player, "RepeatConeFromEcho")();
+        Action<float> echoCone = Method<Action<float>>(_player, "ProcessEchoCone");
+        int echoBurns = 0;
+        ulong echoRngBefore = _player.ObjectTriggers.Rng.State;
+        float echoBefore = enemy.CurrentHp;
+        for (int tick = 0; tick < 120; tick++)
+        {
+            await Frame();
+            Set(enemy, "_igniteTimer", 0f);
+            echoCone(1f / 60);
+            if (enemy.IsBurning) echoBurns++;
+        }
+        Check(enemy.CurrentHp < echoBefore && echoBurns == 0 && _player.ObjectTriggers.Rng.State == echoRngBefore,
+            "Double : les vrais ticks du cône répété infligent leurs dégâts sans tentative ni déclenchement d’Allumette");
+        _player.ResetAttackEcho();
     }
 }

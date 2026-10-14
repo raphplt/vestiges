@@ -46,7 +46,7 @@ namespace Vestiges.Tests;
 /// --capture-erasure : une capture par phase de l'oubli, puis un dégradé de toutes les phases.
 /// --census-props : avec le relevé de densité, décors comptés par famille, barrières à part (RunObservation.Census.cs).
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
-/// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects (RunObservation.Weapons.cs).
+/// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] [--dash-before-attack] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects ; --dash-before-attack arme la rémanence avant l’émission manuelle (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
 /// --capture-loot : écran de butin du coffre le plus proche, objets du sac uniquement (RunObservation.Chests.cs).
 /// --capture-light-columns [secondes] : arrêt devant un coffre de chaque rareté, pour juger l'animation des colonnes (RunObservation.Chests.cs).
@@ -215,6 +215,8 @@ public partial class RunObservation : Node
                 await MeasurePropCost(double.Parse(Argument(args, "--measure-seconds", "8"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-weapons") >= 0)
                 await CaptureWeapons(Argument(args, "--weapons", null), Array.IndexOf(args, "--lethal") >= 0);
+            else if (Array.IndexOf(args, "--capture-route-forge") >= 0)
+                await CaptureRouteAndForge();
             else if (Array.IndexOf(args, "--capture-light-columns") >= 0)
                 await CaptureLightColumns(double.Parse(Argument(args, "--capture-light-columns", "4"), CultureInfo.InvariantCulture));
             else if (Array.IndexOf(args, "--capture-biome-tour") >= 0)

@@ -366,18 +366,80 @@ public partial class WeaponRegression : Node2D
             Check(waitingFromEcho == 2 && waitingElsewhere == 2,
                 $"Rémanence : sa rafale attend son tour et partira de la rémanence ({waitingFromEcho} de la rémanence, {waitingElsewhere} du joueur)");
 
-            while (player.WeaponSlots.Count > 0)
+            // Le joueur et sa rémanence ont chacun une cible ; leurs touches doivent rester séparées.
+            enemy.GlobalPosition = player.GlobalPosition + new Vector2(35f, 0f);
+            Vector2 combatOrigin = player.GlobalPosition + new Vector2(1000f, 0f);
+            Enemy echoEnemy = SpawnStill(Vector2.Zero);
+            echoEnemy.GlobalPosition = combatOrigin + new Vector2(35f, 0f);
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            try
+            {
+                foreach (string weaponId in new[] { "chipped_blade", "heavy_hammer", "sharpened_pipe", "teachers_bell", "chain_of_names" })
+                {
+                    while (player.WeaponSlots.Count > 0)
+                        player.RemoveWeapon(0);
+                    player.AddWeapon(WeaponDataLoader.Get(weaponId));
+                    float beforeOwn = Lost(enemy), beforeEcho = Lost(echoEnemy);
+                    echoed = null;
+                    player.ArmAttackEcho(combatOrigin, 0.5f);
+                    attack.Invoke(player, new object[] { 0 });
+                    float ownHit = Lost(enemy) - beforeOwn, echoHit = Lost(echoEnemy) - beforeEcho;
+                    Check(ownHit > 0f && Mathf.Abs(echoHit - ownHit * 0.5f) < 0.1f
+                        && echoed == combatOrigin && !player.HasAttackEcho
+                        && echoEnemy.LastDamageResult.Source.IsEcho && echoEnemy.LastDamageResult.Source.Origin == combatOrigin,
+                        $"Rémanence : {weaponId} touche depuis son origine à moitié dégâts ({ownHit:0.###}/{echoHit:0.###})");
+                    echoed = null;
+                    player.ArmAttackEcho(combatOrigin + new Vector2(0f, 900f), 0.5f);
+                    attack.Invoke(player, new object[] { 0 });
+                    Check(player.HasAttackEcho && echoed == null, $"Rémanence : {weaponId} attend sans cible à sa portée");
+                    player.DisarmAttackEcho();
+                }
+
+                while (player.WeaponSlots.Count > 0)
+                    player.RemoveWeapon(0);
+                player.AddWeapon(WeaponDataLoader.Get("music_box"));
+                echoed = null;
+                player.ArmAttackEcho(combatOrigin, 0.5f);
+                attack.Invoke(player, new object[] { 0 });
+                Check(player.HasAttackEcho && echoed == null, "Rémanence : les orbites continues ne la consomment pas");
+                player.DisarmAttackEcho();
+
                 player.RemoveWeapon(0);
-            player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
-            echoed = null;
-            player.ArmAttackEcho(origin, 0.5f);
-            attack.Invoke(player, new object[] { 0 });
-            Check(player.HasAttackEcho && echoed == null, "Rémanence : la mêlée n'est pas répétée, elle attend un tir");
-            player.DisarmAttackEcho();
+                player.AddWeapon(WeaponDataLoader.Get("last_broadcast"));
+                typeof(Player).GetField("_facingDirection", Private).SetValue(player, Vector2.Right);
+                float ownBefore = Lost(enemy), echoBefore = Lost(echoEnemy);
+                player.ArmAttackEcho(combatOrigin, 0.5f);
+                attack.Invoke(player, new object[] { 0 });
+                MethodInfo ownCone = typeof(Player).GetMethod("ProcessSustainedCone", Private);
+                MethodInfo echoCone = typeof(Player).GetMethod("ProcessEchoCone", Private);
+                ownCone.Invoke(player, new object[] { 0.1f });
+                echoCone.Invoke(player, new object[] { 0.1f });
+                float ownConeDamage = Lost(enemy) - ownBefore, echoConeDamage = Lost(echoEnemy) - echoBefore;
+                Check(ownConeDamage > 0f && Mathf.Abs(echoConeDamage - ownConeDamage * 0.5f) < 0.1f
+                    && !player.HasAttackEcho && echoEnemy.LastDamageResult.Source.IsEcho
+                    && echoEnemy.LastDamageResult.Source.Origin == combatOrigin,
+                    $"Rémanence : le cône est répété depuis son origine ({ownConeDamage:0.###}/{echoConeDamage:0.###})");
+                player.GlobalPosition += new Vector2(0f, 1000f);
+                float beforeFixedCone = Lost(echoEnemy);
+                echoCone.Invoke(player, new object[] { 0.1f });
+                Check(Lost(echoEnemy) > beforeFixedCone, "Rémanence : le cône continue à son origine après le départ du joueur");
+                player.GlobalPosition -= new Vector2(0f, 1000f);
+                player.ResetAttackEcho();
+                float beforeReset = Lost(echoEnemy);
+                echoCone.Invoke(player, new object[] { 0.1f });
+                Check(Mathf.IsEqualApprox(Lost(echoEnemy), beforeReset), "Rémanence : reset arrête aussi son cône");
+                player.RemoveWeapon(0);
+                player.AddWeapon(WeaponDataLoader.Get("chipped_blade"));
+            }
+            finally
+            {
+                echoEnemy.QueueFree();
+            }
 
             RemanenceEcho module = new();
             module.Initialize(player, PerkDataLoader.GetAll().Find(perk => perk.Id == "eveillee_double").Echo);
             player.AddChild(module);
+            module.ProcessMode = ProcessModeEnum.Disabled;
             Vector2 departure = player.GlobalPosition;
             module.Advance(1f / 60f);
             player.Mobility.Request();
@@ -392,6 +454,30 @@ public partial class WeaponRegression : Node2D
                 module.Advance(1f / 60f);
             Check(armedAtDeparture && !player.HasAttackEcho && !module.IsShown,
                 $"Rémanence : armée au départ de la mobilité, à l'endroit quitté ({armedAt}), retirée au bout de 1,5 s");
+
+            RemanenceEcho invalid = new();
+            invalid.Initialize(player, new PerkEcho { Seconds = 0f, DamageRatio = 0.5f });
+            player.AddChild(invalid);
+            invalid.Advance(1f);
+            Check(!invalid.IsShown && !player.HasAttackEcho, "Rémanence : configuration invalide ignorée sans crash");
+            invalid.QueueFree();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+            player.ArmAttackEcho(departure, 0.5f);
+            typeof(RemanenceEcho).GetField("_remaining", Private).SetValue(module, 1f);
+            bool paused = GetTree().Paused;
+            GetTree().Paused = true;
+            module.Advance(2f);
+            Check(player.HasAttackEcho, "Rémanence : sa durée est suspendue pendant la pause");
+            GetTree().Paused = paused;
+            module.Advance(2f);
+            Check(!player.HasAttackEcho, "Rémanence : sa durée reprend après la pause");
+
+            player.ArmAttackEcho(departure, 0.5f);
+            typeof(Player).GetMethod("Die", Private).Invoke(player, null);
+            module.Advance(0.1f);
+            Check(!player.HasAttackEcho && !module.IsShown, "Rémanence : la mort la retire immédiatement");
+
         }
         finally
         {

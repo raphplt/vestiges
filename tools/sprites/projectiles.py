@@ -161,19 +161,21 @@ def _flash() -> ProjectileModel:
 
 
 def _chalk() -> ProjectileModel:
-    """Craie d'enfant qui tournoie : bâton rose, bout taillé, bague de papier jaune."""
+    """Craie d'enfant qui tournoie : bâton rose, bout taillé, bague de papier jaune. Couchée, elle tourne autour de la
+    verticale comme un bâton lancé à plat : son raccourci suit la projection 2:1 au lieu d'un bâton dressé vers l'écran."""
     materials = (make_material("chalk", "#E87BA8", contrast=1.0), make_material("paper", "#F2D45C", contrast=0.9),
                  make_material("tip", "#F7D9E6", contrast=0.6))
+    frames = 8
 
     def parts(frame: int) -> Sequence[Part]:
-        spin = rotation_x(frame * np.pi / 2)
+        spin = rotation_y(frame * 2 * np.pi / frames) @ rotation_z(np.pi / 2)
         return (
             Part(_rotated(lambda p: capsule(p, (0, -6, 0), (0, 5, 0), 2.0), spin), 0),
             Part(_rotated(lambda p: cylinder(p, (0, -1.5, 0), 2.3, 2.2, 0.3), spin), 1),
             Part(_rotated(lambda p: capsule(p, (0, 5, 0), (0, 8.5, 0), 2.0, 0.5), spin), 2),
         )
 
-    return ProjectileModel(materials, parts, (24, 24), 16, 4, 14, streak=4)
+    return ProjectileModel(materials, parts, (24, 24), 16, frames, 20, streak=4)
 
 
 def _stone() -> ProjectileModel:

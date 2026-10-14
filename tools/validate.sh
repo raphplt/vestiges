@@ -13,7 +13,7 @@ tests=(smoke perk_contracts perk_acquisition perk_effects objects weapons enemy_
 if [[ $# -gt 0 ]]; then tests=("$@"); fi
 for name in "${tests[@]}"; do
     case "$name" in
-        smoke|perk_contracts|perk_acquisition|perk_effects|objects|weapons|enemy_abilities|small_places|field_bonuses|cone|temporal|erasure_active|cartography|choice_screen|menu_navigation|ui_art|music|audio|movement|movement-integration|dev_mode|development_tools|dev_release|saves|loading|input_remap|run_trace|run_phase|catalogs|quests|camp|inventory|item_loot|item_combat|indicible|boss_parts|steam_leaderboards|progression-model|launchers) ;;
+        smoke|perk_contracts|perk_acquisition|perk_effects|route_forge|objects|weapons|enemy_abilities|small_places|field_bonuses|cone|temporal|erasure_active|cartography|choice_screen|menu_navigation|ui_art|music|audio|movement|movement-integration|dev_mode|development_tools|dev_release|saves|loading|input_remap|run_trace|run_phase|catalogs|quests|camp|inventory|item_loot|item_combat|indicible|boss_parts|steam_leaderboards|progression-model|launchers) ;;
         *) echo "Suite inconnue : $name" >&2; exit 1 ;;
     esac
 done
@@ -54,6 +54,7 @@ for name in "${tests[@]}"; do
     command_args=()
     case "$name" in
         smoke) command_args=(tools/smoke_test.sh) ;;
+        route_forge) command_args=(tools/test_perk_effects.sh --route-forge-only) ;;
         movement-integration) command_args=(tools/test_movement.sh --run-integration) ;;
         development_tools) command_args=(tools/test_development_tools.sh) ;;
         progression-model) command_args=(python3 tools/tests/test_progression_model.py) ;;

@@ -13,12 +13,12 @@ using Vestiges.World;
 
 namespace Vestiges.Tests;
 
-/// <summary>Plan 45 N5 : réserve dans le vrai monde et cinq salves du vrai harpon, avec preuves de déplacement.</summary>
+/// <summary>Plan 45 N5 : Pression dans le vrai monde et cinq salves du vrai harpon, avec preuves de déplacement.</summary>
 public partial class RunObservation
 {
     private async Task CaptureScaphandriereKit()
     {
-        AirReserve air = _player.GetNodeOrNull<AirReserve>("AirReserve")
+        ErasurePressure pressure = _player.GetNodeOrNull<ErasurePressure>("ErasurePressure")
             ?? throw new InvalidOperationException("Le scénario du kit exige la Scaphandrière et sa signature réelle.");
         _world.GetNode("SpawnManager").ProcessMode = ProcessModeEnum.Disabled;
         _player.AIInputOverride = Vector2.Zero;
@@ -60,28 +60,25 @@ public partial class RunObservation
                     for (int x = -8; x <= 8; x++) erasure.OverrideMemory(center + new Vector2I(x, y), memory);
                 erasure.RefreshGroundMemory();
             }
-            async Task AirFrame(string name, AirReserveState state, float min, float max)
+            async Task PressureFrame(string name, int intensity, float multiplier)
             {
+                await Seconds(0.1f);
                 await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-                Check(air.State == state && air.RemainingSeconds >= min && air.RemainingSeconds <= max,
-                    $"air {name} état={air.State} réserve={air.RemainingSeconds:F2}");
-                SaveCrop("scaph-air-" + name, _player.GlobalPosition + new Vector2(0, -18), new Vector2(100, 90));
+                Check(pressure.Intensity == intensity && Mathf.IsEqualApprox(pressure.DamageMultiplier, multiplier),
+                    $"pression {name} intensité={pressure.Intensity} multiplicateur={pressure.DamageMultiplier:F2}");
+                SaveCrop("scaph-pression-" + name, _player.GlobalPosition + new Vector2(0, -18), new Vector2(100, 90));
                 trace?.Sample(elapsed);
             }
             SetMemory(1f);
-            await AirFrame("plein", AirReserveState.Full, 5.9f, 6f);
+            await PressureFrame("ancree", 0, 1f);
             SetMemory(0.38f);
-            await Seconds(3f);
-            await AirFrame("consommation", AirReserveState.Consuming, 2.7f, 3.2f);
-            Check(air.IsProtecting && _player.ErasurePhase == ErasureManager.ErasureZonePhase.Frayed,
-                "consommation protège en vraie phase effilochée");
-            await Seconds(3.2f);
-            await AirFrame("vide", AirReserveState.Empty, 0f, 0f);
-            Check(!air.IsProtecting, "réserve épuisée : malus restaurés");
+            await PressureFrame("effilochee", 1, 1.25f);
+            SetMemory(0.12f);
+            await PressureFrame("effacee", 2, 1.5f);
+            SetMemory(0f);
+            await PressureFrame("neant", 0, 1f);
             SetMemory(1f);
-            await Seconds(5f);
-            await AirFrame("recharge", AirReserveState.Recharging, 2.8f, 3.2f);
-            // Le reste de la recharge avance pendant la galerie ; aucune manipulation de la réserve.
+            await PressureFrame("retour", 0, 1f);
             Dictionary<string, float> distances = new();
             foreach ((string name, string enemyId, string ascension) in new[]
             {
@@ -90,6 +87,8 @@ public partial class RunObservation
             })
             {
                 while (_player.WeaponSlots.Count > 0) _player.RemoveWeapon(0);
+                // Les changements de mémoire et le streaming peuvent modifier le terrain depuis le premier cadrage.
+                origin = FindScaphTrialOrigin(origin);
                 _player.GlobalPosition = origin;
                 _camera.ResetSmoothing();
                 _player.AddWeapon(WeaponDataLoader.Get("harpoon_rifle"));
@@ -167,8 +166,8 @@ public partial class RunObservation
             }
             Check(distances["treuil"] > distances["leger"] && distances["leger"] > distances["abysse"],
                 "trajectoires comparables : treuil > base > abysse");
-            Check(air.State == AirReserveState.Full, "recharge complète pendant la galerie");
-            GD.Print($"[RunObservation] RESULT scaph-kit checks={checks} air=4 harpoon=5 failures=0");
+            Check(pressure.Intensity == 0, "aucune Pression sur sol ancré pendant la galerie");
+            GD.Print($"[RunObservation] RESULT scaph-kit checks={checks} pressure=5 harpoon=5 failures=0");
         }
         finally
         {
@@ -176,22 +175,28 @@ public partial class RunObservation
         }
     }
 
-    /// <summary>Les cinq tirs partagent un couloir sec sans obstacle ; le monde n'est pas effacé pour les besoins du banc.</summary>
+    /// <summary>Revalide le terrain réel et l'emprise des corps avant chaque salve, sans déplacer les obstacles.</summary>
     private Vector2 FindScaphTrialOrigin(Vector2 around)
     {
-        for (int row = -12; row <= 12; row++)
-            for (int col = -12; col <= 12; col++)
-            {
-                Vector2 candidate = around + new Vector2(col * 32, row * 32);
-                bool clear = true;
-                for (int x = -20; x <= 280; x += 8)
-                    for (int y = -20; y <= 20; y += 10)
-                    {
-                        Vector2 point = candidate + new Vector2(x, y);
-                        if (_world.IsWaterAt(point) || ObstacleField.Resolve(ref point, 18f)) clear = false;
-                    }
-                if (clear) return candidate;
-            }
-        throw new InvalidOperationException("Aucun couloir sec de 300 px pour le harpon près du cadrage.");
+        for (int radius = 0; radius <= 12; radius++)
+            for (int row = -radius; row <= radius; row++)
+                for (int col = -radius; col <= radius; col++)
+                {
+                    if (Mathf.Max(Mathf.Abs(row), Mathf.Abs(col)) != radius) continue;
+                    Vector2 candidate = around + new Vector2(col * 32, row * 32);
+                    Vector2 from = candidate + new Vector2(280f, 0f);
+                    Vector2 displacement = new(-300f, 0f);
+                    // Une cellule sans sol n'est pas de l'eau ; le même garde que le vrai filin doit l'écarter.
+                    if (_player.ClampHarpoonTravel(from, displacement).DistanceSquaredTo(displacement) > 0.01f) continue;
+                    bool clear = true;
+                    for (int x = -20; clear && x <= 280; x += 2)
+                        for (int y = -24; clear && y <= 24; y += 8)
+                        {
+                            Vector2 point = candidate + new Vector2(x, y);
+                            if (_world.IsWaterAt(point) || ObstacleField.Resolve(ref point, 24f)) clear = false;
+                        }
+                    if (clear) return candidate;
+                }
+        throw new InvalidOperationException("Aucun couloir réel, sec et libre de 300 px pour le harpon près du cadrage.");
     }
 }

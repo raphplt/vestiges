@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
 /// <summary>
 /// Forme des Craies (plan 27 V2b) : étoile, cercle, maison ou soleil tracé à la craie sur le sol, à la taille réelle de
-/// la zone touchée (un cercle à l'écran, comme le contrôle des dégâts). Pixels calculés une fois au lancement, tracé en
+/// la zone touchée. La forme est couchée au sol (<see cref="Iso"/>) : le cercle devient l'ellipse deux fois plus large
+/// que haute sur laquelle les dégâts se contrôlent. Pixels calculés une fois au lancement, tracé en
 /// quelques poses, tenu, puis effacé par tramage ; le dessin n'est refait qu'au changement de pose. Recyclé par
 /// CombatPools.
 /// </summary>
@@ -100,7 +102,7 @@ public partial class ChalkDrawing : Node2D
         _release(this);
     }
 
-    /// <summary>Contours de la forme, dans un cercle de rayon <paramref name="radius"/> centré sur l'impact.</summary>
+    /// <summary>Contours de la forme, dans un cercle au sol de rayon <paramref name="radius"/> centré sur l'impact.</summary>
     private void Trace(string shape, float radius)
     {
         switch (shape)
@@ -119,7 +121,7 @@ public partial class ChalkDrawing : Node2D
                 for (int ray = 0; ray < 8; ray++)
                 {
                     Line(Polar(ray, 8, radius * 0.6f), Polar(ray, 8, radius * 0.95f));
-                    _pixels.Add((Vector2I)Polar(ray, 8, radius * 0.95f).Round());
+                    _pixels.Add((Vector2I)Iso.ToScreen(Polar(ray, 8, radius * 0.95f)).Round());
                 }
                 break;
             default:
@@ -142,18 +144,21 @@ public partial class ChalkDrawing : Node2D
         for (int point = 0; point + 1 < points.Length; point++)
             Line(points[point] * radius, points[point + 1] * radius);
         // Le dernier point d'un tracé ouvert n'est posé par aucun segment.
-        _pixels.Add((Vector2I)(points[^1] * radius).Round());
+        _pixels.Add((Vector2I)Iso.ToScreen(points[^1] * radius).Round());
     }
 
     /// <summary>Sommet <paramref name="index"/> sur <paramref name="count"/>, en partant du haut.</summary>
     private static Vector2 Polar(int index, int count, float radius) =>
         Vector2.FromAngle(-Mathf.Pi / 2f + index * Mathf.Tau / count) * radius;
 
-    /// <summary>Segment au pixel (Bresenham), sans doubler l'extrémité partagée avec le segment suivant.</summary>
+    /// <summary>
+    /// Segment au sol projeté à l'écran puis tracé au pixel (Bresenham), sans doubler l'extrémité partagée avec le
+    /// segment suivant.
+    /// </summary>
     private void Line(Vector2 from, Vector2 to)
     {
-        Vector2I a = (Vector2I)from.Round();
-        Vector2I b = (Vector2I)to.Round();
+        Vector2I a = (Vector2I)Iso.ToScreen(from).Round();
+        Vector2I b = (Vector2I)Iso.ToScreen(to).Round();
         int dx = Math.Abs(b.X - a.X), sx = a.X < b.X ? 1 : -1;
         int dy = -Math.Abs(b.Y - a.Y), sy = a.Y < b.Y ? 1 : -1;
         int error = dx + dy;

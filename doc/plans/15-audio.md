@@ -705,3 +705,9 @@ Choix de Raphaël (export de la planche) : **survol B** (papier), **clic A** (pi
 - Contrôles : `audio_bank_audit.py` 0 échec, smoke test, `test_audio.sh` (0 échec). Aucun son écouté par l'agent ; à juger en jeu.
 
 **Reste :** le survol B est un pis-aller ; une seconde planche de survol est à proposer selon ce qui gêne Raphaël dans les trois premières.
+
+### U1b — seconde planche du survol, 14 octobre (à écouter)
+
+Retour de Raphaël sur les trois premiers survols : trop de souffle, trop présents. Directions demandées : bronze effleuré et cran mécanique.
+
+`~/.local/share/vestiges-audio/2026-10-14/menus-survol/index.html` (hors dépôt) : quatre candidats sans bruit large, à 3 dB sous le survol en jeu, quatre variantes chacun. A bronze effleuré en fa (partiels de la cloche de confirmation), B bronze effleuré sur quatre notes de fa mineur (fa, la bémol, do, mi bémol), C cran de métal patiné vers 1,7 kHz, D le même cran en double (entrée et sortie, 11 ms). Le papier en jeu reste en référence. Un curseur règle le niveau de tous les survols et part dans l'export ; la scène en situation utilise le clic, le refus et la confirmation intégrés. Aucun son écouté par l'agent.

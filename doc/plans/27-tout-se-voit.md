@@ -256,7 +256,7 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 ## 13. V2b livré — 7 octobre 2026
 
 **Fait.**
-- **Formes des Craies** (`ChalkDrawing`, recyclé par `CombatPools`) : étoile, cercle, maison ou soleil tiré au hasard, tracé au pixel avec des trous de craie (15 %), en trois poses sur 0,12 s, tenu 0,4 s, effacé en deux poses de tramage. Taille réelle : la zone des Craies se contrôle en cercle à l'écran (`DistanceTo`), la forme est donc dessinée sans écrasement au sol. Familles par forme (étoile Brass, cercle Glass, maison Rust, soleil Fire) et rythme dans `data/fx/chalk_shapes.json`, lu par `ChalkShapeConfig` (forme sans tracé ou famille inconnue refusées). La liste `shapes` de la fiche d'arme reste une annotation : les noms sont les mêmes.
+- **Formes des Craies** (`ChalkDrawing`, recyclé par `CombatPools`) : étoile, cercle, maison ou soleil tiré au hasard, tracé au pixel avec des trous de craie (15 %), en trois poses sur 0,12 s, tenu 0,4 s, effacé en deux poses de tramage. Taille réelle : la zone des Craies se contrôle au sol (`Iso.GroundDistanceSquared`), la forme est donc couchée en ellipse 2:1 (DECISIONS §177 ; d'abord un cercle à l'écran). Familles par forme (étoile Brass, cercle Glass, maison Rust, soleil Fire) et rythme dans `data/fx/chalk_shapes.json`, lu par `ChalkShapeConfig` (forme sans tracé ou famille inconnue refusées). La liste `shapes` de la fiche d'arme reste une annotation : les noms sont les mêmes.
 - **Écho des Gants** : l'anneau fixe de 18 px devient zone tramée, anneau et gerbe au rayon réel de l'écho (cercle à l'écran, comme son contrôle), à la couleur de l'arme.
 - **Coups secondaires** (écho, forme) et **dégâts d'objets** (Mètre, Pétard, Rondelle, écho critique du Stylo) : chaque cible reçoit la gerbe et l'éclat à la couleur de l'arme ou de l'objet, partie du centre de la zone. Mêmes plafonds que les coups directs (rafales par image, budget, réglage « Effets d'attaque »).
 
@@ -267,7 +267,7 @@ V2 se livre en quatre sous-lots, chacun avec sa planche (galerie `--capture-weap
 
 **Relecture `godot-reviewer`, corrigé avant livraison.** Pixels tracés plafonnés à 600 par forme (un sur deux ou trois au-delà, zone très agrandie) ; segments du cercle selon le rayon (un tous les 4 px) au lieu de 32 fixes ; dernier pixel des tracés ouverts ; plafond de gerbes à part pour les coups secondaires et objets (10 par image), pour qu'une explosion en foule ne prive pas le coup direct de la sienne, et rien compté quand les effets d'attaque sont coupés ; réglages des Craies chargés avant de consommer le budget.
 
-**Point ouvert.** Les zones de l'écho et des Craies sont des cercles à l'écran alors que les objets (Mètre, Pétard) mesurent sur le sol écrasé : deux géométries de zone coexistent dans le code, chacune dessinée comme elle touche. À unifier un jour, hors de ce plan.
+**Point clos (DECISIONS §177).** Les zones de l'écho des Gants et des Craies étaient des cercles à l'écran alors que les objets (Mètre, Pétard) mesurent sur le sol écrasé ; elles sont passées au sol, dessin et contrôle des dégâts.
 
 ## 14. V2c livré — 7 octobre 2026
 

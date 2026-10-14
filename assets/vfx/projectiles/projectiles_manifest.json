@@ -54,8 +54,8 @@
       24
     ],
     "directions": 16,
-    "frames": 4,
-    "fps": 14
+    "frames": 8,
+    "fps": 20
   },
   "envelope": {
     "frame": [

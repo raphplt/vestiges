@@ -25,28 +25,66 @@ public class PerkData
     public List<PerkEffect> Effects { get; set; }
     /// <summary>Élan d'une signature qui récompense le mouvement continu (Tournée du Facteur), sinon null.</summary>
     public PerkMomentum Momentum { get; set; }
-    /// <summary>Rémanence d'une signature qui répète un tir après la mobilité (Double de l'Éveillée), sinon null.</summary>
+    /// <summary>Rémanence d'une signature qui répète une attaque après la mobilité (Double de l'Éveillée), sinon null.</summary>
     public PerkEcho Echo { get; set; }
-    /// <summary>Réserve qui suspend les malus de déplacement et de dégâts de l'Effacement, sinon null.</summary>
-    public PerkAir Air { get; set; }
+    /// <summary>Critique d’ouverture progressant avec le niveau, sinon null.</summary>
+    public PerkOpeningStrike OpeningStrike { get; set; }
+    /// <summary>Gain offensif près du front de l’Effacement, sinon null.</summary>
+    public PerkPressure Pressure { get; set; }
+    public PerkRouteEndurance RouteEndurance { get; set; }
+    public PerkShockwave Shockwave { get; set; }
 }
 
-/// <summary>Durées de la réserve d'air : consommation complète et recharge complète hors danger.</summary>
-public sealed record PerkAirAudio(string Consume, string Empty, float MinIntervalSeconds);
-
-public sealed class PerkAir
+public sealed record PerkRouteEndurance(int CellsPerCharge, int MaxCharges, float DamageReduction)
 {
-    public float Seconds { get; }
-    public float RechargeSeconds { get; }
-    public PerkAirAudio Audio { get; }
-
-    public PerkAir(float seconds, float rechargeSeconds, PerkAirAudio audio = null)
+    public void Validate()
     {
-        if (!float.IsFinite(seconds) || seconds <= 0f || !float.IsFinite(rechargeSeconds) || rechargeSeconds <= 0f)
-            throw new ArgumentOutOfRangeException(nameof(seconds), "Les durées d'air doivent être finies et strictement positives.");
-        Seconds = seconds;
-        RechargeSeconds = rechargeSeconds;
-        Audio = audio;
+        if (CellsPerCharge < 1 || CellsPerCharge > 1000000 || MaxCharges < 1 || MaxCharges > 16
+            || !float.IsFinite(DamageReduction) || DamageReduction <= 0f || DamageReduction >= 1f)
+            throw new InvalidOperationException("Endurance : cellules et charges positives, réduction strictement entre 0 et 1.");
+    }
+}
+
+public sealed record PerkShockwave(int AttacksPerWave, float Radius, float DamageRatio, float Knockback)
+{
+    public void Validate()
+    {
+        if (AttacksPerWave < 1 || AttacksPerWave > 128 || !float.IsFinite(Radius) || Radius <= 0f || Radius > 1000f
+            || !float.IsFinite(DamageRatio) || DamageRatio <= 0f || DamageRatio > 5f
+            || !float.IsFinite(Knockback) || Knockback < 0f || Knockback > 80f)
+            throw new InvalidOperationException("Redresser : fréquence positive, rayon et dégâts finis positifs, recul de 0 à 80.");
+    }
+}
+
+public sealed class PerkOpeningStrike
+{
+    public float BaseChance { get; }
+    public float GainPerLevel { get; }
+    public float MaxChance { get; }
+
+    public PerkOpeningStrike(float baseChance, float gainPerLevel, float maxChance)
+    {
+        if (!float.IsFinite(baseChance) || !float.IsFinite(gainPerLevel) || !float.IsFinite(maxChance)
+            || baseChance < 0f || gainPerLevel < 0f || gainPerLevel > 1f || maxChance < baseChance || maxChance > 1f)
+            throw new ArgumentOutOfRangeException(nameof(baseChance), "Critique d’ouverture : probabilités finies entre 0 et 1, plafond au moins égal à la base.");
+        BaseChance = baseChance;
+        GainPerLevel = gainPerLevel;
+        MaxChance = maxChance;
+    }
+}
+
+public sealed class PerkPressure
+{
+    public float FrayedBonus { get; }
+    public float ErasedBonus { get; }
+
+    public PerkPressure(float frayedBonus, float erasedBonus)
+    {
+        if (!float.IsFinite(frayedBonus) || !float.IsFinite(erasedBonus) || frayedBonus < 0f
+            || erasedBonus < frayedBonus || erasedBonus > 10f)
+            throw new ArgumentOutOfRangeException(nameof(frayedBonus), "Pression : bonus finis, positifs et croissants, au maximum 10.");
+        FrayedBonus = frayedBonus;
+        ErasedBonus = erasedBonus;
     }
 }
 
@@ -131,7 +169,10 @@ public static class PerkDataLoader
                 Effects = effects,
                 Momentum = dict.ContainsKey("momentum") ? ReadMomentum(dict["momentum"].AsGodotDictionary()) : null,
                 Echo = dict.ContainsKey("echo") ? ReadEcho(dict["echo"].AsGodotDictionary()) : null,
-                Air = dict.ContainsKey("air") ? ReadAir(dict["air"]) : null,
+                OpeningStrike = dict.ContainsKey("opening_strike") ? ReadOpeningStrike(dict["opening_strike"]) : null,
+                Pressure = dict.ContainsKey("pressure") ? ReadPressure(dict["pressure"]) : null,
+                RouteEndurance = dict.ContainsKey("route_endurance") ? ReadRouteEndurance(dict["route_endurance"]) : null,
+                Shockwave = dict.ContainsKey("shockwave") ? ReadShockwave(dict["shockwave"]) : null,
             };
             parsed.Add(perk);
         }
@@ -155,48 +196,66 @@ public static class PerkDataLoader
         DamageRatio = Mathf.Clamp((float)dict["damage_ratio"].AsDouble(), 0f, 1f),
     };
 
-    internal static PerkAir ReadAir(Variant value)
+    internal static PerkOpeningStrike ReadOpeningStrike(Variant value)
+    {
+        Godot.Collections.Dictionary dict = ReadSettings(value, "opening_strike", "base_chance", "gain_per_level", "max_chance");
+        try
+        {
+            return new PerkOpeningStrike(ReadNumber(dict, "base_chance"), ReadNumber(dict, "gain_per_level"), ReadNumber(dict, "max_chance"));
+        }
+        catch (ArgumentOutOfRangeException exception) { throw new InvalidOperationException(exception.Message, exception); }
+    }
+
+    internal static PerkPressure ReadPressure(Variant value)
+    {
+        Godot.Collections.Dictionary dict = ReadSettings(value, "pressure", "frayed_bonus", "erased_bonus");
+        try { return new PerkPressure(ReadNumber(dict, "frayed_bonus"), ReadNumber(dict, "erased_bonus")); }
+        catch (ArgumentOutOfRangeException exception) { throw new InvalidOperationException(exception.Message, exception); }
+    }
+
+    private static Godot.Collections.Dictionary ReadSettings(Variant value, string name, params string[] allowed)
     {
         if (value.VariantType != Variant.Type.Dictionary)
-            throw new InvalidOperationException("air : objet attendu.");
+            throw new InvalidOperationException($"{name} : objet attendu.");
         Godot.Collections.Dictionary dict = value.AsGodotDictionary();
         foreach (Variant key in dict.Keys)
-            if (key.AsString() is not ("seconds" or "recharge_seconds" or "audio"))
-                throw new InvalidOperationException($"air : clé inconnue « {key} ».");
-        return new PerkAir(ReadAirSeconds(dict, "seconds"), ReadAirSeconds(dict, "recharge_seconds"),
-            dict.TryGetValue("audio", out Variant audio) ? ReadAirAudio(audio) : null);
+            if (Array.IndexOf(allowed, key.AsString()) < 0)
+                throw new InvalidOperationException($"{name} : clé inconnue « {key} ».");
+        return dict;
     }
 
-    private static PerkAirAudio ReadAirAudio(Variant value)
+    internal static PerkRouteEndurance ReadRouteEndurance(Variant value)
     {
-        if (value.VariantType != Variant.Type.Dictionary)
-            throw new InvalidOperationException("air.audio : objet attendu.");
-        Godot.Collections.Dictionary audio = value.AsGodotDictionary();
-        foreach (Variant key in audio.Keys)
-            if (key.AsString() is not ("consume" or "empty" or "min_interval_seconds"))
-                throw new InvalidOperationException($"air.audio : clé inconnue « {key} ».");
-        string Sound(string key)
-        {
-            if (!audio.TryGetValue(key, out Variant item) || item.VariantType != Variant.Type.String
-                || string.IsNullOrWhiteSpace(item.AsString())
-                || !DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains(item.AsString()))
-                throw new InvalidOperationException($"air.audio.{key} : son de la banque requis.");
-            return item.AsString();
-        }
-        float interval = ReadAirSeconds(audio, "min_interval_seconds");
-        if (interval < 1f || interval > 30f)
-            throw new InvalidOperationException("air.audio : intervalle entre 1 et 30 secondes requis.");
-        return new PerkAirAudio(Sound("consume"), Sound("empty"), interval);
+        Godot.Collections.Dictionary dict = ReadSettings(value, "route_endurance", "cells_per_charge", "max_charges", "damage_reduction");
+        PerkRouteEndurance config = new(ReadInteger(dict, "cells_per_charge"), ReadInteger(dict, "max_charges"), ReadNumber(dict, "damage_reduction"));
+        config.Validate();
+        return config;
     }
 
-    private static float ReadAirSeconds(Godot.Collections.Dictionary dict, string key)
+    internal static PerkShockwave ReadShockwave(Variant value)
+    {
+        Godot.Collections.Dictionary dict = ReadSettings(value, "shockwave", "attacks_per_wave", "radius", "damage_ratio", "knockback");
+        PerkShockwave config = new(ReadInteger(dict, "attacks_per_wave"), ReadNumber(dict, "radius"), ReadNumber(dict, "damage_ratio"), ReadNumber(dict, "knockback"));
+        config.Validate();
+        return config;
+    }
+
+    private static int ReadInteger(Godot.Collections.Dictionary dict, string key)
+    {
+        float number = ReadNumber(dict, key);
+        if (number < 1f || number > 1000000f || MathF.Truncate(number) != number)
+            throw new InvalidOperationException($"Signature.{key} : entier positif requis.");
+        return (int)number;
+    }
+
+    private static float ReadNumber(Godot.Collections.Dictionary dict, string key)
     {
         if (!dict.TryGetValue(key, out Variant value) || value.VariantType is not (Variant.Type.Float or Variant.Type.Int))
-            throw new InvalidOperationException($"air.{key} : nombre requis.");
-        float seconds = (float)value.AsDouble();
-        if (!float.IsFinite(seconds) || seconds <= 0f)
-            throw new InvalidOperationException($"air.{key} : durée finie strictement positive requise.");
-        return seconds;
+            throw new InvalidOperationException($"Signature.{key} : nombre requis.");
+        float number = (float)value.AsDouble();
+        if (!float.IsFinite(number))
+            throw new InvalidOperationException($"Signature.{key} : nombre fini requis.");
+        return number;
     }
 
     public static List<PerkData> GetAll()

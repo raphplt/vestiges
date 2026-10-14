@@ -518,6 +518,9 @@ public partial class ObjectsRegression : Node2D
         hpBefore = Hp(burst);
         _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f), FxFamily.Physical, Vector2.Right);
         Check(Near(hpBefore - Hp(burst), fullLoss * 0.5f), $"Mètre pliant palier 15 : un projectile en bout de course éclate à 50 % ({hpBefore - Hp(burst):0.0} PV)");
+        hpBefore = Hp(burst);
+        _player.OnProjectileSpent(burst.GlobalPosition, 10f, _player.BeginAttack(bow, 10f) with { IsEcho = true }, FxFamily.Physical, Vector2.Right);
+        Check(Near(Hp(burst), hpBefore), "Mètre pliant palier 15 : une rémanence dépensée ne produit aucun éclat d'objet");
 
         bool fullDouble = Near(_player.ResolveHitDamage(pushed, 10f, true), 20f);
         bool damagedSame = Near(_player.ResolveHitDamage(control, 10f, true), 10f);

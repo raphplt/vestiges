@@ -7,12 +7,12 @@ namespace Vestiges.Progression;
 
 /// <summary>
 /// Double de l'Éveillée (plan 06 P3b) : au départ d'une mobilité, une rémanence reste à l'endroit quitté pendant
-/// <see cref="PerkEcho.Seconds"/> et répète le prochain tir, depuis là, à <see cref="PerkEcho.DamageRatio"/> des dégâts.
-/// Le joueur tire ; ce module arme la rémanence, la montre (sa silhouette figée, translucide) et la retire.
+/// <see cref="PerkEcho.Seconds"/> et répète la prochaine attaque, depuis là, à <see cref="PerkEcho.DamageRatio"/> des dégâts.
+/// Le joueur attaque ; ce module arme la rémanence, la montre (sa silhouette figée, translucide) et la retire.
 /// </summary>
 public partial class RemanenceEcho : Node
 {
-    private const float FadeAfterShot = 0.25f;
+    private const float FadeAfterAttack = 0.25f;
     private static readonly Color GhostTint = new(0.55f, 1f, 1f, 0.6f);
 
     private Player _player;
@@ -31,10 +31,18 @@ public partial class RemanenceEcho : Node
     {
         _player = player;
         _config = config;
+        ProcessMode = ProcessModeEnum.Pausable;
     }
 
     public override void _Ready()
     {
+        if (_player == null || !IsInstanceValid(_player) || _config == null
+            || !float.IsFinite(_config.Seconds) || _config.Seconds <= 0f
+            || !float.IsFinite(_config.DamageRatio) || _config.DamageRatio <= 0f)
+        {
+            SetProcess(false);
+            return;
+        }
         _playerSprite = _player.GetNodeOrNull<AnimatedSprite2D>("Sprite");
         _ghost = new Sprite2D
         {
@@ -51,7 +59,10 @@ public partial class RemanenceEcho : Node
     public override void _ExitTree()
     {
         if (_player != null && IsInstanceValid(_player))
+        {
             _player.AttackEchoed -= OnAttackEchoed;
+            _player.ResetAttackEcho();
+        }
     }
 
     public override void _Process(double delta)
@@ -64,6 +75,18 @@ public partial class RemanenceEcho : Node
     /// <summary>Un pas du module (appelé par _Process, ou directement par un test).</summary>
     public void Advance(float dt)
     {
+        if (_ghost == null || _player == null || !IsInstanceValid(_player))
+            return;
+        if (_player.IsDead)
+        {
+            _player.ResetAttackEcho();
+            _remaining = 0f;
+            _fade = 0f;
+            _ghost.Visible = false;
+            return;
+        }
+        if (GetTree().Paused || !float.IsFinite(dt) || dt <= 0f)
+            return;
         PlayerMobility mobility = _player.Mobility;
         bool moving = mobility?.IsDashing ?? false;
         // Un saut (Plan de métro) se termine dans son image : seul le compte des dashs le montre.
@@ -90,7 +113,7 @@ public partial class RemanenceEcho : Node
         else if (_fade > 0f)
         {
             _fade -= dt;
-            _ghost.Modulate = GhostTint with { A = GhostTint.A * Mathf.Clamp(_fade / FadeAfterShot, 0f, 1f) };
+            _ghost.Modulate = GhostTint with { A = GhostTint.A * Mathf.Clamp(_fade / FadeAfterAttack, 0f, 1f) };
             if (_fade <= 0f)
                 _ghost.Visible = false;
         }
@@ -121,7 +144,7 @@ public partial class RemanenceEcho : Node
     private void OnAttackEchoed(Vector2 origin)
     {
         _remaining = 0f;
-        _fade = FadeAfterShot;
+        _fade = FadeAfterAttack;
         CombatPools.Instance?.EmitSparks(origin + new Vector2(0f, -Iso.FlightHeight), new SparkBurst
         {
             Family = FxFamily.Essence,

@@ -409,6 +409,8 @@ Raphaël signale que GitHub reste sur la vérification de fusion. L'API indique 
 
 ## 12. Lot P3 — L'Éveillée, personnage complet — 10 octobre 2026
 
+**Historique du 10 octobre :** le Double décrit ici répétait les tirs seulement. Le lot P5 (§14) étend désormais la répétition aux attaques de mêlée, chaînes et cônes ; les orbitales continues restent exclues.
+
 Deuxième héros du plan 32, même chemin que le Facteur (DECISIONS §102 bis). Fiche : [06-fiches-casting §3.4](06-fiches-casting.md) ; lore v1.1 §5 (Mireille Aymard, standardiste qui a reçu les appels et ne les a pas passés : un écho en retard). Arme existante retenue au §9.3 : la **Baguette de sourcier** (`essence_staff`, tirs d'Essence qui cherchent leur proie), débloquée avec elle par Entendre les voix.
 
 | Sous-lot | Contenu | Vérification |
@@ -427,8 +429,48 @@ Deuxième héros du plan 32, même chemin que le Facteur (DECISIONS §102 bis). 
 
 **Reste à faire pour l'Éveillée :** sons propres (accord de verre, écho décalé), le contour « double » permanent de la fiche, équilibrage en jouant (la Baguette est une arme de tier 4 : à surveiller comme arme de départ).
 
-## 13. P4 — Scaphandrière, en implémentation — 13 octobre 2026
+## 13. P4 — Scaphandrière, préparation historique — 13 octobre 2026
+
+**État historique :** la réserve d’air décrite ici a été remplacée par Pression au lot P5 (§14). Le kit jouable et ses captures sont vérifiés ; l’équilibrage humain reste ouvert.
 
 Après la préparation, Raphaël répond « okok go alors » à la recommandation de la Scaphandrière et de l'adaptation de sa réserve d'air (**DECISIONS §161**). Le [plan 45](45-nouveau-personnage.md) porte les sous-lots N0–N5 : N0–N1 sont livrés techniquement ; les poses du saut flottant partent du modèle existant. L'air neutralise temporairement les malus de vitesse/dégâts de l'Effacement ; le Néant garde ses règles. Les chiffres d'essai sont attribués à l'agent dans le plan.
 
 Raphaël demande de conserver le sprite détaillé existant : le portrait IA produit par l’agent a été retiré. Fallback sprite runtime tant que la source correcte n’est pas retrouvée. Les 216 frames ont passé l’audit de cadre et de déterminisme avant branchement ; harpon, réserve d'air, mobilité et accès restent à intégrer. Aucune case globale d'équilibrage ou d'approbation artistique cochée.
+
+## 14. Révision des passifs — lot P5 livré le 14 octobre 2026
+
+**Décision :** DECISIONS §166. Un passif identitaire par héros, en plus de sa mobilité et de son arme de départ ; plusieurs effets cohérents sont autorisés. Paramètres JSON, modules composés, événements existants et fiche explicite retenus. Megabonk sert de référence de lisibilité et d’impact ; le Vagabond orienté chance a été rejeté comme trop proche de Fox.
+
+| Personnage | Règle actuelle ou proposition | État |
+|---|---|---|
+| Vagabond — Endurci par la route | Terrain inédit → jusqu’à trois charges ; chaque charge réduit de moitié une blessure de combat | Livré et vérifié en P6 ; coefficients d’essai |
+| Traqueur — Œil d’aigle | Premier impact direct contre une cible indemne : +10 points de critique au niveau 1, +0,25 point par niveau, plafond +50 points | Livré et vérifié ; coefficients d’essai |
+| Forgeuse — Redresser | Chaque quatrième attaque directe réussie produit une onde avec recul au point touché | Livré et vérifié en P6 ; coefficients d’essai |
+| Facteur — Tournée | Avancer monte jusqu’à +25 % vitesse et +15 % cadence en 4 s ; arrêt toléré 0,5 s ; touche ou eau remettent l’élan à zéro | Conservé et vérifié |
+| Éveillée — Double | Après mobilité, une rémanence pendant 1,5 s répète la prochaine attaque à 50 %, depuis son origine ; tirs, mêlée, chaînes et cônes, hors orbitales continues | Extension livrée et vérifiée |
+| Scaphandrière — Pression | +25 % dégâts en Effiloché, +50 % en Effacé, multiplicatif après le malus de zone ; aucun bonus ailleurs | Remplace la réserve d’air ; livré et vérifié, coefficients d’essai |
+
+### Lot annoncé avant code et contrats livrés
+
+1. **P5a :** données strictes et Traqueur. Un jet unique à l’impact combine chance native et bonus d’ouverture, total plafonné à 100 %. Toute perte effective de PV ferme l’ouverture, DOT compris, même après soin ; seule une nouvelle vie au pool la réarme. Échos, secondaires et objets exclus du bonus ; provenance critique conservée pour armes et quêtes.
+2. **P5b :** conserver Tournée et étendre Double. Ciblage, dégâts et VFX partent de la rémanence ; le cône répète son émission entière depuis une origine fixe. Sans cible l’occasion reste armée. Pas de récursion ni de proc d’objet par l’écho ; pause, mort et retrait du module traités. Le cône original garde ses tentatives d’objets aux impacts visibles, sous leurs budgets.
+3. **P5c :** Pression, suppression du runtime/DTO/tests d’air et adaptation de la capture du kit. Deux intensités de chevrons au-dessus du casque. Avec les malus actuels ×0,95/×0,88, dégâts nets ×1,1875/×1,32 ; vitesse, dégâts reçus et Essence inchangés.
+4. **P5d :** build, suites pertinentes et captures de vraie run avant coche des quatre items spécifiques de roadmap.
+
+### Preuves et limites
+
+Validation dans un snapshot isolé pour garantir des sources cohérentes malgré l’autre tâche de difficulté : **14/14 suites vertes, zéro warning, aucun changement de source pendant validation**, `/tmp/vestiges-passifs-isole-validation-ready-20261014-124900`. Les données de défense du checkout courant ont évolué séparément depuis ce snapshot ; aucun résultat de performance ni d’équilibrage long n’en est déduit.
+
+Captures finales : `/tmp/vestiges-passifs-captures-final` (rapport et preuves : `rapport.md`, `evidence.json`). Scaphandrière : cinq phases de Pression et cinq salves de harpon, 33 contrôles verts ; Éveillée : tirs, chaîne, mêlée et cône avec armement réel puis consommation de Double ; Facteur, Traqueur et fiches du Hub vérifiés. Les premiers essais ont révélé un import de police manquant, des sources mouvantes, le contrat des procs continus, un couloir de harpon incomplet et un dash de galerie mal ordonné ; les preuves finales remplacent ces essais, conservés dans le rapport QA.
+
+Les coefficients restent des valeurs d’essai ; aucune case d’équilibrage humain cochée. Les deux autres personnages sont livrés en P6 ci-dessous. Pour la suite, limiter les preuves à un build, aux tests ciblés nécessaires et à une capture utile, sans dupliquer matrices ou mesures (DECISIONS §166).
+
+### P6 — Vagabond et Forgeuse, autorisé le 14 octobre 2026
+
+Raphaël accepte les deux passifs et demande une implémentation directe, sans multiplication d’agents ou de tests.
+
+1. **Endurci par la route** : chaque 2 000 cellules inédites révélées gagne une charge, trois maximum ; une blessure de combat consomme une charge et réduit de 50 % les dégâts atteignant les PV après armure/bouclier. Le terrain initial, les retours sur ses traces et le Néant ne donnent pas de protection gratuite. Trois points au-dessus du joueur montrent la réserve. Remplace les anciens bonus fixes.
+2. **Redresser** : chaque quatrième attaque directe réussie produit une onde au point d’impact, rayon 90 px au sol, 60 % de la référence de dégâts de l’attaque et recul de 25 px. Une salve/chaîne/cône compte une fois ; les répliques, objets et dégâts sur la durée ne chargent pas l’onde. Historique borné des émissions, effets existants recyclés. Remplace les anciens PV/armure supplémentaires.
+3. **Validation limitée** : build sans warning et smoke requis par le branchement initial ; une suite de régression des signatures, puis un seul scénario de capture des deux personnages dans Main. Aucun banc ni matrice de mesures.
+
+**Livré et vérifié :** build sans warning, smoke et suite limitée `route_forge` verts (2/2, aucune source modifiée), `/tmp/vestiges-p6-minimal-20261014`. Capture commune dans Main : `/tmp/vestiges-p6-capture-final-20261014`, trois charges visibles puis deux après blessure ; une onde réelle sur la quatrième attaque, compteur et effet relus visuellement. Aucun sous-agent, banc ni matrice. Les réglages restent des valeurs d’essai.

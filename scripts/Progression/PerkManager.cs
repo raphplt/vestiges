@@ -42,11 +42,29 @@ public partial class PerkManager : Node
                 echo.Initialize(player, passive.Echo);
                 player.AddChild(echo);
             }
-            if (passive.Air != null)
+            if (passive.OpeningStrike != null && player.GetNodeOrNull<OpeningStrike>("OpeningStrike") == null)
             {
-                AirReserve air = new() { Name = "AirReserve" };
-                air.Initialize(player, passive.Air);
-                player.AddChild(air);
+                OpeningStrike opening = new() { Name = "OpeningStrike" };
+                opening.Initialize(player, passive.OpeningStrike);
+                player.AddChild(opening);
+            }
+            if (passive.Pressure != null && player.GetNodeOrNull<ErasurePressure>("ErasurePressure") == null)
+            {
+                ErasurePressure pressure = new() { Name = "ErasurePressure" };
+                pressure.Initialize(player, passive.Pressure);
+                player.AddChild(pressure);
+            }
+            if (passive.RouteEndurance != null && player.RouteEndurance == null)
+            {
+                RouteEndurance endurance = new() { Name = "RouteEndurance" };
+                endurance.Initialize(player, passive.RouteEndurance);
+                player.AddChild(endurance);
+            }
+            if (passive.Shockwave != null && player.GetNodeOrNull<TemperedImpact>("TemperedImpact") == null)
+            {
+                TemperedImpact impact = new() { Name = "TemperedImpact" };
+                impact.Initialize(player, passive.Shockwave);
+                player.AddChild(impact);
             }
             GD.Print($"[PerkManager] Applied passive: {passive.Name}");
         }

@@ -15,6 +15,8 @@ tools/validate.sh /tmp/vestiges-validation-combat weapons cone movement-integrat
 python3 tools/tests/test_validation_launchers.py
 ```
 
+Pour les signatures du Vagabond et de la Forgeuse uniquement : `tools/validate.sh <dossier neuf> smoke route_forge`. La suite `route_forge` évite de rejouer les autres perks. Capture commune : `CAPTURE_EXTRA_ARGS="--capture-route-forge --character vagabond" tools/capture_run.sh <dossier>`.
+
 Le dossier contient `build.log`, `import.log`, un journal par suite, `results.tsv`, `validation.json` et les manifestes de sources avant/après. La commande renvoie un échec si une suite échoue ou si les sources changent pendant les tests. Une erreur de build ou d'import arrête la commande avant les scènes. En cas d'échec, les profils et journaux temporaires des lanceurs sont conservés ; `VALIDATION_KEEP_LOGS=1` les conserve aussi en cas de succès.
 
 Chaque lancement de moteur doit finir avec le code 0 et un seul résultat correspondant au scénario. Un résultat suivi d'un crash, un journal vide, un résultat absent ou répété et un timeout sont des échecs. Les lignes d'erreur sont contrôlées sans filtrage par mots tels que `steam_api`. Les avertissements Steam, MixRate et ObjectDB de fermeture peuvent subsister ; seule la ligne exacte de ressources Godot encore utilisées à la fermeture est tolérée parmi les erreurs.
