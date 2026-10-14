@@ -15,10 +15,11 @@ namespace Vestiges.Tests;
 /// - Débutant : erre autour du départ, ne se détourne que vers les lieux tout proches, prend une carte au hasard,
 ///   n'esquive pas, ne dashe pas.
 /// - Moyen : garde un cap, visite les lieux vus (détour habituel), prend d'abord ce qu'il possède déjà, va abattre
-///   les Souverains proches.
+///   les Souverains proches, garde ses distances avec la foule.
 /// - Fort : garde un cap, fait de longs détours, choisit par score, relance une offre sans intérêt et bannit
 ///   gratuitement ce qui ne sert pas, va abattre les Souverains proches, s'écarte de la foule et dashe hors d'un
 ///   encerclement (trois créatures au contact) ou pour fuir, PV bas.
+/// Le moyen s'écarte aussi de la foule, de moins loin, et ne dashe que pour fuir.
 /// Le profil fort n'esquive pas les projectiles : aucun index des tirs ennemis n'existe, il ne lit que la foule.
 /// </summary>
 public partial class RunObservation
@@ -34,6 +35,10 @@ public partial class RunObservation
     // 170 px, le Vagabond fort fuyait tout et plafonnait au niveau 3 à 5 min).
     private const float MeleeDodgeRadius = 60f;
     private const float DodgeWeight = 1.6f;
+    // Le profil moyen garde aussi ses distances, moins loin : sans cela il marchait dans la foule et perdait 5 à 10 fois
+    // plus de PV par minute que Raphaël (traces du 13 octobre, plan 47).
+    private const float AverageDodgeRadius = 100f;
+    private const float AverageDodgeWeight = 1.2f;
     private const float EncircledRadius = 110f;
     // L'écart à la foule marche : quatre créatures à moins de 110 px n'arrivent que quelques images par run (mesure du
     // 13 octobre), d'où un seuil bas. Sous 40 % des PV, une seule créature au contact suffit pour fuir.
@@ -226,14 +231,15 @@ public partial class RunObservation
     }
 
     /// <summary>
-    /// Profil fort : la marche vers le point de passage s'écarte de la foule proche, et un encerclement déclenche un
-    /// dash vers le côté le plus libre.
+    /// Profils moyen et fort : la marche vers le point de passage s'écarte de la foule proche. Le fort lit la foule de
+    /// plus loin et dashe hors d'un encerclement ; le moyen ne dashe que pour fuir, PV bas.
     /// </summary>
-    private Vector2 StrongSteer(Vector2 direction)
+    private Vector2 CrowdSteer(Vector2 direction)
     {
         Vector2 position = _player.GlobalPosition;
         bool melee = IsMeleeBuild();
-        float radius = melee ? MeleeDodgeRadius : DodgeRadius;
+        bool strong = _profile == BotProfile.Strong;
+        float radius = melee ? MeleeDodgeRadius : strong ? DodgeRadius : AverageDodgeRadius;
         Vector2 away = Vector2.Zero;
         int close = 0;
         using (CrowdQuery crowd = CrowdIndex.Near(position, Mathf.Max(radius, EncircledRadius)))
@@ -252,10 +258,11 @@ public partial class RunObservation
                 away += offset / distance * (1f - distance / radius);
             }
         }
-        Vector2 steered = (direction + away * DodgeWeight).Normalized();
+        Vector2 steered = (direction + away * (strong ? DodgeWeight : AverageDodgeWeight)).Normalized();
         if (steered == Vector2.Zero)
             steered = direction;
-        bool threatened = close >= (melee ? MeleeEncircledCount : EncircledCount) || (close > 0 && _player.CurrentHp < _player.EffectiveMaxHp * FleeHpRatio);
+        bool fleeing = close > 0 && _player.CurrentHp < _player.EffectiveMaxHp * FleeHpRatio;
+        bool threatened = fleeing || strong && close >= (melee ? MeleeEncircledCount : EncircledCount);
         if (threatened && _player.Mobility.SecondsSinceDash >= _player.Mobility.Config.CooldownSeconds)
             _player.Mobility.Request();
         return steered;

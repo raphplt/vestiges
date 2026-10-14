@@ -840,9 +840,9 @@ public partial class RunObservation : Node
             _player.AIInputOverride = !holding && _player.GlobalPosition.DistanceTo(waypoint) > 12f
                 ? (waypoint - _player.GlobalPosition).Normalized()
                 : Vector2.Zero;
-            // Arrivé au point de passage, le profil fort s'écarte encore de la foule ; pas pendant une interaction tenue.
-            if (_profile == BotProfile.Strong && !holding)
-                _player.AIInputOverride = StrongSteer(_player.AIInputOverride);
+            // Les profils moyen et fort s'écartent de la foule ; pas pendant une interaction tenue.
+            if (_profile is BotProfile.Average or BotProfile.Strong && !holding)
+                _player.AIInputOverride = CrowdSteer(_player.AIInputOverride);
             // Tirs et annonces au sol remarqués selon le profil (plan 42 M0d) ; une interaction tenue n'est pas lâchée.
             if (_profile != BotProfile.Legacy && !holding)
                 _player.AIInputOverride = DodgeThreats(_player.AIInputOverride, t, VisibleWorldRect());
