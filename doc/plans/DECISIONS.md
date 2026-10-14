@@ -2116,3 +2116,5 @@ Raphaël, captures de Megabonk et de Vestiges côte à côte : « à la réflexi
 - Remplace la forme Megabonk du §36 pour l'écran de level-up seulement ; la règle « une ligne de gain » reste. Lot au [plan 04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026).
 
 **Retour du soir, après la première version :** « alors c'est bien mais rajoute plus de détails ! et en particuliers les fonds derriere les icons des armes/objets pourraient etre bcp plus travaillés mais aussi le reste ! » Lot F2 : tirages photo détaillés et papiers, pinces, fil et ceinture plus fouillés ([plan 04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026)).
+
+**Retour suivant :** « c'est plus galere maintenant les actions annexes l'une est à gauche les autres à droite. soit rajouter des claviers soit (ca peut etre les deux) corriger ca ». Les deux, lot F3 : Relancer, Bannir et Passer pendent en colonne au clou de droite, dans l'ordre de la navigation ; « Toutes les stats » pend au clou de gauche ; raccourcis R / B / P (Y / X / LB à la manette), touche dessinée sur chaque étiquette.

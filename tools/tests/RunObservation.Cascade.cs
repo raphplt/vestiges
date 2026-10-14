@@ -38,11 +38,12 @@ public partial class RunObservation
         await Frames(20);
         Check(ScreenOpen() && fragments.QueuedLevels == 4, $"cinq niveaux d'un coup : écran ouvert, 4 en attente ({fragments.QueuedLevels})");
         int rerolls = fragments.RerollsRemaining;
-        activate.Invoke(screen, new object[] { fragments.PendingChoices.Count });
+        // Raccourcis du level-up au fil (plan 04 §11) : relancer et bannir passent par leurs actions d'input.
+        GetViewport().PushInput(new InputEventAction { Action = "levelup_reroll", Pressed = true });
         await Frames(3);
         Check(fragments.RerollsRemaining == rerolls - 1 && fragments.QueuedLevels == 4 && ScreenOpen(), "relancer ne consomme pas un niveau en attente");
         int banishes = fragments.BanishesRemaining;
-        activate.Invoke(screen, new object[] { fragments.PendingChoices.Count + 1 });
+        GetViewport().PushInput(new InputEventAction { Action = "levelup_banish", Pressed = true });
         GetViewport().PushInput(new InputEventAction { Action = "ui_cancel", Pressed = true });
         await Frames(3);
         Check(!(bool)screen.GetType().GetField("_banishMode", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(screen)

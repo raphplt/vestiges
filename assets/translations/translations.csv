@@ -361,7 +361,7 @@ LEVELUP_BANISH_PERIL,Bannir (+{0} Péril),Banish (+{0} Peril)
 LEVELUP_CHANGE_WEAPON_SLOT,Emplacement d'arme {0}/{1},Weapon slot {0}/{1}
 LEVELUP_CHANGE_REMINISCENCE,Réminiscence {0}/{1},Reminiscence {0}/{1}
 LEVELUP_CHANGE_NOW,{0} aujourd'hui : {1},{0} now: {1}
-LEVELUP_STATS_HINT,{0}  ·  toutes les stats,{0}  ·  all stats
+LEVELUP_STATS_TAG,Toutes les stats,All stats
 STAT_CRIT_DAMAGE,Dégâts critiques,Crit damage
 STAT_XP_GAIN,XP gagnée,XP gain
 STAT_DASH_RECHARGE,Recharge du dash,Dash recharge

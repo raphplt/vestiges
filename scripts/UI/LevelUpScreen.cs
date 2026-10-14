@@ -28,6 +28,12 @@ public partial class LevelUpScreen : CanvasLayer
     private static readonly Color OverlayColor = new(0.03f, 0.025f, 0.05f, 0.45f);
     private static readonly Color BanishColor = new(0.85f, 0.25f, 0.2f);
     private const float StatsScrollSpeed = 900f;
+    private const float ScreenMargin = 24f;
+    private const float TagGap = 26f;
+    private const string RerollAction = "levelup_reroll";
+    private const string BanishAction = "levelup_banish";
+    private const string SkipAction = "levelup_skip";
+    private const string KeyLabelName = "Key";
 
     private ColorRect _overlay;
     private PixelBackdrop _veil;
@@ -43,7 +49,7 @@ public partial class LevelUpScreen : CanvasLayer
     private InventoryBelt _belt;
     private Label _title;
     private Label _hint;
-    private Label _statsHint;
+    private Button _statsButton;
     private ColorRect _statsShade;
     private PanelContainer _statsPanel;
     private ScrollContainer _statsScroll;
@@ -128,6 +134,8 @@ public partial class LevelUpScreen : CanvasLayer
         _pegLayer.ZIndex = 2;
         _actionLayer = FullRect(_stage);
         _actionLayer.ZIndex = 2;
+        // Au clou de gauche, toutes les stats : le pendant des actions, au clou de droite.
+        _statsButton = MakeTag("journal", "", PaperArt.Ink, () => SetStatsVisible(!_statsPanel.Visible));
 
         _changeTag = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false, ZIndex = 2 };
         StyleBoxTexture tagStyle = PaperArt.TagStyle(PaperArt.Kraft);
@@ -166,12 +174,6 @@ public partial class LevelUpScreen : CanvasLayer
         _hint.GrowHorizontal = Control.GrowDirection.Both;
         _hint.OffsetTop = 96f;
 
-        _statsHint = UITheme.MakeLabel("", TextRole.Small, UITheme.TextDim, TextWeight.Regular, HorizontalAlignment.Right);
-        AddChild(_statsHint);
-        _statsHint.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.TopRight);
-        _statsHint.GrowHorizontal = Control.GrowDirection.Begin;
-        _statsHint.OffsetRight = -40f;
-        _statsHint.OffsetTop = 40f;
 
         BuildStatsPanel();
     }
@@ -329,36 +331,48 @@ public partial class LevelUpScreen : CanvasLayer
 
     private void BuildActionButtons()
     {
-        _buttons.Add(CreateActionButton(string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
+        _buttons.Add(CreateActionButton(RerollAction, string.Format(Tr("LEVELUP_REROLL"), _fragmentManager.RerollsRemaining),
             _fragmentManager.RerollsRemaining > 0, PaperArt.Ink, () =>
             {
                 _fragmentManager.Reroll();
                 CloseIfDone();
             }));
-        _banishButton = CreateActionButton(BanishLabel(), true, PaperArt.InkRed, ToggleBanish);
+        _banishButton = CreateActionButton(BanishAction, BanishLabel(), true, PaperArt.InkRed, ToggleBanish);
         _buttons.Add(_banishButton);
-        _buttons.Add(CreateActionButton(Tr("LEVELUP_SKIP"), true, PaperArt.Ink, Skip));
+        _buttons.Add(CreateActionButton(SkipAction, Tr("LEVELUP_SKIP"), true, PaperArt.Ink, Skip));
         Callable.From(LayoutActions).CallDeferred();
     }
 
-    /// <summary>Relancer pend au clou de gauche ; Bannir au clou de droite, Passer sous Bannir.</summary>
+    /// <summary>
+    /// Les trois actions pendent l'une sous l'autre au clou de droite, dans l'ordre de la navigation ; toutes les stats
+    /// au clou de gauche. Une étiquette trop large pour le bord de l'écran s'en écarte, sa ficelle part en biais.
+    /// </summary>
     private void LayoutActions()
     {
         if (_buttons.Count < 3)
             return;
-        float left = _line.Left;
-        float right = _line.Right;
-        float top = _line.Top + 70f;
-        HangButton(_buttons[0], left, top, 2f);
-        HangButton(_buttons[1], right, top, -2f);
-        HangButton(_buttons[2], right, top + _buttons[1].Size.Y + 34f, 1.5f);
+        float viewWidth = _stage.GetViewportRect().Size.X;
+        float top = _line.Top + 64f;
         _strings.Clear();
-        _strings.Add(new Vector2(left, _line.Top));
-        _strings.Add(new Vector2(left, top + 10f));
-        _strings.Add(new Vector2(right, _line.Top));
-        _strings.Add(new Vector2(right, top + 10f));
-        _strings.Add(new Vector2(right, top + _buttons[1].Size.Y - 6f));
-        _strings.Add(new Vector2(right, top + _buttons[1].Size.Y + 44f));
+        float columnWidth = 0f;
+        foreach (Button button in _buttons)
+            columnWidth = Mathf.Max(columnWidth, button.GetCombinedMinimumSize().X);
+        float columnX = Mathf.Min(_line.Right, viewWidth - columnWidth / 2f - ScreenMargin);
+        Vector2 from = new(_line.Right, _line.Top);
+        float y = top;
+        for (int i = 0; i < _buttons.Count; i++)
+        {
+            Button button = _buttons[i];
+            HangButton(button, columnX, y, i % 2 == 0 ? 1.5f : -1.5f);
+            _strings.Add(from);
+            _strings.Add(new Vector2(columnX, y + 10f));
+            from = new Vector2(columnX, y + button.Size.Y - 6f);
+            y += button.Size.Y + TagGap;
+        }
+        float statsX = Mathf.Max(_line.Left, _statsButton.GetCombinedMinimumSize().X / 2f + ScreenMargin);
+        HangButton(_statsButton, statsX, top, 2f);
+        _strings.Add(new Vector2(_line.Left, _line.Top));
+        _strings.Add(new Vector2(statsX, top + 10f));
         UpdateChangeTag();
     }
 
@@ -368,19 +382,34 @@ public partial class LevelUpScreen : CanvasLayer
         button.Position = new Vector2(x - button.Size.X / 2f, top);
         button.PivotOffset = new Vector2(button.Size.X / 2f, 0f);
         button.Rotation = Mathf.DegToRad(degrees);
+        PlaceTagParts(button);
     }
 
-    private Button CreateActionButton(string text, bool enabled, Color ink, System.Action onPressed)
+    private Button CreateActionButton(string action, string text, bool enabled, Color ink, System.Action onPressed)
+    {
+        Button button = MakeTag(action, text, ink, onPressed);
+        button.Disabled = !enabled;
+        button.AddThemeColorOverride("font_color", enabled ? ink : PaperArt.InkDim);
+        StyleButton(button, false);
+        int index = _cards.Count + _buttons.Count;
+        button.MouseEntered += () => SetFocus(index);
+        return button;
+    }
+
+    /// <summary>
+    /// Étiquette d'action pendue : œillet en haut, touche du raccourci en petit au-dessus du libellé. La touche suit le
+    /// clavier ou la manette branchée.
+    /// </summary>
+    private Button MakeTag(string action, string text, Color ink, System.Action onPressed)
     {
         Button button = new()
         {
             Text = text,
-            Disabled = !enabled,
             FocusMode = Control.FocusModeEnum.None,
             ProcessMode = ProcessModeEnum.Always,
         };
         UITheme.SetTextRole(button, TextRole.Body);
-        button.AddThemeColorOverride("font_color", enabled ? ink : PaperArt.InkDim);
+        button.AddThemeColorOverride("font_color", ink);
         button.AddThemeColorOverride("font_hover_color", ink);
         button.AddThemeColorOverride("font_pressed_color", ink);
         button.AddThemeColorOverride("font_disabled_color", new Color(PaperArt.InkDim, 0.6f));
@@ -388,30 +417,48 @@ public partial class LevelUpScreen : CanvasLayer
         StyleButton(button, false);
         UITheme.WireButtonAudio(button);
         button.Pressed += () => onPressed();
-        int index = _cards.Count + _buttons.Count;
-        button.MouseEntered += () => SetFocus(index);
         _actionLayer.AddChild(button);
         Eyelet(button).Position = new Vector2(0f, 6f);
-        button.Resized += () => CenterEyelet(button);
+        // Touche tracée à l'encre sous l'œillet, comme une touche de clavier dessinée sur l'étiquette.
+        StyleBoxFlat cap = new() { DrawCenter = false, BorderColor = new Color(PaperArt.Ink, 0.75f) };
+        cap.SetBorderWidthAll(2);
+        cap.BorderWidthBottom = 4;
+        cap.ContentMarginLeft = cap.ContentMarginRight = 8;
+        cap.ContentMarginBottom = 2;
+        PanelContainer keyCap = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
+        keyCap.AddThemeStyleboxOverride("panel", cap);
+        Label key = UITheme.MakeLabel(KeyName(action), TextRole.Small, PaperArt.Ink, TextWeight.Regular, HorizontalAlignment.Center, outline: 0);
+        key.Name = KeyLabelName;
+        keyCap.AddChild(key);
+        button.AddChild(keyCap);
+        button.Resized += () => PlaceTagParts(button);
+        keyCap.Resized += () => PlaceTagParts(button);
         return button;
     }
 
-    private static void CenterEyelet(Button button)
+    /// <summary>Œillet et touche au milieu du haut de l'étiquette : ses deux premiers enfants.</summary>
+    private static void PlaceTagParts(Button button)
     {
-        if (button.GetChildCount() > 0 && button.GetChild(0) is TextureRect eyelet)
-            eyelet.Position = new Vector2((button.Size.X - eyelet.Size.X) / 2f, 6f);
+        if (button.GetChildCount() < 2 || button.GetChild(0) is not TextureRect eyelet || button.GetChild(1) is not Control keyCap)
+            return;
+        eyelet.Position = new Vector2((button.Size.X - eyelet.Size.X) / 2f, 6f);
+        keyCap.Size = keyCap.GetCombinedMinimumSize();
+        keyCap.Position = new Vector2((button.Size.X - keyCap.Size.X) / 2f, 24f);
     }
+
+    private static string KeyName(string action) => InputRemapManager.Instance is { GamepadConnected: true }
+        ? InputRemapManager.GetJoyButtonName(action)
+        : InputRemapManager.GetKeyName(action);
+
 
     /// <summary>Étiquette pâle au repos ; survolée, elle prend le kraft et le liseré, comme le fragment survolé.</summary>
     private static void StyleButton(Button button, bool focused)
     {
         Color tint = button.Disabled ? PaperArt.PaleTag.Darkened(0.25f) : focused ? PaperArt.Kraft.Lightened(0.15f) : PaperArt.PaleTag;
-        StyleBoxTexture style = PaperArt.TagStyle(tint);
-        style.ContentMarginLeft = style.ContentMarginRight = 26;
-        style.ContentMarginTop = 24;
-        style.ContentMarginBottom = 10;
-        foreach (string state in new[] { "normal", "hover", "pressed", "disabled", "focus" })
+        StyleBoxTexture style = TagButtonStyle(tint);
+        foreach (string state in new[] { "normal", "pressed", "disabled", "focus" })
             button.AddThemeStyleboxOverride(state, style);
+        button.AddThemeStyleboxOverride("hover", button.Disabled ? style : TagButtonStyle(PaperArt.Kraft.Lightened(0.15f)));
     }
 
     /// <summary>Le défilement au stick ou à Page haut/bas ne tourne que panneau des stats ouvert.</summary>
@@ -420,6 +467,15 @@ public partial class LevelUpScreen : CanvasLayer
         _statsPanel.Visible = visible;
         _statsShade.Visible = visible;
         SetProcess(visible);
+    }
+
+    private static StyleBoxTexture TagButtonStyle(Color tint)
+    {
+        StyleBoxTexture style = PaperArt.TagStyle(tint);
+        style.ContentMarginLeft = style.ContentMarginRight = 26;
+        style.ContentMarginTop = 70;
+        style.ContentMarginBottom = 10;
+        return style;
     }
 
     public override void _Process(double delta)
@@ -450,7 +506,13 @@ public partial class LevelUpScreen : CanvasLayer
         }
         int total = _cards.Count + _buttons.Count;
         bool onCard = _focusIndex < _cards.Count;
-        if (@event.IsActionPressed("ui_right"))
+        if (@event.IsActionPressed(RerollAction))
+            Activate(_cards.Count);
+        else if (@event.IsActionPressed(BanishAction))
+            Activate(_cards.Count + 1);
+        else if (@event.IsActionPressed(SkipAction))
+            Activate(_cards.Count + 2);
+        else if (@event.IsActionPressed("ui_right"))
             SetFocus((_focusIndex + 1) % total);
         else if (@event.IsActionPressed("ui_left"))
             SetFocus((_focusIndex - 1 + total) % total);
@@ -647,10 +709,8 @@ public partial class LevelUpScreen : CanvasLayer
             return;
         PlayerSheet.AddStatLines(_statsContainer, player, GetNodeOrNull<EssenceTracker>("/root/Main/EssenceTracker"),
             GetNodeOrNull<PerilManager>("/root/Main/PerilManager"), withOublis: false, TextRole.Small);
-        string key = InputRemapManager.Instance is { GamepadConnected: true }
-            ? InputRemapManager.GetJoyButtonName("journal")
-            : InputRemapManager.GetKeyName("journal");
-        _statsHint.Text = string.Format(Tr("LEVELUP_STATS_HINT"), key);
+        _statsButton.Text = Tr("LEVELUP_STATS_TAG");
+        _statsButton.FindChild(KeyLabelName, true, false).Set("text", KeyName("journal"));
     }
 
     private void ShowScreen()
