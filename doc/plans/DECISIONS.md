@@ -1912,3 +1912,12 @@ Réponses de Raphaël aux pistes du §165 :
 - **Niveaux de difficulté** (nouvelle idée) : « plusieurs niveaux de difficulté à choisir dès le début avant de commencer la run, de simple à impossible. cela aura un impact sur les ennemis leur fréquence puissance les boss etc. mais ça a aussi pas mal d'impact sur le jeu qu'il faut penser en amont (classement global par exemple, et sinon juste le pourquoi un joueur irait sur des niveaux plus élevés à part pour le défi personnel) ». À concevoir avec les paliers de départ du plan 46.
 
 Découpage proposé au [plan 47](47-fin-de-run-menacante.md) : L1 défenses freinées, L2 créatures qui suivent après 15 min (avec mesure), L3 monde instable (plan 42), L4 niveaux de difficulté (avec le plan 46).
+
+## 168. Niveaux de difficulté : un classement, des niveaux à gagner ; Vestiges divisés par 3 — 14 octobre 2026
+
+Réponses de Raphaël sur le plan 47 :
+- **Classement** : un seul classement mondial aux éliminations, tous niveaux confondus ; un niveau plus dur donne plus de créatures, donc plus d'éliminations possibles.
+- **Accès** : chaque niveau s'ouvre en battant l'Indicible au niveau d'avant.
+- **Pourquoi monter** : « les vestiges auront peu d'intérêt une fois tout débloqué. donc je dirais peut-être quand même le choix + de vestiges pour les nouveaux joueurs le temps de tout débloquer (il faut aussi diminuer drastiquement le gain de vestiges au moins d'un facteur 2 ou 3, et en gros prendre ce nouveau facteur qui sera entre 0.2 et 0.4 x le nombre de kills et ça sera pour les runs "simples" et ça monte avec les runs plus dures ». Les autres motifs (déblocages réservés, marques de victoire) restent ouverts.
+- **Fait le jour même** : 0,4 Vestige par élimination (`kills_per_vestige` 0,85 → 2,5), soit un gain divisé par environ 3. La matrice M1 donnait le Campement plein en 11 runs moyennes (cible 30 à 50). Le multiplicateur par niveau viendra avec le lot L4.
+- **L1 et L2** : feu vert. D'abord recaler le bot (aller chercher les Souverains, esquiver moins loin), puis défenses et créatures réglées ensemble sur la cible du §167, avec mesure.

@@ -34,7 +34,7 @@ Raphaël veut que le classement revienne, avec un affichage refait :
 **C1 livré le 13 octobre**, sur la branche `classement-eliminations` :
 - éliminations au centre du bilan et en grand dans le HUD ;
 - record global et record du personnage (ligne dédiée au bilan, célébrée dans les deux cas) ;
-- Vestiges = éliminations ÷ 0,85 ;
+- Vestiges = éliminations ÷ 2,5 (0,4 par élimination ; 0,85 jusqu'au 14 octobre, §168) ;
 - envois Steam : tous les temps, semaine, personnage ; tableau des Résurgences retiré.
 
 Retirés : le multiplicateur de score du Péril, du personnage, des mutateurs, et le bonus de score de l'oubli ; le fichier `highscore_kills.save` (records dans la sauvegarde méta) ; les succès Steam de score (V1). Suites vertes : smoke, catalogues, sauvegardes, mode dev, outils de dev, classements Steam, intégration du mouvement, Indicible, menus.

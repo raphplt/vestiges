@@ -1,6 +1,6 @@
 # Plan 47 — Une fin de run qui menace
 
-14 octobre 2026. **Proposition de découpage, à valider ; aucun lot codé.** Réponse à [DECISIONS §165 et §167](DECISIONS.md), sur les constats de la matrice M1 ([plan 42 §5](42-signature.md#5-campagne-de-mesures)).
+14 octobre 2026. **Découpage validé (L1–L2 lancés, L4 en partie tranché, [§168](DECISIONS.md)).** Réponse à [DECISIONS §165 et §167](DECISIONS.md), sur les constats de la matrice M1 ([plan 42 §5](42-signature.md#5-campagne-de-mesures)).
 
 ## 1. Le constat
 
@@ -56,12 +56,14 @@ L'Effacement qui accélère en fin de run et fait traverser la foule, les stats 
 
 ### L4 — Niveaux de difficulté au départ (conception, avec le plan 46)
 
-Proposé par Raphaël le 14 octobre : choisir avant la run un niveau, de simple à impossible, qui change la fréquence et la puissance des créatures, les boss, etc. Le plan 46 (autre session) a déjà un accord de principe sur des « paliers de départ » : les deux se conçoivent ensemble. Questions ouvertes, à trancher avant tout code :
+Proposé par Raphaël le 14 octobre : choisir avant la run un niveau, de simple à impossible, qui change la fréquence et la puissance des créatures, les boss, etc. Le plan 46 (autre session) a déjà un accord de principe sur des « paliers de départ » : les deux se conçoivent ensemble.
 
-- **Classement** : un seul classement aux éliminations (un niveau plus dur donne plus de créatures, donc plus d'éliminations possibles) ou un classement par niveau.
-- **Pourquoi monter** : plus d'éliminations, donc plus de Vestiges ; quêtes et déblocages réservés aux niveaux élevés ; marque de victoire par personnage et par niveau.
-- **Accès** : tous les niveaux ouverts d'emblée, ou chacun débloqué en battant l'Indicible au niveau précédent.
-- **Référence** : le niveau « normal » est celui calé en L2 ; les autres s'en déduisent.
+Tranché ([§168](DECISIONS.md)) :
+- **un seul classement** mondial aux éliminations, tous niveaux confondus ;
+- **chaque niveau s'ouvre** en battant l'Indicible au niveau d'avant ;
+- **Vestiges** : 0,2 à 0,4 × éliminations au niveau simple, davantage au-dessus, pour que les nouveaux joueurs aient intérêt à monter le temps de tout débloquer. Le taux commun est passé à 0,4 le 14 octobre.
+
+Reste ouvert : déblocages réservés aux niveaux élevés, marques de victoire, nombre de niveaux et ce que chacun change. Le niveau « normal » est celui calé en L2 ; les autres s'en déduisent.
 
 ## 4. Ordre proposé
 
