@@ -182,6 +182,7 @@ public partial class MovementRegression : Node2D
         wall.QueueFree();
 
         await Step(1);
+        await RunWorldEdgeChecks();
         RunFacingChecks();
         await RunMobilityChecks();
         _player.TakeDamage(10000f);
