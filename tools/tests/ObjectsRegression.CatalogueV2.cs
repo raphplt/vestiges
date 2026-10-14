@@ -18,7 +18,7 @@ public partial class ObjectsRegression
         (string Id, Func<Player, float> Read, float Gain)[] items =
         {
             ("dossard_froisse", p => p.SpeedMultiplier, 0.08f),
-            ("pastille_mentholee", p => p.BonusRegenRate, 0.15f),
+            ("pastille_mentholee", p => p.BonusRegenRate, 0.08f),
             ("bouillotte", p => p.EffectiveMaxHp, 12f),
             ("agrafe_rouillee", p => p.Armor, 1f),
             ("bons_points", p => p.XpGainMultiplier, 0.06f),
@@ -31,7 +31,7 @@ public partial class ObjectsRegression
             ("yoyo", p => p.Mobility.RechargeMultiplier, 0.08f),
             ("bocal_de_conserve", p => p.StatusDurationMultiplier, 0.12f),
             ("peigne_casse", p => p.ProjectilePierce, 1f),
-            ("ampoule_rouge", p => p.Lifesteal, 0.005f),
+            ("ampoule_rouge", p => p.Lifesteal, 0.003f),
             ("bille_irisee", p => p.CritMultiplier, 0.25f),
             ("boucle_cabossee", p => p.MaxShield, 15f),
             ("diapositive_en_double", p => p.BonusProjectiles, 1f),
@@ -124,8 +124,8 @@ public partial class ObjectsRegression
         regen.Invoke(_player, new object[] { 2f });
         bool blocked = Near(hp, _player.CurrentHp);
         regen.Invoke(_player, new object[] { 10f });
-        Check(blocked && Near(_player.CurrentHp - hp, (_player.BaseRegenRate + 0.3f) * 10f),
-            "Pastilles : aucun soin pendant les deux secondes après blessure ; puis 18 PV/min ajoutés au soin réel");
+        Check(blocked && Near(_player.CurrentHp - hp, (_player.BaseRegenRate + 0.16f) * 10f),
+            "Pastilles : aucun soin pendant les deux secondes après blessure ; puis 9,6 PV/min ajoutés au soin réel");
         hp = _player.CurrentHp;
         _player.AddItemCopy("bouillotte");
         bool noHeal = Near(_player.CurrentHp, hp);
@@ -138,7 +138,7 @@ public partial class ObjectsRegression
         _player.AddItemCopy("agrafe_rouillee");
         hp = _player.CurrentHp;
         _player.TakeDamage(10f);
-        Check(Near(hp - _player.CurrentHp, 10f * 15f / 17f), "Agrafes : deux points d’armure réduisent réellement un coup de 10 à 8,82 PV");
+        Check(Near(hp - _player.CurrentHp, 10f * 30f / 32f), "Agrafes : deux points d’armure réduisent réellement un coup de 10 à 9,38 PV");
         _player.AddItemCopy("boucle_cabossee");
         PlayerDefense defense = (PlayerDefense)typeof(Player).GetField("_defense", Private).GetValue(_player);
         bool empty = Near(_player.Shield, 0f);
@@ -158,7 +158,7 @@ public partial class ObjectsRegression
         hp = _player.CurrentHp;
         target.TakeDamage(20f, source: _player.BeginAttack(_player.EquippedWeapon, 20f));
         typeof(Player).GetMethod("StepLifesteal", Private).Invoke(_player, new object[] { 0.25f });
-        Check(Near(_player.CurrentHp - hp, 0.2f), "Ampoules : deux copies soignent réellement 0,2 PV sur un coup de 20, loin du plafond de haut build");
+        Check(Near(_player.CurrentHp - hp, 0.12f), "Ampoules : deux copies soignent réellement 0,12 PV sur un coup de 20, loin du plafond de haut build");
         target.QueueFree();
     }
 
@@ -173,8 +173,8 @@ public partial class ObjectsRegression
             described &= text.Length > 0 && !text.Contains('{') && !text.Contains("STAT_", StringComparison.Ordinal);
         }
         Check(described, "Les 56 fiches décrivent leurs copies sans clé brute ni paramètre manquant");
-        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pastille_mentholee"), 2).Contains("18 PV/min", StringComparison.Ordinal),
-            "Deux Pastilles : la fiche annonce 18 PV/min, pas un soin chaque minute");
+        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pastille_mentholee"), 2).Contains("9,6 PV/min", StringComparison.Ordinal),
+            "Deux Pastilles : la fiche annonce 9,6 PV/min, pas un soin chaque minute");
         Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pied_de_biche"), 8).StartsWith("60 %", StringComparison.Ordinal)
             && ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("etiquette_perdue"), 8).Contains("3 coffre", StringComparison.Ordinal),
             "Copies illimitées : gratuité plafonnée à 60 % et directions à trois dans les descriptions");

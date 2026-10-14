@@ -65,7 +65,25 @@ Tranché ([§168](DECISIONS.md)) :
 
 Reste ouvert : déblocages réservés aux niveaux élevés, marques de victoire, nombre de niveaux et ce que chacun change. Le niveau « normal » est celui calé en L2 ; les autres s'en déduisent.
 
-## 4. Ordre proposé
+## 4. Livré le 14 octobre : L1 et L2, premier réglage
+
+**Bot recalé d'abord** (`RunObservation.Profiles.cs`) : les profils moyen et fort vont abattre les Souverains proches à distance de tir, même après la fin de leur chasse (27 sur 30 tués au lieu de 20 à 27), et le profil moyen garde ses distances avec la foule (30 à 40 % de PV perdus en moins). Il reste loin d'un vrai joueur (le bot moyen perd 200 à 600 PV/min, Raphaël 10 à 200) : le réglage se lit donc en **pression qui monte avec le temps**, pas en minute de mort absolue, et Raphaël juge en jouant.
+
+**L1** : vol de vie plafonné à 2 % des PV max/s, 0,3 % par niveau ou par Ampoule ; régénération 0,2 PV/s par niveau de l'Écusson de la couturière, 0,08 par Pastille ; armure à demi-valeur 30, plafond 60 %.
+
+**L2** : PV des créatures ×1,18 par minute après 15 min (1,13 avant) ; Péril du temps 0,5 point par minute à partir de 15 min (Péril 7,5 à 30 min : créatures ×1,75, PV et dégâts ×1,375).
+
+Mesure (méta complète, profil moyen, 30 min, graines 7, 42 et 1002), coups fatals entre 20 et 30 min, avant → après :
+
+| Personnage | Avant | Après | Premier coup fatal après 15 min |
+|---|---|---|---|
+| Vagabond | 23, 0, 0 | 6, 71, 42 | 15 à 21 min |
+| Facteur | 8, 7, 4 | 249, 57, 462 | 15 à 18 min |
+| Traqueur | 1, 73, 0 | 42, 0, 0 | 18 à 24 min, une graine sans |
+
+Vagabond et Facteur entrent dans la cible ; le Traqueur reste intouchable dans deux graines sur trois. Son arc dominait déjà la matrice M1 : c'est un réglage du Traqueur, à faire à part comme celui du Facteur, pas une courbe générale à pousser encore, qui écraserait les autres. Effet de bord à surveiller : plus de créatures, c'est plus d'XP (Traqueur niveau 195 à 30 min dans une graine).
+
+## 5. Ordre proposé
 
 1. L1 (petit, données seules), avec L2 et sa mesure : défenses et créatures se règlent ensemble.
 2. L4, conception avec Raphaël, en même temps que le plan 46.
