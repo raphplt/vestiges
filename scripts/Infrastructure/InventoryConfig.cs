@@ -4,17 +4,14 @@ using Godot;
 namespace Vestiges.Infrastructure;
 
 /// <summary>
-/// Réglages de l'inventaire du joueur (data/progression/inventory.json, plan 35) : emplacements d'Écussons, rendement
-/// des niveaux d'Écusson, sac d'objets, valeur des exemplaires et objets lâchés dans le monde. Contrôlés en entier ; un fichier refusé arrête le
-/// chargement de la run.
+/// Réglages de l'inventaire du joueur (data/progression/inventory.json, plan 35) : emplacements d'Écussons, sac d'objets,
+/// valeur des exemplaires et objets lâchés dans le monde. Contrôlés en entier ; un fichier refusé arrête le chargement de la run.
 /// </summary>
 public static class InventoryConfig
 {
     private const string ConfigPath = "res://data/progression/inventory.json";
     // Valeurs de départ du dépôt, le temps que le fichier soit lu ; un fichier refusé arrête la run (GameBootstrap).
     private static int _badgeSlots = 4;
-    private static int _badgeSoftCapLevel = 30;
-    private static float _badgeSoftCapFactor = 0.5f;
     private static int _bagSize = 10;
     private static float _eliteItemChance = 0.25f;
     private static int _sovereignItems = 1;
@@ -105,23 +102,6 @@ public static class InventoryConfig
         }
     }
 
-    /// <summary>Niveau d'Écusson au-delà duquel chaque niveau ne vaut plus qu'une part du pas.</summary>
-    public static int BadgeSoftCapLevel
-    {
-        get
-        {
-            Load();
-            return _badgeSoftCapLevel;
-        }
-    }
-
-    /// <summary>Part du pas que vaut le niveau <paramref name="level"/> d'un Écusson : 1, puis le facteur au-delà du seuil.</summary>
-    public static float BadgeStepFactor(int level)
-    {
-        Load();
-        return level > _badgeSoftCapLevel ? _badgeSoftCapFactor : 1f;
-    }
-
     public static bool TryLoad(out string error)
     {
         Load();
@@ -136,11 +116,9 @@ public static class InventoryConfig
         {
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
-            reader.AllowOnly(reader.Root, "inventaire", "badge_slots", "badge_soft_cap_level", "badge_soft_cap_factor", "bag_size",
+            reader.AllowOnly(reader.Root, "inventaire", "badge_slots", "bag_size",
                 "elite_item_chance", "sovereign_items", "usage");
             int badgeSlots = reader.Integer(reader.Root, "badge_slots", 1, 8);
-            int softCapLevel = reader.Integer(reader.Root, "badge_soft_cap_level", 1, 1000);
-            float softCapFactor = reader.Ratio(reader.Root, "badge_soft_cap_factor");
             int bagSize = reader.Integer(reader.Root, "bag_size", 1, 50);
             float eliteChance = reader.Chance(reader.Root, "elite_item_chance");
             int sovereignItems = reader.Integer(reader.Root, "sovereign_items", 0, 5);
@@ -153,8 +131,6 @@ public static class InventoryConfig
             if (reader.Error != null)
                 return reader.Error;
             _badgeSlots = badgeSlots;
-            _badgeSoftCapLevel = softCapLevel;
-            _badgeSoftCapFactor = softCapFactor;
             _bagSize = bagSize;
             _eliteItemChance = eliteChance;
             _sovereignItems = sovereignItems;

@@ -31,27 +31,24 @@ public class ActivePassiveSouvenir
 	/// <summary>Valeur d'un effet : son neutre plus la somme de ses gains.</summary>
 	public float Value(int effect) => Data.Effects[effect].Neutral + _gains[effect];
 
-	/// <summary>Valeur d'un effet après une carte de gain <paramref name="gain"/> (1 pour une commune).</summary>
-	public float ValueAfter(int effect, float gain) => Value(effect) + Data.Effects[effect].Step * gain * StepFactor(Level + 1);
+	/// <summary>
+	/// Valeur d'un effet après une carte de gains <paramref name="gain"/> et <paramref name="integerGain"/> (1 pour une commune).
+	/// </summary>
+	public float ValueAfter(int effect, float gain, float integerGain) => Value(effect) + StepGain(effect, gain, integerGain);
 
 	public bool Reached(ObjectMilestoneData milestone) => Data.IsBadge && Level >= milestone.Level;
 
-	/// <summary>Une carte : un niveau de plus et le pas de chaque effet, multiplié par <paramref name="gain"/>.</summary>
-	public bool Upgrade(float gain)
+	/// <summary>
+	/// Une carte : un niveau de plus et le pas de chaque effet, multiplié par <paramref name="gain"/>, ou par
+	/// <paramref name="integerGain"/> pour un effet entier. Aucun rendement décroissant : chaque niveau vaut son pas (DECISIONS §175).
+	/// </summary>
+	public bool Upgrade(float gain, float integerGain)
 	{
 		if (!Data.IsBadge || IsMaxLevel)
 			return false;
 		Level++;
-		float factor = StepFactor(Level);
 		for (int i = 0; i < _gains.Length; i++)
-		{
-			float delta = Data.Effects[i].Step * gain * factor;
-			// Une stat qui se compte (projectiles, perforations, armure…) ne gagne jamais moins d'une unité par niveau,
-			// rendement décroissant compris (DECISIONS §171).
-			if (delta > 0f && StatCatalog.Display(Data.Effects[i].Stat) == StatDisplay.Count)
-				delta = System.MathF.Max(1f, delta);
-			_gains[i] += delta;
-		}
+			_gains[i] += StepGain(i, gain, integerGain);
 		return true;
 	}
 
@@ -79,5 +76,6 @@ public class ActivePassiveSouvenir
 	}
 
 	/// <summary>Rendement d'un niveau : un pas entier, sauf pour un Écusson au-delà du seuil d'inventory.json.</summary>
-	private float StepFactor(int level) => Data.IsBadge ? InventoryConfig.BadgeStepFactor(level) : 1f;
+	private float StepGain(int effect, float gain, float integerGain) =>
+		Data.Effects[effect].Step * (Data.Effects[effect].Integer ? integerGain : gain);
 }

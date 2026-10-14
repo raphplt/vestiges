@@ -330,7 +330,7 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
 **Données.**
 - Les 35 fiches de `passive_souvenirs.json` portent maintenant `kind`. On compte 16 Écussons (« Écusson du batteur »…, l'ancien nom passé en `subtitle`) et 19 objets, dont l'arbitre et les deux fiches désactivées.
 - Le contrôle au chargement refuse une étagère absente ou inconnue, et un sous-titre vide.
-- `inventory.json` donne 4 emplacements d'Écussons et le rendement : au-delà du niveau 30, un niveau d'Écusson ne vaut plus qu'un demi-pas. Les Écussons montent jusqu'au niveau 99 ; les objets restent plafonnés à 30.
+- `inventory.json` donne 4 emplacements d'Écussons et le rendement : au-delà du niveau 30, un niveau d'Écusson ne vaut plus qu'un demi-pas (retiré le 14 octobre, DECISIONS §175 : aucun rendement décroissant dans les améliorations). Les Écussons montent jusqu'au niveau 99 ; les objets restent plafonnés à 30.
 - Valeurs : l'Écusson du batteur vaut +240 % de cadence au niveau 30 (inchangé), puis +4 % par niveau, jusqu'à +516 % au niveau 99.
 
 **Jeu.**
@@ -480,7 +480,7 @@ I8 (revue des Réminiscences et des bénédictions) attend une partie jouée.
 
 Pause, fiche du joueur, barre du bas et bilan suivaient déjà l'inventaire depuis I1 et I2 (Écussons, sac, exemplaires). I5 complète le reste :
 - **Collection** : onglet **Écussons** à part, entre Armes et Objets. Sous chaque fiche, la règle tirée des données :
-  - Écusson : l'objet d'où il vient, montée au level-up jusqu'au niveau 99, demi-pas au-delà du seuil (`inventory.json`) ;
+  - Écusson : l'objet d'où il vient, montée au level-up jusqu'au niveau 99, sans rendement décroissant (DECISIONS §175) ;
   - objet : exemplaires au plus et exemplaire du palier, ou exemplaires seuls s'il n'a pas de palier.
 - **Ramassage d'un objet** : son de trouvaille, et l'icône s'envole du sol vers sa case du sac (nouveau signal `ItemPickedUp`, même envol que les armes).
 - **Pause** : « Surplus +N % » à côté du niveau d'une arme qui en a reçu (I4).

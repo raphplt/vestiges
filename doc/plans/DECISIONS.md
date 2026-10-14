@@ -1969,3 +1969,22 @@ Retours du 13 au soir : « bcp d'effets d'objets ou d'écussons sont durs à lir
 Retour de jeu : « le bullet time des projectile est trop rapide en général ». Précisé : il s'agit de la vitesse de vol, pas de la cadence ; projectiles ennemis inchangés.
 
 **Réglage :** `projectile_speed` −30 % sur les armes à distance du joueur (Arc du gymnase 280, Lance-billes 210, Cloueuse 350, Assiettes 245, Lentille de phare 560, Instantané 420, Sacoche de lettres 240, Fusil-harpon 180). Les armes déjà lentes baissent de 15 % seulement, pour garder le virage des têtes chercheuses : Boussole 170, Baguette de sourcier 210, Lampe à pétrole 155, Craies 130. La portée ne change pas : le trajet dure plus longtemps. `tools/test_weapons.sh` vert.
+
+## 175. Tirs étalés sur la recharge, cadence plus lente, stats entières sous l'unité en commune, plus aucun rendement décroissant — 14 octobre 2026
+
+Retours de jeu de Raphaël après le §174 :
+- **Cadence** : « la cadence de tir elle-même est trop forte » ; surtout « les délais entre les tirs successifs : si on a trois projectiles, il ne faut pas les tirer en rafale mais les écarter dans le délai prévu avant le prochain tir ».
+- **Stats entières** : il revient sur le §171 : une amélioration commune peut donner moins d'un projectile entier ; plus d'un est réservé aux rangs supérieurs. Même règle pour les cartes d'arme et l'Écusson de l'archer.
+- **Rendement décroissant** : « il ne faut pas de rendement décroissant du tout dans le jeu dans les améliorations d'armes / d'écussons. Ça doit même être l'inverse : le rendement doit être stable (ou croissant avec la luck, car la luck améliore le niveau des améliorations). Je sais que ça peut “péter” les runs, donc il faut améliorer les courbes de difficulté en fonction de ça. Mais j'y tiens beaucoup, car c'est très frustrant d'avoir un rendement décroissant dans un jeu incrémental. »
+- **Affichage** : la carte d'amélioration d'une arme additionnait ses projectiles propres et ceux des Écussons (« 4 → 5 » pour un arc niveau 1 et un Jongleur à +3) ; le nombre de l'arme doit s'afficher à part.
+
+**Choix :**
+- les tirs visés d'une attaque se répartissent à intervalles égaux sur toute la recharge (`shot_cooldown_share` 1,0 dans `weapon_visuals.json`, à la place de `shot_interval_s` 0,08 s et `shot_max_cooldown_share`) : 3 tirs et 1 s de recharge, un tir toutes les 0,33 s. L'éventail propre des armes en salve (Lance-billes, Assiettes, Instantané) part toujours d'un coup ;
+- `attack_speed` de base −20 % pour les armes à distance et les Craies, −10 % pour la mêlée (Arc du gymnase 0,83 → 1,04 s entre deux attaques, Lance-billes 0,56 → 0,69 s, Lame ébréchée 1,00 → 1,11 s) ;
+- stats entières : 0,5 / 0,75 / 1 / 1,5 / 2 de la commune à la légendaire, pour les cartes d'arme (projectiles, perforation, rebonds) et pour le Jongleur et l'Écusson de l'archer. `integer_gain` devient un multiple du pas (1 / 1,5 / 2 / 3 / 4) ; ces stats portent un pas de 0,5, et les effets d'Écusson concernés sont marqués `integer`. Les seuils d'usage relevés au §171 (2 500 touches, 1 000 perforations) ne bougent pas ;
+- plus aucun rendement décroissant des Écussons : `badge_soft_cap_level` et `badge_soft_cap_factor` sont retirés, et chaque niveau vaut son pas entier jusqu'au niveau 99. Le plancher d'une unité du §171 disparaît avec lui ;
+- la carte d'amélioration d'arme montre le nombre propre de l'arme pour une stat qui se compte ; la fiche de pause sépare base de l'arme, niveaux de l'arme et build.
+
+**À faire :** les courbes de difficulté doivent suivre une puissance qui ne plafonne plus (plan 47, fin de run sans danger). Une commune sur la Boîte à musique donne +0,5 orbe, visible seulement à la carte suivante, car les orbes ne comptent que la partie entière : à revoir si cela gêne.
+
+**Vérification :** build sans avertissement ; suites smoke, objets, armes, inventaire, combat d'objets, effets de perks, écran de choix, catalogues, quêtes et navigation des menus vertes (validation headless sur une copie propre). Relecture `godot-reviewer` : rien de bloquant.

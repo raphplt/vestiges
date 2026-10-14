@@ -95,10 +95,11 @@ public partial class Player
 
     /// <summary>
     /// Ajoute un Écusson au niveau 1, ou le monte de <paramref name="cards"/> cartes de gain <paramref name="gain"/>
-    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3). Pour un objet, ajoute des copies entières,
-    /// sans gain de rareté ni niveau caché. Faux si rien n’a changé.
+    /// chacune (1 pour une commune, 3 pour une légendaire ; plan 23 R3), <paramref name="integerGain"/> pour ses effets
+    /// entiers (DECISIONS §175). Pour un objet, ajoute des copies entières, sans gain de rareté ni niveau caché.
+    /// Faux si rien n’a changé.
     /// </summary>
-    public bool AddOrUpgradePassive(string passiveId, int cards = 1, float gain = 1f)
+    public bool AddOrUpgradePassive(string passiveId, int cards = 1, float gain = 1f, float integerGain = 1f)
     {
         PassiveSouvenirData data = PassiveSouvenirDataLoader.Get(passiveId);
         if (data == null || cards < 1)
@@ -126,7 +127,7 @@ public partial class Player
                 {
                     for (int i = 0; i < data.Effects.Count; i++)
                         _passiveValuesBefore[i] = existing.Value(i);
-                    existing.Upgrade(gain);
+                    existing.Upgrade(gain, integerGain);
                     ApplyPassiveEffects(existing, _passiveValuesBefore);
                 }
                 if (existing.Level == previousLevel)
@@ -167,7 +168,7 @@ public partial class Player
 
         GD.Print($"[Player] Passive added [{slotIndex}]: {data.Name} (level 1/{data.MaxLevel})");
         if (cards > 1)
-            AddOrUpgradePassive(passiveId, cards - 1, gain);
+            AddOrUpgradePassive(passiveId, cards - 1, gain, integerGain);
         return true;
     }
 

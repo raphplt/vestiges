@@ -512,6 +512,7 @@ public partial class PauseMenu : CanvasLayer
 	{
 		if (!shown.Add(stat)) return;
 		float value = player.GetWeaponStatForDisplay(weapon, stat);
+		float own = weapon.GetStat(stat);
 		float initial = weapon.Base.Stats.GetValueOrDefault(stat);
 		string Format(float number) => stat switch
 		{
@@ -524,8 +525,14 @@ public partial class PauseMenu : CanvasLayer
 		Label line = PlayerSheet.MakeLabel($"{StatCatalog.Name(stat, weapon.Base)} : {Format(value)}", TextRole.Body, StatValueColor);
 		line.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(line);
-		float change = value - initial;
-		Label detail = PlayerSheet.MakeLabel($"Base de l’arme : {Format(initial)} · évolution et build : {(change >= 0f ? "+" : "")}{Format(change)}", TextRole.Caption, TextVeryDim);
+		string Signed(float number) => (number >= 0f ? "+" : "") + Format(number);
+		// Les niveaux de l'arme et le build à part : 4 projectiles, c'est 1 de l'arme et 3 des Écussons (DECISIONS §175).
+		string parts = $"Base de l’arme : {Format(initial)}";
+		if (!Mathf.IsZeroApprox(own - initial))
+			parts += $" · niveaux de l’arme : {Signed(own - initial)}";
+		if (!Mathf.IsZeroApprox(value - own))
+			parts += $" · build : {Signed(value - own)}";
+		Label detail = PlayerSheet.MakeLabel(parts, TextRole.Caption, TextVeryDim);
 		detail.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		text.AddChild(detail);
 	}

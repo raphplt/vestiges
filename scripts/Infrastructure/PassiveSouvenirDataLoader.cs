@@ -161,6 +161,7 @@ public static class PassiveSouvenirDataLoader
 				Stat = effect["stat"].AsString(),
 				ModifierType = effect.ContainsKey("modifier_type") ? effect["modifier_type"].AsString() : "multiplicative",
 				Step = (float)effect["step"].AsDouble(),
+				Integer = effect.ContainsKey("integer") && effect["integer"].AsBool(),
 			});
 		}
 		if (dict.ContainsKey("params"))

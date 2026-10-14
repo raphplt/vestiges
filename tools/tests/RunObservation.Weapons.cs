@@ -103,9 +103,9 @@ public partial class RunObservation
             int targets = int.Parse(Argument(OS.GetCmdlineUserArgs(), "--targets", "5"), System.Globalization.CultureInfo.InvariantCulture);
             foreach (WeaponInstance held in _player.WeaponSlots)
                 foreach (string stat in held.Base.Growth.Keys)
-                    if (WeaponUpgradeDataLoader.GetStatConfig(stat) is { Integer: true })
+                    if (WeaponUpgradeDataLoader.GetStatConfig(stat) is { Integer: true } config)
                         for (int gain = 0; gain < integerGains && held.CanLevelUp; gain++)
-                            _player.UpgradeWeapon(held.Id, new[] { new StatGain(stat, UpgradeRoller.Get("common").IntegerGain) });
+                            _player.UpgradeWeapon(held.Id, new[] { new StatGain(stat, config.Step * UpgradeRoller.Get("common").IntegerGain) });
             Vector2 origin = _player.GlobalPosition;
             for (int index = 0; index < targets; index++)
             {

@@ -69,11 +69,10 @@ public partial class InventoryRegression : Node
         Check(InventoryConfig.BadgeSlots == 4, "quatre Écussons");
         (string, string, string)[] cases =
         {
-            ("emplacements nuls", "{\"badge_slots\": 0, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5}", "badge_slots"),
-            ("facteur nul", "{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0}", "badge_soft_cap_factor"),
-            ("facteur au-delà de 1", "{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 1.5}", "badge_soft_cap_factor"),
-            ("clé inconnue", "{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5, \"tomes\": 4}", "clé « tomes » inconnue"),
-            ("seuil absent", "{\"badge_slots\": 4, \"badge_soft_cap_factor\": 0.5}", "badge_soft_cap_level absent"),
+            ("emplacements nuls", "{\"badge_slots\": 0}", "badge_slots"),
+            ("clé inconnue", "{\"badge_slots\": 4, \"tomes\": 4}", "clé « tomes » inconnue"),
+            ("rendement décroissant refusé", Config("\"bag_size\": 10", "\"badge_soft_cap_level\": 30"), "clé « badge_soft_cap_level » inconnue"),
+            ("emplacements absents", "{\"bag_size\": 10}", "badge_slots absent"),
             ("sac vide", Config("\"bag_size\": 0", "\"elite_item_chance\": 0.25"), "bag_size"),
             ("ancienne courbe refusée", Config("\"bag_size\": 10", "\"item_copy_levels\": [10, 15]"), "clé « item_copy_levels » inconnue"),
             ("usage absent", Config("\"bag_size\": 10", "\"elite_item_chance\": 0.25, \"sovereign_items\": 1"),
@@ -87,8 +86,7 @@ public partial class InventoryRegression : Node
             string message = InventoryConfig.Apply(json);
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"réglages refusés ({label}) : {message}");
         }
-        Check(InventoryConfig.BadgeSlots == 4 && Mathf.IsEqualApprox(InventoryConfig.BadgeStepFactor(31), 0.5f)
-            && Mathf.IsEqualApprox(InventoryConfig.BadgeStepFactor(30), 1f), "un fichier refusé ne remplace pas les réglages chargés");
+        Check(InventoryConfig.BadgeSlots == 4 && InventoryConfig.BagSize == 10, "un fichier refusé ne remplace pas les réglages chargés");
         InventoryConfig.Apply(Godot.FileAccess.GetFileAsString(ConfigPath));
     }
 
@@ -100,18 +98,18 @@ public partial class InventoryRegression : Node
         Check(_player.BadgeSlots.Count == 1 && _player.PassiveSlots.Count == 1 && _player.FindObject("instinct").Data.IsBadge
             && !_player.FindObject("glacon").Data.IsBadge, "un Écusson et un objet vont chacun sur leur étagère");
 
-        // L'aperçu d'une carte et la valeur obtenue suivent le même rendement, de part et d'autre du seuil.
+        // L'aperçu d'une carte et la valeur obtenue concordent, et un niveau vaut son pas entier à tout niveau (DECISIONS §175).
         ActivePassiveSouvenir badge = _player.FindObject("instinct");
         _player.AddOrUpgradePassive("instinct", 28);
-        float preview = badge.ValueAfter(0, 1f);
+        float preview = badge.ValueAfter(0, 1f, 1f);
         _player.AddOrUpgradePassive("instinct");
         bool fullStep = Mathf.IsEqualApprox(badge.Value(0), preview) && badge.Level == 30;
-        preview = badge.ValueAfter(0, 3f);
+        preview = badge.ValueAfter(0, 3f, 4f);
         float before = badge.Value(0);
-        _player.AddOrUpgradePassive("instinct", 1, 3f);
+        _player.AddOrUpgradePassive("instinct", 1, 3f, 4f);
         Check(fullStep && Mathf.IsEqualApprox(badge.Value(0), preview)
-            && Mathf.IsEqualApprox(badge.Value(0) - before, badge.Data.Effects[0].Step * 3f * 0.5f),
-            $"niveau 31 : un demi-pas, même valeur annoncée et obtenue ({before:0.###} → {badge.Value(0):0.###})");
+            && Mathf.IsEqualApprox(badge.Value(0) - before, badge.Data.Effects[0].Step * 3f),
+            $"niveau 31 : le pas entier, sans rendement décroissant, même valeur annoncée et obtenue ({before:0.###} → {badge.Value(0):0.###})");
 
         ActivePassiveSouvenir item = _player.FindObject("glacon");
         _player.SetBagCapacity(45);
@@ -130,7 +128,7 @@ public partial class InventoryRegression : Node
     }
 
     private static string Config(string bag, string copies) =>
-        $"{{\"badge_slots\": 4, \"badge_soft_cap_level\": 30, \"badge_soft_cap_factor\": 0.5, {bag}, {copies}}}";
+        $"{{\"badge_slots\": 4, {bag}, {copies}}}";
 
     private void CheckItemCopies()
     {

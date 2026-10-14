@@ -425,7 +425,7 @@ public partial class HubCollectionPanel : MarginContainer
             string stats;
             if (passive.IsBadge)
                 stats = string.Format(TranslationServer.Translate("COLLECTION_BADGE_RULE"), passive.Subtitle,
-                    passive.MaxLevel, InventoryConfig.BadgeSoftCapLevel);
+                    passive.MaxLevel);
             else
                 stats = (passive.HasCopyLimit
                     ? string.Format(TranslationServer.Translate("COLLECTION_ITEM_RULE_PLAIN"), passive.MaxCopies)

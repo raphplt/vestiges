@@ -20,7 +20,7 @@ public static class ObjectDataValidator
         "survival", "offer_weight", "params", "enabled", "rarity", "max_copies", "unique", "usage", "initial_unlock",
     };
     private static readonly string[] UsageKeys = { "trigger", "threshold" };
-    private static readonly string[] EffectKeys = { "stat", "modifier_type", "step" };
+    private static readonly string[] EffectKeys = { "stat", "modifier_type", "step", "integer" };
     private static readonly string[] MilestoneKeys = { "level", "effect", "text", "params" };
 
     /// <summary>Le contrat lu : statistiques (modificateurs, réglages), statistiques inactives, effets de palier.</summary>
@@ -240,6 +240,8 @@ public static class ObjectDataValidator
                 return $"{where}, effet : {reader.Error}";
             string stat = Text(effect, "stat");
             string modifier = effect.TryGetProperty("modifier_type", out _) ? Text(effect, "modifier_type") : "multiplicative";
+            if (effect.TryGetProperty("integer", out JsonElement integer) && integer.ValueKind == JsonValueKind.True && modifier != "additive")
+                return $"{where}, {stat} : un effet entier doit être un ajout";
             if (contract.Stats.TryGetValue(stat ?? "", out (HashSet<string> Modifiers, string[] Params) rule))
             {
                 if (!rule.Modifiers.Contains(modifier ?? ""))

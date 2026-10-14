@@ -16,7 +16,7 @@ public class UpgradeRarity
 	public float Weight;
 	public int WeaponStats;
 	public float WeaponGain;
-	/// <summary>Gain d'une stat entière tirée (0,5 en commune à 3 en légendaire ; plan 23 R4).</summary>
+	/// <summary>Multiple du pas d'une stat entière (1 en commune à 4 en légendaire ; plan 23 R4, DECISIONS §175).</summary>
 	public float IntegerGain;
 	/// <summary>Multiple du pas d'un objet pour une carte de cette rareté (plan 23 R3), et des bénédictions des Mémoriaux.</summary>
 	public float PassiveGain;
@@ -124,7 +124,7 @@ public static class UpgradeRoller
 			pool.Remove(stat);
 			WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(stat);
 			if (config != null)
-				gains.Add(new StatGain(stat, config.Integer ? rarity.IntegerGain : config.Step * rarity.WeaponGain));
+				gains.Add(new StatGain(stat, config.Step * (config.Integer ? rarity.IntegerGain : rarity.WeaponGain)));
 		}
 		return gains;
 	}

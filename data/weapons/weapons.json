@@ -40,7 +40,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 10,
-      "attack_speed": 1.0,
+      "attack_speed": 0.9,
       "range": 90,
       "arc_angle": 90,
       "knockback": 10
@@ -92,7 +92,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 16,
-      "attack_speed": 0.65,
+      "attack_speed": 0.59,
       "range": 90,
       "arc_angle": 120,
       "knockback": 40
@@ -149,7 +149,7 @@
     ],
     "stats": {
       "damage": 8,
-      "attack_speed": 1.2,
+      "attack_speed": 0.96,
       "range": 150,
       "projectile_speed": 280,
       "projectile_count": 1
@@ -201,7 +201,7 @@
     ],
     "stats": {
       "damage": 4,
-      "attack_speed": 1.8,
+      "attack_speed": 1.44,
       "range": 120,
       "projectile_speed": 210,
       "projectile_count": 3,
@@ -255,7 +255,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 7,
-      "attack_speed": 1.5,
+      "attack_speed": 1.35,
       "range": 85,
       "knockback": 5
     },
@@ -309,7 +309,7 @@
     ],
     "stats": {
       "damage": 22,
-      "attack_speed": 0.6,
+      "attack_speed": 0.48,
       "range": 180,
       "projectile_speed": 350,
       "projectile_count": 1,
@@ -361,7 +361,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 18,
-      "attack_speed": 0.8,
+      "attack_speed": 0.72,
       "range": 85,
       "arc_angle": 160,
       "knockback": 25
@@ -411,7 +411,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 9,
-      "attack_speed": 0.9,
+      "attack_speed": 0.81,
       "range": 48,
       "arc_angle": 360,
       "knockback": 15
@@ -457,7 +457,7 @@
     ],
     "stats": {
       "damage": 11,
-      "attack_speed": 1.1,
+      "attack_speed": 0.88,
       "range": 140,
       "projectile_speed": 245,
       "projectile_count": 2,
@@ -506,7 +506,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 25,
-      "attack_speed": 0.5,
+      "attack_speed": 0.45,
       "range": 90,
       "arc_angle": 100,
       "knockback": 45
@@ -568,7 +568,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 12,
-      "attack_speed": 0.7,
+      "attack_speed": 0.63,
       "range": 110,
       "arc_angle": 360,
       "knockback": 60
@@ -623,7 +623,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 6,
-      "attack_speed": 2.5,
+      "attack_speed": 2.25,
       "range": 80,
       "knockback": 0
     },
@@ -678,7 +678,7 @@
     ],
     "stats": {
       "damage": 30,
-      "attack_speed": 0.4,
+      "attack_speed": 0.32,
       "range": 250,
       "projectile_speed": 560,
       "projectile_count": 1,
@@ -783,7 +783,7 @@
     ],
     "stats": {
       "damage": 14,
-      "attack_speed": 0.8,
+      "attack_speed": 0.72,
       "range": 85,
       "chain_targets": 2,
       "chain_range": 100,
@@ -832,7 +832,7 @@
     ],
     "stats": {
       "damage": 13,
-      "attack_speed": 1.0,
+      "attack_speed": 0.8,
       "range": 180,
       "projectile_speed": 170,
       "projectile_count": 1,
@@ -880,7 +880,7 @@
     ],
     "stats": {
       "damage": 18,
-      "attack_speed": 0.5,
+      "attack_speed": 0.4,
       "range": 130,
       "projectile_count": 5,
       "spread_angle": 45,
@@ -930,7 +930,7 @@
     ],
     "stats": {
       "damage": 20,
-      "attack_speed": 0.8,
+      "attack_speed": 0.64,
       "range": 200,
       "projectile_speed": 210,
       "projectile_count": 1,
@@ -978,7 +978,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 15,
-      "attack_speed": 1.8,
+      "attack_speed": 1.62,
       "range": 85,
       "arc_angle": 70,
       "knockback": 0
@@ -1032,7 +1032,7 @@
     ],
     "stats": {
       "damage": 10,
-      "attack_speed": 0.6,
+      "attack_speed": 0.48,
       "range": 170,
       "projectile_speed": 155,
       "projectile_count": 1
@@ -1086,7 +1086,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 11,
-      "attack_speed": 1.4,
+      "attack_speed": 1.26,
       "range": 80,
       "arc_angle": 90,
       "knockback": 15
@@ -1136,7 +1136,7 @@
     ],
     "stats": {
       "damage": 25,
-      "attack_speed": 0.6,
+      "attack_speed": 0.48,
       "range": 200,
       "projectile_speed": 130,
       "projectile_count": 2,
@@ -1198,7 +1198,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 8,
-      "attack_speed": 0.3,
+      "attack_speed": 0.24,
       "range": 250,
       "projectile_speed": 0,
       "cone_angle_start": 15,
@@ -1253,7 +1253,7 @@
     "stats": {
       "projectile_count": 1,
       "damage": 35,
-      "attack_speed": 0.35,
+      "attack_speed": 0.32,
       "range": 90,
       "arc_angle": 140,
       "knockback": 50
@@ -1311,7 +1311,7 @@
     ],
     "stats": {
       "damage": 9,
-      "attack_speed": 1.1,
+      "attack_speed": 0.88,
       "range": 220,
       "projectile_speed": 240,
       "projectile_count": 1,
@@ -1389,7 +1389,7 @@
     },
     "stats": {
       "damage": 24,
-      "attack_speed": 0.65,
+      "attack_speed": 0.52,
       "range": 340,
       "projectile_speed": 180,
       "projectile_count": 1,

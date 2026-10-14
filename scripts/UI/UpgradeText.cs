@@ -37,8 +37,11 @@ public static class UpgradeText
                 for (int i = 0; i < choice.WeaponGains.Count; i++)
                 {
                     string stat = choice.WeaponGains[i].Stat;
-                    float before = player.GetWeaponStatForDisplay(weapon, stat);
-                    float next = player.GetWeaponStatForDisplay(after, stat);
+                    // Une stat qui se compte montre le nombre propre de l'arme, celui que la carte monte, sans les
+                    // projectiles ou perforations que les Écussons donnent à toutes les armes (DECISIONS §175).
+                    bool own = StatCatalog.Display(stat) == StatDisplay.Count;
+                    float before = own ? weapon.GetStat(stat) : player.GetWeaponStatForDisplay(weapon, stat);
+                    float next = own ? after.GetStat(stat) : player.GetWeaponStatForDisplay(after, stat);
                     if (i == 0)
                         lines.Add((FullGain(stat, weapon.Base, before, next), ChoiceStyle.GainColor));
                     else
@@ -104,7 +107,7 @@ public static class UpgradeText
                 {
                     PassiveEffectData effect = passive.Data.Effects[i];
                     float before = passive.Value(i);
-                    float after = passive.ValueAfter(i, choice.PassiveGain);
+                    float after = passive.ValueAfter(i, choice.PassiveGain, choice.IntegerGain);
                     if (Mathf.IsEqualApprox(before, after))
                         continue;
                     if (first)

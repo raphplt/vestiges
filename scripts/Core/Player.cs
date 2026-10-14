@@ -2169,16 +2169,14 @@ public partial class Player : CharacterBody2D
     }
 
     /// <summary>
-    /// Tirs à la chaîne (DECISIONS §130, à la place de la rafale de G6g) : les tirs visés d'une attaque partent l'un après
-    /// l'autre, un écart fixe entre deux, resserré pour que la chaîne tienne dans une part de la recharge de l'arme.
+    /// Tirs à la chaîne (DECISIONS §130 et §175) : les tirs visés d'une attaque partent l'un après l'autre, répartis à
+    /// intervalles égaux sur la recharge de l'arme, pour que le rythme reste régulier d'une attaque à la suivante.
     /// </summary>
     private float ChainedShotStep(int shotCount)
     {
         if (shotCount <= 1)
             return 0f;
-        WeaponVisualConfig config = WeaponVisualConfig.Load();
-        float span = AttackIntervalOf(_equippedWeapon) * config.ShotMaxCooldownShare;
-        return Mathf.Min(config.ShotInterval, span / (shotCount - 1));
+        return AttackIntervalOf(_equippedWeapon) * WeaponVisualConfig.Load().ShotCooldownShare / shotCount;
     }
 
     /// <summary>

@@ -594,6 +594,8 @@ public class FragmentOption
     public IReadOnlyList<StatGain> WeaponGains { get; private init; } = System.Array.Empty<StatGain>();
     /// <summary>Amélioration d'objet : un niveau, dont le gain multiplie le pas de l'objet selon la rareté (plan 23 R3).</summary>
     public float PassiveGain { get; private init; } = 1f;
+    /// <summary>Gain de rareté d'un effet entier de l'objet (projectiles, perforation ; DECISIONS §175).</summary>
+    public float IntegerGain { get; private init; } = 1f;
     /// <summary>Rareté tirée avant que la Chance, l'oubli de la zone ou le Péril ne la montent ; null hors amélioration.</summary>
     public UpgradeRarity RolledRarity { get; private init; }
     /// <summary>La Chance (ou l'oubli, le Péril) a monté la rareté de cette carte : l'écran le montre (plan 24 D2).</summary>
@@ -618,16 +620,20 @@ public class FragmentOption
     public bool IsCarried { get; private init; }
 
     public FragmentOption AsCarried() =>
-        new(Id, Type, DisplayName) { Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IsCarried = true };
+        new(Id, Type, DisplayName)
+        {
+            Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IntegerGain = IntegerGain, IsCarried = true,
+        };
 
     public FragmentOption WithRolledRarity(UpgradeRarity rolled) =>
         new(Id, Type, DisplayName)
         {
-            Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, Ascension = Ascension, RolledRarity = rolled,
+            Rarity = Rarity, WeaponGains = WeaponGains, PassiveGain = PassiveGain, IntegerGain = IntegerGain, Ascension = Ascension,
+            RolledRarity = rolled,
         };
 
     public FragmentOption WithPassiveUpgrade(UpgradeRarity rarity) =>
-        new(Id, Type, DisplayName) { Rarity = rarity, PassiveGain = rarity.PassiveGain };
+        new(Id, Type, DisplayName) { Rarity = rarity, PassiveGain = rarity.PassiveGain, IntegerGain = rarity.IntegerGain };
 
     /// <summary>Donne le fragment au joueur ; faux si l'offre a vieilli (arme déjà là, emplacements pleins, maximum).</summary>
     public bool ApplyTo(Player player)
@@ -646,7 +652,7 @@ public class FragmentOption
             case "passive_new":
                 return player.AddOrUpgradePassive(Id);
             case "passive_upgrade":
-                return player.AddOrUpgradePassive(Id, 1, PassiveGain);
+                return player.AddOrUpgradePassive(Id, 1, PassiveGain, IntegerGain);
             case PerkSpecializationOffers.OptionType:
                 return player.AcquireSpecialization(PerkSpecializationDataLoader.Get(Id));
             default:

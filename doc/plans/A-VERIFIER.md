@@ -156,6 +156,6 @@ Livré et testé en headless (suite `inventory`), HUD, pause, échange et Collec
 
 ## Plan 21 G6h — tirs à la chaîne, session cloud du 12 octobre
 
-- [ ] **Cadence** : 0,08 s entre deux tirs d'une attaque (`shot_interval_s`). Assez lisible, trop lent, trop rapide ?
+- [x] **Cadence** : 0,08 s entre deux tirs d'une attaque (`shot_interval_s`). Assez lisible, trop lent, trop rapide ? → trop rapide (Raphaël, 14 octobre) : les tirs se répartissent désormais sur toute la recharge (`shot_cooldown_share`, DECISIONS §175).
 - [ ] **Son** : un son par tir, les suivants −4 dB et variés en hauteur ; les 11 armes à projectiles passent à 60 ms d'intervalle minimal et trois voix (au lieu de 180 ms et une). Mitraille désagréable à haut nombre de projectiles, ou à deux armes à projectiles ensemble ?
 - [ ] **Salves** : Lance-billes, Assiettes et Polaroïd gardent leur éventail ; leurs projectiles en plus partent ensuite au lieu d'élargir l'éventail. Moins efficace contre une foule ?

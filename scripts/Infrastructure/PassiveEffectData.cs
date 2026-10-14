@@ -11,6 +11,8 @@ public sealed class PassiveEffectData
 	public string ModifierType { get; init; }
 	/// <summary>Gain d'une carte commune.</summary>
 	public float Step { get; init; }
+	/// <summary>Stat entière (projectiles, perforation) : le gain de rareté des stats entières multiplie son pas (DECISIONS §175).</summary>
+	public bool Integer { get; init; }
 
 	public bool Multiplicative => ModifierType == "multiplicative";
 

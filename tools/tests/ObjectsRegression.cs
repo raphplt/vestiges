@@ -147,12 +147,12 @@ public partial class ObjectsRegression : Node2D
         _player.AddOrUpgradePassive("memoire_vive", 25);
         bool thirty = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.4f) && _player.GetPassiveLevel("memoire_vive") == 30;
         _player.AddOrUpgradePassive("memoire_vive");
-        bool halfStep = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.44f);
+        bool fullStep = Near(_player.AttackSpeedMultiplier / baseSpeed, 3.48f);
         _player.AddOrUpgradePassive("memoire_vive", 200);
         bool capped = _player.GetPassiveLevel("memoire_vive") == 99 && !_player.AddOrUpgradePassive("memoire_vive")
-            && Near(_player.AttackSpeedMultiplier / baseSpeed, 6.16f);
-        Check(one && five && thirty && halfStep && capped,
-            "Écusson du batteur : +8 % de cadence par carte commune, +240 % au niveau 30, puis un demi-pas par niveau jusqu'au 99");
+            && Near(_player.AttackSpeedMultiplier / baseSpeed, 8.92f);
+        Check(one && five && thirty && fullStep && capped,
+            "Écusson du batteur : +8 % de cadence par carte commune, +240 % au niveau 30, toujours un pas entier jusqu'au 99 (DECISIONS §175)");
 
         float hp = _player.EffectiveMaxHp;
         float current = _player.CurrentHp;
@@ -281,19 +281,27 @@ public partial class ObjectsRegression : Node2D
     {
         Setup();
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool one = Near(_player.BonusProjectiles, 1f) && _player.ObjectMilestones == null;
+        bool one = Near(_player.BonusProjectiles, 0.5f) && _player.ObjectMilestones == null;
         _player.AddOrUpgradePassive("souffle_du_neant", 13);
-        bool before = Near(_player.BonusProjectiles, 14f) && _player.GetPassiveLevel("souffle_du_neant") == 14 && _player.ObjectMilestones == null;
+        bool before = Near(_player.BonusProjectiles, 7f) && _player.GetPassiveLevel("souffle_du_neant") == 14 && _player.ObjectMilestones == null;
         _player.AddOrUpgradePassive("souffle_du_neant");
-        bool reached = _player.ObjectMilestones is { SpreadsExtraProjectiles: true } && Near(_player.BonusProjectiles, 15f);
+        bool reached = _player.ObjectMilestones is { SpreadsExtraProjectiles: true } && Near(_player.BonusProjectiles, 7.5f);
         Check(one && before && reached,
-            "Papier carbone : +1 projectile par carte commune ; au palier 15, les projectiles en plus visent chacun leur cible");
+            "Papier carbone : +0,5 projectile par carte commune (DECISIONS §175) ; au palier 15, les projectiles en plus visent chacun leur cible");
 
         Setup();
         _player.AddOrUpgradePassive("reflet_brise");
-        _player.AddOrUpgradePassive("reflet_brise", 14, 2f);
-        Check(Near(_player.ProjectilePierce, 1f + 28f) && _player.ObjectMilestones is { } milestones && Near(milestones.PierceDamageRamp, 0.1f),
-            "Reflet brisé : +1 perforation par carte commune (× 2 en rare) ; au palier 15, +10 % de dégâts par ennemi traversé");
+        _player.AddOrUpgradePassive("reflet_brise", 14, 2f, 2f);
+        Check(Near(_player.ProjectilePierce, 0.5f + 14f) && _player.ObjectMilestones is { } milestones && Near(milestones.PierceDamageRamp, 0.1f),
+            "Reflet brisé : +0,5 perforation par carte commune, +1 en rare ; au palier 15, +10 % de dégâts par ennemi traversé");
+
+        // Pas de rendement décroissant : passé le niveau 30, une commune donne toujours 0,5 projectile, une légendaire 2.
+        Setup();
+        _player.AddOrUpgradePassive("souffle_du_neant", 40);
+        float atForty = _player.BonusProjectiles;
+        _player.AddOrUpgradePassive("souffle_du_neant", 1, 3f, 4f);
+        Check(Near(atForty, 20f) && Near(_player.BonusProjectiles - atForty, 2f),
+            $"Papier carbone niveau 40 : 20 projectiles en plus, +2 pour une légendaire ({atForty:0.##} → {_player.BonusProjectiles:0.##})");
 
         // Un tir qui perfore trois ennemis : le deuxième encaisse 110 %, le troisième 120 %.
         Projectile shot = GD.Load<PackedScene>("res://scenes/combat/Projectile.tscn").Instantiate<Projectile>();
@@ -358,8 +366,8 @@ public partial class ObjectsRegression : Node2D
         Check(rolls, "Stat fractionnaire : la partie entière toujours, la décimale en chance");
 
         Setup();
-        // L'Écusson pris (1), puis cinq cartes inhabituelles (×1,5) : 8,5 projectiles en plus, la demie en chance.
-        _player.AddOrUpgradePassive("souffle_du_neant", 6, 1.5f);
+        // L'Écusson pris (0,5), puis cinq cartes rares (+1) : 5,5 projectiles en plus, la demie en chance.
+        _player.AddOrUpgradePassive("souffle_du_neant", 6, 2f, 2f);
         MethodInfo roll = typeof(Player).GetMethod("RollBonusProjectiles", Private);
         WeaponInstance bow = _player.WeaponSlots[0];
         int total = 0, low = int.MaxValue, high = 0;
@@ -372,8 +380,8 @@ public partial class ObjectsRegression : Node2D
             high = Math.Max(high, extra);
         }
         float mean = total / (float)attacks;
-        Check(low == 8 && high == 9 && mean > 8.42f && mean < 8.58f,
-            $"Papier carbone niveau 6 en inhabituel : 8,5 projectiles en plus, soit 8 ou 9 par attaque ({mean:0.00} en moyenne sur {attacks})");
+        Check(low == 5 && high == 6 && mean > 5.42f && mean < 5.58f,
+            $"Papier carbone niveau 6 en rare : 5,5 projectiles en plus, soit 5 ou 6 par attaque ({mean:0.00} en moyenne sur {attacks})");
     }
 
     private void CheckStatusDuration()
@@ -1292,6 +1300,12 @@ public partial class ObjectsRegression : Node2D
         WeaponInstance bow = _player.WeaponSlots[0];
         Check(Near(_player.GetWeaponStatForDisplay(bow, "projectile_count"), bow.GetStat("projectile_count") + _player.BonusProjectiles),
             "Fiche d’arme : les projectiles du build sont inclus dans la quantité finale");
+        // La carte d'amélioration de l'arme montre son nombre propre, celui qu'elle monte, sans les projectiles des Écussons.
+        FragmentOption bowCard = new FragmentOption(bow.Id, "weapon_upgrade", bow.Base.Name)
+            .WithWeaponUpgrade(UpgradeRoller.Get("common"), new[] { new StatGain("projectile_count", 0.5f) });
+        string bowText = CardText(bowCard);
+        Check(bowText.Contains("1 → 1,5", StringComparison.Ordinal),
+            $"Carte d’arme : projectiles de l’arc 1 → 1,5, sans les {_player.BonusProjectiles:0.#} du Papier carbone ({bowText})");
         WeaponInstance volley = new(WeaponDataLoader.Get("makeshift_bow"));
         WeaponInstance piercing = new(WeaponDataLoader.Get("makeshift_bow"));
         foreach (WeaponInstance variant in new[] { volley, piercing })
