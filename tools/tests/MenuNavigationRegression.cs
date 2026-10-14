@@ -22,6 +22,7 @@ public partial class MenuNavigationRegression : Node
             HubScreen hub = GD.Load<PackedScene>("res://scenes/Hub.tscn").Instantiate<HubScreen>();
             GetTree().Root.AddChild(hub);
             await Frames(5);
+            await CheckFocusSound(hub);
             GameManager manager = GetNode<GameManager>("/root/GameManager");
             await CheckCampMenu(hub);
             string selected = manager.SelectedCharacterId;
@@ -253,6 +254,25 @@ public partial class MenuNavigationRegression : Node
         GetViewport().PushInput(new InputEventKey { Keycode = Key.Tab, Pressed = false });
         await Frames(2);
     }
+    /// <summary>Le survol ne sonne qu'au déplacement du joueur : un focus donné par le jeu doublerait le clic ou le retour (DECISIONS §178).</summary>
+    private async Task CheckFocusSound(HubScreen hub)
+    {
+        int requests = 0;
+        void Count(string key, AudioManager.SoundOutcome outcome)
+        {
+            if (key == "sfx_menu_survol") requests++;
+        }
+        AudioManager.Instance.SoundRequested += Count;
+        HubMenuButton enter = Field<HubMenuButton>(hub, "_enterVoidButton");
+        enter.GrabFocusSilently();
+        await Press("ui_down");
+        Check(requests == 1 && !enter.HasFocus(), "Descendre dans le menu sonne le survol");
+        enter.GrabFocus();
+        await Frames(2);
+        Check(requests == 1 && enter.HasFocus(), "Un focus donné par le jeu reste muet");
+        AudioManager.Instance.SoundRequested -= Count;
+    }
+
     private async Task Press(string action)
     {
         Input.ParseInputEvent(new InputEventAction { Action = action, Pressed = true });

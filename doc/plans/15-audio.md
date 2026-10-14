@@ -726,3 +726,11 @@ Retours de Raphaël après essai en jeu : le son de retour et le clic de bouton 
 ### U1d — clic de bouton, 14 octobre (à écouter)
 
 Retour : « le clic bouton n'est pas assez reconnaissable ni percutant ». `~/.local/share/vestiges-audio/2026-10-14/menus-clic/index.html` (hors dépôt) : quatre candidats à attaque sèche, présence entre 2 et 4 kHz sans bruit large, queues de 70 à 90 ms, 3 dB au-dessus du clic en jeu, avec un curseur de niveau exporté. A pierre sèche, B pierre sur métal (même matière que le survol), C loquet en deux temps, D interrupteur ancien. La scène joue survols, clic, retour et cloche du jeu. Aucun son écouté par l'agent.
+
+### U1e — doublons et mix, 14 octobre
+
+Retours : « baisse le hover et monte le clic » ; « que ce soit clic ou retour j'ai l'impression d'entendre des sons en double ». Cause des doublons : le survol sonnait à chaque prise de focus, y compris un focus donné par le jeu (page ouverte, retour sur le bouton d'origine, onglet des Paramètres) ou par le clic de souris lui-même ; chaque clic et chaque retour entraînaient un cran.
+
+- Le focus ne sonne plus qu'au déplacement du joueur (`UITheme.IsNavigationInput` : flèches, manette, Tab) ; le survol à la souris sonne toujours à l'entrée du pointeur.
+- Mix : `sfx_menu_survol` à −3 dB, `sfx_menu_clic` à +4 dB dans `sounds.json` (le retour garde son niveau).
+- Contrôles : build sans avertissement, `audio_bank_audit.py` 0 échec ; `MenuNavigationRegression` vérifie qu'une flèche sonne le survol et qu'un focus donné par le code reste muet (la suite s'arrête plus loin sur la vérification du portrait de la Scaphandrière, hors de ce lot). Suites audio et Campement non relancées sur ce dernier changement, à la demande de Raphaël.

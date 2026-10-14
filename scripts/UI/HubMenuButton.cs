@@ -47,12 +47,16 @@ public partial class HubMenuButton : Button
 	{
 		MouseEntered += () =>
 		{
-			if (!Disabled)
-				GrabFocus();
+			if (Disabled)
+				return;
+			if (!HasFocus())
+				AudioManager.PlayUI("sfx_menu_survol");
+			GrabFocus();
 		};
+		// Au clavier et à la manette seulement : le survol à la souris a déjà sonné, et un focus donné par le jeu se tait.
 		FocusEntered += () =>
 		{
-			if (!_silentFocus)
+			if (!_silentFocus && UITheme.IsNavigationInput())
 				AudioManager.PlayUI("sfx_menu_survol");
 			Animate(1f);
 		};

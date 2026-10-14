@@ -261,7 +261,7 @@
   },
   "sfx_menu_clic": {
     "path": "res://assets/audio/sfx/ui/menu_click.wav",
-    "volume_db": 0,
+    "volume_db": 4,
     "min_interval_ms": 120,
     "effect_id": "menu_click",
     "priority": 30,
@@ -277,7 +277,7 @@
   },
   "sfx_menu_survol": {
     "path": "res://assets/audio/sfx/ui/menu_hover_1.wav",
-    "volume_db": 0,
+    "volume_db": -3,
     "min_interval_ms": 120,
     "effect_id": "menu_hover",
     "priority": 10,
