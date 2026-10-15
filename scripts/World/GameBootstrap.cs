@@ -456,7 +456,9 @@ public partial class GameBootstrap : Node
         player.InitializeCharacter(data);
         // Le Campement (plan 36) : ce qui a été acheté au Hub vaut pour toute la run. Le FragmentManager, ajouté en différé,
         // a passé son _Ready (bannissements de base) lors des attentes du chargement : ses ajouts ne sont pas écrasés.
-        CampUpgrades.Apply(player, fragmentManager, essenceTracker, MetaSaveManager.GetCampRanks(), DevelopmentMode.IsEnabled);
+        CampUpgrades.Totals camp = CampUpgrades.Apply(player, fragmentManager, essenceTracker, MetaSaveManager.GetCampRanks(),
+            DevelopmentMode.IsEnabled);
+        scoreManager.VestigeMultiplier = 1f + camp.VestigeGain;
         perkManager.ApplyPassivePerks(data.Id);
         scoreManager.SetRunTracker(runTracker);
         gm.ActiveMutators = new System.Collections.Generic.List<string>();

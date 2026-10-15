@@ -37,6 +37,7 @@ public static class CampUpgradeDataLoader
         ["rerolls"] = CampEffect.Rerolls,
         ["banishes"] = CampEffect.Banishes,
         ["start_essence"] = CampEffect.StartEssence,
+        ["vestige_gain"] = CampEffect.VestigeGain,
         ["stat"] = CampEffect.Stat,
     };
 
@@ -164,7 +165,9 @@ public static class CampUpgradeDataLoader
             if (item.Error == null && (entry.TryGetProperty("stat", out _) || entry.TryGetProperty("modifier_type", out _)))
                 item.Fail("stat et modifier_type ne valent que pour l'effet stat");
             // Emplacements, places du sac, relances, bannissements et Essence se comptent en unités entières.
-            upgrade.Step = item.Integer(entry, "step", 1, 1000);
+            upgrade.Step = upgrade.Effect == CampEffect.VestigeGain
+                ? item.Positive(entry, "step")
+                : item.Integer(entry, "step", 1, 1000);
         }
 
         List<JsonElement> prices = item.List(entry, "prices", 1);

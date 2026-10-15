@@ -20,7 +20,7 @@
 | Lot | Contenu | État |
 |---|---|---|
 | **T1** Réglages | Coffres à l'appui, collés (40 px) ; autres lieux ÷2 et fouille qui suit le joueur ; anneau d'apparition ; Vestiges 0,7 ; brouillard ; début de run ; dash invulnérable | **Livré le 15 octobre** |
-| T2 Campement | Retrait PV, dégâts, cadence, vitesse, régénération, armure (sans remboursement, §152) ; nouvelle amélioration « gain de Vestiges » | À faire |
+| T2 Campement | Retrait PV, dégâts, cadence, vitesse, régénération, armure (sans remboursement, §152) ; nouvelle amélioration « gain de Vestiges » | **Livré le 15 octobre** |
 | T3 Niveaux de difficulté | Simple et Normal ouverts, Difficile et Impossible à gagner en battant l'Indicible ; nombre, PV, dégâts, boss, multiplicateur de Vestiges ; conception au plan 47 L4 et 46 | À concevoir puis faire |
 | T4 Essence et coffres | Essence par type de créature dans son JSON ; prix des coffres qui monte par coffre ouvert et plus au temps ; coffres de boss et d'élites gratuits | À faire |
 | T5 Lisibilité | Repères au bord de l'écran pour tous (l'Étiquette perdue à renforcer ou retirer) ; première run guidée ; dash montré dès le début | À concevoir puis faire |
@@ -36,3 +36,12 @@
 - **Dash** : invulnérable 0,15 s, soit tout le dash commun ; le début de la glissade et du saut (profils plus longs) aussi.
 
 Vérifié : build sans avertissement, smoke, déplacements (tests réécrits : coffre ouvert à l'appui, fouille qui continue en bougeant, dash protégé, mort en dash par la variante de 60 ms), inventaire. Pas de mesure de densité : réglages tranchés par Raphaël. **À juger en jouant** : ouverture au contact, fouille en mouvement, distance d'apparition en courant, brouillard.
+
+## 4. T2, livré le 15 octobre
+
+- **Retirés** de `camp_upgrades.json` : Sac de couchage (PV), Pierre à aiguiser (dégâts), Métronome (cadence), Bonnes chaussures (vitesse), Marmite (régénération), Rembourrage (armure), avec leurs textes, leurs icônes et leurs fabriques dans `tools/sprites/ui/camp.py`. Gardés : Filet à papillons (aimant), Carnet de notes (XP), Patte de lapin (Chance).
+- **Remboursement** : rien à construire. La normalisation du profil existante retire une amélioration inconnue et **rend ce qui avait été versé** pour elle, à la première lecture du profil (déjà testée par `CampRegression`).
+- **Boîte en fer** (`camp_vestige_gain`, rayon Confort) : +10 % de Vestiges de fin de run par rang, cinq rangs à 300, 700, 1 400, 2 500 et 4 000. Effet `vestige_gain` (`CampEffect.VestigeGain`), total porté par `CampUpgrades.Totals.VestigeGain`, posé par `GameBootstrap` dans `ScoreManager.VestigeMultiplier`, appliqué par `ScoreConfig.VestigesFor(kills, multiplier)`. Le multiplicateur des niveaux de difficulté (T3) passera par le même endroit.
+- **Campement plein** : 98 450 → 56 650 Vestiges, neuf améliorations au lieu de quatorze. À 0,7 Vestige par élimination, il se remplit environ 2,3 fois plus vite qu'avant T1, et plus encore une fois la Boîte en fer achetée. D'autres usages des Vestiges restent à trouver (§184).
+
+Vérifié : build sans avertissement, smoke, Campement (catalogue, achats, remboursements, normalisation, application en run, multiplicateur en vraie run), mode dev ; capture de la page du Campement (rayons et fiche de la Boîte en fer) regardée. Icône de la Boîte en fer provisoire : boîte rouge ouverte, éclats dedans.

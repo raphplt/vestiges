@@ -16,8 +16,11 @@ public sealed class ScoreConfig
 
     public float KillsPerVestige { get; private init; }
 
-    /// <summary>Vestiges d'une run de <paramref name="kills"/> éliminations, arrondis en dessous.</summary>
-    public int VestigesFor(int kills) => Mathf.FloorToInt(kills / KillsPerVestige);
+    /// <summary>
+    /// Vestiges d'une run de <paramref name="kills"/> éliminations, multipliés par <paramref name="multiplier"/>
+    /// (Campement), arrondis en dessous.
+    /// </summary>
+    public int VestigesFor(int kills, float multiplier = 1f) => Mathf.FloorToInt(kills / KillsPerVestige * multiplier);
 
     /// <summary>Le barème du jeu, lu une fois ; un barème invalide arrête le chargement de la run (GameBootstrap).</summary>
     public static ScoreConfig Load() =>

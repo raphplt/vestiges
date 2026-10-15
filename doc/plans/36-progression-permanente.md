@@ -1,5 +1,7 @@
 # Plan 36 — La progression permanente : des améliorations au Hub
 
+> **15 octobre 2026** : les six améliorations de puissance brute (PV, dégâts, cadence, vitesse, régénération, armure) sont retirées et la Boîte en fer (+10 % de Vestiges par rang) ajoutée ([plan 50 T2](50-retours-premier-testeur.md), DECISIONS §152 et §184). Les prix et comptes de runs ci-dessous sont historiques.
+
 ## Reprise visuelle M12 — Alkhemikal pour les titres, 12 octobre 2026
 
 Raphaël compare en jeu Pixel Operator, Alkhemikal et Ithaca (dafont,

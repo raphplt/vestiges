@@ -17,6 +17,8 @@ public enum CampEffect
     Rerolls,
     Banishes,
     StartEssence,
+    /// <summary>Vestiges gagnés en fin de run, en fraction de plus (DECISIONS §184).</summary>
+    VestigeGain,
     Stat,
 }
 

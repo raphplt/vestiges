@@ -20,7 +20,7 @@ namespace Vestiges.Tests;
 public partial class CampRegression : Node
 {
     private const string CatalogPath = "res://data/progression/camp_upgrades.json";
-    private const int FullCampPrice = 98_450;
+    private const int FullCampPrice = 56_650;
 
     private int _checks;
     private int _failures;
@@ -65,17 +65,21 @@ public partial class CampRegression : Node
             foreach (int price in upgrade.Prices)
                 total += price;
         }
-        Check(all.Count == 14, $"14 améliorations ({all.Count})");
-        Check(branches[CampBranch.Capacities] == 4 && branches[CampBranch.Stats] == 9 && branches[CampBranch.Comfort] == 1,
-            $"4 capacités, 9 stats, 1 confort ({branches[CampBranch.Capacities]}, {branches[CampBranch.Stats]}, {branches[CampBranch.Comfort]})");
+        Check(all.Count == 9, $"9 améliorations ({all.Count})");
+        Check(branches[CampBranch.Capacities] == 4 && branches[CampBranch.Stats] == 3 && branches[CampBranch.Comfort] == 2,
+            $"4 capacités, 3 stats, 2 confort ({branches[CampBranch.Capacities]}, {branches[CampBranch.Stats]}, {branches[CampBranch.Comfort]})");
         Check(total == FullCampPrice, $"Campement plein : {FullCampPrice} Vestiges ({total})");
         Check(CampUpgradeDataLoader.BaseWeaponSlots == 2, "deux emplacements d'armes au départ");
         CampUpgradeData slots = CampUpgradeDataLoader.Get("camp_weapon_slots");
         Check(slots != null && slots.MaxRank == 2 && slots.PriceOfRank(1) == 400 && slots.PriceOfRank(2) == 2500,
             "Râtelier : 2 rangs, 400 puis 2 500");
-        CampUpgradeData hp = CampUpgradeDataLoader.Get("camp_max_hp");
-        Check(hp != null && hp.Effect == CampEffect.Stat && hp.IsMultiplicative && Mathf.IsEqualApprox(hp.Step, 0.05f) && hp.Percent,
-            "PV max : +5 % par rang, multiplicatif");
+        foreach (string raw in new[] { "camp_max_hp", "camp_damage", "camp_attack_speed", "camp_speed", "camp_regen", "camp_armor" })
+            Check(CampUpgradeDataLoader.Get(raw) == null, $"puissance brute retirée : {raw} (DECISIONS §152, §184)");
+        CampUpgradeData gain = CampUpgradeDataLoader.Get("camp_vestige_gain");
+        Check(gain != null && gain.Effect == CampEffect.VestigeGain && Mathf.IsEqualApprox(gain.Step, 0.1f) && gain.Percent
+            && gain.MaxRank == 5, "Boîte en fer : +10 % de Vestiges par rang, cinq rangs");
+        Check(ScoreConfig.Load().VestigesFor(100, 1.5f) == Mathf.FloorToInt(100 / ScoreConfig.Load().KillsPerVestige * 1.5f),
+            "Vestiges de fin de run multipliés par le Campement");
         Check(TranslationServer.Translate(slots?.NameKey ?? "") != slots?.NameKey, "noms traduits");
     }
 
@@ -105,7 +109,7 @@ public partial class CampRegression : Node
             string message = CampUpgradeDataLoader.Apply(root.ToJsonString());
             Check(message != null && message.Contains(expected, StringComparison.Ordinal), $"Campement refusé ({label}) : {message}");
         }
-        Check(CampUpgradeDataLoader.All.Count == 14 && CampUpgradeDataLoader.Get("camp_rerolls")?.MaxRank == 3,
+        Check(CampUpgradeDataLoader.All.Count == 9 && CampUpgradeDataLoader.Get("camp_rerolls")?.MaxRank == 3,
             "un fichier refusé ne remplace pas le catalogue chargé");
     }
 
@@ -144,7 +148,7 @@ public partial class CampRegression : Node
         MetaSaveManager.RefundCampRank("camp_rerolls", out _);
         Check(MetaSaveManager.GetCampRank("camp_rerolls") == 2 && MetaSaveManager.GetVestiges() == 9900,
             "un rang rendu : son prix (2 000) revient");
-        MetaSaveManager.BuyCampRank("camp_damage", out _);
+        MetaSaveManager.BuyCampRank("camp_magnet", out _);
         Check(MetaSaveManager.GetCampRefundAmount() == 1350,
             "la confirmation peut annoncer les 1 350 Vestiges réellement versés, sans modifier le solde");
         int refunded = MetaSaveManager.RefundAllCamp(out saved);
@@ -181,10 +185,11 @@ public partial class CampRegression : Node
     private void CheckApply()
     {
         CampUpgrades.Totals fresh = CampUpgrades.Compute(new Dictionary<string, int>(), false);
-        Check(fresh == new CampUpgrades.Totals(2, 10, 0, 0, 0), $"profil neuf : 2 emplacements, sac de 10, rien d'autre ({fresh})");
+        Check(fresh == new CampUpgrades.Totals(2, 10, 0, 0, 0, 0f), $"profil neuf : 2 emplacements, sac de 10, rien d'autre ({fresh})");
         Dictionary<string, int> full = FullRanks();
         CampUpgrades.Totals totals = CampUpgrades.Compute(full, false);
-        Check(totals == new CampUpgrades.Totals(4, 25, 3, 3, 100), $"Campement plein : 4 emplacements, sac de 25, +3, +3, +100 Essence ({totals})");
+        Check(totals with { VestigeGain = 0f } == new CampUpgrades.Totals(4, 25, 3, 3, 100, 0f) && Mathf.IsEqualApprox(totals.VestigeGain, 0.5f),
+            $"Campement plein : 4 emplacements, sac de 25, +3, +3, +100 Essence, Vestiges +50 % ({totals})");
         Check(CampUpgrades.Compute(new Dictionary<string, int>(), true).WeaponSlots == 4, "mode dev : quatre emplacements");
         Check(CampUpgrades.Compute(new Dictionary<string, int> { ["camp_weapon_slots"] = 7 }, false).WeaponSlots == 4,
             "un rang trop haut ne dépasse pas quatre emplacements");
@@ -221,12 +226,11 @@ public partial class CampRegression : Node
         Check(fragments.RerollsRemaining == rerolls + 3 && fragments.BanishesRemaining == banishes + 3,
             $"relances +3, bannissements +3 ({fragments.RerollsRemaining}, {fragments.BanishesRemaining})");
         Check(essence.CurrentEssence == 100, $"100 Essence au départ ({essence.CurrentEssence})");
-        Check(Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp * 1.25f), $"PV max ×1,25 ({maxHp} → {player.EffectiveMaxHp})");
-        Check(Mathf.IsEqualApprox(player.CurrentHp, player.EffectiveMaxHp), "PV courants remplis d'autant");
-        Check(Mathf.IsEqualApprox(player.DamageMultiplier, 1.2f) && Mathf.IsEqualApprox(player.AttackSpeedMultiplier, 1.15f)
-            && Mathf.IsEqualApprox(player.SpeedMultiplier, 1.1f), "dégâts ×1,2, cadence ×1,15, vitesse ×1,1, sans composer");
-        Check(Mathf.IsEqualApprox(player.BonusRegenRate, regen + 0.5f) && Mathf.IsEqualApprox(player.Armor, armor + 5f)
-            && Mathf.IsEqualApprox(player.LuckBonus, luck + 0.15f), "régénération +0,5, armure +5, Chance +0,15");
+        Check(Mathf.IsEqualApprox(player.EffectiveMaxHp, maxHp) && Mathf.IsEqualApprox(player.DamageMultiplier, 1f)
+            && Mathf.IsEqualApprox(player.AttackSpeedMultiplier, 1f) && Mathf.IsEqualApprox(player.SpeedMultiplier, 1f)
+            && Mathf.IsEqualApprox(player.BonusRegenRate, regen) && Mathf.IsEqualApprox(player.Armor, armor),
+            "aucune puissance brute : PV, dégâts, cadence, vitesse, régénération et armure inchangés");
+        Check(Mathf.IsEqualApprox(player.LuckBonus, luck + 0.15f), "Chance +0,15");
         Check(Mathf.IsEqualApprox(player.XpMagnetMultiplier, 1.5f) && Mathf.IsEqualApprox(player.XpGainMultiplier, 1.2f),
             "attraction ×1,5, XP ×1,2");
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
@@ -276,7 +280,9 @@ public partial class CampRegression : Node
         Check(fragments.RerollsRemaining == (fullCamp ? 6 : 3), $"run : relances ({fragments.RerollsRemaining})");
         Check(fragments.BanishesRemaining == PerilDataLoader.BanishFree + (fullCamp ? 3 : 0), $"run : bannissements ({fragments.BanishesRemaining})");
         Check(essence.CurrentEssence >= (fullCamp ? 100 : 0), $"run : Essence de départ ({essence.CurrentEssence})");
-        Check(Mathf.IsEqualApprox(player.DamageMultiplier, fullCamp ? 1.2f : 1f), $"run : dégâts ×{player.DamageMultiplier}");
+        Check(Mathf.IsEqualApprox(player.DamageMultiplier, 1f), $"run : dégâts ×{player.DamageMultiplier}, sans puissance brute");
+        float vestiges = world.GetNode<Vestiges.Score.ScoreManager>("ScoreManager").VestigeMultiplier;
+        Check(Mathf.IsEqualApprox(vestiges, fullCamp ? 1.5f : 1f), $"run : Vestiges ×{vestiges}");
         foreach (WeaponData weapon in WeaponDataLoader.GetAll())
             if (MetaSaveManager.IsWeaponUnlocked(weapon.Id))
                 player.AddWeapon(weapon);

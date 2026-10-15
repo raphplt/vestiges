@@ -472,24 +472,6 @@ CAMP_REROLLS_DESC,+{0} relance par run,+{0} reroll per run
 CAMP_BANISHES,Boîte d'allumettes,Box of Matches
 CAMP_BANISHES_HINT,Écarter une carte pour toute la run.,Remove a card for the whole run.
 CAMP_BANISHES_DESC,+{0} bannissement gratuit par run,+{0} free banish per run
-CAMP_MAX_HP,Sac de couchage,Sleeping Bag
-CAMP_MAX_HP_HINT,Tu commences chaque run plus solide.,You start every run tougher.
-CAMP_MAX_HP_DESC,+{0} PV max,+{0} max HP
-CAMP_DAMAGE,Pierre à aiguiser,Whetstone
-CAMP_DAMAGE_HINT,Toutes tes armes frappent plus fort.,All your weapons hit harder.
-CAMP_DAMAGE_DESC,+{0} dégâts,+{0} damage
-CAMP_ATTACK_SPEED,Métronome,Metronome
-CAMP_ATTACK_SPEED_HINT,Toutes tes armes attaquent plus vite.,All your weapons attack faster.
-CAMP_ATTACK_SPEED_DESC,+{0} cadence d'attaque,+{0} attack speed
-CAMP_SPEED,Bonnes chaussures,Good Boots
-CAMP_SPEED_HINT,Tu te déplaces plus vite.,You move faster.
-CAMP_SPEED_DESC,+{0} vitesse de déplacement,+{0} movement speed
-CAMP_REGEN,Marmite,Cooking Pot
-CAMP_REGEN_HINT,Tu reprends des PV avec le temps.,You recover HP over time.
-CAMP_REGEN_DESC,+{0} PV/min,+{0} HP/min
-CAMP_ARMOR,Rembourrage,Padding
-CAMP_ARMOR_HINT,Chaque coup reçu fait moins mal.,Every hit you take hurts less.
-CAMP_ARMOR_DESC,+{0} armure,+{0} armor
 CAMP_MAGNET,Filet à papillons,Butterfly Net
 CAMP_MAGNET_HINT,Tu ramasses l'XP de plus loin.,You collect XP from farther away.
 CAMP_MAGNET_DESC,+{0} distance de ramassage d'XP,+{0} XP pickup range
@@ -502,6 +484,9 @@ CAMP_LUCK_DESC,+{0} chance,+{0} luck
 CAMP_START_ESSENCE,Bocal d'Essence,Essence Jar
 CAMP_START_ESSENCE_HINT,De l'Essence en poche dès le départ.,Essence in your pocket from the start.
 CAMP_START_ESSENCE_DESC,+{0} Essence au départ,+{0} starting Essence
+CAMP_VESTIGE_GAIN,Boîte en fer,Tin Box
+CAMP_VESTIGE_GAIN_HINT,Tu rapportes plus de Vestiges de chaque run.,You bring back more Vestiges from every run.
+CAMP_VESTIGE_GAIN_DESC,+{0} Vestiges gagnés,+{0} Vestiges earned
 UI_CAMP_TITLE,Campement,Camp
 UI_CAMP_BRANCH_CAPACITIES,Capacités,Capacities
 UI_CAMP_BRANCH_STATS,Statistiques,Stats

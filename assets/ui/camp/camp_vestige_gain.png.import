@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dvqe6mmon6bie"
-path="res://.godot/imported/camp_speed.png-5936fdf845e9fdadab84de2e0257edf8.ctex"
+uid="uid://yeyj7ltonl6b"
+path="res://.godot/imported/camp_vestige_gain.png-aa4043a46a28b150281cbc149679c939.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/camp/camp_speed.png"
-dest_files=["res://.godot/imported/camp_speed.png-5936fdf845e9fdadab84de2e0257edf8.ctex"]
+source_file="res://assets/ui/camp/camp_vestige_gain.png"
+dest_files=["res://.godot/imported/camp_vestige_gain.png-aa4043a46a28b150281cbc149679c939.ctex"]
 
 [params]
 

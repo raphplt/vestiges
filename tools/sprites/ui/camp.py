@@ -72,67 +72,14 @@ def cards() -> Item:
     return item
 
 
-def bedroll() -> Item:
-    item = Item('camp_max_hp')
-    item.add('green', box((0, 0, 0), (10, 8, 6), 4))
-    item.add('paper', oval((-10, 0, 0), (1.5, 8, 6)))
-    item.add('leather', ring((-10, 0, 1), 4, 1), box((4, 0, 0), (1, 8.2, 6.2), 3))
-    item.add('yellow', box((4, 3, 6), (1.5, 1.6, .8)))
-    return item
-
-
-def whetstone() -> Item:
-    item = Item('camp_damage')
-    item.add('dark', box((0, -5, 0), (12, 4, 6), 1))
-    item.add('steel', box((0, -2, 0), (12, 1.5, 6), .8))
-    item.add('light', line([(-7, 1, 5), (7, 9, 5)], 1.2))
-    item.add('leather', line([(-7, 1, 5), (-13, -2, 5)], 1.6))
-    item.add('dark', line([(-5, -1, 6.1), (5, -1, 6.1)], .5))
-    return item
-
-
-def metronome() -> Item:
-    item = Item('camp_attack_speed', yaw=.2)
-    item.add('wood', polygon([(-10, -13), (10, -13), (4, 14), (-4, 14)], 0, 4))
-    item.add('dark', polygon([(-7, -10), (7, -10), (2, 11), (-2, 11)], 4.2, .4))
-    item.add('paper', line([(0, -8, 5), (0, 10, 5)], .8))
-    item.add('steel', line([(0, -9, 5.8), (8, 9, 5.8)], .8))
-    item.add('copper', box((6, 5, 6), (2, 1.8, .8)))
-    item.add('leather', box((0, -14, 0), (11, 1.2, 4.5)))
-    return item
-
-
-def boots() -> Item:
-    item = Item('camp_speed')
-    for x, y, z in [(-6, 2, -3), (5, -2, 3)]:
-        item.add('leather', box((x, y + 3, z), (4, 9, 3), 1),
-                 box((x + 2, y - 6, z + 1), (6, 3, 4), 1.5))
-        item.add('dark', box((x + 2, y - 9, z + 1), (6, 1, 4.2), .5))
-        item.add('wood', box((x, y + 10, z), (4.1, 1.5, 3.2), .4))
-        item.add('paper', line([(x - 2, y + 2, z + 3.2), (x + 2, y + 2, z + 3.2)], .5),
-                 line([(x - 2, y - 1, z + 3.2), (x + 2, y - 1, z + 3.2)], .5))
-    return item
-
-
-def pot() -> Item:
-    item = Item('camp_regen')
-    item.add('steel', union(box((0, -3, 0), (9, 7, 6), 4),
-                           line([(-9, 1, 0), (-13, 1, 0), (-13, -3, 0), (-9, -3, 0)], 1.2),
-                           line([(9, 1, 0), (13, 1, 0), (13, -3, 0), (9, -3, 0)], 1.2)))
-    item.add('dark', oval((0, 4, 0), (9, 1.3, 6)))
-    item.add('light', oval((0, 5, 0), (9, 1, 6)))
-    item.add('leather', box((0, 7, 0), (2.5, 1.5, 2)))
-    return item
-
-
-def padding() -> Item:
-    item = Item('camp_armor')
-    vest = polygon([(-10, -13), (10, -13), (10, 9), (5, 13), (0, 8), (-5, 13), (-10, 9)], 0, 3)
-    item.add('paper', vest)
-    item.add('leather', line([(0, 7, 3.5), (0, -13, 3.5)], .8))
-    for y in [-8, -2, 4]:
-        item.add('wood', line([(-8, y, 3.4), (-2, y, 3.4)], .7),
-                 line([(2, y, 3.4), (8, y, 3.4)], .7))
+def tin_box() -> Item:
+    item = Item('camp_vestige_gain', yaw=.25)
+    item.add('red', box((0, -5, 0), (10, 5, 6), .8))
+    item.add('yellow', box((0, -5, 6.2), (7, 2.5, .3), .3), box((0, -1, 0), (10.4, .8, 6.4), .3))
+    item.add('red', box((0, 8, -6), (10, 7, .9), .8))
+    item.add('steel', box((0, 1, -6), (10.4, .8, 1.2), .3))
+    item.add('glass', polygon([(-6, 0), (-3, 7), (0, 0)], 0, 2.5), polygon([(1, 0), (4, 5), (7, 0)], 1, 2))
+    item.add('yellow', polygon([(-2, 0), (0, 4), (2, 0)], 3, 1.5))
     return item
 
 
@@ -168,8 +115,8 @@ def rabbit_foot() -> Item:
     return item
 
 
-FACTORIES = [weapon_rack, satchel, cards, matchbox, bedroll, whetstone,
-             metronome, boots, pot, padding, net, notebook, rabbit_foot, essence_jar]
+FACTORIES = [weapon_rack, satchel, cards, matchbox, net, notebook, rabbit_foot,
+             essence_jar, tin_box]
 
 
 def catalogue() -> dict[str, Image.Image]:

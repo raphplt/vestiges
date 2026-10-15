@@ -36,6 +36,8 @@ public partial class ScoreManager : Node
     public bool IsNewRecord => _endSettled ? _endedWithRecord : _totalKills > BestKills;
     public bool IsNewCharacterRecord => _endSettled ? _endedWithCharacterRecord : _totalKills > CharacterBestKills;
     public int VestigesEarned { get; private set; }
+    /// <summary>Multiplicateur des Vestiges de fin de run, posé au départ par le Campement.</summary>
+    public float VestigeMultiplier { get; set; } = 1f;
 
     private RunTracker _runTracker;
 
@@ -81,7 +83,7 @@ public partial class ScoreManager : Node
 
         RunRecord record = BuildRunRecord();
         record.RunId = System.Guid.NewGuid().ToString("N");
-        VestigesEarned = _config?.VestigesFor(_totalKills) ?? 0;
+        VestigesEarned = _config?.VestigesFor(_totalKills, VestigeMultiplier) ?? 0;
         RunSettlement.Outcome outcome = RunSettlement.Settle(record, VestigesEarned);
 
         GameManager gm = GetNode<GameManager>("/root/GameManager");
