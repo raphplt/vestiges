@@ -2141,3 +2141,14 @@ Raphaël, en vocal avec un joueur qui découvrait le jeu, plus ses propres remar
 **Niveaux de difficulté, le même jour** (plan 50 T3) : « écart moyen » retenu (Simple ×0,75 créatures, ×0,8 PV, ×0,7 dégâts ; Difficile ×1,3 / ×1,35 / ×1,3, Vestiges ×1,25 ; Impossible ×1,6 / ×1,8 / ×1,7, Vestiges ×1,5), les boss suivant PV et dégâts. En plus : Effacement plus rapide, élites plus fréquentes **et** Péril de départ (3 en Difficile, 6 en Impossible), qui s'ajoute aux multiplicateurs. Choix sur l'écran du personnage, sous la fiche, dernier niveau retenu.
 
 **Lisibilité, le même jour** (plan 50 T5) : deux flèches de coffres pour tous, **Étiquette perdue retirée** ; invite du dash au premier danger, une fois par profil. Première run guidée : « j'aurais tendance à dire trois étapes », mais Raphaël pointe un manque plus large : **pas d'objectif dans la partie**. « Le but de Megabonk, c'est trouver le portail et activer le portail pour passer au niveau d'après. Risk of Rain 2, c'est pareil » ; « quand la partie dure depuis 15-20 minutes, ça peut être perdu » ; « rendre le jeu moins linéaire […] plus structurer le jeu, plus rendre la boucle de gameplay plus complexe ou plus intéressante », avec un champ de liberté plus restreint (carte qui s'efface, boss à heure fixe). « Il faudrait y mettre un certain investissement de recherche et développement. » Chantier de conception à ouvrir ; la première run guidée attend son résultat, ses étapes devant mener à l'objectif de la run.
+
+## 185. Objectifs dans la run : boss invoqué, terres successives à étudier — 15 octobre 2026
+
+Brainstorm sur le manque relevé au §184 (pas d'objectif, joueur perdu vers 15–20 min). Quatre pistes proposées : A, Mémoriaux à raviver pour appeler l'Indicible ; B, piste narrative ; C, terres successives ; D, contrats au choix. Étude au [plan 51](51-objectifs-de-run.md).
+
+**Tranché :**
+- **A presque acquise, C à étudier** : « A et C me parlent beaucoup (que ce soit l'un l'autre ou les deux. mais A je suis presque sur qu'il le faut) il faut creuser dans ces directions sur la faisabilité et les implications ».
+- **Boss plus à heure fixe** : « on peut l'invoquer quand on veut […] si on rassemble assez de mémoriaux ou qu'on active un portail on peut lancer le boss », à tordre selon le lore. Ce qui pousse à le faire : une difficulté qui monte sans cesse, « au bout d'un moment, ça sera intenable. Donc on sera obligé de faire le boss, soit pour passer au late game, soit pour aller sur la map suivante ».
+- **Ampleur** : plusieurs terres successives le tentent, avec des implications majeures (quatre ou cinq biomes aujourd'hui). Le lore peut être retouché « même en profondeur », en gardant une cohérence globale.
+- **Ressenti visé** : course contre l'Effacement, pression et choix serrés, « limite une difficulté croissante comme Risk of Rain 2 et Megabonk ».
+- **Écartées** : la piste narrative (B) et les contrats (D).
