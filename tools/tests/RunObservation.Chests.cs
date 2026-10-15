@@ -188,11 +188,7 @@ public partial class RunObservation
             _player.GlobalPosition = nearest.GlobalPosition + new Vector2(-760f, 0f);
             _camera.ResetSmoothing();
             await Frames(30);
-            SaveFrame("loot-pointer-without-label");
-            if (!_player.AddItemCopy("etiquette_perdue"))
-                throw new System.InvalidOperationException("Étiquette indisponible pour la capture.");
-            await Frames(30);
-            SaveFrame("loot-pointer-with-label");
+            SaveFrame("loot-pointer");
         }
         _player.GlobalPosition = nearest.GlobalPosition + new Vector2(-30f, 4f);
         _player.AIInputOverride = Vector2.Zero;

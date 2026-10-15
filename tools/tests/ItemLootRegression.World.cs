@@ -12,7 +12,8 @@ public partial class ItemLootRegression
 {
     private async Task CheckCatalogWorldItems()
     {
-        string[] ids = { "pied_de_biche", "etiquette_perdue", "ticket_de_vestiaire", "sonnette", "carnet_dadresses" };
+        string[] ids = { "pied_de_biche", "ticket_de_vestiaire", "sonnette", "carnet_dadresses" };
+        Check(PassiveSouvenirDataLoader.Get("etiquette_perdue") == null, "Étiquette perdue retirée : les flèches de coffres valent pour tous (DECISIONS §184)");
         foreach (string id in ids)
         {
             bool exists = PassiveSouvenirDataLoader.Get(id) is { IsBadge: false };
@@ -22,13 +23,13 @@ public partial class ItemLootRegression
         _player.SetBagCapacity(200);
         foreach (string id in ids)
             Check(_player.AddItemCopy(id), $"acquisition réelle applique {id}");
-        Check(WorldItemEffects.FreeChestChance(_player) == .15f && WorldItemEffects.ChestPointers(_player) == 1
+        Check(WorldItemEffects.FreeChestChance(_player) == .15f
             && WorldItemEffects.ExtraItemSeconds(_player) == 45f && WorldItemEffects.ExtraChoices(_player) == 1,
             "les paramètres du catalogue sont raccordés aux services du monde");
         for (int copy = 1; copy < 8; copy++)
             foreach (string id in ids)
                 if (id != "carnet_dadresses") Check(_player.AddItemCopy(id), $"copie {copy + 1} autorisée : {id}");
-        Check(WorldItemEffects.FreeChestChance(_player) == .6f && WorldItemEffects.ChestPointers(_player) == 3
+        Check(WorldItemEffects.FreeChestChance(_player) == .6f
             && WorldItemEffects.ExtraItemSeconds(_player) == 360f, "huit copies : caps d’effet conservés, durée linéaire");
         Check(_player.AddItemCopy("carnet_dadresses") && _player.AddItemCopy("carnet_dadresses")
             && !_player.AddItemCopy("carnet_dadresses") && WorldItemEffects.ExtraChoices(_player) == 3,
@@ -43,7 +44,7 @@ public partial class ItemLootRegression
         CheckRealBell();
         await CheckRealAddressBook();
         foreach (string id in ids) RemoveCopies(id);
-        Check(WorldItemEffects.FreeChestChance(_player) == 0 && WorldItemEffects.ChestPointers(_player) == 0
+        Check(WorldItemEffects.FreeChestChance(_player) == 0
             && WorldItemEffects.ExtraItemSeconds(_player) == 0 && WorldItemEffects.ExtraChoices(_player) == 0,
             "oubli réel : tous les effets du monde retirés");
     }
@@ -65,13 +66,9 @@ public partial class ItemLootRegression
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         camera.ForceUpdateScroll();
         pointers._Process(0);
-        Check((int)typeof(ChestPointers).GetField("_count", Private).GetValue(pointers) > 0,
-            "Étiquette réelle : coffre hors champ signalé");
-        RemoveCopies("etiquette_perdue");
-        pointers._Process(0);
-        Check((int)typeof(ChestPointers).GetField("_count", Private).GetValue(pointers) == 0
+        Check((int)typeof(ChestPointers).GetField("_count", Private).GetValue(pointers) > 0
             && (int)typeof(ChestPointers).GetField("_placeCount", Private).GetValue(pointers) == 1,
-            "sans Étiquette : flèches des coffres retirées, lieu révélé conservé");
+            "sans objet : coffre hors champ signalé, lieu révélé aussi");
         revealed.Unreveal(); revealed.QueueFree(); hud.QueueFree(); offscreen.QueueFree(); camera.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }

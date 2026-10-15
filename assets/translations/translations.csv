@@ -487,6 +487,7 @@ CAMP_START_ESSENCE_DESC,+{0} Essence au départ,+{0} starting Essence
 CAMP_VESTIGE_GAIN,Boîte en fer,Tin Box
 CAMP_VESTIGE_GAIN_HINT,Tu rapportes plus de Vestiges de chaque run.,You bring back more Vestiges from every run.
 CAMP_VESTIGE_GAIN_DESC,+{0} Vestiges gagnés,+{0} Vestiges earned
+HINT_DASH_DODGE,[{0}] Esquive : invulnérable pendant le dash,[{0}] Dodge: invulnerable while dashing
 UI_DIFFICULTY,Difficulté,Difficulty
 UI_DIFFICULTY_LOCKED,Bats l'Indicible en {0} pour l'ouvrir.,Defeat the Unspeakable on {0} to open it.
 UI_DIFFICULTY_VESTIGES,Vestiges ×{0},Vestiges ×{0}
@@ -568,7 +569,6 @@ STAT_BUILD,Bonus du build,Build bonus
 STAT_CONE_START,Ouverture initiale,Initial angle
 STAT_SPREAD,Dispersion,Spread
 STAT_CHAIN_FALLOFF,Dégâts conservés par rebond,Damage retained per bounce
-STAT_CHEST_POINTERS,Directions de coffres,Chest directions
 STAT_ITEM_LIFETIME,Présence des objets au sol,Ground item lifetime
 STAT_FREE_CHEST,Gratuité des coffres,Free chest chance
 STAT_CHEST_XP_PULL,Attraction après coffre,Chest XP attraction

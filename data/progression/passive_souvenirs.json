@@ -1818,34 +1818,6 @@
     "initial_unlock": false
   },
   {
-    "id": "etiquette_perdue",
-    "kind": "item",
-    "icon": "res://assets/items/icons/item_etiquette_perdue.png",
-    "icon_small": "res://assets/items/icons/item_etiquette_perdue_16.png",
-    "name": "Étiquette perdue",
-    "description": "Des flèches montrent les coffres fermés les plus proches, hors de l’écran : jusqu’à {pointers} à la fois.",
-    "icon_color": [
-      0.45,
-      0.6,
-      0.85
-    ],
-    "max_level": 30,
-    "effects": [
-      {
-        "stat": "chest_pointers",
-        "modifier_type": "additive",
-        "step": 1
-      }
-    ],
-    "rarity": "common",
-    "max_copies": 0,
-    "initial_unlock": true,
-    "params": {
-      "pointers_per_copy": 1,
-      "max_pointers": 3
-    }
-  },
-  {
     "id": "ticket_de_vestiaire",
     "kind": "item",
     "icon": "res://assets/items/icons/item_ticket_de_vestiaire.png",

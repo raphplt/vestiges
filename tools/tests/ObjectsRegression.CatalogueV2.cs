@@ -173,11 +173,10 @@ public partial class ObjectsRegression
             string text = ItemPresentation.Describe(data, copies, _player) + data.Flavor;
             described &= text.Length > 0 && !text.Contains('{') && !text.Contains("STAT_", StringComparison.Ordinal);
         }
-        Check(described, "Les 56 fiches décrivent leurs copies sans clé brute ni paramètre manquant");
+        Check(described, "Les 55 fiches décrivent leurs copies sans clé brute ni paramètre manquant");
         Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pastille_mentholee"), 2).Contains("9,6 PV/min", StringComparison.Ordinal),
             "Deux Pastilles : la fiche annonce 9,6 PV/min, pas un soin chaque minute");
-        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pied_de_biche"), 8).StartsWith("60 %", StringComparison.Ordinal)
-            && ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("etiquette_perdue"), 8).Contains("jusqu’à 3 à la fois", StringComparison.Ordinal),
-            "Copies illimitées : gratuité plafonnée à 60 % et directions à trois dans les descriptions");
+        Check(ItemPresentation.Describe(PassiveSouvenirDataLoader.Get("pied_de_biche"), 8).StartsWith("60 %", StringComparison.Ordinal),
+            "Copies illimitées : gratuité plafonnée à 60 % dans la description");
     }
 }

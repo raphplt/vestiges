@@ -342,15 +342,6 @@
       ],
       "params": []
     },
-    "chest_pointers": {
-      "modifiers": [
-        "additive"
-      ],
-      "params": [
-        "pointers_per_copy",
-        "max_pointers"
-      ]
-    },
     "item_lifetime": {
       "modifiers": [
         "additive"

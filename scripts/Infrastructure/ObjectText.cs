@@ -22,7 +22,6 @@ public static class ObjectText
 		["elite_slow"] = new[] { "slow" },
 		["dash_trail"] = new[] { "slow", "trail_seconds" },
 		["dash_blink"] = new[] { "distance" },
-		["chest_pointers"] = new[] { "pointers" },
 		["item_lifetime"] = new[] { "extra_seconds" },
 		["free_chest"] = new[] { "chance" },
 		["chest_xp_pull"] = new[] { "radius" },
@@ -64,9 +63,6 @@ public static class ObjectText
 				break;
 			case "dash_blink":
 				values["distance"] = P("base_distance") + P("distance_per_copy") * (copies - 1);
-				break;
-			case "chest_pointers":
-				values["pointers"] = Mathf.Min(P("pointers_per_copy") * copies, P("max_pointers"));
 				break;
 			case "item_lifetime":
 				values["extra_seconds"] = P("extra_seconds_per_copy") * copies;

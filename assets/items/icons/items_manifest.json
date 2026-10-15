@@ -456,13 +456,6 @@
       "world": false
     },
     {
-      "id": "etiquette_perdue",
-      "name": "Étiquette perdue",
-      "icon": "item_etiquette_perdue.png",
-      "icon_16": "item_etiquette_perdue_16.png",
-      "world": false
-    },
-    {
       "id": "ticket_de_vestiaire",
       "name": "Ticket de vestiaire",
       "icon": "item_ticket_de_vestiaire.png",

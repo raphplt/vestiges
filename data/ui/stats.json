@@ -55,7 +55,6 @@
         {"id": "poison", "name_key": "STAT_POISON", "display": "fraction"},
         {"id": "extra_cards", "name_key": "STAT_EXTRA_CARDS", "display": "count"},
         {"id": "elite_slow", "name_key": "STAT_ELITE_SLOW", "display": "value", "unit": "s"},
-        {"id": "chest_pointers", "name_key": "STAT_CHEST_POINTERS", "display": "count"},
         {"id": "item_lifetime", "name_key": "STAT_ITEM_LIFETIME", "display": "value", "unit": "s"},
         {"id": "free_chest", "name_key": "STAT_FREE_CHEST", "display": "fraction"},
         {"id": "chest_xp_pull", "name_key": "STAT_CHEST_XP_PULL", "display": "value", "unit": "px"},

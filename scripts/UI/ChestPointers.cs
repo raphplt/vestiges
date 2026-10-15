@@ -7,8 +7,9 @@ using Vestiges.World;
 namespace Vestiges.UI;
 
 /// <summary>
-/// Flèches au bord de l'écran vers les coffres fermés proches mais hors du cadre, à la couleur de leur rareté, et vers
-/// les petits lieux qu'une cabine téléphonique a révélés (plan 22 C4), à la couleur du lieu, plus petites.
+/// Flèches au bord de l'écran vers les coffres fermés proches mais hors du cadre, à la couleur de leur rareté, pour tous
+/// depuis le retrait de l'Étiquette perdue (DECISIONS §184 : le joueur ne voyait pas que la carte valait d'être
+/// parcourue), et vers les petits lieux qu'une cabine téléphonique a révélés (plan 22 C4), à la couleur du lieu, plus petites.
 /// Enfant de la racine mise à l'échelle du HUD (unités de référence 960×540), comme la flèche des événements.
 /// </summary>
 public partial class ChestPointers : Control
@@ -29,8 +30,6 @@ public partial class ChestPointers : Control
     private int _placeCount;
     private bool _drawn;
     private EventBus _eventBus;
-    private GroupCache _groups;
-    private int _allowedCount;
 
     public ChestPointers()
     {
@@ -45,7 +44,6 @@ public partial class ChestPointers : Control
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _eventBus = GetNode<EventBus>("/root/EventBus");
-        _groups = GetNode<GroupCache>("/root/GroupCache");
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
     }
 
@@ -69,8 +67,7 @@ public partial class ChestPointers : Control
         Camera2D camera = GetViewport().GetCamera2D();
         _count = 0;
         _placeCount = 0;
-        _allowedCount = Mathf.Min(_shown.Length, WorldItemEffects.ChestPointers(_groups.GetPlayer() as Player));
-        if (camera != null && _allowedCount > 0)
+        if (camera != null && _shown.Length > 0)
             CollectNearest(camera);
         if (camera != null && SmallPlace.Revealed.Count > 0)
             CollectRevealed(camera);
@@ -95,7 +92,7 @@ public partial class ChestPointers : Control
             if (distanceSq > _rangeSq)
                 continue;
             int slot;
-            if (_count < _allowedCount)
+            if (_count < _shown.Length)
                 slot = _count++;
             else if (distanceSq < _distances[_count - 1])
                 slot = _count - 1;

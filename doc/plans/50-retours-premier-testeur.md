@@ -23,7 +23,7 @@
 | T2 Campement | Retrait PV, dégâts, cadence, vitesse, régénération, armure (sans remboursement, §152) ; nouvelle amélioration « gain de Vestiges » | **Livré le 15 octobre** |
 | T3 Niveaux de difficulté | Simple et Normal ouverts, Difficile et Impossible à gagner en battant l'Indicible ; nombre, PV, dégâts, boss, élites, Effacement, Péril de départ, Vestiges | **Livré le 15 octobre** |
 | T4 Essence et coffres | Essence par type de créature dans son JSON ; prix des coffres qui monte par coffre ouvert et plus au temps ; coffres de boss et d'élites gratuits | **Livré le 15 octobre** |
-| T5 Lisibilité | Repères au bord de l'écran pour tous (l'Étiquette perdue à renforcer ou retirer) ; première run guidée ; dash montré dès le début | À concevoir puis faire |
+| T5 Lisibilité | Repères au bord de l'écran pour tous, Étiquette perdue retirée ; dash montré au premier danger | **Livré le 15 octobre** ; première run guidée en attente du chantier « objectifs de run » |
 
 ## 3. T1, livré le 15 octobre
 
@@ -92,3 +92,15 @@ Vérifié : build sans avertissement, smoke, sauvegardes (ouverture des niveaux,
 - **Coffres gratuits** : `Chest.AlwaysFree` pour les coffres lâchés par une créature à variante (élites, Souverains) et par la Barrière ; invite « Ouvrir — gratuit » ; ils ne font pas monter le prix des suivants.
 
 Vérifié : build sans avertissement, smoke, butin (prix par ouverture, invite refaite quand le prix monte, coffre gratuit), catalogues (contrat des créatures), quêtes, objets. Le bot n'ouvre pas de coffres payants : la courbe de prix se juge en jouant.
+
+## 7. T5, livré le 15 octobre
+
+- **Flèches de coffres pour tous** : `ChestPointers` montre les deux coffres fermés les plus proches hors champ (`edge_pointer.max` 2, portée 700 px, `chest_placement.json`), sans objet. L'**Étiquette perdue** est retirée : fiche, icônes, fabrique du générateur, stat `chest_pointers` (contrat, textes, fiche des stats). Catalogue : 55 objets, 26 dans la réserve de départ.
+- **Invite du dash** (`UI/DashHint`, dans le HUD) : à moins de 160 px d'une créature, « [touche] Esquive : invulnérable pendant le dash » sous le personnage, 5 s, puis de nouveau au danger suivant ; trois dashs faits la retirent pour de bon (aide `dash_dodge`, une fois par profil).
+- **Première run guidée** : pas faite. Raphaël veut d'abord un vrai objectif dans la run (§184) ; le guidage mènera à cet objectif.
+
+Vérifié : build sans avertissement, smoke, butin (flèche sans objet, lieu révélé), catalogues, quêtes (réserve de départ), objets, inventaire ; capture d'une vraie run : l'invite apparaît sous le personnage au premier contact (21 s), lisible.
+
+## 8. Suite : objectifs dans la run (recherche et conception)
+
+Retour de Raphaël au §184 : la run manque d'un objectif à atteindre (portail de Megabonk, téléporteur de Risk of Rain 2) ; passé 15 à 20 minutes, le joueur peut se sentir perdu. Contraintes propres à Vestiges : la carte s'efface, les boss sont à heure fixe (Souverains, Barrière à 15 min, Indicible vers 30 min), l'exploration nomade est le cœur. Chantier à ouvrir en plan dédié : recherche sur les jeux du genre, puis propositions à trancher avant tout code.

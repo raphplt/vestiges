@@ -30,9 +30,9 @@ public partial class QuestRegression
         try
         {
             ResetItemProfile(dataField);
-            Check(!DevelopmentMode.IsEnabled && ItemLootPool.For(_player).Eligible("chest_common").Count == 27,
-                "profil normal neuf : 27 objets dans les coffres, aucun déblocage dev");
-            Check(ItemLootPool.For(_player).Eligible("workshop").Count == 27, "Atelier neuf : les mêmes 27 objets");
+            Check(!DevelopmentMode.IsEnabled && ItemLootPool.For(_player).Eligible("chest_common").Count == 26,
+                "profil normal neuf : 26 objets dans les coffres, aucun déblocage dev");
+            Check(ItemLootPool.For(_player).Eligible("workshop").Count == 26, "Atelier neuf : les mêmes 26 objets");
             foreach (string id in ItemQuestIds)
             {
                 ResetItemProfile(dataField);
@@ -68,9 +68,9 @@ public partial class QuestRegression
                 if (quest.Unlocks.Any(unlock => unlock.Kind == UnlockKind.Object))
                     MetaSaveManager.ClaimQuest(quest, out _);
             MetaSaveManager.ReloadProfile();
-            Check(ItemLootPool.For(_player).Eligible("chest_common").Count == 56
-                && ItemLootPool.For(_player).Eligible("workshop").Count == 56,
-                "29 quêtes d'objets accomplies : les 56 objets entrent dans les coffres et l'Atelier");
+            Check(ItemLootPool.For(_player).Eligible("chest_common").Count == 55
+                && ItemLootPool.For(_player).Eligible("workshop").Count == 55,
+                "29 quêtes d'objets accomplies : les 55 objets entrent dans les coffres et l'Atelier");
             CheckItemToasts();
         }
         finally

@@ -723,6 +723,12 @@ public static class MetaSaveManager
     }
 
     /// <summary>Vrai la première fois que cette aide est demandée pour ce profil ; elle est alors retenue.</summary>
+    public static bool HasSeenHint(string hintId)
+    {
+        Load();
+        return _data.SeenHints.Contains(hintId);
+    }
+
     public static bool MarkHintSeen(string hintId)
     {
         Load();

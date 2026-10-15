@@ -328,17 +328,6 @@ def chipped_domino() -> Item:
     return item
 
 
-def luggage_tag() -> Item:
-    """Étiquette de bagage en kraft, œillet de métal, ficelle, adresse griffonnée."""
-    item = Item("etiquette_perdue", .06)
-    item.add("kraft", polygon([(-6.5, -12), (6.5, -12), (6.5, 6), (3, 10), (-3, 10), (-6.5, 6)], 0, .7))
-    item.add("steel", ring((0, 6.5, .8), 1.7, .5))
-    item.add("paper", line([(0, 6.5, 1), (2, 10, 1), (6, 13, 0), (10, 12, 0), (9, 8, 0)], .55))
-    for y, w in ((1, 4.5), (-2.5, 3.5), (-6, 4.5), (-9, 2.5)):
-        item.add("dark", line([(-w, y, .9), (-w + 2, y + .6, .9), (w - 2, y - .4, .9), (w, y, .9)], .35))
-    return item
-
-
 def cloakroom_token() -> Item:
     """Jeton de vestiaire oblong en plastique rouge, numéroté, suspendu à un crochet de portemanteau."""
     item = Item("ticket_de_vestiaire", .2)
@@ -465,5 +454,5 @@ def faded_portrait() -> Item:
     return item
 
 
-PLAY_ITEMS = [door_stop, foam_dart, ball_bearing, coiled_cord, tiny_horseshoe, chipped_domino, luggage_tag, cloakroom_token,
+PLAY_ITEMS = [door_stop, foam_dart, ball_bearing, coiled_cord, tiny_horseshoe, chipped_domino, cloakroom_token,
               crowbar, bike_bell, struck_ledger, red_yarn, cancel_stamp, address_book, rewound_cassette, faded_portrait]

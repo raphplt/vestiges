@@ -1,5 +1,7 @@
 # Plan 35 — Catalogue d’objets V2 : 56 objets
 
+> **15 octobre 2026** : l’Étiquette perdue est retirée, les flèches de coffres valant désormais pour tous ([plan 50 T5](50-retours-premier-testeur.md), DECISIONS §184). Le catalogue compte 55 objets ; le texte ci-dessous est historique.
+
 12 octobre 2026. **Icônes propres des 34 nouveaux objets livrées le même jour (§7).** Complément du [plan de rareté et d’équilibrage](35-raretes-des-objets.md), après les deux séries de retours de Raphaël (DECISIONS §128 et §132). **Plan validé et implémenté (DECISIONS §133), hors nouveaux sprites et animations.** Les 22 objets existants et les 34 nouveaux ont leurs raccordements et contrôles par lot ; recette globale et équilibre des builds se distinguent de ces preuves techniques. Les [quinze quêtes Q sont intégrées](35-quetes-objets-v2.md), activation vérifiée (DECISIONS §138). Le plan principal fait autorité sur les 22 effets révisés.
 
 ## 1. Inspiration et identité

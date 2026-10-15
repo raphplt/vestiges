@@ -33,7 +33,7 @@ public partial class QuestRegression : Node
         "semelle_usee", "chewing_gum", "plan_de_metro", "flacon_de_pharmacie", "montre_arretee",
         "dossard_froisse", "pastille_mentholee", "bouillotte", "agrafe_rouillee", "bons_points", "bande_magnetique",
         "petite_cle", "compas", "longue_vue", "verre_fele", "yoyo", "boucle_cabossee", "diapositive_en_double",
-        "flechette_mousse", "etiquette_perdue", "sonnette", "tampon_annule", "carnet_dadresses", "cassette_rembobinee",
+        "flechette_mousse", "sonnette", "tampon_annule", "carnet_dadresses", "cassette_rembobinee",
     };
 
     /// <summary>Réserve de départ des Réminiscences (plan 37 H4) : une par famille de la première offre.</summary>
@@ -165,7 +165,7 @@ public partial class QuestRegression : Node
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
             if (MetaSaveManager.IsObjectUnlocked(item.Id))
                 objects.Add(item.Id);
-        Check(objects.SetEquals(StartingObjects), $"profil neuf : 27 objets et 10 Écussons de départ ({objects.Count})");
+        Check(objects.SetEquals(StartingObjects), $"profil neuf : 26 objets et 10 Écussons de départ ({objects.Count})");
         int pending = 0, epics = 0, legendaries = 0;
         foreach (PassiveSouvenirData item in PassiveSouvenirDataLoader.GetAll())
         {

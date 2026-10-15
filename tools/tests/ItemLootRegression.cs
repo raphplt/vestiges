@@ -252,10 +252,6 @@ public partial class ItemLootRegression : Node
     }
     private void CheckWorldHooks()
     {
-        ActivePassiveSouvenir label = Fixture("etiquette_perdue", 8, ("pointers_per_copy", 1f), ("max_pointers", 3f));
-        Check(WorldItemEffects.ChestPointers(_player) == 3, "Étiquette : huit copies, trois flèches au maximum");
-        Bag.Remove(label);
-        Check(WorldItemEffects.ChestPointers(_player) == 0, "sans Étiquette : aucune flèche de coffre");
         ActivePassiveSouvenir ticket = Fixture("ticket_de_vestiaire", 8, ("extra_seconds_per_copy", 45f));
         Check(WorldItemEffects.ExtraItemSeconds(_player) == 360f, "Ticket : durée additive au-delà de six copies");
         Bag.Remove(ticket);
