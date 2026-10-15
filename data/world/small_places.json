@@ -10,7 +10,7 @@
                 "prop_crystal_vein"
             ],
             "prompt": "PLACE_CRYSTAL_PROMPT",
-            "hold_seconds": 1.0,
+            "hold_seconds": 0.5,
             "reward": "essence",
             "amount_min": 6,
             "amount_max": 10,
@@ -29,7 +29,7 @@
                 "prop_scene_crow_scarecrow"
             ],
             "prompt": "PLACE_SCARECROW_PROMPT",
-            "hold_seconds": 0.5,
+            "hold_seconds": 0.25,
             "reward": "ambush",
             "enemies": 3,
             "ambush_radius_px": 140,
@@ -49,7 +49,7 @@
                 "prop_mailbox"
             ],
             "prompt": "PLACE_MAILBOX_PROMPT",
-            "hold_seconds": 0.6,
+            "hold_seconds": 0.3,
             "reward": "xp",
             "amount": 0.5,
             "max_per_map": 30,
@@ -68,7 +68,7 @@
                 "prop_quarry_wagon_crystal"
             ],
             "prompt": "PLACE_MINE_CART_PROMPT",
-            "hold_seconds": 0.8,
+            "hold_seconds": 0.4,
             "reward": "essence_or_weapon",
             "chance": 0.25,
             "amount_min": 8,
@@ -94,7 +94,7 @@
                 "prop_car_overgrown"
             ],
             "prompt": "PLACE_CAR_PROMPT",
-            "hold_seconds": 0.8,
+            "hold_seconds": 0.4,
             "reward": "search",
             "chance": 0.4,
             "amount": 0.12,
@@ -114,7 +114,7 @@
                 "prop_phone_booth"
             ],
             "prompt": "PLACE_PHONE_PROMPT",
-            "hold_seconds": 0.6,
+            "hold_seconds": 0.3,
             "reward": "reveal",
             "radius_px": 2400,
             "duration_s": 45,
@@ -132,7 +132,7 @@
                 "prop_bus_shelter"
             ],
             "prompt": "PLACE_BUS_PROMPT",
-            "hold_seconds": 0.5,
+            "hold_seconds": 0.25,
             "reward": "speed",
             "amount": 0.2,
             "duration_s": 20,
@@ -150,7 +150,7 @@
                 "prop_scene_picnic"
             ],
             "prompt": "PLACE_PICNIC_PROMPT",
-            "hold_seconds": 0.6,
+            "hold_seconds": 0.3,
             "reward": "lore_heal",
             "amount": 0.08,
             "lore": [

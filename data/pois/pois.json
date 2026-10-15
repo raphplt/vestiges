@@ -13,7 +13,7 @@
         "outline_color": "#6B5335",
         "shape": "building",
         "interaction_type": "search",
-        "search_time": 1.5,
+        "search_time": 0.75,
         "loot_table_id": "poi_searchable",
         "enemy_guards": []
     },
@@ -31,7 +31,7 @@
         "outline_color": "#806020",
         "shape": "crate",
         "interaction_type": "search",
-        "search_time": 0.8,
+        "search_time": 0.4,
         "loot_table_id": "poi_cache",
         "enemy_guards": []
     },
@@ -68,7 +68,7 @@
         "outline_color": "#706880",
         "shape": "ruin",
         "interaction_type": "search",
-        "search_time": 1.0,
+        "search_time": 0.5,
         "loot_table_id": "chest_lore",
         "enemy_guards": []
     },

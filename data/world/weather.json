@@ -11,7 +11,7 @@
             "biomes": { "swamp": 2.0, "forest_reclaimed": 1.2, "wild_fields": 1.0, "urban_ruins": 0.8, "collapsed_quarry": 0.6 },
             "grade": { "saturation": 0.72, "contrast": 0.82, "exposure": 1.05 },
             "shadows": 0.2,
-            "view": { "clear_px": 170, "full_px": 360, "opacity": 0.82, "color": [0.80, 0.82, 0.84] }
+            "view": { "clear_px": 260, "full_px": 480, "opacity": 0.6, "color": [0.80, 0.82, 0.84] }
         },
         "ash_rain": {
             "duration_sec": [40, 60],

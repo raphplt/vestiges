@@ -25,6 +25,7 @@ public partial class SpawnManager : Node2D
 	private readonly List<float> _dmgSegmentPerMinute = new();
 	private float _rangedDamageGrowthShare = 1f;
 	private float _xpGrowthPerMinute;
+	private float _earlyXpMultiplier = 1f;
 	private float _xpOblivionBonus;
 	private float _xpCrisisMultiplier = 1f;
 	private int _maxEnemies;
@@ -481,13 +482,16 @@ public partial class SpawnManager : Node2D
 	}
 
 	/// <summary>Densité du début de run (DECISIONS §171) : réduite jusqu'à une minute donnée, puis rendue progressivement.</summary>
-	private float EarlyDensity(float elapsedMinutes)
+	private float EarlyDensity(float elapsedMinutes) => Mathf.Lerp(1f, _earlyDensityMultiplier, EarlyWeight(elapsedMinutes));
+
+	/// <summary>1 pendant le début de run, puis descend à 0 sur la rampe de retour au réglage normal.</summary>
+	private float EarlyWeight(float elapsedMinutes)
 	{
 		if (elapsedMinutes <= _earlyDensityUntilMinute)
-			return _earlyDensityMultiplier;
-		if (_earlyDensityRampMinutes <= 0f)
 			return 1f;
-		return Mathf.Lerp(_earlyDensityMultiplier, 1f, Mathf.Clamp((elapsedMinutes - _earlyDensityUntilMinute) / _earlyDensityRampMinutes, 0f, 1f));
+		if (_earlyDensityRampMinutes <= 0f)
+			return 0f;
+		return 1f - Mathf.Clamp((elapsedMinutes - _earlyDensityUntilMinute) / _earlyDensityRampMinutes, 0f, 1f);
 	}
 
 	/// <summary>0 à la fin du répit, 1 une fois la montée d'ouverture terminée.</summary>
@@ -570,7 +574,7 @@ public partial class SpawnManager : Node2D
 	/// </summary>
 	private float ComputeXpMultiplier(float elapsedMinutes, Vector2 spawnPos)
 	{
-		float multiplier = 1f + _xpGrowthPerMinute * elapsedMinutes;
+		float multiplier = (1f + _xpGrowthPerMinute * elapsedMinutes) * Mathf.Lerp(1f, _earlyXpMultiplier, EarlyWeight(elapsedMinutes));
 		if (_erasureManager != null)
 			multiplier *= 1f + _xpOblivionBonus * (1f - _erasureManager.GetMemoryAt(spawnPos));
 		if (_currentRunPhase == GameManager.RunPhase.Crisis)
@@ -773,12 +777,11 @@ public partial class SpawnManager : Node2D
 			_ => 1f
 		};
 		Vector2 halfExtents = GetViewHalfExtents();
-		Vector2 moveDirection = _player.Velocity.Normalized();
 
 		Vector2 position = _player.GlobalPosition;
 		for (int attempt = 0; attempt < 15; attempt++)
 		{
-			position = _positionPicker.Pick(_player.GlobalPosition, halfExtents, moveDirection, marginScale);
+			position = _positionPicker.Pick(_player.GlobalPosition, halfExtents, _player.Velocity, marginScale);
 			if (!IsWaterAt(position))
 				return position;
 		}
@@ -888,6 +891,7 @@ public partial class SpawnManager : Node2D
 		_earlyDensityMultiplier = dict.ContainsKey("early_density_multiplier") ? (float)dict["early_density_multiplier"].AsDouble() : 1f;
 		_earlyDensityUntilMinute = dict.ContainsKey("early_density_until_minute") ? (float)dict["early_density_until_minute"].AsDouble() : 0f;
 		_earlyDensityRampMinutes = dict.ContainsKey("early_density_ramp_minutes") ? (float)dict["early_density_ramp_minutes"].AsDouble() : 0f;
+		_earlyXpMultiplier = dict.ContainsKey("early_xp_multiplier") ? (float)dict["early_xp_multiplier"].AsDouble() : 1f;
 		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("local_enemy_target_growth_per_minute") ? (float)dict["local_enemy_target_growth_per_minute"].AsDouble() : 6f;
 		_dayLocalSpawnBurstMax = dict.ContainsKey("local_spawn_burst_max") ? (int)dict["local_spawn_burst_max"].AsDouble() : 4;
 		_sameTypeClusterChance = dict.ContainsKey("same_type_cluster_chance") ? (float)dict["same_type_cluster_chance"].AsDouble() : 0.4f;
@@ -913,6 +917,8 @@ public partial class SpawnManager : Node2D
 		_positionPicker.MarginMax = dict.ContainsKey("spawn_screen_margin_max") ? (float)dict["spawn_screen_margin_max"].AsDouble() : _positionPicker.MarginMax;
 		_positionPicker.ForwardBias = dict.ContainsKey("spawn_forward_bias") ? (float)dict["spawn_forward_bias"].AsDouble() : _positionPicker.ForwardBias;
 		_positionPicker.ForwardArcDegrees = dict.ContainsKey("spawn_forward_arc_degrees") ? (float)dict["spawn_forward_arc_degrees"].AsDouble() : _positionPicker.ForwardArcDegrees;
+		_positionPicker.LeadSeconds = dict.ContainsKey("spawn_speed_lead_seconds") ? (float)dict["spawn_speed_lead_seconds"].AsDouble() : _positionPicker.LeadSeconds;
+		_positionPicker.MinDistance = dict.ContainsKey("spawn_min_distance_px") ? (float)dict["spawn_min_distance_px"].AsDouble() : _positionPicker.MinDistance;
 
 		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, crisis x{_crisisSpawnMultiplier:F2}");
 	}

@@ -7,7 +7,7 @@
         "column_height": 110,
         "column_core": 1.5,
         "fx_family": "silk",
-        "open_time": 0.5,
+        "open_range_px": 40,
         "loot_table_id": "chest_common",
         "loot_rolls": 1
     },
@@ -20,7 +20,7 @@
         "column_height": 124,
         "column_core": 2,
         "fx_family": "hybrid",
-        "open_time": 0.8,
+        "open_range_px": 40,
         "loot_table_id": "chest_rare",
         "loot_rolls": 1
     },
@@ -33,7 +33,7 @@
         "column_height": 160,
         "column_core": 3,
         "fx_family": "void",
-        "open_time": 1.2,
+        "open_range_px": 40,
         "loot_table_id": "chest_epic",
         "loot_rolls": 2
     },
@@ -45,7 +45,7 @@
         "column_height": 136,
         "column_core": 2.5,
         "fx_family": "crit",
-        "open_time": 1.0,
+        "open_range_px": 40,
         "loot_table_id": "chest_lore",
         "loot_rolls": 1
     }

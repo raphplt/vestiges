@@ -71,7 +71,7 @@ public partial class CatalogValuesProbe : Node
         List<ChestData> chests = ChestDataLoader.GetAll();
         chests.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
         foreach (ChestData chest in chests)
-            lines.Add(Invariant($"chest {chest.Id} {chest.Rarity} {chest.SpriteClosed} {chest.SpriteOpen} col={chest.ColumnHeight:R}/{chest.ColumnCore:R} fx={chest.FxFamily} open={chest.OpenTime:R} loot={chest.LootTableId}x{chest.LootRolls} down={chest.DowngradeTo ?? "-"}"));
+            lines.Add(Invariant($"chest {chest.Id} {chest.Rarity} {chest.SpriteClosed} {chest.SpriteOpen} col={chest.ColumnHeight:R}/{chest.ColumnCore:R} fx={chest.FxFamily} open={chest.OpenRangePx:R}px loot={chest.LootTableId}x{chest.LootRolls} down={chest.DowngradeTo ?? "-"}"));
         ChestPlacementData placement = ChestDataLoader.LoadPlacement();
         lines.Add(Invariant($"chest placement spacing={placement.MinSpacingPx:R} candidates={placement.CandidatesPerChest} attempts={placement.AttemptsPerChest} path={placement.PathBonus:R} clear={placement.Clearance} building={placement.BuildingClearance} pointer={placement.PointerRangePx:R}/{placement.PointerMax}"));
         foreach (ChestPlacementGroup group in placement.Groups)

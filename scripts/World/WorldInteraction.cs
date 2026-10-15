@@ -8,8 +8,9 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Interaction du joueur avec les lieux du monde (<see cref="IInteractable"/>) : invite au-dessus du plus proche à
-/// portée, jauge pendant l'activation (immobile), puis activation. Un coffre donne son butin, résolu, montré par
-/// l'écran de butin et appliqué à sa fermeture ; les autres lieux gèrent eux-mêmes leur activation.
+/// portée, jauge pendant l'activation (on peut bouger tant qu'on reste près du lieu), puis activation. Un coffre
+/// donne son butin, résolu, montré par l'écran de butin et appliqué à sa fermeture ; les autres lieux gèrent
+/// eux-mêmes leur activation.
 /// </summary>
 public partial class WorldInteraction : Node
 {
@@ -172,7 +173,8 @@ public partial class WorldInteraction : Node
             if (!candidate.CanInteract)
                 continue;
             float distance = _player.GlobalPosition.DistanceTo(candidate.InteractPosition);
-            if (distance < nearestDistance)
+            float radius = candidate.InteractRadius;
+            if (distance < nearestDistance && (radius <= 0f || distance < radius))
             {
                 nearest = candidate;
                 nearestDistance = distance;

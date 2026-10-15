@@ -15,7 +15,8 @@ public class ChestData
     public float ColumnHeight;
     public float ColumnCore;
     public string FxFamily;
-    public float OpenTime;
+    /// <summary>Distance d'ouverture (px) : il faut être collé au coffre, qui s'ouvre à l'appui, sans jauge.</summary>
+    public float OpenRangePx;
     public string LootTableId;
     public int LootRolls;
     /// <summary>Coffre d'un rang de rareté en dessous (Oubli du trésor), ou rien.</summary>
@@ -127,7 +128,7 @@ public static class ChestDataLoader
             JsonConfigReader reader = new(entry);
             string id = reader.Text(entry, "id");
             reader.AllowOnly(entry, "clés", "id", "rarity", "sprite_closed", "sprite_open", "column_height", "column_core",
-                "fx_family", "open_time", "loot_table_id", "loot_rolls", "downgrade_to");
+                "fx_family", "open_range_px", "loot_table_id", "loot_rolls", "downgrade_to");
             ChestData chest = new()
             {
                 Id = id,
@@ -137,7 +138,7 @@ public static class ChestDataLoader
                 ColumnHeight = reader.Positive(entry, "column_height"),
                 ColumnCore = reader.Positive(entry, "column_core"),
                 FxFamily = reader.OneOf(entry, "fx_family", refs.Families),
-                OpenTime = reader.Positive(entry, "open_time"),
+                OpenRangePx = reader.Positive(entry, "open_range_px"),
                 LootTableId = reader.Text(entry, "loot_table_id"),
                 LootRolls = reader.Count(entry, "loot_rolls", 10),
                 DowngradeTo = entry.TryGetProperty("downgrade_to", out _) ? reader.Text(entry, "downgrade_to") : null,

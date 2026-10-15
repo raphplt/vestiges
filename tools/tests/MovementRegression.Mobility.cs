@@ -87,8 +87,10 @@ public partial class MovementRegression
         await CheckMobilityErasure();
         await CheckMobilityDamageAndResponse();
         await ReadyMobility();
+        // Fenêtre d'essai de 60 ms : le coup fatal tombe pendant le dash, mais après son invulnérabilité.
+        _player.Mobility.UseInvulnerabilityTrial = true;
         PressMobility();
-        await Step(1);
+        await Step(5);
         ReleaseMobility();
         Check(_player.Mobility.IsDashing, "dash actif avant test de mort");
     }
@@ -261,12 +263,7 @@ public partial class MovementRegression
         WorldInteraction chests = _player.GetNode<WorldInteraction>("WorldInteraction");
         chests.Configure(null, wallet, null);
         _player._UnhandledInput(new InputEventAction { Action = "interact", Pressed = true });
-        Check(chests.IsActive, "vrai coffre : ouverture commencée");
-        PressMobility();
-        await Step(1);
-        ReleaseMobility();
-        Check(!chests.IsActive && !chest.IsOpened,
-            "dash au neutre : ouverture coffre annulée sans loot");
+        Check(!chests.IsActive && chest.IsOpened, "vrai coffre : ouvert à l'appui, sans jauge (DECISIONS §184)");
         chests.Configure(null, null, null);
         wallet.QueueFree();
         chest.QueueFree();
@@ -280,11 +277,13 @@ public partial class MovementRegression
         await Step(2);
         _player._UnhandledInput(new InputEventAction { Action = "interact", Pressed = true });
         Check(ReadPlayerField<bool>("_isExploringPoi"), "vrai POI : fouille commencée");
-        PressMobility();
-        await Step(1);
-        ReleaseMobility();
-        Check(!ReadPlayerField<bool>("_isExploringPoi") && !poi.IsExplored,
-            "dash au neutre : fouille POI annulée sans loot");
+        SetActions(Vector2.Right);
+        await Step(5);
+        SetActions(Vector2.Zero);
+        Check(ReadPlayerField<bool>("_isExploringPoi") && !poi.IsExplored,
+            "vrai POI : bouger près du lieu n'annule plus la fouille (DECISIONS §184)");
+        await Step(60);
+        Check(poi.IsExplored, "vrai POI : fouille menée à terme en bougeant");
         poi.QueueFree();
     }
 
@@ -400,8 +399,11 @@ public partial class MovementRegression
         await Step(1);
         ReleaseMobility();
         _player.TakeDamage(5f);
-        Check(_player.CurrentHp < hp && !_player.Mobility.IsDashing,
-            "dash défaut sans iframe : dégâts reçus et dash interrompu");
+        Check(_player.CurrentHp == hp && _player.Mobility.IsDashing,
+            "dash défaut : invulnérable pendant tout le dash (DECISIONS §184)");
+        await Step(12);
+        _player.TakeDamage(5f);
+        Check(_player.CurrentHp < hp && !_player.Mobility.IsDashing, "après le dash : dégâts reçus");
         PressMobility();
         await Step(1);
         ReleaseMobility();
@@ -628,8 +630,9 @@ public partial class MovementRegression
         MobilityConfig config = MobilityConfig.Load("float_jump");
         Check(MobilityConfig.Load().VisualHeightPixels == 0f && !MobilityConfig.Load().IgnoreWaterWhileActive,
             "Saut : dash commun sans hauteur ni exception d’eau");
-        Check(config.IgnoreWaterWhileActive && config.VisualHeightPixels == 10f && config.InvulnerabilitySeconds == 0f,
-            "Saut : profil lu, hauteur 10 px, eau survolée et aucune invulnérabilité");
+        Check(config.IgnoreWaterWhileActive && config.VisualHeightPixels == 10f
+            && config.InvulnerabilitySeconds == MobilityConfig.Load().InvulnerabilitySeconds,
+            "Saut : profil lu, hauteur 10 px, eau survolée, invulnérabilité du dash commun");
         foreach (int rate in new[] { 30, 60, 120 })
         {
             PlayerMobility jump = new(config);
@@ -741,11 +744,11 @@ public partial class MovementRegression
             events.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)ErasureManager.ErasureZonePhase.Anchored);
             Reset(); BindWorld(false);
             _player.Mobility.Request();
-            await Step(8);
+            await Step(12);
             float hp = _player.CurrentHp;
             _player.TakeDamage(1f);
             Check(_player.CurrentHp < hp && sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing,
-                "Saut : blessure reçue sans immunité, silhouette reposée immédiatement");
+                "Saut : blessure reçue après la fenêtre d'invulnérabilité, silhouette reposée immédiatement");
             Reset(); _player.Mobility.Request(); await Step(8);
             GetTree().Paused = true;
             Check(sprite.Position == Vector2.Zero && !_player.Mobility.IsDashing && sprite.Animation.ToString().EndsWith("_idle"),

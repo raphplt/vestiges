@@ -2118,3 +2118,22 @@ Raphaël, captures de Megabonk et de Vestiges côte à côte : « à la réflexi
 **Retour du soir, après la première version :** « alors c'est bien mais rajoute plus de détails ! et en particuliers les fonds derriere les icons des armes/objets pourraient etre bcp plus travaillés mais aussi le reste ! » Lot F2 : tirages photo détaillés et papiers, pinces, fil et ceinture plus fouillés ([plan 04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026)).
 
 **Retour suivant :** « c'est plus galere maintenant les actions annexes l'une est à gauche les autres à droite. soit rajouter des claviers soit (ca peut etre les deux) corriger ca ». Les deux, lot F3 : Relancer, Bannir et Passer pendent en colonne au clou de droite, dans l'ordre de la navigation ; « Toutes les stats » pend au clou de gauche ; raccourcis R / B / P (Y / X / LB à la manette), touche dessinée sur chaque étiquette.
+
+## 184. Retours d'un premier testeur (30 min de jeu) — 15 octobre 2026
+
+Raphaël, en vocal avec un joueur qui découvrait le jeu, plus ses propres remarques. Relevé du code et réponses le jour même ; lots au [plan 50](50-retours-premier-testeur.md).
+
+**Constats du testeur** : coffres « quasiment impossibles » à ouvrir dans une foule (la jauge s'annule au moindre déplacement) ; autres lieux un peu lents ; créatures qui apparaissent « dans la gueule » en courant ; Vestiges trop durs à gagner depuis le nerf du §168 ; brouillard trop fort ; dix premières minutes « légèrement » trop dures ; il ne se déplace pas sur la carte et tourne en rond au même endroit ; il ne comprend pas l'intérêt du dash.
+
+**Tranché :**
+- **Coffres** : ouverture instantanée à l'appui sur E, collé au coffre (plus de jauge). **Autres lieux** : durées divisées par deux, et bouger n'annule plus la jauge, seul l'éloignement.
+- **Apparition** : distance minimale au joueur, marge qui grandit avec sa vitesse dans sa direction (décision technique de l'agent).
+- **Vestiges** : +75 %, 0,7 par élimination. **Campement** : retrait des six stats brutes (§152), Aimant, XP et Chance gardés ; ajout d'une amélioration « gain de Vestiges ». Trouver plus tard d'autres usages aux Vestiges.
+- **Brouillard épais** (météo) : vue nette 170 → 260 px, voile complet 360 → 480 px, opacité 0,82 → 0,6.
+- **Début de run** : XP requise −5 % sur les niveaux d'avant 10 min, créatures −5 % jusqu'à 10 min. « Vraiment un tout petit peu. »
+- **Exploration** : repères au bord de l'écran pour tous (aujourd'hui seulement par l'Étiquette perdue : « il faudrait le retirer ou le booster ») et première run guidée.
+- **Dash** : invulnérable pendant le dash, et le montrer dès le début.
+- **Difficulté** (« important et urgent ») : quatre niveaux, Simple et Normal ouverts d'office, Difficile puis Impossible s'ouvrent en battant l'Indicible au niveau d'avant. Chaque niveau règle nombre, PV et dégâts des créatures, boss et multiplicateur de Vestiges.
+- **Essence** (retour ajouté) : « le nombre de kills c'est le même que le nombre d'essence ». Essence selon la créature, dans son JSON. « Mais alors il faut que les coffres deviennent de plus en plus chers » : **le prix monte par coffre ouvert, plus avec le temps de jeu**. Les coffres lâchés par les boss et les élites sont gratuits.
+- **Ordre** : « tout dans l'ordre » : réglages, Campement, difficulté, Essence et coffres, repères et première run guidée.
+- Plus tard : mouvement trop basique (« juste haut, bas, gauche, droite et dash »), à reprendre avec le plan 42 §6.

@@ -49,7 +49,6 @@ public partial class Chest : StaticBody2D, IInteractable
     public static IReadOnlyList<Chest> Closed => _closed;
 
     public bool IsOpened => _isOpened;
-    public float OpenTime => _chestData?.OpenTime ?? 0.5f;
     public string ChestId => _chestData?.Id ?? "";
     public string Rarity => _chestData?.Rarity ?? "common";
     public string LootTableId => _chestData?.LootTableId ?? "";
@@ -65,7 +64,9 @@ public partial class Chest : StaticBody2D, IInteractable
     public Vector2 InteractPosition => GlobalPosition;
     public Vector2 PromptPosition => TopPosition;
     public string PromptVerbKey => "CHEST_OPEN_PROMPT";
-    public float HoldTime => OpenTime;
+    /// <summary>Ouverture à l'appui : une jauge rendait les coffres impossibles à ouvrir dans une foule (DECISIONS §184).</summary>
+    public float HoldTime => 0f;
+    public float InteractRadius => _chestData?.OpenRangePx ?? 0f;
     public Color GaugeColor => RarityPalette.Main(Rarity);
 
     /// <summary>Le butin passe par l'écran de butin : <see cref="WorldInteraction"/> ouvre le coffre lui-même.</summary>

@@ -33,7 +33,7 @@ public partial class RunObservation
         ProcessMode = ProcessModeEnum.Always;
         await Frames(90);
         SmallPlaceDirector director = _world.GetNode<SmallPlaceDirector>("SmallPlaceDirector");
-        // Un maintien s'annule dès que le joueur bouge : le bot reste immobile pendant toute la capture.
+        // Le bot reste immobile pendant toute la capture, pour que chaque lieu soit cadré au même endroit.
         _player.AIInputOverride = Vector2.Zero;
         HashSet<string> done = new();
         foreach (SmallPlace place in director.Places)

@@ -7,6 +7,8 @@ namespace Vestiges.Spawn;
 /// Choisit une position d'apparition juste au-delà du cadre visible de la caméra.
 /// Un anneau calé sur le rectangle de l'écran fait entrer les ennemis rapidement dans le champ,
 /// quelle que soit la direction ; le biais avant nourrit la route du joueur plutôt que ce qu'il laisse derrière lui.
+/// Devant un joueur qui court, l'anneau recule de ce qu'il parcourt en <see cref="LeadSeconds"/>, et aucune créature
+/// ne naît à moins de <see cref="MinDistance"/> : sinon elles apparaissaient « dans la gueule » (DECISIONS §184).
 /// </summary>
 public sealed class SpawnPositionPicker
 {
@@ -15,10 +17,13 @@ public sealed class SpawnPositionPicker
     /// <summary>Probabilité (0–1) de viser le demi-plan vers lequel le joueur se déplace.</summary>
     public float ForwardBias { get; set; } = 0.5f;
     public float ForwardArcDegrees { get; set; } = 140f;
+    public float LeadSeconds { get; set; }
+    public float MinDistance { get; set; }
 
     /// <param name="marginScale">Rapproche l'anneau pendant les phases intenses (crise, fin de run).</param>
-    public Vector2 Pick(Vector2 center, Vector2 viewHalfExtents, Vector2 moveDirection, float marginScale)
+    public Vector2 Pick(Vector2 center, Vector2 viewHalfExtents, Vector2 velocity, float marginScale)
     {
+        Vector2 moveDirection = velocity.Normalized();
         float angle;
         if (moveDirection.LengthSquared() > 0.01f && RunRandom.Spawn.Randf() < ForwardBias)
         {
@@ -33,7 +38,8 @@ public sealed class SpawnPositionPicker
         Vector2 direction = Vector2.FromAngle(angle);
         float edge = DistanceToRectEdge(direction, viewHalfExtents);
         float margin = RunRandom.Spawn.RandfRange(MarginMin, MarginMax) * marginScale;
-        return center + direction * (edge + margin);
+        float lead = Mathf.Max(velocity.Dot(direction), 0f) * LeadSeconds;
+        return center + direction * Mathf.Max(edge + margin + lead, MinDistance);
     }
 
     private static float DistanceToRectEdge(Vector2 direction, Vector2 halfExtents)

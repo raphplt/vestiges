@@ -570,13 +570,9 @@ public partial class Player : CharacterBody2D
         bool harpoonMovement = Harpoon.PullsPlayer;
         if (harpoonMovement)
             Velocity = dt > 0f ? harpoonTravel / dt : Vector2.Zero;
-        if (inputDir != Vector2.Zero || Mobility.IsDashStep)
-        {
-            CancelPoiExplore();
-            _interaction.Cancel();
-            if (inputDir != Vector2.Zero)
-                _facingDirection = inputDir.Normalized();
-        }
+        // Bouger n'annule plus une fouille : seul l'éloignement l'interrompt, pour pouvoir esquiver en fouillant (DECISIONS §184).
+        if (inputDir != Vector2.Zero)
+            _facingDirection = inputDir.Normalized();
 
         Vector2 previousPosition = GlobalPosition;
         bool dashMovement = Mobility.IsDashStep;

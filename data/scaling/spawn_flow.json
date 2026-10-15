@@ -39,8 +39,9 @@
     "enemy_aggression_elite_bonus": 1.08,
     "local_enemy_radius": 700,
     "_doc_opening": "Ouverture : après opening_grace_seconds, la cible de créatures proches part de opening_local_target_start et l'intervalle d'apparition de opening_interval_multiplier_start fois le normal, jusqu'aux valeurs normales au bout de opening_ramp_seconds. Rampe portée de 120 à 300 s le 13 octobre (DECISIONS §154, plan 42 D1) : cinq premières minutes jugées trop nerveuses ; mesuré à 3 min, 23 à 40 créatures à moins de 600 px au lieu de 35 à 57.",
-    "_doc_early_density": "Début de run (DECISIONS §171) : jusqu'à early_density_until_minute, la cible de créatures proches est multipliée par early_density_multiplier et l'intervalle d'apparition divisé par lui ; retour progressif au réglage normal en early_density_ramp_minutes. Raphaël trouvait les dix premières minutes saturées (« spammé d'ennemis en permanence »), environ deux fois trop.",
-    "early_density_multiplier": 0.6,
+    "_doc_early_density": "Début de run (DECISIONS §171) : jusqu'à early_density_until_minute, la cible de créatures proches est multipliée par early_density_multiplier et l'intervalle d'apparition divisé par lui ; retour progressif au réglage normal en early_density_ramp_minutes. Raphaël trouvait les dix premières minutes saturées (« spammé d'ennemis en permanence »), environ deux fois trop. 15 octobre (DECISIONS §184, premier testeur) : 0,6 → 0,57 (−5 %), et l'XP des créatures nées dans la même fenêtre multipliée par early_xp_multiplier (+5 %), qui revient à 1 sur la même rampe.",
+    "early_density_multiplier": 0.57,
+    "early_xp_multiplier": 1.05,
     "early_density_until_minute": 10,
     "early_density_ramp_minutes": 4,
     "opening_grace_seconds": 8,
@@ -72,8 +73,11 @@
     "_doc_time_peril": "Péril du temps (plan 28 P4) : après time_peril_from_minute, la run gagne time_peril_per_minute point de Péril par minute, aux effets de peril.json (nombre, PV, dégâts), en plus de celui du joueur, sans multiplier le score. Plan 47 L2 (14 octobre) : 0,5 point par minute à partir de 15 min, soit Péril 7,5 à 30 min (créatures ×1,75, PV et dégâts ×1,375).",
     "time_peril_from_minute": 15,
     "time_peril_per_minute": 0.5,
+    "_doc_spawn_ring": "Apparition juste hors du cadre de la caméra, à spawn_screen_margin_min/max px du bord (× l'échelle de phase), la moitié du temps dans l'arc spawn_forward_arc_degrees devant le joueur. Devant un joueur qui court, l'anneau recule de sa vitesse × spawn_speed_lead_seconds ; jamais à moins de spawn_min_distance_px (DECISIONS §184, créatures nées « dans la gueule » en courant).",
     "spawn_screen_margin_min": 40,
     "spawn_screen_margin_max": 140,
     "spawn_forward_bias": 0.5,
-    "spawn_forward_arc_degrees": 140
+    "spawn_forward_arc_degrees": 140,
+    "spawn_speed_lead_seconds": 0.6,
+    "spawn_min_distance_px": 320
 }
