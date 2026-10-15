@@ -533,16 +533,19 @@ public partial class HubScreen : Control
 
 	private void StartRun(string characterId)
 	{
-		if (_departing || !MetaSaveManager.IsCharacterUnlocked(characterId)) return;
+		if (_departing || !MetaSaveManager.IsCharacterUnlocked(characterId)
+			|| !MetaSaveManager.IsDifficultyUnlocked(_charactersPanel.DifficultyId)) return;
 		_departing = true;
 		_selectedCharacterId = characterId;
 		AudioManager.PlayUI("sfx_menu_confirmer");
 		GameManager gm = GetNode<GameManager>("/root/GameManager");
 		gm.SelectedCharacterId = characterId;
+		gm.DifficultyId = _charactersPanel.DifficultyId;
+		MetaSaveManager.SetLastDifficulty(gm.DifficultyId);
 		gm.ActiveMutators = new List<string>();
 		string seedText = _seedInput.Text.StripEdges();
 		gm.RunSeed = ulong.TryParse(seedText, out ulong seed) ? seed : 0;
-		GD.Print($"[Hub] Entering Void: {characterId}, seed={gm.RunSeed}");
+		GD.Print($"[Hub] Entering Void: {characterId}, difficulty={gm.DifficultyId}, seed={gm.RunSeed}");
 		_voidTransition.Play(() =>
 		{
 			gm.ChangeState(GameManager.GameState.Run);

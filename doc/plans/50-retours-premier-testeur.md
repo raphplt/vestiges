@@ -21,7 +21,7 @@
 |---|---|---|
 | **T1** Réglages | Coffres à l'appui, collés (40 px) ; autres lieux ÷2 et fouille qui suit le joueur ; anneau d'apparition ; Vestiges 0,7 ; brouillard ; début de run ; dash invulnérable | **Livré le 15 octobre** |
 | T2 Campement | Retrait PV, dégâts, cadence, vitesse, régénération, armure (sans remboursement, §152) ; nouvelle amélioration « gain de Vestiges » | **Livré le 15 octobre** |
-| T3 Niveaux de difficulté | Simple et Normal ouverts, Difficile et Impossible à gagner en battant l'Indicible ; nombre, PV, dégâts, boss, multiplicateur de Vestiges ; conception au plan 47 L4 et 46 | À concevoir puis faire |
+| T3 Niveaux de difficulté | Simple et Normal ouverts, Difficile et Impossible à gagner en battant l'Indicible ; nombre, PV, dégâts, boss, élites, Effacement, Péril de départ, Vestiges | **Livré le 15 octobre** |
 | T4 Essence et coffres | Essence par type de créature dans son JSON ; prix des coffres qui monte par coffre ouvert et plus au temps ; coffres de boss et d'élites gratuits | À faire |
 | T5 Lisibilité | Repères au bord de l'écran pour tous (l'Étiquette perdue à renforcer ou retirer) ; première run guidée ; dash montré dès le début | À concevoir puis faire |
 
@@ -45,3 +45,41 @@ Vérifié : build sans avertissement, smoke, déplacements (tests réécrits : c
 - **Campement plein** : 98 450 → 56 650 Vestiges, neuf améliorations au lieu de quatorze. À 0,7 Vestige par élimination, il se remplit environ 2,3 fois plus vite qu'avant T1, et plus encore une fois la Boîte en fer achetée. D'autres usages des Vestiges restent à trouver (§184).
 
 Vérifié : build sans avertissement, smoke, Campement (catalogue, achats, remboursements, normalisation, application en run, multiplicateur en vraie run), mode dev ; capture de la page du Campement (rayons et fiche de la Boîte en fer) regardée. Icône de la Boîte en fer provisoire : boîte rouge ouverte, éclats dedans.
+
+## 5. T3, livré le 15 octobre
+
+**Données** : `data/scaling/difficulty.json`, lu et contrôlé par `DifficultyDataLoader` (refus au chargement de la run, comme le Péril).
+
+| Niveau | Ouvert | Créatures | PV | Dégâts | Élites | Effacement | Péril de départ | Vestiges |
+|---|---|---|---|---|---|---|---|---|
+| Simple | d'office | ×0,75 | ×0,8 | ×0,7 | ×1 | ×1 | 0 | ×1 |
+| Normal | d'office | ×1 | ×1 | ×1 | ×1 | ×1 | 0 | ×1 |
+| Difficile | Indicible battu en Normal | ×1,3 | ×1,35 | ×1,3 | ×1,3 | ×1,15 | 3 | ×1,25 |
+| Impossible | Indicible battu en Difficile | ×1,6 | ×1,8 | ×1,7 | ×1,6 | ×1,3 | 6 | ×1,5 |
+
+Avec le Péril de départ, l'effet au départ vaut environ ×1,7 créatures, ×1,55 PV et ×1,5 dégâts en Difficile ; ×2,5, ×2,3 et ×2,2 en Impossible (le nombre reste sous le plafond technique de 500 créatures).
+
+**Où ça s'applique** :
+- `SpawnManager.Difficulty`, lu au `_Ready` depuis `GameManager.DifficultyId` : cible locale et plafond de créatures, PV et dégâts à l'apparition (`ComputeScaling`) et des variantes calées sur le niveau (élites, Souverains), intervalle des élites naturelles ;
+- la Barrière (PV des battants, coups de poing et chaîne) et l'Indicible (`EndgameManager`) lisent le niveau par le `SpawnManager` ; les gardiens des anciens POI aussi ;
+- `ErasureManager` : vitesse de l'Effacement ;
+- `GameBootstrap` : Péril de départ (visible au HUD) et multiplicateur de Vestiges, après celui de la Boîte en fer.
+
+**Méta** : `difficulties_beaten` (niveaux où l'Indicible est tombé, inscrits au règlement de la run) et `last_difficulty` dans le profil ; mode dev : tout ouvert. Un relevé ancien sans niveau se lit comme Normal. Le `RunRecord` garde le niveau ; le bilan l'affiche à côté de la graine. Un seul classement, inchangé.
+
+**Hub** : `DifficultySelector` sous la fiche du personnage, au-dessus de « Partir » : gauche et droite au clavier ou à la manette, un clic passe au suivant ; un niveau fermé dit ce qui l'ouvre et « Partir » devient « Difficulté verrouillée ».
+
+**Bancs** : `--difficulty <id>` pour `RunObservation` (`MEASURE_EXTRA_ARGS`).
+
+**Mesure** (5 min, graine 42, bot du profil dev, une seule graine : ordre de grandeur seulement) :
+
+| Niveau | PV apparus | Éliminations | Niveau du joueur à 5 min | Créatures visibles (3–5 min) |
+|---|---|---|---|---|
+| Simple | 6 836 | 82 | 5 | 25 |
+| Normal | 10 562 | 93 | 7 | 20 |
+| Difficile | 17 352 | 20 | 2 | 47 |
+| Impossible | 23 054 | 15 | 2 | 68 |
+
+Le bot ne part pas avec la même arme d'un niveau à l'autre, les éliminations ne se comparent donc pas finement. Mais en Difficile, l'ouverture devient une boule de neige : moins d'éliminations, moins d'XP, des créatures qui s'entassent. **À juger en jouant** avec la méta d'un joueur qui a battu l'Indicible ; si l'ouverture écrase, réduire d'abord le Péril de départ.
+
+Vérifié : build sans avertissement, smoke, sauvegardes (ouverture des niveaux, dernier choix, rechargement), Campement, Barrière, Indicible, mode dev ; capture du sélecteur en profil neuf (Normal, puis Difficile fermé) regardée. `test_menu_navigation` échoue pour une raison antérieure (il attend une Scaphandrière sans portrait, alors que `portrait.webp` existe) : tâche à part.

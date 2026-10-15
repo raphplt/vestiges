@@ -133,7 +133,7 @@ public partial class Barrier : Node2D
 				Part = part, Sprite = sprite, Position = middle,
 				Wall = AddWall($"LeafWall{j}", pillars[j], pillars[j + 1], config.WallThickness),
 			};
-			_health.AddPart(part, radius, config.LeafHpFor(leafCount));
+			_health.AddPart(part, radius, config.LeafHpFor(leafCount) * spawner.Difficulty.EnemyHp);
 			// Encore sous terre : ni cible ni coup avant le verrouillage.
 			part.SetBurrowed(true);
 			_leaves.Add(leaf);
@@ -161,7 +161,7 @@ public partial class Barrier : Node2D
 		_health.Depleted += OnDepleted;
 		_health.ShowBar(_eventBus);
 		_approachSide = SideOf(player.GlobalPosition);
-		_attacks = new BarrierAttacks(this, config, _suffix);
+		_attacks = new BarrierAttacks(this, config, _suffix, spawner.Difficulty.EnemyDamage);
 		AudioManager.Play(config.RiseAudio, 0f);
 		ScreenShake.Instance?.ShakeMedium();
 		GD.Print($"[Barrier] Levée à {center} ({(horizontal ? "horizontale" : "verticale")}), {leafCount} battant(s) de {config.LeafHpFor(leafCount):F0} PV");

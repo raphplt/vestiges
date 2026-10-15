@@ -44,6 +44,9 @@ public partial class GameManager : Node
     /// <summary>Données de la dernière run terminée (pour affichage dans le Hub).</summary>
     public RunRecord LastRunData { get; set; }
 
+    /// <summary>Niveau de difficulté de la prochaine run (data/scaling/difficulty.json) ; vide = niveau par défaut.</summary>
+    public string DifficultyId { get; set; }
+
     /// <summary>Seed de la run. 0 = aléatoire au lancement.</summary>
     public ulong RunSeed { get; set; }
 

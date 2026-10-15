@@ -241,6 +241,8 @@ public partial class PoiManager : Node
         EnemyDataLoader.Load();
         int spawnedCount = 0;
 
+        // Les gardiens suivent le niveau de difficulté de la run, comme les autres créatures (plan 50 T3).
+        DifficultyLevel difficulty = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId);
         for (int i = 0; i < guardIds.Count; i++)
         {
             EnemyData data = EnemyDataLoader.Get(guardIds[i]);
@@ -254,7 +256,7 @@ public partial class PoiManager : Node
             Enemy guard = _enemyPool.Get();
             guard.GlobalPosition = guardPos;
             _enemyContainer.AddChild(guard);
-            guard.Initialize(data, GuardHpScale, GuardDmgScale);
+            guard.Initialize(data, GuardHpScale * difficulty.EnemyHp, GuardDmgScale * difficulty.EnemyDamage);
             guard.SetGuardTarget(poi);
             spawnedCount++;
         }

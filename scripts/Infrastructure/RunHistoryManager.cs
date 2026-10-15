@@ -91,6 +91,10 @@ public class RunRecord
     [JsonPropertyName("boss_defeated")]
     public bool BossDefeated { get; set; }
 
+    /// <summary>Niveau de difficulté de la run (plan 50 T3) ; absent dans les relevés plus anciens, lus comme Normal.</summary>
+    [JsonPropertyName("difficulty")]
+    public string Difficulty { get; set; }
+
     [JsonPropertyName("endgame_reached")]
     public bool EndgameReached { get; set; }
 

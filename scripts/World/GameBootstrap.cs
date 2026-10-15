@@ -125,6 +125,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(XpCurveConfig.TryLoad(out _, out string xpError), xpError);
         RequireCatalog(ScoreConfig.TryLoad(out _, out string scoreError), scoreError);
         RequireCatalog(PerilDataLoader.TryLoad(out string perilError), perilError);
+        RequireCatalog(DifficultyDataLoader.TryLoad(out string difficultyError), difficultyError);
         RequireCatalog(PassiveSouvenirDataLoader.TryLoad(out string objectsError), objectsError);
         RequireCatalog(UpgradeRoller.TryLoad(out string raritiesError), raritiesError);
         RequireCatalog(LevelUpOfferConfig.TryLoad(out _, out string offerError), offerError);
@@ -278,7 +279,7 @@ public partial class GameBootstrap : Node
 
         hud.SetEssenceTracker(essenceTracker);
 
-        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, fragmentManager, essenceTracker);
+        InitializeCharacterAndRun(player, perkManager, scoreManager, runTracker, fragmentManager, essenceTracker, perilManager);
         LoadProfiler.Mark("personnage et run");
 
         if (progression.CurrentLevel > 1 && fragmentManager.PendingChoices.Count == 0)
@@ -439,7 +440,8 @@ public partial class GameBootstrap : Node
     }
 
     private void InitializeCharacterAndRun(Player player, PerkManager perkManager,
-        ScoreManager scoreManager, RunTracker runTracker, FragmentManager fragmentManager, EssenceTracker essenceTracker)
+        ScoreManager scoreManager, RunTracker runTracker, FragmentManager fragmentManager, EssenceTracker essenceTracker,
+        PerilManager perilManager)
     {
         GameManager gm = GetNode<GameManager>("/root/GameManager");
         string characterId = gm.SelectedCharacterId;
@@ -458,7 +460,10 @@ public partial class GameBootstrap : Node
         // a passé son _Ready (bannissements de base) lors des attentes du chargement : ses ajouts ne sont pas écrasés.
         CampUpgrades.Totals camp = CampUpgrades.Apply(player, fragmentManager, essenceTracker, MetaSaveManager.GetCampRanks(),
             DevelopmentMode.IsEnabled);
-        scoreManager.VestigeMultiplier = 1f + camp.VestigeGain;
+        // Niveau de difficulté (plan 50 T3) : Péril de départ, visible au HUD, et Vestiges de fin de run.
+        DifficultyLevel difficulty = DifficultyDataLoader.Get(gm.DifficultyId);
+        scoreManager.VestigeMultiplier = (1f + camp.VestigeGain) * difficulty.Vestiges;
+        perilManager.AddPeril(difficulty.StartPeril);
         perkManager.ApplyPassivePerks(data.Id);
         scoreManager.SetRunTracker(runTracker);
         gm.ActiveMutators = new System.Collections.Generic.List<string>();

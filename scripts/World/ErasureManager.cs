@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
-using Vestiges.Infrastructure;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
@@ -21,6 +21,8 @@ public partial class ErasureManager : Node
     private float _baseDecayPerMinute = 0.012f;
     // Oubli du chemin (plan 17 lot 3D) : l'oubli avance plus vite.
     private float _decayMultiplier = 1f;
+    // Niveau de difficulté de la run (plan 50 T3) : l'Effacement presse davantage aux niveaux durs.
+    private float _difficultySpeed = 1f;
     private float _globalAccelerationPerMinute = 0.0004f;
     private float _distanceDecayMultiplier = 0.11f;
     // La carte est finie et se retraverse en une minute : sans plafond, une zone quittée s'oubliait jusqu'à ×6,5 plus vite
@@ -80,6 +82,7 @@ public partial class ErasureManager : Node
     public override void _Ready()
     {
         LoadConfig();
+        _difficultySpeed = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId).ErasureSpeed;
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
@@ -147,7 +150,7 @@ public partial class ErasureManager : Node
 
     private void AdvanceMemory(float elapsedMinutes)
     {
-        float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier;
+        float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier * _difficultySpeed;
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f) * (_crisisActive ? _crisisDecayMultiplier : 1f);
         float previousGlobal = _globalErasurePercent;
 

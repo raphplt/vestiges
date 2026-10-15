@@ -22,6 +22,7 @@ public partial class HubCharactersPanel : MarginContainer
     private Button _depart;
     private Button _quest;
     private Button _weapon;
+    private DifficultySelector _difficulty;
     // Fiche affichée ; elle suit le survol et le focus, puis revient au personnage choisi (_chosen) à la sortie de la liste.
     private CharacterData _examined;
     private CharacterData _chosen;
@@ -36,7 +37,8 @@ public partial class HubCharactersPanel : MarginContainer
     private int _idleCount;
     private float _idleTime;
     public string ExaminedCharacterId => _chosen?.Id;
-    public bool CanDepart => _examined != null && MetaSaveManager.IsCharacterUnlocked(_examined.Id);
+    public bool CanDepart => _examined != null && MetaSaveManager.IsCharacterUnlocked(_examined.Id) && _difficulty.IsSelectedUnlocked;
+    public string DifficultyId => _difficulty.SelectedId;
 
     public override void _Ready()
     {
@@ -104,6 +106,10 @@ public partial class HubCharactersPanel : MarginContainer
             if (quest != null) EmitSignal(SignalName.QuestRequested, quest.Id);
         };
         sheet.AddChild(_quest);
+        // Le niveau de difficulté se choisit juste avant de partir, au même endroit pour tous les personnages (plan 50 T3).
+        _difficulty = new DifficultySelector { Name = "DifficultySelector" };
+        _difficulty.Changed += RefreshDepart;
+        column.AddChild(_difficulty);
         // Partir reste au pied de la fiche, hors du défilement : toujours au même endroit, toujours visible.
         _depart = MenuSkin.Button("Partir");
         MenuSkin.StyleCallToAction(_depart);
@@ -224,7 +230,7 @@ public partial class HubCharactersPanel : MarginContainer
             }
         _portrait.Texture = art ?? (_idleCount > 0 ? _idle[0] : null);
         _portrait.TextureFilter = art != null ? TextureFilterEnum.Linear : TextureFilterEnum.Nearest;
-        _portrait.Modulate = CanDepart ? Colors.White : new Color(0.65f, 0.63f, 0.68f);
+        _portrait.Modulate = MetaSaveManager.IsCharacterUnlocked(character.Id) ? Colors.White : new Color(0.65f, 0.63f, 0.68f);
         _name.Text = character.Name;
         _description.Text = character.Description;
         PerkData passive = PerkDataLoader.GetAll().Find(perk => perk.Id == character.PassivePerk);
@@ -239,13 +245,22 @@ public partial class HubCharactersPanel : MarginContainer
         MobilityConfig mobility = MobilityConfig.Load(character.MobilityProfile);
         _details.Text = $"{passive?.Description}\n\n{weapon?.Summary}\n\n{mobility.Name} — {mobility.Description}";
         QuestDefinition quest = QuestDataLoader.FindUnlocking(UnlockKind.Character, character.Id);
-        _condition.Text = CanDepart ? "" : QuestBook.LockText(UnlockKind.Character, character.Id);
-        _condition.Visible = !CanDepart;
-        _quest.Visible = !CanDepart && quest != null;
-        _depart.Disabled = !CanDepart;
-        _depart.Text = CanDepart ? "Partir" : "Personnage verrouillé";
+        bool unlocked = MetaSaveManager.IsCharacterUnlocked(character.Id);
+        _condition.Text = unlocked ? "" : QuestBook.LockText(UnlockKind.Character, character.Id);
+        _condition.Visible = !unlocked;
+        _quest.Visible = !unlocked && quest != null;
+        RefreshDepart();
         foreach ((string id, Button row) in _rows)
             MenuSkin.StyleRosterCard(row, id == character.Id);
+    }
+
+    private void RefreshDepart()
+    {
+        if (_examined == null)
+            return;
+        _depart.Disabled = !CanDepart;
+        _depart.Text = CanDepart ? "Partir"
+            : !MetaSaveManager.IsCharacterUnlocked(_examined.Id) ? "Personnage verrouillé" : "Difficulté verrouillée";
     }
 
     public override void _Process(double delta)

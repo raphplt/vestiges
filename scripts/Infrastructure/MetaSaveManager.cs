@@ -61,6 +61,14 @@ public class MetaSaveData
     /// </summary>
     [JsonPropertyName("camp_paid")]
     public Dictionary<string, int> CampPaid { get; set; } = new();
+
+    /// <summary>Niveaux de difficulté où l'Indicible a été battu : chacun ouvre le niveau suivant (plan 50 T3).</summary>
+    [JsonPropertyName("difficulties_beaten")]
+    public List<string> DifficultiesBeaten { get; set; } = new();
+
+    /// <summary>Dernier niveau de difficulté choisi au départ, proposé de nouveau au Hub.</summary>
+    [JsonPropertyName("last_difficulty")]
+    public string LastDifficulty { get; set; }
 }
 
 /// <summary>Issue d'un achat ou d'un remboursement au Campement.</summary>
@@ -257,6 +265,9 @@ public static class MetaSaveManager
         {
             _data.Vestiges += vestiges;
             UpdateStats(record);
+            string difficulty = DifficultyDataLoader.Get(record.Difficulty).Id;
+            if (record.BossDefeated && !_data.DifficultiesBeaten.Contains(difficulty))
+                _data.DifficultiesBeaten.Add(difficulty);
             _data.SettledRuns.Add(record.RunId);
             if (_data.SettledRuns.Count > SettledRunMemory)
                 _data.SettledRuns.RemoveRange(0, _data.SettledRuns.Count - SettledRunMemory);
@@ -497,6 +508,37 @@ public static class MetaSaveManager
     }
 
     public static bool IsCharacterUnlocked(string characterId) => IsUnlocked(UnlockKind.Character, characterId);
+
+    /// <summary>
+    /// Un niveau de difficulté s'ouvre d'office, ou en battant l'Indicible au niveau d'avant (DECISIONS §168, §184). Le
+    /// mode dev ouvre tout.
+    /// </summary>
+    public static bool IsDifficultyUnlocked(string difficultyId)
+    {
+        Load();
+        int index = DifficultyDataLoader.IndexOf(difficultyId);
+        if (index < 0)
+            return false;
+        if (DevelopmentMode.IsEnabled || DifficultyDataLoader.All[index].Open)
+            return true;
+        return index > 0 && _data.DifficultiesBeaten.Contains(DifficultyDataLoader.All[index - 1].Id);
+    }
+
+    /// <summary>Le dernier niveau choisi s'il est toujours ouvert, sinon le niveau par défaut.</summary>
+    public static string GetLastDifficulty()
+    {
+        Load();
+        return IsDifficultyUnlocked(_data.LastDifficulty) ? _data.LastDifficulty : DifficultyDataLoader.DefaultId;
+    }
+
+    public static void SetLastDifficulty(string difficultyId)
+    {
+        Load();
+        if (_data.LastDifficulty == difficultyId || DifficultyDataLoader.IndexOf(difficultyId) < 0)
+            return;
+        _data.LastDifficulty = difficultyId;
+        Save();
+    }
     public static bool IsWeaponUnlocked(string weaponId) => IsUnlocked(UnlockKind.Weapon, weaponId);
     public static bool IsReminiscenceUnlocked(string perkId) => IsUnlocked(UnlockKind.Reminiscence, perkId);
     /// <summary>Objet ou Écusson (plan 35) : la quête qui le garde dépend de son étagère.</summary>
@@ -744,6 +786,11 @@ public static class MetaSaveManager
         }
 
         NormalizeCamp();
+
+        // Un catalogue refusé ne fait rien oublier, comme pour les quêtes.
+        _data.DifficultiesBeaten ??= new List<string>();
+        if (DifficultyDataLoader.TryLoad(out _))
+            _data.DifficultiesBeaten = _data.DifficultiesBeaten.Where(id => DifficultyDataLoader.IndexOf(id) >= 0).Distinct().ToList();
 
         // Le Journal des Souvenirs se remplit en dev sans falsifier de quête ; les déblocages, eux, suivent IsUnlocked.
         if (DevelopmentMode.IsEnabled)

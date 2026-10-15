@@ -487,6 +487,17 @@ CAMP_START_ESSENCE_DESC,+{0} Essence au départ,+{0} starting Essence
 CAMP_VESTIGE_GAIN,Boîte en fer,Tin Box
 CAMP_VESTIGE_GAIN_HINT,Tu rapportes plus de Vestiges de chaque run.,You bring back more Vestiges from every run.
 CAMP_VESTIGE_GAIN_DESC,+{0} Vestiges gagnés,+{0} Vestiges earned
+UI_DIFFICULTY,Difficulté,Difficulty
+UI_DIFFICULTY_LOCKED,Bats l'Indicible en {0} pour l'ouvrir.,Defeat the Unspeakable on {0} to open it.
+UI_DIFFICULTY_VESTIGES,Vestiges ×{0},Vestiges ×{0}
+DIFFICULTY_SIMPLE,Simple,Easy
+DIFFICULTY_SIMPLE_DESC,"Moins de créatures, moins fortes. Pour découvrir le monde.","Fewer, weaker creatures. To discover the world."
+DIFFICULTY_NORMAL,Normal,Normal
+DIFFICULTY_NORMAL_DESC,Le monde tel qu'il s'oublie.,The world as it forgets itself.
+DIFFICULTY_HARD,Difficile,Hard
+DIFFICULTY_HARD_DESC,"Plus de créatures, plus fortes, plus d'élites ; l'Effacement presse. Péril 3 au départ.","More, stronger creatures, more elites; the Erasure hurries. Peril 3 from the start."
+DIFFICULTY_IMPOSSIBLE,Impossible,Impossible
+DIFFICULTY_IMPOSSIBLE_DESC,"Le monde ne veut plus de toi. Péril 6 au départ.","The world no longer wants you. Peril 6 from the start."
 UI_CAMP_TITLE,Campement,Camp
 UI_CAMP_BRANCH_CAPACITIES,Capacités,Capacities
 UI_CAMP_BRANCH_STATS,Statistiques,Stats

@@ -103,6 +103,7 @@ namespace Vestiges.Tests;
 /// --visit : pendant la mesure, le bot ratisse : il se détourne vers les lieux vus, ouvre, ravive et dépense
 /// (RunObservation.Places.cs). Sans lui, les lieux « visités » ne sont que ceux que le trajet traverse.
 /// --peril N : pendant la mesure, la run commence avec N points de Péril (plan 17 lot 3A).
+/// --difficulty simple|normal|hard|impossible : niveau de difficulté de la run (plan 50 T3), Normal par défaut.
 /// --capture-every N : pendant la mesure, capture plein écran toutes les N secondes (HUD, événements).
 /// --event ID : force le micro-événement ID à 3 s de run (bancs de capture).
 /// --hold-map : pendant la mesure, maintient la touche de la carte entière (captures de la carte, plan 24 A6).
@@ -332,6 +333,7 @@ public partial class RunObservation : Node
         GameManager manager = GetNode<GameManager>("/root/GameManager");
         manager.RunSeed = seed;
         manager.SelectedCharacterId = characterId;
+        manager.DifficultyId = Argument(OS.GetCmdlineUserArgs(), "--difficulty", null);
         GetTree().CurrentScene = null;
         _world = GD.Load<PackedScene>("res://scenes/Main.tscn").Instantiate<WorldSetup>();
         GetTree().Root.AddChild(_world);

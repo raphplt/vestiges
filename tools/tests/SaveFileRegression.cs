@@ -24,6 +24,7 @@ public partial class SaveFileRegression : Node
             RunMetaChecks();
             RunHistoryChecks();
             RunSettlementChecks();
+            RunDifficultyChecks();
             RunKillRecordSeedChecks();
         }
         catch (Exception ex)
@@ -290,6 +291,43 @@ public partial class SaveFileRegression : Node
         MetaSaveManager.ReloadProfile();
         RunHistoryManager.ForceReload();
     }
+
+    /// <summary>Niveaux de difficulté (plan 50 T3) : chacun s'ouvre en battant l'Indicible au niveau d'avant.</summary>
+    private void RunDifficultyChecks()
+    {
+        string meta = Abs(DevelopmentMode.GetSavePath("meta_save.json"));
+        string history = Abs(DevelopmentMode.GetSavePath("run_history.json"));
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+        Check(MetaSaveManager.IsDifficultyUnlocked("simple") && MetaSaveManager.IsDifficultyUnlocked("normal")
+            && !MetaSaveManager.IsDifficultyUnlocked("hard") && !MetaSaveManager.IsDifficultyUnlocked("impossible")
+            && !MetaSaveManager.IsDifficultyUnlocked("inconnu"), "difficulté : profil neuf, Simple et Normal ouverts");
+        Check(MetaSaveManager.GetLastDifficulty() == "normal", "difficulté : Normal proposé par défaut");
+
+        MetaSaveManager.SettleRun(Beaten("d-simple", "simple", true), 0);
+        Check(!MetaSaveManager.IsDifficultyUnlocked("hard"), "difficulté : l'Indicible battu en Simple n'ouvre pas Difficile");
+        MetaSaveManager.SettleRun(Beaten("d-normal-perdue", "normal", false), 0);
+        Check(!MetaSaveManager.IsDifficultyUnlocked("hard"), "difficulté : une run perdue en Normal n'ouvre rien");
+        MetaSaveManager.SettleRun(Beaten("d-normal", "normal", true), 0);
+        Check(MetaSaveManager.IsDifficultyUnlocked("hard") && !MetaSaveManager.IsDifficultyUnlocked("impossible"),
+            "difficulté : l'Indicible battu en Normal ouvre Difficile, pas Impossible");
+        MetaSaveManager.SetLastDifficulty("hard");
+        MetaSaveManager.ReloadProfile();
+        Check(MetaSaveManager.IsDifficultyUnlocked("hard") && MetaSaveManager.GetLastDifficulty() == "hard",
+            "difficulté : niveau ouvert et dernier choix gardés après rechargement");
+        MetaSaveManager.SetLastDifficulty("impossible");
+        Check(MetaSaveManager.GetLastDifficulty() == "normal", "difficulté : un dernier choix fermé retombe sur Normal");
+
+        Reset(meta);
+        Reset(history);
+        MetaSaveManager.ReloadProfile();
+        RunHistoryManager.ForceReload();
+    }
+
+    private static RunRecord Beaten(string runId, string difficulty, bool bossDefeated) =>
+        new() { RunId = runId, TotalKills = 10, CharacterId = "vagabond", Difficulty = difficulty, BossDefeated = bossDefeated };
 
     private static string PendingIds() => string.Join(",", MetaSaveManager.GetPendingHistory().ConvertAll(run => run.RunId));
 

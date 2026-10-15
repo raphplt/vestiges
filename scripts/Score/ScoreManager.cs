@@ -134,7 +134,8 @@ public partial class ScoreManager : Node
             RunPhase = _runTracker?.CurrentPhase ?? GameManager.RunPhase.Exploration.ToString(),
             RunDurationSec = _runTracker?.RunDurationSeconds ?? 0f,
             BossDefeated = _bossDefeated,
-            EndgameReached = _endgameReached
+            EndgameReached = _endgameReached,
+            Difficulty = DifficultyDataLoader.Get(gm.DifficultyId).Id
         };
 
         if (_runTracker != null)

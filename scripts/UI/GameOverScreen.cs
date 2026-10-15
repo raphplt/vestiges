@@ -332,7 +332,9 @@ public partial class GameOverScreen : CanvasLayer
         _portrait.Texture = _build != null ? CharacterPortrait.Artwork(_build.CharacterId) ?? CharacterPortrait.Idle(_build.CharacterId) : null;
         _record.Text = RecordLine();
         _record.AddThemeColorOverride("font_color", _isRecord ? UITheme.GoldBright : UITheme.TextDim);
-        _seed.Text = gm.EffectiveSeed > 0 ? string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed) : "";
+        _seed.Text = Tr(DifficultyDataLoader.Get(record?.Difficulty).NameKey);
+        if (gm.EffectiveSeed > 0)
+            _seed.Text += "  ·  " + string.Format(Tr("UI_END_SEED"), gm.EffectiveSeed);
         string saveNotice = !string.IsNullOrEmpty(gm.LastRunSaveError) ? Tr("UI_END_SAVE_FAILED")
             : gm.LastRunHistoryPending ? Tr("UI_END_HISTORY_PENDING") : "";
         if (saveNotice.Length > 0)

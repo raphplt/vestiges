@@ -1,0 +1,10 @@
+{
+    "_doc": "Niveaux de difficulté choisis avant la run (plan 50 T3, plan 47 L4, DECISIONS §168 et §184). Dans l'ordre, du plus simple au plus dur ; open : ouvert d'office, sinon il s'ouvre en battant l'Indicible au niveau d'avant. Multiplicateurs par rapport à Normal, le réglage de spawn_flow.json : enemy_count (cible locale et plafond de créatures, sans dépasser le plafond technique de peril.json), enemy_hp et enemy_damage (créatures, élites, Souverains, Barrière et Indicible), elite_frequency (divise l'intervalle entre deux élites naturelles), erasure_speed (vitesse de l'Effacement), start_peril (points de Péril dès le départ, qui s'ajoutent aux multiplicateurs et se voient au HUD), vestiges (gain de fin de run, en plus des éliminations supplémentaires). Valeurs d'essai du 15 octobre, « écart moyen » ; un seul classement mondial aux éliminations, tous niveaux confondus.",
+    "default": "normal",
+    "levels": [
+        { "id": "simple", "name_key": "DIFFICULTY_SIMPLE", "desc_key": "DIFFICULTY_SIMPLE_DESC", "open": true, "enemy_count": 0.75, "enemy_hp": 0.8, "enemy_damage": 0.7, "elite_frequency": 1.0, "erasure_speed": 1.0, "start_peril": 0, "vestiges": 1.0 },
+        { "id": "normal", "name_key": "DIFFICULTY_NORMAL", "desc_key": "DIFFICULTY_NORMAL_DESC", "open": true, "enemy_count": 1.0, "enemy_hp": 1.0, "enemy_damage": 1.0, "elite_frequency": 1.0, "erasure_speed": 1.0, "start_peril": 0, "vestiges": 1.0 },
+        { "id": "hard", "name_key": "DIFFICULTY_HARD", "desc_key": "DIFFICULTY_HARD_DESC", "open": false, "enemy_count": 1.3, "enemy_hp": 1.35, "enemy_damage": 1.3, "elite_frequency": 1.3, "erasure_speed": 1.15, "start_peril": 3, "vestiges": 1.25 },
+        { "id": "impossible", "name_key": "DIFFICULTY_IMPOSSIBLE", "desc_key": "DIFFICULTY_IMPOSSIBLE_DESC", "open": false, "enemy_count": 1.6, "enemy_hp": 1.8, "enemy_damage": 1.7, "elite_frequency": 1.6, "erasure_speed": 1.3, "start_peril": 6, "vestiges": 1.5 }
+    ]
+}

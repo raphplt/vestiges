@@ -34,6 +34,7 @@ public sealed class BarrierAttacks
 	private readonly string _causeId;
 	private readonly Barrier _barrier;
 	private readonly BarrierConfig _config;
+	private readonly float _damageMultiplier;
 	private readonly FxFamily _family;
 	private readonly List<Strike> _strikes = new();
 	private readonly GroundTelegraph _chainArea;
@@ -55,10 +56,12 @@ public sealed class BarrierAttacks
 	public int FistsLaunched { get; private set; }
 	public int ChainsLaunched { get; private set; }
 
-	public BarrierAttacks(Barrier barrier, BarrierConfig config, string suffix)
+	/// <param name="damageMultiplier">Niveau de difficulté de la run : les coups de poing et la chaîne en suivent les dégâts.</param>
+	public BarrierAttacks(Barrier barrier, BarrierConfig config, string suffix, float damageMultiplier)
 	{
 		_barrier = barrier;
 		_config = config;
+		_damageMultiplier = damageMultiplier;
 		_causeId = EnemyGrammar.BossCausePrefix + config.NameKey;
 		_family = PixelPalette.ParseFamily(config.AttackFamily, FxFamily.Rust);
 		_fistTimer = config.FirstAttackDelay;
@@ -214,7 +217,7 @@ public sealed class BarrierAttacks
 		CombatPools.Instance?.EmitKnockbackDust(strike.Center, Vector2.Up);
 		float reach = _config.FistRadius + _config.FistHitMargin;
 		if (GodotObject.IsInstanceValid(player) && Iso.GroundDistanceSquared(player.GlobalPosition, strike.Center) <= reach * reach
-			&& HitPlayer(player, _config.FistDamage, strike.Center))
+			&& HitPlayer(player, _config.FistDamage * _damageMultiplier, strike.Center))
 			FistHits++;
 	}
 
@@ -263,7 +266,7 @@ public sealed class BarrierAttacks
 			Vector2 toPlayer = Iso.ToGround(player.GlobalPosition - _chainCenter);
 			float width = Mathf.DegToRad(_config.ChainWidthDeg * 0.5f);
 			if (toPlayer.Length() <= _config.ChainRadius && Mathf.Abs(Mathf.AngleDifference(angle, toPlayer.Angle())) <= width
-				&& HitPlayer(player, _config.ChainDamage, _chainCenter))
+				&& HitPlayer(player, _config.ChainDamage * _damageMultiplier, _chainCenter))
 			{
 				_chainHit = true;
 				ChainHits++;

@@ -2137,3 +2137,5 @@ Raphaël, en vocal avec un joueur qui découvrait le jeu, plus ses propres remar
 - **Essence** (retour ajouté) : « le nombre de kills c'est le même que le nombre d'essence ». Essence selon la créature, dans son JSON. « Mais alors il faut que les coffres deviennent de plus en plus chers » : **le prix monte par coffre ouvert, plus avec le temps de jeu**. Les coffres lâchés par les boss et les élites sont gratuits.
 - **Ordre** : « tout dans l'ordre » : réglages, Campement, difficulté, Essence et coffres, repères et première run guidée.
 - Plus tard : mouvement trop basique (« juste haut, bas, gauche, droite et dash »), à reprendre avec le plan 42 §6.
+
+**Niveaux de difficulté, le même jour** (plan 50 T3) : « écart moyen » retenu (Simple ×0,75 créatures, ×0,8 PV, ×0,7 dégâts ; Difficile ×1,3 / ×1,35 / ×1,3, Vestiges ×1,25 ; Impossible ×1,6 / ×1,8 / ×1,7, Vestiges ×1,5), les boss suivant PV et dégâts. En plus : Effacement plus rapide, élites plus fréquentes **et** Péril de départ (3 en Difficile, 6 en Impossible), qui s'ajoute aux multiplicateurs. Choix sur l'écran du personnage, sous la fiche, dernier niveau retenu.

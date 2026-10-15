@@ -56,6 +56,8 @@ L'Effacement qui accélère en fin de run et fait traverser la foule, les stats 
 
 ### L4 — Niveaux de difficulté au départ (conception, avec le plan 46)
 
+> **Livré le 15 octobre** par le [plan 50 T3](50-retours-premier-testeur.md) : quatre niveaux, valeurs « écart moyen », Péril de départ, Effacement et élites (DECISIONS §184).
+
 Proposé par Raphaël le 14 octobre : choisir avant la run un niveau, de simple à impossible, qui change la fréquence et la puissance des créatures, les boss, etc. Le plan 46 (autre session) a déjà un accord de principe sur des « paliers de départ » : les deux se conçoivent ensemble.
 
 Tranché ([§168](DECISIONS.md)) :

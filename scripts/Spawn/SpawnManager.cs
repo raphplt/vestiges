@@ -122,12 +122,16 @@ public partial class SpawnManager : Node2D
 	private readonly List<string> _fallbackExplorationPool = new();
 	private readonly List<string> _fallbackResurgencePool = new();
 
+	/// <summary>Niveau de difficulté de la run : nombre, PV et dégâts des créatures, et des boss qui le lisent ici.</summary>
+	public DifficultyLevel Difficulty { get; private set; } = DifficultyDataLoader.Get(null);
+
 	public override void _Ready()
 	{
 		EnemyDataLoader.Load();
 		BiomeDataLoader.Load();
 		EnemyVariantDataLoader.Load();
 		LoadScalingConfig();
+		Difficulty = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId);
 		_nextEliteAtSec = EnemyVariantDataLoader.NaturalElites.StartSec;
 
 		_pool = GetNode<EnemyPool>("../EnemyPool");
@@ -268,8 +272,8 @@ public partial class SpawnManager : Node2D
 		}
 
 		float peril = PerilPoints(elapsedMinutes);
-		hpScale *= PerilDataLoader.EnemyHpMultiplier(peril);
-		dmgScale *= PerilDataLoader.EnemyDamageMultiplier(peril);
+		hpScale *= PerilDataLoader.EnemyHpMultiplier(peril) * Difficulty.EnemyHp;
+		dmgScale *= PerilDataLoader.EnemyDamageMultiplier(peril) * Difficulty.EnemyDamage;
 	}
 
 	private void ApplyRunPhaseModifiers(Enemy enemy, EnemyData data)
@@ -330,8 +334,8 @@ public partial class SpawnManager : Node2D
 			return;
 		}
 		float peril = PerilPoints(_elapsedTime / 60f);
-		enemy.ApplyVariant(variant, _affixPick, scaling.Hp(_playerLevel) * PerilDataLoader.EnemyHpMultiplier(peril),
-			scaling.DamageScale(_playerLevel) * PerilDataLoader.EnemyDamageMultiplier(peril));
+		enemy.ApplyVariant(variant, _affixPick, scaling.Hp(_playerLevel) * PerilDataLoader.EnemyHpMultiplier(peril) * Difficulty.EnemyHp,
+			scaling.DamageScale(_playerLevel) * PerilDataLoader.EnemyDamageMultiplier(peril) * Difficulty.EnemyDamage);
 	}
 
 	/// <summary>Créature du biome local, de rang normal, en préférant la liste fournie si elle y figure.</summary>
@@ -389,7 +393,7 @@ public partial class SpawnManager : Node2D
 		// Fin de run (plan 47) : élites plus fréquentes, plus nombreuses et plus fortes, progressivement.
 		float ramp = config.LateRamp(elapsedMinutes);
 		_nextEliteAtSec = _elapsedTime + RunRandom.Spawn.RandfRange(Mathf.Lerp(config.IntervalMinSec, config.LateIntervalMinSec, ramp),
-			Mathf.Lerp(config.IntervalMaxSec, config.LateIntervalMaxSec, ramp));
+			Mathf.Lerp(config.IntervalMaxSec, config.LateIntervalMaxSec, ramp)) / Difficulty.EliteFrequency;
 		int maxAlive = Mathf.RoundToInt(Mathf.Lerp(config.MaxAlive, config.LateMaxAlive, ramp));
 
 		for (int i = _naturalElites.Count - 1; i >= 0; i--)
@@ -431,7 +435,7 @@ public partial class SpawnManager : Node2D
 		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
 		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
 		int target = Mathf.RoundToInt(openingTarget * EarlyDensity(elapsedMinutes) * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
-		target = Mathf.RoundToInt(target * phaseMult * EncounterDensityMultiplier);
+		target = Mathf.RoundToInt(target * phaseMult * EncounterDensityMultiplier * Difficulty.EnemyCount);
 
 		int nearCount = CountActiveEnemiesNear(_player.GlobalPosition, _dayLocalEnemyRadius);
 		int missing = target - nearCount;
@@ -649,7 +653,7 @@ public partial class SpawnManager : Node2D
 	{
 		float crisisCap = _currentRunPhase == GameManager.RunPhase.Crisis ? _crisisCapMultiplier : 1f;
 		float scaled = (_maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes)
-			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * crisisCap;
+			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * crisisCap * Difficulty.EnemyCount;
 		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, _activeEnemiesCeilingOverride > 0 ? _activeEnemiesCeilingOverride : PerilDataLoader.ActiveEnemiesCeiling);
 	}
 
