@@ -8,6 +8,7 @@
         "speed": 100,
         "damage": 3,
         "xp_reward": 5,
+        "essence": 1,
         "perception": 560,
         "leash": 1000
     },

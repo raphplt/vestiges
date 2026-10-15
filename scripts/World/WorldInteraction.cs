@@ -19,7 +19,8 @@ public partial class WorldInteraction : Node
     private ChestLootScreen _lootScreen;
     private ChoiceScreen _choices;
     private EssenceTracker _essence;
-    private float _elapsed;
+    // Coffres payés dans la run : chacun fait monter le prix des suivants (DECISIONS §184).
+    private int _chestsOpened;
     private readonly RandomNumberGenerator _chestRng = RunRandom.Create("chest_items");
     private InteractionPrompt _prompt;
     private InteractionGauge _gauge;
@@ -44,7 +45,6 @@ public partial class WorldInteraction : Node
     /// <summary>Appelé à chaque pas physique du joueur : jauge et invite.</summary>
     public void Step(float delta, bool canInteract)
     {
-        _elapsed += delta;
         if (_target != null)
         {
             if (!IsValid(_target) || !_target.CanInteract
@@ -64,7 +64,7 @@ public partial class WorldInteraction : Node
         IInteractable nearest = _target == null && canInteract ? FindNearest() : null;
         if (nearest != null)
             _prompt.ShowAt(nearest.PromptPosition, nearest is Chest chest
-                ? chest.PricePrompt(_player, _essence, _elapsed) : nearest.PromptVerbKey);
+                ? chest.PricePrompt(_player, _essence, _chestsOpened) : nearest.PromptVerbKey);
         else
             _prompt.HidePrompt();
     }
@@ -75,7 +75,7 @@ public partial class WorldInteraction : Node
         if (nearest == null)
             return false;
 
-        if (nearest is Chest chest && !chest.CanPurchase(_player, _essence, _elapsed, _chestRng, out string failure))
+        if (nearest is Chest chest && !chest.CanPurchase(_player, _essence, _chestsOpened, _chestRng, out string failure))
         {
             _player.ShowPopup(failure, new Color("D4A843"));
             return true;
@@ -114,8 +114,9 @@ public partial class WorldInteraction : Node
 
     private void OpenChest(Chest chest)
     {
-        if (!chest.TryPurchase(_player, _essence, _elapsed, _chestRng, out string failure))
+        if (!chest.TryPurchase(_player, _essence, _chestsOpened, _chestRng, out string failure))
         { _player.ShowPopup(failure, new Color("D4A843")); return; }
+        if (!chest.FreeOpening) _chestsOpened++;
         if (chest.FreeOpening) _player.ShowPopup("Ouverture gratuite", new Color("6ACA5A"));
         ChooseNext(chest);
     }

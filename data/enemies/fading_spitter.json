@@ -8,6 +8,7 @@
         "damage": 8,
         "attack_range": 240,
         "xp_reward": 15,
+        "essence": 2,
         "spawn_weight": 0.5,
         "spawn_from_minute": 3
     },

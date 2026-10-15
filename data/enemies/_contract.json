@@ -6,6 +6,7 @@
     "speed": { "min": 0 },
     "damage": { "min": 0 },
     "xp_reward": { "min": 0 },
+    "essence": { "min": 0, "integer": true, "_comment": "Essence à la mort (DECISIONS §184) : selon la créature, pour que les éliminations et l'Essence ne soient plus deux compteurs égaux. Les variantes ajoutent leur bonus_essence." },
     "attack_range": { "default": 0, "min": 0 },
     "perception": { "default": 0, "min": 0, "_comment": "0 : portée de détection commune (EnemyTracking)." },
     "leash": { "default": 0, "min": 0, "_comment": "0 : laisse commune (EnemyTracking)." },

@@ -6,7 +6,8 @@
         "hp": 25,
         "speed": 45,
         "damage": 8,
-        "xp_reward": 15
+        "xp_reward": 15,
+        "essence": 2
     },
     "abilities": {
         "burrow": {

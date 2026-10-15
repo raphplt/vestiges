@@ -10,6 +10,7 @@
         "speed": 35,
         "damage": 12,
         "xp_reward": 25,
+        "essence": 3,
         "perception": 380,
         "leash": 700,
         "spawn_from_minute": 3

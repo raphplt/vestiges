@@ -8,7 +8,8 @@
         "speed": 55,
         "damage": 6,
         "attack_range": 180,
-        "xp_reward": 18
+        "xp_reward": 18,
+        "essence": 2
     },
     "abilities": {
         "aimed_shot": {

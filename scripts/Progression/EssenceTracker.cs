@@ -60,13 +60,8 @@ public partial class EssenceTracker : Node
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
-        EnemyData data = EnemyDataLoader.Get(enemyId);
-        int amount = data?.Tier switch
-        {
-            EnemyTier.Boss => 8,
-            EnemyTier.Elite => 4,
-            _ => 1
-        };
+        // Selon la créature (data/enemies, DECISIONS §184) : éliminations et Essence ne sont plus deux compteurs égaux.
+        int amount = EnemyDataLoader.Get(enemyId)?.Stats.Essence ?? 1;
         if (RunRandom.Loot.Randf() < ErasureEffectAt(position).EssenceChance)
             amount++;
         // Accalmie après une crise : l'Essence des morts rapporte davantage (arrondi au supérieur).

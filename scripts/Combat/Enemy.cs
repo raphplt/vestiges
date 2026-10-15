@@ -1680,6 +1680,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		{
 			Chest chest = _chestScene.Instantiate<Chest>();
 			chest.GlobalPosition = spawnPos;
+			chest.AlwaysFree = true;
 			GetTree().CurrentScene.AddChild(chest);
 			chest.Initialize(chestData);
 		}).CallDeferred();

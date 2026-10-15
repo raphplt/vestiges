@@ -391,6 +391,7 @@ public partial class Barrier : Node2D
 		{
 			Chest chest = scene.Instantiate<Chest>();
 			chest.GlobalPosition = position;
+			chest.AlwaysFree = true;
 			GetTree().CurrentScene.AddChild(chest);
 			chest.Initialize(data);
 		}).CallDeferred();

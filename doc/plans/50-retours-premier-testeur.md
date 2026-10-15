@@ -22,7 +22,7 @@
 | **T1** Réglages | Coffres à l'appui, collés (40 px) ; autres lieux ÷2 et fouille qui suit le joueur ; anneau d'apparition ; Vestiges 0,7 ; brouillard ; début de run ; dash invulnérable | **Livré le 15 octobre** |
 | T2 Campement | Retrait PV, dégâts, cadence, vitesse, régénération, armure (sans remboursement, §152) ; nouvelle amélioration « gain de Vestiges » | **Livré le 15 octobre** |
 | T3 Niveaux de difficulté | Simple et Normal ouverts, Difficile et Impossible à gagner en battant l'Indicible ; nombre, PV, dégâts, boss, élites, Effacement, Péril de départ, Vestiges | **Livré le 15 octobre** |
-| T4 Essence et coffres | Essence par type de créature dans son JSON ; prix des coffres qui monte par coffre ouvert et plus au temps ; coffres de boss et d'élites gratuits | À faire |
+| T4 Essence et coffres | Essence par type de créature dans son JSON ; prix des coffres qui monte par coffre ouvert et plus au temps ; coffres de boss et d'élites gratuits | **Livré le 15 octobre** |
 | T5 Lisibilité | Repères au bord de l'écran pour tous (l'Étiquette perdue à renforcer ou retirer) ; première run guidée ; dash montré dès le début | À concevoir puis faire |
 
 ## 3. T1, livré le 15 octobre
@@ -83,3 +83,12 @@ Avec le Péril de départ, l'effet au départ vaut environ ×1,7 créatures, ×1
 Le bot ne part pas avec la même arme d'un niveau à l'autre, les éliminations ne se comparent donc pas finement. Mais en Difficile, l'ouverture devient une boule de neige : moins d'éliminations, moins d'XP, des créatures qui s'entassent. **À juger en jouant** avec la méta d'un joueur qui a battu l'Indicible ; si l'ouverture écrase, réduire d'abord le Péril de départ.
 
 Vérifié : build sans avertissement, smoke, sauvegardes (ouverture des niveaux, dernier choix, rechargement), Campement, Barrière, Indicible, mode dev ; capture du sélecteur en profil neuf (Normal, puis Difficile fermé) regardée. `test_menu_navigation` échoue pour une raison antérieure (il attend une Scaphandrière sans portrait, alors que `portrait.webp` existe) : tâche à part.
+
+## 6. T4, livré le 15 octobre
+
+- **Essence par créature** : champ `essence` obligatoire dans `stats` de chaque fiche (`data/enemies/_contract.json`), lu par `EnemyStats.Essence` ; `EssenceTracker` n'a plus de valeurs en dur (1 / 4 / 8 selon le rang). Valeurs d'essai : 1 pour Ombre, Charognard, Rampeur d'ombre et Présage ; 2 pour Cracheur, Rampant, Tisseuse, Rôdeur et Sentinelle ; 3 pour Brute, Hurleur et Tréant ; 8 pour les parties de boss et l'Indicible (inchangé). Bonus des variantes et chance de la zone effacée inchangés.
+- **Mesure** (10 min, profil dev, graines 42 et 7) : 632 éliminations pour 947 Essence (×1,5) et 610 pour 759 (×1,24) ; avant, le rapport restait vers ×1,1.
+- **Prix des coffres** : `chest_cost_growth_per_open` 0,2 remplace `chest_cost_growth_per_minute` dans `item_loot.json` : prix de base × (1 + 0,2 × coffres payés déjà ouverts), soit 20, 24, 28… 40 au sixième coffre commun. Le compteur est un état de run tenu par `WorldInteraction` ; le prix est recalculé en direct (il n'est plus figé au premier devis). Arrondi au supérieur avec une tolérance (45 × 1,2 = 54, pas 55).
+- **Coffres gratuits** : `Chest.AlwaysFree` pour les coffres lâchés par une créature à variante (élites, Souverains) et par la Barrière ; invite « Ouvrir — gratuit » ; ils ne font pas monter le prix des suivants.
+
+Vérifié : build sans avertissement, smoke, butin (prix par ouverture, invite refaite quand le prix monte, coffre gratuit), catalogues (contrat des créatures), quêtes, objets. Le bot n'ouvre pas de coffres payants : la courbe de prix se juge en jouant.

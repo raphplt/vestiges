@@ -56,7 +56,7 @@ public partial class ItemLootRegression : Node
     {
         string json = FileAccess.GetFileAsString(ItemLootConfig.Path);
         Check(ItemLootConfig.Apply(json) == null, "configuration complète acceptée");
-        foreach (string key in new[] { "sources", "chest_costs", "workshop_costs", "chest_cost_growth_per_minute" })
+        foreach (string key in new[] { "sources", "chest_costs", "workshop_costs", "chest_cost_growth_per_open" })
         {
             JsonObject invalid = JsonNode.Parse(json).AsObject();
             invalid.Remove(key);
@@ -67,7 +67,8 @@ public partial class ItemLootRegression : Node
         Check(ItemLootConfig.Apply(bad.ToJsonString()) != null, "poids négatif refusé sans publication partielle");
         Check(ItemLootConfig.ChestCost("common", 0) == 20, "configuration précédente préservée après rejet");
         ItemLootConfig.Apply(json);
-        Check(ItemLootConfig.ChestCost("common", 60) == 22 && ItemLootConfig.ChestCost("rare", 60) == 49, "croissance temporelle et arrondi au supérieur");
+        Check(ItemLootConfig.ChestCost("common", 1) == 24 && ItemLootConfig.ChestCost("rare", 1) == 54
+            && ItemLootConfig.ChestCost("common", 5) == 40, "prix qui monte à chaque coffre payé (DECISIONS §184)");
     }
     private static PassiveSouvenirData Item(string id, string rarity, int max = 0) => new()
     { Id = id, Name = id, Kind = ObjectKind.Item, Rarity = rarity, MaxCopies = max };
@@ -160,15 +161,16 @@ public partial class ItemLootRegression : Node
     {
         Balance(19);
         Chest unpaid = Chest();
-        Check(unpaid.Quote(0) == 20 && unpaid.Quote(300) == 20, "devis figé avant paiement malgré le temps écoulé");
+        Check(unpaid.Quote(5) == 40 && unpaid.Quote(0) == 20, "devis qui suit les coffres payés de la run");
         string prompt = unpaid.PricePrompt(_player, _essence, 0);
-        Check(prompt.Contains("20 Essence") && prompt.Contains("insuffisants") && ReferenceEquals(prompt, unpaid.PricePrompt(_player, _essence, 10)), "prompt annonce prix/manque, réutilise le texte sans allocation par frame");
+        Check(prompt.Contains("20 Essence") && prompt.Contains("insuffisants") && ReferenceEquals(prompt, unpaid.PricePrompt(_player, _essence, 0)), "prompt annonce prix/manque, réutilise le texte sans allocation par frame");
+        Check(unpaid.PricePrompt(_player, _essence, 1).Contains("24 Essence"), "prompt refait quand le prix monte");
         ulong rngBefore = _rng.State;
         Check(!unpaid.TryPurchase(_player, _essence, 0, _rng, out _) && !unpaid.IsOpened && _essence.CurrentEssence == 19 && _rng.State == rngBefore,
             "pas assez : coffre fermé, aucun débit/tirage de butin ; zéro Pied-de-biche ne consomme pas de hasard");
         ActivePassiveSouvenir crowbar = Fixture("pied_de_biche", 100, ("chance_per_copy", .15f), ("max_chance", .6f));
         Balance(20);
-        Check(unpaid.TryPurchase(_player, _essence, 500, _rng, out _) && _essence.CurrentEssence == 0 && !unpaid.FreeOpening,
+        Check(unpaid.TryPurchase(_player, _essence, 0, _rng, out _) && _essence.CurrentEssence == 0 && !unpaid.FreeOpening,
             "retour après acquisition du Pied-de-biche : première tentative payante conservée, prix original débité");
         Check(!unpaid.TryPurchase(_player, _essence, 0, _rng, out _), "coffre ouvert ne paie jamais deux fois");
         Check(Mathf.IsEqualApprox(WorldItemEffects.FreeChestChance(_player), .6f), "100 copies ordinaires autorisées, gratuité plafonnée à 60 %");
@@ -177,6 +179,11 @@ public partial class ItemLootRegression : Node
         RandomNumberGenerator lucky = SeedForRoll(true);
         Check(free.TryPurchase(_player, _essence, 0, lucky, out _) && free.FreeOpening && free.IsOpened && _essence.CurrentEssence == 0,
             "gratuité réussie : ouverture réelle avec zéro Essence");
+        Chest dropped = Chest();
+        dropped.AlwaysFree = true;
+        Check(dropped.PricePrompt(_player, _essence, 3).Contains("gratuit") && dropped.TryPurchase(_player, _essence, 3, _rng, out _)
+            && dropped.FreeOpening && dropped.IsOpened && _essence.CurrentEssence == 0,
+            "coffre d'élite ou de boss : gratuit, sans Essence (DECISIONS §184)");
         Chest failed = Chest();
         RandomNumberGenerator unlucky = SeedForRoll(false);
         Check(!failed.TryPurchase(_player, _essence, 0, unlucky, out _), "gratuité manquée, portefeuille vide : reste fermé");

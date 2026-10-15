@@ -36,11 +36,13 @@ public static class ItemLootConfig
         Load();
         return _weights.TryGetValue(source, out double[] weights) ? weights : throw new ArgumentException($"Source inconnue : {source}");
     }
-    public static int ChestCost(string rarity, float elapsedSeconds)
+    /// <summary>Prix d'un coffre après <paramref name="chestsOpened"/> coffres payés dans la run (DECISIONS §184).</summary>
+    public static int ChestCost(string rarity, int chestsOpened)
     {
         Load();
-        double amount = _chestCosts[rarity] * (1d + ChestGrowth * Math.Floor(Math.Max(0f, elapsedSeconds) / 60d));
-        return (int)Math.Min(int.MaxValue, Math.Ceiling(amount));
+        double amount = _chestCosts[rarity] * (1d + ChestGrowth * Math.Max(0, chestsOpened));
+        // Tolérance : 45 × 1,2 vaut 54, pas 55, malgré l'imprécision du pas lu en float.
+        return (int)Math.Min(int.MaxValue, Math.Ceiling(amount - 1e-4));
     }
     public static int WorkshopCost(string rarity) { Load(); return _workshopCosts[Rank(rarity)]; }
 
@@ -51,7 +53,7 @@ public static class ItemLootConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "butin", "sources", "chest_costs", "chest_cost_growth_per_minute", "chest_luck_exponent_per_rank", "workshop_costs");
+            reader.AllowOnly(root, "butin", "sources", "chest_costs", "chest_cost_growth_per_open", "chest_luck_exponent_per_rank", "workshop_costs");
             JsonElement sources = reader.Section("sources");
             reader.AllowOnly(sources, "sources", Sources);
             Dictionary<string, double[]> weights = new();
@@ -74,7 +76,7 @@ public static class ItemLootConfig
             reader.AllowOnly(workshop, "workshop_costs", Rarities);
             int[] workshopCosts = new int[5];
             for (int rank = 0; rank < 5; rank++) workshopCosts[rank] = reader.Count(workshop, Rarities[rank], 1000000);
-            float growth = reader.NonNegative(root, "chest_cost_growth_per_minute");
+            float growth = reader.NonNegative(root, "chest_cost_growth_per_open");
             float exponent = reader.NonNegative(root, "chest_luck_exponent_per_rank");
             if (reader.Error != null) return reader.Error;
             _weights = weights;

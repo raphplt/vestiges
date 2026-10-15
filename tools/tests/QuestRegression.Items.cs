@@ -238,12 +238,12 @@ public partial class QuestRegression
         EssenceTracker essence = new();
         _run.AddChild(essence);
         using RandomNumberGenerator rng = new() { Seed = 913UL };
-        Check(!chest.TryPurchase(_player, essence, 0f, rng, out _) && !MetaSaveManager.HasCompletedQuest(quest.Id),
+        Check(!chest.TryPurchase(_player, essence, 0, rng, out _) && !MetaSaveManager.HasCompletedQuest(quest.Id),
             "49 coffres : un achat refusé faute d'Essence ne compte pas");
         essence.AddEssence(chest.QuotedCost);
-        Check(chest.TryPurchase(_player, essence, 0f, rng, out _) && essence.CurrentEssence == 0
+        Check(chest.TryPurchase(_player, essence, 0, rng, out _) && essence.CurrentEssence == 0
             && MetaSaveManager.HasCompletedQuest(quest.Id), "50e coffre réellement payé : Pied-de-biche débloqué immédiatement");
-        Check(!chest.TryPurchase(_player, essence, 0f, rng, out _) && Count(quest.Id) == 1,
+        Check(!chest.TryPurchase(_player, essence, 0, rng, out _) && Count(quest.Id) == 1,
             "la seconde interaction du coffre ne compte pas et ne renotifie pas");
     }
 

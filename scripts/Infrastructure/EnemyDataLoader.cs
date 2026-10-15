@@ -11,6 +11,8 @@ public class EnemyStats
     public float Damage { get; set; }
     public float AttackRange { get; set; }
     public float XpReward { get; set; }
+    /// <summary>Essence rapportée à la mort, selon la créature (DECISIONS §184).</summary>
+    public int Essence { get; set; }
 }
 
 public class EnemyVisual
@@ -86,7 +88,7 @@ public class EnemyData
 public static class EnemyDataLoader
 {
     private const string Directory = "res://data/enemies/";
-    private static readonly HashSet<string> CoreStats = new() { "hp", "speed", "damage", "attack_range", "xp_reward" };
+    private static readonly HashSet<string> CoreStats = new() { "hp", "speed", "damage", "attack_range", "xp_reward", "essence" };
 
     private static readonly Dictionary<string, EnemyData> _cache = new();
     private static bool _loaded;
@@ -308,6 +310,7 @@ public static class EnemyDataLoader
                 Damage = stats.GetProperty("damage").GetSingle(),
                 AttackRange = stats.TryGetProperty("attack_range", out JsonElement range) ? range.GetSingle() : EnemyContract.StatDefault("attack_range"),
                 XpReward = stats.GetProperty("xp_reward").GetSingle(),
+                Essence = stats.GetProperty("essence").GetInt32(),
             },
             Visual = new EnemyVisual
             {

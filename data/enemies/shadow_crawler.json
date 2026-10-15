@@ -6,7 +6,8 @@
         "hp": 30,
         "speed": 60,
         "damage": 5,
-        "xp_reward": 10
+        "xp_reward": 10,
+        "essence": 1
     },
     "visual": {
         "color": "#CC3333",

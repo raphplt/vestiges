@@ -24,8 +24,11 @@ public partial class Chest : StaticBody2D, IInteractable
     private bool _purchasing;
     private string _pricePrompt;
     private bool _promptAffordable, _promptFree;
+    private int _promptCost;
     public int QuotedCost => _quotedCost ?? 0;
     public bool FreeOpening => _freeOpening;
+    /// <summary>Coffre lâché par une élite, un Souverain ou la Barrière : toujours gratuit (DECISIONS §184).</summary>
+    public bool AlwaysFree { get; set; }
     public ChestRewardSession Rewards { get; private set; }
     private Sprite2D _sprite;
     private LightColumn _column;
@@ -72,37 +75,42 @@ public partial class Chest : StaticBody2D, IInteractable
     /// <summary>Le butin passe par l'écran de butin : <see cref="WorldInteraction"/> ouvre le coffre lui-même.</summary>
     public void Interact(Player player) { }
 
-    /// <summary>Devis annoncé une fois ; s’approcher ne tire rien et ne débite rien.</summary>
-    public int Quote(float elapsedSeconds) => _quotedCost ??= ItemLootConfig.ChestCost(Rarity, elapsedSeconds);
+    /// <summary>
+    /// Prix du coffre après <paramref name="chestsOpened"/> coffres payés dans la run : il monte à chaque ouverture, plus
+    /// avec le temps (DECISIONS §184). S’approcher ne tire rien et ne débite rien.
+    /// </summary>
+    public int Quote(int chestsOpened) => (_quotedCost = ItemLootConfig.ChestCost(Rarity, chestsOpened)).Value;
 
-    public string PricePrompt(Player player, EssenceTracker essence, float elapsedSeconds)
+    public string PricePrompt(Player player, EssenceTracker essence, int chestsOpened)
     {
-        int cost = Quote(elapsedSeconds);
+        int cost = Quote(chestsOpened);
+        bool free = _freeOpening || AlwaysFree;
         bool affordable = (essence?.CurrentEssence ?? 0) >= cost;
-        if (_pricePrompt == null || affordable != _promptAffordable || _promptFree != _freeOpening)
+        if (_pricePrompt == null || affordable != _promptAffordable || _promptFree != free || _promptCost != cost)
         {
             _promptAffordable = affordable;
-            _promptFree = _freeOpening;
-            _pricePrompt = _freeOpening ? "Ouvrir — gratuit" : $"Ouvrir — {cost} Essence" + (!affordable ? " · fonds insuffisants" : "");
+            _promptFree = free;
+            _promptCost = cost;
+            _pricePrompt = free ? "Ouvrir — gratuit" : $"Ouvrir — {cost} Essence" + (!affordable ? " · fonds insuffisants" : "");
         }
         return _pricePrompt;
     }
 
     /// <summary>Première intention explicite : jet unique mémorisé, même si les fonds manquent. Aucun paiement avant la fin de l’interaction.</summary>
-    public bool CanPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, out string failure)
-        => CanPurchase(player, essence, elapsedSeconds, rng, ItemLootPool.For(player), out failure);
+    public bool CanPurchase(Player player, EssenceTracker essence, int chestsOpened, RandomNumberGenerator rng, out string failure)
+        => CanPurchase(player, essence, chestsOpened, rng, ItemLootPool.For(player), out failure);
 
-    private bool CanPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
+    private bool CanPurchase(Player player, EssenceTracker essence, int chestsOpened, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
     {
         failure = "";
         if (!CanOpen) { failure = "Coffre déjà ouvert"; return false; }
         if (!pool.CanSupply(LootRolls)) { failure = "Aucun objet disponible"; return false; }
-        Quote(elapsedSeconds);
+        Quote(chestsOpened);
         if (!_freeAttempted)
         {
             _freeAttempted = true;
             float chance = WorldItemEffects.FreeChestChance(player);
-            _freeOpening = chance > 0f && rng.Randf() < chance;
+            _freeOpening = AlwaysFree || chance > 0f && rng.Randf() < chance;
         }
         if (!_freeOpening && (essence?.CurrentEssence ?? 0) < QuotedCost)
         { failure = $"Il manque {QuotedCost - (essence?.CurrentEssence ?? 0)} Essence"; return false; }
@@ -110,13 +118,13 @@ public partial class Chest : StaticBody2D, IInteractable
     }
 
     /// <summary>Une seule transaction. Les choix éventuels appartiennent désormais au coffre payé, jamais à un écran éphémère.</summary>
-    public bool TryPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, out string failure)
-        => TryPurchase(player, essence, elapsedSeconds, rng, ItemLootPool.For(player), out failure);
+    public bool TryPurchase(Player player, EssenceTracker essence, int chestsOpened, RandomNumberGenerator rng, out string failure)
+        => TryPurchase(player, essence, chestsOpened, rng, ItemLootPool.For(player), out failure);
 
-    internal bool TryPurchase(Player player, EssenceTracker essence, float elapsedSeconds, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
+    internal bool TryPurchase(Player player, EssenceTracker essence, int chestsOpened, RandomNumberGenerator rng, ItemLootPool pool, out string failure)
     {
         if (_purchasing) { failure = "Ouverture déjà en cours"; return false; }
-        if (!CanPurchase(player, essence, elapsedSeconds, rng, pool, out failure)) return false;
+        if (!CanPurchase(player, essence, chestsOpened, rng, pool, out failure)) return false;
         _purchasing = true;
         int paid = _freeOpening ? 0 : QuotedCost;
         bool debited = false;
