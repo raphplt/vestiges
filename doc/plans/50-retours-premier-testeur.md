@@ -105,4 +105,4 @@ Vérifié : build sans avertissement, smoke, butin (flèche sans objet, lieu ré
 
 Retour de Raphaël au §184 : la run manque d'un objectif à atteindre (portail de Megabonk, téléporteur de Risk of Rain 2) ; passé 15 à 20 minutes, le joueur peut se sentir perdu. Contraintes propres à Vestiges : la carte s'efface, les boss sont à heure fixe (Souverains, Barrière à 15 min, Indicible vers 30 min), l'exploration nomade est le cœur. Chantier à ouvrir en plan dédié : recherche sur les jeux du genre, puis propositions à trancher avant tout code.
 
-**Ouvert le 15 octobre au [plan 51](51-objectifs-de-run.md)** ([§185](DECISIONS.md)) : la Descente, Indicible appelé par les Mémoriaux, carte en deux paliers séparés par la Barrière ; questions à trancher au plan 51 §8.
+**Ouvert le 15 octobre au [plan 51](51-objectifs-de-run.md)** ([§185](DECISIONS.md)) : la run en terres, trois cartes plus petites qui s'effacent de leurs bords vers leur cœur, un gardien appelé par les Mémoriaux à la fin de chacune ; questions au plan 51 §9.

@@ -1,236 +1,242 @@
-# Plan 51 — Objectifs dans la run : la Descente
+# Plan 51 — La run en terres
 
-15 octobre 2026. Étude demandée au [§185](DECISIONS.md), sur le manque relevé par le premier testeur ([§184](DECISIONS.md), [plan 50 §8](50-retours-premier-testeur.md)). **Rien n'est implémenté ; propositions à trancher (§8).**
+15 octobre 2026. Ouvert sur le manque relevé par le premier testeur ([§184](DECISIONS.md)) : la run n'a pas d'objectif, et le joueur se sent perdu vers 15 à 20 min. **Direction retenue par Raphaël le jour même ([§185](DECISIONS.md)) : une run traverse trois terres, chacune une carte plus petite qui s'efface de ses bords vers son cœur, avec un boss à la fin.** Rien n'est implémenté. Les propositions ci-dessous sont à trancher (§9).
 
-Ce que Raphaël a fixé :
-- l'Indicible ne vient plus à heure fixe, le joueur l'appelle (Mémoriaux ou portail) ;
-- ce qui l'y pousse, c'est une difficulté qui monte sans cesse jusqu'à devenir intenable ;
-- piste A (Mémoriaux) presque acquise, piste C (terres successives) à étudier, éventuellement ensemble ;
-- le ressenti visé est une course contre l'Effacement, avec des choix serrés ;
-- la piste narrative et les contrats sont écartés ;
-- le lore peut être retouché en profondeur, s'il reste cohérent.
+La première version de ce plan, « la Descente » (une seule carte en deux paliers, collée au lore), est remplacée. Raphaël a demandé de partir du jeu, pas du lore : « la boucle de gameplay s'était plus adaptée en fonction du lore, alors que normalement ça aurait dû être l'inverse ».
 
 ## 0. En bref
 
-- **Proposition : la Descente.** Une run descend de la colline vers la mer, en deux paliers séparés par la Barrière.
-  - **Palier haut** : forêt, champs, Haute-Ville. On y ravive des Mémoriaux. Avec deux voix, la Barrière s'éveille quand le joueur s'en approche ; chaque voix de plus ajoute un battant et un coffre.
-  - **Palier bas** : Bas-Port et carrière. Trois voix de plus rendent la nuit dicible, et le joueur appelle l'Indicible sur le quai.
-  - Le palier quitté s'effondre dans le Néant derrière lui. L'horloge de difficulté ne s'arrête jamais.
-- **Le lore le porte presque tel quel.**
-  - La Barrière est déjà la barrière de la Montée, que la Haute-Ville a fermée devant le Bas-Port la nuit du 14.
-  - « Une mort sans témoin n'a pas lieu » : raviver les Mémoriaux du port, c'est donner des témoins aux noyés, et la nuit se lève.
-- **Faisabilité : tout tient dans une seule carte, sans régénération.** C'est un « C léger », estimé à environ 3 à 4 semaines, piste A comprise.
-  - Les vraies terres régénérées (une carte neuve par palier) coûtent 2 à 3 semaines de plus. Le code suppose partout une carte unique.
-  - Elles restent possibles ensuite, puisque le palier sera déjà l'unité de découpage.
-- **Prérequis technique : une horloge de run unique.** Aujourd'hui, sept compteurs de temps indépendants pilotent la run.
-- **Ordre proposé** :
-  1. l'horloge ;
-  2. l'Indicible appelé, testable sur la carte actuelle ;
-  3. la carte en paliers et la Barrière fixe ;
-  4. en option, la régénération.
+- **Une run, c'est trois terres** tirées parmi une sélection : 5 au départ (forêt, champs, ville, marais, carrière), d'autres plus tard.
+  - Environ 10 min par terre, et un gardien à battre à la fin de chacune.
+  - Une run réussie dure environ 30 min.
+  - Ensuite, la boucle recommence plus dure, pour les runs d'une heure et plus.
+- **La signature : la terre se défait.** Elle tombe dans le Néant de ses bords vers son cœur, avec préavis, selon un motif propre à chaque terre. Le joueur la ralentit là où il se tient. Les Mémoriaux ravivés deviennent des ancres qui tiennent leur zone.
+  - Le vide n'est pas un mur : on peut le traverser en payant.
+  - Ce qui pousse à se dépêcher : le butin des bords va tomber, et la terre rétrécit.
+- **Les Mémoriaux sont les clés.** Il en faut trois pour appeler le gardien au cœur, quand on veut. Chaque Mémorial de plus rend le gardien plus dur et plus généreux.
+  - Si on n'appelle jamais le gardien, il se lève seul quand il ne reste que le cœur, sur un îlot, au milieu de la foule.
+- **Le passage : deux ponts.** La mort du gardien fait naître deux chemins à travers le Néant, vers deux terres qu'on voit à l'horizon. On choisit sa route.
+  - La traversée est un temps calme pendant lequel la terre suivante se prépare : elle cache le chargement.
+- **L'identité de chaque terre** vient d'abord de sa façon de s'effacer, qui ne coûte presque rien à faire varier. S'y ajoutent une règle propre, une famille de créatures et un gardien.
+- **Faisabilité** : changer de carte en cours de run est le socle. Il faut le construire, pour 2 à 3 semaines, parce que tout le code suppose une carte unique.
+  - Un prototype jouable, pour juger le plaisir avant de produire du contenu : 3 à 4 semaines.
+  - La production complète demandera ensuite les terres travaillées, les gardiens et le lore.
 
 ## 1. Ce que font les autres jeux (recherche du 15 octobre)
 
 | Jeu | Ce qui fait passer à la suite | Ce qui pousse à partir |
 |---|---|---|
-| Risk of Rain 2 | Trouver le téléporteur, le charger 90 s dans sa zone et tuer le boss. 5 étapes, puis la boucle recommence | Difficulté = (1 + 0,0506 × minutes) × 1,15^étapes, alors que le butin de chaque carte est fini. Le conseil courant est de ne pas dépasser 3 min avant d'activer. L'autel de la Montagne double le boss contre le double de butin |
-| Megabonk | Porte du boss à trouver ; chrono de 10 min par étape ; 1 à 3 étapes selon le palier | À la fin du chrono, une nuée infinie de fantômes. Elle a été détournée pour farmer, puis corrigée par patch |
-| DRG: Survivor | Barre d'objectif qui avance seule, élite, puis la capsule de départ. 5 étapes | 30 s pour rejoindre la capsule, sinon la run est finie |
-| Halls of Torment, HoloCure, 20 Minutes Till Dawn | Boss à l'heure, survivre au chrono | Chrono fixe : notre situation actuelle |
-| Soulstone Survivors | Un quota d'éliminations fait venir le boss | Le joueur fixe le rythme |
+| Risk of Rain 2 | Trouver le téléporteur, le charger 90 s dans sa zone et tuer le boss. 5 étapes par boucle, chaque rang tiré parmi 2 à 9 variantes | Difficulté = (1 + 0,0506 × minutes) × 1,15^étapes, et le butin de chaque carte est fini. Conseil courant : activer avant 3 min. L'autel de la Montagne double le boss contre le double de butin |
+| Megabonk | Porte du boss à trouver, chrono de 10 min par étape, 1 à 3 étapes selon le palier | À la fin du chrono vient une nuée infinie de fantômes. Elle a été détournée pour farmer, puis corrigée par patch |
+| DRG: Survivor | Barre d'objectif qui avance seule, élite, puis capsule de départ. 5 étapes | 30 s pour rejoindre la capsule, sinon la run est finie |
+| Halls of Torment, HoloCure, 20 Minutes Till Dawn | Boss à l'heure, survivre au chrono | Chrono fixe, notre situation actuelle |
+| Jeux de type « Spleef » (mini-jeux Minecraft) | Le sol de l'arène disparaît | Survivre sur ce qui reste |
+| Battle royales | Zone qui rétrécit en cercle | Dégâts hors de la zone |
 
-Sources : [wiki RoR2, difficulté](https://riskofrain2.wiki.gg/wiki/Difficulty), [téléporteur](https://riskofrain2.wiki.gg/wiki/Teleporter), [autel de la Montagne](https://riskofrain2.wiki.gg/wiki/Shrine_of_the_Mountain), [PC Gamer sur Megabonk](https://www.pcgamer.com/games/roguelike/megabonk-review/), [Destructoid](https://www.destructoid.com/how-to-go-to-the-next-stage-in-megabonk/), [wiki DRG: Survivor](https://deeprockgalactic.wiki.gg/wiki/Survivor:Elimination).
+Sources : [wiki RoR2, difficulté](https://riskofrain2.wiki.gg/wiki/Difficulty), [téléporteur](https://riskofrain2.wiki.gg/wiki/Teleporter), [autel de la Montagne](https://riskofrain2.wiki.gg/wiki/Shrine_of_the_Mountain), [environnements](https://riskofrain2.wiki.gg/wiki/Environments), [PC Gamer sur Megabonk](https://www.pcgamer.com/games/roguelike/megabonk-review/), [Destructoid](https://www.destructoid.com/how-to-go-to-the-next-stage-in-megabonk/), [wiki DRG: Survivor](https://deeprockgalactic.wiki.gg/wiki/Survivor:Elimination).
 
 **Leçons :**
-- **La pression la plus saine** naît d'une ressource finie face à une menace qui monte avec le temps (RoR2). Un temps illimité pousse à farmer, et les correctifs arrivent après coup (la nuée de Megabonk).
-- **Chercher l'objectif lasse** sur une grande carte : c'est une plainte récurrente sur RoR2 (Scorched Acres). Il faut le voir de loin.
-- **Les étapes lassent quand il y a peu de cartes** (IGN sur Megabonk, Ars Technica sur Halls of Torment). C'est l'argument contre des terres qui se ressembleraient.
-- **Le pari « boss plus dur, butin plus riche »** de l'autel de la Montagne existe déjà chez nous : un Mémorial ravivé ajoute un battant à la Barrière, et chaque battant rend un coffre.
+- **La pression la plus saine** vient d'une ressource finie face à une menace qui monte avec le temps. Un temps illimité pousse à farmer.
+- **Chercher l'objectif lasse** sur une grande carte : c'est une plainte récurrente sur RoR2. Une carte plus petite, avec un cœur visible, règle ça.
+- **Les étapes lassent s'il y a peu de cartes** : IGN le reproche à Megabonk, Ars Technica à Halls of Torment. Il faut donc des terres qui se jouent autrement, pas seulement qui se voient autrement.
+- **Personne ne fait du sol qui disparaît le chrono d'un survivors-like.** La zone des battle royales est un cercle uniforme, subi, avec des dégâts hors zone. Le Spleef est une arène sans combat de foule. C'est notre ouverture.
 
-## 2. Ce qui existe
-
-### Calendrier
-
-Tout arrive à heure fixe :
-- micro-événements de 1:10 à la fin ;
-- chasses de Souverains à 4:00, 9:30, 21:00 et 27:00 ;
-- Résurgences toutes les 6 min environ ;
-- **Barrière à 15:00** ;
-- **Indicible à la 5e Résurgence, ou au plus tard à 30:00**.
-
-Pendant ce temps, l'Effacement monte avec le temps, la distance et l'absence du joueur.
-
-**Le temps n'a pas de source unique.** Sept compteurs avancent chacun de leur côté, chacun avec sa propre garde :
-- `SpawnManager._elapsedTime` sert déjà d'horloge de difficulté : PV, dégâts, densité, élites, créatures débloquées, Péril du temps. Le mode dev la règle, et la Barrière et le contenu des micro-événements la lisent ;
-- `CrisisManager`, `RunEventDirector`, `EndgameManager` et `ErasureManager` ont chacun leur compteur ;
-- `RunTracker` et `QuestTracker` comptent le temps réel, ce qui est juste pour eux.
-
-### Mémoriaux
-
-- **Nombre et placement** : 9 par carte, dont 1 près du départ, à 900 px au moins de tout autre lieu.
-- **Raviver** : 3 éclats à ramasser en 20 s, mais un seul suffit. On reçoit 3 bénédictions au choix, plus des services (soin, lever un Oubli).
-- **Contre l'Effacement** : stabilisation ponctuelle de la zone.
-- **Perte** : un Mémorial est perdu quand sa zone passe au Néant, même déjà ravivé.
-- **Ce qui manque** :
-  - pas de pointeur vers les Mémoriaux ;
-  - pas de compteur au HUD ;
-  - même icône sur la minimap quel que soit l'état.
-
-### Barrière
-
-- Elle se lève à 15:00, à 150 px devant le joueur, avec des ailes de chaînes de 3 000 px pour empêcher de la contourner.
-- Battants : 1 + Mémoriaux ravivés, 5 au plus. Elle rend un coffre par battant.
-- Elle se passe dès qu'un battant est brisé.
-- Mesurée entre 2 et 9 min, pour 60 à 90 s visées.
-
-### Indicible
-
-- Il apparaît autour du joueur, pendant la 5e Résurgence, dans la nuit tombée.
-- Trois phases : tempête, marée, vagues.
-- PV ×3,2, sans croissance avec le temps.
-- Sa mort fait passer en Endgame : multiplicateurs relevés, Résurgences plus serrées, difficulté suivante ouverte.
-
-### Carte
-
-- Une ellipse d'environ 200 × 400 cellules, avec les **5 biomes sur 5** en mosaïque d'environ 87 régions.
-- 11 000 décors, 39 coffres et 39 grands lieux.
-- Génération en 3,6 s, jusqu'à 7 s sur une machine chargée.
-
-## 3. La proposition : la Descente
-
-### Le trajet
-
-La vallée descend de la colline vers la mer. Cela suit la géographie du lore ([VESTIGES-LORE.md §2](../VESTIGES-LORE.md)) et le gradient de danger des biomes (Stratégie V2 §9) :
+## 2. La run
 
 ```
-PALIER HAUT : la colline et la ville           PALIER BAS : le port
-forêt, champs (danger 1) → Haute-Ville (2)  ║  Bas-Port, carrière (danger 3)
-départ ···· Mémoriaux (voix) ···· Barrière ═╬═ ···· Mémoriaux ···· le quai : Indicible
-                                            ║
-                       la barrière de la Montée, en travers de la carte
+TERRE 1 (rang 1)          PONTS        TERRE 2 (rang 2)          PONTS        TERRE 3 (rang 3)
+~10 min, gardien    →   choix A/B   →  ~10 min, gardien    →   choix A/B   →  ~10 min, gardien final
+                                                                                    ↓
+                                                     victoire (bilan) ou on continue : la boucle,
+                                                     terres de rang 4, 5…, difficulté multipliée
 ```
 
-1. **Départ** sur le plateau. La Barrière est **déjà là**, en travers de la carte : un mur de chaînes visible sur la minimap dès le début. Le but se voit, il n'y a rien à chercher.
-2. **Palier haut.**
-   - On ravive des Mémoriaux, qui comptent comme des voix. Avec **2 voix**, la Barrière s'éveille quand le joueur s'en approche ; avant cela, c'est un mur inerte.
-   - Chaque voix de plus ajoute un battant et un coffre, jusqu'à 5 : « plus on se souvient, plus elle résiste », le pari de l'autel de la Montagne, à notre façon.
-   - Le joueur choisit quand y aller.
-3. **Le passage.** Dès qu'un battant tombe, on passe.
-   - Le palier haut se détache derrière le joueur et s'effondre dans le Néant en 45 à 60 s : ce qu'on n'a pas pris est perdu.
-   - C'est le moment « jusqu'où » rendu littéral.
-4. **Palier bas.** Le Bas-Port et la carrière, avec les créatures les plus dures.
-   - Les Mémoriaux du port sont les noyés et leurs témoins. **3 voix** rendent la nuit dicible.
-   - Le joueur appelle alors l'Indicible au quai. C'est un lieu fixe, visible et protégé de l'Effacement.
-5. **Après l'Indicible** : late game sur place, selon le plan 34 (Profondeur, Marées), jusqu'à la mort. En option plus tard : la boucle (§6).
+- **La durée.** Une run réussie dure environ 30 min, 10 min par terre, durée à confirmer en jouant. Une très grosse performance passe par la boucle et dépasse l'heure.
+- **La difficulté ne redescend jamais.**
+  - Une horloge de run continue fait monter PV, dégâts et densité, comme aujourd'hui.
+  - Chaque terre franchie ajoute un multiplicateur de rang, l'équivalent du ×1,15 par étape de RoR2.
+  - Le Péril, déjà affiché, porte cette montée et la rend visible.
+  - La tension monte donc par paliers à chaque terre et en continu pendant chacune, comme Raphaël le demande : progressive, pas constante.
+- **N'importe quelle terre peut tomber à n'importe quel rang.** Le danger vient du rang, pas du biome. Une forêt de rang 3 est dure. C'est plus de variété avec le même contenu.
+- **Après la troisième terre**, deux choix proposés :
+  - s'arrêter sur une victoire, avec le bilan ;
+  - continuer dans la boucle, une suite de terres de rang 4, 5…, sans fin. Elle remplace le late game sur place des plans 34 et 47 et sert la course au classement.
 
-### Ce qui pousse à avancer
+## 3. La signature : la terre se défait
 
-- **L'horloge de difficulté** monte sans pause, comme aujourd'hui (PV ×1,13 par minute après 8 min). Elle ne s'arrête pas au passage d'un palier.
-- **Le Péril du temps**, déjà codé mais éteint (`time_peril_per_minute` à 0 avant 15 min), devient l'aiguille visible de cette montée. Par exemple : +1 Péril toutes les 2 à 3 min, affiché au HUD.
-  - Attendre trop longtemps ne déclenche rien de forcé. Simplement, au bout d'un moment, le joueur ne tient plus : c'est ce que Raphaël demande.
-- **L'Effacement mange le palier** : il emporte les Mémoriaux et les services pas encore pris. La ressource est finie et s'amenuise, comme chez RoR2.
-- **Les Résurgences restent le pouls de la run** : la nuit qui remonte, sur l'horloge. Elles ne déclenchent plus l'Indicible.
-- **Les chasses de Souverains** suivent la même horloge.
+Critères visés :
+- **urgence lisible** : on voit ce qui va tomber, et quand ;
+- **un choix par minute** ;
+- **jamais de mort injuste** : le sol ne disparaît jamais sous les pieds sans préavis ;
+- **elle joue avec le combat** ;
+- **chaque terre s'efface à sa façon** ;
+- **ce n'est pas le cercle d'une battle royale.**
 
-### Garde-fous
+### Le front
 
-- **Éviter le blocage** :
-  - le seuil baisse si des Mémoriaux sont perdus (« on ne peut pas appeler une voix qui n'est plus ») ;
-  - le quai et la Barrière ne s'effacent jamais ;
-  - le palier haut compte 5 Mémoriaux, le palier bas 4 à 5.
-- **Pas de farm infini** : le butin est fini (coffres et lieux du palier), l'horloge tourne et le Péril monte. Il n'y a pas de source sans fin à exploiter, contrairement à la nuée de Megabonk.
-- **Jouer vite reste un vrai choix** : on peut forcer la Barrière dès 2 voix et sauter des coffres.
-- **Mesure à fixer en jeu** : passage vers 12–15 min et Indicible vers 25–30 min pour un joueur moyen, selon la cible du plan 47.
+- **La date de chute de chaque morceau de sol est calculée dès la génération.** Elle dépend de :
+  - la distance au cœur ;
+  - un bruit, qui dessine des langues et des baies, donc des îlots naturels ;
+  - le motif propre à la terre (§5).
 
-## 4. Le lore
+  Le front est donc prévisible et lisible. La minimap peut montrer ce qui tombe dans la minute.
+- **Trois états avant le vide**, chacun visible et audible, de 20 à 30 s chacun : **Fragile** (fissures, couleur qui pâlit), **Effiloché** (sol qui clignote, créatures plus rapides), puis **Néant**. Ces états existent déjà dans le code ; ils passent du temps global à la date de chute.
+- **Le cœur ne tombe jamais.** C'est là qu'on appelle le gardien.
+- **Le rythme** : une terre qu'on laisse filer se réduit à son cœur vers 12 à 13 min. Avec 10 min visées, il reste une marge.
+- **Le premier morceau tombe vers 1 min**, après un répit d'arrivée.
 
-[VESTIGES-LORE.md](../VESTIGES-LORE.md) fait foi ; la Bible §1–3 est remplacée.
+### Ce que le joueur peut faire contre le front
 
-**Ce qui soutient déjà la proposition :**
-- §7 : « Chaque Mémorial ravivé est quelqu'un de plus qui frappe à la barrière » et « plus on se souvient, plus elle résiste ». La Barrière **est** la barrière de la Montée.
-- §1 : « Une mort sans témoin n'a pas lieu ». Raviver les Mémoriaux du port donne des témoins aux 31 noyés, et la nuit du 14 devient dicible : l'Indicible se lève.
-- §7 bis : « Toute marche mène à la nuit du 14. Plus on marche, plus on s'en approche ». §9.2 : la vraie fin demande « l'Indicible atteint », c'est un verbe de destination.
-- §1 : « On se souvient des lieux, pas des chemins ». Une fois la barrière passée, plus personne ne tient le chemin ni le palier d'en haut, qui se détache.
-- La pression qui monte prend un sens : attendre, c'est faire ce qu'a fait Vaulme, « rester chez soi, portes closes ».
+- **Tenir là où il se tient.** Le front ralentit près du joueur : c'est déjà le cas, −72 % de déclin dans un rayon de 2,5 cellules. Ce qu'on regarde tient. Défendre un coin riche devient un choix, mais l'horloge, elle, continue.
+- **Ancrer un morceau avec un Mémorial ravivé.** Sa zone ne tombera plus, c'est un îlot sauvé avec ses coffres. Choix : raviver le Mémorial du bord, qui sauve une région mais peut devenir un îlot coupé, ou celui du centre, plus sûr ?
+- **Payer en vitesse.** Une Faille donne de la puissance contre un Oubli, et les Oublis accélèrent déjà l'Effacement. Ce compromis existe dans le code, mais on ne le voit pas. Il devient lisible : la terre tombe plus vite.
 
-**À réécrire si c'est retenu :**
-- §7 bis « Ce qu'il a vu reste à sa place tant qu'il marche » : ajouter la règle du palier quitté.
-- §7 bis, la difficulté : elle monte « par la marche », ajouter « et par l'attente ».
-- §8.2 : la cadence des Résurgences.
-- §7 bis : la Montée « dans chaque carte » devient la run entière.
-- §2 et §11 : le Néant au bord et l'au-delà inconnu ne bougent pas. La Descente reste dans la vallée.
-- Stratégie V2 §6, §9, §11 et §14 ; plans 07, 33 §8 et 34 (calendriers à 15:00 et 30:00).
+### Ce qui pousse à se dépêcher
 
-**Variante écartée en recommandation : la montée** (du port vers la Haute-Ville). Elle fait partir le joueur dans le marais, de danger 3, et contredit la Stratégie V2 §9.
+- **Le butin des bords va tomber.** Les lieux sont plus riches près du front ; c'est un principe du plan 22, déjà en place. Le coffre du bord vaut le détour, et dans 40 s il n'existe plus.
+- **La menace vient du vide.** Les créatures naissent plus nombreuses près du Néant (`spawn_density_at_zero_memory` vaut 2,2) : la foule pousse depuis les bords.
+- **La terre rétrécit.** Moins de place pour esquiver, foule plus serrée, le combat se resserre de lui-même.
 
-## 5. Faisabilité
+### Le vide : on le traverse, en payant
 
-### L'horloge unique (prérequis)
+Un îlot coupé ne doit pas devenir une perte bête. Quatre options :
 
-- Un service `RunClock` porte le temps réel, le temps de difficulté et un éventuel facteur de vitesse.
-- `SpawnManager`, `CrisisManager`, `RunEventDirector`, `EndgameManager` et `ErasureManager` le lisent au lieu de leur compteur.
-- Le temps réel reste pour le bilan, le HUD et les quêtes.
-- **À trancher** : l'ouverture (`opening_*`, `early_*`) se refait-elle à l'arrivée sur un palier ? Je propose non : le palier bas n'a pas d'ouverture.
-- 2 à 3 jours, sans changement de jeu : mesure avant/après identique.
-
-### L'Indicible appelé
-
-- `EndgameManager` : retirer le forçage à la 5e Résurgence ou à 1 800 s ; ajouter l'appel et un lieu-quai interactif.
-- Un compteur de voix unique : il y en a deux aujourd'hui, dans `BarrierDirector` et `QuestTracker`.
-- Interface :
-  - compteur de voix au HUD ;
-  - états des Mémoriaux sur la minimap ;
-  - pointeurs vers les Mémoriaux et le lieu d'appel.
-- PV de l'Indicible : ils doivent suivre l'horloge. Aujourd'hui ils sont fixes, alors l'appeler tard le rendrait trop facile.
-- Le bot de mesure (`RunObservation`) doit apprendre à raviver et à appeler.
-- 6 à 8 jours. **Testable sur la carte actuelle** : la Barrière y reste à l'heure en attendant.
-
-### La carte en paliers (C léger)
-
-- **Génération** : biomes par bande au lieu d'une mosaïque libre (`WorldGenerator.AssignBiomes` et `CreateBiomeRegions`). Il faut une ligne de seuil traversant la carte, le départ au bout du plateau, et des lieux répartis par palier (`SitePlacer`, `landmarks.json`).
-- **Barrière fixe** : posée à la génération sur le seuil, au lieu d'apparaître devant le joueur. Elle s'éveille au contact avec assez de voix. Les ailes et la gestion des bords existent déjà.
-- **Effondrement du palier quitté** : un mode « palier » dans `ErasureManager`, qui pousse les cellules du palier haut vers le Néant. Les lieux perdus le sont déjà par ce chemin.
-- 8 à 12 jours, réglage et mesures compris.
-
-### Les vraies terres régénérées (option)
-
-- Tout l'état de run vit dans des nœuds de `Main` : joueur, inventaire, Essence, Péril, score, quêtes. Il n'existe pas de sauvegarde instantanée.
-- **Recharger la scène** coûte 3 à 5 semaines, à haut risque : une quinzaine de systèmes à transporter.
-- **Régénérer en place** coûte 2 à 3 semaines :
-  - isoler ce que la carte produit, puis vider et reconstruire ;
-  - remettre à zéro une vingtaine de systèmes sur un signal ;
-  - transition avec l'écran de chargement existant ;
-  - ajouter un test qui enchaîne trois terres.
-- Le calcul de la terre suivante peut tourner en tâche de fond. Il reste 1,5 à 2,5 s de chargement à cacher, par exemple derrière le passage.
-- **Ce que ça apporterait** :
-  - des terres tirées parmi des variantes, comme les rangs de RoR2 ;
-  - une boucle infinie à la place du late game sur place ;
-  - des cartes plus petites et plus denses.
-- **Le risque** : avec 5 biomes seulement, il faudrait plusieurs terres par palier pour éviter la monotonie, et c'est la critique faite à Megabonk.
-
-## 6. Plus tard : la boucle (si les terres régénérées sont retenues)
-
-Après l'Indicible, au lieu de rester sur place, le joueur « remonte » : une nouvelle Descente commence, avec une difficulté multipliée et des terres différentes. Le joueur boucle déjà, selon le lore : ce sont des oubliés « qui savent qu'ils bouclent » (§7 bis).
-
-Le late game du plan 34 deviendrait la deuxième boucle et les suivantes. C'est cohérent, mais ça dépend entièrement de la régénération.
-
-## 7. Lots proposés
-
-| Lot | Contenu | Coût estimé | Jouable à la fin |
+| Option | Effet | Pour | Contre |
 |---|---|---|---|
-| **O0 Horloge** | `RunClock` unique, compteurs remplacés, mesure avant/après identique | 2–3 j | Rien de visible |
-| **O1 Voix et Indicible appelé** | Compteur de voix, lieu d'appel, fin du forçage à 30:00, Péril du temps visible, PV de l'Indicible sur l'horloge, pointeurs et minimap, bot | 6–8 j | Piste A sur la carte actuelle |
-| **O2 La Descente** | Carte en deux paliers, Barrière fixe éveillée par les voix, effondrement du palier quitté, lieux par palier | 8–12 j | La proposition complète |
-| **O3 Lore et docs** | Script (§4), Stratégie V2, plans 07, 33, 34 ; première run guidée (plan 50) qui mène aux Mémoriaux puis à la Barrière | 2–3 j | Onboarding |
-| O4 Terres régénérées (option) | Voir §5 | 2–3 semaines | Boucle, variantes de terres |
+| **A. Mur** | Le Néant bloque | Simple, très lisible | Îlots perdus, frustrant |
+| **B. Traverser en payant (recommandé)** | Le Néant draine l'Essence, puis les PV une fois l'Essence épuisée | Un petit saut est bon marché, une longue traversée coûteuse. L'Essence devient « la mémoire qui tient debout » | Le réglage du drain demande du soin |
+| C. Ponts de mémoire | Maintenir une touche vers un îlot fait naître un chemin, payé en Essence à la longueur | Actif, créatif. Côté lore : on paie pour se souvenir d'un chemin. Côté code : c'est une stabilisation en ligne, qui existe déjà | Une action de plus à apprendre |
+| D. Chute | Tomber fait perdre des PV, puis on revient au dernier sol | Le frisson du Spleef | Punitif sur une run de 30 min |
 
-O1 peut se juger en jouant avant d'engager O2.
+- **Recommandation : B d'abord, C ensuite**, comme objet, pouvoir de personnage ou service d'Atelier.
+- **Le dash ne traverse rien aujourd'hui** : il fait environ 70 px. Si l'on veut des petits sauts de vide, c'est un argument pour la refonte du mouvement (plan 42 §6).
+- **Les personnages pourraient y trouver une identité** : pour la Scaphandrière, le Néant est la mer, et elle le traverserait à moindre coût.
 
-## 8. Questions à Raphaël
+### Le gardien
 
-1. **Le sens** : descendre vers la mer (recommandé, cohérent avec le lore et le danger) ou monter vers la Haute-Ville ?
-2. **Le nombre de paliers** : deux, avec la Barrière comme seule couture (recommandé), ou trois, avec un nouveau gardien à concevoir ?
-3. **L'ampleur** : la carte en paliers d'abord (recommandé), ou directement les terres régénérées ?
-4. **Le lieu d'appel de l'Indicible** : le quai du Bas-Port (recommandé), le clocher (sonner le tocsin qu'on a empêché de sonner à 23 h 10), ou le dernier Mémorial ravivé ?
-5. **La pression visible** : le Péril du temps affiché, qui monte seul (recommandé), ou une autre aiguille, par exemple l'heure de la nuit du 14, de 17 h à 23 h 40 ?
-6. **Les seuils de départ** : 2 voix pour la Barrière et 3 pour l'Indicible ?
+- **Trois Mémoriaux ravivés l'appellent.** Il en faut moins si certains ont été perdus : on ne compte que ceux qui restent. Le joueur va au cœur quand il veut et lance le combat.
+- **Chaque Mémorial au-delà de trois** rend le gardien plus fort et sa récompense plus riche. C'est le pari de l'autel de la Montagne, à notre façon.
+- **Si le gardien n'est jamais appelé** et que la terre se réduit à son cœur, il se lève seul, renforcé, sur l'îlot qui reste, au milieu de la foule. Ce n'est pas un chrono arbitraire : c'est la conséquence de l'attente. Battre le gardien reste possible, mais c'est intenable si le build ne suit pas.
+- **Pendant le combat**, deux options :
+  - le front se fige, pour un combat juste ;
+  - le front continue, et l'arène rétrécit (Spleef pendant un boss).
+
+  À trancher en jouant, peut-être selon la terre.
+- **Il faut un bestiaire de gardiens dédiés** : un par terre, plus le gardien final. Raphaël préfère de « gros personnages forts » aux entités abstraites. Le prototype utilise les Souverains existants.
+
+### Le passage : deux ponts
+
+- **La mort du gardien fait naître deux chemins à travers le Néant**, vers deux terres visibles à l'horizon : silhouette, nom et ce qui les rend particulières (« marais, foule rapide », « ville, élites en plus »).
+- **On marche sur le pont choisi, 10 à 20 s de calme.** La terre quittée tombe entièrement derrière soi. Ça sert à trois choses :
+  - respirer ;
+  - le choix de route, qui rend la run moins linéaire ;
+  - cacher la préparation de la terre suivante, 1,5 à 2,5 s de chargement.
+- **Un portail reste possible.** Les ponts sont plus à nous et cohérents avec le vide.
+
+## 4. Où vont les systèmes actuels
+
+| Système | Devient |
+|---|---|
+| Mémoriaux | Clés du gardien et ancres contre le front. Flux de réveil gardé, 4 à 5 par terre |
+| Coffres et lieux (Ateliers, Puits, Failles, stèles) | Moins nombreux par terre, plus serrés, plus riches près du front |
+| Effacement | Date de chute par cellule et motif par terre au lieu d'un déclin global. La présence du joueur, l'ancrage et les Oublis sont gardés |
+| Résurgences | Une par terre, comme pic à mi-terre, ou fondues dans le front. À trancher au prototype |
+| Micro-événements | Par terre, à thème |
+| Souverains | Gardiens provisoires du prototype ; ils restent des rencontres de chasse |
+| Barrière, Indicible | **Raphaël doit les jouer avant de trancher** (dev : `tools/run_dev.sh`). L'Indicible pourrait devenir le gardien final, la Barrière un gardien de la ville, ou être retirés |
+| Péril, niveaux de difficulté, Campement | Inchangés. Le Péril porte la montée |
+| Score et classement | Éliminations, inchangés ; les terres atteintes s'ajoutent au bilan |
+| Minimap | Centrale : elle montre le front et ce qui va tomber |
+| Météo, atmosphère, musique | Par terre |
+| Lore | Repris après le jeu (§7) |
+
+## 5. L'identité de chaque terre
+
+Le levier le moins cher et le plus fort, c'est **le motif d'effacement**. Changer la fonction de la date de chute change toute la façon de jouer la terre. Pistes à choisir, pas des décisions :
+
+| Terre | Elle s'efface… | Sa règle | Ce que ça fait jouer |
+|---|---|---|---|
+| Forêt | Par **clairières** qui s'ouvrent aussi à l'intérieur, pas seulement aux bords | Canopée qui cache, vue courte | Lire la carte, se méfier du centre aussi |
+| Champs | Par **sillons**, des bandes parallèles comme une moisson | Grand ouvert, vent qui pousse projectiles et foule | Longues lignes, foules rapides, course |
+| Ville | Par **pâtés entiers** qui tombent d'un coup au préavis | Rues-couloirs, élites qui sortent des bâtiments | Goulets, choisir sa rue |
+| Marais | Comme une **marée** qui monte puis redescend en partie : du sol revient | Eau qui ralentit, eau profonde | Rythme en vagues, attendre le reflux |
+| Carrière | Par **paliers**, un niveau entier s'effondre | Hauteurs, cristaux d'Essence abondants | Le vide moins cher à traverser, verticalité |
+
+Chaque terre a aussi sa famille de créatures (en partie déjà répartie par biome), son gardien, ses événements et son ambiance. **Les variantes viennent plus tard** pour la rejouabilité (ville inondée, forêt de nuit), comme les versions de cartes de Megabonk.
+
+## 6. Pourquoi c'est à nous
+
+- **Le chrono est le monde lui-même, pas un nombre.** On voit le temps manger la carte.
+- **Le joueur agit sur le chrono** : sa présence, les ancres, les Oublis, la traversée payée. Le cercle des battle royales est subi.
+- **Le motif d'effacement donne l'identité des terres** : la même mécanique se joue cinq fois différemment.
+- **Le choix de route se fait à pied, sur le vide**, pas dans un menu.
+- **Le thème** (un monde qu'on oublie, qu'on fuit, qu'on retient) n'est plus un décor mais la règle du jeu.
+
+## 7. Le lore, après le jeu
+
+Le script ([VESTIGES-LORE.md](../VESTIGES-LORE.md)) se prête mieux qu'il n'y paraît :
+- **§2** : les biomes sont déjà « les morceaux de la vallée qui tiennent encore, recousus au hasard ». Chaque terre est un de ces morceaux, et celui qu'on quitte se décroche.
+- **§1** : « Ce qu'on n'entretient plus s'efface » donne la terre qui tombe. « On se souvient des lieux, pas des chemins » : les ponts sont ce qu'il en coûte de retenir un chemin.
+- **Mémoriaux** : des gens qui ont refusé d'oublier. Ils tiennent leur zone, ce sont les ancres.
+
+**À reprendre** :
+- la présence de la Montée « dans chaque carte » (§7 bis) ;
+- la règle « ce qu'il a vu reste à sa place » ;
+- l'Indicible et la Barrière, selon le sort des boss ;
+- l'au-delà (§11), qui devient le chemin entre les morceaux.
+
+Ce travail se fait en lot dédié, une fois la boucle jouée, pour adapter le lore au jeu. Pas avant.
+
+## 8. Faisabilité et lots
+
+### Le socle technique (études du 15 octobre)
+
+- **Pas d'horloge unique** : sept compteurs de temps indépendants pilotent la run (`SpawnManager`, `CrisisManager`, `RunEventDirector`, `EndgameManager`, `ErasureManager`, `RunTracker`, `QuestTracker`). Un service `RunClock` les remplace, en gardant le temps réel pour le bilan.
+- **Une seule carte par run.**
+  - La génération et la pose (`WorldSetup`, ~3,6 s, jusqu'à 7 s sous charge) sont faites une fois.
+  - Des index statiques (`ObstacleField`, `Memorial.All`, `Chest.Closed`, `SmallPlace.Revealed`) et une vingtaine de systèmes gardent des références à la carte : Effacement, minimap, brouillard, lumières, voix, pools, directeurs.
+  - Tout l'état du joueur vit dans des nœuds de `Main`, sans sauvegarde instantanée.
+- **Recommandé : régénérer en place**, pour 2 à 3 semaines.
+  - Isoler ce que la carte produit.
+  - Ajouter un `ClearWorld` et une construction de terre.
+  - Remettre à zéro chaque système sur un signal `LandChanged`.
+  - Ajouter un test qui enchaîne trois terres sous le bot invincible.
+  - Avec des terres environ trois fois plus petites, la génération pure peut tourner pendant la marche sur le pont.
+- **Recharger la scène** serait plus risqué : 3 à 5 semaines pour transporter une quinzaine de systèmes.
+- **Graines** : une par terre, dérivée de la graine de run et du rang. À corriger : `WorldSetup._EnterTree` relance `RunRandom` à chaque chargement.
+
+### Lots du prototype (juger le plaisir avant de produire)
+
+| Lot | Contenu | Coût estimé |
+|---|---|---|
+| **P0 Horloge** | `RunClock` unique ; mesure avant/après identique | 2–3 j |
+| **P1 Changer de terre** | Régénération en place, terre réduite et mono-biome sur les générateurs actuels, pont de passage simple, graine par terre, test de trois terres | 2–3 sem. |
+| **P2 La terre se défait** | Date de chute par cellule, trois états avec préavis, cœur sûr, présence du joueur, ancres des Mémoriaux, minimap du front, vide traversable (Essence puis PV) | 1–1,5 sem. |
+| **P3 Gardien et route** | Trois Mémoriaux appellent le gardien (Souverain provisoire) au cœur, gardien qui se lève seul si la terre est réduite, deux ponts au choix, multiplicateur de rang, Péril visible | 1 sem. |
+| — | **Raphaël joue** ; réglages | — |
+
+En parallèle, ou avant P3 : **Raphaël joue la Barrière et l'Indicible actuels** pour décider de leur avenir.
+
+### Production ensuite (à découper après le prototype)
+
+- Motif et règle propres à chaque terre (§5), terres plus travaillées, avec des pièces posées à la main.
+- Bestiaire des gardiens et du gardien final : conception, sprites, combats.
+- Boucle après la troisième terre, victoire et bilan.
+- Lore (§7), Stratégie V2 (§6 à §14 à réécrire), première run guidée (plan 50).
+- Plans touchés : 22 (carte), 30 (temps forts), 33 §8, 34 et 47 (calendriers sur 30 min), 07 (boss), 28 (Péril).
+- Classement : terres atteintes au bilan ; règles du weekly inchangées.
+
+**Risques :**
+- **Frustration** (îlots, chutes) : préavis, cœur sûr, vide traversable.
+- **Monotonie** avec 5 terres : motifs d'effacement, puis variantes.
+- **Caches oubliés** lors du changement de terre : test d'enchaînement obligatoire.
+- **Ampleur** : c'est un tournant du jeu. Les autres gros chantiers attendent le verdict du prototype.
+
+## 9. Questions à Raphaël
+
+1. **Le vide** : mur, traversée payée en Essence puis en PV (recommandé), ponts de mémoire à créer, ou chute ?
+2. **Si on n'appelle pas le gardien** : il se lève seul, renforcé, sur l'îlot qui reste (recommandé), ou rien ne se passe et la foule finit le travail ?
+3. **Le passage** : deux ponts vers deux terres visibles (recommandé), ou un portail ?
+4. **Après la troisième terre** : victoire ou boucle au choix (recommandé), ou late game sur place ?
+5. **Pendant le combat contre le gardien** : front figé, ou arène qui rétrécit ? À essayer au prototype, ou décidé maintenant ?
+6. **Feu vert pour le prototype P0 à P3** (3 à 4 semaines, Souverains en gardiens provisoires), avant toute production de terres et de boss ?

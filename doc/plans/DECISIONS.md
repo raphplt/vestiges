@@ -2152,3 +2152,17 @@ Brainstorm sur le manque relevé au §184 (pas d'objectif, joueur perdu vers 15�
 - **Ampleur** : plusieurs terres successives le tentent, avec des implications majeures (quatre ou cinq biomes aujourd'hui). Le lore peut être retouché « même en profondeur », en gardant une cohérence globale.
 - **Ressenti visé** : course contre l'Effacement, pression et choix serrés, « limite une difficulté croissante comme Risk of Rain 2 et Megabonk ».
 - **Écartées** : la piste narrative (B) et les contrats (D).
+
+**Le même jour, après le plan 51 (vocal)** : Raphaël écarte le lore comme contrainte de départ. « Le lore n'a pas été écrit forcément en pensant au gameplay », il ne se prête pas à plusieurs cartes. Le reprendre ou le réécrire en partie est permis, « mais il ne faut pas juste tout chambouler de manière bête », en gardant une cohérence globale.
+- **Plusieurs cartes plutôt qu'une grande** : il trouve le concept de Megabonk et de Risk of Rain 2 « vraiment très bien », car on change de décor à chaque carte. « Quand on se balade dans une seule map et qu'à chaque fois c'est la même, on finit par s'ennuyer, moi je le ressens en jouant depuis plusieurs semaines. » Chaque niveau serait une carte plus travaillée, plus détaillée, « un peu spéciale ». « Le jeu partirait vraiment dans une autre direction, c'est un choix assez fort », mais il ressentait déjà que le jeu était trop linéaire.
+- **Les boss** : Raphaël ne les a pas encore testés. Il n'aime pas trop leur construction : « c'est pas un gros personnage fort, c'est des sortes d'entités un peu spatiales ». À garder peut-être, sans certitude.
+- **L'ambition** : être original comme Megabonk, qui mélange Risk of Rain 2 et Vampire Survivors et crée quelque chose de neuf. Tirer le meilleur de ces jeux avec une identité propre, qui n'est pas là pour être différente : un jeu aussi amusant à la première heure qu'à la deux-centième.
+- **Durées** : une run réussie dure 20 à 30 min, une très grosse performance une heure ou un peu plus. La tension doit monter progressivement, pas rester constante.
+
+**Suite du vocal, même jour : la run en terres retenue comme direction.**
+- **Trois terres par run**, tirées parmi une sélection : cinq aujourd'hui, « on pourrait même étendre », ce qui permettrait d'ajouter des cartes. **Cartes plus petites** (« aujourd'hui la map est quand même très grande, pour moi c'est un problème »). **Environ 10 min par terre**, à confirmer.
+- **Passage** : un portail est le trope classique ; Raphaël reste ouvert à quelque chose de plus créatif.
+- **Un boss à la fin de chaque terre** lui va, avec « un nouveau bestiaire dédié aux boss ».
+- **L'Effacement comme signature** : la terre qui se réduit de ses bords vers son cœur « c'est fort comme mécanique ». « Il faut vraiment penser ça à fond », pas trop frustrant, mais avec le sentiment de devoir se dépêcher. Image : les mini-jeux Minecraft où le sol de l'arène disparaît. À explorer : un îlot isolé devient-il inaccessible ? Peut-on traverser le vide en payant (Essence ou autre) ?
+- **Route entre deux terres** (choisir la suivante entre deux) : intéressant, à condition que **chaque terre ait sa propre identité de jeu**. Aujourd'hui marais, forêt et champs ne diffèrent que visuellement.
+- **La boucle de jeu d'abord, le lore ensuite** : « jusqu'à présent la boucle de gameplay n'avait pas été spécialement étudiée, elle s'était plus adaptée en fonction du lore, alors que normalement ça aurait dû être l'inverse ». Le but est de donner envie de rejouer, « même avant le lore ».
