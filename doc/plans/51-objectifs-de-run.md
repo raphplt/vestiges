@@ -1,5 +1,54 @@
 # Plan 51 — La run en terres
 
+> **Point de reprise du 16 octobre, à lire en premier.** Il couvre la boucle revue (ce plan) et l'Élan ([plan 52](52-elan.md)). Les citations et décisions détaillées sont au [registre §184–185](DECISIONS.md).
+>
+> **Pourquoi.** Le premier testeur n'avait pas d'objectif dans la run et se sentait perdu vers 15 à 20 min ; Raphaël trouve la grande carte unique lassante. La boucle avait été construite d'après le lore : on repart du jeu, et le lore suivra, retouché avec cohérence.
+>
+> **Boucle acté :**
+> - trois terres d'environ 10 min, tirées parmi 5 (forêt, champs, ville, marais, carrière, d'autres plus tard), sur des cartes plus petites ;
+> - un boss à la fin de chaque terre, avec un nouveau bestiaire, que le joueur déclenche lui-même, poussé par une difficulté qui finit par être intenable ;
+> - structure retenue : la terre qui tombe dans le Néant, des bords vers le cœur ;
+> - Mémoriaux : des ancres et de la puissance, pas des clés ;
+> - choix de la terre suivante entre deux, donc une identité de jeu par terre ;
+> - boss agressifs, avec de vrais designs ; la Barrière n'est probablement pas à garder comme boss ;
+> - durée : environ 30 min pour une run réussie, une heure ou plus pour une très grosse performance, avec une tension progressive.
+>
+> **Boucle écarté** : piste narrative, contrats, Traversée, Mangeur, et la forme la plus visible du motif « portail, chrono, boss » de Megabonk.
+>
+> **Boucle ouvert** (§9 et §10) :
+> 1. un chrono ou une jauge visible ;
+> 2. la zone à tenir ;
+> 3. traverser le vide et son prix (recommandé : Essence puis PV) ;
+> 4. le réveil du gardien ;
+> 5. le passage entre deux terres (deux ponts ou un portail) ;
+> 6. ce qui suit la troisième terre (victoire ou boucle) ;
+> 7. le sol pendant le combat du gardien (figé ou qui rétrécit) ;
+> 8. la charte des gardiens.
+>
+> Raphaël doit aussi jouer la Barrière et l'Indicible avant de décider de leur sort.
+>
+> **Boucle, rien n'est codé.** Le prototype demande une horloge de run unique (2–3 j), puis le changement de carte en cours de run (2–3 semaines), soit 3 à 4 semaines en tout. Il attend la validation de l'Élan.
+>
+> **Élan acté** : c'est la mécanique centrale, en version « maîtrise ». La vitesse et les gestes bien faits (esquive parfaite, saut du vide, percussion, glissade) rendent plus fort. La décision du 13 octobre est annulée.
+>
+> **Élan livré : lot E1** (`71e67a0c`).
+> - Jauge à trois paliers, nourrie par la course jusqu'au palier I, perdue à l'arrêt et d'un palier par coup.
+> - Bonus de +8 %/+10 % à +24 %/+36 % de vitesse et de dégâts ; barre sous la recharge du dash.
+> - Bac à sable `tools/elan_sandbox.sh`, à essayer.
+> - L'Élan est éteint en run normale : `enabled_in_runs` vaut faux dans `data/movement/elan.json`.
+> - Avec E1 seul, on ne dépasse pas le palier I.
+>
+> **Élan, la suite** : E2 l'esquive parfaite, E3 le saut du vide, E4 la percussion, E5 la glissade, E6 les retours et réglages.
+>
+> **Élan ouvert** :
+> - jauge ou seulement une traînée ;
+> - l'Élan gardé ou non d'une terre à l'autre ;
+> - une créature tombée dans le Néant comptée comme éliminée (proposé : oui).
+>
+> **Prochaine étape proposée** : E2 puis E3, pendant que Raphaël essaie le bac à sable. Les questions de la boucle se tranchent au fil de ses essais, avant le prototype des terres.
+>
+> **Sur un autre poste** (Mac) : `git pull`, puis `tools/elan_sandbox.sh`. `GODOT_BIN` désigne le binaire Godot .NET 4.7.2 s'il ne s'appelle pas `godot-mono`.
+
 15 octobre 2026. Ouvert sur le manque relevé par le premier testeur ([§184](DECISIONS.md)) : la run n'a pas d'objectif, et le joueur se sent perdu vers 15 à 20 min. **Direction retenue par Raphaël le jour même ([§185](DECISIONS.md)) : une run traverse trois terres, chacune une carte plus petite qui s'efface de ses bords vers son cœur, avec un boss à la fin.** Rien n'est implémenté. Les propositions ci-dessous sont à trancher (§9).
 
 **Mise à jour du 16 octobre ([§185](DECISIONS.md)) :**
