@@ -2,6 +2,11 @@
 
 15 octobre 2026. Ouvert sur le manque relevé par le premier testeur ([§184](DECISIONS.md)) : la run n'a pas d'objectif, et le joueur se sent perdu vers 15 à 20 min. **Direction retenue par Raphaël le jour même ([§185](DECISIONS.md)) : une run traverse trois terres, chacune une carte plus petite qui s'efface de ses bords vers son cœur, avec un boss à la fin.** Rien n'est implémenté. Les propositions ci-dessous sont à trancher (§9).
 
+**Mise à jour du 16 octobre ([§185](DECISIONS.md)) :**
+- **L'Élan devient la mécanique centrale** (plan 52), à valider en bac à sable avant la structure.
+- **Structure : la terre qui tombe est préférée** (§3). La Traversée et le Mangeur sont écartés. Les détails restent à étudier « plus librement, sans trop se rattacher à l'existant » (§10).
+- **Boss** : agressifs, avec de vrais designs. La Barrière n'est probablement pas à garder comme boss.
+
 La première version de ce plan, « la Descente » (une seule carte en deux paliers, collée au lore), est remplacée. Raphaël a demandé de partir du jeu, pas du lore : « la boucle de gameplay s'était plus adaptée en fonction du lore, alors que normalement ça aurait dû être l'inverse ».
 
 ## 0. En bref
@@ -240,3 +245,24 @@ En parallèle, ou avant P3 : **Raphaël joue la Barrière et l'Indicible actuels
 4. **Après la troisième terre** : victoire ou boucle au choix (recommandé), ou late game sur place ?
 5. **Pendant le combat contre le gardien** : front figé, ou arène qui rétrécit ? À essayer au prototype, ou décidé maintenant ?
 6. **Feu vert pour le prototype P0 à P3** (3 à 4 semaines, Souverains en gardiens provisoires), avant toute production de terres et de boss ?
+
+## 10. Suite du 16 octobre : ce qui reste à étudier
+
+Retenu : la terre qui tombe. Écartés : la Traversée (front derrière le joueur, trop linéaire) et le Mangeur (un gardien errant qui mange la terre, coûteux et contraire à un boss agressif).
+
+**À étudier**, en pensant plus librement que l'existant :
+- **Une jauge ou un chrono visible.** Raphaël en veut un : difficulté, effacement, à voir. Une piste : la part de terre restante, montrée comme une jauge, plutôt qu'une horloge.
+- **Une zone à tenir.** Idée de Raphaël : « rester dans une zone délimitée ». Par exemple, raviver un Mémorial en tenant sa zone pendant que la terre tombe autour. Attention, c'est le principe du téléporteur de Risk of Rain 2 : à rendre propre au jeu par le lien avec la chute du sol et avec l'Élan.
+- **Le réveil du gardien** : un repaire visible au cœur, réveillé quand on veut, ou seul quand il ne reste que le cœur. Pas de clés à rassembler.
+- **Mémoriaux** : des ancres, qui sauvent leur zone, et de la puissance.
+
+**Charte des gardiens** (proposée, à valider) :
+- agressif : il traque le joueur ;
+- des attaques annoncées et lisibles, qu'on apprend ;
+- pensé pour l'Élan : charges à sauter, ondes à traverser en esquive parfaite, coups qui brisent le sol en vide ;
+- l'arène tombe pendant le combat ;
+- deux ou trois phases, un combat de 1 à 2 min ;
+- un vrai corps, un gros personnage, différent pour chaque terre.
+
+Avant les terres : **un gardien de référence** conçu avec cette charte. La Barrière, un mur passif par nature, sort des boss ; l'Indicible est à jouer avant de décider.
+
