@@ -2188,3 +2188,20 @@ Brainstorm sur le manque relevé au §184 (pas d'objectif, joueur perdu vers 15�
 - **Structure, réponse du 16 octobre** : « il faut être vraiment plus libre dans la pensée, éventuellement là on essaie encore trop de se rattacher à l'existant ». **La terre qui tombe (option 1) est préférée ; la Traversée est écartée** ; les détails restent à étudier. « Pas de timer » : « ça serait quand même bien », ou à défaut une **jauge** (difficulté, effacement, à voir). Les Mémoriaux en ancres et en puissance lui vont. Idée à discuter : une mécanique de **zone à tenir** (« capture the flag, du genre rester dans une zone délimitée »).
 - **Bac à sable de l'Élan : feu vert, maintenant** (plan 52).
 - **Décision du 13 octobre sur l'élan annulée** (§151 : « l'élan, la vitesse rend plus fort, n'est pas retenu ») : « j'annule ma décision du 13. Je pense qu'il faut un système de version "maîtrise" avec puissance, mais qui puisse prendre en compte aussi la vitesse. Ce truc de gestes maîtrisés est très intéressant et donne un vrai côté stimulant. Après, à voir dans l'implémentation. » Élan = gestes maîtrisés (esquive parfaite, glissade, saut du vide, percussion) **et** vitesse, avec de la puissance à la clé. Plan 52.
+
+## 186. La boucle de jeu arrêtée — 16 octobre 2026 (soir)
+
+Reprise du plan 51 pour formaliser la boucle avant de l'implémenter. Raphaël revient sur trois points du §185 : « Mémoriaux : des ancres et de la puissance, pas des clés, je ne suis pas sûr de ça au final » ; le choix de la terre suivante, « je sais pas si c'est nécessaire » ; et « trois terres d'environ 10 min », qui « reprend la durée d'une run de Megabonk avec le même format […] pas très original ». Il demande à l'agent d'être force de proposition et de penser en game designer : un jeu compréhensible par n'importe quel joueur, aux objectifs clairs, auquel on veut rejouer. Détail au [plan 51 §11](51-objectifs-de-run.md).
+
+**Tranché :**
+- **Mémoriaux : clés, ancres et puissance.** Il en faut trois pour réveiller le gardien ; chacun ancre sa zone contre la chute et donne une puissance. Chaque Mémorial de plus rend le gardien plus fort et plus généreux.
+- **Raviver un Mémorial = tenir son cercle environ 20 s**, assez large pour y courir (la zone à tenir du §185).
+- **Pas de choix de la terre suivante** : les terres sont tirées.
+- **Le passage** : la terre suivante se recoud autour du joueur, « ou [un portail] si [la recousure est] trop dur[e] ».
+- **Le format** : trois formats plus audacieux proposés (l'île qui dérive, l'archipel, des terres de plus en plus courtes avec la Montée en finale fixe). Une première version accélérée avec la Montée : « c'est Megabonk… en vrai peut-être qu'il faut penser le format différemment… c'est une prise de tête ». Puis : « pour l'instant on va faire plus simple, en gros l'idée principale juste avant celle-ci : le 3×10 min environ, avec montée en difficulté constante et late game infini (avec difficulté qui continue de monter) ». Les formats audacieux sont mis en réserve (plan 51 §11.5).
+- **Le late game** : « une 4e map dédiée au late game qui reste à l'infini ». Sa conception reste à faire.
+- **Le vide** : les petits trous se sautent avec l'Élan, et le traverser draine l'Essence puis les PV.
+- **Le gardien** : au réveil, le sol non ancré s'effondre, et l'arène est ce qu'on a sauvé. Pendant le combat, le front se fige et les coups du gardien brisent le sol.
+- **La jauge** : un anneau de terre restante autour de la minimap, avec un repère qui marque quand le gardien se lève seul. Aucun chiffre.
+- **La charte des gardiens** (plan 51 §10) est validée telle quelle.
+- **Ordre** : « valider ça, puis ensuite, quand ça sera bon, on passera sur l'Élan » ; le prototype des terres vient après les lots E2 et E3.

@@ -1,33 +1,22 @@
 # Plan 51 — La run en terres
 
-> **Point de reprise du 16 octobre, à lire en premier.** Il couvre la boucle revue (ce plan) et l'Élan ([plan 52](52-elan.md)). Les citations et décisions détaillées sont au [registre §184–185](DECISIONS.md).
+> **Point de reprise du 16 octobre, à lire en premier.** Il couvre la boucle revue (ce plan) et l'Élan ([plan 52](52-elan.md)). Les citations et décisions détaillées sont au [registre §184–186](DECISIONS.md).
 >
 > **Pourquoi.** Le premier testeur n'avait pas d'objectif dans la run et se sentait perdu vers 15 à 20 min ; Raphaël trouve la grande carte unique lassante. La boucle avait été construite d'après le lore : on repart du jeu, et le lore suivra, retouché avec cohérence.
 >
-> **Boucle acté :**
-> - trois terres d'environ 10 min, tirées parmi 5 (forêt, champs, ville, marais, carrière, d'autres plus tard), sur des cartes plus petites ;
-> - un boss à la fin de chaque terre, avec un nouveau bestiaire, que le joueur déclenche lui-même, poussé par une difficulté qui finit par être intenable ;
-> - structure retenue : la terre qui tombe dans le Néant, des bords vers le cœur ;
-> - Mémoriaux : des ancres et de la puissance, pas des clés ;
-> - choix de la terre suivante entre deux, donc une identité de jeu par terre ;
-> - boss agressifs, avec de vrais designs ; la Barrière n'est probablement pas à garder comme boss ;
-> - durée : environ 30 min pour une run réussie, une heure ou plus pour une très grosse performance, avec une tension progressive.
+> **Boucle arrêtée le 16 octobre au soir : voir le §11, qui fait foi** ([registre §186](DECISIONS.md)). En bref :
+> - **la run** : trois terres d'environ 10 min, tirées parmi 5, sur des cartes plus petites, sans choix de la suivante ; la difficulté monte sans arrêt ; après le troisième gardien, **une 4e carte dédiée au late game**, sans fin ;
+> - **une terre** : raviver des Mémoriaux en tenant leur cercle 20 s (clés, ancres et puissance), réveiller le gardien au cœur dès trois lumières, ou il se lève seul quand la terre est réduite ; l'anneau de terre restante autour de la minimap sert de jauge ;
+> - **l'arène, c'est ce qu'on a sauvé** : au réveil, le sol non ancré s'effondre ; pendant le combat, le front se fige et le gardien brise le sol ;
+> - **le vide** se saute à l'Élan, ou se traverse en payant l'Essence puis les PV ;
+> - **le passage** : la terre suivante se recoud autour du joueur (un portail en repli) ;
+> - **la charte des gardiens** est validée telle quelle.
 >
-> **Boucle écarté** : piste narrative, contrats, Traversée, Mangeur, et la forme la plus visible du motif « portail, chrono, boss » de Megabonk.
+> **Mis en réserve** (§11.5) : l'île qui dérive, l'archipel, les terres de plus en plus courtes, la Montée en finale fixe.
 >
-> **Boucle ouvert** (§9 et §10) :
-> 1. un chrono ou une jauge visible ;
-> 2. la zone à tenir ;
-> 3. traverser le vide et son prix (recommandé : Essence puis PV) ;
-> 4. le réveil du gardien ;
-> 5. le passage entre deux terres (deux ponts ou un portail) ;
-> 6. ce qui suit la troisième terre (victoire ou boucle) ;
-> 7. le sol pendant le combat du gardien (figé ou qui rétrécit) ;
-> 8. la charte des gardiens.
+> **Encore ouvert** (§11.6) : la 4e carte, les questions de l'Élan, la place des Résurgences, les durées ; Raphaël doit jouer la Barrière et l'Indicible avant de décider de leur sort.
 >
-> Raphaël doit aussi jouer la Barrière et l'Indicible avant de décider de leur sort.
->
-> **Boucle, rien n'est codé.** Le prototype demande une horloge de run unique (2–3 j), puis le changement de carte en cours de run (2–3 semaines), soit 3 à 4 semaines en tout. Il attend la validation de l'Élan.
+> **Boucle, rien n'est codé.** Ordre retenu : l'Élan d'abord (E2, E3), puis le prototype des terres (P0 à P3, recadrés au §11.7), soit 3 à 4 semaines.
 >
 > **Élan acté** : c'est la mécanique centrale, en version « maîtrise ». La vitesse et les gestes bien faits (esquive parfaite, saut du vide, percussion, glissade) rendent plus fort. La décision du 13 octobre est annulée.
 >
@@ -40,12 +29,9 @@
 >
 > **Élan, la suite** : E2 l'esquive parfaite, E3 le saut du vide, E4 la percussion, E5 la glissade, E6 les retours et réglages.
 >
-> **Élan ouvert** :
-> - jauge ou seulement une traînée ;
-> - l'Élan gardé ou non d'une terre à l'autre ;
-> - une créature tombée dans le Néant comptée comme éliminée (proposé : oui).
+> **Élan ouvert** : jauge ou seulement une traînée ; l'Élan gardé ou non d'une terre à l'autre ; une créature tombée dans le Néant comptée comme éliminée (proposé : oui).
 >
-> **Prochaine étape proposée** : E2 puis E3, pendant que Raphaël essaie le bac à sable. Les questions de la boucle se tranchent au fil de ses essais, avant le prototype des terres.
+> **Prochaine étape** : E2, l'esquive parfaite, puis E3, le saut du vide (plan 52).
 >
 > **Sur un autre poste** (Mac) : `git pull`, puis `tools/elan_sandbox.sh`. `GODOT_BIN` désigne le binaire Godot .NET 4.7.2 s'il ne s'appelle pas `godot-mono`.
 
@@ -59,6 +45,8 @@
 La première version de ce plan, « la Descente » (une seule carte en deux paliers, collée au lore), est remplacée. Raphaël a demandé de partir du jeu, pas du lore : « la boucle de gameplay s'était plus adaptée en fonction du lore, alors que normalement ça aurait dû être l'inverse ».
 
 ## 0. En bref
+
+> Première version du 15 octobre, **remplacée par le §11** là où elle diverge (Mémoriaux clés, pas de choix de terre, recousure au lieu des ponts, 4e carte de late game).
 
 - **Une run, c'est trois terres** tirées parmi une sélection : 5 au départ (forêt, champs, ville, marais, carrière), d'autres plus tard.
   - Environ 10 min par terre, et un gardien à battre à la fin de chacune.
@@ -288,6 +276,8 @@ En parallèle, ou avant P3 : **Raphaël joue la Barrière et l'Indicible actuels
 
 ## 9. Questions à Raphaël
 
+> **Répondu le 16 octobre (§11, registre §186)** : vide traversable en payant, avec le saut d'Élan ; gardien qui se lève seul ; recousure (portail en repli) ; 4e carte de late game sans fin ; front figé et sol brisé par le gardien. Le feu vert du prototype vient après les lots E2 et E3 de l'Élan.
+
 1. **Le vide** : mur, traversée payée en Essence puis en PV (recommandé), ponts de mémoire à créer, ou chute ?
 2. **Si on n'appelle pas le gardien** : il se lève seul, renforcé, sur l'îlot qui reste (recommandé), ou rien ne se passe et la foule finit le travail ?
 3. **Le passage** : deux ponts vers deux terres visibles (recommandé), ou un portail ?
@@ -296,6 +286,8 @@ En parallèle, ou avant P3 : **Raphaël joue la Barrière et l'Indicible actuels
 6. **Feu vert pour le prototype P0 à P3** (3 à 4 semaines, Souverains en gardiens provisoires), avant toute production de terres et de boss ?
 
 ## 10. Suite du 16 octobre : ce qui reste à étudier
+
+> **Tranché au §11** : anneau de terre restante, cercle de Mémorial à tenir 20 s, gardien réveillé par trois lumières, Mémoriaux clés, ancres et puissance, charte validée.
 
 Retenu : la terre qui tombe. Écartés : la Traversée (front derrière le joueur, trop linéaire) et le Mangeur (un gardien errant qui mange la terre, coûteux et contraire à un boss agressif).
 
@@ -315,3 +307,87 @@ Retenu : la terre qui tombe. Écartés : la Traversée (front derrière le joueu
 
 Avant les terres : **un gardien de référence** conçu avec cette charte. La Barrière, un mur passif par nature, sort des boss ; l'Indicible est à jouer avant de décider.
 
+
+## 11. La boucle arrêtée — 16 octobre 2026 (soir)
+
+Raphaël revient sur trois points du §0 : les Mémoriaux « pas des clés », le choix entre deux terres, et le format « trois terres de 10 min », jugé peu original. Il demande de raisonner en game designer : un jeu que n'importe qui comprend, aux objectifs clairs, auquel on veut rejouer. Après trois formats plus audacieux (§11.5), il choisit de partir au plus simple. **Cette section fait foi : elle remplace le §0 et les §2 à §5, et répond aux §9 et §10.** Décisions au [registre §186](DECISIONS.md).
+
+### 11.1 Le test d'une bonne boucle
+
+Les critères auxquels on mesure chaque choix, maintenant et au prototype :
+
+1. **Lisible en cinq secondes, sans texte.** À tout moment, le joueur sait ce qui le menace (la foule, le sol qui tombe), où aller (une colonne de lumière, le cœur) et ce qu'il construit (un compteur qui avance).
+2. **Un objectif à chaque échelle.** La seconde : bouger, esquiver, entretenir l'Élan. La minute : quel Mémorial, quel coffre avant qu'il tombe. La terre : réveiller le gardien quand on se sent prêt. La run : passer les trois gardiens, puis tenir le plus longtemps possible.
+3. **Une décision qui compte par terre** : réveiller le gardien maintenant, ou chercher encore un Mémorial pendant que le sol s'en va.
+4. **Des pics et des creux** : tenir un Mémorial (pic), explorer (creux), le gardien (sommet), le passage (souffle).
+5. **Le temps et le butin sont finis**, ce qui empêche de farmer sans chrono arbitraire.
+6. **Chaque mort dit « la prochaine fois, je… ».**
+7. **La maîtrise se voit** : le bon joueur va plus vite, plus loin, avec plus de style (l'Élan).
+8. **Une seule idée au centre** : le sol qui s'efface et le mouvement qui le défie. Mémoriaux, gardien et passage passent tous par le sol.
+
+### 11.2 La run
+
+```
+TERRE 1        TERRE 2        TERRE 3        4e TERRE : LE LATE GAME
+~10 min    →   ~10 min    →   ~10 min    →   carte dédiée, sans fin
+gardien        gardien        gardien        la difficulté monte toujours
+```
+
+- **Trois terres d'environ 10 min**, tirées parmi 5 (forêt, champs, ville, marais, carrière), sur des cartes plus petites qu'aujourd'hui. Pas de choix de la terre suivante.
+- **La difficulté monte sans arrêt** : horloge de run continue et multiplicateur de rang à chaque terre, portés par le Péril (§2).
+- **Après le troisième gardien : une 4e carte dédiée au late game**, où l'on reste à l'infini pendant que la difficulté continue de monter, pour les runs d'une heure et le classement. Elle remplace le late game sur place des plans 34 et 47. Sa conception est ouverte (§11.6).
+- **Durée** : environ 30 min pour atteindre la 4e terre, une heure ou plus pour une grosse performance.
+
+### 11.3 Une terre : raviver, réveiller, recoudre
+
+1. **Arriver.** La terre se forme autour du joueur, avec un répit d'environ 30 s. De loin, on voit des colonnes de lumière : ce sont les Mémoriaux éteints (4 ou 5 par terre). Au cœur, le gardien dort, un gros corps immobile.
+2. **Raviver.** Entrer dans le cercle d'un Mémorial et le **tenir environ 20 s** pendant que la foule converge. Le cercle est assez large pour y courir : on le tient en mouvement, donc l'Élan se garde. Un Mémorial ravivé :
+   - **allume une lumière sur le gardien** : c'est une clé, il en faut trois ;
+   - **ancre sa zone**, qui ne tombera plus ;
+   - **donne une puissance au choix**, comme aujourd'hui.
+
+   Un Mémorial du bord rapporte plus, mais son sol tombe tôt. Si le front l'atteint avant qu'on l'ait ravivé, il est perdu.
+3. **La terre tombe**, des bords vers le cœur, avec préavis (§3, inchangé : date de chute par cellule, trois états, cœur sûr, présence du joueur qui ralentit le front).
+   - **La jauge** est un anneau autour de la minimap, qui se vide avec la terre. Un repère y marque le moment où le gardien se lève seul. Aucun chiffre.
+   - **Le vide** : les petits trous se franchissent d'un dash en l'air (Élan, E3). Marcher dans le vide draine l'Essence, puis les PV.
+4. **Réveiller.** Avec trois lumières, on touche le gardien quand on veut. Chaque Mémorial de plus le rend plus fort et sa récompense plus riche. Si on attend jusqu'au repère, il se lève seul, enragé, au milieu de la foule.
+5. **L'arène, c'est ce qu'on a sauvé.**
+   - Au réveil, tout le sol non ancré s'effondre d'un coup. Il reste le cœur et les zones des Mémoriaux ravivés, si bien que les choix d'exploration dessinent le combat.
+   - Pendant le combat, le front se fige, mais les coups du gardien ouvrent des trous dans le sol.
+6. **Recoudre.** Le gardien vaincu, l'îlot reste seul dans le vide et le butin vient au joueur. Puis la terre suivante se recoud autour de lui : les morceaux montent du Néant, du plus proche au plus lointain, comme la chute jouée à l'envers. La génération de la terre se cache dans ce moment. **Repli : un portail**, si la recousure se révèle trop dure à faire.
+
+Le premier tutoriel s'écrit en trois étapes : raviver un Mémorial, réveiller le gardien, passer à la terre suivante.
+
+### 11.4 La charte des gardiens (validée telle quelle)
+
+- **Agressif** : il traque le joueur.
+- **Attaques annoncées et lisibles**, qu'on apprend.
+- **Pensé pour l'Élan** : charges à sauter, ondes à traverser en esquive parfaite, coups qui ouvrent le vide.
+- **Deux ou trois phases**, un combat de 1 à 2 min.
+- **Un vrai corps**, un gros personnage, différent pour chaque terre.
+
+**Un gardien de référence** est conçu avant les terres. La Barrière sort des boss ; le sort de l'Indicible attend que Raphaël l'ait joué.
+
+### 11.5 Mis en réserve (formats plus audacieux, non retenus pour l'instant)
+
+Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par Raphaël au profit du plus simple. À rouvrir si le prototype manque d'identité.
+- **L'île qui dérive** : une seule terre vivante. Le sol le plus ancien tombe, et chaque Mémorial ravivé fait monter du vide un morceau neuf de son côté, souvent d'un autre biome. L'île avance là où l'on se souvient. Trois Mémoriaux font monter le gardien, trois gardiens la finale. Le plus original, et le plus dur à coder (socle d'environ 4 à 5 semaines).
+- **L'archipel** : 10 à 12 petites îles de 2 à 3 min, chacune avec son Mémorial, qu'on enchaîne par des sauts d'Élan, avec un gardien toutes les trois ou quatre. Le rythme est fort, mais haché, et on y perd l'exploration.
+- **Terres de plus en plus courtes** (environ 9, 8 puis 6 min) et **la Montée comme finale fixe**, la même à chaque run, avec le gardien final en haut. La Montée pourrait devenir la 4e carte du late game.
+
+### 11.6 Encore ouvert
+
+- **La 4e carte du late game** : sa forme (arène fixe, qui tombe ou non), ce qui la relance (vagues, gardiens en boucle), si l'arriver compte comme une victoire au bilan, et son lien éventuel avec la Montée.
+- **L'Élan** (plan 52 §6) : jauge ou traînée seule, l'Élan gardé ou non d'une terre à l'autre, une créature tombée dans le vide comptée comme éliminée.
+- **Les Résurgences** : une par terre, à mi-chemin, ou fondues dans le front. À trancher au prototype.
+- **Les durées** (10 min, 20 s de cercle, préavis) : à régler en jouant.
+- **Raphaël joue la Barrière et l'Indicible** avant de décider de leur sort.
+
+### 11.7 Ordre de travail
+
+1. **L'Élan d'abord** (plan 52) : E2, l'esquive parfaite, puis E3, le saut du vide, dont dépend la traversée des trous.
+2. **Ensuite, le prototype des terres** : lots P0 à P3 du §8, recadrés ainsi :
+   - **P1** construit la recousure au lieu du pont ;
+   - **P2** ajoute le cercle à tenir, les ancres, l'anneau et le vide traversable ;
+   - **P3** fait le réveil par trois lumières, l'effondrement au réveil, le gardien qui se lève seul et le multiplicateur de rang.
+   La 4e carte et les gardiens dédiés viennent en production, après le prototype.
