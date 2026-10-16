@@ -229,6 +229,7 @@ public partial class Player : CharacterBody2D
         Waymarks = new Waymarks { Name = "Waymarks" };
         AddChild(Waymarks);
         Mobility = new PlayerMobility(MobilityConfig.Load());
+        InitializeElan();
         Harpoon = new HarpoonTether { Name = "HarpoonTether" };
         Harpoon.Initialize(this);
         AddChild(Harpoon);
@@ -639,6 +640,7 @@ public partial class Player : CharacterBody2D
 
         _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
+        StepElan(dt, movementSpeed);
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
         ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
@@ -1559,6 +1561,8 @@ public partial class Player : CharacterBody2D
             ShowHurt(result.HpLost);
             if (_hasSprite)
                 _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
+            if (result.HpLost > 0f)
+                LoseElanOnHit();
         }
 
         // Le résultat publié reste fatal (rien ne se récupère sur ce coup) ; seul le ticket empêche la mort.

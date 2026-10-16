@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -10,6 +12,13 @@ public partial class MobilityFeedback : Node2D
     private const float TrailLifetime = 0.12f;
     private const float TrailInterval = 0.04f;
     private static readonly Color ReadyColor = new(0.55f, 0.88f, 0.9f, 0.9f);
+    private static readonly Color BarBackColor = new(0.04f, 0.06f, 0.09f, 0.8f);
+    private static readonly Color TierMarkColor = new(0.9f, 0.86f, 0.78f, 0.45f);
+    // Un palier de plus, une couleur plus chaude : du sable à l'ambre puis au blanc chaud.
+    private static readonly Color[] ElanColors =
+    {
+        new(0.62f, 0.56f, 0.46f, 0.85f), new(0.86f, 0.62f, 0.3f, 0.9f), new(0.98f, 0.78f, 0.38f, 0.95f), new(1f, 0.94f, 0.8f, 1f),
+    };
     private readonly Sprite2D[] _trails = new Sprite2D[TrailCount];
     private readonly float[] _remaining = new float[TrailCount];
     private readonly Vector2[] _positions = new Vector2[TrailCount];
@@ -19,6 +28,9 @@ public partial class MobilityFeedback : Node2D
     private bool _wasDashing;
     private bool _dashVisible;
     private int _nextTrail;
+    private float _elan;
+    private int _elanTier;
+    private IReadOnlyList<ElanTier> _elanTiers;
 
     public override void _Ready()
     {
@@ -82,6 +94,14 @@ public partial class MobilityFeedback : Node2D
         QueueRedraw();
     }
 
+    /// <summary>Jauge d'Élan sous la recharge du dash, avec les seuils de palier ; masquée tant que l'Élan est vide.</summary>
+    public void SetElan(float value, int tier, IReadOnlyList<ElanTier> tiers)
+    {
+        _elan = value;
+        _elanTier = tier;
+        _elanTiers = tiers;
+    }
+
     private void PlaceTrail(Vector2 position)
     {
         Sprite2D trail = _trails[_nextTrail];
@@ -112,8 +132,15 @@ public partial class MobilityFeedback : Node2D
 
     public override void _Draw()
     {
-        DrawRect(new Rect2(-12f, 20f, 24f, 2f), new Color(0.04f, 0.06f, 0.09f, 0.8f));
+        DrawRect(new Rect2(-12f, 20f, 24f, 2f), BarBackColor);
         DrawRect(new Rect2(-12f, 20f, 24f * Mathf.Clamp(_charge, 0f, 1f), 2f), ReadyColor);
+        if (_elan > 0f && _elanTiers != null)
+        {
+            DrawRect(new Rect2(-12f, 23f, 24f, 2f), BarBackColor);
+            DrawRect(new Rect2(-12f, 23f, Mathf.Round(24f * _elan), 2f), ElanColors[Mathf.Min(_elanTier, ElanColors.Length - 1)]);
+            for (int i = 0; i < _elanTiers.Count - 1; i++)
+                DrawRect(new Rect2(-12f + Mathf.Round(24f * _elanTiers[i].From), 23f, 1f, 2f), TierMarkColor);
+        }
         if (_dashVisible)
             DrawTexture(PixelEllipseArt.Get(ReadyRingRadius, false), PixelEllipseArt.Offset(ReadyRingRadius), ReadyColor);
     }

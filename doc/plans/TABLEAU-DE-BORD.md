@@ -53,6 +53,7 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 | Sujet | Plan | Question |
 |---|---|---|
+| L'Élan | [52](52-elan.md), [§185](DECISIONS.md) | Mécanique centrale retenue le 16 octobre (décision du 13 annulée). **Lot E1 livré : jauge et bac à sable à jouer** (`tools/elan_sandbox.sh`, Élan éteint en run normale). Suite : E2, l'esquive parfaite. |
 | Run en terres | [51 §9](51-objectifs-de-run.md) | Direction retenue le 15 octobre (§185) : trois terres d'environ 10 min, plus petites, qui s'effacent de leurs bords vers leur cœur, gardien à la fin, deux ponts pour choisir la suivante. **Six questions** : le vide, gardien qui se lève seul, passage, après la troisième terre, combat du gardien, feu vert du prototype (3 à 4 semaines). Jouer la Barrière et l'Indicible avant de décider de leur sort. |
 | Atmosphère | [39 §13](39-atmosphere.md) | Juger en jeu les ambiances intégrées, le voile du marais (force 0,6), l'étalonnage, les nuages, les ombres portées, la météo et la réverbération. |
 | Direction artistique | 08, 25 | Personnages joués validés provisoirement (§62) ; retouches possibles plus tard. |

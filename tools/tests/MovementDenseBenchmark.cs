@@ -151,7 +151,7 @@ public partial class MovementDenseBenchmark : Node
             _player = _world.GetNode<Player>("Player");
             _player.IsGodMode = true;
             _player.IsAIControlled = true;
-            _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : FindOpenArena();
+            _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : TestArena.FindOpen(_player);
             _player.GlobalPosition = _arena;
             // Expérience d'attribution : décors masqués (rendu seul, la physique des décors reste en place).
             if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hide-props") >= 0)
@@ -413,30 +413,6 @@ public partial class MovementDenseBenchmark : Node
             if (counted)
                 _respawns++;
         }
-    }
-
-    /// <summary>
-    /// Premier point, en spirale depuis l'origine, sans décor bloquant dans le rayon de la foule. Depuis la carte agrandie
-    /// du 30 septembre, l'origine tombe dans un immeuble : les créatures y forçaient contre un mur (plan 29 §1.1).
-    /// </summary>
-    private Vector2 FindOpenArena()
-    {
-        const uint PropLayer = 4;
-        PhysicsDirectSpaceState2D space = _player.GetWorld2D().DirectSpaceState;
-        using CircleShape2D circle = new() { Radius = 420f };
-        using PhysicsShapeQueryParameters2D query = new() { Shape = circle, CollisionMask = PropLayer, CollideWithAreas = false };
-        for (int ring = 0; ring <= 40; ring++)
-        {
-            int steps = Math.Max(1, ring * 6);
-            for (int step = 0; step < steps; step++)
-            {
-                Vector2 candidate = Vector2.FromAngle(Mathf.Tau * step / steps) * ring * 256f;
-                query.Transform = new Transform2D(0f, candidate);
-                if (space.IntersectShape(query, 1).Count == 0)
-                    return candidate;
-            }
-        }
-        throw new InvalidOperationException("Aucun terrain dégagé près de l'origine.");
     }
 
     /// <summary>Les morts font monter de niveau : la première carte est prise aussitôt, la run ne reste pas en pause.</summary>

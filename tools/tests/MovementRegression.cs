@@ -185,6 +185,7 @@ public partial class MovementRegression : Node2D
         await RunWorldEdgeChecks();
         RunFacingChecks();
         await RunMobilityChecks();
+        await RunElanChecks();
         _player.TakeDamage(10000f);
         Check(_player.Mobility.State == MobilityState.Death && _player.Mobility.BufferRemaining == 0f,
             "mort en dash : état Death et buffer vide");
