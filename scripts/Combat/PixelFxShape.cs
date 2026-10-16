@@ -10,4 +10,5 @@ public enum PixelFxShape
     Beam = 5,
     Star = 6,
     Lane = 7,
+    Cable = 8,
 }

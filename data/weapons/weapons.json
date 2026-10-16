@@ -382,7 +382,7 @@
     "attack_pattern": "circular",
     "trigger_coefficient": 0.85,
     "fx": {
-      "style": "whirl",
+      "style": "cable",
       "family": "rust"
     },
     "summary": "Fouette tout autour de toi.",

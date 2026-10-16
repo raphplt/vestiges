@@ -7,7 +7,7 @@ render_mode unshaded;
 // animation par poses (progress arrive déjà quantifié) et disparition par tramage ordonné.
 
 // 0 arc (traînée de lame), 1 poussée, 2 anneau, 3 zone au sol, 4 cône, 5 rayon brisé, 6 étoile d'impact,
-// 7 couloir annoncé (trajectoire d'un bond)
+// 7 couloir annoncé (trajectoire d'un bond), 8 câble de la Rallonge
 uniform int shape = 0;
 uniform vec2 size_px = vec2(64.0);
 uniform float angle = 0.0;
@@ -69,6 +69,35 @@ float arc_tone(vec2 p) {
 		return -1.0;
 	float v = 0.55 * t + 0.45 * (1.0 - depth / max(th, 1.0));
 	return v > 0.62 ? 1.0 : (v > 0.36 ? 0.5 : 0.0);
+}
+
+// Un fil matériel relié au buste : courbe en S en retard sur la prise qui fait un tour.
+// Son épaisseur reste fixe quand l'allonge augmente, pour ne pas redevenir une traînée de lame.
+float cable_tone(vec2 p) {
+	vec2 q = to_local(p);
+	float head = -arc_half + 2.0 * arc_half * min(progress / 0.85, 1.0);
+	float c = cos(head);
+	float s = sin(head);
+	vec2 v = vec2(q.x * c + q.y * s, -q.x * s + q.y * c);
+	float reach = radius * (0.4 + 0.6 * min(progress / 0.2, 1.0));
+	// Prise moulée et deux broches, dont l'extrémité marque exactement l'allonge.
+	float tip = reach - v.x;
+	float side = abs(v.y);
+	if (tip >= 2.5 && tip <= 8.0 && side <= 3.5)
+		return side > 2.0 || tip > 6.5 ? 0.0 : 1.0;
+	if (tip >= 0.0 && tip < 2.5 && abs(side - 1.8) < 0.65)
+		return 1.0;
+	float length = max(reach - 7.0, 1.0);
+	if (v.x < 3.0 || v.x > length)
+		return -1.0;
+	float u = v.x / length;
+	float bend = sin(u * TAU) * sin(u * PI) * reach * 0.16;
+	bend *= sin(progress * PI + 0.5);
+	float d = v.y - bend;
+	float half_width = thickness * 0.5;
+	if (abs(d) > half_width)
+		return -1.0;
+	return d < -0.3 ? 1.0 : (d < half_width - 0.5 ? 0.5 : 0.0);
 }
 
 float thrust_tone(vec2 p) {
@@ -395,6 +424,7 @@ float tone_at(vec2 p) {
 	if (shape == 4) return cone_tone(p);
 	if (shape == 5) return beam_tone(p);
 	if (shape == 6) return star_tone(p);
+	if (shape == 8) return cable_tone(p);
 	return -1.0;
 }
 

@@ -822,6 +822,7 @@ Le script de post-processing doit inclure une vérification/correction de l'angl
 - [x] Icônes de nature du butin : Essence, XP, objets, Souvenirs et treize statistiques ; badge de rareté séparé, roulette et résultats capturés (plan 24 R2, plan 04, 1er octobre 2026).
 - [ ] Onboarding implicite (les 5 premières minutes doivent être auto-explicatives).
 - [x] Indicateurs visuels de l'Effacement (phases, transitions de couleur) : sol qui oublie et lisière de l'Effacé, plan 16 O1/O3 (26 septembre 2026) ; les décors suivront en O2.
+- [x] Animations de la Rallonge et de la Pelle à neige distinctes : câble souple à prise pour la Rallonge, large balayage pour la Pelle ; captures normales et Déblayer/Enrouleur inspectées, build sans avertissement, smoke et armes verts ([plan 25 S11](plans/25-sprites-et-design.md#s11--distinguer-la-rallonge-de-la-pelle-à-neige-en-attaque-15-octobre-2026), 15 octobre 2026).
 - [x] Signaux précurseurs des Résurgences.
 - [ ] Sound design cleanup (retirer sons répétitifs, ajuster XP, musique adaptative).
 - [x] Intégration des 50 choix audio A–B6 applicables et nettoyage des fichiers inutilisés ; banque JSON, crédits et archives d’écoute hors dépôt (plan 15).

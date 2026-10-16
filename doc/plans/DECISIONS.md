@@ -2119,6 +2119,12 @@ Raphaël, captures de Megabonk et de Vestiges côte à côte : « à la réflexi
 
 **Retour suivant :** « c'est plus galere maintenant les actions annexes l'une est à gauche les autres à droite. soit rajouter des claviers soit (ca peut etre les deux) corriger ca ». Les deux, lot F3 : Relancer, Bannir et Passer pendent en colonne au clou de droite, dans l'ordre de la navigation ; « Toutes les stats » pend au clou de gauche ; raccourcis R / B / P (Y / X / LB à la manette), touche dessinée sur chaque étiquette.
 
+## 183. Rallonge et Pelle à neige : animations trop semblables — 15 octobre 2026
+
+Raphaël : « rallonge et pelle a neige ont quasiment le meme sprite, ca ne me plait pas (je parle du sprite en jeu - de l'animation) ». Reprise ciblée des effets d'attaque au [plan 25 S11](25-sprites-et-design.md#s11--distinguer-la-rallonge-de-la-pelle-à-neige-en-attaque-15-octobre-2026).
+
+**Livré et vérifié :** la Rallonge dessine un câble fin et souple en S, relié au buste, avec sa prise au bout, qui se déroule puis fait un tour. La Pelle conserve son balayage large. Build sans avertissement, smoke et armes verts, captures des deux armes et de Déblayer/Enrouleur inspectées. Ressenti à juger en jeu par Raphaël.
+
 ## 184. Retours d'un premier testeur (30 min de jeu) — 15 octobre 2026
 
 Raphaël, en vocal avec un joueur qui découvrait le jeu, plus ses propres remarques. Relevé du code et réponses le jour même ; lots au [plan 50](50-retours-premier-testeur.md).

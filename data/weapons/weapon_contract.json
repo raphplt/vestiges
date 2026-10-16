@@ -59,7 +59,7 @@
     "orbit_pulse": { "pulse_min": { "min": 0 }, "pulse_max": { "min": 0 }, "pulse_period": { "min": 0.1 } }
   },
   "fx": {
-    "styles": ["slash", "cleave", "smash", "thrust", "whirl", "bell", "clock", "void", "chain", "cone"],
+    "styles": ["slash", "cleave", "smash", "thrust", "whirl", "cable", "bell", "clock", "void", "chain", "cone"],
     "families": ["physical", "heavy", "essence", "hybrid", "void", "fire", "hostile", "crit", "blood", "stone", "rust", "pale", "silk", "brass", "glass", "verdigris", "gum"],
     "projectile_aliases": ["orb"]
   }

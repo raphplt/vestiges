@@ -92,8 +92,8 @@ public sealed class PlayerAttackFx
 
     /// <summary>
     /// Coup de mêlée : une forme par frappe (les frappes supplémentaires appellent plusieurs fois). La forme suit
-    /// l'attaque, le style de l'arme n'en donne que la matière : trait pour l'attaque droite, traînée pour l'arc et
-    /// l'onde. Son bord passe à l'allonge (<paramref name="range"/>) et son ouverture à <paramref name="arcAngle"/>,
+    /// l'attaque : trait pour l'attaque droite, traînée pour l'arc et l'onde, câble pour la Rallonge.
+    /// Son bord passe à l'allonge (<paramref name="range"/>) et son ouverture à <paramref name="arcAngle"/>,
     /// sans plafond : la frappe ne touche jamais hors de ce qui est dessiné (<see cref="MeleeStrikeShape"/>).
     /// </summary>
     public void PlayMelee(WeaponData weapon, AttackPatternKind pattern, Vector2 direction, float range, float arcAngle, Vector2? origin = null)
@@ -125,6 +125,9 @@ public sealed class PlayerAttackFx
                 break;
             case "whirl":
                 PlayArc(torso, direction, radius, radius * 0.3f, Mathf.Pi, family, 0.28f, followOwner: followOwner);
+                break;
+            case "cable":
+                PlayCable(torso, direction, radius, family, followOwner);
                 break;
             case "bell":
                 // L'anneau extérieur, 1,35 fois le premier, marque l'allonge.
@@ -379,6 +382,17 @@ public sealed class PlayerAttackFx
         spec.Squash = squash;
         spec.Steps = 7;
         spec.FadeTail = 0.2f;
+        Pools.PlayFx(center, spec, FxOwner.Player, followOwner ? _owner : null);
+    }
+
+    private void PlayCable(Vector2 center, Vector2 direction, float radius, FxFamily family, bool followOwner)
+    {
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Cable, family, radius, 3f, 0.32f);
+        spec.Angle = GroundAngle(direction, Iso.SlashSquash);
+        spec.ArcHalf = Mathf.Pi;
+        spec.Squash = Iso.SlashSquash;
+        spec.Steps = 12;
+        spec.FadeTail = 0.15f;
         Pools.PlayFx(center, spec, FxOwner.Player, followOwner ? _owner : null);
     }
 

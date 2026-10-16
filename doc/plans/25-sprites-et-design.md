@@ -639,6 +639,18 @@ Raphaël : les zones posées au sol, du joueur comme des créatures, sont « sou
 
 **Vérification :** build sans avertissement ; captures en run de la bile, des armes à zone, des capacités ennemies, des statuts (annonce d'explosion) et du combat de l'Indicible, toutes inspectées, sans erreur de shader. Coût non mesuré au banc : le banc dense n'emploie aucune de ces armes. Le shader évalue désormais cinq fois la forme par pixel de zone, et jusqu'à six fois de plus pour les langues de feu.
 
+### S11 — distinguer la Rallonge de la Pelle à neige en attaque, 15 octobre 2026
+
+Retour de Raphaël : leurs sprites d'attaque en jeu se ressemblent trop (DECISIONS §183). Les styles `cleave` et `whirl` dessinent la même traînée orange, avec une ouverture et une épaisseur différentes.
+
+**Lot unique :** donner à la Rallonge le style `cable` : fil fin en S, déroulement, rotation autour du buste et prise à deux broches au bout. Forme dédiée dans le shader pixel art existant, via le pool d'effets ; conserver la projection des frappes et leur allonge. La Pelle conserve sa large traînée de déblaiement. Aucun réglage de dégâts, de cadence ou de portée. Vérifier le build, le smoke, la suite armes et des captures des deux armes, avec leurs ascensions.
+
+- [x] Animation intégrée et vérifiée en vraie run.
+
+**Livré :** style `cable` déclaré dans les données et leur contrat ; forme `PixelFxShape.Cable` dans le shader partagé. Douze poses sur 0,32 s : déroulement, fil en S, tour complet, disparition tramée. Épaisseur fixe de 3 texels, contour teinté et prise moulée à deux broches ; l'allonge agrandit la longueur du câble, pas son épaisseur. Un seul effet recyclé par frappe, attaché au buste ; les rémanences gardent leur origine figée.
+
+**Vérification :** build à 0 avertissement ; validation `smoke weapons` : 2/2 suites vertes. [Quatre instants des deux attaques en vraie Main](planches/25-s11-attaques-pelle-rallonge.png) inspectés ; seconde galerie inspectée avec Pelle Déblayer et Rallonge Enrouleur : le câble reste fin avec la portée accrue, la Pelle garde son large balayage même en cercle complet. Journaux et captures supplémentaires hors dépôt : `/tmp/vestiges-cable-{before,after,ascensions,validation}-20261015`. Coût non mesuré au banc ; appréciation de l'animation en jeu par Raphaël encore ouverte.
+
 ### S2 à S4 — personnages joués repris et intégrés, 3 octobre
 
 Direction retenue par Raphaël entre « stylisé » et « grosse tête » (DECISIONS §61). [Planche avant/après](planches/25-s9-personnages.png), [animations](planches/25-s9-animations.png).
