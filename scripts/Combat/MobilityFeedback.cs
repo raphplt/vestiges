@@ -19,6 +19,10 @@ public partial class MobilityFeedback : Node2D
     {
         new(0.62f, 0.56f, 0.46f, 0.85f), new(0.86f, 0.62f, 0.3f, 0.9f), new(0.98f, 0.78f, 0.38f, 0.95f), new(1f, 0.94f, 0.8f, 1f),
     };
+    // Esquive parfaite (plan 52 E2) : une onde qui s'ouvre au sol en quatre rayons, cuits au chargement.
+    private const float DodgeRingSeconds = 0.3f;
+    private static readonly int[] DodgeRingRadii = { 16, 21, 26, 31 };
+    private static readonly Color DodgeRingColor = new(1f, 0.93f, 0.72f, 1f);
     private readonly Sprite2D[] _trails = new Sprite2D[TrailCount];
     private readonly float[] _remaining = new float[TrailCount];
     private readonly Vector2[] _positions = new Vector2[TrailCount];
@@ -31,12 +35,15 @@ public partial class MobilityFeedback : Node2D
     private float _elan;
     private int _elanTier;
     private IReadOnlyList<ElanTier> _elanTiers;
+    private float _dodgeRemaining;
 
     public override void _Ready()
     {
         // Même couche que le sol, derrière le joueur dans l'ordre de dessin de ses enfants.
         ShowBehindParent = true;
         _frames = VfxFactory.GetDashTrailTextures();
+        foreach (int radius in DodgeRingRadii)
+            PixelEllipseArt.Get(radius, false);
         for (int i = 0; i < TrailCount; i++)
         {
             _trails[i] = new Sprite2D
@@ -54,6 +61,7 @@ public partial class MobilityFeedback : Node2D
     public void UpdateFeedback(float delta, PlayerMobility mobility, Vector2 from, Vector2 position, bool moved)
     {
         _charge = 1f - mobility.CooldownRemaining / mobility.CooldownSeconds;
+        _dodgeRemaining = Mathf.Max(0f, _dodgeRemaining - delta);
         _dashVisible = mobility.IsDashStep && moved;
         if (mobility.StartedThisStep)
         {
@@ -102,6 +110,14 @@ public partial class MobilityFeedback : Node2D
         _elanTiers = tiers;
     }
 
+    /// <summary>Un coup évité pendant le dash : son clair et onde au sol, lisibles au milieu de la foule.</summary>
+    public void PerfectDodge(string audio)
+    {
+        Infrastructure.AudioManager.Play(audio, 0.04f, -2f, 1.35f);
+        _dodgeRemaining = DodgeRingSeconds;
+        QueueRedraw();
+    }
+
     private void PlaceTrail(Vector2 position)
     {
         Sprite2D trail = _trails[_nextTrail];
@@ -118,6 +134,7 @@ public partial class MobilityFeedback : Node2D
     {
         _wasDashing = false;
         _dashVisible = false;
+        _dodgeRemaining = 0f;
         for (int i = 0; i < TrailCount; i++)
         {
             _remaining[i] = 0f;
@@ -140,6 +157,13 @@ public partial class MobilityFeedback : Node2D
             DrawRect(new Rect2(-12f, 23f, Mathf.Round(24f * _elan), 2f), ElanColors[Mathf.Min(_elanTier, ElanColors.Length - 1)]);
             for (int i = 0; i < _elanTiers.Count - 1; i++)
                 DrawRect(new Rect2(-12f + Mathf.Round(24f * _elanTiers[i].From), 23f, 1f, 2f), TierMarkColor);
+        }
+        if (_dodgeRemaining > 0f)
+        {
+            float progress = 1f - _dodgeRemaining / DodgeRingSeconds;
+            int radius = DodgeRingRadii[Mathf.Min(DodgeRingRadii.Length - 1, (int)(progress * DodgeRingRadii.Length))];
+            Color color = DodgeRingColor with { A = 1f - progress * 0.8f };
+            DrawTexture(PixelEllipseArt.Get(radius, false), PixelEllipseArt.Offset(radius), color);
         }
         if (_dashVisible)
             DrawTexture(PixelEllipseArt.Get(ReadyRingRadius, false), PixelEllipseArt.Offset(ReadyRingRadius), ReadyColor);

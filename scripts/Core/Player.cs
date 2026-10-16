@@ -1497,7 +1497,7 @@ public partial class Player : CharacterBody2D
         if (IsGodMode)
             return default;
 #endif
-        if (_currentHp <= 0 || Mobility.IsInvulnerable || _defense.IsInvulnerable)
+        if (_currentHp <= 0 || DodgesHit() || _defense.IsInvulnerable)
             return default;
 
         if (_objectMilestones != null && _objectMilestones.Ignores(damage, EffectiveMaxHp))

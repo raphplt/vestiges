@@ -522,7 +522,7 @@ public partial class Indicible : Node2D
 
 	private bool HitPlayer(float damage, Vector2 from)
 	{
-		if (_player.Mobility.IsInvulnerable)
+		if (_player.DodgesHit())
 			return false;
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, EnemyGrammar.FinalBossId, damage);
 		_player.TakeDamage(damage, from);

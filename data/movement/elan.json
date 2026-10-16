@@ -1,5 +1,5 @@
 {
-    "_doc": "Élan (plan 52, DECISIONS §185) : ressource de 0 à 1 gagnée en courant et par les gestes maîtrisés, perdue à l'arrêt et sous les coups ; ses paliers donnent vitesse et dégâts. enabled_in_runs : actif en run normale ; faux pendant le bac à sable (tools/elan_sandbox.sh l'active), pour ne pas changer l'équilibre ni les mesures avant validation. tiers : paliers dans l'ordre, from (seuil d'Élan), speed et damage (bonus multiplicatifs, 0,08 = +8 %). speed : la course seule (vitesse réelle rapportée à la vitesse du personnage d'au moins min_ratio) fait monter l'Élan de per_second, sans dépasser cap. still : sous speed_ratio de la vitesse, le joueur est arrêté ; après grace_seconds, l'Élan baisse de decay_per_second. upkeep_decay_per_second : au-dessus du plafond de la course, l'Élan s'érode jusqu'à lui ; seuls les gestes le tiennent haut. hit_loss : perdu à chaque coup qui entame les PV. Valeurs de départ du 16 octobre, à régler en jouant.",
+    "_doc": "Élan (plan 52, DECISIONS §185) : ressource de 0 à 1 gagnée en courant et par les gestes maîtrisés, perdue à l'arrêt et sous les coups ; ses paliers donnent vitesse et dégâts. enabled_in_runs : actif en run normale ; faux pendant le bac à sable (tools/elan_sandbox.sh l'active), pour ne pas changer l'équilibre ni les mesures avant validation. tiers : paliers dans l'ordre, from (seuil d'Élan), speed et damage (bonus multiplicatifs, 0,08 = +8 %). speed : la course seule (vitesse réelle rapportée à la vitesse du personnage d'au moins min_ratio) fait monter l'Élan de per_second, sans dépasser cap. still : sous speed_ratio de la vitesse, le joueur est arrêté ; après grace_seconds, l'Élan baisse de decay_per_second. upkeep_decay_per_second : au-dessus du plafond de la course, l'Élan s'érode jusqu'à lui ; seuls les gestes le tiennent haut. hit_loss : perdu à chaque coup qui entame les PV. perfect_dodge : un coup évité pendant le dash (esquive parfaite, une fois par dash) donne gain et rend cooldown_refund de la recharge du dash, avec le son audio. Valeurs de départ du 16 octobre, à régler en jouant.",
     "enabled_in_runs": false,
     "tiers": [
         { "from": 0.34, "speed": 0.08, "damage": 0.10 },
@@ -9,5 +9,6 @@
     "speed": { "min_ratio": 0.85, "per_second": 0.04, "cap": 0.34 },
     "still": { "speed_ratio": 0.15, "grace_seconds": 0.4, "decay_per_second": 0.5 },
     "upkeep_decay_per_second": 0.03,
-    "hit_loss": 0.33
+    "hit_loss": 0.33,
+    "perfect_dodge": { "gain": 0.25, "cooldown_refund": 0.5, "audio": "sfx_armor_parry" }
 }

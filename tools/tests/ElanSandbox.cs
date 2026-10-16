@@ -36,6 +36,7 @@ public partial class ElanSandbox : Node
     private string _captureDir;
     private float _captureSeconds;
     private float _elapsed;
+    private int _dodgesBeforeCapture;
 
     public override async void _Ready()
     {
@@ -108,15 +109,29 @@ public partial class ElanSandbox : Node
         }
         PlayerElan elan = _player.Elan;
         _label.Text = string.Format(CultureInfo.InvariantCulture,
-            "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\ncréatures {5}  apparues {6}",
-            elan.Value, elan.Tier, elan.LastChange, elan.SpeedAt(elan.Tier), elan.DamageAt(elan.Tier), _crowd.Count, _spawned);
+            "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\nesquives parfaites {7}\ncréatures {5}  apparues {6}",
+            elan.Value, elan.Tier, elan.LastChange, elan.SpeedAt(elan.Tier), elan.DamageAt(elan.Tier), _crowd.Count, _spawned,
+            _player.PerfectDodges);
     }
 
-    /// <summary>Course en cercle large, puis une image du joueur et de sa jauge.</summary>
+    /// <summary>
+    /// Fonce vers la créature la plus proche et dashe au contact ; passé le délai, l'image est gardée juste après une esquive
+    /// parfaite (onde visible), ou au bout de dix secondes de plus.
+    /// </summary>
     private void StepCapture()
     {
-        _player.AIInputOverride = Vector2.FromAngle(_elapsed * 0.35f).Orthogonal();
+        Enemy nearest = NearestCrowd(out float distance);
+        _player.AIInputOverride = nearest != null
+            ? (nearest.GlobalPosition - _player.GlobalPosition).Normalized()
+            : Vector2.FromAngle(_elapsed * 0.35f).Orthogonal();
+        if (nearest != null && distance < 70f && _player.Mobility.CooldownRemaining <= 0f)
+            _player.Mobility.Request();
         if (_elapsed < _captureSeconds)
+        {
+            _dodgesBeforeCapture = _player.PerfectDodges;
+            return;
+        }
+        if (_player.PerfectDodges == _dodgesBeforeCapture && _elapsed < _captureSeconds + 10f)
             return;
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/elan_{_captureSeconds:0}s.png";
@@ -124,6 +139,24 @@ public partial class ElanSandbox : Node
         GD.Print($"[ElanSandbox] Capture : {path}");
         GetTree().Quit(0);
         _captureDir = null;
+    }
+
+    private Enemy NearestCrowd(out float distance)
+    {
+        Enemy nearest = null;
+        distance = float.MaxValue;
+        foreach (Enemy enemy in _crowd)
+        {
+            if (!IsInstanceValid(enemy) || !enemy.IsActive)
+                continue;
+            float candidate = enemy.GlobalPosition.DistanceTo(_player.GlobalPosition);
+            if (candidate < distance)
+            {
+                distance = candidate;
+                nearest = enemy;
+            }
+        }
+        return nearest;
     }
 
     /// <summary>Retire les créatures mortes ou semées, puis complète la foule sur un anneau autour du joueur.</summary>

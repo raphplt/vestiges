@@ -6,7 +6,7 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Tests;
 
-/// <summary>Élan (plan 52, lot E1) : règles du module seul, puis effet réel sur la course du joueur.</summary>
+/// <summary>Élan (plan 52) : règles du module seul, effet réel sur la course du joueur, puis les gestes (lots E2 et suivants).</summary>
 public partial class MovementRegression
 {
     private const float ElanStep = 1f / 60f;
@@ -16,6 +16,7 @@ public partial class MovementRegression
         CheckElanConfig();
         CheckElanModule();
         await CheckElanPlayer();
+        await CheckPerfectDodge();
     }
 
     private void CheckElanConfig()
@@ -93,6 +94,42 @@ public partial class MovementRegression
         float restored = (await Measure(60)).Length();
         Check(Math.Abs(restored - baseSpeed) < 0.5f, $"élan éteint : vitesse de base rendue ({restored:F1} / {baseSpeed:F1})");
         SetActions(Vector2.Zero);
+    }
+
+    /// <summary>Lot E2 : un coup évité pendant le dash donne de l'Élan et rend de la recharge, une fois par dash.</summary>
+    private async Task CheckPerfectDodge()
+    {
+        ElanConfig config = ElanConfig.Load();
+        await ReadyMobility();
+        _player.SetElanEnabled(true);
+        SetActions(Vector2.Right);
+        PressMobility();
+        await Step(1);
+        ReleaseMobility();
+        float cooldownBefore = _player.Mobility.CooldownRemaining;
+        PlayerDamageResult dodged = _player.TakeDamage(5f);
+        // La course de l'image du dash ajoute une miette d'Élan : tolérance de 0,01.
+        float afterDodge = _player.Elan.Value;
+        Check(!dodged.Applied && Math.Abs(afterDodge - config.PerfectDodgeGain) < 0.01f && _player.PerfectDodges == 1,
+            $"esquive parfaite : coup évité, Élan {_player.Elan.Value:F2} (attendu {config.PerfectDodgeGain:F2})");
+        float refunded = cooldownBefore - _player.Mobility.CooldownRemaining;
+        Check(Math.Abs(refunded - _player.Mobility.CooldownSeconds * config.PerfectDodgeCooldownRefund) < 0.001f,
+            $"esquive parfaite : {refunded:F2} s de recharge rendues");
+        _player.TakeDamage(5f);
+        Check(Math.Abs(_player.Elan.Value - afterDodge) < 0.01f && _player.PerfectDodges == 1,
+            "esquive parfaite : une seule par dash, même sous plusieurs coups");
+        await Step(12);
+        SetActions(Vector2.Zero);
+        Check(_player.TakeDamage(1f).Applied, "esquive parfaite : hors du dash, le coup porte");
+
+        _player.SetElanEnabled(false);
+        await ReadyMobility();
+        PressMobility();
+        await Step(1);
+        ReleaseMobility();
+        Check(!_player.TakeDamage(5f).Applied && _player.Elan.Value == 0f && _player.PerfectDodges == 1,
+            "élan éteint : le dash protège toujours, sans esquive parfaite");
+        await Step(12);
     }
 
     private static void Advance(PlayerElan elan, float seconds, float speedRatio)

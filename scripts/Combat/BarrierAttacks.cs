@@ -283,7 +283,7 @@ public sealed class BarrierAttacks
 	/// </summary>
 	private bool HitPlayer(Player player, float damage, Vector2 from)
 	{
-		if (player.Mobility.IsInvulnerable)
+		if (player.DodgesHit())
 			return false;
 		_eventBus.EmitSignal(EventBus.SignalName.PlayerHitBy, _causeId, damage);
 		return player.TakeDamage(damage, from).Applied;

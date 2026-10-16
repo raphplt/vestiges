@@ -201,6 +201,12 @@ public sealed class PlayerMobility
             _locomotionVelocity = actualVelocity;
     }
 
+    /// <summary>Rend une part de la recharge pleine du dash (esquive parfaite, plan 52 E2), sans descendre sous zéro.</summary>
+    public void RefundCooldown(float fraction)
+    {
+        CooldownRemaining = Mathf.Max(0f, CooldownRemaining - CooldownSeconds * fraction);
+    }
+
     public void StopDash()
     {
         if (IsDashing)

@@ -25,6 +25,11 @@ public sealed class ElanConfig
     public float StillDecayPerSecond { get; init; }
     public float UpkeepDecayPerSecond { get; init; }
     public float HitLoss { get; init; }
+    /// <summary>Esquive parfaite (lot E2) : un coup évité pendant le dash, compté une fois par dash.</summary>
+    public float PerfectDodgeGain { get; init; }
+    /// <summary>Part de la recharge du dash rendue par une esquive parfaite.</summary>
+    public float PerfectDodgeCooldownRefund { get; init; }
+    public string PerfectDodgeAudio { get; init; } = "";
 
     public static ElanConfig Load()
     {
@@ -52,7 +57,8 @@ public sealed class ElanConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "élan", "enabled_in_runs", "tiers", "speed", "still", "upkeep_decay_per_second", "hit_loss");
+            reader.AllowOnly(root, "élan", "enabled_in_runs", "tiers", "speed", "still", "upkeep_decay_per_second", "hit_loss",
+                "perfect_dodge");
             List<ElanTier> tiers = new();
             float previous = 0f;
             foreach (JsonElement entry in reader.List(root, "tiers", 1))
@@ -68,6 +74,8 @@ public sealed class ElanConfig
             reader.AllowOnly(speed, "speed", "min_ratio", "per_second", "cap");
             JsonElement still = reader.Section(root, "still");
             reader.AllowOnly(still, "still", "speed_ratio", "grace_seconds", "decay_per_second");
+            JsonElement dodge = reader.Section(root, "perfect_dodge");
+            reader.AllowOnly(dodge, "perfect_dodge", "gain", "cooldown_refund", "audio");
             ElanConfig config = new()
             {
                 EnabledInRuns = reader.Flag(root, "enabled_in_runs"),
@@ -80,6 +88,9 @@ public sealed class ElanConfig
                 StillDecayPerSecond = reader.NonNegative(still, "decay_per_second"),
                 UpkeepDecayPerSecond = reader.NonNegative(root, "upkeep_decay_per_second"),
                 HitLoss = reader.Chance(root, "hit_loss"),
+                PerfectDodgeGain = reader.Chance(dodge, "gain"),
+                PerfectDodgeCooldownRefund = reader.Chance(dodge, "cooldown_refund"),
+                PerfectDodgeAudio = reader.Text(dodge, "audio"),
             };
             if (reader.Error == null && config.SpeedCap < tiers[0].From - 0.0001f)
                 reader.Fail("speed.cap sous le premier palier : la course n'en atteindrait aucun");

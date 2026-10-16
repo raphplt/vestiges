@@ -142,3 +142,19 @@ Documenté : un dash compte comme de la course, et courir freiné (eau, ralentis
 
 **Suite proposée : E2, l'esquive parfaite.**
 
+
+## 8. Compte rendu E2 — 16 octobre 2026 (soir)
+
+**Livré :**
+- **Esquive parfaite** : le premier coup évité pendant un dash donne +0,25 d'Élan et rend la moitié de la recharge du dash. Elle compte une fois par dash, même sous plusieurs coups.
+- **Une seule entrée pour tous les coups** : `Player.DodgesHit()`, appelée par `TakeDamage`, la Barrière et l'Indicible (qui testaient l'invulnérabilité eux-mêmes). L'esquive compte donc quelle que soit la source : contact, projectile, zone, boss.
+- **Retour** : son clair (la parade d'armure, plus aiguë, provisoire), éclair blanc chaud du joueur et onde qui s'ouvre au sol en quatre rayons, cuits au chargement.
+- **Réglages** dans `elan.json` (`perfect_dodge` : gain, part de recharge rendue, son).
+- **Élan éteint** (run normale) : le dash protège comme avant, sans gain ni recharge rendue. L'équilibre ne change pas.
+- **Bac à sable** : compteur d'esquives parfaites à l'affichage. En mode capture, le bot fonce vers la créature la plus proche et dashe au contact.
+
+**Vérifié :** build sans avertissement ; `tools/test_movement.sh` vert, avec 5 contrôles de plus (gain, recharge rendue, une seule fois par dash, coup qui porte hors du dash, Élan éteint).
+
+**Pas encore vérifié** : la capture de l'onde. La dernière capture du bac à sable a gardé l'écran de chargement au lieu du jeu, à comprendre avant de conclure sur le rendu.
+
+**Suite : E3, le saut du vide.** Proposé : l'Élan « porte » le dash au-dessus du vide. Un dash fait environ 70 px et une cellule de Néant 128 px, donc un dash seul ne franchit jamais un trou. Au-dessus du vide, le dash se prolonge d'une distance qui grandit avec le palier (par exemple 0, 64, 128 puis 192 px). Franchir un trou et retomber sur le sol donne +0,15. Atterrir dans le vide, c'est y marcher, et payer (plan 51 §11).
