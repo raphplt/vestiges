@@ -5,7 +5,8 @@ namespace Vestiges.World;
 
 /// <summary>
 /// Réglages des terres successives (plan 51, section <c>lands</c> de data/world/world_gen.json) : taille d'une terre et
-/// part des lieux et des coffres gardée par rapport à la grande carte. Éteintes, la run garde sa carte unique.
+/// part des lieux et des coffres gardée par rapport à la grande carte. Allumées par défaut (plan 51 §15) ; éteintes, la
+/// run garde la grande carte en mosaïque.
 /// </summary>
 public sealed class LandsConfig
 {
@@ -28,8 +29,9 @@ public sealed class LandsConfig
         }
         bool enabled = section.GetValueOrDefault("enabled", false).AsBool();
 #if TOOLS
-        // Prototype des terres : allumées pour une run de dev par --lands, sans toucher au réglage des runs normales.
-        enabled |= System.Array.IndexOf(OS.GetCmdlineUserArgs(), "--lands") >= 0;
+        // Runs de dev : --lands allume les terres, --no-lands rend la grande carte en mosaïque (mesures, comparaisons).
+        string[] args = OS.GetCmdlineUserArgs();
+        enabled = (enabled || System.Array.IndexOf(args, "--lands") >= 0) && System.Array.IndexOf(args, "--no-lands") < 0;
 #endif
         return new LandsConfig
         {

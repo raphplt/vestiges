@@ -112,7 +112,8 @@ public partial class ErasureManager : Node
         LoadConfig();
         _difficultySpeed = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId).ErasureSpeed;
 
-        _clock = GetNode<RunClock>("../RunClock");
+        // Exigée au premier pas seulement : un Effacement posé seul sans tourner (bancs) n'en a pas besoin.
+        _clock = GetNodeOrNull<RunClock>("../RunClock");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
@@ -164,6 +165,7 @@ public partial class ErasureManager : Node
         CachePlayer();
         if (_player == null || !IsInstanceValid(_player) || _player.IsDead)
             return;
+        _clock ??= GetNode<RunClock>("../RunClock");
 
         // Sur une terre, toutes les cellules sont déjà inscrites par le front.
         if (_front == null)

@@ -2207,3 +2207,5 @@ Reprise du plan 51 pour formaliser la boucle avant de l'implémenter. Raphaël r
 - **Ordre** : « valider ça, puis ensuite, quand ça sera bon, on passera sur l'Élan » ; le prototype des terres vient après les lots E2 et E3.
 
 **17 octobre, après essai du bac à sable** : l'esquive parfaite (lot E2) « c'est un peu difficile mais c'est une bonne chose ». **Ordre changé** : « je voudrais d'abord bosser sur la boucle de jeu et le cycle plutôt ». Le prototype des terres (plan 51, P0 à P3) passe avant les lots E3 à E6 de l'Élan ; le vide s'y traverse d'abord à pied, en payant, et le saut d'Élan viendra avec E3.
+
+**17 octobre, terres par défaut** : « je voudrais que tu branches le nouveau système sur le jeu principal, par défaut ». Toutes les runs passent par les terres (plan 51 §15), la grande carte reste disponible aux mesures (`--no-lands`). Idée du même jour, non tranchée : « faire quelque chose avec les ennemis qu'on tue ? avoir une mécanique liée à ça. Je ne suis pas sûr de cette idée. » Trois pistes au plan 51 §15, la recommandée : les morts dans le cercle d'un Mémorial le raniment plus vite.

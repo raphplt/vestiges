@@ -81,7 +81,7 @@ tools/run_dev.sh res://scenes/Main.tscn -- \
 | `teleport on` / `teleport off` | Téléportation au clic droit |
 | `move 100 -50` | Position du joueur dans le monde |
 | `spawn shadow_crawler 100 -50` | ID de créature et position dans le monde |
-| `land next` / `land 2` | Terre suivante, ou terre de rang donné (plan 51) : la carte se vide et la suivante se construit, joueur et build intacts. Petites terres d’un biome si la run est lancée avec `--lands` (`tools/run_dev.sh -- --lands`) |
+| `land next` / `land 2` | Terre suivante, ou terre de rang donné (plan 51) : la carte se vide et la suivante se construit, joueur et build intacts. Les terres sont la règle par défaut ; `--no-lands` (`tools/run_dev.sh -- --no-lands`) rend la grande carte en mosaïque, pour les mesures et comparaisons |
 
 Pour capturer l’atelier avec le banc existant : `CAPTURE_EXTRA_ARGS=--capture-dev-tools tools/capture_run.sh /tmp/vestiges-atelier`. Il produit une vue joueur/armes et une vue temps/console.
 

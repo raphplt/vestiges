@@ -630,3 +630,17 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
 Relevé : les quêtes « battre la Barrière » et « battre l'Indicible » ne sont pas atteignables sur les terres. Ce sera à revoir avec le catalogue des quêtes quand les terres seront allumées pour tous.
 
 **Reste du prototype** : P2c (anneau de terre restante, minimap du front), P1e (recousure), le bot des terres, puis la séance de jeu de Raphaël. La charte des gardiens (attaques qui brisent le sol, un vrai corps par terre) attend la production.
+
+
+## 15. Terres par défaut, et une idée sur les ennemis tués — 17 octobre 2026
+
+**Décision de Raphaël** : « je voudrais que tu branches le nouveau système sur le jeu principal, par défaut ». Les terres deviennent la règle de toutes les runs. La grande carte reste accessible aux mesures par le drapeau de dev `--no-lands`. La fusion vers `main` attend que l'agent des optimisations macOS ait commité son travail en cours dans le dossier de `main`.
+
+**Idée de Raphaël, à confirmer** : « faire quelque chose avec les ennemis qu'on tue ? avoir une mécanique liée à ça. Je ne suis pas sûr de cette idée. » Pistes proposées, rien de codé :
+1. **Les morts raniment le Mémorial** (recommandé) : une créature tuée dans le cercle le remplit un peu plus vite. Le maintien devient un vrai combat, et un bon build ravive plus vite. Lisible, peu coûteux.
+2. **Les morts retiennent la terre** : tuer près du front repousse sa chute à cet endroit. Original et proche du thème (abattre l'oubli, c'est se souvenir), mais il faut voir le front reculer : à faire après l'anneau et la minimap du front.
+3. **Les morts nourrissent le gardien** : chaque mort sur la terre l'endurcit et enrichit son butin. Ce pari double celui des lumières en trop.
+
+**Branché par défaut (branche `terres`), même jour.** `lands.enabled` passe à vrai ; `--no-lands` rend la grande carte aux runs de dev. Validation complète : 36 suites sur 40 vertes au premier passage.
+- Trois échecs, les bancs des effets de perks, des armes et des objets en combat, venaient d'un nouvel oubli de P0 : ils créent un Effacement seul, sans horloge à côté. L'Effacement cherche désormais l'horloge sans l'exiger au démarrage, et l'exige au premier pas ; les trois suites sont vertes.
+- Un échec ne vient pas de ce chantier : le banc de navigation des menus attend une Scaphandrière sans portrait, or un portrait lui a été ajouté le 14 octobre (`c46e20e2`). Il faudra le mettre à jour.
