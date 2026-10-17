@@ -43,6 +43,7 @@ public partial class CatalogContractRegression : Node
             CheckCrises();
             CheckErasure();
             CheckRunEvents();
+            CheckSpawnFlow();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -872,6 +873,55 @@ public partial class CatalogContractRegression : Node
             Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(RunEventDataLoader.Find("hunt"), hunt),
                 $"micro-événements, {name} refusé sans publication ({error})");
         }
+    }
+
+    /// <summary>Flux d'apparition (plan 26 Q7e-1) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckSpawnFlow()
+    {
+        Check(Vestiges.Spawn.SpawnFlowConfig.TryLoad(out Vestiges.Spawn.SpawnFlowConfig loaded, out string loadError)
+            && loaded.Integer("max_enemies_on_screen") == 110 && loaded.HpSegments.Count == 4
+            && loaded.FallbackResurgencePool.Count(id => id == "shade") == 2, $"flux d'apparition du dépôt accepté {loadError}");
+        string valid = FileAccess.GetFileAsString(Vestiges.Spawn.SpawnFlowConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["max_enemies"] = 110, "clé « max_enemies » inconnue"),
+            ("intervalle absent", root => root.Remove("base_spawn_interval"), "base_spawn_interval"),
+            ("intervalle nul", root => root["base_spawn_interval"] = 0, "base_spawn_interval"),
+            ("intervalle minimal au-dessus du normal", root => root["min_spawn_interval"] = 3, "min_spawn_interval ≤ base_spawn_interval"),
+            ("plafond fractionnaire", root => root["max_enemies_on_screen"] = 110.5, "max_enemies_on_screen"),
+            ("plafond nul", root => root["max_enemies_on_screen"] = 0, "max_enemies_on_screen"),
+            ("décroissance négative", root => root["spawn_interval_decay_per_minute"] = -0.01, "spawn_interval_decay_per_minute"),
+            ("PV d'emblée nuls", root => root["flat_hp_multiplier"] = 0, "flat_hp_multiplier"),
+            ("chance de groupe hors borne", root => root["same_type_cluster_chance"] = 1.5, "same_type_cluster_chance"),
+            ("groupe inversé", root => root["same_type_cluster_min"] = 6, "same_type_cluster_min ≤ same_type_cluster_max"),
+            ("écart inversé", root => root["same_type_cluster_spacing_min"] = 60, "same_type_cluster_spacing_min ≤ same_type_cluster_spacing_max"),
+            ("marge inversée", root => root["spawn_screen_margin_min"] = 200, "spawn_screen_margin_min ≤ spawn_screen_margin_max"),
+            ("rafale de crise fractionnaire", root => root["crisis_burst_base"] = 8.5, "crisis_burst_base"),
+            ("arc au-delà du tour", root => root["spawn_forward_arc_degrees"] = 400, "spawn_forward_arc_degrees"),
+            ("biais hors borne", root => root["spawn_forward_bias"] = -0.1, "spawn_forward_bias"),
+            ("Péril négatif", root => root["time_peril_per_minute"] = -0.5, "time_peril_per_minute"),
+            ("secours inconnu", root => root["fallback_exploration_pool"]![0] = "dragon", "créature « dragon » inconnue"),
+            ("secours vide", root => root["fallback_resurgence_pool"] = new JsonArray(), "fallback_resurgence_pool"),
+            ("secours absent", root => root.Remove("fallback_exploration_pool"), "fallback_exploration_pool"),
+            ("segment inconnu", root => root["hp_scaling_segments"]![0]!["slope"] = 1.1, "clé « slope » inconnue"),
+            ("pente nulle", root => root["damage_scaling_segments"]![0]!["per_minute"] = 0, "per_minute"),
+            ("minute négative", root => root["hp_scaling_segments"]![1]!["from_minute"] = -4, "from_minute"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"base_spawn_interval\": " : Mutated(valid, mutate);
+            bool refused = !Vestiges.Spawn.SpawnFlowConfig.TryParse(text, EnemyDataLoader.Exists, out Vestiges.Spawn.SpawnFlowConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"flux d'apparition, {name} refusé ({error})");
+        }
+        const string minimal = "{ \"base_spawn_interval\": 2, \"min_spawn_interval\": 0.3, \"spawn_interval_decay_per_minute\": 0.05, "
+            + "\"max_enemies_on_screen\": 120, \"fallback_exploration_pool\": [\"shade\"], \"fallback_resurgence_pool\": [\"shade\"], "
+            + "\"local_enemy_target_base\": 10 }";
+        Check(Vestiges.Spawn.SpawnFlowConfig.TryParse(minimal, EnemyDataLoader.Exists, out Vestiges.Spawn.SpawnFlowConfig defaults, out string minimalError)
+            && defaults.Number("opening_local_target_start") == 10f && defaults.Number("local_enemy_radius") == 900f
+            && defaults.Integer("local_spawn_burst_max") == 4 && defaults.Number("crisis_spawn_multiplier") == 1.65f
+            && defaults.Number("spawn_forward_arc_degrees") == 140f && defaults.HpSegments.Count == 1 && defaults.HpSegments[0] == (0f, 1f),
+            $"flux d'apparition : fichier minimal, secours d'avant gardés {minimalError}");
     }
 
     private void CheckAtmosphere()

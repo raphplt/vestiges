@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**17 octobre, nuit — flux d'apparition lu strictement ([plan 26 Q7e-1](26-qualite-et-dette-technique.md), §68) :** `spawn_flow.json` a un lecteur strict ; le jeu ne retombe plus sur d'anciens réglages oubliés si le fichier est cassé, et une créature de secours inconnue refuse le fichier au lieu d'être retirée en silence. Mêmes valeurs effectives.
+
 **17 octobre, nuit — Résurgences et Effacement lus strictement ([plan 26 Q7d-1, Q7d-2](26-qualite-et-dette-technique.md), §68) :** `crises.json` et `erasure.json` ont chacun un lecteur unique et strict au lieu de sept lectures indépendantes qui ignoraient un fichier invalide ; mêmes valeurs effectives. Puis `run_events.json` (Q7d-3) : contrat par sorte d'événement. Q7d terminé ; une vingtaine de lecteurs restent à durcir (Q7e à Q7g proposés).
 
 **17 octobre, nuit — fermes et chantiers lus strictement ([plan 26 Q7c-4c](26-qualite-et-dette-technique.md), §68) :** `farms.json` et `quarry_sites.json` sont contrôlés (décors présents, positions, rangées, scènes) ; un fichier absent ou invalide arrête le chargement au lieu de désactiver le lieu en silence ; mêmes valeurs effectives.

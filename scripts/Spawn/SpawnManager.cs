@@ -840,149 +840,89 @@ public partial class SpawnManager : Node2D
 	// Chargement config
 	// =========================================================
 
+	/// <summary>Réglages contrôlés au chargement de la run (SpawnFlowConfig, plan 26 Q7e-1) ; un champ absent garde son secours.</summary>
 	private void LoadScalingConfig()
 	{
-		FileAccess file = FileAccess.Open("res://data/scaling/spawn_flow.json", FileAccess.ModeFlags.Read);
-		if (file == null)
-		{
-			GD.PushError("[SpawnManager] Cannot open spawn_flow.json, using defaults");
-			SetDefaults();
-			return;
-		}
-
-		string jsonText = file.GetAsText();
-		file.Close();
-
-		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
-		{
-			GD.PushError($"[SpawnManager] Parse error: {json.GetErrorMessage()}");
-			SetDefaults();
-			return;
-		}
-
-		Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-		foreach (string error in ReadFallbackPool(dict, "fallback_exploration_pool", _fallbackExplorationPool))
-			GD.PushError($"[SpawnManager] {error}");
-		foreach (string error in ReadFallbackPool(dict, "fallback_resurgence_pool", _fallbackResurgencePool))
-			GD.PushError($"[SpawnManager] {error}");
-		_baseSpawnInterval = (float)dict["base_spawn_interval"].AsDouble();
-		_minSpawnInterval = (float)dict["min_spawn_interval"].AsDouble();
-		_spawnIntervalDecay = (float)dict["spawn_interval_decay_per_minute"].AsDouble();
-		ReadSegments(dict, "hp_scaling_segments", _hpSegmentFromMinute, _hpSegmentPerMinute);
-		ReadSegments(dict, "damage_scaling_segments", _dmgSegmentFromMinute, _dmgSegmentPerMinute);
-		_flatHpMultiplier = dict.ContainsKey("flat_hp_multiplier") ? (float)dict["flat_hp_multiplier"].AsDouble() : 1f;
-		_flatDmgMultiplier = dict.ContainsKey("flat_dmg_multiplier") ? (float)dict["flat_dmg_multiplier"].AsDouble() : 1f;
-		_rangedDamageGrowthShare = dict.ContainsKey("ranged_damage_growth_share") ? (float)dict["ranged_damage_growth_share"].AsDouble() : 1f;
-		_xpGrowthPerMinute = dict.ContainsKey("xp_growth_per_minute") ? (float)dict["xp_growth_per_minute"].AsDouble() : 0f;
-		_xpOblivionBonus = dict.ContainsKey("xp_oblivion_bonus") ? (float)dict["xp_oblivion_bonus"].AsDouble() : 0f;
-		_xpCrisisMultiplier = dict.ContainsKey("xp_crisis_multiplier") ? (float)dict["xp_crisis_multiplier"].AsDouble() : 1f;
-		_maxEnemies = (int)dict["max_enemies_on_screen"].AsDouble();
-		_maxEnemiesGrowthPerMinute = dict.ContainsKey("max_enemies_growth_per_minute") ? (float)dict["max_enemies_growth_per_minute"].AsDouble() : 0f;
-		_enemySpeedBaseMultiplier = dict.ContainsKey("enemy_speed_base_multiplier") ? (float)dict["enemy_speed_base_multiplier"].AsDouble() : 1f;
-		_enemySpeedGrowthPerMinute = dict.ContainsKey("enemy_speed_growth_per_minute") ? (float)dict["enemy_speed_growth_per_minute"].AsDouble() : 0f;
-		_enemySpeedMeleeBonus = dict.ContainsKey("enemy_speed_melee_bonus") ? (float)dict["enemy_speed_melee_bonus"].AsDouble() : 1f;
-		_enemySpeedRangedBonus = dict.ContainsKey("enemy_speed_ranged_bonus") ? (float)dict["enemy_speed_ranged_bonus"].AsDouble() : 1f;
-		_enemySpeedEliteBonus = dict.ContainsKey("enemy_speed_elite_bonus") ? (float)dict["enemy_speed_elite_bonus"].AsDouble() : 1f;
-		_enemyAggressionBaseMultiplier = dict.ContainsKey("enemy_aggression_base_multiplier") ? (float)dict["enemy_aggression_base_multiplier"].AsDouble() : 1f;
-		_enemyAggressionGrowthPerMinute = dict.ContainsKey("enemy_aggression_growth_per_minute") ? (float)dict["enemy_aggression_growth_per_minute"].AsDouble() : 0f;
-		_enemyAggressionMeleeBonus = dict.ContainsKey("enemy_aggression_melee_bonus") ? (float)dict["enemy_aggression_melee_bonus"].AsDouble() : 1f;
-		_enemyAggressionRangedBonus = dict.ContainsKey("enemy_aggression_ranged_bonus") ? (float)dict["enemy_aggression_ranged_bonus"].AsDouble() : 1f;
-		_enemyAggressionEliteBonus = dict.ContainsKey("enemy_aggression_elite_bonus") ? (float)dict["enemy_aggression_elite_bonus"].AsDouble() : 1f;
-		_dayEnemyDespawnDistance = dict.ContainsKey("day_enemy_despawn_distance") ? (float)dict["day_enemy_despawn_distance"].AsDouble() : 1400f;
-		_dayLocalEnemyRadius = dict.ContainsKey("local_enemy_radius") ? (float)dict["local_enemy_radius"].AsDouble() : 900f;
-		_dayLocalEnemyTargetBase = dict.ContainsKey("local_enemy_target_base") ? (float)dict["local_enemy_target_base"].AsDouble() : 24f;
-		_openingGraceSec = dict.ContainsKey("opening_grace_seconds") ? (float)dict["opening_grace_seconds"].AsDouble() : 0f;
-		_openingRampSec = dict.ContainsKey("opening_ramp_seconds") ? (float)dict["opening_ramp_seconds"].AsDouble() : 0f;
-		_openingLocalTargetStart = dict.ContainsKey("opening_local_target_start") ? (float)dict["opening_local_target_start"].AsDouble() : _dayLocalEnemyTargetBase;
-		_openingIntervalMultiplierStart = dict.ContainsKey("opening_interval_multiplier_start") ? (float)dict["opening_interval_multiplier_start"].AsDouble() : 1f;
-		_earlyDensityMultiplier = dict.ContainsKey("early_density_multiplier") ? (float)dict["early_density_multiplier"].AsDouble() : 1f;
-		_earlyDensityUntilMinute = dict.ContainsKey("early_density_until_minute") ? (float)dict["early_density_until_minute"].AsDouble() : 0f;
-		_earlyDensityRampMinutes = dict.ContainsKey("early_density_ramp_minutes") ? (float)dict["early_density_ramp_minutes"].AsDouble() : 0f;
-		_earlyXpMultiplier = dict.ContainsKey("early_xp_multiplier") ? (float)dict["early_xp_multiplier"].AsDouble() : 1f;
-		_dayLocalEnemyTargetGrowthPerMinute = dict.ContainsKey("local_enemy_target_growth_per_minute") ? (float)dict["local_enemy_target_growth_per_minute"].AsDouble() : 6f;
-		_dayLocalSpawnBurstMax = dict.ContainsKey("local_spawn_burst_max") ? (int)dict["local_spawn_burst_max"].AsDouble() : 4;
-		_sameTypeClusterChance = dict.ContainsKey("same_type_cluster_chance") ? (float)dict["same_type_cluster_chance"].AsDouble() : 0.4f;
-		_sameTypeClusterMin = dict.ContainsKey("same_type_cluster_min") ? (int)dict["same_type_cluster_min"].AsDouble() : 2;
-		_sameTypeClusterMax = dict.ContainsKey("same_type_cluster_max") ? (int)dict["same_type_cluster_max"].AsDouble() : 4;
-		_sameTypeClusterSpacingMin = dict.ContainsKey("same_type_cluster_spacing_min") ? (float)dict["same_type_cluster_spacing_min"].AsDouble() : 18f;
-		_sameTypeClusterSpacingMax = dict.ContainsKey("same_type_cluster_spacing_max") ? (float)dict["same_type_cluster_spacing_max"].AsDouble() : 46f;
-		_crisisSpawnMultiplier = dict.ContainsKey("crisis_spawn_multiplier") ? (float)dict["crisis_spawn_multiplier"].AsDouble() : _crisisSpawnMultiplier;
-		_crisisCapMultiplier = dict.ContainsKey("crisis_cap_multiplier") ? (float)dict["crisis_cap_multiplier"].AsDouble() : 1f;
-		_crisisBurstBase = dict.ContainsKey("crisis_burst_base") ? (int)dict["crisis_burst_base"].AsDouble() : _crisisBurstBase;
-		_crisisBurstPerIntensity = dict.ContainsKey("crisis_burst_per_intensity") ? (int)dict["crisis_burst_per_intensity"].AsDouble() : _crisisBurstPerIntensity;
-		_lateGameSpawnMultiplier = dict.ContainsKey("late_game_spawn_multiplier") ? (float)dict["late_game_spawn_multiplier"].AsDouble() : _lateGameSpawnMultiplier;
-		_endgameSpawnMultiplier = dict.ContainsKey("endgame_spawn_multiplier") ? (float)dict["endgame_spawn_multiplier"].AsDouble() : _endgameSpawnMultiplier;
-		_crisisHpMultiplier = dict.ContainsKey("crisis_hp_multiplier") ? (float)dict["crisis_hp_multiplier"].AsDouble() : _crisisHpMultiplier;
-		_crisisDamageMultiplier = dict.ContainsKey("crisis_damage_multiplier") ? (float)dict["crisis_damage_multiplier"].AsDouble() : _crisisDamageMultiplier;
-		_lateGameHpMultiplier = dict.ContainsKey("late_game_hp_multiplier") ? (float)dict["late_game_hp_multiplier"].AsDouble() : _lateGameHpMultiplier;
-		_lateGameDamageMultiplier = dict.ContainsKey("late_game_damage_multiplier") ? (float)dict["late_game_damage_multiplier"].AsDouble() : _lateGameDamageMultiplier;
-		_endgameHpMultiplier = dict.ContainsKey("endgame_hp_multiplier") ? (float)dict["endgame_hp_multiplier"].AsDouble() : _endgameHpMultiplier;
-		_endgameDamageMultiplier = dict.ContainsKey("endgame_damage_multiplier") ? (float)dict["endgame_damage_multiplier"].AsDouble() : _endgameDamageMultiplier;
-		_timePerilFromMinute = dict.ContainsKey("time_peril_from_minute") ? (float)dict["time_peril_from_minute"].AsDouble() : 0f;
-		_timePerilPerMinute = dict.ContainsKey("time_peril_per_minute") ? (float)dict["time_peril_per_minute"].AsDouble() : 0f;
-		_positionPicker.MarginMin = dict.ContainsKey("spawn_screen_margin_min") ? (float)dict["spawn_screen_margin_min"].AsDouble() : _positionPicker.MarginMin;
-		_positionPicker.MarginMax = dict.ContainsKey("spawn_screen_margin_max") ? (float)dict["spawn_screen_margin_max"].AsDouble() : _positionPicker.MarginMax;
-		_positionPicker.ForwardBias = dict.ContainsKey("spawn_forward_bias") ? (float)dict["spawn_forward_bias"].AsDouble() : _positionPicker.ForwardBias;
-		_positionPicker.ForwardArcDegrees = dict.ContainsKey("spawn_forward_arc_degrees") ? (float)dict["spawn_forward_arc_degrees"].AsDouble() : _positionPicker.ForwardArcDegrees;
-		_positionPicker.LeadSeconds = dict.ContainsKey("spawn_speed_lead_seconds") ? (float)dict["spawn_speed_lead_seconds"].AsDouble() : _positionPicker.LeadSeconds;
-		_positionPicker.MinDistance = dict.ContainsKey("spawn_min_distance_px") ? (float)dict["spawn_min_distance_px"].AsDouble() : _positionPicker.MinDistance;
+		SpawnFlowConfig config = SpawnFlowConfig.Load();
+		_fallbackExplorationPool.Clear();
+		_fallbackExplorationPool.AddRange(config.FallbackExplorationPool);
+		_fallbackResurgencePool.Clear();
+		_fallbackResurgencePool.AddRange(config.FallbackResurgencePool);
+		CopySegments(config.HpSegments, _hpSegmentFromMinute, _hpSegmentPerMinute);
+		CopySegments(config.DamageSegments, _dmgSegmentFromMinute, _dmgSegmentPerMinute);
+		_baseSpawnInterval = config.Number("base_spawn_interval");
+		_minSpawnInterval = config.Number("min_spawn_interval");
+		_spawnIntervalDecay = config.Number("spawn_interval_decay_per_minute");
+		_maxEnemies = config.Integer("max_enemies_on_screen");
+		_flatHpMultiplier = config.Number("flat_hp_multiplier");
+		_flatDmgMultiplier = config.Number("flat_dmg_multiplier");
+		_rangedDamageGrowthShare = config.Number("ranged_damage_growth_share");
+		_xpGrowthPerMinute = config.Number("xp_growth_per_minute");
+		_xpOblivionBonus = config.Number("xp_oblivion_bonus");
+		_xpCrisisMultiplier = config.Number("xp_crisis_multiplier");
+		_maxEnemiesGrowthPerMinute = config.Number("max_enemies_growth_per_minute");
+		_enemySpeedBaseMultiplier = config.Number("enemy_speed_base_multiplier");
+		_enemySpeedGrowthPerMinute = config.Number("enemy_speed_growth_per_minute");
+		_enemySpeedMeleeBonus = config.Number("enemy_speed_melee_bonus");
+		_enemySpeedRangedBonus = config.Number("enemy_speed_ranged_bonus");
+		_enemySpeedEliteBonus = config.Number("enemy_speed_elite_bonus");
+		_enemyAggressionBaseMultiplier = config.Number("enemy_aggression_base_multiplier");
+		_enemyAggressionGrowthPerMinute = config.Number("enemy_aggression_growth_per_minute");
+		_enemyAggressionMeleeBonus = config.Number("enemy_aggression_melee_bonus");
+		_enemyAggressionRangedBonus = config.Number("enemy_aggression_ranged_bonus");
+		_enemyAggressionEliteBonus = config.Number("enemy_aggression_elite_bonus");
+		_dayEnemyDespawnDistance = config.Number("day_enemy_despawn_distance");
+		_dayLocalEnemyRadius = config.Number("local_enemy_radius");
+		_dayLocalEnemyTargetBase = config.Number("local_enemy_target_base");
+		_openingGraceSec = config.Number("opening_grace_seconds");
+		_openingRampSec = config.Number("opening_ramp_seconds");
+		_openingLocalTargetStart = config.Number("opening_local_target_start");
+		_openingIntervalMultiplierStart = config.Number("opening_interval_multiplier_start");
+		_earlyDensityMultiplier = config.Number("early_density_multiplier");
+		_earlyDensityUntilMinute = config.Number("early_density_until_minute");
+		_earlyDensityRampMinutes = config.Number("early_density_ramp_minutes");
+		_earlyXpMultiplier = config.Number("early_xp_multiplier");
+		_dayLocalEnemyTargetGrowthPerMinute = config.Number("local_enemy_target_growth_per_minute");
+		_dayLocalSpawnBurstMax = config.Integer("local_spawn_burst_max");
+		_sameTypeClusterChance = config.Number("same_type_cluster_chance");
+		_sameTypeClusterMin = config.Integer("same_type_cluster_min");
+		_sameTypeClusterMax = config.Integer("same_type_cluster_max");
+		_sameTypeClusterSpacingMin = config.Number("same_type_cluster_spacing_min");
+		_sameTypeClusterSpacingMax = config.Number("same_type_cluster_spacing_max");
+		_crisisSpawnMultiplier = config.Number("crisis_spawn_multiplier");
+		_crisisCapMultiplier = config.Number("crisis_cap_multiplier");
+		_crisisBurstBase = config.Integer("crisis_burst_base");
+		_crisisBurstPerIntensity = config.Integer("crisis_burst_per_intensity");
+		_lateGameSpawnMultiplier = config.Number("late_game_spawn_multiplier");
+		_endgameSpawnMultiplier = config.Number("endgame_spawn_multiplier");
+		_crisisHpMultiplier = config.Number("crisis_hp_multiplier");
+		_crisisDamageMultiplier = config.Number("crisis_damage_multiplier");
+		_lateGameHpMultiplier = config.Number("late_game_hp_multiplier");
+		_lateGameDamageMultiplier = config.Number("late_game_damage_multiplier");
+		_endgameHpMultiplier = config.Number("endgame_hp_multiplier");
+		_endgameDamageMultiplier = config.Number("endgame_damage_multiplier");
+		_timePerilFromMinute = config.Number("time_peril_from_minute");
+		_timePerilPerMinute = config.Number("time_peril_per_minute");
+		_positionPicker.MarginMin = config.Number("spawn_screen_margin_min");
+		_positionPicker.MarginMax = config.Number("spawn_screen_margin_max");
+		_positionPicker.ForwardBias = config.Number("spawn_forward_bias");
+		_positionPicker.ForwardArcDegrees = config.Number("spawn_forward_arc_degrees");
+		_positionPicker.LeadSeconds = config.Number("spawn_speed_lead_seconds");
+		_positionPicker.MinDistance = config.Number("spawn_min_distance_px");
 
 		GD.Print($"[SpawnManager] Config loaded — interval: {_baseSpawnInterval}s, max: {_maxEnemies}, crisis x{_crisisSpawnMultiplier:F2}");
 	}
 
-	/// <summary>Groupe de secours : chaque créature doit exister ; renvoie un message par absence (clé ou créature).</summary>
-	internal static List<string> ReadFallbackPool(Godot.Collections.Dictionary dict, string key, List<string> pool)
+	private static void CopySegments(IReadOnlyList<(float FromMinute, float PerMinute)> segments, List<float> fromMinute, List<float> perMinute)
 	{
-		pool.Clear();
-		if (!dict.ContainsKey(key))
-			return new List<string> { $"spawn_flow.json : {key} absent, aucun secours hors biome" };
-		foreach (Variant entry in dict[key].AsGodotArray())
-			pool.Add(entry.AsString());
-		return EnemyPools.KeepKnown(pool, $"spawn_flow.json, {key}");
-	}
-
-	private void SetDefaults()
-	{
-		_baseSpawnInterval = 2.0f;
-		_minSpawnInterval = 0.3f;
-		_spawnIntervalDecay = 0.05f;
-		_hpSegmentFromMinute.Clear();
-		_hpSegmentPerMinute.Clear();
-		_hpSegmentFromMinute.Add(0f);
-		_hpSegmentPerMinute.Add(1.06f);
-		_dmgSegmentFromMinute.Clear();
-		_dmgSegmentPerMinute.Clear();
-		_dmgSegmentFromMinute.Add(0f);
-		_dmgSegmentPerMinute.Add(1.04f);
-		_maxEnemies = 120;
-		_maxEnemiesGrowthPerMinute = 4f;
-		_enemySpeedBaseMultiplier = 1.10f;
-		_enemySpeedGrowthPerMinute = 0.025f;
-		_enemySpeedMeleeBonus = 1f;
-		_enemySpeedRangedBonus = 1f;
-		_enemySpeedEliteBonus = 1f;
-		_enemyAggressionBaseMultiplier = 1.05f;
-		_enemyAggressionGrowthPerMinute = 0.04f;
-		_enemyAggressionMeleeBonus = 1f;
-		_enemyAggressionRangedBonus = 1f;
-		_enemyAggressionEliteBonus = 1f;
-		_dayEnemyDespawnDistance = 1400f;
-		_dayLocalEnemyRadius = 920f;
-		_dayLocalEnemyTargetBase = 6f;
-		_dayLocalEnemyTargetGrowthPerMinute = 2.5f;
-		_dayLocalSpawnBurstMax = 3;
-		_sameTypeClusterChance = 0.6f;
-		_sameTypeClusterMin = 2;
-		_sameTypeClusterMax = 5;
-		_sameTypeClusterSpacingMin = 16f;
-		_sameTypeClusterSpacingMax = 42f;
-		_crisisSpawnMultiplier = 1.65f;
-		_crisisCapMultiplier = 1f;
-		_crisisBurstBase = 8;
-		_crisisBurstPerIntensity = 4;
-		_lateGameSpawnMultiplier = 1.4f;
-		_endgameSpawnMultiplier = 1.85f;
+		fromMinute.Clear();
+		perMinute.Clear();
+		foreach ((float from, float rate) in segments)
+		{
+			fromMinute.Add(from);
+			perMinute.Add(rate);
+		}
+		SortSegments(fromMinute, perMinute);
 	}
 
 	/// <summary>
@@ -1083,28 +1023,6 @@ public partial class SpawnManager : Node2D
 			growth *= Mathf.Pow(perMinute[i], minutes);
 		}
 		return growth;
-	}
-
-	private static void ReadSegments(Godot.Collections.Dictionary dict, string key, List<float> fromMinute, List<float> perMinute)
-	{
-		fromMinute.Clear();
-		perMinute.Clear();
-		if (dict.TryGetValue(key, out Variant segments))
-		{
-			foreach (Variant segment in segments.AsGodotArray())
-			{
-				Godot.Collections.Dictionary entry = segment.AsGodotDictionary();
-				fromMinute.Add((float)entry["from_minute"].AsDouble());
-				perMinute.Add((float)entry["per_minute"].AsDouble());
-			}
-		}
-		if (fromMinute.Count == 0)
-		{
-			GD.PushWarning($"[SpawnManager] {key} vide : pas de croissance avec le temps");
-			fromMinute.Add(0f);
-			perMinute.Add(1f);
-		}
-		SortSegments(fromMinute, perMinute);
 	}
 
 	/// <summary>ComputeScaling parcourt les segments dans l'ordre : un JSON ou une surcharge en désordre est retrié.</summary>

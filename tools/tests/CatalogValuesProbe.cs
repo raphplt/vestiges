@@ -204,6 +204,27 @@ public partial class CatalogValuesProbe : Node
             values.Sort(StringComparer.Ordinal);
             lines.Add(Invariant($"events {runEvent.Id} {runEvent.Kind} {runEvent.TitleKey} {runEvent.ObjectiveKey} min={runEvent.MinSec:R} weight={runEvent.Weight:R} duration={runEvent.DurationSec:R} {string.Join(" ", values)}"));
         }
+        // Q7e-1 : spawn_flow.json, champs de SpawnManager par réflexion (présents des deux côtés), listes et placement.
+        Vestiges.Spawn.SpawnManager spawn = new();
+        System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        typeof(Vestiges.Spawn.SpawnManager).GetMethod("LoadScalingConfig", hidden)!.Invoke(spawn, null);
+        List<string> spawnFields = new();
+        foreach (System.Reflection.FieldInfo info in typeof(Vestiges.Spawn.SpawnManager).GetFields(hidden))
+        {
+            object value = info.GetValue(spawn);
+            if (value is float or int)
+                spawnFields.Add(Invariant($"{info.Name}={value}"));
+            else if (value is List<float> numbers)
+                spawnFields.Add(Invariant($"{info.Name}=[{string.Join(",", numbers.ConvertAll(n => n.ToString("R", CultureInfo.InvariantCulture)))}]"));
+            else if (value is List<string> names)
+                spawnFields.Add($"{info.Name}=[{string.Join(",", names)}]");
+            else if (value is Vestiges.Spawn.SpawnPositionPicker picker)
+                spawnFields.Add(Invariant($"{info.Name}={picker.MarginMin:R},{picker.MarginMax:R},{picker.ForwardBias:R},{picker.ForwardArcDegrees:R},{picker.LeadSeconds:R},{picker.MinDistance:R}"));
+        }
+        spawnFields.Sort(StringComparer.Ordinal);
+        foreach (string spawnField in spawnFields)
+            lines.Add($"spawn {spawnField}");
+        spawn.Free();
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

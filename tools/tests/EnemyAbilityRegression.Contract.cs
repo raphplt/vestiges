@@ -172,15 +172,6 @@ public partial class EnemyAbilityRegression
         Check(string.Join(",", pool) == "rodeur,shade,shade" && errors.Count == 1
             && errors[0] == "biome test, exploration_enemy_pool : créature « inexistant » introuvable, retirée du groupe",
             $"groupe de biome : créature absente retirée, répétitions gardées ({string.Join(" | ", errors)})");
-
-        Godot.Collections.Dictionary flow = new() { ["fallback_exploration_pool"] = new Godot.Collections.Array { "shade", "fantome" } };
-        List<string> fallback = new();
-        errors = Spawn.SpawnManager.ReadFallbackPool(flow, "fallback_exploration_pool", fallback);
-        Check(string.Join(",", fallback) == "shade" && errors.Count == 1 && errors[0].Contains("« fantome » introuvable"),
-            $"secours d'apparition : créature absente retirée ({string.Join(" | ", errors)})");
-        errors = Spawn.SpawnManager.ReadFallbackPool(flow, "fallback_resurgence_pool", fallback);
-        Check(fallback.Count == 0 && errors.Count == 1 && errors[0].Contains("fallback_resurgence_pool absent"),
-            $"secours d'apparition : clé absente, groupe vide ({string.Join(" | ", errors)})");
     }
 
     private void RunCatalogFixtures()
