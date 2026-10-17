@@ -671,6 +671,8 @@ Constat sur la galerie avant ([`tools/capture_ground_zones.sh`](../../tools/capt
 
 **Mesuré :** galerie en mode banc, 144 zones, rendu logiciel (Xvfb, llvmpipe), deux passes chacun au même commit : avant 111,3 et 115,3 ms par image, après 116,5 et 115,0 ms (+2 %, dans le bruit des passes). Le banc suit bien la charge (12 zones : 23 ms ; 144 : 117 ms). Pas de mesure GPU : à recouper sur Mac si une scène chargée en zones baisse.
 
+**Après relecture `godot-reviewer` :** rien de bloquant (pas de `return` dans `fragment()`, pas de division par zéro, raccords continus au saut de ±π). Optimisations appliquées : gardes exactes hors de la bande du bord dans `edge_class` (le grain borne le bord à ± rough, un voisin déplace q d'au plus squash), bruit sauté quand le grain est nul (cadran, couloir), gouttes, langues de feu et débris sautés loin de la zone ; paramètre inutile retiré ; galerie lancée en `--fixed-fps 60`, désormais reproductible (deux passes identiques au pixel). Images de la galerie identiques au pixel avec et sans gardes. Banc à 144 zones : **80,6 et 80,1 ms** par image, contre 116,3 et 117,9 ms sans les gardes et 112,9 ms avant S12, soit **−29 % par rapport aux anciennes zones**.
+
 ### S11 — distinguer la Rallonge de la Pelle à neige en attaque, 15 octobre 2026
 
 Retour de Raphaël : leurs sprites d'attaque en jeu se ressemblent trop (DECISIONS §183). Les styles `cleave` et `whirl` dessinent la même traînée orange, avec une ouverture et une épaisseur différentes.

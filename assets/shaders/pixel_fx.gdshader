@@ -218,6 +218,8 @@ vec2 ground(vec2 p) {
 
 // Rayon du bord dans la direction de q : cercle exact, grain d'au plus `rough` unités au sol, continu le long du bord.
 float rim_radius(vec2 q, float scale, float rough) {
+	if (rough <= 0.0)
+		return radius * scale;
 	vec2 dir = q / max(length(q), 1e-4);
 	return radius * scale + rough * (value_noise(dir * radius * 0.45 + 7.0) - 0.5) * 2.0;
 }
@@ -258,6 +260,15 @@ bool in_area(vec2 p, float scale, float amp) {
 
 // 0 dedans, 1 bord intérieur, 2 contour extérieur, 3 dehors (voisins à un texel d'écran).
 int edge_class(vec2 p, float scale, float amp) {
+	// Hors de la bande du bord, la réponse est connue sans bruit : le grain borne le bord à ± amp, et un voisin à un
+	// texel d'écran déplace q d'au plus squash.
+	if (shape != 7) {
+		float l = length(ground(p));
+		if (l - squash > radius * scale + amp)
+			return 3;
+		if (l + squash < radius * scale - amp)
+			return 0;
+	}
 	bool r = in_area(p + vec2(1.0, 0.0), scale, amp);
 	bool l = in_area(p - vec2(1.0, 0.0), scale, amp);
 	bool d = in_area(p + vec2(0.0, 1.0), scale, amp);
@@ -276,7 +287,7 @@ vec4 worn_outline(vec2 p) {
 	return shade(c_outline, cell_hash(floor(p) + 41.0) > 0.82 ? 0.5 : 0.92);
 }
 
-vec4 worn_rim(vec2 p, vec2 q) {
+vec4 worn_rim(vec2 q) {
 	return value_noise(q * 0.5 + 19.0) > 0.62 ? c_light : c_mid;
 }
 
@@ -290,7 +301,7 @@ vec4 mark_color(vec2 p, float t) {
 		return vec4(0.0);
 	vec2 q = ground(p);
 	if (e == 1)
-		return worn_rim(p, q);
+		return worn_rim(q);
 	if (e == 2)
 		return worn_outline(p);
 	bool dash = fract(atan(q.y, q.x) / TAU * 16.0 + t * 0.25) < 0.5;
@@ -331,7 +342,7 @@ vec4 lane_color(vec2 p, float t) {
 	if (e == 2)
 		return worn_outline(p);
 	if (e == 1)
-		return worn_rim(p, q);
+		return worn_rim(q);
 	if (fill_density >= 0.99)
 		return c_light;
 	if (fill_density <= 0.0)
@@ -356,6 +367,8 @@ vec4 liquid_color(vec2 p, float t) {
 	vec2 q = ground(p);
 	if (e >= 2) {
 		bool rim = e == 2;
+		if (length(q) > radius * 1.24 + 2.4 + 2.0 * squash)
+			return vec4(0.0);
 		for (int k = 0; k < 5; k++) {
 			float a = hash(float(k) * 3.1) * TAU;
 			vec2 c = vec2(cos(a), sin(a)) * radius * (1.04 + 0.2 * hash(float(k) * 5.7));
@@ -424,6 +437,8 @@ vec4 fire_color(vec2 p, float t) {
 			return c_dark;
 		return vec4(c_outline.rgb * 0.6, bayer4(p) < 0.5 ? 0.75 : 0.5);
 	}
+	if (length(ground(p)) - 6.0 * squash > radius * scale + amp)
+		return vec4(0.0);
 	for (int lift = 1; lift <= 6; lift++) {
 		vec2 below = p + vec2(0.0, float(lift));
 		if (in_zone(below, scale, amp) && fire_heat(below, t) - float(lift) * 0.05 > 0.5
@@ -464,7 +479,8 @@ vec4 dial_color(vec2 p) {
 // de la zone, sol roussi et fissuré.
 vec4 burst_color(vec2 p) {
 	float grow = 0.55 + 0.45 * min(1.0, progress * 2.5);
-	for (int k = 0; k < 8; k++) {
+	float reach = radius * (0.3 + 0.95 * progress) * 1.1 + 2.0 * squash;
+	for (int k = 0; k < 8 && length(ground(p)) < reach; k++) {
 		float a = hash(float(k) * 2.3 + 0.5) * TAU;
 		float dist = radius * (0.3 + 0.95 * progress) * (0.75 + 0.35 * hash(float(k) * 6.1));
 		vec2 o = abs(p - vec2(cos(a), sin(a) / squash) * dist);

@@ -74,7 +74,7 @@ public static class PixelBlob
         return Mathf.Sqrt(groundX * groundX + groundY * groundY) / rim;
     }
 
-    /// <summary>Bruit de valeur périodique sur le tour du bord, environ une cellule par pixel de circonférence.</summary>
+    /// <summary>Bruit de valeur périodique sur le tour du bord, une cellule tous les deux pixels de circonférence environ.</summary>
     private static float RimNoise(float theta, float phase, float radius)
     {
         int cells = Mathf.Max(8, Mathf.RoundToInt(radius * 2.8f));
