@@ -136,6 +136,7 @@ public partial class BadgeUsage : Node
         _eventBus.LevelUp += OnLevelUp;
         _eventBus.ChestOpened += OnChestOpened;
         _eventBus.PassiveSouvenirUpgraded += OnBadgeUpgraded;
+        _eventBus.LandChanged += OnLandChanged;
         SetProcess(_countsMeters || _countsContact);
     }
 
@@ -153,6 +154,14 @@ public partial class BadgeUsage : Node
         _eventBus.LevelUp -= OnLevelUp;
         _eventBus.ChestOpened -= OnChestOpened;
         _eventBus.PassiveSouvenirUpgraded -= OnBadgeUpgraded;
+        _eventBus.LandChanged -= OnLandChanged;
+    }
+
+    /// <summary>Le joueur repart du départ d'une terre neuve (plan 51) : ce saut ne file pas les Écussons de la marche.</summary>
+    private void OnLandChanged(int index)
+    {
+        if (_player != null)
+            _lastPosition = _player.GlobalPosition;
     }
 
     /// <summary>Un Écusson vient d'être cousu : son fil commence vide. Sans déclencheur, il ne monte qu'au level-up.</summary>

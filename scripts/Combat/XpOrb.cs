@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
@@ -7,7 +8,7 @@ namespace Vestiges.Combat;
 
 public partial class XpOrb : Area2D, ITicked
 {
-    private static readonly System.Collections.Generic.HashSet<XpOrb> _onGround = new();
+    private static readonly HashSet<XpOrb> _onGround = new();
 
     /// <summary>Sonnette : appelle uniquement les orbes présentes autour du coffre, y compris endormies, sans créer d’XP.</summary>
     public static int AttractExisting(Vector2 center, float radius, Player player)
@@ -240,7 +241,7 @@ public partial class XpOrb : Area2D, ITicked
     /// </summary>
     public static int CollectAll(Player player)
     {
-        System.Collections.Generic.List<XpOrb> orbs = new(_onGround);
+        List<XpOrb> orbs = new(_onGround);
         foreach (XpOrb orb in orbs)
             orb.Collect(player, false);
         return orbs.Count;

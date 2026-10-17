@@ -111,8 +111,10 @@ public partial class FaunaDirector : Node2D
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.LandChanging -= OnLandChanging;
+        }
     }
 
     public override void _Process(double delta)

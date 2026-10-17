@@ -36,6 +36,8 @@ public partial class FogOfWar : Node2D
     {
         _ground = ground;
         _revealedCells.Clear();
+        _revealRevision++;
+        _lastPlayerCell = new Vector2I(int.MinValue, int.MinValue);
         // Terre suivante (plan 51) : l'Oubli du regard déjà subi et l'abonnement restent ceux de la run.
         if (_eventBus == null)
         {

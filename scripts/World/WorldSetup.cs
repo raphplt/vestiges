@@ -381,15 +381,12 @@ public partial class WorldSetup : Node2D
 
     /// <summary>
     /// Vide la carte en cours (plan 51, changement de terre) : nœuds de carte, décors, lieux, coffres et objets au sol,
-    /// créatures rendues au pool, tuiles, obstacles. Les orbes d'XP restées au sol reviennent au joueur. Le joueur et
-    /// les systèmes qui portent la run ne sont pas touchés ; leur remise à zéro suit le signal de changement de terre.
+    /// créatures rendues au pool, tuiles, obstacles. Le joueur et les systèmes qui portent la run ne sont pas touchés ;
+    /// leur remise à zéro suit le signal de changement de terre.
     /// </summary>
     public async Task ClearWorldAsync()
     {
         IsWorldReady = false;
-        Player player = GetNodeOrNull<Player>("Player");
-        if (player != null)
-            XpOrb.CollectAll(player);
         Node enemies = GetNode("EnemyContainer");
         foreach (Node child in enemies.GetChildren())
         {

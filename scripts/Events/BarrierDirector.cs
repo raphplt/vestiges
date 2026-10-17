@@ -173,6 +173,9 @@ public partial class BarrierDirector : Node
 	/// <summary>Changement de terre (plan 51) : une Barrière levée reste derrière, comme quand le joueur la contourne.</summary>
 	private void OnLandChanging(int toIndex)
 	{
+		// Le cap se relit sur la terre neuve : rien du trajet d'avant le passage.
+		_trailCount = 0;
+		_trailIndex = 0;
 		if (!IsInstanceValid(_barrier))
 			return;
 		if (!_barrier.IsEnded)

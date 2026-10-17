@@ -54,8 +54,10 @@ public partial class WorkshopDirector : Node
     public override void _ExitTree()
     {
         if (_eventBus != null)
+        {
             _eventBus.WorkshopInteracted -= OnWorkshopInteracted;
             _eventBus.LandChanging -= OnLandChanging;
+        }
     }
 
     public override void _Process(double delta)

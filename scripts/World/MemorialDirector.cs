@@ -107,6 +107,8 @@ public partial class MemorialDirector : Node
         _gathering = null;
         _countdown?.End();
         _shards.Clear();
+        _collected = 0;
+        _gatherRemaining = 0f;
     }
 
     private void StartGathering(Memorial memorial)

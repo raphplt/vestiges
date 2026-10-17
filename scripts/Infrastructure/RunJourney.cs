@@ -20,6 +20,9 @@ public sealed class RunJourney
     public float MaxDistanceMeters { get; private set; }
     public float TravelledMeters { get; private set; }
 
+    /// <summary>Le joueur repart du départ d'une terre neuve (plan 51) : ce saut n'est pas un trajet parcouru.</summary>
+    public void Rebase(Vector2 playerPosition) => _last = playerPosition;
+
     public void Track(Vector2 playerPosition)
     {
         if (!_started)

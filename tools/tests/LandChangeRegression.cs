@@ -104,6 +104,19 @@ public partial class LandChangeRegression : Node
             _player.IsAIControlled = false;
             Check(_world.GetNode<RunClock>("RunClock").Seconds > after.Clock, $"terre {land} : l'horloge repart après le passage");
         }
+
+        // Assez d'XP au sol pour monter de niveau : l'écran de choix garde la pause, la fin du passage ne la lève pas.
+        CombatPools.Instance.SpawnXpOrb(_player.GlobalPosition + new Vector2(1500f, 0f), 5000f);
+        await Frame();
+        await Frame();
+        await transition.GoToLandAsync(Lands);
+        bool levelUpShown = false;
+        for (int frame = 0; frame < 30 && !levelUpShown; frame++)
+        {
+            await Frame();
+            levelUpShown = GetTree().Paused && _world.GetNode<CanvasLayer>("LevelUpScreen").Visible;
+        }
+        Check(levelUpShown, $"terre {Lands} : la montée de niveau des orbes ramassées garde la pause sous son écran");
     }
 
     /// <summary>Ce que le passage ne doit jamais toucher : niveau, PV, armes, Essence, Péril, éliminations, horloge.</summary>

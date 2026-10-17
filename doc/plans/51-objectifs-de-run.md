@@ -489,3 +489,10 @@ Livrés ensemble : le vidage seul fait planter les systèmes qui gardent la cart
 - validation large lancée au moment du commit, à la demande de Raphaël ; son résultat est consigné au lot suivant.
 
 **Suite : P1d**, une commande de dev « terre suivante » et un écran pendant le passage, pour essayer en jouant.
+
+**Relecture de P1b et P1c (`godot-reviewer`), corrigé le même jour :**
+- les orbes ramassées au passage pouvaient faire monter de niveau pendant le passage, et sa fin levait la pause sous l'écran de choix. Elles sont maintenant ramassées après la reprise, et le banc couvre le cas (5 000 XP au sol) ;
+- le saut au départ de la terre suivante comptait dans le trajet parcouru (bilan, quête de distance) et dans les fils de marche des Écussons. Les deux se recalent sur `LandChanged`, et le cap de la Barrière oublie le trajet d'avant ;
+- passage protégé par un `try/finally` (pause et état rendus même sur erreur) ; deux désabonnements hors de leur garde ; brouillard qui repart d'un relevé complet ; restes de la collecte d'éclats remis à zéro.
+
+**Validation large** (18 suites) : 16 vertes au premier passage. **Butin d'objets** : son banc créait l'Effacement seul, sans horloge à côté. C'est un oubli du lot P0, qui est sur `main`, corrigé ici et à reporter sur `main` à la fusion. **Mouvement** : 5 contrôles de vitesse ×1,08 juste après le scénario du Facteur, sous une forte charge machine. Non reproduit seul, deux fois vert depuis.

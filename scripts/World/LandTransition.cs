@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 
 namespace Vestiges.World;
@@ -66,21 +67,28 @@ public partial class LandTransition : Node
         bool wasPaused = tree.Paused;
         tree.Paused = true;
         ulong started = Time.GetTicksMsec();
-
-        _eventBus.EmitSignal(EventBus.SignalName.LandChanging, index);
-        // Nommés comme au premier chargement : libérés tout de suite, pour que les suivants reprennent leur nom.
-        _voices?.Free();
-        _falseLights?.Free();
-        await _world.ClearWorldAsync();
-        await _world.BuildLandAsync(index);
-        _smallPlaces.ResetLand(_world.LandSeed);
-        PlaceLandDetails();
-        _player.ArriveOnLand(Vector2.Zero);
-        LandIndex = index;
-        _eventBus.EmitSignal(EventBus.SignalName.LandChanged, index);
-
-        tree.Paused = wasPaused;
-        IsChanging = false;
-        GD.Print($"[LandTransition] Terre {index} ({string.Join(",", _world.Land.BiomeIds)}) en {Time.GetTicksMsec() - started} ms");
+        try
+        {
+            _eventBus.EmitSignal(EventBus.SignalName.LandChanging, index);
+            // Nommés comme au premier chargement : libérés tout de suite, pour que les suivants reprennent leur nom.
+            _voices?.Free();
+            _falseLights?.Free();
+            await _world.ClearWorldAsync();
+            await _world.BuildLandAsync(index);
+            _smallPlaces.ResetLand(_world.LandSeed);
+            PlaceLandDetails();
+            _player.ArriveOnLand(Vector2.Zero);
+            LandIndex = index;
+            _eventBus.EmitSignal(EventBus.SignalName.LandChanged, index);
+            GD.Print($"[LandTransition] Terre {index} ({string.Join(",", _world.Land.BiomeIds)}) en {Time.GetTicksMsec() - started} ms");
+        }
+        finally
+        {
+            tree.Paused = wasPaused;
+            IsChanging = false;
+        }
+        // Après la reprise : si les orbes de la terre quittée font monter de niveau, l'écran de choix prend la pause à
+        // son tour, au lieu d'être relancé par la fin du passage.
+        XpOrb.CollectAll(_player);
     }
 }

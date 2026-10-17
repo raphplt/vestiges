@@ -81,6 +81,9 @@ public partial class ItemLootRegression
 
     private async Task CheckRealTicket()
     {
+        // L'Effacement lit l'horloge de run, sa sœur (plan 51 P0).
+        if (GetNodeOrNull("RunClock") == null)
+            AddChild(new Vestiges.Core.RunClock { Name = "RunClock" });
         ErasureManager erasure = new() { Name = "ErasureManager" }; AddChild(erasure); erasure.SetProcess(false);
         ItemPickup kept = GroundItem(new Vector2(3000, 0));
         kept._Process(121);

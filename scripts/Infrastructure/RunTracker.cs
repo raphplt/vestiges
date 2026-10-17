@@ -175,6 +175,7 @@ public partial class RunTracker : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _clock = GetNode<RunClock>("../RunClock");
         _eventBus.GameStateChanged += OnGameStateChanged;
+        _eventBus.LandChanged += OnLandChanged;
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
@@ -202,6 +203,7 @@ public partial class RunTracker : Node
     {
         if (_eventBus == null) return;
         _eventBus.GameStateChanged -= OnGameStateChanged;
+        _eventBus.LandChanged -= OnLandChanged;
         _eventBus.EnemySpawned -= OnEnemySpawned;
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
@@ -249,6 +251,13 @@ public partial class RunTracker : Node
         int activeEnemies = GetTree().GetNodesInGroup("enemies").Count;
         if (activeEnemies > _peakEnemies)
             _peakEnemies = activeEnemies;
+    }
+
+    /// <summary>Le joueur repart du départ d'une terre neuve (plan 51) : ce saut ne compte pas dans le trajet parcouru.</summary>
+    private void OnLandChanged(int index)
+    {
+        if (GetTree().GetFirstNodeInGroup("player") is Node2D player)
+            _journey?.Rebase(player.GlobalPosition);
     }
 
     private void OnGameStateChanged(string oldState, string newState)
