@@ -244,6 +244,9 @@ public sealed class PlayerAttackFx
             .SetEase(Tween.EaseType.Out);
     }
 
+    /// <summary>Annule l'élan en cours : mort ou suspension reposent la silhouette à sa place.</summary>
+    public void ClearLunge() => LungeOffset = Vector2.Zero;
+
     /// <summary>Micro-amorti d'inertie à la réception d'un dash ou à l'arrêt franc d'une course (plan 54 G1).</summary>
     public void PlayStepSquash(float horizontal = 1.06f, float vertical = 0.94f, float duration = 0.09f)
     {

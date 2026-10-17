@@ -25,6 +25,8 @@ public class CharacterData
     public string PassivePerk { get; set; }
     public List<string> ExclusivePerks { get; set; } = new();
     public Color VisualColor { get; set; }
+    /// <summary>Couleur identitaire des traînées du dash (plan 54 G3) ; la couleur du corps à défaut.</summary>
+    public Color AccentColor { get; set; }
     public string SpriteFolder { get; set; }
     /// <summary>Distance en pixels du centre de la frame aux pieds : ancre le sprite sur la position au sol.</summary>
     public float SpriteFeetOffset { get; set; }
@@ -93,12 +95,8 @@ public static class CharacterDataLoader
                 BaseStats = stats,
                 PassivePerk = dict["passive_perk"].AsString(),
                 ExclusivePerks = exclusivePerks,
-                VisualColor = new Color(
-                    (float)colorArr[0].AsDouble(),
-                    (float)colorArr[1].AsDouble(),
-                    (float)colorArr[2].AsDouble(),
-                    (float)colorArr[3].AsDouble()
-                ),
+                VisualColor = ReadColor(colorArr),
+                AccentColor = dict.ContainsKey("accent_color") ? ReadColor(dict["accent_color"].AsGodotArray()) : ReadColor(colorArr),
                 SpriteFolder = dict.ContainsKey("sprite_folder") ? dict["sprite_folder"].AsString() : null,
                 SpriteFeetOffset = dict.ContainsKey("sprite_feet_offset") ? (float)dict["sprite_feet_offset"].AsDouble() : 0f,
                 MobilityProfile = dict.ContainsKey("mobility") ? dict["mobility"].AsString() : null
@@ -111,6 +109,9 @@ public static class CharacterDataLoader
         _loaded = true;
         GD.Print($"[CharacterDataLoader] Loaded {_allCharacters.Count} characters");
     }
+
+    private static Color ReadColor(Godot.Collections.Array rgba) =>
+        new((float)rgba[0].AsDouble(), (float)rgba[1].AsDouble(), (float)rgba[2].AsDouble(), (float)rgba[3].AsDouble());
 
     public static CharacterData Get(string id)
     {

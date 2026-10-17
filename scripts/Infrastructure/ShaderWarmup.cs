@@ -24,6 +24,8 @@ public partial class ShaderWarmup : SubViewport
         ("res://assets/shaders/ground.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/path.gdshader", SampleKind.Mesh),
         ("res://assets/shaders/echo.gdshader", SampleKind.Sprite),
+        // Traînée du dash : compilée au premier dash, en pleine run (plan 54 G3).
+        ("res://assets/shaders/dash_silhouette.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/light_column.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/pixel_fx.gdshader", SampleKind.Sprite),
         ("res://assets/shaders/player_projectile.gdshader", SampleKind.Sprite),

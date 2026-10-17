@@ -5,12 +5,19 @@ using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
-/// <summary>Traînées recyclées et témoin de recharge ; aucune création de node à l'activation.</summary>
+/// <summary>
+/// Traînées recyclées et témoin de recharge ; aucune création de node à l'activation. Avec un sprite, chaque traînée
+/// reprend la frame exacte du personnage en silhouette à sa couleur d'accent (plan 54 G3).
+/// </summary>
 public partial class MobilityFeedback : Node2D
 {
     private const int TrailCount = 4;
     private const float TrailLifetime = 0.12f;
     private const float TrailInterval = 0.04f;
+    // La silhouette tient un peu plus longtemps : elle se trame en s'effaçant au lieu de passer par trois formes.
+    private const float SilhouetteLifetime = 0.18f;
+    private const float SilhouetteAlpha = 1f;
+    private static ShaderMaterial _silhouetteMaterial;
     private static readonly Color ReadyColor = new(0.55f, 0.88f, 0.9f, 0.9f);
     private static readonly Color BarBackColor = new(0.04f, 0.06f, 0.09f, 0.8f);
     private static readonly Color TierMarkColor = new(0.9f, 0.86f, 0.78f, 0.45f);
@@ -27,6 +34,9 @@ public partial class MobilityFeedback : Node2D
     private readonly float[] _remaining = new float[TrailCount];
     private readonly Vector2[] _positions = new Vector2[TrailCount];
     private Texture2D[] _frames;
+    private AnimatedSprite2D _source;
+    private Color _accent = Colors.White;
+    private float _lifetime = TrailLifetime;
     private float _trailTimer;
     private float _charge = 1f;
     private bool _wasDashing;
@@ -79,9 +89,14 @@ public partial class MobilityFeedback : Node2D
             if (_trails[i].Visible)
             {
                 _trails[i].GlobalPosition = _positions[i];
-                float progress = 1f - _remaining[i] / TrailLifetime;
-                _trails[i].Texture = _frames[Mathf.Min(2, (int)(progress * 3f))];
-                _trails[i].Modulate = new Color(1f, 1f, 1f, 1f - progress);
+                float progress = 1f - _remaining[i] / _lifetime;
+                if (_source != null)
+                    _trails[i].Modulate = _accent with { A = SilhouetteAlpha * (1f - progress) };
+                else
+                {
+                    _trails[i].Texture = _frames[Mathf.Min(2, (int)(progress * 3f))];
+                    _trails[i].Modulate = new Color(1f, 1f, 1f, 1f - progress);
+                }
             }
         }
 
@@ -118,15 +133,48 @@ public partial class MobilityFeedback : Node2D
         QueueRedraw();
     }
 
+    /// <summary>
+    /// Source des silhouettes : le sprite du personnage et sa couleur d'accent ; <paramref name="source"/> null
+    /// garde les formes génériques (personnage sans sprite).
+    /// </summary>
+    public void SetSilhouette(AnimatedSprite2D source, Color accent)
+    {
+        _source = source;
+        _accent = accent;
+        _lifetime = source != null ? SilhouetteLifetime : TrailLifetime;
+        if (source != null)
+            _silhouetteMaterial ??= new ShaderMaterial { Shader = GD.Load<Shader>("res://assets/shaders/dash_silhouette.gdshader") };
+        foreach (Sprite2D trail in _trails)
+        {
+            trail.Material = source != null ? _silhouetteMaterial : null;
+            trail.Offset = source?.Offset ?? Vector2.Zero;
+            trail.Rotation = 0f;
+            trail.Scale = Vector2.One;
+        }
+    }
+
     private void PlaceTrail(Vector2 position)
     {
         Sprite2D trail = _trails[_nextTrail];
+        if (_source != null)
+        {
+            // La frame affichée à cet instant, à la hauteur du sprite (saut, élan d'attaque) et avec son inclinaison.
+            position += _source.Position;
+            trail.Texture = _source.SpriteFrames.GetFrameTexture(_source.Animation, _source.Frame);
+            trail.FlipH = _source.FlipH;
+            trail.Rotation = _source.Rotation;
+            trail.Scale = _source.Scale;
+            trail.Modulate = _accent with { A = SilhouetteAlpha };
+        }
+        else
+        {
+            trail.Texture = _frames[0];
+            trail.Modulate = Colors.White;
+        }
         trail.GlobalPosition = position;
         _positions[_nextTrail] = position;
-        trail.Texture = _frames[0];
-        trail.Modulate = Colors.White;
         trail.Visible = true;
-        _remaining[_nextTrail] = TrailLifetime;
+        _remaining[_nextTrail] = _lifetime;
         _nextTrail = (_nextTrail + 1) % TrailCount;
     }
 

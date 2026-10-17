@@ -116,6 +116,12 @@ Conformément aux règles du projet, nous avançons **un lot à la fois**, en co
   - Appliquer les nouveaux matériaux, membres sculptés, accessoires tenus et allures propres à **La Forgeuse**, **Le Traqueur**, **Le Facteur**, **L'Éveillée** et **La Scaphandrière** (`tools/sprites/characters/*.py`).
   - Planche comparative de contrôle pour validation, puis export et test avec `tools/capture_run.sh`.
 
+- [x] **Lot G3 — Traînées fidèles, télégraphes vivants et coups orientés (Godot)**
+  - [`MobilityFeedback.cs`](../../scripts/Combat/MobilityFeedback.cs) : chaque traînée du dash (et du saut instantané) reprend la frame exacte du sprite joueur (animation, image, retournement, hauteur), en silhouette pleine à la couleur d'accent du personnage (`accent_color` dans `data/characters/characters.json`) par un petit shader préchauffé au chargement ; repli sur les formes génériques pour un personnage sans sprite.
+  - [`Enemy.cs`](../../scripts/Combat/Enemy.cs) + nouveau `WindupFeedback` : pendant l'annonce d'attaque, vibration horizontale d'un pixel en plus de la posture accroupie ; à la détente (bond, charge, onde), étirement bref vers le haut puis retour élastique. Une annulation n'étire pas. Le retour de coup reçu reste prioritaire sur la position et l'échelle.
+  - [`HitFeedback.cs`](../../scripts/Combat/HitFeedback.cs) : l'écrasement suit l'axe dominant du coup (coup de côté : écrasé en largeur ; coup du haut ou du bas : écrasé en hauteur).
+  - Vérification : build, smoke test, `tools/test_enemy_abilities.sh`, capture en run, banc A/B si le coût bouge.
+
 - [ ] **Lot S3 — Déclinaison SDF 2.0 au reste du bestiaire**
   - Appliquer les fusions organiques `smin`, textures de surface, démarches et attaques avec anticipation/*smear* aux autres créatures de `tools/sprites/creatures/*.py`.
   - Planche bestiaire comparative, export et validation complète (`tools/validate.sh`).
@@ -145,3 +151,20 @@ Duo pilote validé en jeu par Raphaël, échelle gardée (DECISIONS §188). Les 
 - Pas de banc : mêmes cadres, mêmes nombres de frames, aucun code du jeu modifié.
 
 **Reste au plan :** S3 (bestiaire), et la partie Godot non découpée du volet B (traînée du dash à la silhouette exacte, vibration et écrasement des créatures avant l'attaque, écrasement orienté selon le coup reçu), à proposer en lot G3.
+
+---
+
+## 5. Lot G3 livré — 17 octobre 2026
+
+**Fait :**
+- **Traînées du dash** ([`MobilityFeedback.cs`](../../scripts/Combat/MobilityFeedback.cs)) : chaque traînée reprend la frame affichée du sprite joueur (animation, image, hauteur, inclinaison, échelle), en silhouette pleine à la couleur d'accent du personnage, puis se trame au pixel (Bayer 4×4) en s'effaçant en 0,18 s. Nouveau shader [`dash_silhouette.gdshader`](../../assets/shaders/dash_silhouette.gdshader), préchauffé au chargement. Couleur dans `data/characters/characters.json` (`accent_color`, la couleur du corps à défaut) : Vagabond orange écharpe, Forgeuse rouge forge, Traqueur vert, Facteur or, Éveillée cyan, Scaphandrière vert-de-gris. Personnage sans sprite : formes génériques inchangées.
+- **Annonce des créatures** (nouveau [`WindupFeedback.cs`](../../scripts/Combat/WindupFeedback.cs)) : pendant l'annonce (bond du Rôdeur, charge et onde des gardiens), le visuel tremble d'un pixel en plus de la posture accroupie ; à la détente (`Enemy.ReleaseWindup`), il s'étire vers le haut (0,84 × 1,2) et revient au repos en 0,14 s. Une annulation n'étire pas. Un coup reçu garde la priorité sur la position et l'échelle.
+- **Coups orientés** ([`HitFeedback.cs`](../../scripts/Combat/HitFeedback.cs)) : coup venu du côté, la créature s'écrase en largeur (0,8 × 1,2) ; du haut ou du bas de l'écran, en hauteur (1,25 × 0,75, comme avant). L'axe dominant tranche : un mélange annulait l'écrasement en diagonale.
+
+**Régressions des lots G1 et G2 corrigées (commités sans relancer ces suites) :**
+- G2 : le tempo de marche divisait la vitesse par la vitesse de base, ralenti compris ; le ralenti, déjà appliqué à la cadence par le statut, comptait deux fois (0,29 au lieu de 0,4). La référence inclut maintenant le facteur de ralenti, et un écart de moins de 8 % garde la cadence à 1 (pas de réécriture à chaque bousculade).
+- G1 : l'élan d'attaque pouvait laisser le sprite décalé à la mort ou à la suspension (échec « Saut : mort en l'air repose immédiatement la silhouette ») ; il est remis à zéro dans les deux cas.
+
+**Vérifié :** build 0 avertissement ; `tools/smoke_test.sh` ; `tools/test_enemy_abilities.sh` 0 échec, dont quatre contrôles nouveaux (tremblement d'un pixel, détente étirée, retour au repos, annulation sans étirement) et le contrôle d'écrasement mis à jour pour un coup de côté ; `tools/test_movement.sh`, `tools/test_weapons.sh`, `tools/test_dev_mode.sh` verts ; `tools/test_shader_warmup.sh` valide (premier passage expiré sous charge machine, second passage à 360 s valide). Relecture `godot-reviewer` : trois remarques traitées (remise au repos à l'arrêt, recul d'un coup préservé à la détente, même visuel ciblé que le retour de coup) et l'échelle copiée sur la traînée. Captures de la galerie d'armes avec dash (Vagabond, Forgeuse) regardées.
+
+**Non mesuré :** pas de banc ; quatre sprites recyclés par dash, une créature à la fois en annonce, aucun nœud créé. Le tremblement et la détente ne se jugent qu'en mouvement : à regarder en jeu.

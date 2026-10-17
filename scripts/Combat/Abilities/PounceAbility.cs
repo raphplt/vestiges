@@ -151,7 +151,7 @@ public class PounceAbility : IEnemyAbility
         _phase = Phase.Leap;
         _timer = _leapSeconds;
         _hasHit = false;
-        owner.SetWindupPose(false);
+        owner.ReleaseWindup();
         owner.PlayAttackAnim();
         _marker.HideMarker();
         if (_leapAudio.Length > 0)

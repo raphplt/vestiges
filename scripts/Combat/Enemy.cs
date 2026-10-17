@@ -198,6 +198,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private static Shader _entityShader;
 	private ShaderMaterial _spriteMaterial;
 	private readonly HitFeedback _hitFeedback = new();
+	private readonly WindupFeedback _windupFeedback = new();
 	private readonly EnemyStatusVisual _statusVisual = new();
 	private EnemyStatusMarks _statusMarks;
 	private readonly DamageOverTimeNumbers _dotNumbers = new();
@@ -305,6 +306,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		LastImpactDamage = 0f;
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_windupFeedback.Stop();
 		_statusVisual.Attach(null);
 		_dotNumbers.Clear();
 		_explosionWarning.Hide();
@@ -548,6 +550,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// (les tweens Godot sont pauses quand le node quitte l'arbre et reprennent quand il y revient)
 		_hitFeedback.RestScale = Vector2.One;
 		_hitFeedback.Stop();
+		_windupFeedback.Stop();
 		_continuousImpact = default;
 		_damageNumber = null;
 		_modifierAura?.HideAura();
@@ -647,6 +650,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Avant le retour anticipé : un coup fatal finit son flash pendant l'animation de mort.
 		if (_hitFeedback.IsActive)
 			_hitFeedback.Tick((float)delta);
+		if (_windupFeedback.IsActive)
+			_windupFeedback.Tick((float)delta, _hitFeedback.IsActive);
 		if (_isDying || !IsActive)
 			return;
 
@@ -1827,8 +1832,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		else
 			action = SpriteAction.Idle;
 
-		float speedRatio = action == SpriteAction.Walk && moving && _baseSpeed > 1f
-			? Mathf.Clamp(Velocity.Length() / _baseSpeed, 0.72f, 1.45f)
+		// Le ralenti règle déjà la cadence par le statut : la vitesse de référence le compte pour ne pas le doubler.
+		float reference = _baseSpeed * MoveFactor;
+		float speedRatio = action == SpriteAction.Walk && moving && reference > 1f
+			? WalkTempo(Velocity.Length() / reference)
 			: 1f;
 		float tempo = _isDying ? 1f : AnimationTempo * _statusVisual.AnimationTempo * speedRatio;
 		// Figée : l'animation s'arrête sur la pose en cours, sans repasser à l'attente.
@@ -1837,6 +1844,13 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_spriteTempo != tempo)
 			SetSpriteTempo(tempo);
 	}
+
+	/// <summary>
+	/// Cadence de marche selon la vitesse réelle (plan 54 G2) : bornée, et à 1 près de l'allure de référence pour ne pas
+	/// réécrire la cadence à chaque bousculade de la foule.
+	/// </summary>
+	private static float WalkTempo(float ratio) =>
+		Mathf.Abs(ratio - 1f) < 0.08f ? 1f : Mathf.Clamp(ratio, 0.72f, 1.45f);
 
 	private void SetSpriteTempo(float tempo)
 	{
@@ -1976,8 +1990,27 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			EnemyAttackFx.FlashWarning(_sprite, paletteColor, duration);
 	}
 
-	/// <summary>Posture accroupie d'annonce, sur le visuel seul pour ne pas toucher l'échelle d'Aberration.</summary>
+	/// <summary>
+	/// Posture accroupie et tremblante d'annonce, sur le visuel seul pour ne pas toucher l'échelle d'Aberration ;
+	/// <c>false</c> annule sans détente (voir <see cref="ReleaseWindup"/>).
+	/// </summary>
 	internal void SetWindupPose(bool active)
+	{
+		SetWindupScale(active);
+		if (active)
+			_windupFeedback.Begin(_hasSprite && _spriteMaterial != null ? _sprite : _visual);
+		else
+			_windupFeedback.Stop();
+	}
+
+	/// <summary>Détente de l'attaque annoncée : la posture tombe et le visuel s'étire avant de revenir (plan 54 G3).</summary>
+	internal void ReleaseWindup()
+	{
+		SetWindupScale(false);
+		_windupFeedback.Release();
+	}
+
+	private void SetWindupScale(bool active)
 	{
 		Vector2 pose = active ? new Vector2(1.18f, 0.78f) : Vector2.One;
 		_hitFeedback.RestScale = pose;

@@ -204,7 +204,8 @@ public partial class EnemyAbilityRegression : Node2D
         enemy.TakeDamage(5f);
         Check(enemy.Position == body && shown.Position.X > 1f,
             $"Coup : recul du visuel ({shown.Position.X:F1} px) sans déplacer le corps");
-        Check(shown.Scale.X > 1.1f && shown.Scale.Y < 0.9f, $"Coup : écrasement ({shown.Scale})");
+        // Coup venu du côté (le joueur est à gauche) : écrasé en largeur (plan 54 G3).
+        Check(shown.Scale.X < 0.9f && shown.Scale.Y > 1.1f, $"Coup de côté : écrasement en largeur ({shown.Scale})");
         await Step(2);
         enemy.TakeDamage(7f);
         Check(VisibleNumbers(pools, out string texts) == 1 && texts == "12",
@@ -221,7 +222,19 @@ public partial class EnemyAbilityRegression : Node2D
         enemy.TakeDamage(1f);
         await Step(30);
         Check(shown.Scale.IsEqualApprox(new Vector2(1.18f, 0.78f)), $"Coup pendant une annonce : posture conservée ({shown.Scale})");
+        // Annonce vivante (plan 54 G3) : tremblement d'un pixel, détente étirée puis repos ; une annulation n'étire pas.
+        Check(Mathf.Abs(shown.Position.X) == 1f && shown.Position.Y == 0f, $"Annonce : tremblement d'un pixel ({shown.Position})");
+        enemy.ReleaseWindup();
+        await Step(1);
+        Check(shown.Position == Vector2.Zero && shown.Scale.Y > 1.05f && shown.Scale.X < 0.95f,
+            $"Détente : visuel étiré vers le haut ({shown.Scale})");
+        await Step(30);
+        Check(shown.Position == Vector2.Zero && shown.Scale == Vector2.One, $"Détente : visuel revenu au repos ({shown.Scale})");
+        enemy.SetWindupPose(true);
+        await Step(3);
         enemy.SetWindupPose(false);
+        await Step(1);
+        Check(shown.Position == Vector2.Zero && shown.Scale == Vector2.One, $"Annonce annulée : repos sans étirement ({shown.Scale})");
 
         // Onde de montée de niveau (J4) : créature repoussée en apparence, corps immobile, sans flash.
         await Step(30);

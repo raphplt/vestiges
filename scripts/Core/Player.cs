@@ -292,6 +292,8 @@ public partial class Player : CharacterBody2D
         _visual.Color = data.VisualColor;
         _originalColor = data.VisualColor;
 
+        // Formes génériques jusqu'à ce qu'un sprite soit chargé ci-dessous.
+        _mobilityFeedback.SetSilhouette(null, data.AccentColor);
         // Sprite animé : remplace le Polygon2D si sprite_folder est défini
         if (!string.IsNullOrEmpty(data.SpriteFolder))
         {
@@ -317,6 +319,7 @@ public partial class Player : CharacterBody2D
                     new Color(oc.R * 0.3f + 0.05f, oc.G * 0.3f + 0.05f, oc.B * 0.3f + 0.05f, 0.9f));
                 _sprite.Material = _spriteMaterial;
                 _statusVisual.Attach(_spriteMaterial, webbed => WebbedChanged?.Invoke(webbed));
+                _mobilityFeedback.SetSilhouette(_sprite, data.AccentColor);
 
                 PlaySpriteAnim("SE_idle");
             }
@@ -721,6 +724,7 @@ public partial class Player : CharacterBody2D
         bool wasAirborne = (Mobility?.VisualHeight ?? 0f) > 0f;
         Harpoon?.Cancel();
         Mobility?.Suspend();
+        _attackFx?.ClearLunge();
         UpdateMobilityHeight();
         _mobilityFeedback?.Suspend();
         _mobilityRequiresRelease = true;
@@ -1902,6 +1906,7 @@ public partial class Player : CharacterBody2D
         _isDead = true;
         Harpoon.Cancel();
         Mobility.Die();
+        _attackFx?.ClearLunge();
         UpdateMobilityHeight();
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;

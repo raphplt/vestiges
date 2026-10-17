@@ -17,6 +17,7 @@
         "passive_perk": "traqueur_precision",
         "exclusive_perks": ["traqueur_piercing", "traqueur_swiftness", "traqueur_ambush", "traqueur_evasion", "traqueur_marked"],
         "visual_color": [0.2, 0.7, 0.3, 1.0],
+        "accent_color": [0.55, 0.78, 0.4, 1.0],
         "sprite_folder": "traqueur",
         "sprite_feet_offset": 17
     },
@@ -38,6 +39,7 @@
         "passive_perk": "vagabond_harvest",
         "exclusive_perks": ["vagabond_adaptability", "vagabond_survivalist", "vagabond_jack_of_all", "vagabond_nomad", "vagabond_scrounger"],
         "visual_color": [0.48, 0.36, 0.26, 1.0],
+        "accent_color": [0.88, 0.54, 0.22, 1.0],
         "sprite_folder": "vagabond",
         "sprite_feet_offset": 18
     },
@@ -59,6 +61,7 @@
         "passive_perk": "forgeuse_fortify",
         "exclusive_perks": ["forgeuse_quick_craft", "forgeuse_reinforce", "forgeuse_overcharge", "forgeuse_recycler", "forgeuse_last_wall"],
         "visual_color": [0.42, 0.42, 0.48, 1.0],
+        "accent_color": [0.85, 0.3, 0.23, 1.0],
         "sprite_folder": "forgeuse",
         "sprite_feet_offset": 18
     },
@@ -80,6 +83,7 @@
         "passive_perk": "facteur_round",
         "exclusive_perks": [],
         "visual_color": [0.36, 0.45, 0.58, 1.0],
+        "accent_color": [0.88, 0.69, 0.25, 1.0],
         "sprite_folder": "facteur",
         "sprite_feet_offset": 18,
         "mobility": "glide"
@@ -102,6 +106,7 @@
         "passive_perk": "eveillee_double",
         "exclusive_perks": [],
         "visual_color": [0.37, 0.77, 0.77, 1.0],
+        "accent_color": [0.37, 0.77, 0.77, 1.0],
         "sprite_folder": "eveillee",
         "sprite_feet_offset": 18,
         "mobility": "phase"
@@ -124,6 +129,7 @@
         "passive_perk": "scaphandriere_air",
         "exclusive_perks": [],
         "visual_color": [0.63, 0.44, 0.27, 1.0],
+        "accent_color": [0.45, 0.72, 0.62, 1.0],
         "sprite_folder": "scaphandriere",
         "sprite_feet_offset": 16,
         "mobility": "float_jump"

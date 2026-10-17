@@ -3,7 +3,8 @@ using Godot;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Retour visuel d'un coup reçu par une créature (plan 02 J1) : flash blanc, écrasement puis rebond élastique,
+/// Retour visuel d'un coup reçu par une créature (plan 02 J1) : flash blanc, écrasement dans l'axe du coup puis
+/// rebond élastique,
 /// recul du visuel dans le sens du coup, étincelles projetées du même côté. Animé par l'ennemi à chaque tick
 /// physique, sans tween ni allocation par coup ; le recul déplace le visuel, jamais le corps physique.
 /// </summary>
@@ -15,7 +16,9 @@ public sealed class HitFeedback
     private const float RecoilSec = 0.1f;
     private const float RecoilPx = 5f;
     private const float ShoveSec = 0.3f;
-    private static readonly Vector2 SquashScale = new(1.25f, 0.75f);
+    // Coup venu du haut ou du bas de l'écran : écrasé en hauteur ; venu du côté : écrasé en largeur (plan 54 G3).
+    private static readonly Vector2 VerticalSquash = new(1.25f, 0.75f);
+    private static readonly Vector2 SideSquash = new(0.8f, 1.2f);
     private static readonly Color FlashModulate = new(3f, 3f, 3f, 1f);
 
     private Node2D _target;
@@ -23,6 +26,7 @@ public sealed class HitFeedback
     private Polygon2D _polygon;
     private Color _polygonColor;
     private Vector2 _recoil;
+    private Vector2 _squash = VerticalSquash;
     private float _elapsed = -1f;
     private bool _flash;
     private float _recoilSec = RecoilSec;
@@ -47,6 +51,7 @@ public sealed class HitFeedback
         _polygonColor = polygonColor;
         _target = hasSprite ? sprite : polygon;
         _recoil = direction * RecoilPx;
+        _squash = SquashFor(direction);
         _recoilSec = RecoilSec;
         _flash = true;
         _elapsed = 0f;
@@ -65,6 +70,7 @@ public sealed class HitFeedback
         _polygon = null;
         _target = sprite != null && sprite.Visible ? sprite : polygon;
         _recoil = direction * distance;
+        _squash = SquashFor(direction);
         _recoilSec = ShoveSec;
         _flash = false;
         _elapsed = 0f;
@@ -102,6 +108,13 @@ public sealed class HitFeedback
         }
     }
 
+    /// <summary>
+    /// Axe d'écrasement selon l'axe dominant du coup ; un mélange des deux annulerait l'écrasement en diagonale.
+    /// Sans direction : écrasé en hauteur, comme avant.
+    /// </summary>
+    private static Vector2 SquashFor(Vector2 direction) =>
+        Mathf.Abs(direction.X) > Mathf.Abs(direction.Y) ? SideSquash : VerticalSquash;
+
     private void Apply()
     {
         if (_target == null)
@@ -122,7 +135,7 @@ public sealed class HitFeedback
         float squash = Mathf.Clamp(_elapsed / SquashSec, 0f, 1f);
         float elastic = squash >= 1f ? 1f
             : Mathf.Pow(2f, -10f * squash) * Mathf.Sin((squash * 10f - 0.75f) * (Mathf.Tau / 3f)) + 1f;
-        _target.Scale = RestScale * SquashScale.Lerp(Vector2.One, elastic);
+        _target.Scale = RestScale * _squash.Lerp(Vector2.One, elastic);
 
         // Recul bref dans le sens du coup, qui revient en douceur.
         float recoil = Mathf.Clamp(_elapsed / _recoilSec, 0f, 1f);

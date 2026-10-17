@@ -207,7 +207,7 @@ public sealed class GuardianMoves : IEnemyAbility
         _move = Move.Charge;
         _timer = _config.ChargeSeconds;
         _chargeHit = false;
-        _owner.SetWindupPose(false);
+        _owner.ReleaseWindup();
         _owner.PlayAttackAnim();
         _chargeMark.HideMarker();
     }
@@ -296,7 +296,7 @@ public sealed class GuardianMoves : IEnemyAbility
         _timer = 0f;
         _waveHit = false;
         _waveStep = -1;
-        _owner.SetWindupPose(false);
+        _owner.ReleaseWindup();
         _owner.PlayAttackAnim();
         ScreenShake.Instance?.ShakeLight();
         AudioManager.PlayAt(_config.WaveAudio, _waveCenter, 0.08f, -5f);
