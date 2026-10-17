@@ -109,7 +109,13 @@ public partial class LandChangeRegression : Node
         CombatPools.Instance.SpawnXpOrb(_player.GlobalPosition + new Vector2(1500f, 0f), 5000f);
         await Frame();
         await Frame();
-        await transition.GoToLandAsync(Lands);
+        // Par la commande de dev, comme depuis l'atelier de test (F4).
+        Vestiges.Development.DevelopmentCommandResult command =
+            _world.GetNode<Vestiges.Development.DevelopmentRunTools>("DevelopmentRunTools").Execute("land next");
+        Check(command.Success && transition.IsChanging, $"commande « land next » : {command.Message}");
+        while (transition.IsChanging)
+            await Frame();
+        Check(transition.LandIndex == Lands, $"commande « land next » : terre {transition.LandIndex}");
         bool levelUpShown = false;
         for (int frame = 0; frame < 30 && !levelUpShown; frame++)
         {

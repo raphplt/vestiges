@@ -582,6 +582,9 @@ public partial class RunObservation : Node
         GD.Print($"[RunObservation] RESULT character={characterId} output={_output}");
     }
 
+    // Fondu de sortie de l'écran de passage (GameLoadingOverlay.FadeOut) : environ 1,7 s.
+    private const double LandCaptureDelaySeconds = 2.5;
+
     private async Task MeasureDensity(double seconds, ulong seed)
     {
         string[] args = OS.GetCmdlineUserArgs();
@@ -734,6 +737,12 @@ public partial class RunObservation : Node
         double nextChestSample = 0.0;
         List<(Rect2 Rect, float SortY, bool Canopy)> propRects = CollectPropRects();
         bool nomad = Array.IndexOf(OS.GetCmdlineUserArgs(), "--nomad") >= 0;
+        // --land-every S (plan 51) : passage à la terre suivante toutes les S secondes de jeu ; une image de chaque
+        // terre neuve est gardée après le fondu de l'écran de passage (land-N.png) quand la run est capturée.
+        double landEvery = double.Parse(Argument(OS.GetCmdlineUserArgs(), "--land-every", "0"), CultureInfo.InvariantCulture);
+        double nextLand = landEvery;
+        double landCaptureAt = double.MaxValue;
+        LandTransition lands = _world.GetNode<LandTransition>("LandTransition");
         // --player-profile : le profil décide du cap, des détours, des cartes et de l'esquive (plan 42 M0b).
         bool profiled = ReadProfile(args, seed);
         if (profiled)
@@ -803,6 +812,21 @@ public partial class RunObservation : Node
             timeline?.Sample(t);
             pace.Sample(t);
             GrantBuildObjects(t);
+            if (landEvery > 0 && t >= nextLand && !lands.IsChanging)
+            {
+                nextLand += landEvery;
+                await lands.GoToLandAsync(lands.LandIndex + 1);
+                waypoint = _player.GlobalPosition;
+                lastProgressPosition = waypoint;
+                // Images seulement pour une capture à l'écran (--capture-every) : la mesure headless n'a pas de rendu.
+                if (_captureEvery > 0)
+                    landCaptureAt = t + LandCaptureDelaySeconds;
+            }
+            if (t >= landCaptureAt)
+            {
+                landCaptureAt = double.MaxValue;
+                Save($"land-{lands.LandIndex}.png");
+            }
 
             // Déplacement nomade déterministe : nouveau point de passage à 500–900 px dès l'arrivée,
             // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes.

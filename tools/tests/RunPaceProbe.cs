@@ -94,6 +94,7 @@ internal sealed class RunPaceProbe : IDisposable
         _bus.WellInteracted += OnLandmark;
         _bus.RunEventStarted += OnEvent;
         _bus.CrisisStarted += OnCrisis;
+        _bus.LandChanged += OnLandChanged;
         _bus.BossEncounterStarted += OnBoss;
     }
 
@@ -200,9 +201,13 @@ internal sealed class RunPaceProbe : IDisposable
         _lastBossTime = _time;
     }
 
+    /// <summary>Terre suivante (plan 51) : le saut au départ n'est pas un trajet. Chaque terre part du même point.</summary>
+    private void OnLandChanged(int index) => _last = _player.GlobalPosition;
+
     public void Dispose()
     {
         _trace.Dispose();
+        _bus.LandChanged -= OnLandChanged;
         _bus.EnemyDamageResolved -= OnDamage;
         _bus.EnemyKillResolved -= OnKill;
         _bus.PlayerDamageResolved -= OnPlayerDamage;

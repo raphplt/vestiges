@@ -6,6 +6,7 @@ using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
 using Vestiges.Spawn;
+using Vestiges.World;
 
 namespace Vestiges.Development;
 
@@ -148,12 +149,26 @@ public partial class DevelopmentRunTools : Node
                     if (_spawner.SpawnEventEnemy(parts[1], position) == null)
                         throw new ArgumentException("Apparition impossible à cet endroit.");
                     message = $"Créature créée : {parts[1]}."; break;
+                case "land": message = ChangeLand(parts); break;
                 default: return new(false, "Commande inconnue. Voir doc/DEV-MODE.md.");
             }
             GD.Print($"[DevelopmentRunTools] {command} → {message}");
             return new(true, message);
         }
         catch (ArgumentException exception) { return new(false, exception.Message); }
+    }
+
+    /// <summary>Plan 51 : « land next » passe à la terre suivante, « land N » à la terre de rang N.</summary>
+    private string ChangeLand(string[] parts)
+    {
+        Count(parts, 2);
+        LandTransition transition = GetNodeOrNull<LandTransition>("/root/Main/LandTransition")
+            ?? throw new ArgumentException("Aucun passage de terre dans cette scène.");
+        if (transition.IsChanging)
+            throw new ArgumentException("Un passage est déjà en cours.");
+        int index = parts[1] == "next" ? transition.LandIndex + 1 : Integer(parts[1], 0, 999);
+        _ = transition.GoToLandAsync(index);
+        return $"Passage vers la terre {index} lancé.";
     }
 
     private string SetWeapon(string[] parts)

@@ -496,3 +496,18 @@ Livrés ensemble : le vidage seul fait planter les systèmes qui gardent la cart
 - passage protégé par un `try/finally` (pause et état rendus même sur erreur) ; deux désabonnements hors de leur garde ; brouillard qui repart d'un relevé complet ; restes de la collecte d'éclats remis à zéro.
 
 **Validation large** (18 suites) : 16 vertes au premier passage. **Butin d'objets** : son banc créait l'Effacement seul, sans horloge à côté. C'est un oubli du lot P0, qui est sur `main`, corrigé ici et à reporter sur `main` à la fusion. **Mouvement** : 5 contrôles de vitesse ×1,08 juste après le scénario du Facteur, sous une forte charge machine. Non reproduit seul, deux fois vert depuis.
+
+### Compte rendu P1d — 17 octobre 2026
+
+**Livré (branche `terres`) :**
+- **Commande de dev `land next`** (ou `land N`), et bouton « Terre suivante » dans l'atelier de test (F4), section « Terres ». Documentée dans `doc/DEV-MODE.md`. Pour jouer en petites terres d'un biome : `tools/run_dev.sh -- --lands`.
+- **Écran pendant le passage** : l'écran de chargement du jeu couvre le passage, avec sa marche, ses phrases et sa progression (étapes de la construction), puis son fondu de sortie. Il tient la place de la recousure (P1e).
+- **Outil de mesure** : `--land-every S` change de terre toutes les S secondes de jeu, et garde une image de chaque terre neuve (`land-N.png`) pendant une capture. La sonde de rythme ne compte plus le saut au départ comme un trajet.
+
+**Vérifié :**
+- banc des terres vert, dernier passage lancé par la commande de dev ; suites du mode dev, des outils de dev et de l'export de release vertes (les outils restent absents des exports) ;
+- capture d'une run qui change de terre toutes les 25 s : marais en 1,6 s, carrière en 1,5 s, sans erreur au journal.
+
+**Pas vérifié à l'image** : toutes les images de la capture, y compris celle prise à 30 s avant tout passage, montrent la même vue figée de l'écran de chargement initial. macOS ne dessinait plus la fenêtre de capture, masquée pendant le travail sur la machine. La capture de l'esquive parfaite (lot E2), prise sur `main` avant ce chantier, avait le même défaut. C'est à refaire fenêtre visible, ou à voir en jouant.
+
+**Banc dense** : non relancé, aucune boucle par image n'a changé (le passage n'existe qu'à la demande, et les nouvelles réactions ne tournent qu'au changement de terre).

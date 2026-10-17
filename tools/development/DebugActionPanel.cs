@@ -205,6 +205,10 @@ public partial class DebugActionPanel : CanvasLayer
             Run(FormattableString.Invariant($"spawn {Selected(_enemy)} {position.X} {position.Y}"));
         });
 
+        Section("Terres (plan 51)");
+        Button(_content, "Terre suivante", () => Run("land next"));
+        Label(_content, "Vide la carte et construit la suivante, joueur et build intacts. Petites terres d'un biome avec --lands.");
+
         Section("Console · commandes communes aux agents");
         HBoxContainer console = Row(_content);
         _console = new LineEdit { Name = "Command", PlaceholderText = "weapon makeshift_bow 1 10 rare", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };

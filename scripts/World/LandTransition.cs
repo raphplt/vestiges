@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
+using Vestiges.UI;
 
 namespace Vestiges.World;
 
@@ -67,6 +68,9 @@ public partial class LandTransition : Node
         bool wasPaused = tree.Paused;
         tree.Paused = true;
         ulong started = Time.GetTicksMsec();
+        // L'écran de chargement couvre le passage, en attendant la recousure (P1e).
+        GameLoadingOverlay overlay = new() { Name = "LandLoadingOverlay" };
+        _world.AddChild(overlay);
         try
         {
             _eventBus.EmitSignal(EventBus.SignalName.LandChanging, index);
@@ -74,7 +78,7 @@ public partial class LandTransition : Node
             _voices?.Free();
             _falseLights?.Free();
             await _world.ClearWorldAsync();
-            await _world.BuildLandAsync(index);
+            await _world.BuildLandAsync(index, overlay.SetProgress);
             _smallPlaces.ResetLand(_world.LandSeed);
             PlaceLandDetails();
             _player.ArriveOnLand(Vector2.Zero);
@@ -84,6 +88,7 @@ public partial class LandTransition : Node
         }
         finally
         {
+            overlay.FadeOut();
             tree.Paused = wasPaused;
             IsChanging = false;
         }
