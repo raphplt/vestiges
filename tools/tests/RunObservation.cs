@@ -294,6 +294,8 @@ public partial class RunObservation : Node
                 await CaptureBestiary();
             else if (Array.IndexOf(args, "--capture-scaph-kit") >= 0)
                 await CaptureScaphandriereKit();
+            else if (Array.IndexOf(args, "--capture-lands") >= 0)
+                await CaptureLands();
             else if (Array.IndexOf(args, "--capture-character") >= 0)
                 await CaptureCharacter(Argument(args, "--character", "traqueur"));
             else

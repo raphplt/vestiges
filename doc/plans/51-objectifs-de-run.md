@@ -657,3 +657,12 @@ Relevé : les quêtes « battre la Barrière » et « battre l'Indicible » ne s
 - banc des terres vert : la ligne s'affiche (« Terre 1 · Mémoriaux ravivés 1/3 ») et change quand les lumières sont toutes allumées (« Terre 1 · Réveille le gardien, au cœur ») ;
 - suites de démarrage, catalogues, cartographie et art de l'interface vertes ;
 - **captures en vraie run regardées** : la fenêtre de capture est de nouveau dessinée. Sur une terre de champs (graine 7) puis une terre de marais (graine 42) : ligne d'objectif, anneau plein, repaire violet et Mémorial doré sur la minimap, colonne de lumière du repaire à l'écran.
+
+**Vérifié à l'image, même jour** (nouveau mode `--capture-lands`, graine 42, terre de marais puis de champs) :
+- **le cercle** d'un Mémorial en cours : grande ellipse claire au sol, remplie d'une trame depuis le Mémorial ;
+- **le front à mi-terre** : le Néant pâle et fissuré ronge la terre ; la minimap montre les morceaux restants et l'anneau, à moitié plein ;
+- **le repaire prêt** : trois lumières allumées, ligne d'objectif dorée « Réveille le gardien, au cœur » ;
+- **le réveil** : barre du gardien (un Rampant Souverain), sol tombé tout autour, minimap réduite au cœur, anneau vide, « Bats le gardien » ;
+- **la terre suivante** : champs, « Terre 2 · Mémoriaux ravivés 0/3 », repaire près du départ.
+
+Corrigé en regardant : le repaire empruntait la stèle des Mémoriaux et redevenait blanc une fois prêt, donc identique à un Mémorial. Il reste maintenant violet, plus clair quand il est prêt.

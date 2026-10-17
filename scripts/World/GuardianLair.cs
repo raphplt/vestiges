@@ -14,7 +14,10 @@ public partial class GuardianLair : Node2D, IInteractable
     private const string SpritePath = "res://assets/landmarks/memorial_dormant.png";
     private const float PipSpacing = 10f;
     private static readonly RarityColors LairColors = RarityPalette.Colors("legendary");
+    // Toujours violet, pour ne jamais le confondre avec un Mémorial (même stèle, en attendant les gardiens dessinés) ;
+    // plus clair quand toutes ses lumières sont allumées.
     private static readonly Color SleepTint = new(0.45f, 0.35f, 0.55f);
+    private static readonly Color ReadyTint = new(1.25f, 0.85f, 1.45f);
     private static readonly Color DarkPip = new(0.15f, 0.12f, 0.2f, 0.9f);
 
     private GuardianDirector _director;
@@ -71,7 +74,7 @@ public partial class GuardianLair : Node2D, IInteractable
         if (lit == _lit)
             return;
         _lit = lit;
-        _sprite.Modulate = CanInteract ? Colors.White : SleepTint;
+        _sprite.Modulate = CanInteract ? ReadyTint : SleepTint;
         QueueRedraw();
     }
 
