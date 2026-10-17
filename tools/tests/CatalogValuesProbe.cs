@@ -225,6 +225,24 @@ public partial class CatalogValuesProbe : Node
         foreach (string spawnField in spawnFields)
             lines.Add($"spawn {spawnField}");
         spawn.Free();
+        // Q7e-2 : foule et variantes (crowd.json, enemies/_variants.json).
+        lines.Add(Invariant($"crowd {CrowdDataLoader.SeparationRadius:R} {CrowdDataLoader.SeparationStrength:R} {CrowdDataLoader.SeparationMaxPush:R} {CrowdDataLoader.ContactDistance:R}"));
+        foreach (string variantId in new[] { "elite", "champion", "aberration" })
+        {
+            EnemyVariantData v = EnemyVariantDataLoader.GetVariant(variantId);
+            VariantLevelScaling level = v.LevelScaling;
+            string scaling = level == null ? "none" : Invariant($"{level.FightSeconds:R},{level.DpsCoefficient:R},{level.DpsExponent:R},{level.DamageBase:R},{level.DamagePerLevel:R}");
+            lines.Add(Invariant($"variant {v.Id} [{v.TitleMasculine}|{v.TitleFeminine}] target={v.HpTarget:R} min={v.HpMultMin:R} hp={v.HpMult:R} dmg={v.DamageMult:R} speed={v.SpeedMult:R} scale={v.Scale:R} xp={v.XpMult:R} affixes={v.AffixCount} pool=[{string.Join(",", v.AffixPool)}] essence={v.BonusEssence} chest={v.RewardChest}@{v.RewardChestChance:R} outline={v.OutlineColor.ToHtml()} shake={v.DeathShake} plate={v.Nameplate} shader={v.AberrationShader} level={scaling}"));
+        }
+        foreach (string affixId in new[] { "enraged", "armored", "regenerant", "explosive", "swift" })
+        {
+            EnemyAffixData a = EnemyVariantDataLoader.GetAffix(affixId);
+            lines.Add(Invariant($"affix {a.Id} [{a.NameMasculine}|{a.NameFeminine}] color={a.Color.ToHtml()} hp={a.HpMult:R} dmg={a.DamageMult:R} speed={a.SpeedMult:R} taken={a.DamageTakenMult:R} regen={a.RegenRatioPerSec:R}/{a.RegenPauseAfterHitSec:R} blast={a.DeathExplosionRadius:R}x{a.DeathExplosionDamageMult:R}"));
+        }
+        NaturalEliteConfig elites = EnemyVariantDataLoader.NaturalElites;
+        lines.Add(Invariant($"elites start={elites.StartSec:R} interval={elites.IntervalMinSec:R}-{elites.IntervalMaxSec:R} alive={elites.MaxAlive} pool=[{string.Join(",", elites.AffixPool)}] late={elites.LateFromMinute:R}-{elites.LateFullMinute:R} {elites.LateIntervalMinSec:R}-{elites.LateIntervalMaxSec:R} alive={elites.LateMaxAlive} hp={elites.LateHpMult:R} dmg={elites.LateDamageMult:R} extra={elites.LateExtraAffixAt:R}"));
+        PhaseModifierConfig phases = EnemyVariantDataLoader.PhaseModifiers;
+        lines.Add(Invariant($"phases aberration={phases.CrisisAberrationChance:R}+{phases.CrisisAberrationChancePerIntensity:R} affix={phases.AffixChanceCrisis:R},{phases.AffixChanceLateGame:R},{phases.AffixChanceEndgame:R} pool=[{string.Join(",", phases.AffixPool)}]"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

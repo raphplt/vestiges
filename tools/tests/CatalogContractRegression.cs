@@ -44,6 +44,8 @@ public partial class CatalogContractRegression : Node
             CheckErasure();
             CheckRunEvents();
             CheckSpawnFlow();
+            CheckCrowd();
+            CheckVariants();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -922,6 +924,90 @@ public partial class CatalogContractRegression : Node
             && defaults.Integer("local_spawn_burst_max") == 4 && defaults.Number("crisis_spawn_multiplier") == 1.65f
             && defaults.Number("spawn_forward_arc_degrees") == 140f && defaults.HpSegments.Count == 1 && defaults.HpSegments[0] == (0f, 1f),
             $"flux d'apparition : fichier minimal, secours d'avant gardés {minimalError}");
+    }
+
+    /// <summary>Foule (plan 26 Q7e-2) : fichier du dépôt accepté, règles refusées, secours d'avant.</summary>
+    private void CheckCrowd()
+    {
+        Check(CrowdDataLoader.TryLoad(out string loadError) && CrowdDataLoader.SeparationRadius == 26f, $"foule du dépôt acceptée {loadError}");
+        string valid = FileAccess.GetFileAsString(CrowdDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["separation"] = 26, "clé « separation » inconnue"),
+            ("rayon négatif", root => root["separation_radius_px"] = -1, "separation_radius_px"),
+            ("force non numérique", root => root["separation_strength"] = "forte", "separation_strength"),
+            ("contact négatif", root => root["contact_distance_px"] = -22, "contact_distance_px"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"separation_radius_px\": " : Mutated(valid, mutate);
+            bool refused = !CrowdDataLoader.TryParse(text, out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"foule, {name} refusé ({error})");
+        }
+        Check(CrowdDataLoader.TryParse("{}", out CrowdDataLoader.Settings defaults, out _)
+            && defaults == new CrowdDataLoader.Settings(26f, 0.9f, 1.5f, 22f), "foule : fichier vide, secours d'avant gardés");
+    }
+
+    /// <summary>Variantes et affixes (plan 26 Q7e-2) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckVariants()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Check(EnemyVariantDataLoader.TryLoad(out string loadError) && EnemyVariantDataLoader.GetVariant("champion")?.LevelScaling != null
+            && EnemyVariantDataLoader.NaturalElites.LateMaxAlive == 8, $"variantes du dépôt acceptées {loadError}");
+        EnemyVariantData elite = EnemyVariantDataLoader.GetVariant("elite");
+        NaturalEliteConfig natural = EnemyVariantDataLoader.NaturalElites;
+        string valid = FileAccess.GetFileAsString(EnemyVariantDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("section inconnue", root => root["bosses"] = new JsonObject(), "clé « bosses » inconnue"),
+            ("section absente", root => root.Remove("phase_modifiers"), "phase_modifiers"),
+            ("variante inconnue du code", root => root["variants"]!["legend"] = new JsonObject(), "variante « legend » inconnue du code"),
+            ("variante absente", root => root["variants"]!.AsObject().Remove("aberration"), "variante « aberration » absente"),
+            ("variante non objet", root => root["variants"]!["elite"] = 5, "variante elite : objet attendu"),
+            ("affixe non objet", root => root["affixes"]!["swift"] = new JsonArray(), "affixe swift : objet attendu"),
+            ("champ de variante inconnu", root => root["variants"]!["elite"]!["hp"] = 5, "clé « hp » inconnue"),
+            ("PV nuls", root => root["variants"]!["elite"]!["hp_mult"] = 0, "hp_mult"),
+            ("bornes de PV inversées", root => root["variants"]!["elite"]!["hp_mult_min"] = 6, "hp_mult_min ≤ hp_mult"),
+            ("taille nulle", root => root["variants"]!["aberration"]!["scale"] = 0, "scale"),
+            ("affixes fractionnaires", root => root["variants"]!["elite"]!["affix_count"] = 1.5, "affix_count"),
+            ("Essence négative", root => root["variants"]!["elite"]!["bonus_essence"] = -3, "bonus_essence"),
+            ("coffre inconnu", root => root["variants"]!["elite"]!["reward_chest"] = "chest_mythique", "« chest_mythique » inconnu"),
+            ("chance de coffre hors borne", root => root["variants"]!["elite"]!["reward_chest_chance"] = 1.5, "reward_chest_chance"),
+            ("couleur invalide", root => root["variants"]!["elite"]!["outline_color"] = "doré", "couleur « doré » invalide"),
+            ("secousse inconnue", root => root["variants"]!["champion"]!["death_shake"] = "huge", "« huge » inconnu"),
+            ("plaque non booléenne", root => root["variants"]!["elite"]!["nameplate"] = "oui", "nameplate"),
+            ("titre non textuel", root => root["variants"]!["champion"]!["title_m"] = 3, "title_m"),
+            ("affixe de variante inconnu", root => root["variants"]!["champion"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+            ("affixe de variante en double", root => root["variants"]!["champion"]!["affix_pool"]!.AsArray().Add("swift"), "« swift » en double"),
+            ("échelle de niveau inconnue", root => root["variants"]!["champion"]!["level_scaling"]!["slope"] = 1, "clé « slope » inconnue"),
+            ("combat nul", root => root["variants"]!["champion"]!["level_scaling"]!["fight_seconds"] = 0, "fight_seconds"),
+            ("champ d'affixe inconnu", root => root["affixes"]!["swift"]!["speed"] = 1.45, "clé « speed » inconnue"),
+            ("nom d'affixe vide", root => root["affixes"]!["swift"]!["name_m"] = "", "name_m"),
+            ("dégâts subis nuls", root => root["affixes"]!["armored"]!["damage_taken_mult"] = 0, "damage_taken_mult"),
+            ("régénération hors borne", root => root["affixes"]!["regenerant"]!["regen_ratio_per_sec"] = 1.5, "regen_ratio_per_sec"),
+            ("explosion négative", root => root["affixes"]!["explosive"]!["death_explosion_radius"] = -64, "death_explosion_radius"),
+            ("élites inversées", root => root["natural_elites"]!["interval_min_sec"] = 90, "interval_min_sec ≤ interval_max_sec"),
+            ("élites fractionnaires", root => root["natural_elites"]!["max_alive"] = 2.5, "max_alive"),
+            ("élites tardives inconnues", root => root["natural_elites"]!["late"]!["count"] = 8, "clé « count » inconnue"),
+            ("élites tardives inversées", root => root["natural_elites"]!["late"]!["interval_min_sec"] = 30, "interval_min_sec ≤ interval_max_sec"),
+            ("affixe d'élite inconnu", root => root["natural_elites"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+            ("chance de phase hors borne", root => root["phase_modifiers"]!["affix_chance_endgame"] = 1.2, "affix_chance_endgame"),
+            ("affixe de phase inconnu", root => root["phase_modifiers"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"variants\": " : Mutated(valid, mutate);
+            string error = EnemyVariantDataLoader.Apply(text, chestExists);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(EnemyVariantDataLoader.GetVariant("elite"), elite)
+                && ReferenceEquals(EnemyVariantDataLoader.NaturalElites, natural), $"variantes, {name} refusé sans publication ({error})");
+        }
+        JsonObject repeated = JsonNode.Parse(valid)!.AsObject();
+        repeated["phase_modifiers"]!["affix_pool"]!.AsArray().Add("enraged");
+        Check(EnemyVariantDataLoader.Apply(repeated.ToJsonString(), chestExists) == null
+            && EnemyVariantDataLoader.PhaseModifiers.AffixPool.Count == 4, "variantes : affixe de phase répété admis (il pèse davantage)");
+        Check(EnemyVariantDataLoader.Apply(valid, chestExists) == null, "variantes du dépôt republiées");
     }
 
     private void CheckAtmosphere()
