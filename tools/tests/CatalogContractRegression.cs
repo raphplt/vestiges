@@ -48,6 +48,8 @@ public partial class CatalogContractRegression : Node
             CheckVariants();
             CheckCharacters();
             CheckPerks();
+            CheckSouvenirs();
+            CheckWeaponUpgrades();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1089,6 +1091,87 @@ public partial class CatalogContractRegression : Node
                 && ReferenceEquals(PerkDataLoader.GetAll().Find(perk => perk.Id == "facteur_round"), round),
                 $"signatures, {name} refusé sans publication ({error})");
         }
+    }
+
+    /// <summary>Constellations et Souvenirs (plan 26 Q7f-3) : catalogues du dépôt acceptés, refus sans publication.</summary>
+    private void CheckSouvenirs()
+    {
+        Check(SouvenirDataLoader.TryLoad(out string loadError) && SouvenirDataLoader.GetAllConstellations().Count == 6
+            && SouvenirDataLoader.GetAll().Count == 19, $"Souvenirs du dépôt acceptés {loadError}");
+        SouvenirData ticket = SouvenirDataLoader.Get("billet_de_train");
+        string constellations = FileAccess.GetFileAsString(SouvenirDataLoader.ConstellationsPath);
+        string souvenirs = FileAccess.GetFileAsString(SouvenirDataLoader.SouvenirsPath);
+        (string, Func<JsonArray, JsonNode>, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("constellations vides", _ => new JsonArray(), null, "liste non vide attendue"),
+            ("champ de constellation inconnu", list => { list[0]!["icon"] = "x"; return list; }, null, "clé « icon » inconnue"),
+            ("constellation en double", list => { list.Add(list[0]!.DeepClone()); list[^1]!["order"] = 9; return list; }, null, "identifiant déjà déclaré"),
+            ("rang pris", list => { list[1]!["order"] = 0; return list; }, null, "rang 0 déjà pris"),
+            ("rang fractionnaire", list => { list[0]!["order"] = 0.5; return list; }, null, "order"),
+            ("couleur invalide", list => { list[0]!["color"] = "sépia"; return list; }, null, "couleur « sépia » invalide"),
+            ("description vide", list => { list[0]!["description"] = ""; return list; }, null, "description"),
+            ("Souvenirs non liste", null, _ => new JsonObject(), "liste non vide attendue"),
+            ("champ de Souvenir inconnu", null, list => { list[0]!["weight"] = 2; return list; }, "clé « weight » inconnue"),
+            ("Souvenir en double", null, list => { list.Add(list[0]!.DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("constellation inconnue", null, list => { list[0]!["constellation"] = "apres"; return list; }, "constellation « apres » inconnue"),
+            ("texte vide", null, list => { list[0]!["text"] = ""; return list; }, "text"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutateConstellations, Func<JsonArray, JsonNode> mutateSouvenirs, string expected) in cases)
+        {
+            string constellationsText = mutateConstellations == null ? constellations : mutateConstellations(JsonNode.Parse(constellations)!.AsArray()).ToJsonString();
+            string souvenirsText = mutateSouvenirs == null ? souvenirs : mutateSouvenirs(JsonNode.Parse(souvenirs)!.AsArray()).ToJsonString();
+            string error = SouvenirDataLoader.Apply(constellationsText, souvenirsText);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(SouvenirDataLoader.Get("billet_de_train"), ticket),
+                $"Souvenirs, {name} refusé sans publication ({error})");
+        }
+        ConstellationData before = SouvenirDataLoader.GetConstellation("avant");
+        JsonArray orphan = JsonNode.Parse(souvenirs)!.AsArray();
+        orphan[0]!["constellation"] = "apres";
+        SouvenirDataLoader.Apply(constellations, orphan.ToJsonString());
+        Check(ReferenceEquals(SouvenirDataLoader.GetConstellation("avant"), before), "Souvenirs refusés : constellations valides non publiées seules");
+        Check(SouvenirDataLoader.Apply(constellations, "[ 3 ]")?.Contains("entrée 0 : objet attendu", StringComparison.Ordinal) == true,
+            "Souvenirs : entrée non objet refusée");
+        Check(SouvenirDataLoader.Apply(constellations, souvenirs) == null && !ReferenceEquals(SouvenirDataLoader.Get("billet_de_train"), ticket)
+            && SouvenirDataLoader.GetAllConstellations().Count == 6, "Souvenirs du dépôt republiés");
+        string invalid = SouvenirDataLoader.Apply(constellations, "[ { \"id\": ");
+        Check(invalid?.Contains("JSON invalide", StringComparison.Ordinal) == true, $"Souvenirs, JSON invalide refusé ({invalid})");
+    }
+
+    /// <summary>Montées d'armes (plan 26 Q7f-3) : fichier du dépôt accepté, refus sans publication.</summary>
+    private void CheckWeaponUpgrades()
+    {
+        Check(WeaponUpgradeDataLoader.TryLoad(out string loadError) && WeaponUpgradeDataLoader.GetWeaponMaxLevel() == 50
+            && WeaponUpgradeDataLoader.GetStatConfig("projectile_count") is { Integer: true, Additive: true }, $"montées d'armes du dépôt acceptées {loadError}");
+        WeaponUpgradeStatConfig damage = WeaponUpgradeDataLoader.GetStatConfig("damage");
+        string valid = FileAccess.GetFileAsString(WeaponUpgradeDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["max_level"] = 50, "clé « max_level » inconnue"),
+            ("niveau maximal nul", root => root["weapon_max_level"] = 0, "weapon_max_level"),
+            ("niveau maximal fractionnaire", root => root["weapon_max_level"] = 50.5, "weapon_max_level"),
+            ("stats absentes", root => root.Remove("stats"), "section stats absente"),
+            ("stats vides", root => root["stats"] = new JsonObject(), "au moins une stat montable"),
+            ("stat non objet", root => root["stats"]!["damage"] = 0.18, "stats.damage : objet attendu"),
+            ("champ de stat inconnu", root => root["stats"]!["damage"]!["weight"] = 1, "clé « weight » inconnue"),
+            ("pas absent", root => root["stats"]!["damage"]!.AsObject().Remove("step"), "step"),
+            ("pas nul", root => root["stats"]!["damage"]!["step"] = 0, "step"),
+            ("mode inconnu", root => root["stats"]!["damage"]!["mode"] = "exponential", "« exponential » inconnu"),
+            ("entier non booléen", root => root["stats"]!["projectile_count"]!["integer"] = 1, "integer"),
+            ("plafond négatif", root => root["stats"]!["arc_angle"]!["max"] = -360, "max"),
+        };
+        string duplicated = valid.Replace("\"weapon_max_level\": 50,", "\"weapon_max_level\": 50, \"weapon_max_level\": 40,", StringComparison.Ordinal);
+        string duplicateError = WeaponUpgradeDataLoader.Apply(duplicated);
+        Check(duplicated != valid && duplicateError?.Contains("en double", StringComparison.Ordinal) == true, $"montées d'armes, clé en double refusée ({duplicateError})");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"stats\": " : Mutated(valid, mutate);
+            string error = WeaponUpgradeDataLoader.Apply(text);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(WeaponUpgradeDataLoader.GetStatConfig("damage"), damage),
+                $"montées d'armes, {name} refusé sans publication ({error})");
+        }
+        Check(WeaponUpgradeDataLoader.Apply(valid) == null && !ReferenceEquals(WeaponUpgradeDataLoader.GetStatConfig("damage"), damage)
+            && WeaponUpgradeDataLoader.GetWeaponMaxLevel() == 50, "montées d'armes du dépôt republiées");
     }
 
     private void CheckAtmosphere()

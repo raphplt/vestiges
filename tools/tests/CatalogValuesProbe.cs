@@ -256,6 +256,20 @@ public partial class CatalogValuesProbe : Node
             string effects = perk.Effects == null ? "null" : string.Join(";", perk.Effects.ConvertAll(e => Invariant($"{e.Stat}:{e.Modifier:R}:{e.ModifierType}")));
             lines.Add(Invariant($"perk {perk.Id} [{perk.Name}|{perk.Description}] stat={perk.Stat ?? "null"}:{perk.Modifier:R}:{perk.ModifierType ?? "null"} passive={perk.IsPassive} character={perk.CharacterId ?? "null"} effects={effects} {blocks}"));
         }
+        // Q7f-3 : constellations et Souvenirs, montées d'armes.
+        foreach (ConstellationData constellation in SouvenirDataLoader.GetAllConstellations())
+            lines.Add(Invariant($"constellation {constellation.Order} {constellation.Id} [{constellation.Name}|{constellation.Description}] {constellation.Color.R:R},{constellation.Color.G:R},{constellation.Color.B:R},{constellation.Color.A:R}"));
+        List<SouvenirData> souvenirs = SouvenirDataLoader.GetAll();
+        souvenirs.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+        foreach (SouvenirData souvenir in souvenirs)
+            lines.Add($"souvenir {souvenir.Id} {souvenir.ConstellationId} [{souvenir.Name}|{souvenir.Text}]");
+        lines.Add($"weapon_max_level {WeaponUpgradeDataLoader.GetWeaponMaxLevel()}");
+        foreach (string stat in new[] { "damage", "attack_speed", "range", "arc_angle", "cone_angle_end", "knockback", "projectile_speed",
+            "orbital_speed", "chain_range", "homing_strength", "projectile_count", "projectile_pierce", "chain_targets", "inconnue" })
+        {
+            WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(stat);
+            lines.Add(config == null ? $"upgrade {stat} null" : Invariant($"upgrade {config.Key} step={config.Step:R} additive={config.Additive} integer={config.Integer} max={config.Max:R}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

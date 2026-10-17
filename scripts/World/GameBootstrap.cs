@@ -122,11 +122,12 @@ public partial class GameBootstrap : Node
         LoadGuard.InjectFault("catalogues");
         RequireCatalog(PerkDataLoader.TryLoad(out string perksError), perksError);
         RequireCatalog(CharacterDataLoader.TryLoad(out string charactersError), charactersError);
+        // Les armes contrôlent leurs stats montables contre ce fichier.
+        RequireCatalog(WeaponUpgradeDataLoader.TryLoad(out string upgradesError), upgradesError);
         WeaponDataLoader.Load();
-        WeaponUpgradeDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
         MetaSaveManager.Load();
-        SouvenirDataLoader.Load();
+        RequireCatalog(SouvenirDataLoader.TryLoad(out string souvenirsError), souvenirsError);
         // Catalogues contrôlés en entier (plan 26 Q7) : un refus arrête le chargement sur l'écran d'erreur, avec son message.
         RequireCatalog(XpCurveConfig.TryLoad(out _, out string xpError), xpError);
         RequireCatalog(ScoreConfig.TryLoad(out _, out string scoreError), scoreError);
