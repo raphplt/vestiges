@@ -109,22 +109,13 @@ public partial class CrisisAftermath : Node
         GD.PushWarning("[CrisisAftermath] Aucun sol praticable devant le joueur : pas de coffre d'accalmie");
     }
 
+    /// <summary>Réglages contrôlés par <see cref="CrisisConfig"/> (plan 26 Q7d-1).</summary>
     private void LoadConfig()
     {
-        using FileAccess file = FileAccess.Open("res://data/scaling/crises.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            return;
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
-            return;
-        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-        _essenceMultiplier = (float)dict.GetValueOrDefault("calm_essence_multiplier", _essenceMultiplier).AsDouble();
-        _essenceSeconds = (float)dict.GetValueOrDefault("calm_essence_seconds", _essenceSeconds).AsDouble();
-        _chestId = dict.GetValueOrDefault("calm_chest", _chestId).AsString();
-        if (dict.ContainsKey("calm_chest_distance"))
-        {
-            Godot.Collections.Array range = dict["calm_chest_distance"].AsGodotArray();
-            _chestDistance = new Vector2((float)range[0].AsDouble(), (float)range[1].AsDouble());
-        }
+        CrisisConfig config = CrisisConfig.Load();
+        _essenceMultiplier = config.CalmEssenceMultiplier;
+        _essenceSeconds = config.CalmEssenceSeconds;
+        _chestId = config.CalmChest;
+        _chestDistance = config.CalmChestDistance;
     }
 }

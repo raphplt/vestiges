@@ -147,6 +147,21 @@ public partial class CatalogValuesProbe : Node
         lines.Add($"farm edges {string.Join(",", farm.ParcelEdges)}");
         lines.Add($"farm orchard {string.Join(";", farm.OrchardTrees.ConvertAll(tree => $"{tree.Base}+{tree.Canopy}"))}");
         lines.Add(Invariant($"farm scenes {string.Join(",", farm.Scenes)} blocking={string.Join(",", farm.BlockingScenes)} chance={farm.SceneChancePerRegion:R}"));
+        // Q7d-1 : crises.json, relevé dans les champs des trois lecteurs (présents des deux côtés du changement).
+        foreach (Node reader in new Node[] { new Vestiges.Events.CrisisManager(), new Vestiges.Events.CrisisAftermath(), new Vestiges.Events.EndgameManager() })
+        {
+            System.Type type = reader.GetType();
+            type.GetMethod("LoadConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(reader, null);
+            List<string> fields = new();
+            foreach (System.Reflection.FieldInfo info in type.GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance))
+            {
+                if (info.FieldType == typeof(float) || info.FieldType == typeof(int) || info.FieldType == typeof(string) || info.FieldType == typeof(Vector2))
+                    fields.Add(Invariant($"{info.Name}={info.GetValue(reader)}"));
+            }
+            fields.Sort(StringComparer.Ordinal);
+            lines.Add($"crises {type.Name} {string.Join(" ", fields)}");
+            reader.Free();
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

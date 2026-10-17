@@ -40,6 +40,7 @@ public partial class CatalogContractRegression : Node
             CheckBiomes();
             CheckWorldGen();
             CheckSites();
+            CheckCrises();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -734,6 +735,48 @@ public partial class CatalogContractRegression : Node
             $"chantiers : champs facultatifs absents, secours d'avant gardés {bareError}");
         Check(FarmConfig.TryParse("{ \"enabled\": false }", farmSprite, out FarmConfig emptyFarm, out _) && !emptyFarm.Site.Enabled
             && emptyFarm.Scenes.Length == 0 && emptyFarm.SceneChancePerRegion == 0.5f, "fermes : fichier minimal, secours d'avant gardés");
+    }
+
+    /// <summary>Résurgences, late game et accalmie (plan 26 Q7d-1) : fichier du dépôt accepté, règles refusées.</summary>
+    private void CheckCrises()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Check(Vestiges.Events.CrisisConfig.TryLoad(out Vestiges.Events.CrisisConfig loaded, out string loadError)
+            && loaded.FirstCrisisDelaySec == 360f && loaded.BossCrisisThreshold == 5 && loaded.CalmChest == "chest_rare",
+            $"crises du dépôt acceptées {loadError}");
+        string valid = FileAccess.GetFileAsString(Vestiges.Events.CrisisConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["interval"] = 290, "clé « interval » inconnue"),
+            ("premier délai nul", root => root["first_crisis_delay_sec"] = 0, "first_crisis_delay_sec"),
+            ("intervalle non numérique", root => root["interval_sec"] = "souvent", "interval_sec"),
+            ("variance négative", root => root["interval_variance_sec"] = -5, "interval_variance_sec"),
+            ("annonce négative", root => root["warning_duration_sec"] = -1, "warning_duration_sec"),
+            ("crise nulle", root => root["crisis_duration_sec"] = 0, "crisis_duration_sec"),
+            ("seuil d'oubli hors borne", root => root["late_game_erasure_threshold"] = 1.2, "late_game_erasure_threshold"),
+            ("seuil de crises nul", root => root["late_game_crisis_threshold"] = 0, "late_game_crisis_threshold"),
+            ("seuil de boss fractionnaire", root => root["boss_crisis_threshold"] = 4.5, "boss_crisis_threshold"),
+            ("heure du boss nulle", root => root["boss_time_threshold_sec"] = 0, "boss_time_threshold_sec"),
+            ("PV du boss nuls", root => root["boss_hp_scale"] = 0, "boss_hp_scale"),
+            ("tempo de fin nul", root => root["endgame_interval_multiplier"] = 0, "endgame_interval_multiplier"),
+            ("Essence d'accalmie nulle", root => root["calm_essence_multiplier"] = 0, "calm_essence_multiplier"),
+            ("accalmie négative", root => root["calm_essence_seconds"] = -1, "calm_essence_seconds"),
+            ("coffre inconnu", root => root["calm_chest"] = "chest_mythique", "coffre « chest_mythique » inconnu"),
+            ("coffre vide", root => root["calm_chest"] = "", "calm_chest"),
+            ("distance inversée", root => root["calm_chest_distance"] = new JsonArray(340, 220), "calm_chest_distance"),
+            ("distance négative", root => root["calm_chest_distance"] = new JsonArray(-10, 220), "calm_chest_distance"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"interval_sec\": " : Mutated(valid, mutate);
+            bool refused = !Vestiges.Events.CrisisConfig.TryParse(text, chestExists, out Vestiges.Events.CrisisConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"crises, {name} refusé ({error})");
+        }
+        Check(Vestiges.Events.CrisisConfig.TryParse("{}", chestExists, out Vestiges.Events.CrisisConfig defaults, out _)
+            && defaults.FirstCrisisDelaySec == 240f && defaults.IntervalVarianceSec == 45f && defaults.LateGameErasureThreshold == 0.68f
+            && defaults.LateGameCrisisThreshold == 4 && defaults.CalmChestDistance == new Vector2(220f, 340f),
+            "crises : fichier vide, secours d'avant gardés");
     }
 
     private void CheckAtmosphere()

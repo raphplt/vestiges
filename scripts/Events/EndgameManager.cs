@@ -192,37 +192,15 @@ public partial class EndgameManager : Node
 		_player = GetTree().GetFirstNodeInGroup("player") as Player;
 	}
 
+	/// <summary>Réglages contrôlés par <see cref="CrisisConfig"/> (plan 26 Q7d-1).</summary>
 	private void LoadConfig()
 	{
-		FileAccess file = FileAccess.Open("res://data/scaling/crises.json", FileAccess.ModeFlags.Read);
-		if (file == null)
-			return;
-
-		string jsonText = file.GetAsText();
-		file.Close();
-
-		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
-			return;
-
-		Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-		_lateGameErasureThreshold = dict.ContainsKey("late_game_erasure_threshold")
-			? (float)dict["late_game_erasure_threshold"].AsDouble()
-			: _lateGameErasureThreshold;
-		_lateGameCrisisThreshold = dict.ContainsKey("late_game_crisis_threshold")
-			? (int)dict["late_game_crisis_threshold"].AsDouble()
-			: _lateGameCrisisThreshold;
-		_bossCrisisThreshold = dict.ContainsKey("boss_crisis_threshold")
-			? (int)dict["boss_crisis_threshold"].AsDouble()
-			: _bossCrisisThreshold;
-		_bossTimeThresholdSec = dict.ContainsKey("boss_time_threshold_sec")
-			? (float)dict["boss_time_threshold_sec"].AsDouble()
-			: _bossTimeThresholdSec;
-		_bossHpScale = dict.ContainsKey("boss_hp_scale")
-			? (float)dict["boss_hp_scale"].AsDouble()
-			: _bossHpScale;
-		_bossDmgScale = dict.ContainsKey("boss_dmg_scale")
-			? (float)dict["boss_dmg_scale"].AsDouble()
-			: _bossDmgScale;
+		CrisisConfig config = CrisisConfig.Load();
+		_lateGameErasureThreshold = config.LateGameErasureThreshold;
+		_lateGameCrisisThreshold = config.LateGameCrisisThreshold;
+		_bossCrisisThreshold = config.BossCrisisThreshold;
+		_bossTimeThresholdSec = config.BossTimeThresholdSec;
+		_bossHpScale = config.BossHpScale;
+		_bossDmgScale = config.BossDmgScale;
 	}
 }

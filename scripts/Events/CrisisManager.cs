@@ -135,27 +135,17 @@ public partial class CrisisManager : Node
         _nextCrisisAtSec = _clock.Seconds + Mathf.Max(20f, delaySec);
     }
 
+    /// <summary>Réglages contrôlés par <see cref="CrisisConfig"/> (plan 26 Q7d-1) ; le bootstrap a déjà refusé un fichier invalide.</summary>
     private void LoadConfig()
     {
-        FileAccess file = FileAccess.Open("res://data/scaling/crises.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            return;
-
-        string jsonText = file.GetAsText();
-        file.Close();
-
-        Json json = new();
-        if (json.Parse(jsonText) != Error.Ok)
-            return;
-
-        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-        _firstCrisisDelaySec = dict.ContainsKey("first_crisis_delay_sec") ? (float)dict["first_crisis_delay_sec"].AsDouble() : _firstCrisisDelaySec;
-        _intervalSec = dict.ContainsKey("interval_sec") ? (float)dict["interval_sec"].AsDouble() : _intervalSec;
-        _intervalVarianceSec = dict.ContainsKey("interval_variance_sec") ? (float)dict["interval_variance_sec"].AsDouble() : _intervalVarianceSec;
-        _warningDurationSec = dict.ContainsKey("warning_duration_sec") ? (float)dict["warning_duration_sec"].AsDouble() : _warningDurationSec;
-        _crisisDurationSec = dict.ContainsKey("crisis_duration_sec") ? (float)dict["crisis_duration_sec"].AsDouble() : _crisisDurationSec;
-        _endgameIntervalMultiplier = dict.ContainsKey("endgame_interval_multiplier") ? (float)dict["endgame_interval_multiplier"].AsDouble() : _endgameIntervalMultiplier;
-        _endgameDurationMultiplier = dict.ContainsKey("endgame_duration_multiplier") ? (float)dict["endgame_duration_multiplier"].AsDouble() : _endgameDurationMultiplier;
+        CrisisConfig config = CrisisConfig.Load();
+        _firstCrisisDelaySec = config.FirstCrisisDelaySec;
+        _intervalSec = config.IntervalSec;
+        _intervalVarianceSec = config.IntervalVarianceSec;
+        _warningDurationSec = config.WarningDurationSec;
+        _crisisDurationSec = config.CrisisDurationSec;
+        _endgameIntervalMultiplier = config.EndgameIntervalMultiplier;
+        _endgameDurationMultiplier = config.EndgameDurationMultiplier;
     }
 
     public void EnableEndgameTempo()
