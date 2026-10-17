@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
+using Vestiges.World;
 
 namespace Vestiges.Tests;
 
@@ -37,6 +38,7 @@ public partial class CatalogContractRegression : Node
             CheckSmallPlaces();
             CheckWaymarks();
             CheckBiomes();
+            CheckWorldGen();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -560,6 +562,106 @@ public partial class CatalogContractRegression : Node
             && ((IDictionary<string, IReadOnlyList<string>>)forest.TileSources).IsReadOnly
             && ((IList<string>)forest.TileSources["forest"]).IsReadOnly && ((ISet<string>)forest.WangTileGroups).IsReadOnly,
             "définitions et collections imbriquées publiées en lecture seule");
+    }
+
+    /// <summary>Réglages du monde (plan 26 Q7c-4b) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckWorldGen()
+    {
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        Func<string, bool> propExists = path => ResourceLoader.Exists($"res://assets/props/{path}.png");
+        Check(WorldGenConfig.TryLoad(out WorldGenConfig loaded, out string loadError), $"réglages du monde du dépôt acceptés {loadError}");
+        Check(loaded.Zones.Count == 3 && loaded.AvailableBiomes.Count == 5 && loaded.Lands.CountScales.Count == 6,
+            "réglages du monde : trois zones, cinq biomes, six parts de terre");
+        Check(!ReferenceEquals(WorldGenConfig.Load(), WorldGenConfig.Load()), "chaque lecture rend une copie neuve, ajustable par la terre");
+        string valid = FileAccess.GetFileAsString(WorldGenConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["map_radiuss"] = 200, "clé « map_radiuss » inconnue"),
+            ("rayon absent", root => root.Remove("map_radius"), "map_radius absent"),
+            ("rayon fractionnaire", root => root["map_radius"] = 200.5, "map_radius"),
+            ("rayon trop petit", root => root["map_radius"] = 2, "map_radius"),
+            ("hauteur non numérique", root => root["map_radius_y"] = "grand", "map_radius_y"),
+            ("lissage absent", root => root.Remove("ca_iterations"), "ca_iterations absent"),
+            ("dégagement négatif", root => root["spawn_clearance"] = -1, "spawn_clearance"),
+            ("brouillard non entier", root => root["fog_reveal_radius"] = 2.5, "fog_reveal_radius"),
+            ("lieux V1 non booléens", root => root["pois_enabled"] = 0, "pois_enabled"),
+            ("biomes non liste", root => root["available_biomes"] = "swamp", "available_biomes"),
+            ("biome inconnu", root => root["available_biomes"]![0] = "volcan", "biome « volcan » inconnu"),
+            ("biome en double", root => root["available_biomes"]!.AsArray().Add("swamp"), "biome « swamp » en double"),
+            ("trop de biomes par carte", root => root["biome_count"] = 6, "biome_count"),
+            ("espacement nul", root => root["biome_layout"]!["region_spacing"] = 0, "region_spacing"),
+            ("décalage hors borne", root => root["biome_layout"]!["spawn_offset_factor"] = 1.5, "spawn_offset_factor"),
+            ("disposition inconnue", root => root["biome_layout"]!["spacing"] = 28, "clé « spacing » inconnue"),
+            ("fondu non booléen", root => root["ground_blend"]!["enabled"] = "oui", "enabled"),
+            ("bande de fondu nulle", root => root["ground_blend"]!["band_px"] = 0, "band_px"),
+            ("grain hors borne", root => root["ground_blend"]!["grain"] = 2, "grain"),
+            ("bruit de bord négatif", root => root["ground_blend"]!["edge_noise"] = -0.1, "edge_noise"),
+            ("chance de boucle hors borne", root => root["paths"]!["extra_edge_chance"] = 1.5, "extra_edge_chance"),
+            ("coût nul", root => root["paths"]!["costs"]!["road"] = 0, "road"),
+            ("coût inconnu", root => root["paths"]!["costs"]!["lava"] = 1, "clé « lava » inconnue"),
+            ("liaisons fractionnaires", root => root["paths"]!["spawn_links"] = 1.5, "spawn_links"),
+            ("exploration nulle", root => root["paths"]!["max_expansions"] = 0, "max_expansions"),
+            ("style de chemin invalide", root => root["paths"]!["default_style"]!["tone"] = "bleu", "paths.default_style.tone"),
+            ("style de chemin inconnu", root => root["paths"]!["default_style"]!["width"] = 28, "clé « width » inconnue"),
+            ("jonction hors borne", root => root["junction_props"]!["chance"] = 1.2, "chance"),
+            ("bande de jonction négative", root => root["junction_props"]!["band_cells"] = -1, "band_cells"),
+            ("paire non triée", root => root["junction_props"]!["pairs"]!["wild_fields+forest_reclaimed"] = new JsonArray("forest/prop_bush"), "wild_fields+forest_reclaimed"),
+            ("paire de biome inconnu", root => root["junction_props"]!["pairs"]!["forest_reclaimed+volcan"] = new JsonArray("forest/prop_bush"), "forest_reclaimed+volcan"),
+            ("paire sans décor", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"] = new JsonArray(), "swamp+wild_fields"),
+            ("décor introuvable", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"]![0] = "swamp/prop_inconnu", "décor « swamp/prop_inconnu »"),
+            ("décor hors dossier", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"]![0] = "../tiles/foret/tile_foret_sol_w00", "décor « ../tiles"),
+            ("terre sans rayon", root => root["lands"]!.AsObject().Remove("map_radius"), "map_radius absent"),
+            ("terre non booléenne", root => root["lands"]!["enabled"] = 1, "enabled"),
+            ("part de terre inconnue", root => root["lands"]!["count_scales"]!["fountain"] = 0.3, "sorte de lieu « fountain »"),
+            ("part de terre négative", root => root["lands"]!["count_scales"]!["chests"] = -0.1, "chests"),
+            ("couronne inversée", root => root["lands"]!["memorial_band"] = new JsonArray(0.9, 0.3), "memorial_band"),
+            ("couronne hors borne", root => root["lands"]!["memorial_band"] = new JsonArray(0.3, 1.2), "memorial_band"),
+            ("champ de terre inconnu", root => root["lands"]!["radius"] = 116, "clé « radius » inconnue"),
+            ("décor bloquant négatif", root => root["props"]!["min_blocking_height"] = -1, "min_blocking_height"),
+            ("emprise nulle", root => root["props"]!["footprint_scale"] = 0, "footprint_scale"),
+            ("préfixe vide", root => root["props"]!["trample_prefixes"]![0] = "", "trample_prefixes"),
+            ("règle de décor inconnue", root => root["props"]!["min_height"] = 18, "clé « min_height » inconnue"),
+            ("zones absentes", root => root.Remove("zones"), "zones"),
+            ("zones vides", root => root["zones"] = new JsonArray(), "zones"),
+            ("rayons non croissants", root => root["zones"]![1]!["max_radius"] = 10, "rayons strictement croissants"),
+            ("terrain de zone inconnu", root => root["zones"]![0]!["weights"]!["lava"] = 0.1, "clé « lava » inconnue"),
+            ("poids de zone absent", root => root["zones"]![0]!["weights"]!.AsObject().Remove("water"), "water absent"),
+            ("poids de zone négatif", root => root["zones"]![0]!["weights"]!["grass"] = -0.5, "grass"),
+            ("zone sans poids", root => root["zones"]![0]!["weights"] = new JsonObject { ["grass"] = 0, ["concrete"] = 0, ["water"] = 0, ["forest"] = 0 }, "total strictement positif"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"map_radius\": " : Mutated(valid, mutate);
+            bool refused = !WorldGenConfig.TryParse(text, biomeExists, propExists, out WorldGenConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true,
+                $"monde, {name} refusé ({error})");
+        }
+        string minimal = Mutated(valid, root =>
+        {
+            foreach (string key in new[] { "map_radius_y", "spawn_clearance", "lands", "props", "ground_blend", "paths", "junction_props",
+                         "edge_fade_width", "biome_count", "biome_layout", "poi_min_distance_between", "pois_enabled",
+                         "lore_elements_enabled", "fog_reveal_radius", "fog_initial_clear_radius" })
+                root.Remove(key);
+        });
+        Check(WorldGenConfig.TryParse(minimal, biomeExists, propExists, out WorldGenConfig defaults, out string minimalError)
+            && defaults.MapRadiusY == defaults.MapRadius && defaults.SpawnClearance == 4 && defaults.BiomeCount == 3
+            && !defaults.Lands.Enabled && defaults.JunctionProps == null && defaults.Paths.MaxExpansions == PathNetworkConfig.Default.MaxExpansions
+            && defaults.PropRules.FootprintScale == PropRules.Default.FootprintScale && defaults.FogRevealRadius == 6,
+            $"monde : champs facultatifs absents, secours d'avant gardés {minimalError}");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root => root.Remove("available_biomes")), biomeExists, propExists, out WorldGenConfig all, out _)
+            && all.AvailableBiomes.Count == 0, "monde : biomes absents, liste vide (tous les biomes du catalogue)");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root => root["available_biomes"] = new JsonArray()), biomeExists, propExists, out _, out _),
+            "monde : liste de biomes vide admise (tous les biomes du catalogue)");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root =>
+            {
+                root["lands"]!["count_scales"]!["rift"] = 1.5;
+                root["ground_blend"]!["edge_noise"] = 1.5;
+                root["junction_props"]!["band_cells"] = 0;
+                root["zones"]![0]!.AsObject().Remove("name");
+            }), biomeExists, propExists, out WorldGenConfig loose, out string looseError)
+            && loose.Lands.CountScales["rift"] == 1.5f && loose.GroundBlend.EdgeNoise == 1.5f && loose.JunctionProps.BandCells == 0,
+            $"monde : part de terre au-delà de 1, bruit de bord ample, bande nulle et zone sans nom admis {looseError}");
     }
 
     private void CheckAtmosphere()

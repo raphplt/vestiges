@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -18,13 +19,26 @@ public struct PathStyle
 
     public static PathStyle Default => new() { Tone = new Color("#6f5d46"), Ruts = 0f, WidthPx = 28f };
 
-    public static PathStyle Parse(Godot.Collections.Dictionary dict, PathStyle fallback)
+    /// <summary>
+    /// Style lu strictement (<c>path_style</c> d'un biome, <c>paths.default_style</c>) : un champ absent garde la valeur
+    /// de <see cref="Default"/>.
+    /// </summary>
+    public static PathStyle Read(JsonConfigReader reader, JsonElement section, string where)
     {
-        return new PathStyle
+        reader.AllowOnly(section, where, "tone", "ruts", "width_px");
+        PathStyle style = Default;
+        if (JsonConfigReader.Has(section, "tone"))
         {
-            Tone = dict.ContainsKey("tone") ? new Color(dict["tone"].AsString()) : fallback.Tone,
-            Ruts = dict.ContainsKey("ruts") ? (float)dict["ruts"].AsDouble() : fallback.Ruts,
-            WidthPx = dict.ContainsKey("width_px") ? (float)dict["width_px"].AsDouble() : fallback.WidthPx,
-        };
+            string tone = reader.Text(section, "tone");
+            if (tone != null && !Color.HtmlIsValid(tone))
+                reader.Fail($"{where}.tone : couleur HTML attendue");
+            else if (tone != null)
+                style.Tone = new Color(tone);
+        }
+        if (JsonConfigReader.Has(section, "ruts"))
+            style.Ruts = reader.Chance(section, "ruts");
+        if (JsonConfigReader.Has(section, "width_px"))
+            style.WidthPx = reader.Positive(section, "width_px");
+        return style;
     }
 }

@@ -9,7 +9,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Chargement récupérable (plan 26 Q4), sur la vraie Main : un scénario par lancement (--scenario).
-/// normal : la run démarre. random-seed : la seed tirée au lancement est publiée. fault-catalogues, fault-generation, fault-decors : une panne injectée affiche l'écran
+/// normal : la run démarre. random-seed : la seed tirée au lancement est publiée. invalid-biome, invalid-world : un vrai
+/// fichier refusé (copie isolée) arrête le chargement. fault-catalogues, fault-generation, fault-decors : une panne injectée affiche l'écran
 /// d'erreur, l'arbre reste en pause derrière lui et le bouton ramène au Hub. leave-generation, leave-decors : la
 /// scène quittée en route ne laisse ni pause, ni décors orphelins, ni exception. quit : fermeture pendant le chargement.
 /// </summary>
@@ -44,6 +45,8 @@ public partial class LoadingRecoveryRegression : Node
                 case "fault-catalogues": await FaultedLoad("catalogues", "Catalogues"); break;
                 // À lancer dans une copie isolée dont un biome porte map_weight = 0, jamais dans le dépôt courant.
                 case "invalid-biome": await FaultedLoad("biome", "Catalogues", "map_weight", false); break;
+                // À lancer dans une copie isolée dont world_gen.json porte ca_iterations = -1, jamais dans le dépôt courant.
+                case "invalid-world": await FaultedLoad("monde", "Catalogues", "ca_iterations", false); break;
                 case "fault-generation": await FaultedLoad("génération", "Création du monde"); break;
                 case "fault-decors": await FaultedLoad("décors", "Décors"); break;
                 case "leave-generation": await LeaveDuringGeneration(); break;
@@ -99,7 +102,7 @@ public partial class LoadingRecoveryRegression : Node
             $"diagnostic affiché : étape et message ({detail})");
         if (!injectFault)
             Check(ReadField<Task>(world, "_generation") == null && !world.IsWorldReady,
-                "catalogue de biomes refusé : aucune génération lancée");
+                $"catalogue refusé ({step}) : aucune génération lancée");
         await Capture($"echec-{step}");
         Node2D staging = ReadField<Node2D>(world, "_propStaging");
         back.EmitSignal(Button.SignalName.Pressed);

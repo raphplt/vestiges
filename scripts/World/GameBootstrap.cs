@@ -137,6 +137,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(SmallPlaceDataLoader.TryLoad(out string placesError), placesError);
         RequireCatalog(WaymarkDataLoader.TryLoad(out string waymarksError), waymarksError);
         RequireCatalog(BiomeDataLoader.TryLoad(out string biomesError), biomesError);
+        RequireCatalog(WorldGenConfig.TryLoad(out _, out string worldError), worldError);
         RequireCatalog(CampUpgradeDataLoader.TryLoad(out string campError), campError);
         RequireCatalog(InventoryConfig.TryLoad(out string inventoryError), inventoryError);
         RequireCatalog(ItemLootConfig.TryLoad(out string itemLootError), itemLootError);

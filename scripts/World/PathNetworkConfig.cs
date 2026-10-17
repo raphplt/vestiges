@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Text.Json;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
@@ -53,31 +53,52 @@ public struct PathNetworkConfig
         DefaultStyle = PathStyle.Default,
     };
 
-    public static PathNetworkConfig Parse(Godot.Collections.Dictionary dict)
+    /// <summary>Section <c>paths</c> lue strictement ; un champ absent garde sa valeur de <see cref="Default"/>.</summary>
+    public static PathNetworkConfig Read(JsonConfigReader reader, JsonElement section)
     {
-        PathNetworkConfig d = Default;
-        Godot.Collections.Dictionary costs = dict.ContainsKey("costs") ? dict["costs"].AsGodotDictionary() : new Godot.Collections.Dictionary();
-        return new PathNetworkConfig
+        reader.AllowOnly(section, "paths", "enabled", "neighbour_factor", "extra_edge_chance", "extra_edge_factor",
+            "spawn_links", "noise_amplitude", "noise_frequency", "costs", "wobble_px", "edge_margin", "max_expansions",
+            "default_style");
+        PathNetworkConfig config = Default;
+        if (JsonConfigReader.Has(section, "enabled"))
+            config.Enabled = reader.Flag(section, "enabled");
+        if (JsonConfigReader.Has(section, "neighbour_factor"))
+            config.NeighbourFactor = reader.Positive(section, "neighbour_factor");
+        if (JsonConfigReader.Has(section, "extra_edge_chance"))
+            config.ExtraEdgeChance = reader.Chance(section, "extra_edge_chance");
+        if (JsonConfigReader.Has(section, "extra_edge_factor"))
+            config.ExtraEdgeFactor = reader.Positive(section, "extra_edge_factor");
+        if (JsonConfigReader.Has(section, "spawn_links"))
+            config.SpawnLinks = reader.Integer(section, "spawn_links", 0, 16);
+        if (JsonConfigReader.Has(section, "noise_amplitude"))
+            config.NoiseAmplitude = reader.NonNegative(section, "noise_amplitude");
+        if (JsonConfigReader.Has(section, "noise_frequency"))
+            config.NoiseFrequency = reader.Positive(section, "noise_frequency");
+        if (JsonConfigReader.Has(section, "costs"))
         {
-            Enabled = dict.GetValueOrDefault("enabled", d.Enabled).AsBool(),
-            NeighbourFactor = (float)dict.GetValueOrDefault("neighbour_factor", d.NeighbourFactor).AsDouble(),
-            ExtraEdgeChance = (float)dict.GetValueOrDefault("extra_edge_chance", d.ExtraEdgeChance).AsDouble(),
-            ExtraEdgeFactor = (float)dict.GetValueOrDefault("extra_edge_factor", d.ExtraEdgeFactor).AsDouble(),
-            SpawnLinks = (int)dict.GetValueOrDefault("spawn_links", d.SpawnLinks).AsDouble(),
-            NoiseAmplitude = (float)dict.GetValueOrDefault("noise_amplitude", d.NoiseAmplitude).AsDouble(),
-            NoiseFrequency = (float)dict.GetValueOrDefault("noise_frequency", d.NoiseFrequency).AsDouble(),
-            RoadCost = (float)costs.GetValueOrDefault("road", d.RoadCost).AsDouble(),
-            ExistingPathCost = (float)costs.GetValueOrDefault("existing_path", d.ExistingPathCost).AsDouble(),
-            FieldLaneCost = (float)costs.GetValueOrDefault("field_lane", d.FieldLaneCost).AsDouble(),
-            ForestCost = (float)costs.GetValueOrDefault("forest", d.ForestCost).AsDouble(),
-            SidewalkCost = (float)costs.GetValueOrDefault("sidewalk", d.SidewalkCost).AsDouble(),
-            PlazaCost = (float)costs.GetValueOrDefault("plaza", d.PlazaCost).AsDouble(),
-            WobblePx = (float)dict.GetValueOrDefault("wobble_px", d.WobblePx).AsDouble(),
-            EdgeMargin = (int)dict.GetValueOrDefault("edge_margin", d.EdgeMargin).AsDouble(),
-            MaxExpansions = (int)dict.GetValueOrDefault("max_expansions", d.MaxExpansions).AsDouble(),
-            DefaultStyle = dict.ContainsKey("default_style")
-                ? PathStyle.Parse(dict["default_style"].AsGodotDictionary(), d.DefaultStyle)
-                : d.DefaultStyle,
-        };
+            JsonElement costs = reader.Section(section, "costs");
+            reader.AllowOnly(costs, "paths.costs", "road", "existing_path", "field_lane", "forest", "sidewalk", "plaza");
+            if (JsonConfigReader.Has(costs, "road"))
+                config.RoadCost = reader.Positive(costs, "road");
+            if (JsonConfigReader.Has(costs, "existing_path"))
+                config.ExistingPathCost = reader.Positive(costs, "existing_path");
+            if (JsonConfigReader.Has(costs, "field_lane"))
+                config.FieldLaneCost = reader.Positive(costs, "field_lane");
+            if (JsonConfigReader.Has(costs, "forest"))
+                config.ForestCost = reader.Positive(costs, "forest");
+            if (JsonConfigReader.Has(costs, "sidewalk"))
+                config.SidewalkCost = reader.Positive(costs, "sidewalk");
+            if (JsonConfigReader.Has(costs, "plaza"))
+                config.PlazaCost = reader.Positive(costs, "plaza");
+        }
+        if (JsonConfigReader.Has(section, "wobble_px"))
+            config.WobblePx = reader.NonNegative(section, "wobble_px");
+        if (JsonConfigReader.Has(section, "edge_margin"))
+            config.EdgeMargin = reader.Integer(section, "edge_margin", 0, 4000);
+        if (JsonConfigReader.Has(section, "max_expansions"))
+            config.MaxExpansions = reader.Integer(section, "max_expansions", 1, 10_000_000);
+        if (JsonConfigReader.Has(section, "default_style"))
+            config.DefaultStyle = PathStyle.Read(reader, reader.Section(section, "default_style"), "paths.default_style");
+        return config;
     }
 }

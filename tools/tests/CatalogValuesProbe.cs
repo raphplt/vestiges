@@ -111,6 +111,29 @@ public partial class CatalogValuesProbe : Node
             if (biome.PathStyle is PathStyle style)
                 lines.Add(Invariant($"biome {biome.Id} path {style.Tone} ruts={style.Ruts:R} width={style.WidthPx:R}"));
         }
+        // Q7c-4b : réglages du monde (world_gen.json), section par section, ordre des listes compris.
+        Vestiges.World.WorldGenConfig world = Vestiges.World.WorldGenConfig.Load();
+        lines.Add(Invariant($"world map={world.MapRadius}x{world.MapRadiusY} clearance={world.SpawnClearance} ca={world.CaIterations} biomes={world.BiomeCount} fade={world.EdgeFadeWidth} poi_gap={world.PoiMinDistanceBetween} pois={world.PoisEnabled} lore={world.LoreElementsEnabled} fog={world.FogRevealRadius}/{world.FogInitialClearRadius}"));
+        lines.Add($"world available {string.Join(",", world.AvailableBiomes)}");
+        lines.Add(Invariant($"world layout {world.BiomeLayout.RegionSpacing:R} {world.BiomeLayout.WarpStrength:R} {world.BiomeLayout.SpawnOffsetFactor:R}"));
+        foreach (Vestiges.World.WorldGenerator.ZoneConfig zone in world.Zones)
+            lines.Add(Invariant($"world zone {zone.MaxRadius:R} {zone.GrassWeight:R} {zone.ConcreteWeight:R} {zone.WaterWeight:R} {zone.ForestWeight:R}"));
+        Vestiges.World.PropRules props = world.PropRules;
+        lines.Add(Invariant($"world props {props.MinBlockingHeight:R} {props.MinBlockingPixels} {props.FootprintScale:R} {props.GroundDecalMaxHeight:R} {props.OccluderMinHeight:R} {props.TrampleMaxHeight:R} {string.Join(",", props.TramplePrefixes)}"));
+        Vestiges.World.GroundBlendConfig blend = world.GroundBlend;
+        lines.Add(Invariant($"world blend {blend.Enabled} {blend.BandPx:R} {blend.EdgeNoise:R} {blend.NoiseScale:R} {blend.Grain:R}"));
+        Vestiges.World.PathNetworkConfig paths = world.Paths;
+        lines.Add(Invariant($"world paths {paths.Enabled} {paths.NeighbourFactor:R} {paths.ExtraEdgeChance:R} {paths.ExtraEdgeFactor:R} {paths.SpawnLinks} {paths.NoiseAmplitude:R} {paths.NoiseFrequency:R} costs={paths.RoadCost:R},{paths.ExistingPathCost:R},{paths.FieldLaneCost:R},{paths.ForestCost:R},{paths.SidewalkCost:R},{paths.PlazaCost:R} wobble={paths.WobblePx:R} margin={paths.EdgeMargin} max={paths.MaxExpansions} style={paths.DefaultStyle.Tone} {paths.DefaultStyle.Ruts:R} {paths.DefaultStyle.WidthPx:R}"));
+        Vestiges.World.JunctionPropPlacer.Config junction = world.JunctionProps;
+        lines.Add(Invariant($"world junction {junction.Enabled} {junction.BandCells} {junction.Chance:R}"));
+        List<string> pairs = new(junction.Pairs.Keys);
+        pairs.Sort(StringComparer.Ordinal);
+        foreach (string pair in pairs)
+            lines.Add($"world junction {pair} {string.Join(",", junction.Pairs[pair])}");
+        Vestiges.World.LandsConfig lands = world.Lands;
+        List<string> scales = new(lands.CountScales.Keys);
+        scales.Sort(StringComparer.Ordinal);
+        lines.Add(Invariant($"world lands {lands.Enabled} {lands.MapRadius}x{lands.MapRadiusY} band={lands.MemorialBand.X:R}-{lands.MemorialBand.Y:R} scales={string.Join(",", scales.ConvertAll(k => Invariant($"{k}:{lands.CountScales[k]:R}")))}"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

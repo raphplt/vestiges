@@ -41,6 +41,9 @@ public sealed class SitePlacer
     /// <summary>Couronne imposée aux Mémoriaux sur une terre (plan 51) ; nulle sur la grande carte.</summary>
     public Vector2? MemorialBand { get; init; }
 
+    /// <summary>Sortes de lieux que <see cref="Scaled"/> réduit sur une terre (clés de <c>lands.count_scales</c>).</summary>
+    public static readonly string[] ScaledKinds = { "chests", "memorial", "rift", "workshop", "peril_stele", "well" };
+
     /// <summary>Part gardée par sorte de lieu sur une terre plus petite que la grande carte (plan 51) ; 1 par défaut.</summary>
     public Func<string, float> CountScale { get; init; } = _ => 1f;
 
