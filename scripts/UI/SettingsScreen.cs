@@ -18,7 +18,7 @@ public partial class SettingsScreen : CanvasLayer
 	private Control _contentArea;
 	// Contrôle qui avait le focus avant l'ouverture (bouton Paramètres de la pause ou de l'accueil) : il le retrouve.
 	private Control _returnFocus;
-	private string _activeTab = "audio";
+	private string _activeTab = "general";
 	private readonly System.Collections.Generic.Dictionary<string, Button> _tabButtons = new();
 
 	// Textures NinePatch
@@ -267,6 +267,7 @@ public partial class SettingsScreen : CanvasLayer
 		innerBar.AddThemeConstantOverride("separation", 4);
 		tabMargin.AddChild(innerBar);
 
+		AddTab(innerBar, "general", "Général");
 		AddTab(innerBar, "audio", "Audio");
 		AddTab(innerBar, "graphismes", "Graphismes");
 		AddTab(innerBar, "effets", "Effets");
@@ -282,7 +283,7 @@ public partial class SettingsScreen : CanvasLayer
 		{
 			Text = label,
 			SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-			CustomMinimumSize = new Vector2(220, 60),
+			CustomMinimumSize = new Vector2(170, 60),
 			FocusMode = Control.FocusModeEnum.All,
 			Flat = true
 		};
@@ -317,6 +318,7 @@ public partial class SettingsScreen : CanvasLayer
 		// Build tab content
 		Control content = tabId switch
 		{
+			"general" => BuildGeneralTab(),
 			"audio" => BuildAudioTab(),
 			"graphismes" => BuildGraphicsTab(),
 			"effets" => BuildEffectsTab(),
@@ -357,6 +359,59 @@ public partial class SettingsScreen : CanvasLayer
 				return nested;
 		}
 		return null;
+	}
+
+	// ================================================================
+	// GENERAL TAB
+	// ================================================================
+	private MarginContainer BuildGeneralTab()
+	{
+		MarginContainer margin = new();
+		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		margin.AddThemeConstantOverride("margin_left", 30);
+		margin.AddThemeConstantOverride("margin_top", 20);
+		margin.AddThemeConstantOverride("margin_right", 30);
+		margin.AddThemeConstantOverride("margin_bottom", 12);
+
+		VBoxContainer vbox = new();
+		vbox.AddThemeConstantOverride("separation", 16);
+		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		margin.AddChild(vbox);
+
+		// Langue
+		vbox.AddChild(BuildCycleRow("Langue",
+			LocaleManager.Instance != null
+				? LocaleManager.Instance.CurrentLocaleName
+				: "Français",
+			(btn) =>
+			{
+				if (LocaleManager.Instance == null) return;
+				LocaleManager.Instance.CycleLocale();
+				btn.Text = LocaleManager.Instance.CurrentLocaleName;
+			}));
+
+		// Section Accessibilité
+		Label accessHeader = new()
+		{
+			Text = "ACCESSIBILITÉ",
+		};
+		UITheme.SetTextRole(accessHeader, TextRole.Subhead);
+		accessHeader.AddThemeColorOverride("font_color", UITheme.GoldColor);
+		vbox.AddChild(accessHeader);
+
+		// Filtre daltonien
+		vbox.AddChild(BuildCycleRow("Filtre daltonien",
+			ColorBlindFilter.Instance != null
+				? ColorBlindFilter.ModeLabel(ColorBlindFilter.Instance.CurrentMode)
+				: "Off",
+			(btn) =>
+			{
+				if (ColorBlindFilter.Instance == null) return;
+				ColorBlindFilter.Mode newMode = ColorBlindFilter.Instance.CycleMode();
+				btn.Text = ColorBlindFilter.ModeLabel(newMode);
+			}));
+
+		return margin;
 	}
 
 	// ================================================================
@@ -528,30 +583,6 @@ public partial class SettingsScreen : CanvasLayer
 			{
 				DisplaySettings.CycleMaxFps();
 				btn.Text = DisplaySettings.MaxFpsLabel(DisplaySettings.CurrentMaxFps);
-			}));
-
-		// Colorblind filter
-		vbox.AddChild(BuildCycleRow("Filtre daltonien",
-			ColorBlindFilter.Instance != null
-				? ColorBlindFilter.ModeLabel(ColorBlindFilter.Instance.CurrentMode)
-				: "Off",
-			(btn) =>
-			{
-				if (ColorBlindFilter.Instance == null) return;
-				ColorBlindFilter.Mode newMode = ColorBlindFilter.Instance.CycleMode();
-				btn.Text = ColorBlindFilter.ModeLabel(newMode);
-			}));
-
-		// Language
-		vbox.AddChild(BuildCycleRow("Langue",
-			LocaleManager.Instance != null
-				? LocaleManager.Instance.CurrentLocaleName
-				: "Français",
-			(btn) =>
-			{
-				if (LocaleManager.Instance == null) return;
-				LocaleManager.Instance.CycleLocale();
-				btn.Text = LocaleManager.Instance.CurrentLocaleName;
 			}));
 
 		return margin;
