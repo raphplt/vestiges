@@ -53,6 +53,9 @@ public partial class ErasureManager : Node
     private const int MaxUpdatesPerFrame = 4;
     private double _updateTimer;
     private RunClock _clock;
+    // Terres allumées (plan 51 P2a) : la mémoire suit le front de chute de la terre au lieu d'un déclin global.
+    private LandFront _front;
+    private WorldSetup _world;
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
@@ -79,6 +82,9 @@ public partial class ErasureManager : Node
 
     public bool IsLateGame => _globalErasurePercent >= _lateGameThreshold;
 
+    /// <summary>Front de chute de la terre en cours ; nul sur la grande carte.</summary>
+    public LandFront Front => _front;
+
     public override void _Ready()
     {
         LoadConfig();
@@ -95,12 +101,15 @@ public partial class ErasureManager : Node
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
         _eventBus.LandChanging += OnLandChanging;
+        _eventBus.LandChanged += OnLandChanged;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
         RenderingServer.GlobalShaderParameterSet("erasure_memory", _memoryTexture);
         RenderingServer.GlobalShaderParameterSet("erasure_window", Vector4.Zero);
         RenderingServer.GlobalShaderParameterSet("erasure_far_memory", 1f);
+        _world = GetParentOrNull<WorldSetup>();
+        BuildFront();
     }
 
     public override void _ExitTree()
@@ -117,6 +126,7 @@ public partial class ErasureManager : Node
             _eventBus.WorkshopVisited -= OnMemorialAwakened;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
             _eventBus.LandChanging -= OnLandChanging;
+            _eventBus.LandChanged -= OnLandChanged;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
         }
@@ -133,7 +143,9 @@ public partial class ErasureManager : Node
         if (_player == null || !IsInstanceValid(_player) || _player.IsDead)
             return;
 
-        SeedAroundPlayer();
+        // Sur une terre, toutes les cellules sont déjà inscrites par le front.
+        if (_front == null)
+            SeedAroundPlayer();
         int updates = 0;
         while (_updateTimer + 1e-9 >= _updateIntervalSec && updates < MaxUpdatesPerFrame)
         {
@@ -153,6 +165,11 @@ public partial class ErasureManager : Node
 
     private void AdvanceMemory(float elapsedMinutes)
     {
+        if (_front != null)
+        {
+            AdvanceFront();
+            return;
+        }
         float decayPerMinute = (_baseDecayPerMinute + _globalAccelerationPerMinute * elapsedMinutes) * _decayMultiplier * _difficultySpeed;
         float decayAmount = decayPerMinute * (_updateIntervalSec / 60f) * (_crisisActive ? _crisisDecayMultiplier : 1f);
         float previousGlobal = _globalErasurePercent;
@@ -211,6 +228,7 @@ public partial class ErasureManager : Node
     /// </summary>
     private void OnLandChanging(int toIndex)
     {
+        _front = null;
         _zoneMemory.Clear();
         _zonePhases.Clear();
         _activeCells.Clear();
@@ -221,6 +239,80 @@ public partial class ErasureManager : Node
         RenderingServer.GlobalShaderParameterSet("erasure_far_memory", 1f);
         _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, 0f);
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)_playerPhase);
+    }
+
+    private void OnLandChanged(int index) => BuildFront();
+
+    /// <summary>
+    /// Front de la terre en cours (plan 51 P2a) : toutes ses cellules de sol inscrites avec leur date de chute, et leur
+    /// mémoire de départ posée sans signal. Sur la grande carte, aucun front : l'Effacement garde son déclin.
+    /// </summary>
+    private void BuildFront()
+    {
+        _front = null;
+        if (_world?.Land is not { IsLand: true } land || _world.Generator == null)
+            return;
+        LandFrontConfig config = LandFrontConfig.Load(out string error);
+        if (config == null)
+        {
+            GD.PushError($"[ErasureManager] {error} : terre sans front de chute");
+            return;
+        }
+        LandFront front = new(config, land.Seed);
+        WorldGenerator generator = _world.Generator;
+        TileMapLayer ground = _world.GetNode<TileMapLayer>("Ground");
+        Rect2 bounds = _world.WorldBounds;
+        Vector2I min = WorldToCell(bounds.Position);
+        Vector2I max = WorldToCell(bounds.End);
+        for (int x = min.X; x <= max.X; x++)
+        {
+            for (int y = min.Y; y <= max.Y; y++)
+            {
+                Vector2I cell = new(x, y);
+                Vector2I tile = ground.LocalToMap(ground.ToLocal(CellCenterToWorld(cell)));
+                if (!generator.IsWithinBounds(tile.X, tile.Y) || generator.IsErased(tile.X, tile.Y))
+                    continue;
+                front.AddCell(cell, generator.EllipseDistance(tile.X, tile.Y) / generator.MapRadiusX);
+            }
+        }
+        _front = front;
+        foreach (Vector2I cell in front.Cells)
+            StoreMemory(cell, front.MemoryAt(cell), true);
+        GD.Print($"[ErasureManager] Front de la terre {land.Index} : {front.CellCount} cellules");
+    }
+
+    /// <summary>
+    /// Pas du front : son horloge avance au rythme de l'oubli (Oublis, difficulté, crise), la présence du joueur retarde
+    /// la chute autour de lui, puis chaque cellule relit sa mémoire. Aucun Effacement global : le late game ne vient pas
+    /// de la chute des terres.
+    /// </summary>
+    private void AdvanceFront()
+    {
+        float step = _updateIntervalSec * _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
+        _front.Advance(step);
+        Vector2I playerCell = WorldToCell(_player.GlobalPosition);
+        int reach = Mathf.CeilToInt(_playerPresenceFalloffCells);
+        for (int dx = -reach; dx <= reach; dx++)
+        {
+            for (int dy = -reach; dy <= reach; dy++)
+            {
+                Vector2I cell = new(playerCell.X + dx, playerCell.Y + dy);
+                float distance = CellCenterToWorld(cell).DistanceTo(_player.GlobalPosition) / Mathf.Max(_cellSize, 1);
+                float proximity = Mathf.Clamp(1f - distance / Mathf.Max(_playerPresenceFalloffCells, 0.01f), 0f, 1f);
+                if (proximity > 0f)
+                    _front.Delay(cell, step * _playerDecayReduction * proximity);
+            }
+        }
+        LastAdvancedCellCount = 0;
+        foreach (Vector2I cell in _activeCells)
+        {
+            LastAdvancedCellCount++;
+            float memory = _front.MemoryAt(cell);
+            _zoneMemory[cell] = memory;
+            if (memory == 0f)
+                _activeCells.SetActive(cell, false);
+            UpdateZonePhase(cell, memory);
+        }
     }
 
     /// <summary>Recopie la mémoire des zones autour du joueur dans la texture lue par le shader du sol.</summary>
@@ -306,7 +398,14 @@ public partial class ErasureManager : Node
 
                 float current = GetMemoryAtCell(cell);
                 float stabilized = Mathf.Max(current, _stabilizeMemoryFloor);
-                SetMemory(cell, stabilized);
+                // Sur une terre, un lieu ravivé repousse la chute alentour, sans jamais l'avancer.
+                if (_front != null && _front.Contains(cell))
+                {
+                    _front.Restore(cell, stabilized);
+                    StoreMemory(cell, _front.MemoryAt(cell), false);
+                }
+                else
+                    SetMemory(cell, stabilized);
             }
         }
 
@@ -342,6 +441,12 @@ public partial class ErasureManager : Node
     }
 
     private void SetMemory(Vector2I cell, float memory, bool silent = false)
+    {
+        _front?.SetMemory(cell, memory);
+        StoreMemory(cell, memory, silent);
+    }
+
+    private void StoreMemory(Vector2I cell, float memory, bool silent)
     {
         _zoneMemory[cell] = memory;
         _activeCells.SetActive(cell, memory > 0f);

@@ -12,6 +12,9 @@ public sealed class LandSpec
 {
     public int Index { get; private init; }
 
+    /// <summary>Terre du prototype (terres allumées) ; faux pour la grande carte en mosaïque d'aujourd'hui.</summary>
+    public bool IsLand { get; private init; }
+
     /// <summary>Graine de la carte : celle de la run pour la terre 0, dérivée du rang ensuite.</summary>
     public ulong Seed { get; private init; }
     public int MapRadius { get; private init; }
@@ -35,7 +38,7 @@ public sealed class LandSpec
         }
         return new LandSpec
         {
-            Index = index, Seed = seed, MapRadius = lands.MapRadius, MapRadiusY = lands.MapRadiusY,
+            Index = index, IsLand = true, Seed = seed, MapRadius = lands.MapRadius, MapRadiusY = lands.MapRadiusY,
             BiomeIds = new[] { BiomeOf(index, config.AvailableBiomes) }, BiomeCount = 1,
             CountScales = lands.CountScales,
         };

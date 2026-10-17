@@ -742,6 +742,7 @@ public partial class RunObservation : Node
         double landEvery = double.Parse(Argument(OS.GetCmdlineUserArgs(), "--land-every", "0"), CultureInfo.InvariantCulture);
         double nextLand = landEvery;
         double landCaptureAt = double.MaxValue;
+        double nextFrontReport = 0.0;
         LandTransition lands = _world.GetNode<LandTransition>("LandTransition");
         // --player-profile : le profil décide du cap, des détours, des cartes et de l'esquive (plan 42 M0b).
         bool profiled = ReadProfile(args, seed);
@@ -812,6 +813,12 @@ public partial class RunObservation : Node
             timeline?.Sample(t);
             pace.Sample(t);
             GrantBuildObjects(t);
+            // Terre restante, minute par minute, sur une terre allumée (plan 51 P2a).
+            if (erasure.Front != null && t >= nextFrontReport)
+            {
+                GD.Print(FormattableString.Invariant($"[RunObservation] FRONT t={t:F0} standing={erasure.Front.StandingShare():F3} land={lands.LandIndex}"));
+                nextFrontReport += 60.0;
+            }
             if (landEvery > 0 && t >= nextLand && !lands.IsChanging)
             {
                 nextLand += landEvery;

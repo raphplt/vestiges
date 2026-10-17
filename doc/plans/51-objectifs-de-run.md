@@ -527,3 +527,36 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
 | **P2b Les Mémoriaux à tenir** | Sur les terres, raviver un Mémorial, c'est tenir son cercle environ 20 s (au lieu de rassembler ses éclats) ; une fois ravivé, sa zone est ancrée et ne tombe plus ; chaque Mémorial ravivé allume une lumière comptée pour le gardien (P3) ; un Mémorial atteint par le front avant d'être ravivé est perdu | Banc : cercle tenu, quitté, ravivé ; zone ancrée qui ne tombe pas ; compteur de lumières |
 | **P2c Lire la terre** | Anneau de terre restante autour de la minimap, avec le repère du réveil forcé ; la minimap montre le front et ce qui tombe dans la minute | Capture, à juger par Raphaël |
 | **P2d Le vide** | Marcher dans le Néant draine l'Essence, puis les PV quand elle est épuisée (au lieu des seuls PV aujourd'hui) | Banc : drain d'Essence puis de PV |
+
+### Compte rendu P2a, le front — 17 octobre 2026
+
+**Livré (branche `terres`, terres allumées seulement) :**
+- **`LandFront`** (`scripts/World/LandFront.cs`) :
+  - chaque cellule d'Effacement de la terre reçoit à la construction sa date de chute, tirée de sa distance au cœur et d'un bruit (langues et baies) ;
+  - sa mémoire est le temps qui lui reste, rapporté au préavis : les mêmes états, le même rendu du sol et les mêmes signaux qu'aujourd'hui ;
+  - le cœur ne tombe jamais.
+- **Une part égale par minute.** La date suit le carré de la distance : la terre perd une surface régulière, au lieu de fondre vite au début puis de moins en moins. La tension monte donc jusqu'au bout, comme voulu au §185. C'est un choix pris en mesurant, à revoir en jouant.
+- **L'Effacement suit le front** sur une terre :
+  - toutes ses cellules sont suivies, environ 5 100 ;
+  - l'horloge du front avance avec le jeu, plus vite sous les Oublis, aux niveaux durs et pendant les Résurgences ;
+  - la présence du joueur retarde la chute autour de lui ;
+  - un lieu ravivé ou un coffre ouvert repousse la chute alentour, sans jamais l'avancer.
+
+  Aucun Effacement global : le late game ne vient pas de la chute des terres.
+- **Réglages** : section `land_front` de `data/scaling/erasure.json`, contrôlée en entier. Première chute à 60 s, cœur atteint à 720 s, préavis de 100 s (25 s par état), cœur de 12 % du rayon, ±90 s de bruit.
+
+**Vérifié :**
+- banc des terres, 39 contrôles verts :
+  - règles du front : états dans l'ordre et à l'heure, présence qui repousse, chute dans le Néant, stabilisation qui n'avance jamais, ancre et cœur intacts, terre restante ;
+  - sur la vraie terre : 5 103 cellules, cœur intact, 182 cellules du bord déjà fragiles à l'arrivée ;
+  - front neuf à chaque terre ;
+- Effacement actif et petits lieux verts ;
+- **terre restante mesurée** (bot nomade invincible, 13 min, graines 7 et 42, courbes quasi identiques) :
+
+  | min | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+  |---|---|---|---|---|---|---|---|---|---|---|---|---|
+  | debout | 99 % | 94 % | 85 % | 76 % | 67 % | 57 % | 43 % | 33 % | 24 % | 15 % | 6 % | 1,5 % (cœur) |
+
+  Avec une date linéaire en distance, la moitié de la terre était tombée dès 5 min et 10 % restaient à 9 min.
+
+**Pas vérifié à l'image** : le front se dessine avec le rendu existant des états d'Effacement, mais aucune capture n'a pu être prise (fenêtre de capture non dessinée, voir P1d).

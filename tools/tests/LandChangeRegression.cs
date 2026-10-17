@@ -40,6 +40,8 @@ public partial class LandChangeRegression : Node
                 await Frame();
             _player = _world.GetNode<Player>("Player");
             _player.SurviveFatalHitsForTests = true;
+            CheckFrontRules();
+            CheckFrontOnLand();
             await CheckLands();
             GD.Print($"[LandChangeRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -50,6 +52,70 @@ public partial class LandChangeRegression : Node
             GetTree().Quit(2);
         }
     }
+
+    /// <summary>Lot P2a, règles du front seul : ordre et heure des états, cœur intact, présence, stabilisation, ancre.</summary>
+    private void CheckFrontRules()
+    {
+        LandFrontConfig config = LandFrontConfig.Load(out string error);
+        Check(config != null, $"front : réglages valides ({error})");
+        if (config == null)
+            return;
+        Check(LandFrontConfig.Parse(FileAccess.GetFileAsString("res://data/scaling/erasure.json")
+            .Replace("\"heart_reached_seconds\": 720", "\"heart_reached_seconds\": 30"), out string order) == null && order.Contains("suivre"),
+            $"front : cœur atteint avant la première chute refusé ({order})");
+        LandFrontConfig quiet = new()
+        {
+            FirstFallSeconds = config.FirstFallSeconds, HeartReachedSeconds = config.HeartReachedSeconds,
+            WarningSeconds = config.WarningSeconds, HeartRadius = config.HeartRadius, NoiseSeconds = 0f,
+            NoiseFrequency = config.NoiseFrequency,
+        };
+        LandFront front = new(quiet, 1);
+        Vector2I heart = new(0, 0), middle = new(1, 0), rim = new(2, 0);
+        front.AddCell(heart, 0f);
+        // À mi-chemin en surface entre le cœur et le bord : sa chute tombe à mi-chemin entre la première et le cœur atteint.
+        front.AddCell(middle, Mathf.Sqrt((1f + quiet.HeartRadius * quiet.HeartRadius) / 2f));
+        front.AddCell(rim, 1f);
+        float rimFall = quiet.FirstFallSeconds;
+        float third = quiet.WarningSeconds / 4f;
+        front.Advance(rimFall - quiet.WarningSeconds * 0.5f + 0.1f);
+        Check(Phase(front.MemoryAt(rim)) == ErasureManager.ErasureZonePhase.Frayed && Phase(front.MemoryAt(middle)) == ErasureManager.ErasureZonePhase.Anchored,
+            $"front : le bord s'effiloche avant le milieu ({front.MemoryAt(rim):F2}, {front.MemoryAt(middle):F2})");
+        front.Delay(rim, third);
+        Check(Phase(front.MemoryAt(rim)) == ErasureManager.ErasureZonePhase.Fragile, $"front : la présence repousse la chute ({front.MemoryAt(rim):F2})");
+        front.Advance(quiet.WarningSeconds);
+        Check(front.MemoryAt(rim) == 0f && Phase(front.MemoryAt(rim)) == ErasureManager.ErasureZonePhase.Void,
+            "front : le bord tombe dans le Néant après son préavis");
+        float middleFall = (quiet.FirstFallSeconds + quiet.HeartReachedSeconds) / 2f;
+        front.Advance(middleFall - front.Time - 1f);
+        front.Restore(middle, 0.1f);
+        Check(front.MemoryAt(middle) > 0f, "front : un lieu ravivé n'avance jamais la chute");
+        front.Anchor(middle);
+        front.Advance(quiet.HeartReachedSeconds * 3f);
+        Check(front.MemoryAt(middle) == 1f && front.MemoryAt(heart) == 1f, "front : zone ancrée et cœur ne tombent jamais");
+        Check(Mathf.IsEqualApprox(front.StandingShare(), 2f / 3f), $"front : terre restante {front.StandingShare():F2} (cœur et ancre)");
+    }
+
+    /// <summary>Lot P2a sur la vraie terre : toutes ses cellules au front, cœur sûr, bords déjà pâles à l'arrivée.</summary>
+    private void CheckFrontOnLand()
+    {
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        LandFront front = erasure.Front;
+        Check(front != null && front.CellCount > 1000, $"front de la terre 0 : {front?.CellCount ?? 0} cellules");
+        if (front == null)
+            return;
+        int pale = 0;
+        foreach (Vector2I cell in front.Cells)
+        {
+            if (front.MemoryAt(cell) <= 0.75f)
+                pale++;
+        }
+        Check(erasure.GetMemoryAt(Vector2.Zero) == 1f && pale > 0, $"front de la terre 0 : cœur intact, {pale} cellules du bord déjà fragiles");
+        Check(Mathf.IsEqualApprox(front.StandingShare(), 1f), "front de la terre 0 : toute la terre debout à l'arrivée");
+    }
+
+    private static ErasureManager.ErasureZonePhase Phase(float memory) => memory <= 0f ? ErasureManager.ErasureZonePhase.Void
+        : memory <= 0.25f ? ErasureManager.ErasureZonePhase.Erased : memory <= 0.5f ? ErasureManager.ErasureZonePhase.Frayed
+        : memory <= 0.75f ? ErasureManager.ErasureZonePhase.Fragile : ErasureManager.ErasureZonePhase.Anchored;
 
     private async Task CheckLands()
     {
@@ -87,6 +153,9 @@ public partial class LandChangeRegression : Node
             Check(_world.IsWorldReady && _world.Generator.MapRadiusX == _world.Land.MapRadius && !GetTree().Paused,
                 $"terre {land} : construite (rayon {_world.Generator.MapRadiusX}), jeu repris");
             Check(GroundHoles() == 0, $"terre {land} : sol sans trou ({GroundHoles()})");
+            LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
+            Check(front != null && front.Time == 0f && Mathf.IsEqualApprox(front.StandingShare(), 1f),
+                $"terre {land} : front neuf ({front?.CellCount ?? 0} cellules)");
             Check(Memorial.All.Count == memorials && Chest.Closed.Count == chests && ObstacleField.Count > 0,
                 $"terre {land} : seuls ses lieux comptent ({Memorial.All.Count} Mémoriaux, {Chest.Closed.Count} coffres, {ObstacleField.Count} obstacles)");
             Check(CountActive(enemies) == 0, $"terre {land} : aucune créature de la terre quittée ({CountActive(enemies)})");
