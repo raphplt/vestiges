@@ -41,15 +41,40 @@ class Pose:
     elbow_l: float = 0.25
     elbow_r: float = 0.25
     arm_out: float = 0.12
+    arm_in_l: float = 0.0
+    arm_in_r: float = 0.0
+    shrug_l: float = 0.0
+    shrug_r: float = 0.0
     root_pitch: float = 0.0
     root_roll: float = 0.0
-    # Éléments souples (écharpe, pointe de capuche, sac, braise) : -1..1, en retard sur le corps.
+    # Squash & stretch conservant le volume autour du sol : < 0 écrasement d'impact, > 0 étirement d'impulsion.
+    stretch: float = 0.0
+    # Éléments souples (écharpe, pointe de capuche, sac, braise) : recul/avance, soulèvement vertical et fouet latéral.
     drape: float = 0.0
+    drape_lift: float = 0.0
+    drape_sway: float = 0.0
+    # Intensité de traînée d'attaque ou de dash (0 = aucune, 1 = smear franc).
+    smear: float = 0.0
 
     def mirrored(self) -> "Pose":
-        return replace(self, hip_l=self.hip_r, hip_r=self.hip_l, knee_l=self.knee_r, knee_r=self.knee_l,
-                       shoulder_l=self.shoulder_r, shoulder_r=self.shoulder_l,
-                       elbow_l=self.elbow_r, elbow_r=self.elbow_l, lean_side=-self.lean_side, twist=-self.twist)
+        return replace(
+            self,
+            hip_l=self.hip_r,
+            hip_r=self.hip_l,
+            knee_l=self.knee_r,
+            knee_r=self.knee_l,
+            shoulder_l=self.shoulder_r,
+            shoulder_r=self.shoulder_l,
+            elbow_l=self.elbow_r,
+            elbow_r=self.elbow_l,
+            arm_in_l=self.arm_in_r,
+            arm_in_r=self.arm_in_l,
+            shrug_l=self.shrug_r,
+            shrug_r=self.shrug_l,
+            lean_side=-self.lean_side,
+            twist=-self.twist,
+            drape_sway=-self.drape_sway,
+        )
 
 
 DOWN = np.array([0.0, -1.0, 0.0])
@@ -67,6 +92,10 @@ class Skeleton:
     torso: np.ndarray
     head: np.ndarray
     drape: float = 0.0
+    drape_lift: float = 0.0
+    drape_sway: float = 0.0
+    stretch: float = 0.0
+    smear: float = 0.0
 
     def point(self, name: str) -> np.ndarray:
         return self.joints[name]
@@ -77,6 +106,11 @@ class Skeleton:
 
     def on_head(self, offset) -> np.ndarray:
         return self.joints["head"] + self.head @ np.asarray(offset, dtype=np.float64)
+
+    def hand_dir(self, side: str) -> np.ndarray:
+        """Direction unitaire de l'avant-bras (coude → main) pour orienter un équipement tenu."""
+        vec = self.joints[f"hand_{side}"] - self.joints[f"elbow_{side}"]
+        return vec / max(float(np.linalg.norm(vec)), 1e-6)
 
 
 def build_skeleton(pose: Pose, dims: Proportions = Proportions()) -> Skeleton:
@@ -90,8 +124,10 @@ def build_skeleton(pose: Pose, dims: Proportions = Proportions()) -> Skeleton:
 
     joints: dict[str, np.ndarray] = {"pelvis": pelvis, "chest": chest, "neck": neck, "head": head}
     for side, sign in (("l", 1.0), ("r", -1.0)):
-        shoulder = chest + torso @ np.array([sign * dims.shoulder_half, -1.6 + pose.breath * 0.5, 0.0])
-        abduction = rotation_z(sign * pose.arm_out)
+        shrug = getattr(pose, f"shrug_{side}")
+        arm_in = getattr(pose, f"arm_in_{side}")
+        shoulder = chest + torso @ np.array([sign * dims.shoulder_half, -1.6 + pose.breath * 0.5 + shrug, 0.0])
+        abduction = rotation_z(sign * (pose.arm_out - arm_in))
         swing = getattr(pose, f"shoulder_{side}")
         bend = getattr(pose, f"elbow_{side}")
         elbow = shoulder + torso @ abduction @ _swing(swing) @ (DOWN * dims.upper_arm)
@@ -106,10 +142,26 @@ def build_skeleton(pose: Pose, dims: Proportions = Proportions()) -> Skeleton:
         joints.update({f"shoulder_{side}": shoulder, f"elbow_{side}": elbow, f"hand_{side}": hand,
                        f"hip_{side}": hip, f"knee_{side}": knee, f"ankle_{side}": ankle, f"toe_{side}": toe})
 
+    # Squash & stretch conservant le volume autour du sol (y = 0).
+    if abs(pose.stretch) > 1e-4:
+        sy = max(0.65, 1.0 + pose.stretch)
+        sxz = 1.0 / np.sqrt(sy)
+        scale_vec = np.array([sxz, sy, sxz], dtype=np.float64)
+        joints = {name: pt * scale_vec for name, pt in joints.items()}
+
     # Transformation racine au sol (chute, bascule) autour du point de contact.
     root = rotation_x(pose.root_pitch) @ rotation_z(pose.root_roll)
     if pose.root_pitch or pose.root_roll:
         joints = {name: root @ point for name, point in joints.items()}
         torso = root @ torso
         head_rotation = root @ head_rotation
-    return Skeleton(joints, torso, head_rotation, pose.drape)
+    return Skeleton(
+        joints,
+        torso,
+        head_rotation,
+        drape=pose.drape,
+        drape_lift=pose.drape_lift,
+        drape_sway=pose.drape_sway,
+        stretch=pose.stretch,
+        smear=pose.smear,
+    )

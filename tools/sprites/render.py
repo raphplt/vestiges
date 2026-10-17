@@ -46,6 +46,8 @@ class Part:
     # False pour un détail peint plus fin qu'un pixel (gravier, crépi) : ses marches casseraient les normales et
     # assombriraient toute la surface ; il colore sans compter dans l'éclairage.
     relief: bool = True
+    # Point d'ancrage optionnel (articulation, centre de pièce) pour que le grain 3D suive le membre en mouvement.
+    anchor: Sequence[float] | np.ndarray | None = None
 
 
 def screen_direction_to_yaw(dx: float, dy: float) -> float:
@@ -64,6 +66,27 @@ def _evaluate(parts: Sequence[Part], points: np.ndarray) -> tuple[np.ndarray, np
         best = np.where(closer, d, best)
         material = np.where(closer, part.material, material)
     return best, material
+
+
+def _evaluate_with_part(parts: Sequence[Part], points: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    best = np.full(len(points), np.inf)
+    material = np.full(len(points), -1, dtype=np.int32)
+    part_idx = np.full(len(points), -1, dtype=np.int32)
+    for idx, part in enumerate(parts):
+        d = part.distance(points)
+        closer = d < best
+        best = np.where(closer, d, best)
+        material = np.where(closer, part.material, material)
+        part_idx = np.where(closer, idx, part_idx)
+    return best, material, part_idx
+
+
+def _triplanar_noise(local_p: np.ndarray) -> np.ndarray:
+    """Bruit 3D déterministe à échelle macro (~4-5 px) : crée des nappes de matière sans bruit haute fréquence."""
+    x, y, z = local_p[:, 0], local_p[:, 1], local_p[:, 2]
+    n1 = np.sin(x * 0.34 + np.cos(y * 0.28 - z * 0.30)) * np.cos(z * 0.32 + np.sin(x * 0.26 + y * 0.30))
+    n2 = np.sin((x - z) * 0.52 + y * 0.44) * 0.25
+    return np.clip((n1 + n2) / 1.25, -1.0, 1.0)
 
 
 def _normals(parts: Sequence[Part], points: np.ndarray) -> np.ndarray:
@@ -150,13 +173,39 @@ def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: flo
     hit_index = np.nonzero(hit)[0]
     if len(hit_index):
         points = origins[hit_index] + view * t[hit_index, None]
-        _, material[hit_index] = _evaluate(parts, points)
+        _, hit_mats, hit_parts = _evaluate_with_part(parts, points)
+        material[hit_index] = hit_mats
         normal = _normals([part for part in parts if part.relief], points)
         diffuse = np.clip(normal @ light, 0.0, 1.0)
         shade = 0.2 + 0.8 * diffuse
         # Les faces tournées vers le sol restent dans l'ombre portée du volume.
         shade *= np.where(normal[:, 1] < -0.35, 0.82, 1.0)
-        value[hit_index] = shade
+
+        mat_roughness = np.array([m.roughness for m in materials], dtype=np.float64)[hit_mats]
+        mat_specular = np.array([m.specular for m in materials], dtype=np.float64)[hit_mats]
+        mat_rim = np.array([m.rim for m in materials], dtype=np.float64)[hit_mats]
+
+        if np.any(mat_roughness > 0.0):
+            local_pts = points.copy()
+            for idx, part in enumerate(parts):
+                if part.anchor is not None:
+                    mask_p = hit_parts == idx
+                    if np.any(mask_p):
+                        local_pts[mask_p] -= np.asarray(part.anchor, dtype=np.float64)
+            shade += mat_roughness * _triplanar_noise(local_pts) * 0.10
+
+        if np.any(mat_specular > 0.0):
+            to_cam = -view
+            half_vec = (to_cam + light) / max(float(np.linalg.norm(to_cam + light)), 1e-9)
+            spec = np.clip(normal @ half_vec, 0.0, 1.0) ** 10.0
+            shade += mat_specular * spec * 0.44
+
+        if np.any(mat_rim > 0.0):
+            grazing = 1.0 - np.clip(normal @ (-view), 0.0, 1.0)
+            upward = np.clip(normal[:, 1] + 0.35, 0.0, 1.0)
+            shade += mat_rim * (grazing ** 2.4) * upward * 0.20
+
+        value[hit_index] = np.clip(shade, 0.0, 1.2)
 
     # Regroupement par pixel : (H, ss, W, ss) → (H, W, ss*ss)
     def per_pixel(array: np.ndarray) -> np.ndarray:
@@ -184,22 +233,57 @@ def render_layers(parts: Sequence[Part], materials: Sequence[Material], yaw: flo
         pixel_value[y, x] = counts[chosen] / (ss * ss) if emissive[chosen] else values[y, x][mask].mean()
         pixel_depth[y, x] = depths[y, x][mask].min()
 
+    # Tramage damier 2×2 uniquement à l'intérieur d'une plage du même matériau (jamais en bordure de contour).
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            if not covered[y, x]:
+                continue
+            chosen = pixel_material[y, x]
+            dither_strength = materials[chosen].dither
+            if dither_strength <= 0.0 or emissive[chosen]:
+                continue
+            if not all(pixel_material[ny, nx] == chosen for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1))):
+                continue
+            val = pixel_value[y, x]
+            band = 0.042 * dither_strength
+            nearest_dist = min(abs(val - thr) for thr in SHADE_THRESHOLDS)
+            if nearest_dist < band:
+                checker = 1.0 if ((x + y) & 1) else -1.0
+                pixel_value[y, x] = val + checker * band * 0.55
+
     shade_index = np.digitize(pixel_value, SHADE_THRESHOLDS)
-    shade_index = _clean_orphans(shade_index, pixel_material, covered)
+    shade_index = _clean_orphans(shade_index, pixel_material, covered, materials)
     return _compose(materials, covered, pixel_material, shade_index, pixel_depth, smooth_slopes)
 
 
-def _clean_orphans(shade: np.ndarray, material: np.ndarray, covered: np.ndarray) -> np.ndarray:
-    """Un ton isolé entouré d'un autre ton du même matériau devient du bruit : il prend la valeur voisine."""
+def _clean_orphans(
+    shade: np.ndarray,
+    material: np.ndarray,
+    covered: np.ndarray,
+    materials: Sequence[Material] | None = None,
+) -> np.ndarray:
+    """Un ton isolé entouré d'un autre ton du même matériau devient du bruit : il prend la valeur voisine,
+    sauf s'il s'agit d'un éclat spéculaire franc ou d'un motif de dithering soutenu par au moins 2 diagonales."""
     result = shade.copy()
     height, width = shade.shape
     for y in range(1, height - 1):
         for x in range(1, width - 1):
             if not covered[y, x]:
                 continue
+            mat_id = material[y, x]
+            cur = shade[y, x]
+            if materials is not None and mat_id >= 0:
+                mat = materials[mat_id]
+                if mat.specular > 0.5 and cur == 3:
+                    continue
+                if mat.dither > 0.0:
+                    diags = [(y - 1, x - 1), (y - 1, x + 1), (y + 1, x - 1), (y + 1, x + 1)]
+                    diag_matches = sum(1 for d in diags if covered[d] and material[d] == mat_id and shade[d] == cur)
+                    if diag_matches >= 2:
+                        continue
             neighbours = [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]
-            same = [shade[n] for n in neighbours if covered[n] and material[n] == material[y, x]]
-            if len(same) >= 3 and all(v != shade[y, x] for v in same):
+            same = [shade[n] for n in neighbours if covered[n] and material[n] == mat_id]
+            if len(same) >= 3 and all(v != cur for v in same):
                 result[y, x] = int(np.median(same))
     return result
 

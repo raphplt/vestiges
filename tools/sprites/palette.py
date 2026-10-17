@@ -29,16 +29,30 @@ def _toward(hue: float, target: float, amount: float) -> float:
 
 @dataclass(frozen=True)
 class Material:
-    """Quatre tons du plus sombre au plus clair, plus deux tons de contour."""
+    """Quatre tons du plus sombre au plus clair, plus deux tons de contour et paramètres de matière SDF 2.0."""
     name: str
     ramp: tuple[RampColor, RampColor, RampColor, RampColor]
     outline: RampColor
     inner_line: RampColor
     # Lumière propre (yeux de créature) : prioritaire sur les pixels partagés, jamais ombrée ni cernée.
     emissive: bool = False
+    # Grain 3D ancré au volume (cuir, pierre, mousse, drap), éclat spéculaire (métal, os, verre),
+    # tramage damier sur les seules bandes de transition (charte §5) et rehaussement de bord (rim).
+    roughness: float = 0.0
+    specular: float = 0.0
+    dither: float = 0.0
+    rim: float = 0.0
 
 
-def make_material(name: str, base_hex: str, contrast: float = 1.0) -> Material:
+def make_material(
+    name: str,
+    base_hex: str,
+    contrast: float = 1.0,
+    roughness: float = 0.0,
+    specular: float = 0.0,
+    dither: float = 0.0,
+    rim: float = 0.0,
+) -> Material:
     base = hex_to_rgb(base_hex)
     hue = colorsys.rgb_to_hls(*(c / 255.0 for c in base))[0]
     # Ombres vers le violet-bleu (lumière ambiante froide de l'Effacement), lumières vers l'or (mémoire).
@@ -52,7 +66,16 @@ def make_material(name: str, base_hex: str, contrast: float = 1.0) -> Material:
     )
     outline = _shift(base, 0.32, 0.85, cool * 1.3)
     inner = _shift(base, 0.5, 0.9, cool)
-    return Material(name, ramp, outline, inner)
+    return Material(
+        name,
+        ramp,
+        outline,
+        inner,
+        roughness=roughness,
+        specular=specular,
+        dither=dither,
+        rim=rim,
+    )
 
 
 def make_emissive(name: str, base_hex: str) -> Material:

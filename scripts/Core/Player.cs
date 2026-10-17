@@ -95,6 +95,8 @@ public partial class Player : CharacterBody2D
     private const float MovementSpeedEpsilon = 0.1f;
     private const float SpriteFeetBelowOrigin = 10f;
     private float _hurtAnimTimer;
+    private SpriteAction _lastSpriteAction = SpriteAction.Idle;
+    private int _lastFootstepFrame = -1;
 
     // Shader VFX unifié (outline + hit flash + dissolve)
     private static Shader _entityShader;
@@ -1685,11 +1687,22 @@ public partial class Player : CharacterBody2D
         if (movementRate <= 0f)
         {
             _footstepTimer = 0f;
+            _lastFootstepFrame = -1;
             return;
         }
 
         _footstepTimer -= delta * movementRate;
-        if (_footstepTimer > 0f)
+        bool triggeredByFrame = false;
+        if (_hasSprite && _lastSpriteAction == SpriteAction.Walk && _sprite.SpriteFrames != null)
+        {
+            int frame = _sprite.Frame;
+            if ((frame == 0 || frame == 4) && frame != _lastFootstepFrame)
+            {
+                _lastFootstepFrame = frame;
+                triggeredByFrame = true;
+            }
+        }
+        if (!triggeredByFrame && _footstepTimer > 0f)
             return;
 
         _footstepTimer = FootstepInterval;
@@ -2019,7 +2032,7 @@ public partial class Player : CharacterBody2D
     private void UpdateMobilityHeight()
     {
         if (_sprite != null)
-            _sprite.Position = _spriteRestPosition + new Vector2(0f, -(Mobility?.VisualHeight ?? 0f));
+            _sprite.Position = _spriteRestPosition + new Vector2(0f, -(Mobility?.VisualHeight ?? 0f)) + (_attackFx?.LungeOffset ?? Vector2.Zero);
     }
 
     private static StringName[,] BuildSpriteAnimations()
@@ -2056,6 +2069,22 @@ public partial class Player : CharacterBody2D
             action = SpriteAction.Walk;
         else
             action = SpriteAction.Idle;
+
+        // Amorti d'inertie à la réception d'un dash ou à l'arrêt franc d'une course (plan 54 G1).
+        if (!_isDead && _lastSpriteAction != action)
+        {
+            if (_lastSpriteAction == SpriteAction.Dash)
+                _attackFx?.PlayStepSquash(1.08f, 0.92f, 0.10f);
+            else if (_lastSpriteAction == SpriteAction.Walk && action == SpriteAction.Idle)
+                _attackFx?.PlayStepSquash(1.04f, 0.96f, 0.08f);
+        }
+        _lastSpriteAction = action;
+
+        // Légère inclinaison dynamique dans le sens du déplacement horizontal.
+        float targetTilt = (action == SpriteAction.Walk || action == SpriteAction.Dash) && Speed > 0f
+            ? Mathf.Clamp(movementVelocity.X / Speed, -1f, 1f) * 0.055f
+            : 0f;
+        _sprite.Rotation = Mathf.Lerp(_sprite.Rotation, targetTilt, Mathf.Min(1f, delta * 14f));
 
         StringName animation = SpriteAnimations[(int)_facing.Current, (int)action];
         if (action == SpriteAction.Dash && !_sprite.SpriteFrames.HasAnimation(animation))
@@ -2556,7 +2585,8 @@ public partial class Player : CharacterBody2D
             return;
 
         _facingDirection = direction.Normalized();
-        _attackFx.PlayRecoil(isMelee);
+        _attackFx.PlayRecoil(isMelee, _facingDirection);
+        UpdateMobilityHeight();
         if (!isMelee)
             SpawnMuzzleFlash(direction);
         // Personnage sans sprite : le polygone de repli garde sa réaction propre.

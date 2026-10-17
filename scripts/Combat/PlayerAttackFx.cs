@@ -30,6 +30,9 @@ public sealed class PlayerAttackFx
     // Ondes en attente d'une frappe circulaire répétée (plan 21 G6g) : liste réutilisée, aucune allocation par coup.
     private readonly List<PendingMelee> _pendingMelee = new();
 
+    /// <summary>Décalage d'élan du sprite lors d'une frappe ou d'un recul de tir (plan 54 G1), résorbé chaque tick.</summary>
+    public Vector2 LungeOffset { get; private set; }
+
     private struct PendingMelee
     {
         public WeaponData Weapon;
@@ -73,9 +76,12 @@ public sealed class PlayerAttackFx
         });
     }
 
-    /// <summary>Avance les coups en attente ; à appeler à chaque frame physique du joueur.</summary>
+    /// <summary>Avance les coups en attente et résorbe l'élan d'attaque ; à appeler à chaque frame physique du joueur.</summary>
     public void Tick(float delta)
     {
+        if (LungeOffset != Vector2.Zero)
+            LungeOffset = LungeOffset.MoveToward(Vector2.Zero, 28f * delta);
+
         for (int i = _pendingMelee.Count - 1; i >= 0; i--)
         {
             PendingMelee pending = _pendingMelee[i];
@@ -223,15 +229,30 @@ public sealed class PlayerAttackFx
             visual.Texture = texture;
     }
 
-    /// <summary>Réaction d'attaque du personnage : écrasement d'un à deux pixels vers la cible.</summary>
-    public void PlayRecoil(bool isMelee)
+    /// <summary>Réaction d'attaque du personnage : élan orienté vers la cible (mêlée) ou recul (tir) + squash bref.</summary>
+    public void PlayRecoil(bool isMelee, Vector2 direction = default)
+    {
+        if (_sprite == null || !_sprite.Visible)
+            return;
+        if (direction != Vector2.Zero)
+            LungeOffset = isMelee ? direction * 2.6f : -direction * 1.4f;
+        _squashTween?.Kill();
+        _sprite.Scale = isMelee ? new Vector2(1.09f, 0.92f) : new Vector2(0.95f, 1.05f);
+        _squashTween = _sprite.CreateTween();
+        _squashTween.TweenProperty(_sprite, "scale", Vector2.One, isMelee ? 0.1f : 0.08f)
+            .SetTrans(Tween.TransitionType.Quad)
+            .SetEase(Tween.EaseType.Out);
+    }
+
+    /// <summary>Micro-amorti d'inertie à la réception d'un dash ou à l'arrêt franc d'une course (plan 54 G1).</summary>
+    public void PlayStepSquash(float horizontal = 1.06f, float vertical = 0.94f, float duration = 0.09f)
     {
         if (_sprite == null || !_sprite.Visible)
             return;
         _squashTween?.Kill();
-        _sprite.Scale = isMelee ? new Vector2(1.08f, 0.93f) : new Vector2(0.95f, 1.04f);
+        _sprite.Scale = new Vector2(horizontal, vertical);
         _squashTween = _sprite.CreateTween();
-        _squashTween.TweenProperty(_sprite, "scale", Vector2.One, isMelee ? 0.1f : 0.08f)
+        _squashTween.TweenProperty(_sprite, "scale", Vector2.One, duration)
             .SetTrans(Tween.TransitionType.Quad)
             .SetEase(Tween.EaseType.Out);
     }

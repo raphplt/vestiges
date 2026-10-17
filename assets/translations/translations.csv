@@ -3,6 +3,7 @@ UI_MENU_BACK,Retour,Back
 UI_MOBILITY,Mobilité,Mobility
 UI_SETTINGS,PARAMÈTRES,SETTINGS
 UI_CLOSE,"[Échap] ou [X] Fermer","[Esc] or [X] Close"
+UI_GENERAL,Général,General
 UI_AUDIO,Audio,Audio
 UI_GRAPHICS,Graphismes,Graphics
 UI_CONTROLS,Contrôles,Controls

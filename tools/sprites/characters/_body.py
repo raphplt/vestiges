@@ -1,4 +1,4 @@
-"""Membres communs aux personnages humanoïdes : manches, mains, jambes et chaussures."""
+"""Membres communs aux personnages humanoïdes : manches galbées, gants à revers, jambes et bottes structurées."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,7 +7,7 @@ import numpy as np
 
 from ..render import Part
 from ..rig import Skeleton
-from ..sdf import capsule, sphere
+from ..sdf import capsule, smin, sphere, tapered_box
 
 
 @dataclass(frozen=True)
@@ -34,23 +34,53 @@ def ankle_up(s: Skeleton, side: str, length: float) -> np.ndarray:
 def limbs(s: Skeleton, style: LimbStyle, legs: bool = True) -> list[Part]:
     parts: list[Part] = []
     for side in ("l", "r"):
+        sh = s.point(f"shoulder_{side}")
+        el = s.point(f"elbow_{side}")
+        ha = s.point(f"hand_{side}")
         parts += [
-            Part(lambda p, side=side: capsule(p, s.point(f"shoulder_{side}"), s.point(f"elbow_{side}"),
-                                              style.arm_radius, style.arm_radius * 0.9), style.sleeve),
-            Part(lambda p, side=side: capsule(p, s.point(f"elbow_{side}"), s.point(f"hand_{side}"),
-                                              style.arm_radius * 0.9, style.arm_radius * 0.8), style.sleeve),
-            Part(lambda p, side=side: sphere(p, s.point(f"hand_{side}"), style.hand_radius), style.hand),
+            Part(
+                lambda p, sh=sh, el=el: capsule(p, sh, el, style.arm_radius, style.arm_radius * 0.9),
+                style.sleeve,
+                anchor=sh,
+            ),
+            Part(
+                lambda p, el=el, ha=ha: capsule(p, el, ha, style.arm_radius * 0.9, style.arm_radius * 0.8),
+                style.sleeve,
+                anchor=el,
+            ),
+            Part(
+                lambda p, ha=ha: sphere(p, ha, style.hand_radius),
+                style.hand,
+                anchor=ha,
+            ),
         ]
         if not legs:
             continue
+        hip = s.point(f"hip_{side}")
+        knee = s.point(f"knee_{side}")
+        ankle = s.point(f"ankle_{side}")
+        toe = s.point(f"toe_{side}")
+        boot_top = ankle_up(s, side, style.boot_height)
         parts += [
-            Part(lambda p, side=side: capsule(p, s.point(f"hip_{side}"), s.point(f"knee_{side}"),
-                                              style.leg_radius, style.leg_radius * 0.9), style.leg),
-            Part(lambda p, side=side: capsule(p, s.point(f"knee_{side}"), s.point(f"ankle_{side}"),
-                                              style.leg_radius * 0.85, style.leg_radius * 0.8), style.leg),
-            Part(lambda p, side=side: capsule(p, ankle_up(s, side, style.boot_height), s.point(f"ankle_{side}"),
-                                              style.boot_radius, style.boot_radius), style.boot),
-            Part(lambda p, side=side: capsule(p, s.point(f"ankle_{side}"), s.point(f"toe_{side}"),
-                                              style.foot_radius, style.foot_radius * 0.85), style.boot),
+            Part(
+                lambda p, hip=hip, knee=knee: capsule(p, hip, knee, style.leg_radius, style.leg_radius * 0.9),
+                style.leg,
+                anchor=hip,
+            ),
+            Part(
+                lambda p, knee=knee, ankle=ankle: capsule(p, knee, ankle, style.leg_radius * 0.85, style.leg_radius * 0.8),
+                style.leg,
+                anchor=knee,
+            ),
+            Part(
+                lambda p, bt=boot_top, ak=ankle: capsule(p, bt, ak, style.boot_radius, style.boot_radius),
+                style.boot,
+                anchor=ankle,
+            ),
+            Part(
+                lambda p, ak=ankle, to=toe: capsule(p, ak, to, style.foot_radius, style.foot_radius * 0.85),
+                style.boot,
+                anchor=ankle,
+            ),
         ]
     return parts

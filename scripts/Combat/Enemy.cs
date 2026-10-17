@@ -1790,6 +1790,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				_statusMarks.Configure(data.Id, _sprite);
 
 				PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)SpriteAction.Idle]);
+				int idleFrames = _spriteFrames.GetFrameCount(_sprite.Animation);
+				if (idleFrames > 1)
+					_sprite.SetFrameAndProgress((int)(GetInstanceId() % (ulong)idleFrames), (GetInstanceId() % 17UL) / 17f);
 			}
 		}
 	}
@@ -1824,7 +1827,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		else
 			action = SpriteAction.Idle;
 
-		float tempo = _isDying ? 1f : AnimationTempo * _statusVisual.AnimationTempo;
+		float speedRatio = action == SpriteAction.Walk && moving && _baseSpeed > 1f
+			? Mathf.Clamp(Velocity.Length() / _baseSpeed, 0.72f, 1.45f)
+			: 1f;
+		float tempo = _isDying ? 1f : AnimationTempo * _statusVisual.AnimationTempo * speedRatio;
 		// Figée : l'animation s'arrête sur la pose en cours, sans repasser à l'attente.
 		if (tempo > 0f)
 			PlaySpriteAnim(SpriteAnimations[(int)_facing.Current, (int)action]);

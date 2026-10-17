@@ -2228,3 +2228,17 @@ Raphaël : « ouais ok ca me va totalement. je serai d'avis de travailler sur ce
 - **V3** : Pré-calcul CPU des jonctions de biomes dans `GroundMaterial` / `ground.gdshader`.
 - **V4** : Moteur de rendu Metal / macOS et validation globale A/B sur Mac.
 
+## 188. Sprites vivants et netteté à 30 px (Plan 54) — 17 octobre 2026
+
+Premier essai du Lot S0 sur **Le Vagabond** et **Le Rôdeur** ([plan 54](54-sprites-vivants-et-animations.md)). Retours de Raphaël sur la planche comparative :
+- « c'est un peu mieux apres a voir en jeu.. fait en sorte que je puisse le tester en jeu stp. »
+- « aussi je me demande si ils ne pourraient pas etre plus détaillés mais apres j'ai peur que ca dénote avecle reste du jeu. »
+- « apres c'est moins net maintenant egalement »
+
+**Diagnostic et règles retenues pour la netteté à ~30 px (`CHARACTER_MODEL_SCALE = 0.53`) :**
+- **Primitives symétriques en rotation (`capsule`, `sphere`)** sur les membres orientés : `tapered_box` est aligné sur les axes monde et crée un crénelage en escalier sur des bras/bottes de 2–3 px quand le personnage tourne sur 8 directions.
+- **Pas de micro-détails de 1 px sur un torse de 6×6 px** (boucle de ceinture, fente de manteau, côtes isolées) : à cette échelle, la richesse visuelle vient de la **silhouette**, des **poses-clés franches**, du **mouvement secondaire 3D** (écharpe, paquetage, pans du manteau) et de la **réactivité en jeu** (pas synchronisés, inclinaison, *lunge* d'attaque), pas de bruit de surface qui casse les aplats et dénote avec les décors.
+- **Pas d'`emissive` hors yeux** (court-circuite `inner_line` et bave sur les matériaux voisins) et **`stretch = 0.0` dans le squelette SDF** pour éviter le scintillement sous-pixel du chapeau et des yeux d'une frame à l'autre.
+
+
+**Validation du duo pilote (17 octobre 2026, au soir)** : Raphaël a joué le Vagabond et le Rôdeur refaits avec l'inclinaison, l'amorti, l'élan d'attaque et le tempo de marche des créatures (lots S1, G1, G2) : **validé**. **Échelle gardée** (`CHARACTER_MODEL_SCALE = 0.53`, pas de cran de détail en plus) : la richesse passe par la silhouette, les poses et le mouvement secondaire. Suite choisie : **lot S2**, les cinq autres personnages jouables, avant la partie Godot restante (traînées fidèles, télégraphes).
