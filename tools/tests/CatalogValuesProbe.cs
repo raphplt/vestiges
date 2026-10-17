@@ -249,6 +249,13 @@ public partial class CatalogValuesProbe : Node
             CharacterStats stats = character.BaseStats;
             lines.Add(Invariant($"character {character.Id} [{character.Name}|{character.Description}] weapon={character.StartingWeaponId} passive={character.PassivePerk} speed={stats.Speed:R} dmg={stats.AttackDamage:R} as={stats.AttackSpeed:R} range={stats.AttackRange:R} hp={stats.MaxHp:R} regen={stats.RegenRate:R} shield={stats.Shield:R} interact={stats.InteractRange:R} color={character.VisualColor.ToHtml()} accent={character.AccentColor.ToHtml()} sprite={character.SpriteFolder} feet={character.SpriteFeetOffset:R} mobility={character.MobilityProfile ?? "null"}"));
         }
+        // Q7f-2 : signatures (perks.json), dans l'ordre du fichier.
+        foreach (PerkData perk in PerkDataLoader.GetAll())
+        {
+            string blocks = Invariant($"momentum={(perk.Momentum == null ? "-" : $"{perk.Momentum.RampSeconds:R},{perk.Momentum.SpeedBonus:R},{perk.Momentum.AttackSpeedBonus:R},{perk.Momentum.StopGraceSeconds:R}")} echo={(perk.Echo == null ? "-" : $"{perk.Echo.Seconds:R},{perk.Echo.DamageRatio:R}")} opening={(perk.OpeningStrike == null ? "-" : $"{perk.OpeningStrike.BaseChance:R},{perk.OpeningStrike.GainPerLevel:R},{perk.OpeningStrike.MaxChance:R}")} pressure={(perk.Pressure == null ? "-" : $"{perk.Pressure.FrayedBonus:R},{perk.Pressure.ErasedBonus:R}")} route={perk.RouteEndurance?.ToString() ?? "-"} shock={perk.Shockwave?.ToString() ?? "-"}");
+            string effects = perk.Effects == null ? "null" : string.Join(";", perk.Effects.ConvertAll(e => Invariant($"{e.Stat}:{e.Modifier:R}:{e.ModifierType}")));
+            lines.Add(Invariant($"perk {perk.Id} [{perk.Name}|{perk.Description}] stat={perk.Stat ?? "null"}:{perk.Modifier:R}:{perk.ModifierType ?? "null"} passive={perk.IsPassive} character={perk.CharacterId ?? "null"} effects={effects} {blocks}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

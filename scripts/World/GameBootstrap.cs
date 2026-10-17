@@ -120,10 +120,10 @@ public partial class GameBootstrap : Node
 
         Step("Catalogues");
         LoadGuard.InjectFault("catalogues");
+        RequireCatalog(PerkDataLoader.TryLoad(out string perksError), perksError);
         RequireCatalog(CharacterDataLoader.TryLoad(out string charactersError), charactersError);
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
-        PerkDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
         MetaSaveManager.Load();
         SouvenirDataLoader.Load();

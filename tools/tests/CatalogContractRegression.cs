@@ -47,6 +47,7 @@ public partial class CatalogContractRegression : Node
             CheckCrowd();
             CheckVariants();
             CheckCharacters();
+            CheckPerks();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1048,6 +1049,45 @@ public partial class CatalogContractRegression : Node
             string error = CharacterDataLoader.Apply(text, references);
             Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(CharacterDataLoader.Get("vagabond"), vagabond),
                 $"personnages, {name} refusé sans publication ({error})");
+        }
+    }
+
+    /// <summary>Signatures (plan 26 Q7f-2) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckPerks()
+    {
+        Check(PerkDataLoader.TryLoad(out string loadError) && PerkDataLoader.GetAll().Count == 6, $"signatures du dépôt acceptées {loadError}");
+        PerkData round = PerkDataLoader.GetAll().Find(perk => perk.Id == "facteur_round");
+        string valid = FileAccess.GetFileAsString(PerkDataLoader.DataPath);
+        JsonObject Perk(JsonArray list, string id) => list.OfType<JsonObject>().First(perk => perk["id"]!.GetValue<string>() == id);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de signatures attendue"),
+            ("liste de commentaires", _ => new JsonArray("_seul commentaire"), "aucune signature"),
+            ("texte hors commentaire", list => { list.Add("signature"); return list; }, "objet attendu"),
+            ("champ mort", list => { Perk(list, "facteur_round")["rarity"] = "passive"; return list; }, "clé inconnue « rarity »"),
+            ("identifiant en double", list => { list.Add(Perk(list, "facteur_round").DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("nom vide", list => { Perk(list, "facteur_round")["name"] = ""; return list; }, "name : texte non vide requis"),
+            ("passif non booléen", list => { Perk(list, "facteur_round")["is_passive"] = 1; return list; }, "is_passive : booléen requis"),
+            ("statistique inconnue", list => { JsonObject perk = Perk(list, "facteur_round"); perk["stat"] = "charisma"; perk["modifier"] = 1.1; perk["modifier_type"] = "multiplicative"; return list; }, "« charisma » en multiplicative n'est pas appliqué"),
+            ("modificateur incomplet", list => { Perk(list, "facteur_round")["stat"] = "speed"; return list; }, "modifier_type : texte requis"),
+            ("effet sans type", list => { Perk(list, "facteur_round")["effects"] = new JsonArray(new JsonObject { ["stat"] = "speed", ["modifier"] = 1.1 }); return list; }, "modifier_type"),
+            ("effet inconnu", list => { Perk(list, "facteur_round")["effects"] = new JsonArray(new JsonObject { ["stat"] = "speed", ["modifier"] = 1.1, ["modifier_type"] = "multiplicative", ["until"] = 3 }); return list; }, "clé inconnue « until »"),
+            ("élan trop court", list => { Perk(list, "facteur_round")["momentum"]!["ramp_seconds"] = 0.05; return list; }, "Élan"),
+            ("élan négatif", list => { Perk(list, "facteur_round")["momentum"]!["speed_bonus"] = -0.25; return list; }, "Élan"),
+            ("élan inconnu", list => { Perk(list, "facteur_round")["momentum"]!["decay"] = 1; return list; }, "clé inconnue « decay »"),
+            ("rémanence au-delà des dégâts", list => { Perk(list, "eveillee_double")["echo"]!["damage_ratio"] = 1.5; return list; }, "Rémanence"),
+            ("rémanence non numérique", list => { Perk(list, "eveillee_double")["echo"]!["seconds"] = "1.5"; return list; }, "seconds : nombre requis"),
+            ("pression inversée", list => { Perk(list, "scaphandriere_air")["pressure"]!["frayed_bonus"] = 1; return list; }, "Pression"),
+            ("onde sans rayon", list => { Perk(list, "forgeuse_fortify")["shockwave"]!["radius"] = 0; return list; }, "Redresser"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = PerkDataLoader.Apply(text);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true
+                && ReferenceEquals(PerkDataLoader.GetAll().Find(perk => perk.Id == "facteur_round"), round),
+                $"signatures, {name} refusé sans publication ({error})");
         }
     }
 
