@@ -34,9 +34,10 @@
 > **Prototype, état au 17 octobre** (branche `terres`, worktree `../vestiges-terres`, non fusionnée ; terres allumées par `--lands`) :
 > - P0 horloge de run unique (§12, sur `main`) ;
 > - P1a à P1d : construire une terre, la vider, remettre les systèmes à zéro, passage jouable par la commande `land next` (§13) ;
-> - P2a le front de chute, P2b les Mémoriaux à tenir, P2d le vide qui prend l'Essence (§14).
+> - P2a le front de chute, P2b les Mémoriaux à tenir, P2d le vide qui prend l'Essence (§14) ;
+> - P3 le gardien : repaire au cœur, réveil par trois lumières, gardien qui se lève seul enragé, effondrement au réveil, passage et Péril de rang (compte rendu en fin de §14).
 >
-> **Reste** : P2c (anneau de terre restante, minimap du front), P1e (recousure), puis P3 (gardien réveillé par trois lumières, effondrement au réveil, gardien qui se lève seul, multiplicateur de rang). À la fusion vers `main`, reporter la correction du banc du butin (oubli de P0). **Captures impossibles tant que macOS ne dessine pas la fenêtre de capture** (fenêtre masquée).
+> **Reste** : un bot qui joue la boucle des terres (pour mesurer le rythme d'une run), P2c (anneau de terre restante, minimap du front) et P1e (recousure), qui demandent une fenêtre de capture visible ; puis la séance de jeu de Raphaël et la fusion vers `main`. À la fusion vers `main`, reporter la correction du banc du butin (oubli de P0). **Captures impossibles tant que macOS ne dessine pas la fenêtre de capture** (fenêtre masquée).
 >
 > **Sur un autre poste** (Mac) : `git pull`, puis `tools/elan_sandbox.sh`. `GODOT_BIN` désigne le binaire Godot .NET 4.7.2 s'il ne s'appelle pas `godot-mono`.
 
