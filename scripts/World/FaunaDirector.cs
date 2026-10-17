@@ -97,12 +97,22 @@ public partial class FaunaDirector : Node2D
             _critters.Add(new Critter { Sprite = sprite });
         }
         _eventBus.EnemyKilled += OnEnemyKilled;
+        _eventBus.LandChanging += OnLandChanging;
+    }
+
+    /// <summary>Changement de terre (plan 51) : les bêtes de la terre quittée s'effacent avec elle.</summary>
+    private void OnLandChanging(int toIndex)
+    {
+        foreach (Critter critter in _critters)
+            Deactivate(critter);
+        _noises.Clear();
     }
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
             _eventBus.EnemyKilled -= OnEnemyKilled;
+            _eventBus.LandChanging -= OnLandChanging;
     }
 
     public override void _Process(double delta)

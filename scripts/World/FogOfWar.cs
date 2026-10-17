@@ -35,11 +35,16 @@ public partial class FogOfWar : Node2D
     public void Initialize(TileMapLayer ground, int fogRevealRadius, int fogInitialClearRadius)
     {
         _ground = ground;
-        _fogRevealRadius = fogRevealRadius;
-        _baseRevealRadius = fogRevealRadius;
-        _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
-        if (_eventBus != null)
-            _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        _revealedCells.Clear();
+        // Terre suivante (plan 51) : l'Oubli du regard déjà subi et l'abonnement restent ceux de la run.
+        if (_eventBus == null)
+        {
+            _fogRevealRadius = fogRevealRadius;
+            _baseRevealRadius = fogRevealRadius;
+            _eventBus = GetNodeOrNull<EventBus>("/root/EventBus");
+            if (_eventBus != null)
+                _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        }
 
         RevealInitialArea(fogInitialClearRadius);
     }

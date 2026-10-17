@@ -13,6 +13,13 @@ public partial class EventBus : Node
     [Signal] public delegate void RunPhaseChangedEventHandler(string oldPhase, string newPhase);
     /// <summary>Biome où se tient le joueur ; vide lorsque sa position n'a pas encore de biome connu.</summary>
     [Signal] public delegate void PlayerBiomeChangedEventHandler(string biomeId);
+    /// <summary>
+    /// Changement de terre (plan 51) : la carte en cours va être vidée, chacun lâche ce qu'il en garde. Émis jeu en
+    /// pause, avant le vidage ; <paramref name="toIndex"/> est le rang de la terre suivante.
+    /// </summary>
+    [Signal] public delegate void LandChangingEventHandler(int toIndex);
+    /// <summary>La terre de rang <paramref name="index"/> est construite et le joueur posé au départ ; jeu encore en pause.</summary>
+    [Signal] public delegate void LandChangedEventHandler(int index);
     /// <summary>Météo de la run (plan 39 A5) : identifiant de data/world/weather.json, vide quand le ciel se dégage.</summary>
     [Signal] public delegate void WeatherChangedEventHandler(string weatherId);
 

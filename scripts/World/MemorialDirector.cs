@@ -58,6 +58,7 @@ public partial class MemorialDirector : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.MemorialInteracted += OnMemorialInteracted;
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        _eventBus.LandChanging += OnLandChanging;
     }
 
     public override void _ExitTree()
@@ -66,6 +67,7 @@ public partial class MemorialDirector : Node
             return;
         _eventBus.MemorialInteracted -= OnMemorialInteracted;
         _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+        _eventBus.LandChanging -= OnLandChanging;
     }
 
     public override void _Process(double delta)
@@ -95,6 +97,17 @@ public partial class MemorialDirector : Node
     // ==============================
     // Éclats
     // ==============================
+
+    /// <summary>
+    /// Changement de terre (plan 51) : une collecte d'éclats en cours s'arrête sans rien rendre ; ses éclats et son
+    /// Mémorial partent avec la terre (conteneur des lieux vidé).
+    /// </summary>
+    private void OnLandChanging(int toIndex)
+    {
+        _gathering = null;
+        _countdown?.End();
+        _shards.Clear();
+    }
 
     private void StartGathering(Memorial memorial)
     {

@@ -18,6 +18,15 @@ internal sealed class ErasureCellIndex
     public int ActiveCount { get; private set; }
     public int WordCount => _activeWords.Count;
 
+    /// <summary>Oublie toutes les cellules (changement de terre, plan 51).</summary>
+    public void Clear()
+    {
+        _indices.Clear();
+        _cells.Clear();
+        _activeWords.Clear();
+        ActiveCount = 0;
+    }
+
     public void SetActive(Vector2I cell, bool active)
     {
         if (!_indices.TryGetValue(cell, out int index))

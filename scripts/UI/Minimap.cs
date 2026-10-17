@@ -111,6 +111,21 @@ public partial class Minimap : Control
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.ZonePhaseChanged += OnZonePhaseChanged;
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        _eventBus.LandChanging += OnLandChanging;
+        Visible = false;
+    }
+
+    /// <summary>
+    /// Changement de terre (plan 51) : la carte de la terre quittée et ses petits lieux sont oubliés ; la suivante se
+    /// redessine à la première mise à jour où elle est prête.
+    /// </summary>
+    private void OnLandChanging(int toIndex)
+    {
+        _raster?.Dispose();
+        _raster = null;
+        _places = null;
+        _legend?.QueueFree();
+        _legend = null;
         Visible = false;
     }
 
@@ -132,6 +147,7 @@ public partial class Minimap : Control
         {
             _eventBus.ZonePhaseChanged -= OnZonePhaseChanged;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+            _eventBus.LandChanging -= OnLandChanging;
         }
         _raster?.Dispose();
     }

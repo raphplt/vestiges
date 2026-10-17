@@ -94,6 +94,7 @@ public partial class ErasureManager : Node
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.LandChanging += OnLandChanging;
 
         _memoryImage = Image.CreateFromData(MemoryWindowCells, MemoryWindowCells, false, Image.Format.R8, _memoryBytes);
         _memoryTexture = ImageTexture.CreateFromImage(_memoryImage);
@@ -115,6 +116,7 @@ public partial class ErasureManager : Node
             _eventBus.MemorialAwakened -= OnMemorialAwakened;
             _eventBus.WorkshopVisited -= OnMemorialAwakened;
             _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+            _eventBus.LandChanging -= OnLandChanging;
             _eventBus.CrisisStarted -= OnCrisisStarted;
             _eventBus.CrisisEnded -= OnCrisisEnded;
         }
@@ -201,6 +203,24 @@ public partial class ErasureManager : Node
         float damage = _player.EffectiveMaxHp * _voidDamageRatioPerSecond * _updateIntervalSec;
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerHitBy, "void", damage);
         _player.TakeErasureDamage(damage);
+    }
+
+    /// <summary>
+    /// Changement de terre (plan 51) : la mémoire de la terre quittée part avec elle, la suivante naît intacte et le sol
+    /// redevient net à l'écran. Le rythme de l'oubli et ses Oublis restent ceux de la run.
+    /// </summary>
+    private void OnLandChanging(int toIndex)
+    {
+        _zoneMemory.Clear();
+        _zonePhases.Clear();
+        _activeCells.Clear();
+        _globalErasurePercent = 0f;
+        _updateTimer = 0;
+        _playerPhase = ErasureZonePhase.Anchored;
+        RenderingServer.GlobalShaderParameterSet("erasure_window", Vector4.Zero);
+        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", 1f);
+        _eventBus?.EmitSignal(EventBus.SignalName.ErasureUpdated, 0f);
+        _eventBus?.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)_playerPhase);
     }
 
     /// <summary>Recopie la mémoire des zones autour du joueur dans la texture lue par le shader du sol.</summary>

@@ -272,6 +272,10 @@ public class BiomeTileMapper
 			return fallbackSources[hash % fallbackSources.Length];
 		}
 
+		// Terre d'un seul biome (plan 51) : un terrain qu'aucun biome chargé ne dessine (le béton au marais) prend son herbe.
+		if (terrain != TerrainType.Grass)
+			return GetSourceId(biomeIndex, TerrainType.Grass, x, y, urbanCellType, generator);
+
 		GD.PushWarning($"[BiomeTileMapper] Aucun sourceId pour terrain {terrain} (biomeIndex={biomeIndex}, cell={x},{y})");
 		return -1;
 	}

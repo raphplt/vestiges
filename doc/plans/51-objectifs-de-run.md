@@ -448,3 +448,44 @@ Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par
 - suites vertes : démarrage, chargement, catalogues, cartographie, petits lieux, mouvement intégré.
 
 **Relevé pour la production** : une terre de champs seule répète beaucoup ses fermes (une par région). Les terres d'un seul biome demanderont des pièces plus variées (§5).
+
+### Compte rendu P1b et P1c — 17 octobre 2026
+
+Livrés ensemble : le vidage seul fait planter les systèmes qui gardent la carte (petits lieux, minimap), il n'a de sens qu'avec leur remise à zéro.
+
+**Livré (branche `terres`) :**
+- **`LandTransition`** (`scripts/World/LandTransition.cs`) orchestre le passage, jeu en pause comme au chargement :
+  1. signal `LandChanging` ;
+  2. vidage de la carte, puis construction de la terre suivante par le même chemin que le premier chargement (`WorldSetup.BuildLandAsync`) ;
+  3. petits lieux, cabines et fausses lumières refaits ;
+  4. joueur posé au départ (`Player.ArriveOnLand`) ;
+  5. signal `LandChanged`.
+
+  Il pose aussi ces détails au premier chargement, à la place du bootstrap.
+- **`WorldSetup.ClearWorldAsync`** :
+  - libère les nœuds de carte, qu'il tient en liste ;
+  - vide les décors, les lieux et les objets au sol, le sol et les obstacles ;
+  - retire les créatures sur-le-champ (`Enemy.Withdraw`, sans butin ni élimination) ;
+  - ramène au joueur les orbes d'XP restées au sol (`XpOrb.CollectAll`).
+- **Réactions au départ** : l'Effacement repart de zéro ; la minimap oublie sa carte ; une collecte d'éclats en cours s'arrête ; les objets en vente des Ateliers disparaissent ; un micro-événement en cours finit échoué ; une Barrière levée reste derrière ; les bonus au sol disparaissent (ceux déjà pris continuent) ; la faune s'efface.
+- **Ce qui suit la run sans rien perdre** :
+  - le brouillard garde l'Oubli du regard et son abonnement ;
+  - les bonus de vitesse des abribus courent jusqu'au bout ;
+  - les particules d'oubli relisent l'index d'occlusion refait.
+- **Défauts corrigés en route :**
+  - une terre d'un seul biome laissait des trous où un terrain n'avait pas de tuile (32 cellules de béton au marais) : ce terrain prend maintenant l'herbe du biome ;
+  - les chemins de terre n'apparaissaient jamais sur la minimap (défaut existant) : leur emprise est gardée après la construction. C'est le seul changement visible en run normale.
+- **Banc `tools/test_lands.sh`** (suite `lands`) : trois terres enchaînées par le vrai passage sur la vraie scène, foule et orbe posées avant chacun.
+
+**Vérifié :**
+- build sans avertissement ; banc des terres vert et sans erreur au journal, sur carrière, marais puis champs ;
+- à chaque passage :
+  - rien ne reste de la terre quittée (5 Mémoriaux et 13 coffres comptés, pas 10 ni 26) ;
+  - aucune créature ancienne ; l'orbe revient au joueur ;
+  - sol sans trou ; joueur au départ ;
+  - niveau, PV, armes, Essence, Péril, éliminations et horloge identiques ;
+  - puis 4 s de jeu sans erreur, l'horloge repart ;
+- un passage dure 1,4 à 1,9 s, machine calme ;
+- validation large lancée au moment du commit, à la demande de Raphaël ; son résultat est consigné au lot suivant.
+
+**Suite : P1d**, une commande de dev « terre suivante » et un écran pendant le passage, pour essayer en jouant.

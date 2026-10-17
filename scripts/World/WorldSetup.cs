@@ -30,6 +30,8 @@ public partial class WorldSetup : Node2D
     private WorldGenConfig _config;
     private LandSpec _land;
     private TileSet _baseTileSet;
+    // Nœuds propres à la carte en cours, libérés au changement de terre (plan 51) ; le reste de Main porte la run.
+    private readonly List<Node> _landNodes = new();
     private BiomeTileMapper _tileMapper;
 
     /// <summary>Seed de la run : celle du Hub, ou tirée à l'entrée dans l'arbre (voir <see cref="_EnterTree"/>).</summary>
@@ -47,7 +49,7 @@ public partial class WorldSetup : Node2D
     /// <summary>Référence publique au générateur pour les autres systèmes.</summary>
     public WorldGenerator Generator => _generator;
     /// <summary>Emprise des chemins, réutilisée par la cartographie sans parcourir les décors.</summary>
-    public IReadOnlySet<Vector2I> PathCells => _pathNetwork?.Cells;
+    public IReadOnlySet<Vector2I> PathCells => _pathCells;
 
     /// <summary>Checks if a world position is impassable (water or erased void).</summary>
     public bool IsWaterAt(Vector2 worldPos)
@@ -75,6 +77,8 @@ public partial class WorldSetup : Node2D
     private SwampPropLayout _swampLayout;
     private WildFieldsLayout _wildFieldsLayout;
     private PathNetwork _pathNetwork;
+    // Gardée après la construction : la cartographie n'échantillonne une cellule qu'à sa découverte, bien plus tard.
+    private IReadOnlySet<Vector2I> _pathCells;
     private FarmConfig _farmConfig;
     private List<CompositionSite> _farms = new();
     private SitePlan _quarryPlan;
@@ -282,6 +286,25 @@ public partial class WorldSetup : Node2D
     public async Task InitializeWorldAsync(Action<string> onProgress = null)
     {
         onProgress?.Invoke("Création du monde...");
+        await BuildCurrentLandAsync(onProgress);
+    }
+
+    /// <summary>
+    /// Construit la terre de rang <paramref name="index"/> à la place de la carte vidée par <see cref="ClearWorldAsync"/>
+    /// (plan 51) : mêmes étapes que le premier chargement, génération sur un thread pendant que le jeu attend.
+    /// </summary>
+    public async Task BuildLandAsync(int index, Action<string> onProgress = null)
+    {
+        LoadProfiler.Begin();
+        _config = WorldGenConfig.Load();
+        _land = LandSpec.For(index, _config, Seed);
+        _land.ApplyTo(_config);
+        _generation = Task.Run(GenerateWorld);
+        await BuildCurrentLandAsync(onProgress);
+    }
+
+    private async Task BuildCurrentLandAsync(Action<string> onProgress)
+    {
         CreateVoidBackground();
 
         await _generation;
@@ -291,7 +314,7 @@ public partial class WorldSetup : Node2D
         PrepareTiles();
         LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
-        WorldEdgeCollision.Build(this, _ground, _generator);
+        _landNodes.Add(WorldEdgeCollision.Build(this, _ground, _generator));
         LoadProfiler.Mark("tuiles et bord du monde");
         GroundMaterial.Apply(_ground, _roadOverlay, _generator, _tileMapper, _terrain, new Vector2I(_config.MapRadius, _config.MapRadiusY), _config.GroundBlend);
         AddPaths();
@@ -336,7 +359,9 @@ public partial class WorldSetup : Node2D
         onProgress?.Invoke("Atmosphère...");
         if (_config.LoreElementsEnabled)
             SpawnLoreElements();
-        InitBiomeAtmosphere();
+        // L'atmosphère suit le joueur de terre en terre : créée une fois, elle relit le biome sous ses pieds.
+        if (_biomeAtmosphere == null)
+            InitBiomeAtmosphere();
         await YieldFrame();
 
         // Libérer les refs temporaires
@@ -346,11 +371,58 @@ public partial class WorldSetup : Node2D
         _tileMapper.SetRoadTiles(null);
         _swampLayout = null;
         _wildFieldsLayout = null;
+        _pathCells = _pathNetwork?.Cells;
         _pathNetwork = null;
 
         IsWorldReady = true;
         LoadProfiler.Mark("atmosphère");
         GD.Print($"[WorldSetup] Terre {_land.Index} générée, graine {LandSeed} (run {Seed})");
+    }
+
+    /// <summary>
+    /// Vide la carte en cours (plan 51, changement de terre) : nœuds de carte, décors, lieux, coffres et objets au sol,
+    /// créatures rendues au pool, tuiles, obstacles. Les orbes d'XP restées au sol reviennent au joueur. Le joueur et
+    /// les systèmes qui portent la run ne sont pas touchés ; leur remise à zéro suit le signal de changement de terre.
+    /// </summary>
+    public async Task ClearWorldAsync()
+    {
+        IsWorldReady = false;
+        Player player = GetNodeOrNull<Player>("Player");
+        if (player != null)
+            XpOrb.CollectAll(player);
+        Node enemies = GetNode("EnemyContainer");
+        foreach (Node child in enemies.GetChildren())
+        {
+            if (child is Enemy enemy)
+                enemy.Withdraw();
+        }
+
+        BeginLoadSlice();
+        foreach (Node node in _landNodes)
+        {
+            if (IsInstanceValid(node))
+                node.QueueFree();
+        }
+        _landNodes.Clear();
+        // Décors par tronçons, lieux et objets au sol un par un : la libération s'étale sur plusieurs images.
+        foreach (Node container in new[] { GetNode("PropContainer"), _poiContainer })
+        {
+            foreach (Node child in container.GetChildren())
+            {
+                child.QueueFree();
+                if (LoadSliceSpent())
+                    await YieldLoadSlice();
+            }
+        }
+        _ground.Clear();
+        _roadOverlay?.Clear();
+        ObstacleField.Clear();
+        _usedCells.Clear();
+        _generator = null;
+
+        // Une image libère ce qui a été mis en file : les index statiques se vident à la sortie de chaque lieu.
+        await YieldFrame();
+        GD.Print($"[WorldSetup] Terre {_land.Index} vidée");
     }
 
     /// <summary>Rend la main au moteur pour une image, puis s'arrête si la scène a été quittée entre-temps.</summary>
@@ -427,6 +499,7 @@ public partial class WorldSetup : Node2D
         voidBg.ZIndex = -100;
         AddChild(voidBg);
         MoveChild(voidBg, 0);
+        _landNodes.Add(voidBg);
     }
 
     /// <summary>Pose des tuiles du sol, en rendant la main au moteur par tranches de temps.</summary>
@@ -502,6 +575,7 @@ public partial class WorldSetup : Node2D
             return;
         Node2D paths = PathMeshes.Build(_pathNetwork);
         AddChild(paths);
+        _landNodes.Add(paths);
         MoveChild(paths, _roadOverlay != null ? _roadOverlay.GetIndex() : _ground.GetIndex() + 1);
     }
 
@@ -526,6 +600,7 @@ public partial class WorldSetup : Node2D
     {
         _poiManager = new PoiManager();
         AddChild(_poiManager);
+        _landNodes.Add(_poiManager);
 
         Spawn.EnemyPool enemyPool = GetNodeOrNull<Spawn.EnemyPool>("EnemyPool");
         Node enemyContainer = GetNodeOrNull("EnemyContainer");
@@ -550,6 +625,7 @@ public partial class WorldSetup : Node2D
         Node2D propContainer = GetNode<Node2D>("PropContainer");
         Node2D decals = new() { Name = "GroundDecals", ZIndex = -1 };
         AddChild(decals);
+        _landNodes.Add(decals);
         // Hors de l'arbre comme PropStaging : libéré même si la construction échoue (plan 26 Q4).
         Node2D decalStaging = new();
         try
@@ -560,6 +636,7 @@ public partial class WorldSetup : Node2D
             Node2D player = GetNodeOrNull<Node2D>("Player");
             PropOcclusion occlusion = new() { Name = "PropOcclusion" };
             AddChild(occlusion);
+            _landNodes.Add(occlusion);
             occlusion.Build(_propStaging, player);
             LoadProfiler.Mark("index d'occlusion construit");
             await YieldFrame();
@@ -567,6 +644,7 @@ public partial class WorldSetup : Node2D
             // En dernier : les décors, rangés en tronçons hors de l'arbre, y entrent tronçon par tronçon (voir PropChunks).
             PropChunks chunks = new() { Name = "PropChunks" };
             AddChild(chunks);
+            _landNodes.Add(chunks);
             chunks.Build(player?.GetNodeOrNull<Camera2D>("Camera"), (_propStaging, propContainer), (decalStaging, decals));
             _propStaging.Free();
             _propStaging = null;
@@ -614,6 +692,7 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
+        _landNodes.Add(_propSpawner);
         SiteComposer.Place(_farms, _farmConfig.Site, propContainer, LandSeed);
         LoadProfiler.Mark("décors des fermes");
         await YieldFrame();
@@ -726,6 +805,7 @@ public partial class WorldSetup : Node2D
         _loreRng = RunRandom.Create("lore_elements");
         Node2D loreContainer = new() { Name = "LoreContainer" };
         AddChild(loreContainer);
+        _landNodes.Add(loreContainer);
 
         // Placer après PropContainer pour Z-order correct
         Node propContainer = GetNodeOrNull("PropContainer");

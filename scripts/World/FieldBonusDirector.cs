@@ -39,6 +39,14 @@ public partial class FieldBonusDirector : Node
         _eventBus.VariantEnemyKilled += OnVariantKilled;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.CrisisEnded += OnCrisisEnded;
+        _eventBus.LandChanging += OnLandChanging;
+    }
+
+    /// <summary>Changement de terre (plan 51) : les bonus restés au sol disparaissent ; ceux déjà pris continuent.</summary>
+    private void OnLandChanging(int toIndex)
+    {
+        for (int i = _active.Count - 1; i >= 0; i--)
+            _active[i].Release();
     }
 
     public override void _ExitTree()
@@ -48,6 +56,7 @@ public partial class FieldBonusDirector : Node
         _eventBus.VariantEnemyKilled -= OnVariantKilled;
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.CrisisEnded -= OnCrisisEnded;
+        _eventBus.LandChanging -= OnLandChanging;
     }
 
     private void OnVariantKilled(string displayName, string variantId, Vector2 position)

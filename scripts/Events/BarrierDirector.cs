@@ -54,6 +54,7 @@ public partial class BarrierDirector : Node
 		_trail = new Vector2[Mathf.Max(2, Mathf.CeilToInt(_config.HeadingWindowSec / HeadingSampleSec) + 1)];
 		_eventBus.MemorialAwakened += OnMemorialAwakened;
 		_eventBus.CrisisCalmChanged += OnCalmChanged;
+		_eventBus.LandChanging += OnLandChanging;
 	}
 
 	public override void _ExitTree()
@@ -62,6 +63,7 @@ public partial class BarrierDirector : Node
 			return;
 		_eventBus.MemorialAwakened -= OnMemorialAwakened;
 		_eventBus.CrisisCalmChanged -= OnCalmChanged;
+		_eventBus.LandChanging -= OnLandChanging;
 	}
 
 	public override void _Process(double delta)
@@ -166,6 +168,17 @@ public partial class BarrierDirector : Node
 			footing++;
 		}
 		return footing;
+	}
+
+	/// <summary>Changement de terre (plan 51) : une Barrière levée reste derrière, comme quand le joueur la contourne.</summary>
+	private void OnLandChanging(int toIndex)
+	{
+		if (!IsInstanceValid(_barrier))
+			return;
+		if (!_barrier.IsEnded)
+			_barrier.End(false);
+		_barrier.QueueFree();
+		_barrier = null;
 	}
 
 	private void OnBarrierEnded(bool defeated)

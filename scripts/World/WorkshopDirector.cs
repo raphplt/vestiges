@@ -45,12 +45,17 @@ public partial class WorkshopDirector : Node
         _rng.Seed = RunRandom.SeedFor("workshops");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.WorkshopInteracted += OnWorkshopInteracted;
+        _eventBus.LandChanging += OnLandChanging;
     }
+
+    /// <summary>Changement de terre (plan 51) : les Ateliers de la terre quittée et leurs objets en vente disparaissent.</summary>
+    private void OnLandChanging(int toIndex) => _itemOffers.Clear();
 
     public override void _ExitTree()
     {
         if (_eventBus != null)
             _eventBus.WorkshopInteracted -= OnWorkshopInteracted;
+            _eventBus.LandChanging -= OnLandChanging;
     }
 
     public override void _Process(double delta)

@@ -67,6 +67,7 @@ public partial class RunEventDirector : Node
         _eventBus.EventEnemyKilled += OnEventEnemyKilled;
         _eventBus.BossEncounterStarted += OnBossEncounterStarted;
         _eventBus.BossEncounterEnded += OnBossEncounterEnded;
+        _eventBus.LandChanging += OnLandChanging;
     }
 
     public override void _ExitTree()
@@ -75,6 +76,7 @@ public partial class RunEventDirector : Node
         _eventBus.EventEnemyKilled -= OnEventEnemyKilled;
         _eventBus.BossEncounterStarted -= OnBossEncounterStarted;
         _eventBus.BossEncounterEnded -= OnBossEncounterEnded;
+        _eventBus.LandChanging -= OnLandChanging;
         _active?.Cleanup();
         _active = null;
     }
@@ -275,6 +277,13 @@ public partial class RunEventDirector : Node
         _eventBus.EmitSignal(EventBus.SignalName.RandomEventEnded, _activeData.Id);
         _nextEventAt = _clock.Seconds + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
         _activeData = null;
+    }
+
+    /// <summary>Changement de terre (plan 51) : le micro-événement en cours, posé sur la terre quittée, finit échoué.</summary>
+    private void OnLandChanging(int toIndex)
+    {
+        if (_active != null)
+            EndActive();
     }
 
     private void OnBossEncounterStarted(int encounterId, string bossName, float maxHp, int notches) => _bossEncounters.Add(encounterId);

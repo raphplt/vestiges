@@ -26,12 +26,12 @@ public static class WorldEdgeCollision
     private readonly record struct EdgePoint(Vector2 Position, Vector2 VoidCenter);
 
     /// <summary>Crée le corps « WorldEdge » sous <paramref name="parent"/>, autour du sol de la carte générée.</summary>
-    public static void Build(Node2D parent, TileMapLayer ground, WorldGenerator generator)
+    public static StaticBody2D Build(Node2D parent, TileMapLayer ground, WorldGenerator generator)
     {
         // Un rang de marge : le dernier sol peut toucher une cellule hors de la grille générée.
         Rect2I cells = new(-generator.MapRadiusX - 1, -generator.MapRadiusY - 1,
             generator.MapRadiusX * 2 + 3, generator.MapRadiusY * 2 + 3);
-        Build(parent, ground, cells, (x, y) => !generator.IsErased(x, y));
+        return Build(parent, ground, cells, (x, y) => !generator.IsErased(x, y));
     }
 
     /// <summary>Mur autour des cellules où <paramref name="isGround"/> est vrai, dans <paramref name="cells"/>.</summary>

@@ -55,6 +55,17 @@ public partial class SmallPlaceDirector : Node
 		_rng.Seed = RunRandom.SeedFor("small_places");
 	}
 
+	/// <summary>
+	/// Changement de terre (plan 51) : les petits lieux et les embuscades de la terre quittée sont oubliés, le placement
+	/// suivra la graine de la nouvelle terre. Les bonus de vitesse déjà accordés au joueur courent jusqu'au bout.
+	/// </summary>
+	public void ResetLand(ulong seed)
+	{
+		_places.Clear();
+		_ambushes.Clear();
+		_placementRng = new RandomNumberGenerator { Seed = seed ^ 0x5A11_91ACEUL };
+	}
+
 	public override void _Ready()
 	{
 		_eventBus = GetNode<EventBus>("/root/EventBus");

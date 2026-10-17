@@ -74,13 +74,15 @@ public partial class ErasureMotes : Node
 
     private bool Resolve()
     {
-        if (_player != null && _erasure != null && _occlusion != null)
+        if (_player != null && _erasure != null && IsInstanceValid(_occlusion))
             return true;
         Node root = GetParent();
         _erasure ??= root.GetNodeOrNull<ErasureManager>("ErasureManager");
-        _occlusion ??= root.GetNodeOrNull<PropOcclusion>("PropOcclusion");
+        // L'index d'occlusion est refait à chaque terre (plan 51) : l'ancien est libéré avec la carte.
+        if (!IsInstanceValid(_occlusion))
+            _occlusion = root.GetNodeOrNull<PropOcclusion>("PropOcclusion");
         _player ??= root.GetNodeOrNull<Node2D>("Player");
-        return _player != null && _erasure != null && _occlusion != null;
+        return _player != null && _erasure != null && IsInstanceValid(_occlusion);
     }
 
     private bool LoadConfig()

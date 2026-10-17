@@ -230,35 +230,49 @@ public partial class XpOrb : Area2D, ITicked
 
     private void OnBodyEntered(Node2D body)
     {
-        if (_collected)
-            return;
+        if (!_collected && body is Player player)
+            Collect(player, true);
+    }
 
-        if (body is Player player)
+    /// <summary>
+    /// Changement de terre (plan 51) : toutes les orbes restées au sol reviennent au joueur d'un coup, sans gerbe ni son
+    /// en rafale ; le butin de la terre quittée n'est pas perdu.
+    /// </summary>
+    public static int CollectAll(Player player)
+    {
+        System.Collections.Generic.List<XpOrb> orbs = new(_onGround);
+        foreach (XpOrb orb in orbs)
+            orb.Collect(player, false);
+        return orbs.Count;
+    }
+
+    private void Collect(Player player, bool feedback)
+    {
+        _collected = true;
+        _onGround.Remove(this);
+        // Ramassée en dormant (le joueur marche dessus) : CombatPools l'oubliera à sa prochaine ronde.
+        IsAsleep = false;
+
+        if (feedback)
         {
-            _collected = true;
-            _onGround.Remove(this);
-            // Ramassée en dormant (le joueur marche dessus) : CombatPools l'oubliera à sa prochaine ronde.
-            IsAsleep = false;
-
             CombatPools.Instance?.ShowXpCollect(GlobalPosition);
-
             ulong now = AudioManager.NowMsec;
             _chain = now - _lastCollectMs < ChainWindowMs ? Mathf.Min(_chain + 1, ChainMax) : 0;
             _lastCollectMs = now;
             AudioManager.Play("xp_gain", 0.01f, -1.5f, 1f + _chain * ChainPitchStep);
-
-            EventBus eventBus = GetNode<EventBus>("/root/EventBus");
-            eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
-            player.OnXpOrbCollected();
-
-            // Retour au pool : invisible, inerte, prête pour la prochaine mort.
-            Visible = false;
-            _sprite.Stop();
-            _glow.Emitting = false;
-            Roster.Remove(this);
-            SetDeferred(Area2D.PropertyName.Monitoring, false);
-            _release(this);
         }
+
+        EventBus eventBus = GetNode<EventBus>("/root/EventBus");
+        eventBus.EmitSignal(EventBus.SignalName.XpGained, _xpValue);
+        player.OnXpOrbCollected();
+
+        // Retour au pool : invisible, inerte, prête pour la prochaine mort.
+        Visible = false;
+        _sprite.Stop();
+        _glow.Emitting = false;
+        Roster.Remove(this);
+        SetDeferred(Area2D.PropertyName.Monitoring, false);
+        _release(this);
     }
 
     /// <summary>Aspirée, l'orbe s'étire dans sa course et sème des éclats d'Essence derrière elle.</summary>

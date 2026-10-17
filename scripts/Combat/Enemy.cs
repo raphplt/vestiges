@@ -510,6 +510,17 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		tween.TweenCallback(Callable.From(OnDeathComplete));
 	}
 
+	/// <summary>
+	/// Changement de terre (plan 51) : la créature quitte la carte sur-le-champ, jeu en pause, sans dissolution, butin
+	/// ni élimination. Une créature déjà en train de mourir finit sa mort, dont l'animation la rend au pool.
+	/// </summary>
+	public void Withdraw()
+	{
+		if (_isDying || !IsActive)
+			return;
+		OnDeathComplete();
+	}
+
 	/// <summary>Renforce une créature déjà lancée (élites de fin de run, plan 47) : PV pleins au nouveau maximum.</summary>
 	public void Empower(float hpMult, float damageMult) => ScaleStats(hpMult, damageMult, 1f);
 

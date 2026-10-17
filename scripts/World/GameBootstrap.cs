@@ -255,15 +255,11 @@ public partial class GameBootstrap : Node
         SmallPlaceDirector smallPlaces = new() { Name = "SmallPlaceDirector" };
         smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.LandSeed);
         sceneRoot.AddChild(smallPlaces);
-        smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
-        // Cabines qui sonnent (plan 39 C1) : après les petits lieux, dont les cabines.
-        AbandonedVoicesDirector abandonedVoices = new() { Name = "AbandonedVoicesDirector" };
-        abandonedVoices.Setup(smallPlaces, player);
-        sceneRoot.AddChild(abandonedVoices);
-        // Fausses lumières (plan 39 B4a) : sur les lampes des décors déjà posés.
-        FalseLightDirector falseLights = new() { Name = "FalseLightDirector" };
-        falseLights.Setup(GetNode("../PropContainer"), erasureManager, GetNodeOrNull<CanvasModulate>("../CanvasModulate"));
-        sceneRoot.AddChild(falseLights);
+        // Passage d'une terre à l'autre (plan 51) ; il pose aussi les détails des décors, refaits à chaque terre.
+        LandTransition landTransition = new() { Name = "LandTransition" };
+        landTransition.Setup(worldSetup, player, smallPlaces, erasureManager, GetNodeOrNull<CanvasModulate>("../CanvasModulate"));
+        sceneRoot.AddChild(landTransition);
+        landTransition.PlaceLandDetails();
         LoadProfiler.Mark("directeurs et petits lieux");
         // Jeu toujours en pause : rendre la main ici coupe la dernière image figée du chargement en deux (plan 37 R5).
         await NextLoadingFrame();

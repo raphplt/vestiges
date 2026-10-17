@@ -51,6 +51,9 @@ public static class ObstacleField
 	private static readonly Dictionary<ulong, int> ByOwner = new();
 	private static ulong _flushedTick = ulong.MaxValue;
 
+	/// <summary>Emprises inscrites ou en attente ; nul après un changement de terre (plan 51).</summary>
+	public static int Count => Obstacles.Count + PendingList.Count;
+
 	/// <summary>Oublie tous les décors : à appeler au début d'une run, avant que les siens ne s'inscrivent.</summary>
 	public static void Clear()
 	{
