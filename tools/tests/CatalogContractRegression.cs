@@ -39,6 +39,7 @@ public partial class CatalogContractRegression : Node
             CheckWaymarks();
             CheckBiomes();
             CheckWorldGen();
+            CheckSites();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -662,6 +663,77 @@ public partial class CatalogContractRegression : Node
             }), biomeExists, propExists, out WorldGenConfig loose, out string looseError)
             && loose.Lands.CountScales["rift"] == 1.5f && loose.GroundBlend.EdgeNoise == 1.5f && loose.JunctionProps.BandCells == 0,
             $"monde : part de terre au-delà de 1, bruit de bord ample, bande nulle et zone sans nom admis {looseError}");
+    }
+
+    /// <summary>Fermes et chantiers de la carrière (plan 26 Q7c-4c) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckSites()
+    {
+        Func<string, bool> farmSprite = stem => ResourceLoader.Exists($"{WildFieldsComposer.Folder}{stem}.png");
+        Func<string, bool> quarrySprite = stem => ResourceLoader.Exists($"{WorldSetup.QuarryFolder}{stem}.png");
+        Check(FarmConfig.TryLoad(out FarmConfig farm, out string farmError) && farm.Site.Enabled && farm.Site.Elements.Count > 0
+            && farm.OrchardTrees.Count == 2 && farm.BlockingScenes.Length == 1, $"fermes du dépôt acceptées {farmError}");
+        Check(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", out SitePlan quarry,
+            out string quarryError) && quarry.Enabled && quarry.Elements.Count == 23, $"chantiers du dépôt acceptés {quarryError}");
+        string quarryText = FileAccess.GetFileAsString(WorldSetup.QuarrySitesPath);
+        (string, Action<JsonObject>, string)[] planCases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["enable"] = true, "clé « enable » inconnue"),
+            ("activation non booléenne", root => root["enabled"] = 1, "enabled"),
+            ("recherche nulle", root => root["search_radius_cells"] = 0, "search_radius_cells"),
+            ("emprise à une dimension", root => root["half_extent_px"] = new JsonArray(480), "half_extent_px"),
+            ("emprise nulle", root => root["half_extent_px"] = new JsonArray(0, 140), "half_extent_px"),
+            ("emprise non numérique", root => root["half_extent_px"] = new JsonArray("large", 140), "half_extent_px"),
+            ("portée négative", root => root["path_reach_px"] = -1, "path_reach_px"),
+            ("largeur nulle", root => root["spur_width_factor"] = 0, "spur_width_factor"),
+            ("éléments non liste", root => root["elements"] = 1, "elements"),
+            ("élément sans décor", root => root["elements"]![0]!.AsObject().Remove("sprites"), "sprites"),
+            ("liste de décors vide", root => root["elements"]![0]!["sprites"] = new JsonArray(), "sprites"),
+            ("décor introuvable", root => root["elements"]![0]!["sprites"]![0] = "prop_inconnu", "décor « prop_inconnu »"),
+            ("décor hors dossier", root => root["elements"]![0]!["sprites"]![0] = "../forest/prop_bush", "décor « ../forest/prop_bush »"),
+            ("élément sans position", root => root["elements"]![0]!.AsObject().Remove("at"), "at"),
+            ("champ d'élément inconnu", root => root["elements"]![0]!["blocked"] = true, "clé « blocked » inconnue"),
+            ("chance hors borne", root => root["elements"]![3]!["chance"] = 1.5, "chance"),
+            ("rangée sans pas", root => root["elements"]![1]!.AsObject().Remove("step"), "to et step vont ensemble"),
+            ("pas sans rangée", root => root["elements"]![0]!["step"] = 10, "to et step vont ensemble"),
+            ("pas nul", root => root["elements"]![1]!["step"] = 0, "step"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in planCases)
+        {
+            string text = mutate == null ? "{ \"enabled\": " : Mutated(quarryText, mutate);
+            bool refused = !SitePlan.TryParse(text, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", quarrySprite,
+                out SitePlan plan, out string error);
+            Check(refused && plan == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"chantiers, {name} refusé ({error})");
+        }
+        string farmText = FileAccess.GetFileAsString(FarmConfig.FilePath);
+        (string, Action<JsonObject>, string)[] farmCases =
+        {
+            ("champ inconnu", root => root["scene"] = new JsonArray(), "clé « scene » inconnue"),
+            ("bord de parcelle introuvable", root => root["parcel_edges"]![0] = "prop_haie", "décor « prop_haie »"),
+            ("verger à un décor", root => root["orchard_trees"]![0] = new JsonArray("prop_orchard_tree_base"), "orchard_trees"),
+            ("verger introuvable", root => root["orchard_trees"]![0]![1] = "prop_canopee", "prop_canopee"),
+            ("scène introuvable", root => root["scenes"]![0] = "prop_scene_inconnue", "décor « prop_scene_inconnue »"),
+            ("scène bloquante hors des scènes", root => root["blocking_scenes"]![0] = "prop_hedge_h", "absente de scenes"),
+            ("chance de scène hors borne", root => root["scene_chance_per_region"] = 2, "scene_chance_per_region"),
+            ("élément de ferme invalide", root => root["elements"]![0]!["at"] = new JsonArray(1, 2, 3), "at"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in farmCases)
+        {
+            bool refused = !FarmConfig.TryParse(Mutated(farmText, mutate), farmSprite, out FarmConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"fermes, {name} refusé ({error})");
+        }
+        string minimal = Mutated(quarryText, root =>
+        {
+            foreach (string key in new[] { "search_radius_cells", "half_extent_px", "path_reach_px", "spur_start", "spur_width_factor", "elements" })
+                root.Remove(key);
+        });
+        SitePlan defaults = new();
+        Check(SitePlan.TryParse(minimal, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", quarrySprite, out SitePlan bare, out string bareError)
+            && bare.SearchRadiusCells == defaults.SearchRadiusCells && bare.HalfExtentPx == defaults.HalfExtentPx
+            && bare.PathReachPx == defaults.PathReachPx && bare.SpurWidthFactor == defaults.SpurWidthFactor && bare.Elements.Count == 0,
+            $"chantiers : champs facultatifs absents, secours d'avant gardés {bareError}");
+        Check(FarmConfig.TryParse("{ \"enabled\": false }", farmSprite, out FarmConfig emptyFarm, out _) && !emptyFarm.Site.Enabled
+            && emptyFarm.Scenes.Length == 0 && emptyFarm.SceneChancePerRegion == 0.5f, "fermes : fichier minimal, secours d'avant gardés");
     }
 
     private void CheckAtmosphere()

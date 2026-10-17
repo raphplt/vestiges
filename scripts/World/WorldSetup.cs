@@ -186,6 +186,9 @@ public partial class WorldSetup : Node2D
     }
 
     private Task _generation;
+    /// <summary>Chantiers de la carrière (plan 08), contrôlés au chargement par <see cref="GameBootstrap"/>.</summary>
+    public const string QuarrySitesPath = "res://data/world/quarry_sites.json";
+    public const string QuarryFolder = "res://assets/props/collapsed_quarry/";
     private WorldGenerator _builtGenerator;
     private RandomNumberGenerator _loreRng;
     // Décors en attente, hors de l'arbre, entre les placeurs et le découpage en tronçons.
@@ -193,7 +196,7 @@ public partial class WorldSetup : Node2D
 
     /// <summary>
     /// Terrain, biomes, plans de la ville, du marais et des champs, chemins, fermes et chantiers. Calcul pur, sans nœud
-    /// ni ressource du moteur hors bruits : peut tourner hors du thread principal. Chronométré étape par étape.
+    /// ni ressource du moteur hors bruits, lectures de fichiers et ResourceLoader.Exists (sûrs hors du thread principal) : peut tourner hors du thread principal. Chronométré étape par étape.
     /// </summary>
     private void GenerateWorld()
     {
@@ -249,8 +252,7 @@ public partial class WorldSetup : Node2D
         _farmConfig = FarmConfig.Load();
         _farms = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _farmConfig.Site, LandSeed);
         // Chantiers de la carrière : galerie étayée, voie et wagonnets, baraque et machines groupées.
-        _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
-                                    "res://assets/props/collapsed_quarry/", "chantiers");
+        _quarryPlan = SitePlan.Load(QuarrySitesPath, "collapsed_quarry", QuarryFolder, "chantiers");
         _quarrySites = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _quarryPlan, LandSeed);
         LoadProfiler.Span("fermes et chantiers (thread)", ref step);
         _builtGenerator = generator;

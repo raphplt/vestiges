@@ -134,6 +134,19 @@ public partial class CatalogValuesProbe : Node
         List<string> scales = new(lands.CountScales.Keys);
         scales.Sort(StringComparer.Ordinal);
         lines.Add(Invariant($"world lands {lands.Enabled} {lands.MapRadius}x{lands.MapRadiusY} band={lands.MemorialBand.X:R}-{lands.MemorialBand.Y:R} scales={string.Join(",", scales.ConvertAll(k => Invariant($"{k}:{lands.CountScales[k]:R}")))}"));
+        // Q7c-4c : fermes et chantiers de la carrière, éléments dans l'ordre.
+        Vestiges.World.FarmConfig farm = Vestiges.World.FarmConfig.Load();
+        Vestiges.World.SitePlan quarry = Vestiges.World.SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
+            "res://assets/props/collapsed_quarry/", "chantiers");
+        foreach (Vestiges.World.SitePlan plan in new[] { farm.Site, quarry })
+        {
+            lines.Add(Invariant($"site {plan.LogName} {plan.BiomeId} {plan.Folder} enabled={plan.Enabled} search={plan.SearchRadiusCells} half={plan.HalfExtentPx} reach={plan.PathReachPx:R} spur={plan.SpurStart} width={plan.SpurWidthFactor:R}"));
+            foreach (Vestiges.World.SitePlan.Element element in plan.Elements)
+                lines.Add(Invariant($"site {plan.LogName} element {string.Join(",", element.Sprites)} at={element.At} to={element.To} step={element.Step:R} blocking={element.Blocking} chance={element.Chance:R}"));
+        }
+        lines.Add($"farm edges {string.Join(",", farm.ParcelEdges)}");
+        lines.Add($"farm orchard {string.Join(";", farm.OrchardTrees.ConvertAll(tree => $"{tree.Base}+{tree.Canopy}"))}");
+        lines.Add(Invariant($"farm scenes {string.Join(",", farm.Scenes)} blocking={string.Join(",", farm.BlockingScenes)} chance={farm.SceneChancePerRegion:R}"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
