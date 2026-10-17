@@ -9,7 +9,8 @@ namespace Vestiges.Events;
 /// <summary>
 /// Orchestration du late game V2.
 /// Déclenche le passage en late game, force l'apparition de l'Indicible,
-/// puis bascule la run en endgame après sa mort.
+/// puis bascule la run en endgame après sa mort. Sur les terres (plan 51 §16), c'est le dernier gardien vaincu qui gagne
+/// la run et l'ouvre.
 /// </summary>
 public partial class EndgameManager : Node
 {
@@ -55,6 +56,7 @@ public partial class EndgameManager : Node
 
 		_eventBus.EnemyKilled += OnEnemyKilled;
 		_eventBus.CrisisStarted += OnCrisisStarted;
+		_eventBus.GuardianDefeated += OnGuardianDefeated;
 
 		// Contrôlés dès le début de la run : une faute de réglage du boss se voit au chargement, pas à 30 minutes.
 		// Le reste de la run se joue ; seuls le boss et la fin de partie qu'il ouvre sont retirés.
@@ -72,6 +74,7 @@ public partial class EndgameManager : Node
 		{
 			_eventBus.EnemyKilled -= OnEnemyKilled;
 			_eventBus.CrisisStarted -= OnCrisisStarted;
+			_eventBus.GuardianDefeated -= OnGuardianDefeated;
 		}
 	}
 
@@ -157,12 +160,28 @@ public partial class EndgameManager : Node
 		if (enemyId != EnemyGrammar.FinalBossId)
 			return;
 
-		_bossDefeated = true;
 		_bossSpawned = false;
+		ReachEndgame();
+		GD.Print("[EndgameManager] Indicible defeated, endgame reached");
+	}
+
+	private void OnGuardianDefeated(int land, bool victory)
+	{
+		if (!victory || _bossDefeated)
+			return;
+
+		ReachLateGame();
+		ReachEndgame();
+		GD.Print($"[EndgameManager] Dernier gardien vaincu (terre {land}) : run gagnée, endgame atteint");
+	}
+
+	/// <summary>Le boss de la run est tombé : la run est gagnée, et ce qui suit se joue en endgame.</summary>
+	private void ReachEndgame()
+	{
+		_bossDefeated = true;
 		_endgameReached = true;
 		_gameManager?.ReportEndgame();
 		_crisisManager?.EnableEndgameTempo();
-		GD.Print("[EndgameManager] Indicible defeated, endgame reached");
 	}
 
 	private void CachePlayer()

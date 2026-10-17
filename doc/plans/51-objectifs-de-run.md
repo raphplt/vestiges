@@ -677,3 +677,67 @@ Corrigé en regardant : le repaire empruntait la stèle des Mémoriaux et redeve
 3. **Foule réduite de moitié pendant le combat**, comme pour la Barrière (§85), et **gardien allégé** (PV ×1,5, plancher de 2 500 PV ×1,8 par terre, 4 escortes) : combat de 64 à 177 s quand on le réveille, 1 à 5 min s'il se lève seul, enragé. Graine 7 : terres 1 et 2 en 3 min environ chacune ; **à partir de la terre 4, la puissance du bot dépasse la montée de difficulté** (terres 5 et 6 en 2 min). Le late game doit durcir la run. Graine 42 : le bot reste bloqué sur certaines terres, une limite de son pilotage.
 
 **La durée visée de 10 min par terre** repose sur deux systèmes déjà en place, gardés tels quels jusqu'à la séance de Raphaël : l'anneau (la terre tombe en 12 min au plus, puis le gardien se lève seul, enragé), et la difficulté qui monte avec le temps, plus d'un rang par terre. Un joueur rapide finit vite, un joueur lent le paie en difficulté : le modèle de Risk of Rain 2.
+
+## 16. Ce qui manque pour une run complète — découpage du 17 octobre 2026
+
+Demande de Raphaël : « ça serait bien de traiter le late game alors. Et les boss, ils ont été faits ? Bref, sur ce qui manque, fais-le. Le 10 min par terre devrait être timé avec un chronomètre, ou alors un système de difficulté croissante comme RoR2, enfin à voir. »
+
+État avant ce découpage : les trois terres s'enchaînent, mais le troisième gardien ouvre une quatrième terre ordinaire, puis une cinquième, sans fin ni victoire ; le gardien est un Souverain grossi, sans attaque à lui ; la terre suivante apparaît d'un coup.
+
+**Durée** : on garde les deux mécanismes déjà en place, l'anneau (12 min au plus, puis le gardien se lève seul, enragé) et la difficulté qui monte avec le temps (modèle de RoR2). Pas de chronomètre affiché : l'anneau en tient lieu, sans chiffre. À revoir après la séance de jeu.
+
+Lots, dans l'ordre :
+
+1. **L1, la victoire.** Le troisième gardien vaincu, la run est gagnée : elle compte comme le boss battu (déblocage de la difficulté suivante), la phase passe en endgame (créatures plus nombreuses et plus dures, musique de fin, Résurgences plus serrées), une annonce le dit, et le bilan montre les terres franchies. Les quêtes de la Barrière et de l'Indicible deviennent atteignables : un gardien abattu compte pour la Barrière, le troisième pour l'Indicible.
+2. **L2, la 4e terre, sans fin.** Une terre dédiée, la dernière tirée. Pas de repaire ni de clés : le front la ronge jusqu'au cœur, qui ne tombe jamais, et la partie se joue ensuite sur le cœur et les zones ancrées par les Mémoriaux, qui gardent leur puissance et leur ancre. Toutes les deux à trois minutes, **un écho de gardien** se lève, plus fort à chaque fois, avec un coffre, et chaque écho ajoute un point de Péril. La difficulté ne cesse donc de monter ; la run finit à la mort. Ligne d'objectif : « Dernière terre · Échos vaincus N ».
+3. **G1, le gardien de référence** (charte §11.4) : une charge annoncée par une ligne au sol, une frappe qui ouvre le vide sous un cercle annoncé, une onde à traverser en esquive. Trois phases (à 66 % et 33 % des PV), chacune plus rapide. Sans art nouveau, il garde le corps grossi du Souverain de la terre ; un vrai corps par terre attend la production.
+4. **R1, la recousure** : à l'arrivée, la terre monte du Néant autour du joueur, du plus proche au plus lointain, en deux à trois secondes.
+
+### Compte rendu L1, L2, G1, R1 — 17 octobre 2026
+
+**Livré (branche `terres`) :**
+- **L1, la victoire.** Le troisième gardien vaincu (`lands_to_win`), la run est gagnée. Elle compte comme boss battu (la difficulté suivante se débloque) et passe en phase endgame : créatures plus nombreuses et plus dures, musique de fin, Résurgences plus serrées. La ligne d'objectif devient dorée (« Run gagnée · La dernière terre se recoud ») et le son de victoire joue. Au bilan, « Terres franchies » affiche « 3, run gagnée ». Un gardien abattu compte pour la quête de la Barrière, le troisième pour celles de l'Indicible (textes des quêtes mis à jour). Nouveau signal `GuardianDefeated(land, victory)`.
+- **L2, la 4e terre.** Une terre neuve, tirée parmi les biomes pas encore vus, sans repaire ni passage. Le front la ronge jusqu'au cœur, qui ne tombe jamais. 90 s après l'arrivée, puis 2 min 30 après la chute du précédent, **un écho de gardien** se lève à 320 px du joueur, sur du sol debout : un Souverain de la terre aux PV d'un gardien du rang suivant, ×0,5, avec ses coups. Chaque écho ajoute un point de Péril et laisse un coffre rare. Ligne d'objectif : « Dernière terre · Échos vaincus N », puis « Un écho de gardien te traque » en rouge. Le bot de mesure tient le cœur.
+- **G1, le gardien de référence** (`GuardianMoves`, greffé sur le Souverain), avec trois coups annoncés, un à la fois :
+  - **charge** : une ligne au sol, verrouillée au début de l'annonce, puis une récupération qui laisse riposter ;
+  - **frappe** : un disque au sol là où va le joueur, qui ouvre le vide dessous pendant 20 s, cœur compris (`ErasureManager.BreakGround`) ; une brèche frappée de nouveau reste ouverte jusqu'à la plus tardive des deux fins ;
+  - **onde** : dès la deuxième phase, sa portée s'annonce, puis un anneau part du gardien, à traverser d'un dash.
+
+  Trois phases, sous 66 % puis 33 % des PV, avec des recharges ×0,8 puis ×0,6. À la troisième, la frappe tombe en trois disques. Réglages dans la section `moves` de `guardian.json`, validée en entier. Le corps reste le Souverain grossi de la terre ; un vrai corps par terre attend l'art.
+- **Combat du gardien recadré** :
+  - au réveil, les créatures restées sur le sol qui s'effondre tombent avec lui (retirées sans butin, sauf celles d'un événement) ;
+  - les PV du gardien ne dépassent plus 1,6 fois son plancher de rang (`hp_cap_floor_ratio`) ;
+  - un gardien retiré sans mourir revient au lieu de compter comme vaincu.
+- **R1, la recousure.** À l'arrivée, le voile de chargement s'efface sur le Néant, puis la terre monte autour du joueur en 2,5 s, du plus proche au plus lointain, avec un bord effiloché. C'est du rendu seul : la terre est entière pour le jeu dès l'arrivée. Garde-fou : si le voile ne la lâche pas, la terre monte d'elle-même au bout de 3 s.
+
+**Vérifié :**
+- banc des terres vert, avec ces nouveaux contrôles :
+  - à mi-PV, deuxième phase ;
+  - la frappe ouvre le vide au cœur, puis la brèche se referme ;
+  - le dernier gardien vaincu donne la phase Endgame et le boss battu ;
+  - terre du late game : biome neuf, pas de repaire, Péril +3 ;
+  - un écho se lève (Péril +1, ligne rouge), puis tombe (coffre, « Échos vaincus 1 ») ;
+  - réduite à son cœur, cette terre ne lève aucun gardien.
+- **Captures en vraie run regardées** (`--capture-lands`, graine 42) :
+  - frappe annoncée sous le joueur, puis brèche de Néant pâle à sa place ;
+  - recousure : Néant fissuré, puis la terre qui monte en anneau autour du joueur ;
+  - 4e terre (carrière) : écho avec sa barre de boss et la ligne rouge.
+
+  Relevé en regardant : le cœur fait à peu près un écran (±890 × ±445 px). Au réveil, le sol tombé commence donc juste hors champ, et seule la minimap montre l'effondrement.
+- 18 suites de validation vertes : démarrage, capacités des créatures, Effacement actif, cartographie, phases de run, catalogues, quêtes, Indicible, parties de boss, mouvement intégré, sauvegardes, chargement, terres, petits lieux, mode dev, outils de dev, trace de run, art de l'interface.
+- Relecture (`godot-reviewer`) : rien de bloquant. Corrigé : brèche frappée deux fois, gardien retiré sans mourir (il revient au lieu de donner la victoire), créatures d'événement épargnées par l'effondrement, disques de frappe placés au sol depuis le gardien, seuils de phase validés, anneau de l'onde redessiné par paliers, sons et distance de l'écho en données.
+- Corrigé en regardant : la recousure se jouait sous le voile de chargement, puis remplissait l'écran en 0,4 s. Elle attend maintenant le voile et suit la taille de l'écran.
+
+**Mesure au bot** (`--lands-bot --nomad`, 50 min de jeu, binaire final). Le bot est invincible et choisit mal ses cartes : ses durées sont un plancher.
+- **Graine 7** :
+  - terres 1 et 2 en 3 min 40 et 4 min 15 ; combats de gardien de 110 et 138 s, les trois phases jouées ;
+  - terre 3 : le bot n'allume que deux lumières, et le gardien se lève seul, enragé (19 440 PV, plafond atteint). Il tombe en 168 s, contre 523 s avant le plafond et l'effondrement qui emporte la foule ;
+  - **run gagnée à 21 min 48** ;
+  - 4e terre : cinq échos en 27 min, de 11,6 k à 76,5 k PV, abattus en 2 à 5 min. Le Péril passe de 9 à 14.
+- **Graine 42** : le bot se bloque sur les terres 1 et 3, si bien que les deux gardiens se lèvent seuls. Le combat contre l'enragé traîne (7 min, puis 16 min à 19 440 PV), avec un bot de niveau 36 au milieu de 380 à 700 créatures. Run gagnée à 49 min.
+- Avant ces réglages (graine 7, binaire sans coups ni plafond), l'enragé de la terre 3 avait 33 409 PV et tenait 9 min.
+
+**À juger en jouant** :
+- le combat contre un gardien enragé, quand le joueur est faible et la foule épaisse : c'est la punition d'avoir laissé filer la terre, mais 7 à 16 min au bot, c'est trop si un joueur moyen s'en approche ;
+- la montée des échos : +80 % de PV par écho, sans plafond absolu. C'est voulu pour que la run finisse, à confirmer par une run jouée ;
+- foule de la 4e terre : 460 à 720 créatures, avec un pic à 1 247 pendant une Résurgence (graine 7, t ≈ 43 min). À surveiller au banc de coût.

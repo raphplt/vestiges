@@ -50,6 +50,7 @@ public partial class ScoreManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.RunPhaseChanged += OnRunPhaseChanged;
+        _eventBus.GuardianDefeated += OnGuardianDefeated;
     }
 
     public override void _ExitTree()
@@ -58,6 +59,7 @@ public partial class ScoreManager : Node
         {
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.RunPhaseChanged -= OnRunPhaseChanged;
+            _eventBus.GuardianDefeated -= OnGuardianDefeated;
         }
     }
 
@@ -161,6 +163,7 @@ public partial class ScoreManager : Node
             record.ElitesKilled = _runTracker.ElitesKilled;
             record.SovereignsKilled = _runTracker.SovereignsKilled;
             record.BossesKilled = _runTracker.BossesKilled;
+            record.LandsCrossed = _runTracker.LandsCrossed;
         }
 
         if (player != null)
@@ -186,6 +189,13 @@ public partial class ScoreManager : Node
     {
         _totalKills++;
         if (enemyId == EnemyGrammar.FinalBossId)
+            _bossDefeated = true;
+    }
+
+    /// <summary>Sur les terres, le dernier gardien vaincu tient lieu de boss de la run (plan 51 §16).</summary>
+    private void OnGuardianDefeated(int land, bool victory)
+    {
+        if (victory)
             _bossDefeated = true;
     }
 

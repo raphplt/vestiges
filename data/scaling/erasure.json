@@ -21,7 +21,7 @@
     "void_damage_ratio_per_second": 0.06,
     "crisis_decay_multiplier": 1.5,
     "land_front": {
-        "_doc": "Front de chute d'une terre (plan 51 P2a), seulement quand les terres sont allumées. Chaque cellule tombe à une date tirée de sa distance au cœur : first_fall_seconds au bord le plus exposé, heart_reached_seconds pour le dernier sol hors du cœur (la terre réduite à son cœur), noise_seconds d'écart dessinés par un bruit de fréquence noise_frequency (langues et baies). warning_seconds : préavis entier, trois états visibles d'un tiers chacun avant le Néant. heart_radius : rayon du cœur en part du rayon de la terre, il ne tombe jamais. anchor_radius_cells : un Mémorial ravivé ancre les cellules à cette distance (en cellules d'Effacement), qui ne tomberont plus (P2b). void_essence_per_second : traverser le Néant d'une terre coûte cette Essence par seconde ; les PV ne paient que la part que l'Essence ne couvre plus (P2d). L'horloge du front avance avec le temps de jeu, plus vite sous les Oublis, aux niveaux durs et pendant les Résurgences ; la présence du joueur retarde la chute autour de lui (player_presence_falloff_cells, player_decay_reduction).",
+        "_doc": "Front de chute d'une terre (plan 51 P2a), seulement quand les terres sont allumées. Chaque cellule tombe à une date tirée de sa distance au cœur : first_fall_seconds au bord le plus exposé, heart_reached_seconds pour le dernier sol hors du cœur (la terre réduite à son cœur), noise_seconds d'écart dessinés par un bruit de fréquence noise_frequency (langues et baies). warning_seconds : préavis entier, trois états visibles d'un tiers chacun avant le Néant. heart_radius : rayon du cœur en part du rayon de la terre, il ne tombe jamais. anchor_radius_cells : un Mémorial ravivé ancre les cellules à cette distance (en cellules d'Effacement), qui ne tomberont plus (P2b). void_essence_per_second : traverser le Néant d'une terre coûte cette Essence par seconde ; les PV ne paient que la part que l'Essence ne couvre plus (P2d). stitch_seconds : à l'arrivée sur une terre, le sol et ses décors montent du Néant autour du joueur, du plus proche au plus lointain, en ce temps (recousure, §16 R1) ; rendu seul, la terre est déjà entière pour le jeu ; 0 l'affiche d'un coup. L'horloge du front avance avec le temps de jeu, plus vite sous les Oublis, aux niveaux durs et pendant les Résurgences ; la présence du joueur retarde la chute autour de lui (player_presence_falloff_cells, player_decay_reduction).",
         "first_fall_seconds": 60,
         "heart_reached_seconds": 720,
         "warning_seconds": 100,
@@ -29,7 +29,8 @@
         "noise_seconds": 90,
         "noise_frequency": 0.12,
         "anchor_radius_cells": 4,
-        "void_essence_per_second": 6
+        "void_essence_per_second": 6,
+        "stitch_seconds": 2.5
     },
     "motes": {
         "_doc": "Plan 16 O2 : en zone Effacée, des éclats du Néant s'élèvent des décors hauts proches du joueur.",

@@ -1880,6 +1880,16 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		}
 	}
 
+	/// <summary>
+	/// Greffe une capacité hors fiche (coups du gardien de terre, plan 51 §16) jusqu'au prochain retour au pool, où les
+	/// capacités sont relues depuis la fiche.
+	/// </summary>
+	internal void AddAbility(IEnemyAbility ability)
+	{
+		_abilities.Add(ability);
+		_abilityReplacesAttack |= ability.ReplacesBaseAttack;
+	}
+
 	/// <summary>Une annonce à la fois : le Hurleur ne vise pas pendant son cri, pour que chaque signal reste lisible.</summary>
 	internal bool IsAnotherAbilityActive(IEnemyAbility self)
 	{

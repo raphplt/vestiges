@@ -68,7 +68,7 @@ public partial class LandTransition : Node
         bool wasPaused = tree.Paused;
         tree.Paused = true;
         ulong started = Time.GetTicksMsec();
-        // L'écran de chargement couvre le passage, en attendant la recousure (P1e).
+        // L'écran de chargement couvre la construction ; la recousure suit (ErasureManager).
         GameLoadingOverlay overlay = new() { Name = "LandLoadingOverlay" };
         _world.AddChild(overlay);
         try
@@ -88,7 +88,8 @@ public partial class LandTransition : Node
         }
         finally
         {
-            overlay.FadeOut();
+            // La terre attend sous le voile, dans le Néant, puis se recoud quand il s'est effacé (§16 R1).
+            overlay.FadeOut(_erasure.ReleaseStitch);
             tree.Paused = wasPaused;
             IsChanging = false;
         }

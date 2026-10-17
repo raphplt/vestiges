@@ -20,7 +20,6 @@ namespace Vestiges.Tests;
 public partial class LandChangeRegression : Node
 {
     private const ulong Seed = 51;
-    private const int Lands = 3;
     private const float OrbXp = 7f;
     private WorldSetup _world;
     private Player _player;
@@ -193,7 +192,11 @@ public partial class LandChangeRegression : Node
         LandFrontConfig config = erasure.Front.Config;
         essence.AddEssence(40);
         _player.Heal(_player.EffectiveMaxHp);
-        _player.GlobalPosition = new Vector2(3000f, 0f);
+        // Hors du cœur et des zones ancrées, qui dépendent de la place des Mémoriaux.
+        Vector2 inVoid = new(3000f, 0f);
+        for (int i = 0; i < 16 && erasure.GetZonePhaseAt(inVoid) != ErasureManager.ErasureZonePhase.Void; i++)
+            inVoid = Vector2.FromAngle(Mathf.Tau * i / 16f) * 3000f;
+        _player.GlobalPosition = inVoid;
         int essenceBefore = essence.CurrentEssence;
         float hpBefore = _player.CurrentHp;
         await Frames(120);
@@ -246,6 +249,17 @@ public partial class LandChangeRegression : Node
             $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.MaxHp:F0} PV)");
         Check(erasure.FrontFrozen && erasure.Front.StandingShare() < standingBefore,
             $"gardien : le sol non ancré s'effondre, le front se fige ({standingBefore:P0} → {erasure.Front.StandingShare():P0})");
+
+        // Plan 51 §16 G1 : ses coups, ses phases, et la brèche qui s'ouvre au cœur puis se referme.
+        guardian.TakeDamage(guardian.MaxHp * 0.5f);
+        await Frames(3);
+        Check(director.Moves != null && director.Moves.Phase == 1, $"gardien : à mi-PV, deuxième phase ({director.Moves?.Phase + 1})");
+        Vector2 strike = new(0f, -120f);
+        erasure.BreakGround(strike, 110f, 2f);
+        Check(erasure.GetZonePhaseAt(strike) == ErasureManager.ErasureZonePhase.Void, "gardien : sa frappe ouvre le vide, même au cœur");
+        _world.GetNode<RunClock>("RunClock").Advance(3.0);
+        await Frames(45);
+        Check(erasure.GetMemoryAt(strike) == 1f, $"gardien : la brèche se referme ({erasure.GetMemoryAt(strike):F2})");
 
         int perilBefore = peril.Peril;
         guardian.TakeDamage(guardian.MaxHp * 10f);
@@ -306,7 +320,9 @@ public partial class LandChangeRegression : Node
         Check(memorials > 0 && chests > 0 && ObstacleField.Count > 0,
             $"terre {start} peuplée : {memorials} Mémoriaux, {chests} coffres, {ObstacleField.Count} obstacles");
 
-        for (int land = start + 1; land < start + Lands; land++)
+        // Jusqu'à la terre du dernier gardien ; la victoire et la terre du late game se vérifient à part.
+        int lastGuardianLand = GuardianConfig.Load(out _).LandsToWin - 1;
+        for (int land = start + 1; land <= lastGuardianLand; land++)
         {
             Node enemies = _world.GetNode("EnemyContainer");
             PlaceCrowd(enemies);
@@ -358,6 +374,8 @@ public partial class LandChangeRegression : Node
             Check(_world.GetNode<RunClock>("RunClock").Seconds > after.Clock, $"terre {land} : l'horloge repart après le passage");
         }
 
+        await CheckVictory(biomes);
+
         // Assez d'XP au sol pour monter de niveau : l'écran de choix garde la pause, la fin du passage ne la lève pas.
         CombatPools.Instance.SpawnXpOrb(_player.GlobalPosition + new Vector2(1500f, 0f), 5000f);
         await Frame();
@@ -368,7 +386,7 @@ public partial class LandChangeRegression : Node
         Check(command.Success && transition.IsChanging, $"commande « land next » : {command.Message}");
         while (transition.IsChanging)
             await Frame();
-        Check(transition.LandIndex == start + Lands, $"commande « land next » : terre {transition.LandIndex}");
+        Check(transition.LandIndex == lastGuardianLand + 2, $"commande « land next » : terre {transition.LandIndex}");
         bool levelUpShown = false;
         for (int frame = 0; frame < 30 && !levelUpShown; frame++)
         {
@@ -376,6 +394,82 @@ public partial class LandChangeRegression : Node
             levelUpShown = GetTree().Paused && _world.GetNode<CanvasLayer>("LevelUpScreen").Visible;
         }
         Check(levelUpShown, $"terre {transition.LandIndex} : la montée de niveau des orbes ramassées garde la pause sous son écran");
+    }
+
+    /// <summary>
+    /// Plan 51 §16, L1 et L2 : le dernier gardien vaincu gagne la run (boss battu, endgame), puis la terre du late game
+    /// n'a ni repaire ni passage ; un écho de gardien s'y lève, durcit la run, laisse un coffre, et le suivant attend.
+    /// </summary>
+    private async Task CheckVictory(HashSet<string> biomes)
+    {
+        GuardianConfig config = GuardianConfig.Load(out _);
+        GuardianDirector director = _world.GetNode<GuardianDirector>("GuardianDirector");
+        LandTransition transition = _world.GetNode<LandTransition>("LandTransition");
+        PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
+        GameManager manager = GetNode<GameManager>("/root/GameManager");
+        Label objective = (Label)_world.FindChild("LandObjective", true, false);
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        int victories = 0;
+        void OnGuardian(int land, bool victory) => victories += victory ? 1 : 0;
+        bus.GuardianDefeated += OnGuardian;
+
+        _world.GetNode<MemorialDirector>("MemorialDirector").SetLitForTests(config.WakeLights);
+        await Frame();
+        await Frame();
+        GuardianLair lair = _world.GetNode("PoiContainer").GetNodeOrNull<GuardianLair>("GuardianLair");
+        lair?.Interact(_player);
+        Enemy guardian = director.Guardian;
+        Check(guardian != null && !director.IsLateGame, $"terre {transition.LandIndex} : le dernier gardien est réveillé ({guardian?.DisplayName})");
+        guardian?.TakeDamage(guardian.MaxHp * 10f);
+        for (int frame = 0; frame < 30 && !director.IsDefeated; frame++)
+            await Frame();
+        await Frame();
+        string won = objective?.Text;
+        Check(victories == 1 && manager.CurrentRunPhase == GameManager.RunPhase.Endgame
+            && _world.GetNode<Vestiges.Events.EndgameManager>("EndgameManager").IsBossDefeated,
+            $"dernier gardien vaincu : run gagnée, phase {manager.CurrentRunPhase}, « {won} »");
+
+        int lastLand = transition.LandIndex;
+        int perilBefore = peril.Peril;
+        for (int frame = 0; frame < 600 && transition.LandIndex == lastLand; frame++)
+        {
+            await Frame();
+            if (GetTree().Paused && !transition.IsChanging)
+                await SettleChoices();
+        }
+        while (transition.IsChanging)
+            await Frame();
+        await SettleChoices();
+        await Frame();
+        Check(director.IsLateGame && _world.GetNode("PoiContainer").GetNodeOrNull("GuardianLair") == null && biomes.Add(_world.Land.BiomeIds[0])
+            && peril.Peril == perilBefore + config.RankPeril,
+            $"terre {transition.LandIndex}, celle du late game : biome neuf ({_world.Land.BiomeIds[0]}), pas de repaire, Péril {perilBefore} → {peril.Peril}");
+        string holding = objective?.Text;
+        Check(!string.IsNullOrEmpty(holding) && holding != won, $"terre du late game : objectif « {holding} »");
+
+        int chestsBefore = Chest.Closed.Count;
+        perilBefore = peril.Peril;
+        typeof(GuardianDirector).GetField("_echoIn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            .SetValue(director, 0f);
+        await Frame();
+        await Frame();
+        Enemy echo = director.Guardian;
+        Check(director.IsFighting && echo is { IsActive: true } && peril.Peril == perilBefore + config.EchoPeril && objective?.Text != holding,
+            $"écho de gardien levé : {echo?.DisplayName}, {echo?.MaxHp:F0} PV, Péril {perilBefore} → {peril.Peril}, « {objective?.Text} »");
+        echo?.TakeDamage(echo.MaxHp * 10f);
+        for (int frame = 0; frame < 30 && director.IsFighting; frame++)
+            await Frame();
+        await Frame();
+        Check(!director.IsFighting && director.EchoesDefeated == 1 && Chest.Closed.Count > chestsBefore && victories == 1,
+            $"écho vaincu : {director.EchoesDefeated} écho, {Chest.Closed.Count - chestsBefore} coffre(s), « {objective?.Text} »");
+
+        LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
+        front.Advance(front.Config.HeartReachedSeconds);
+        await Frames(45);
+        Check(!director.IsFighting && front.StandingShare() > 0f && transition.LandIndex == lastLand + 1,
+            $"terre du late game réduite à son cœur : on y reste ({front.StandingShare():P0} debout), aucun gardien ne se lève");
+        bus.GuardianDefeated -= OnGuardian;
+        _player.GlobalPosition = Vector2.Zero;
     }
 
     /// <summary>

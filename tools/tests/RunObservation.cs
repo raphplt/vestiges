@@ -680,7 +680,7 @@ public partial class RunObservation : Node
         // Étapes des terres (plan 51), datées en temps de jeu : lumières, réveil du gardien, victoire.
         EventBus.LandObjectiveChangedEventHandler onLandObjective = (land, lights, needed, stage) =>
             GD.Print(string.Create(CultureInfo.InvariantCulture,
-                $"[RunObservation] LAND t={gameTime:F0} terre={land} lumieres={lights}/{needed} etape={stage} niveau={_player.GetNode<Vestiges.Progression.PlayerProgression>("PlayerProgression").CurrentLevel}"));
+                $"[RunObservation] LAND t={gameTime:F0} terre={land} lumieres={lights}/{needed} etape={stage} niveau={_player.GetNode<Vestiges.Progression.PlayerProgression>("PlayerProgression").CurrentLevel} peril={_world.GetNode<Vestiges.Progression.PerilManager>("PerilManager").Peril} creatures={GetTree().GetNodeCountInGroup("enemies")}"));
         eventBus.LandObjectiveChanged += onLandObjective;
         // Temps pour tuer (plan 20, R1-T) : PV des créatures apparues et dégâts infligés, cumulés ; le modèle en
         // déduit, par palier, le PV moyen d'une créature divisé par les dégâts infligés par seconde.

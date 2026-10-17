@@ -22,9 +22,15 @@ public partial class EventBus : Node
     [Signal] public delegate void LandChangedEventHandler(int index);
     /// <summary>
     /// Objectif de la terre en cours (plan 51 P2c) : <paramref name="lights"/> Mémoriaux ravivés sur <paramref name="needed"/>,
-    /// et l'étape du gardien (0 endormi, 1 prêt à réveiller, 2 combat, 3 combat enragé, 4 vaincu, passage).
+    /// et l'étape du gardien (0 endormi, 1 prêt à réveiller, 2 combat, 3 combat enragé, 4 vaincu, passage). Sur la terre
+    /// du late game, <paramref name="lights"/> compte les échos vaincus (5 en attente d'un écho, 6 écho levé) ; 7 : le dernier gardien est vaincu, la run est gagnée.
     /// </summary>
     [Signal] public delegate void LandObjectiveChangedEventHandler(int land, int lights, int needed, int stage);
+    /// <summary>
+    /// Un gardien de terre tombe (plan 51 §16), ou un écho de gardien sur la terre du late game.
+    /// <paramref name="victory"/> : c'était le dernier gardien à vaincre, la run est gagnée.
+    /// </summary>
+    [Signal] public delegate void GuardianDefeatedEventHandler(int land, bool victory);
     /// <summary>Météo de la run (plan 39 A5) : identifiant de data/world/weather.json, vide quand le ciel se dégage.</summary>
     [Signal] public delegate void WeatherChangedEventHandler(string weatherId);
 

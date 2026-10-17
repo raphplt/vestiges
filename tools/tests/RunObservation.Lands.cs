@@ -68,7 +68,13 @@ public partial class RunObservation
             return true;
         }
         if (lair == null)
-            return false;
+        {
+            // Terre du late game : rien à raviver, le bot tient le cœur, qui ne tombe jamais, en y tournant.
+            if (!guardian.IsLateGame)
+                return false;
+            waypoint = Vector2.FromAngle((float)time * 0.4f) * CircleOrbitPx;
+            return true;
+        }
         waypoint = lair.GlobalPosition;
         return true;
     }
@@ -118,7 +124,21 @@ public partial class RunObservation
         await Seconds(2.0);
         Save("lands-4-guardian.png");
 
-        guardian.Guardian?.TakeDamage(guardian.Guardian.MaxHp * 10f);
+        // Ses coups (§16 G1) : une frappe annoncée au sol, puis la brèche de vide qu'elle laisse.
+        ulong strikeDeadline = Time.GetTicksMsec() + 15_000;
+        while (!SlamShown() && Time.GetTicksMsec() < strikeDeadline)
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await Seconds(0.6);
+        Save("lands-4b-strike.png");
+        await Seconds(1.2);
+        Save("lands-4c-breach.png");
+
+        // Un Rampant enfoui ne prend aucun dégât : le coup est rejoué jusqu'à ce qu'il tombe.
+        for (int frame = 0; frame < 600 && guardian.IsFighting; frame++)
+        {
+            guardian.Guardian?.TakeDamage(guardian.Guardian.MaxHp * 10f);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
         LandTransition transition = _world.GetNode<LandTransition>("LandTransition");
         int land = transition.LandIndex;
         ulong deadline = Time.GetTicksMsec() + 30_000;
@@ -129,8 +149,33 @@ public partial class RunObservation
             if (GetTree().Paused && !transition.IsChanging)
                 AutoPickLevelUp();
         }
+        // La recousure (§16 R1) : la terre neuve monte du Néant autour du joueur.
+        // Le voile de chargement s'efface en deux secondes environ, puis la terre monte en stitch_seconds.
+        await Seconds(1.5);
+        Save("lands-5a-void.png");
+        await Seconds(1.0);
+        Save("lands-5b-stitch.png");
+        await Seconds(3.5);
+        Save("lands-6-next.png");
+        int next = transition.LandIndex;
+
+        // La terre du late game (§16 L2) et son premier écho de gardien.
+        await transition.GoToLandAsync(GuardianConfig.Load(out _).LandsToWin);
         await Seconds(3.0);
-        Save("lands-5-next.png");
-        GD.Print($"[RunObservation] RESULT lands terre {land} → {transition.LandIndex}");
+        typeof(GuardianDirector).GetField("_echoIn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            .SetValue(guardian, 0f);
+        await Seconds(2.5);
+        Save("lands-7-echo.png");
+        GD.Print($"[RunObservation] RESULT lands terre {land} → {next} → {transition.LandIndex}, écho {guardian.Guardian?.DisplayName}");
+    }
+
+    private static bool SlamShown()
+    {
+        foreach (Combat.Abilities.GroundTelegraph mark in Combat.Abilities.GroundTelegraph.Shown)
+        {
+            if (mark.Name.ToString().StartsWith("GuardianSlamMarker", System.StringComparison.Ordinal))
+                return true;
+        }
+        return false;
     }
 }

@@ -495,6 +495,10 @@ public partial class GameOverScreen : CanvasLayer
             (Tr("UI_END_ELITES"), (record?.ElitesKilled ?? 0).ToString("N0")),
             (Tr("UI_END_SOVEREIGNS"), (record?.SovereignsKilled ?? 0).ToString("N0")),
         };
+        if (record?.LandsCrossed is > 0)
+            facts.Add((Tr("UI_END_LANDS"), record.BossDefeated
+                ? string.Format(Tr("UI_END_LANDS_WON"), record.LandsCrossed.Value)
+                : record.LandsCrossed.Value.ToString()));
         if (record?.BossesKilled is > 0)
             facts.Add((Tr("UI_END_BOSSES"), record.BossesKilled.Value.ToString("N0")));
         facts.Add((Tr("UI_END_TRAVELLED"), FormatMeters(record?.TravelledMeters ?? 0f)));

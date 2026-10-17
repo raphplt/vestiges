@@ -28,6 +28,8 @@ public sealed class LandFrontConfig
     public float AnchorRadiusCells { get; init; }
     /// <summary>Essence prise par seconde dans le Néant d'une terre, avant les PV (P2d).</summary>
     public float VoidEssencePerSecond { get; init; }
+    /// <summary>Durée de la recousure à l'arrivée sur une terre (§16 R1) : le sol monte du Néant, du plus proche au plus lointain.</summary>
+    public float StitchSeconds { get; init; }
 
     public static LandFrontConfig Load(out string error)
     {
@@ -49,7 +51,7 @@ public sealed class LandFrontConfig
             JsonElement front = reader.Section("land_front");
             reader.AllowOnly(front, "land_front", "_doc", "first_fall_seconds", "heart_reached_seconds", "warning_seconds",
                 "heart_radius", "noise_seconds", "noise_frequency", "anchor_radius_cells",
-                "void_essence_per_second");
+                "void_essence_per_second", "stitch_seconds");
             LandFrontConfig config = new()
             {
                 FirstFallSeconds = reader.Positive(front, "first_fall_seconds"),
@@ -60,6 +62,7 @@ public sealed class LandFrontConfig
                 NoiseFrequency = reader.Positive(front, "noise_frequency"),
                 AnchorRadiusCells = reader.Positive(front, "anchor_radius_cells"),
                 VoidEssencePerSecond = reader.NonNegative(front, "void_essence_per_second"),
+                StitchSeconds = reader.NonNegative(front, "stitch_seconds"),
             };
             if (reader.Error == null && config.HeartReachedSeconds <= config.FirstFallSeconds)
                 reader.Fail("land_front : heart_reached_seconds doit suivre first_fall_seconds");

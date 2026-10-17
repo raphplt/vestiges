@@ -261,6 +261,8 @@ UI_END_LEVEL_REACHED,Niveau atteint,Level reached
 UI_END_ELITES,Élites,Elites
 UI_END_SOVEREIGNS,Souverains,Sovereigns
 UI_END_BOSSES,Boss,Bosses
+UI_END_LANDS,Terres franchies,Lands crossed
+UI_END_LANDS_WON,"{0}, run gagnée","{0}, run won"
 UI_END_TRAVELLED,Parcouru,Travelled
 UI_END_CHESTS,Coffres ouverts,Chests opened
 UI_END_DAMAGE_TAKEN,Dégâts subis,Damage taken
@@ -601,3 +603,6 @@ LAND_OBJECTIVE_READY,"Terre {0} · Réveille le gardien, au cœur","Land {0} · 
 LAND_OBJECTIVE_FIGHT,"Terre {0} · Bats le gardien","Land {0} · Defeat the guardian"
 LAND_OBJECTIVE_RAGE,"Terre {0} · Le gardien s'est levé seul","Land {0} · The guardian rose on its own"
 LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · The next land is stitching itself"
+LAND_OBJECTIVE_HOLD,"Dernière terre · Échos vaincus {1}","Last land · Echoes defeated {1}"
+LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last land · A guardian's echo hunts you"
+LAND_OBJECTIVE_VICTORY,"Run gagnée · La dernière terre se recoud","Run won · The last land is stitching itself"

@@ -5,7 +5,7 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Objectif de la terre en cours (plan 51 P2c), une ligne au-dessus de la minimap : Mémoriaux ravivés, puis réveiller le
-/// gardien, le battre, la terre suivante. Cachée hors des terres.
+/// gardien, le battre, la terre suivante ; sur la terre du late game, les échos vaincus. Cachée hors des terres.
 /// </summary>
 public partial class LandObjective : Label
 {
@@ -44,10 +44,13 @@ public partial class LandObjective : Label
             1 => "LAND_OBJECTIVE_READY",
             2 => "LAND_OBJECTIVE_FIGHT",
             3 => "LAND_OBJECTIVE_RAGE",
+            5 => "LAND_OBJECTIVE_HOLD",
+            6 => "LAND_OBJECTIVE_ECHO",
+            7 => "LAND_OBJECTIVE_VICTORY",
             _ => "LAND_OBJECTIVE_PASSAGE",
         };
         Text = string.Format(Tr(key), land + 1, lights, needed);
-        AddThemeColorOverride("font_color", stage == 1 ? ReadyColor : stage == 3 ? DangerColor : CalmColor);
+        AddThemeColorOverride("font_color", stage is 1 or 7 ? ReadyColor : stage is 3 or 6 ? DangerColor : CalmColor);
         Visible = true;
         Place();
     }

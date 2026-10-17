@@ -26,7 +26,7 @@
         {
             "id": "straighten_the_grid",
             "name": "Redresser la grille",
-            "description": "Abattre la Barrière.",
+            "description": "Abattre la Barrière, ou un gardien de terre.",
             "difficulty": 2,
             "scope": "run",
             "conditions": [
@@ -318,7 +318,7 @@
         {
             "id": "name_unspeakable",
             "name": "Nommer l'Indicible",
-            "description": "Vaincre l'Indicible.",
+            "description": "Vaincre l'Indicible, ou le troisième gardien.",
             "difficulty": 3,
             "scope": "run",
             "conditions": [
@@ -337,7 +337,7 @@
         {
             "id": "beyond_climax",
             "name": "Au-delà du climax",
-            "description": "Survivre à une Résurgence après la chute de l'Indicible.",
+            "description": "Survivre à une Résurgence après la chute de l'Indicible ou du troisième gardien.",
             "difficulty": 3,
             "scope": "run",
             "conditions": [

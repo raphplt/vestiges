@@ -14,6 +14,8 @@ public sealed class LandFront
     private readonly LandFrontConfig _config;
     private readonly FastNoiseLite _noise;
     private readonly Dictionary<Vector2I, float> _fallAt = new();
+    // Brèches ouvertes par les coups du gardien (§16 G1) : tombées tant qu'elles durent, cœur compris, puis refermées.
+    private readonly HashSet<Vector2I> _breaches = new();
 
     public LandFront(LandFrontConfig config, ulong seed)
     {
@@ -72,6 +74,8 @@ public sealed class LandFront
     /// <summary>Mémoire de 1 (loin de la chute) à 0 (tombée) ; une cellule hors de la terre ou au cœur vaut 1.</summary>
     public float MemoryAt(Vector2I cell)
     {
+        if (_breaches.Contains(cell))
+            return 0f;
         if (!_fallAt.TryGetValue(cell, out float fall) || float.IsPositiveInfinity(fall))
             return 1f;
         return Mathf.Clamp((fall - Time) / _config.WarningSeconds, 0f, 1f);
@@ -104,6 +108,12 @@ public sealed class LandFront
         if (_fallAt.TryGetValue(cell, out float fall) && fall > Time)
             _fallAt[cell] = float.PositiveInfinity;
     }
+
+    /// <summary>Ouvre une brèche dans une cellule de la terre, même au cœur ; faux si elle l'est déjà ou hors de la terre.</summary>
+    public bool Breach(Vector2I cell) => _fallAt.ContainsKey(cell) && _breaches.Add(cell);
+
+    /// <summary>Referme une brèche : la cellule reprend sa date de chute, donc reste tombée si son heure est passée.</summary>
+    public void Mend(Vector2I cell) => _breaches.Remove(cell);
 
     /// <summary>Réveil du gardien (P3) : tout le sol qui n'est ni le cœur ni ancré tombe d'un coup ; rend les cellules tombées.</summary>
     public List<Vector2I> CollapseUnanchored()

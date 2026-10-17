@@ -106,6 +106,7 @@ public partial class QuestTracker : Node
         _eventBus.PlayerDamageResolved += OnPlayerDamage;
         _eventBus.PlayerHealingResolved += OnPlayerHealing;
         _eventBus.EnemyKilled += OnEnemyKilled;
+        _eventBus.GuardianDefeated += OnGuardianDefeated;
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
         _eventBus.OubliEffectChanged += OnOubliChanged;
@@ -132,6 +133,7 @@ public partial class QuestTracker : Node
         _eventBus.PlayerDamageResolved -= OnPlayerDamage;
         _eventBus.PlayerHealingResolved -= OnPlayerHealing;
         _eventBus.EnemyKilled -= OnEnemyKilled;
+        _eventBus.GuardianDefeated -= OnGuardianDefeated;
         _eventBus.CrisisStarted -= OnCrisisStarted;
         _eventBus.CrisisEnded -= OnCrisisEnded;
         _eventBus.OubliEffectChanged -= OnOubliChanged;
@@ -260,6 +262,16 @@ public partial class QuestTracker : Node
             count++;
         }
         return count;
+    }
+
+    /// <summary>Sur les terres (plan 51 §16), un gardien vaut la Barrière, et le dernier vaut l'Indicible.</summary>
+    private void OnGuardianDefeated(int land, bool victory)
+    {
+        Raise(Fact.BarrierDefeated, 1f);
+        if (!victory)
+            return;
+        _indicibleDown = true;
+        Raise(Fact.IndicibleDefeated, 1f);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)

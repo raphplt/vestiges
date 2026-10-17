@@ -53,6 +53,8 @@ public partial class RunTracker : Node
     private int _elitesKilled;
     private int _sovereignsKilled;
     private int _bossesKilled;
+    private int? _landsCrossed;
+    private bool _runWon;
     // Temps passé dans le build par arme, pour les dégâts par seconde du bilan : périodes closes (arme retirée), et
     // entrée de la période en cours. Au premier relevé, le build de départ compte depuis zéro.
     private readonly Dictionary<string, float> _weaponHeldBefore = new();
@@ -77,6 +79,9 @@ public partial class RunTracker : Node
     public int ElitesKilled => _elitesKilled;
     public int SovereignsKilled => _sovereignsKilled;
     public int BossesKilled => _bossesKilled;
+
+    /// <summary>Terres dont le gardien est tombé (plan 51) ; null sur la grande carte.</summary>
+    public int? LandsCrossed => _landsCrossed;
 
     /// <summary>Temps passé dans le build par cette arme, jusqu'à la fin de la run.</summary>
     public float WeaponHeldSeconds(string weaponId)
@@ -176,6 +181,7 @@ public partial class RunTracker : Node
         _clock = GetNode<RunClock>("../RunClock");
         _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.LandChanged += OnLandChanged;
+        _eventBus.GuardianDefeated += OnGuardianDefeated;
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.PlayerDamaged += OnPlayerDamaged;
@@ -204,6 +210,7 @@ public partial class RunTracker : Node
         if (_eventBus == null) return;
         _eventBus.GameStateChanged -= OnGameStateChanged;
         _eventBus.LandChanged -= OnLandChanged;
+        _eventBus.GuardianDefeated -= OnGuardianDefeated;
         _eventBus.EnemySpawned -= OnEnemySpawned;
         _eventBus.EnemyKilled -= OnEnemyKilled;
         _eventBus.PlayerDamaged -= OnPlayerDamaged;
@@ -258,6 +265,17 @@ public partial class RunTracker : Node
     {
         if (GetTree().GetFirstNodeInGroup("player") is Node2D player)
             _journey?.Rebase(player.GlobalPosition);
+    }
+
+    /// <summary>Gardiens et échos comptent comme boss ; les échos de la terre du late game ne la franchissent pas.</summary>
+    private void OnGuardianDefeated(int land, bool victory)
+    {
+        if (_frozen)
+            return;
+        _bossesKilled++;
+        if (!_runWon)
+            _landsCrossed = Mathf.Max(_landsCrossed ?? 0, land + 1);
+        _runWon |= victory;
     }
 
     private void OnGameStateChanged(string oldState, string newState)

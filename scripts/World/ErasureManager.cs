@@ -65,6 +65,9 @@ public partial class ErasureManager : Node
 
     // Fenêtre de mémoire autour du joueur, lue par le shader du sol (assets/shaders/ground.gdshader).
     private const int MemoryWindowCells = 32;
+    // Largeur du bord effiloché de la recousure, en cellules.
+    private const float StitchEdgeCells = 1.5f;
+    private const float StitchScreenCells = 10f;
     private readonly byte[] _memoryBytes = new byte[MemoryWindowCells * MemoryWindowCells];
     private Image _memoryImage;
     private ImageTexture _memoryTexture;
@@ -89,6 +92,71 @@ public partial class ErasureManager : Node
 
     /// <summary>Front figé (combat du gardien, P3) : plus rien ne tombe, ni ne remonte.</summary>
     public bool FrontFrozen { get; set; }
+
+    // Recousure à l'arrivée sur une terre (§16 R1), rendu seul : temps écoulé (négatif hors recousure) et point de départ.
+    private float _stitchElapsed = -1f;
+    private Vector2I _stitchOrigin;
+    // Retenue tant que l'écran de chargement couvre la terre ; lâchée au plus tard après StitchHoldMaxSeconds.
+    private float _stitchHeldFor = -1f;
+    private const float StitchHoldMaxSeconds = 3f;
+
+    // Brèches du gardien et date (horloge de run) où chacune se referme.
+    private readonly Dictionary<Vector2I, float> _breaches = new();
+    private readonly List<Vector2I> _mended = new();
+
+    /// <summary>
+    /// Coup du gardien qui brise le sol (plan 51 §16 G1) : les cellules sous le disque au sol de rayon
+    /// <paramref name="radius"/> tombent dans le Néant, cœur compris, et se referment <paramref name="seconds"/> plus tard.
+    /// </summary>
+    public void BreakGround(Vector2 center, float radius, float seconds)
+    {
+        if (_front == null)
+            return;
+        Vector2I origin = WorldToCell(center);
+        int reach = Mathf.CeilToInt(radius * 2f / _cellSize) + 1;
+        float mendAt = _clock.Seconds + seconds;
+        for (int dx = -reach; dx <= reach; dx++)
+        {
+            for (int dy = -reach; dy <= reach; dy++)
+            {
+                Vector2I cell = new(origin.X + dx, origin.Y + dy);
+                // La cellule frappée tombe toujours, même quand le disque passe entre les centres.
+                if (cell != origin && Iso.GroundDistanceSquared(CellCenterToWorld(cell), center) > radius * radius)
+                    continue;
+                // Une brèche frappée de nouveau reste ouverte jusqu'à la plus tardive des deux fins.
+                if (_breaches.TryGetValue(cell, out float open))
+                {
+                    _breaches[cell] = Mathf.Max(open, mendAt);
+                    continue;
+                }
+                if (!_front.Breach(cell))
+                    continue;
+                _breaches[cell] = mendAt;
+                StoreMemory(cell, 0f, false);
+            }
+        }
+        PublishGroundMemory();
+    }
+
+    /// <summary>Referme les brèches dont l'heure est venue ; la cellule reprend la mémoire que lui donne le front.</summary>
+    private void MendBreaches()
+    {
+        if (_breaches.Count == 0)
+            return;
+        float now = _clock.Seconds;
+        foreach (KeyValuePair<Vector2I, float> breach in _breaches)
+        {
+            if (breach.Value <= now)
+                _mended.Add(breach.Key);
+        }
+        foreach (Vector2I cell in _mended)
+        {
+            _breaches.Remove(cell);
+            _front.Mend(cell);
+            StoreMemory(cell, _front.MemoryAt(cell), false);
+        }
+        _mended.Clear();
+    }
 
     /// <summary>
     /// Réveil du gardien (plan 51 P3) : tout le sol non ancré hors du cœur tombe d'un coup, l'arène est ce qu'on a
@@ -157,6 +225,7 @@ public partial class ErasureManager : Node
 
     public override void _Process(double delta)
     {
+        UpdateStitch((float)delta);
         _updateTimer += delta;
         // Tolérance au bruit d'addition des deltas, sans faire perdre le reste de temps à chaque pas.
         if (_updateTimer + 1e-9 < _updateIntervalSec)
@@ -267,6 +336,8 @@ public partial class ErasureManager : Node
     private void OnLandChanging(int toIndex)
     {
         _front = null;
+        _stitchElapsed = -1f;
+        _breaches.Clear();
         FrontFrozen = false;
         _zoneMemory.Clear();
         _zonePhases.Clear();
@@ -280,7 +351,54 @@ public partial class ErasureManager : Node
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)_playerPhase);
     }
 
-    private void OnLandChanged(int index) => BuildFront();
+    private void OnLandChanged(int index)
+    {
+        BuildFront();
+        if (_front == null || _front.Config.StitchSeconds <= 0f)
+            return;
+        CachePlayer();
+        _stitchOrigin = WorldToCell(_player?.GlobalPosition ?? Vector2.Zero);
+        _stitchElapsed = 0f;
+        _stitchHeldFor = 0f;
+        PublishGroundMemory();
+    }
+
+    /// <summary>L'écran de chargement s'est effacé sur le Néant : la terre peut monter.</summary>
+    public void ReleaseStitch() => _stitchHeldFor = -1f;
+
+    /// <summary>
+    /// Recousure (plan 51 §16 R1) : la terre neuve monte du Néant autour du joueur, du plus proche au plus lointain, comme
+    /// la chute jouée à l'envers. Rendu seul : le sol et les décors la lisent dans la mémoire publiée au shader, la terre
+    /// est entière pour le jeu dès l'arrivée.
+    /// </summary>
+    private void UpdateStitch(float delta)
+    {
+        if (_stitchElapsed < 0f)
+            return;
+        if (_stitchHeldFor >= 0f)
+        {
+            _stitchHeldFor += delta;
+            if (_stitchHeldFor < StitchHoldMaxSeconds)
+                return;
+            _stitchHeldFor = -1f;
+        }
+        _stitchElapsed += delta;
+        if (_front == null || _stitchElapsed >= _front.Config.StitchSeconds)
+            _stitchElapsed = -1f;
+        PublishGroundMemory();
+    }
+
+    /// <summary>Part montrée d'une cellule pendant la recousure : un bord effiloché qui s'éloigne du point d'arrivée.</summary>
+    private float StitchShown(Vector2I cell)
+    {
+        float progress = Mathf.Clamp(_stitchElapsed / _front.Config.StitchSeconds, 0f, 1f);
+        // Calée sur l'écran (environ 8 cellules du centre au coin) : on voit la terre monter du début à la fin.
+        float reach = (StitchScreenCells + StitchEdgeCells) * Mathf.SmoothStep(0f, 1f, progress);
+        // Un peu de désordre sur le bord : la terre revient par morceaux, pas en disque parfait.
+        float jitter = ((cell.X * 73856093) ^ (cell.Y * 19349663)) & 1023;
+        float distance = ((Vector2)(cell - _stitchOrigin)).Length() + jitter / 1023f * StitchEdgeCells;
+        return Mathf.Clamp((reach - distance) / StitchEdgeCells, 0f, 1f);
+    }
 
     /// <summary>
     /// Front de la terre en cours (plan 51 P2a) : toutes ses cellules de sol inscrites avec leur date de chute, et leur
@@ -329,6 +447,7 @@ public partial class ErasureManager : Node
     {
         float step = FrontFrozen ? 0f : _updateIntervalSec * _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
         _front.Advance(step);
+        MendBreaches();
         Vector2I playerCell = WorldToCell(_player.GlobalPosition);
         int reach = Mathf.CeilToInt(_playerPresenceFalloffCells);
         for (int dx = -reach; dx <= reach; dx++)
@@ -365,7 +484,10 @@ public partial class ErasureManager : Node
         {
             for (int x = 0; x < MemoryWindowCells; x++)
             {
-                float memory = GetMemoryAtCell(new Vector2I(origin.X + x, origin.Y + y));
+                Vector2I cell = new(origin.X + x, origin.Y + y);
+                float memory = GetMemoryAtCell(cell);
+                if (_stitchElapsed >= 0f)
+                    memory = Mathf.Min(memory, StitchShown(cell));
                 _memoryBytes[y * MemoryWindowCells + x] = (byte)Mathf.RoundToInt(memory * 255f);
             }
         }
@@ -375,7 +497,7 @@ public partial class ErasureManager : Node
         float windowSize = MemoryWindowCells * _cellSize;
         RenderingServer.GlobalShaderParameterSet("erasure_window",
             new Vector4(origin.X * _cellSize, origin.Y * _cellSize, windowSize, windowSize));
-        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", GetMemoryAtCell(origin - Vector2I.One));
+        RenderingServer.GlobalShaderParameterSet("erasure_far_memory", _stitchElapsed >= 0f ? 0f : GetMemoryAtCell(origin - Vector2I.One));
     }
 
 #if TOOLS
