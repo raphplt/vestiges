@@ -42,6 +42,7 @@ public partial class CatalogContractRegression : Node
             CheckSites();
             CheckCrises();
             CheckErasure();
+            CheckRunEvents();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -830,6 +831,47 @@ public partial class CatalogContractRegression : Node
             && defaults.CellSize == 128 && defaults.BaseDecayPerMinute == 0.012f && defaults.StabilizeOnChestOpen && defaults.Motes == null
             && defaults.Echoes.Enabled && defaults.Echoes.FirstDelaySec == 60f && defaults.ZoneEffects.Count == 0,
             "Effacement : fichier vide, secours d'avant gardés (sans éclats ni effets de phase)");
+    }
+
+    /// <summary>Micro-événements (plan 26 Q7d-3) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckRunEvents()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(RunEventDataLoader.TryLoad(out string loadError) && RunEventDataLoader.Events.Count > 0
+            && RunEventDataLoader.Schedule.FixedEvents.Count > 0, $"micro-événements du dépôt acceptés {loadError}");
+        RunEventData hunt = RunEventDataLoader.Find("hunt");
+        string valid = FileAccess.GetFileAsString(RunEventDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ racine inconnu", root => root["event"] = new JsonArray(), "clé « event » inconnue"),
+            ("cadence absente", root => root.Remove("schedule"), "schedule"),
+            ("cadence inconnue", root => root["schedule"]!["gap"] = 60, "clé « gap » inconnue"),
+            ("premier événement inversé", root => root["schedule"]!["first_event_min_sec"] = 200, "first_event_min_sec ≤ first_event_max_sec"),
+            ("mémoire fractionnaire", root => root["schedule"]!["recent_memory"] = 1.5, "recent_memory"),
+            ("poids récent hors borne", root => root["schedule"]!["recent_weight_factor"] = 2, "recent_weight_factor"),
+            ("rendez-vous inconnu", root => root["schedule"]!["fixed_events"]![0]!["id"] = "pluie", "événement « pluie » inconnu"),
+            ("rendez-vous à zéro", root => root["schedule"]!["fixed_events"]![0]!["at_sec"] = 0, "at_sec"),
+            ("événements vides", root => root["events"] = new JsonArray(), "events"),
+            ("sorte inconnue", root => root["events"]![0]!["kind"] = "carnaval", "« carnaval » inconnu"),
+            ("id en double", root => root["events"]![1]!["id"] = root["events"]![0]!["id"]!.GetValue<string>(), "en double"),
+            ("titre sans traduction", root => root["events"]![0]!["title_key"] = "EVENT_INCONNU", "sans traduction"),
+            ("réglage d'une autre sorte", root => root["events"]![0]!["band_width"] = 280, "clé « band_width » inconnue"),
+            ("réglage négatif", root => root["events"]![0]!["reward_essence"] = -5, "reward_essence"),
+            ("durée nulle", root => root["events"]![0]!["duration_sec"] = 0, "duration_sec"),
+            ("poids négatif", root => root["events"]![1]!["weight"] = -1, "weight"),
+            ("coffre inconnu", root => root["events"]![1]!["reward_chest"] = "chest_mythique", "coffre « chest_mythique »"),
+            ("créature inconnue", root => root["events"]![1]!["preferred_enemies"]![0] = "dragon", "créature « dragon »"),
+            ("distances inversées", root => root["events"]![0]!["spawn_distance_min"] = 9999, "spawn_distance_min ≤ spawn_distance_max"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"events\": " : Mutated(valid, mutate);
+            string error = RunEventDataLoader.Apply(text, chestExists, EnemyDataLoader.Exists, translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(RunEventDataLoader.Find("hunt"), hunt),
+                $"micro-événements, {name} refusé sans publication ({error})");
+        }
     }
 
     private void CheckAtmosphere()

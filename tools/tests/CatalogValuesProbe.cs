@@ -185,6 +185,25 @@ public partial class CatalogValuesProbe : Node
         lines.Add($"erasure echoes {string.Join(" ", echoFields)}");
         foreach (Vestiges.World.ErasureManager.ErasureZonePhase phase in Enum.GetValues<Vestiges.World.ErasureManager.ErasureZonePhase>())
             lines.Add(Invariant($"erasure effect {phase} {Vestiges.World.ErasureEffects.For(phase)}"));
+        // Q7d-3 : micro-événements, cadence et réglages par sorte (commentaires « _ » exclus).
+        RunEventDataLoader.Load();
+        RunEventSchedule schedule = RunEventDataLoader.Schedule;
+        lines.Add(Invariant($"events schedule first={schedule.FirstEventMinSec:R}-{schedule.FirstEventMaxSec:R} gap={schedule.GapMinSec:R}-{schedule.GapMaxSec:R} margin={schedule.CrisisMarginSec:R} calm={schedule.AfterCrisisCalmSec:R} recent={schedule.RecentMemory}/{schedule.RecentWeightFactor:R} progress={schedule.ProgressEmitIntervalSec:R} fixed={string.Join(",", schedule.FixedEvents.ConvertAll(f => Invariant($"{f.EventId}@{f.AtSec:R}")))}"));
+        foreach (RunEventData runEvent in RunEventDataLoader.Events)
+        {
+            List<string> values = new();
+            foreach ((string key, float number) in runEvent.Numbers)
+                if (!key.StartsWith('_'))
+                    values.Add(Invariant($"{key}={number:R}"));
+            foreach ((string key, string text) in runEvent.Texts)
+                if (!key.StartsWith('_'))
+                    values.Add($"{key}={text}");
+            foreach ((string key, List<string> list) in runEvent.Lists)
+                if (!key.StartsWith('_'))
+                    values.Add($"{key}=[{string.Join(",", list)}]");
+            values.Sort(StringComparer.Ordinal);
+            lines.Add(Invariant($"events {runEvent.Id} {runEvent.Kind} {runEvent.TitleKey} {runEvent.ObjectiveKey} min={runEvent.MinSec:R} weight={runEvent.Weight:R} duration={runEvent.DurationSec:R} {string.Join(" ", values)}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
