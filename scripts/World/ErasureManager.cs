@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Godot;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
+using Vestiges.Progression;
 
 namespace Vestiges.World;
 
@@ -56,6 +57,7 @@ public partial class ErasureManager : Node
     // Terres allumées (plan 51 P2a) : la mémoire suit le front de chute de la terre au lieu d'un déclin global.
     private LandFront _front;
     private WorldSetup _world;
+    private EssenceTracker _essence;
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
@@ -212,12 +214,26 @@ public partial class ErasureManager : Node
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerErasurePhaseChanged, (int)phase);
     }
 
-    /// <summary>Le Néant se traverse mais consume : dégâts continus, proportionnels aux PV max, à chaque mise à jour.</summary>
+    /// <summary>
+    /// Le Néant se traverse mais consume : dégâts continus, proportionnels aux PV max, à chaque mise à jour. Sur une terre
+    /// (plan 51 P2d), il prend d'abord l'Essence ; les PV ne paient que la part qu'elle ne couvre plus.
+    /// </summary>
     private void HurtPlayerInVoid()
     {
         if (_voidDamageRatioPerSecond <= 0f || GetZonePhaseAt(_player.GlobalPosition) != ErasureZonePhase.Void)
             return;
         float damage = _player.EffectiveMaxHp * _voidDamageRatioPerSecond * _updateIntervalSec;
+        if (_front != null && _front.Config.VoidEssencePerSecond > 0f)
+        {
+            _essence ??= GetNodeOrNull<EssenceTracker>("../EssenceTracker");
+            int cost = Mathf.CeilToInt(_front.Config.VoidEssencePerSecond * _updateIntervalSec);
+            int paid = Mathf.Min(cost, _essence?.CurrentEssence ?? 0);
+            if (paid > 0)
+                _essence.TrySpend(paid);
+            damage *= 1f - (float)paid / cost;
+            if (damage <= 0f)
+                return;
+        }
         _eventBus?.EmitSignal(EventBus.SignalName.PlayerHitBy, "void", damage);
         _player.TakeErasureDamage(damage);
     }

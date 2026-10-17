@@ -564,7 +564,7 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
 ### Compte rendu P2b, les Mémoriaux à tenir — 17 octobre 2026
 
 **Livré (branche `terres`, terres allumées seulement) :**
-- **Le cercle à tenir.** Activer un Mémorial fait apparaître un cercle de 220 px au sol (`MemorialCircle`), qui se remplit du centre vers le bord tant que le joueur s'y trouve. Il assez large pour y courir.
+- **Le cercle à tenir.** Activer un Mémorial fait apparaître un cercle de 220 px au sol (`MemorialCircle`), qui se remplit du centre vers le bord tant que le joueur s'y trouve. Il est assez large pour y courir.
   - Hors du cercle, le temps tenu redescend à moitié de la vitesse de montée.
   - Au-delà de 560 px, la tentative s'arrête.
   - Pendant le maintien, la foule est 1,6 fois plus dense.
@@ -580,3 +580,11 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
 - suites de démarrage, catalogues, petits lieux, Effacement actif et écran de choix vertes.
 
 **Pas encore** : aucune indication à l'écran du temps tenu, à part le remplissage du cercle, ni de son et de tic-tac du maintien. À juger en jouant. Le compte à rebours des éclats reste propre à la grande carte.
+
+### Compte rendu P2d, le vide — 17 octobre 2026
+
+**Livré (branche `terres`, terres allumées seulement)** : le Néant d'une terre prend d'abord l'Essence, 6 par seconde par tranches entières, puis les PV pour la part qu'elle ne couvre plus. Traverser un trou court reste bon marché ; une longue traversée, ou une traversée sans Essence, coûte cher. Réglage `land_front.void_essence_per_second`. La grande carte garde le seul coût en PV.
+
+**Vérifié** : banc des terres vert deux fois de suite. Sur une cellule tombée, l'Essence passe de 40 à 28 en 2 s et les PV ne bougent pas ; sans Essence, les PV passent de 70 à 63,7 en 2 s.
+
+**Banc rendu robuste** en route : le bot choisit les cartes d'un écran de niveau ou de choix comme un joueur pressé ; une créature déjà mourante au passage n'est plus comptée comme restée (elle finit sa mort puis revient au pool) ; les orbes des créatures tuées juste avant le passage reviennent aussi au joueur. Le niveau peut donc monter au passage, et c'est voulu.

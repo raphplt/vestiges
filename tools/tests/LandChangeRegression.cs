@@ -50,6 +50,7 @@ public partial class LandChangeRegression : Node
             _memorials = Memorial.All.Count;
             _chests = Chest.Closed.Count;
             await CheckMemorialCircle();
+            await CheckVoidDrain();
             await CheckLands();
             GD.Print($"[LandChangeRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -178,6 +179,32 @@ public partial class LandChangeRegression : Node
         spawner.ProcessMode = ProcessModeEnum.Inherit;
     }
 
+    /// <summary>
+    /// Lot P2d : le Néant d'une terre prend l'Essence d'abord, les PV ensuite. Après le contrôle du cercle, tout le sol
+    /// hors du cœur et de l'ancre est tombé : le joueur y est posé.
+    /// </summary>
+    private async Task CheckVoidDrain()
+    {
+        EssenceTracker essence = _world.GetNode<EssenceTracker>("EssenceTracker");
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        LandFrontConfig config = erasure.Front.Config;
+        essence.AddEssence(40);
+        _player.Heal(_player.EffectiveMaxHp);
+        _player.GlobalPosition = new Vector2(3000f, 0f);
+        int essenceBefore = essence.CurrentEssence;
+        float hpBefore = _player.CurrentHp;
+        await Frames(120);
+        Check(erasure.GetZonePhaseAt(_player.GlobalPosition) == ErasureManager.ErasureZonePhase.Void
+            && essence.CurrentEssence < essenceBefore && _player.CurrentHp == hpBefore,
+            $"vide : l'Essence paie d'abord ({essenceBefore} → {essence.CurrentEssence}, {config.VoidEssencePerSecond}/s), PV intacts");
+        essence.TrySpend(essence.CurrentEssence);
+        await Frames(120);
+        Check(_player.CurrentHp < hpBefore, $"vide : sans Essence, les PV paient ({hpBefore} → {_player.CurrentHp:F1})");
+        _player.GlobalPosition = Vector2.Zero;
+        _player.Heal(_player.EffectiveMaxHp);
+        await Frames(2);
+    }
+
     private async Task Frames(int count)
     {
         for (int i = 0; i < count; i++)
@@ -217,11 +244,13 @@ public partial class LandChangeRegression : Node
             await transition.GoToLandAsync(land);
             bus.XpGained -= OnXp;
             Snapshot after = Snapshot.Of(_world, _player);
+            // Les orbes ramassées peuvent faire monter de niveau : l'écran de choix prend la pause, le bot choisit.
+            await SettleChoices();
 
             string biome = _world.Land.BiomeIds[0];
             Check(transition.LandIndex == land && _world.Land.Index == land && biomes.Add(biome),
                 $"terre {land} : nouveau biome ({biome}), graine {_world.LandSeed}");
-            Check(_world.IsWorldReady && _world.Generator.MapRadiusX == _world.Land.MapRadius && !GetTree().Paused,
+            Check(_world.IsWorldReady && _world.Generator.MapRadiusX == _world.Land.MapRadius && !GetTree().Paused && !transition.IsChanging,
                 $"terre {land} : construite (rayon {_world.Generator.MapRadiusX}), jeu repris");
             Check(GroundHoles() == 0, $"terre {land} : sol sans trou ({GroundHoles()})");
             LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
@@ -230,7 +259,8 @@ public partial class LandChangeRegression : Node
             Check(Memorial.All.Count == memorials && Chest.Closed.Count == chests && ObstacleField.Count > 0,
                 $"terre {land} : seuls ses lieux comptent ({Memorial.All.Count} Mémoriaux, {Chest.Closed.Count} coffres, {ObstacleField.Count} obstacles)");
             Check(CountActive(enemies) == 0, $"terre {land} : aucune créature de la terre quittée ({CountActive(enemies)})");
-            Check(Mathf.IsEqualApprox(gained, OrbXp), $"terre {land} : l'orbe restée au sol est revenue ({gained} XP)");
+            // L'orbe posée, plus celles des créatures tuées juste avant le passage.
+            Check(gained >= OrbXp, $"terre {land} : les orbes restées au sol sont revenues ({gained} XP)");
             Check(_player.GlobalPosition == Vector2.Zero, $"terre {land} : joueur au départ ({_player.GlobalPosition})");
             Check(after.SameRunAs(before), $"terre {land} : run intacte ({before} → {after})");
 
@@ -240,6 +270,8 @@ public partial class LandChangeRegression : Node
             {
                 _player.AIInputOverride = Vector2.FromAngle(frame * 0.02f);
                 await Frame();
+                if (GetTree().Paused)
+                    await SettleChoices();
             }
             _player.IsAIControlled = false;
             Check(_world.GetNode<RunClock>("RunClock").Seconds > after.Clock, $"terre {land} : l'horloge repart après le passage");
@@ -265,7 +297,10 @@ public partial class LandChangeRegression : Node
         Check(levelUpShown, $"terre {Lands} : la montée de niveau des orbes ramassées garde la pause sous son écran");
     }
 
-    /// <summary>Ce que le passage ne doit jamais toucher : niveau, PV, armes, Essence, Péril, éliminations, horloge.</summary>
+    /// <summary>
+    /// Ce que le passage ne doit jamais toucher : PV, armes, Essence, Péril, éliminations, horloge. Le niveau peut monter
+    /// avec les orbes ramassées au passage.
+    /// </summary>
     private readonly record struct Snapshot(int Level, float Hp, int Weapons, int Essence, int Peril, int Kills, float Clock)
     {
         public static Snapshot Of(WorldSetup world, Player player) => new(
@@ -273,7 +308,7 @@ public partial class LandChangeRegression : Node
             world.GetNode<EssenceTracker>("EssenceTracker").CurrentEssence, world.GetNode<PerilManager>("PerilManager").Peril,
             world.GetNode<ScoreManager>("ScoreManager").TotalKills, world.GetNode<RunClock>("RunClock").Seconds);
 
-        public bool SameRunAs(Snapshot before) => Level == before.Level && Hp == before.Hp && Weapons == before.Weapons
+        public bool SameRunAs(Snapshot before) => Level >= before.Level && Hp == before.Hp && Weapons == before.Weapons
             && Essence == before.Essence && Peril == before.Peril && Kills == before.Kills && Clock == before.Clock;
     }
 
@@ -311,10 +346,28 @@ public partial class LandChangeRegression : Node
         int active = 0;
         foreach (Node child in container.GetChildren())
         {
-            if (child is Enemy { IsActive: true })
+            // Une créature déjà en train de mourir finit sa mort, puis revient au pool.
+            if (child is Enemy { IsActive: true, IsDying: false })
                 active++;
         }
         return active;
+    }
+
+    /// <summary>Choisit comme un joueur pressé : première carte d'un écran de niveau ou de choix, jusqu'à la reprise.</summary>
+    private async Task SettleChoices()
+    {
+        ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
+        Node levelUp = _world.GetNode("LevelUpScreen");
+        System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        for (int attempt = 0; attempt < 200 && GetTree().Paused; attempt++)
+        {
+            if (choices.IsOpen)
+                choices.Activate(choices.FirstEnabled());
+            else if (levelUp.GetType().GetField("_fragmentManager", flags)?.GetValue(levelUp) is FragmentManager fragments
+                && fragments.IsChoiceActive && fragments.PendingChoices.Count > 0)
+                levelUp.GetType().GetMethod("OnCardChosen", flags).Invoke(levelUp, new object[] { fragments.PendingChoices[0] });
+            await Frame();
+        }
     }
 
     private SignalAwaiter Frame() => ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
