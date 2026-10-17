@@ -45,7 +45,7 @@ public static class MouseCursor
 
     private static void ApplyScale()
     {
-        int scale = Mathf.Max(1, Mathf.RoundToInt(_tree.Root.Size.Y / ReferenceHeight));
+        int scale = ComputeCursorScale();
         if (scale == _scale)
             return;
         _scale = scale;
@@ -54,6 +54,21 @@ public static class MouseCursor
         SetShape(manifest, "arrow", Input.CursorShape.Arrow, scale);
         SetShape(manifest, "hand", Input.CursorShape.PointingHand, scale);
         GD.Print($"[MouseCursor] Curseurs pixel art ×{scale} pour une fenêtre de {_tree.Root.Size.Y} px de haut");
+    }
+
+    private static int ComputeCursorScale()
+    {
+        if (OS.GetName() == "macOS")
+        {
+            // Sous macOS, WindowGetSize() est en pixels physiques (×2 sur écran Retina) ET NSCursor interprète les
+            // dimensions de l'image en points logiques (qu'AppKit multiplie à nouveau par le facteur Retina). Diviser
+            // par dpiScale² donne ×1 en points logiques sur Retina (22×36 px physiques, taille standard du pointeur macOS).
+            int screen = DisplayServer.WindowGetCurrentScreen();
+            float dpiScale = Mathf.Max(1f, DisplayServer.ScreenGetScale(screen));
+            float winHeight = DisplayServer.WindowGetSize().Y;
+            return Mathf.Max(1, Mathf.RoundToInt(winHeight / (ReferenceHeight * dpiScale * dpiScale)));
+        }
+        return Mathf.Max(1, Mathf.RoundToInt(_tree.Root.Size.Y / ReferenceHeight));
     }
 
     private static void SetShape(Godot.Collections.Dictionary manifest, string name, Input.CursorShape shape, int scale)

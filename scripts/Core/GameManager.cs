@@ -76,11 +76,16 @@ public partial class GameManager : Node
         _eventBus = GetNode<EventBus>("/root/EventBus");
         // La fermeture de la fenêtre passe par la sortie propre, comme le bouton Quitter.
         GetTree().AutoAcceptQuit = false;
+        DisplaySettings.Install(GetTree());
         MouseCursor.Install(GetTree(), () => _currentState == GameState.Run);
     }
 
     // Toute fermeture, même sans GameExit (bancs, tests), rend les curseurs avant que le moteur ne s'arrête.
-    public override void _ExitTree() => MouseCursor.Release();
+    public override void _ExitTree()
+    {
+        DisplaySettings.Release();
+        MouseCursor.Release();
+    }
 
     public override void _Notification(int what)
     {

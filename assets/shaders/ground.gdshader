@@ -30,6 +30,17 @@ const vec2 TILE = vec2(64.0, 32.0);
 const int NONE = 255;
 // Anneaux de sondage de la frontière : assez pour que la lisière ne marche pas par paliers (plan 37 M2).
 const int RINGS = 6;
+// Directions de sondage précalculées (cos(angle), sin(angle) * 0.5) pour éviter 48 appels trigonométriques par fragment (plan 53 V3).
+const vec2 RING_DIRS[8] = vec2[8](
+	vec2(1.0, 0.0),
+	vec2(0.70710678, 0.35355339),
+	vec2(0.0, 0.5),
+	vec2(-0.70710678, 0.35355339),
+	vec2(-1.0, 0.0),
+	vec2(-0.70710678, -0.35355339),
+	vec2(0.0, -0.5),
+	vec2(0.70710678, -0.35355339)
+);
 
 varying vec2 world_pos;
 varying vec4 vertex_color;
@@ -110,46 +121,33 @@ void fragment() {
 			if (base.a > 0.5)
 				COLOR = vec4(base.rgb, 1.0) * vertex_color;
 		}
-		if (own != NONE && own_data.a > 0.5) {
-			float nearest = 1e9;
-			ivec2 other_cell = ivec2(0);
-			int other_biome = own;
-			// Anneau extérieur d'abord : loin de toute frontière (cas courant), 8 lectures suffisent.
-			// Point sondé déformé par un bruit : la distance à la frontière ne suit plus les losanges de la grille.
-			vec2 warped = p + (vec2(value_noise(p * 0.07 + 5.1), value_noise(p * 0.07 + 41.7)) - 0.5) * 20.0;
-			for (int ring = RINGS; ring >= 1; ring--) {
-				float radius = band_px * float(ring) / float(RINGS);
-				bool found = false;
+		if (own != NONE && own_data.a > 0.1) {
+			// Lisière organique (plan 37 M2) évaluée d'abord (plan 53 V3) : si le bruit de lisière n'avance pas du
+			// côté des voisins présents dans cell_map.a (ou reste sous le demi-pas du premier anneau), aucun sondage
+			// de la grille n'est nécessaire (> 65 % des fragments éliminés d'emblée).
+			vec2 grid = floor(p * 0.5) * 2.0;
+			float shape = mix(cloud_noise(grid * 0.06 + 17.3), cloud_noise(grid * 0.22 + 3.1), grain);
+			shape += (cloud_noise(p * noise_scale) - 0.5) * edge_noise;
+			float raw_advance = (shape - 0.5) * 2.0 * band_px;
+			bool want_higher = raw_advance > 0.0;
+			bool allowed = want_higher ? (own_data.a < 0.5 || own_data.a > 0.85) : (own_data.a > 0.5);
+			int target_ring = allowed ? clamp(int(floor(abs(raw_advance) * float(RINGS) / band_px + 0.5)), 0, RINGS) : 0;
+			if (target_ring > 0) {
+				// Point sondé déformé par un bruit : la distance à la frontière ne suit plus les losanges de la grille.
+				// Un seul anneau (target_ring) suffit : un voisin est à distance <= radius(target_ring) ssi le cercle
+				// de rayon radius(target_ring) l'intersecte (band_px < largeur d'une tuile).
+				vec2 warped = p + (vec2(cloud_noise(p * 0.07 + 5.1), cloud_noise(p * 0.07 + 41.7)) - 0.5) * 20.0;
+				float radius = band_px * float(target_ring) / float(RINGS);
 				for (int i = 0; i < 8; i++) {
-					float angle = float(i) * 0.7853982;
-					ivec2 c = cell_of(warped + vec2(cos(angle), sin(angle) * 0.5) * radius);
-					int b = biome_of(cell_data(c));
-					if (b != NONE && b != own) {
-						nearest = radius;
-						other_cell = c;
-						other_biome = b;
-						found = true;
+					ivec2 c = cell_of(warped + RING_DIRS[i] * radius);
+					vec4 cand_data = cell_data(c);
+					int b = biome_of(cand_data);
+					if (b != NONE && b != own && (own < b) == want_higher) {
+						vec4 other = cell_texel(cand_data, local);
+						if (other.a > 0.5)
+							COLOR = vec4(other.rgb, 1.0) * vertex_color;
 						break;
 					}
-				}
-				if (!found)
-					break;
-			}
-			if (nearest < 1e8) {
-				// Lisière organique (plan 37 M2) : un bruit déplace la frontière vers l'un ou l'autre biome, d'une
-				// bande au plus. Le signe dépend de l'ordre des deux biomes, si bien que les deux côtés voient la même
-				// frontière déplacée : de grandes plaques avancent sur le voisin, rongées d'un grain plus fin, au pixel
-				// double. Un seuil tiré pixel par pixel donnait des pixels épars, un seuil commun aux deux côtés gardait
-				// le bord droit des losanges en échangeant seulement les matières.
-				vec2 grid = floor(p / 2.0) * 2.0;
-				float shape = mix(value_noise(grid * 0.06 + 17.3), value_noise(grid * 0.22 + 3.1), grain);
-				shape += (value_noise(p * noise_scale) - 0.5) * edge_noise;
-				float side = own < other_biome ? 1.0 : -1.0;
-				float advance = side * (shape - 0.5) * 2.0 * band_px;
-				if (advance > nearest - band_px / float(RINGS) * 0.5) {
-					vec4 other = cell_texel(cell_data(other_cell), local);
-					if (other.a > 0.5)
-						COLOR = vec4(other.rgb, 1.0) * vertex_color;
 				}
 			}
 		}

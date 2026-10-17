@@ -2,6 +2,7 @@
 # Profil de développement : contenu disponible, progression séparée dans user://dev/.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source tools/lib/portable.sh
 dotnet build --nologo
 engine_args=()
 user_args=()

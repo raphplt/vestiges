@@ -49,7 +49,9 @@ public partial class BiomeAtmosphere : Node2D
 	private static readonly StringName GrimePaperParameter = "world_grime_paper";
 	private static readonly StringName GrimeInkParameter = "world_grime_ink";
 	private static readonly StringName StainScaleParameter = "world_stain_scale";
+	private static readonly StringName NoiseLutParameter = "world_noise_lut";
 	private static readonly Grade NeutralGrade = Grade.Of(BiomeAtmosphereStyle.Neutral, 1f, 0f);
+	private static ImageTexture _noiseTexture;
 
 	private AtmosphereConfig _config;
 	private Grade _gradeFrom = NeutralGrade;
@@ -87,6 +89,7 @@ public partial class BiomeAtmosphere : Node2D
 
 	public override void _Ready()
 	{
+		EnsureNoiseTexture();
 		_worldSetup = GetParent<WorldSetup>();
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		if (!AtmosphereConfig.TryLoad(out _config, out string error))
@@ -294,6 +297,75 @@ public partial class BiomeAtmosphere : Node2D
 		RenderingServer.GlobalShaderParameterSet(GrimeInkParameter, new Vector4(ink.R, ink.G, ink.B, _config.GrimeShadowTone));
 		RenderingServer.GlobalShaderParameterSet(StainScaleParameter, 1f / _config.GrimeStainScalePx);
 	}
+
+	/// <summary>
+	/// Précalcule une fois par processus la texture répétable 256×256 <c>world_noise_lut</c> lue par
+	/// <c>world_grade.gdshaderinc</c> et <c>ground.gdshader</c> (plan 53 V2), afin d'éviter 8 bruits procéduraux par
+	/// fragment sur le sol, les routes et les décors.
+	/// </summary>
+	public static void EnsureNoiseTexture()
+	{
+		if (_noiseTexture != null)
+			return;
+		const int size = 256;
+		byte[] pixels = new byte[size * size * 4];
+		for (int y = 0; y < size; y++)
+		{
+			float v = (y + 0.5f) / size;
+			for (int x = 0; x < size; x++)
+			{
+				float u = (x + 0.5f) / size;
+				float cloud = PeriodicCloudNoise(u * 32f, v * 32f, 32) * 0.65f
+					+ PeriodicCloudNoise(u * 88f + 13.1f, v * 88f + 13.1f, 88) * 0.35f;
+				float s0 = PeriodicCloudNoise(u * 32f, v * 32f, 32);
+				float s1 = PeriodicCloudNoise(u * 64f + 17.7f, v * 64f + 17.7f, 64);
+				float s2 = PeriodicCloudNoise(u * 128f + 53.6f, v * 128f + 53.6f, 128);
+				float stain3 = (s0 * 0.5f + s1 * 0.25f + s2 * 0.125f) / 0.875f;
+				float stain2 = (s0 * 0.5f + s1 * 0.25f) / 0.75f;
+				float baseHash = CloudHash(x, y);
+				int offset = (y * size + x) * 4;
+				pixels[offset] = (byte)Mathf.Clamp(Mathf.RoundToInt(cloud * 255f), 0, 255);
+				pixels[offset + 1] = (byte)Mathf.Clamp(Mathf.RoundToInt(stain3 * 255f), 0, 255);
+				pixels[offset + 2] = (byte)Mathf.Clamp(Mathf.RoundToInt(stain2 * 255f), 0, 255);
+				pixels[offset + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(baseHash * 255f), 0, 255);
+			}
+		}
+		_noiseTexture = ImageTexture.CreateFromImage(Image.CreateFromData(size, size, false, Image.Format.Rgba8, pixels));
+		RenderingServer.GlobalShaderParameterSet(NoiseLutParameter, _noiseTexture);
+	}
+
+	private static float PeriodicCloudNoise(float x, float y, int period)
+	{
+		float fx = Mathf.Floor(x);
+		float fy = Mathf.Floor(y);
+		float tx = x - fx;
+		float ty = y - fy;
+		tx = tx * tx * (3f - 2f * tx);
+		ty = ty * ty * (3f - 2f * ty);
+		int ix0 = ((int)fx % period + period) % period;
+		int iy0 = ((int)fy % period + period) % period;
+		int ix1 = (ix0 + 1) % period;
+		int iy1 = (iy0 + 1) % period;
+		float a = CloudHash(ix0, iy0);
+		float b = CloudHash(ix1, iy0);
+		float c = CloudHash(ix0, iy1);
+		float d = CloudHash(ix1, iy1);
+		return Mathf.Lerp(Mathf.Lerp(a, b, tx), Mathf.Lerp(c, d, tx), ty);
+	}
+
+	private static float CloudHash(int x, int y)
+	{
+		float p3x = Frac(x * 0.1031f);
+		float p3y = Frac(y * 0.1031f);
+		float p3z = p3x;
+		float dot = p3x * (p3y + 33.33f) + p3y * (p3z + 33.33f) + p3z * (p3x + 33.33f);
+		p3x += dot;
+		p3y += dot;
+		p3z += dot;
+		return Frac((p3x + p3y) * p3z);
+	}
+
+	private static float Frac(float v) => v - Mathf.Floor(v);
 
 	private void AdvanceClouds(float delta)
 	{

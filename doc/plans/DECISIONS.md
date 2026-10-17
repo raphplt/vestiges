@@ -2207,3 +2207,16 @@ Reprise du plan 51 pour formaliser la boucle avant de l'implémenter. Raphaël r
 - **Ordre** : « valider ça, puis ensuite, quand ça sera bon, on passera sur l'Élan » ; le prototype des terres vient après les lots E2 et E3.
 
 **17 octobre, après essai du bac à sable** : l'esquive parfaite (lot E2) « c'est un peu difficile mais c'est une bonne chose ». **Ordre changé** : « je voudrais d'abord bosser sur la boucle de jeu et le cycle plutôt ». Le prototype des terres (plan 51, P0 à P3) passe avant les lots E3 à E6 de l'Élan ; le vide s'y traverse d'abord à pied, en payant, et le saut d'Élan viendra avec E3.
+
+## 187. Optimisation macOS, shaders du monde et paramètres vidéo — 17 octobre 2026
+
+Constat de Raphaël : le jeu tourne à +150 FPS sur PC Windows/Linux, mais tombe à 30–40 FPS sur Mac (M5 Pro 18 Go et M1 Pro 16 Go). Diagnostic : (1) résolution Retina × `canvas_items` (6 à 8 Mpx de fragments), (2) bruits procéduraux recalculés par fragment dans `world_grade.gdshaderinc`, (3) 48 recherches de cellules par fragment aux frontières dans `ground.gdshader`, (4) couche OpenGL dépréciée sur macOS + verrouillage V-Sync et absence de réglages vidéo.
+
+Raphaël : « ouais ok ca me va totalement. je serai d'avis de travailler sur ces quatre leviers !! Et en profiter d'ailleurs pour dans les menus du jeu pouvoir régler la résolution, les fps max, ect... »
+
+**Découpé au [plan 53](53-optimisation-macos-et-parametres-video.md)** en quatre lots :
+- **V1** : Paramètres vidéo dans **Paramètres › Graphismes** (Plein écran persisté, Résolution, Échelle de rendu / Retina, V-Sync, FPS max).
+- **V2** : Pré-calcul en texture répétable des bruits de `world_grade.gdshaderinc` (nuages, grain, taches).
+- **V3** : Pré-calcul CPU des jonctions de biomes dans `GroundMaterial` / `ground.gdshader`.
+- **V4** : Moteur de rendu Metal / macOS et validation globale A/B sur Mac.
+

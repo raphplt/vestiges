@@ -52,6 +52,7 @@ public partial class ShaderWarmup : SubViewport
 
     public override void _Ready()
     {
+        World.BiomeAtmosphere.EnsureNoiseTexture();
         Name = "ShaderWarmup";
         Size = new Vector2I(256, ((Samples.Length + 3) / 4) * 56 + 32);
         Disable3D = true;

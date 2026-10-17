@@ -51,9 +51,9 @@ public partial class MenuNavigationRegression : Node
             await Frames(2);
             Check(!characters.CanDepart && Field<Button>(characters, "_depart").Disabled, "Le héros verrouillé ne peut pas partir");
             TextureRect portrait = Field<TextureRect>(characters, "_portrait");
-            Check(portrait.Texture != null && portrait.Texture.GetSize() == new Vector2(42, 48)
-                && portrait.TextureFilter == CanvasItem.TextureFilterEnum.Nearest,
-                "La Scaphandrière emploie son sprite animé existant en l'absence de portrait");
+            Check(portrait.Texture != null && portrait.Texture == CharacterPortrait.Artwork(locked.Id)
+                && portrait.TextureFilter == CanvasItem.TextureFilterEnum.Linear,
+                "La Scaphandrière affiche son portrait illustré");
             Field<Button>(characters, "_detailsButton").EmitSignal(BaseButton.SignalName.Pressed);
             string details = Field<Label>(characters, "_details").Text;
             Check(details.Contains("+25% de dégâts") && details.Contains("+50% en zone effacée") && details.Contains("Perfore") && details.Contains("Saut flottant")
@@ -81,7 +81,28 @@ public partial class MenuNavigationRegression : Node
             await Press("ui_cancel");
             SettingsScreen settings = Field<SettingsScreen>(hub, "_settingsScreen");
             Control returnFocus = GetViewport().GuiGetFocusOwner();
-            settings.Open(); await Frames(2); settings.Close();
+            settings.Open(); await Frames(2);
+            typeof(SettingsScreen).GetMethod("ShowTab", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .Invoke(settings, new object[] { "graphismes" });
+            await Frames(2);
+            Check(DisplaySettings.RenderScale == RenderScaleMode.Max1080p && DisplaySettings.CurrentResolution == new Vector2I(1920, 1080),
+                "Graphismes : valeurs par défaut (1080p, échelle 1080p optimisée)");
+            DisplaySettings.CycleResolution();
+            DisplaySettings.CycleRenderScale();
+            DisplaySettings.CycleMaxFps();
+            DisplaySettings.VSync = false;
+            settings.Close();
+            DisplaySettings.Load();
+            Check(DisplaySettings.CurrentResolution == new Vector2I(2560, 1440)
+                && DisplaySettings.RenderScale == RenderScaleMode.Native
+                && DisplaySettings.CurrentMaxFps == 60
+                && !DisplaySettings.VSync,
+                "Graphismes : résolution, échelle de rendu, V-Sync et FPS max sont persistés à la fermeture");
+            DisplaySettings.ResolutionIndex = 2;
+            DisplaySettings.RenderScale = RenderScaleMode.Max1080p;
+            DisplaySettings.MaxFpsIndex = 0;
+            DisplaySettings.VSync = true;
+            DisplaySettings.Save();
             Check(GetViewport().GuiGetFocusOwner() == returnFocus, "Paramètres restitue le focus");
             await CheckItemSorting(hub);
             hub.QueueFree(); await Frames(2);
