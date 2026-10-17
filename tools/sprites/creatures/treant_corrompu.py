@@ -6,6 +6,9 @@ nœuds luisent vert-acide. Une couronne de feuillage mort et de mousse. Lent, d�
 Reprise du 11 octobre (plan 37 M4) : brun sur brun, coiffé d'une boule verte, il se lisait comme une souche. Bois
 mort grisé fendu de noir, bouche creuse sous les nœuds, couronne de feuilles rousses en touffes d'où sortent des
 branches nues, bras plus longs et plus clairs.
+Plan 54 S3 : tronc d'un seul tenant (`smin`), nœuds au bord éclairé ; il avance en déracinant une souche après
+l'autre (le tronc bascule sur la racine qui porte, les branches traînent) et frappe d'un arc ample, de l'armé
+haut à l'impact au sol.
 """
 from __future__ import annotations
 
@@ -15,21 +18,21 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, smin, sphere
 
 FRAME_SIZE = (56, 72)
 FRAME_PIVOT = (28.0, 67.0)
 
 BARK, BARK_DARK, LEAF, MOSS, KNOT, EYE, HOLLOW, LIMB = range(8)
 MATERIALS = [
-    make_material("bark", "#7C7064"),
-    make_material("bark_dark", "#2F2722"),
-    make_material("leaf", "#7E5F34"),
-    make_material("moss", "#5F8A36"),
-    make_material("knot", "#A08A6C"),
+    make_material("bark", "#7C7064", contrast=1.12),
+    make_material("bark_dark", "#2F2722", contrast=1.05),
+    make_material("leaf", "#7E5F34", contrast=1.1),
+    make_material("moss", "#5F8A36", contrast=1.1),
+    make_material("knot", "#A08A6C", contrast=1.1, rim=0.5),
     make_emissive("eye", "#7FFF00"),
     make_material("hollow", "#1A1216", contrast=0.5),
-    make_material("limb", "#6A5E54"),
+    make_material("limb", "#6A5E54", contrast=1.1),
 ]
 
 K = 1.7
@@ -57,8 +60,8 @@ def parts(t: Tree) -> list[Part]:
     hand_r = at(-7.5, 10.0, 4.0)
     result = [
         # Tronc : large en bas, qui se tord vers le haut.
-        Part(lambda p: capsule(p, at(0.0, 3.0), at(0.4, 14.0, 0.4), 5.0 * K, 4.2 * K), BARK),
-        Part(lambda p: capsule(p, at(0.4, 14.0, 0.4), at(-0.6, 25.0, -0.4), 4.2 * K, 3.2 * K), BARK),
+        Part(lambda p: smin(capsule(p, at(0.0, 3.0), at(0.4, 14.0, 0.4), 5.0 * K, 4.2 * K),
+                            capsule(p, at(0.4, 14.0, 0.4), at(-0.6, 25.0, -0.4), 4.2 * K, 3.2 * K), 1.0 * K), BARK),
         # Fentes sombres de l'écorce.
         Part(lambda p: ellipsoid(p, at(1.6, 7.0, 4.7), (0.6 * K, 3.6 * K, 0.5 * K), rotation @ rotation_z(-0.1)), BARK_DARK),
         Part(lambda p: ellipsoid(p, at(-3.0, 13.0, 3.0), (0.5 * K, 3.4 * K, 0.5 * K), rotation @ rotation_z(0.3)), BARK_DARK),
@@ -103,12 +106,17 @@ def _animations() -> dict[str, list[Tree]]:
     rest = Tree()
     return {
         # Immobile comme un arbre : à peine un souffle dans la couronne.
-        "idle": [rest, replace(rest, sway=0.015), replace(rest, sway=0.025), replace(rest, sway=0.01)],
-        "walk": [replace(rest, step=i * np.pi / 2, sway=(0.05, 0.0, -0.05, 0.0)[i]) for i in range(4)],
-        # Coup de branche : il arme loin en arrière et frappe de haut en bas.
-        "attack": [replace(rest, swing=0.8, lean=-0.05), replace(rest, swing=1.0, lean=-0.1),
-                   replace(rest, swing=-0.6, lean=0.3), replace(rest, swing=-0.3, lean=0.2)],
-        "death": [replace(rest, lean=-0.1, sway=0.1), replace(rest, fall=0.3), replace(rest, fall=0.7), replace(rest, fall=1.05)],
+        "idle": [rest, replace(rest, sway=0.015), replace(rest, sway=0.025, swing=0.05), replace(rest, sway=0.01)],
+        # Il se déracine une souche après l'autre : le tronc bascule lourdement sur la racine qui porte, se redresse
+        # en tirant la suivante, les branches traînent.
+        "walk": [replace(rest, step=i * np.pi / 2, sway=sw, lean=le, swing=sg)
+                 for i, (sw, le, sg) in enumerate(((0.07, 0.16, -0.15), (0.03, 0.1, 0.0), (-0.05, 0.15, 0.1),
+                                                   (-0.01, 0.08, 0.05)))],
+        # Coup de branche : il arme haut en arrière, abat la branche en arc et l'écrase au sol, puis se relève.
+        "attack": [replace(rest, swing=1.05, lean=-0.12, sway=0.04), replace(rest, swing=0.1, lean=0.18),
+                   replace(rest, swing=-0.75, lean=0.36, sway=-0.03), replace(rest, swing=-0.3, lean=0.2)],
+        "death": [replace(rest, lean=-0.12, sway=0.1, swing=0.5), replace(rest, fall=0.3), replace(rest, fall=0.7),
+                  replace(rest, fall=1.05)],
     }
 
 

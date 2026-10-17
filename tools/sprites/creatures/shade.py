@@ -7,6 +7,9 @@ Reprise du 11 octobre (plan 37 M4), deux fois :
   moitié une tête et des épaules. Un bras tendu se traîne devant, l'autre n'est qu'un moignon qui fond ; deux yeux
   vert-acide dans la tête, un troisième resté dans la flaque. Le Rampant d'ombre est la suite : une ombre qui a
   appris à marcher.
+Plan 54 S3 : buste et flaque fondus d'un seul tenant (`smin`), reflets qui accrochent la lumière ; elle rampe en
+quatre temps inégaux (la main s'agrippe, le corps se hisse, la flaque se rattrape) et se ramasse dans l'encre avant
+de jaillir.
 """
 from __future__ import annotations
 
@@ -16,18 +19,18 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, rotation_y, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, rotation_y, smin, sphere
 
 FRAME_SIZE = (36, 36)
 FRAME_PIVOT = (18.0, 28.0)
 
 INK, SHEEN, FIGURE, EYE, SHEEN_COLD = range(5)
 MATERIALS = [
-    make_material("ink", "#1C1826", contrast=0.6),
-    make_material("sheen", "#6E58AE", contrast=0.7),
-    make_material("figure", "#40305E", contrast=0.8),
+    make_material("ink", "#1C1826", contrast=0.7),
+    make_material("sheen", "#6E58AE", contrast=0.8, specular=0.55),
+    make_material("figure", "#40305E", contrast=0.95, rim=0.6),
     make_emissive("eye", "#7FFF00"),
-    make_material("sheen_cold", "#3E8C9E", contrast=0.7),
+    make_material("sheen_cold", "#3E8C9E", contrast=0.8, specular=0.45),
 ]
 
 K = 1.5
@@ -62,9 +65,10 @@ def parts(s: Stain) -> list[Part]:
     stump = shoulder_r + lean @ np.array([-0.8 * K, -2.4 * K, 1.0 * K])
 
     result = [
-        # Flaque d'encre, irrégulière, étirée vers l'arrière.
-        Part(lambda p: ellipsoid(p, pool, (5.6 * K, 0.9 * K * flat + 0.3, 6.0 * K * s.stretch)), INK),
-        Part(lambda p: ellipsoid(p, pool + [-2.4 * K, 0.0, -3.4 * K * s.stretch], (3.6 * K, 0.7 * K * flat + 0.3, 3.8 * K)), INK),
+        # Flaque d'encre, irrégulière, étirée vers l'arrière : deux nappes fondues en une seule.
+        Part(lambda p: smin(ellipsoid(p, pool, (5.6 * K, 0.9 * K * flat + 0.3, 6.0 * K * s.stretch)),
+                            ellipsoid(p, pool + [-2.4 * K, 0.0, -3.4 * K * s.stretch], (3.6 * K, 0.7 * K * flat + 0.3, 3.8 * K)),
+                            0.6 * K), INK),
         # Reflets irisés à la surface de l'encre.
         Part(lambda p: ellipsoid(p, pool + [2.2 * K, 0.75 * K * flat, -2.4 * K], (2.2 * K, 0.4 * K, 1.8 * K)), SHEEN),
         Part(lambda p: ellipsoid(p, pool + [-2.6 * K, 0.7 * K * flat, -0.4 * K], (1.6 * K, 0.4 * K, 1.4 * K)), SHEEN_COLD),
@@ -74,10 +78,10 @@ def parts(s: Stain) -> list[Part]:
     ]
     if emerge > 0.05:
         result += [
-            # Torse qui sort de l'encre, épaules inégales, tête penchée vers l'avant.
-            Part(lambda p: capsule(p, base, chest, 2.6 * K, 1.8 * K), FIGURE),
-            Part(lambda p: capsule(p, chest, head, 0.9 * K, 0.9 * K), FIGURE),
-            Part(lambda p: capsule(p, shoulder_l, shoulder_r, 1.3 * K, 1.1 * K), FIGURE),
+            # Torse qui sort de l'encre, épaules inégales fondues dans le buste, tête penchée vers l'avant.
+            Part(lambda p: smin(smin(capsule(p, base, chest, 2.6 * K, 1.8 * K),
+                                     capsule(p, shoulder_l, shoulder_r, 1.3 * K, 1.1 * K), 0.9 * K),
+                                capsule(p, chest, head, 0.9 * K, 0.9 * K), 0.6 * K), FIGURE),
             Part(lambda p: sphere(p, head, 2.1 * K * min(1.0, emerge + 0.2)), FIGURE),
             Part(lambda p: capsule(p, shoulder_l, elbow, 1.1 * K, 0.95 * K), FIGURE),
             Part(lambda p: capsule(p, elbow, hand, 0.95 * K, 0.7 * K), FIGURE),
@@ -101,17 +105,22 @@ def parts(s: Stain) -> list[Part]:
 def _animations() -> dict[str, list[Stain]]:
     rest = Stain()
     return {
-        # Elle respire en se soulevant à peine, la flaque ondule.
-        "idle": [rest, replace(rest, ripple=0.5, rise=0.08), replace(rest, ripple=1.0, rise=0.15),
-                 replace(rest, ripple=0.5, rise=0.08)],
-        # Glissement : la main se tend, la flaque s'étire et se rattrape.
-        "walk": [replace(rest, stretch=1.2, ripple=1.0, lean=0.4, reach=1.0), replace(rest, stretch=1.05, ripple=0.3, reach=0.4),
-                 replace(rest, stretch=1.25, ripple=-1.0, lean=0.3, reach=1.0), replace(rest, stretch=1.05, ripple=-0.3, reach=0.4)],
-        # Frappe : la silhouette se dresse hors de l'encre, puis retombe sur la cible.
-        "attack": [replace(rest, rise=0.5), replace(rest, rise=1.0, stretch=1.1),
-                   replace(rest, rise=0.6, stretch=1.3, lean=0.8, reach=1.5), replace(rest, rise=0.15, stretch=1.1, reach=0.6)],
-        # Elle s'enfonce dans le sol, la silhouette d'abord.
-        "death": [replace(rest, sink=0.3, ripple=1.0, rise=0.3), replace(rest, sink=0.6, stretch=1.3),
+        # Elle respire en se soulevant à peine, la tête cherche, la flaque ondule.
+        "idle": [rest, replace(rest, ripple=0.6, rise=0.1, lean=-0.1), replace(rest, ripple=1.0, rise=0.18, lean=-0.2),
+                 replace(rest, ripple=0.2, rise=0.04, lean=0.15)],
+        # Reptation en quatre temps inégaux : la main se tend loin, s'agrippe et le buste se hisse en tassant la
+        # flaque, puis la flaque se rattrape d'un coup et le corps se relève en glissant.
+        "walk": [replace(rest, stretch=1.0, ripple=0.6, lean=0.5, rise=0.1, reach=1.5),
+                 replace(rest, stretch=0.85, ripple=0.2, lean=0.95, rise=-0.2, reach=0.9),
+                 replace(rest, stretch=1.38, ripple=-0.9, lean=0.1, rise=0.25, reach=0.3),
+                 replace(rest, stretch=1.15, ripple=-0.3, lean=0.3, rise=0.1, reach=0.8)],
+        # Frappe : elle se ramasse dans l'encre, jaillit, s'abat sur la cible, puis se laisse retomber.
+        "attack": [replace(rest, sink=0.25, lean=-0.7, stretch=0.82, reach=-0.3, ripple=0.4),
+                   replace(rest, rise=1.3, stretch=1.2, lean=0.35, reach=1.2),
+                   replace(rest, rise=0.7, stretch=1.38, lean=1.15, reach=1.9, ripple=-0.6),
+                   replace(rest, rise=0.2, stretch=1.05, lean=0.25, reach=0.6)],
+        # Elle se cabre une dernière fois, puis s'enfonce dans le sol, la silhouette d'abord.
+        "death": [replace(rest, sink=0.15, ripple=1.0, rise=0.6, lean=-0.6), replace(rest, sink=0.55, stretch=1.3, ripple=-0.5),
                   replace(rest, sink=0.85, stretch=1.5), replace(rest, sink=0.97, stretch=1.7)],
     }
 

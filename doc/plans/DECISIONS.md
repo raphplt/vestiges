@@ -2244,3 +2244,10 @@ Premier essai du Lot S0 sur **Le Vagabond** et **Le Rôdeur** ([plan 54](54-spri
 **Validation du duo pilote (17 octobre 2026, au soir)** : Raphaël a joué le Vagabond et le Rôdeur refaits avec l'inclinaison, l'amorti, l'élan d'attaque et le tempo de marche des créatures (lots S1, G1, G2) : **validé**. **Échelle gardée** (`CHARACTER_MODEL_SCALE = 0.53`, pas de cran de détail en plus) : la richesse passe par la silhouette, les poses et le mouvement secondaire. Suite choisie : **lot S2**, les cinq autres personnages jouables, avant la partie Godot restante (traînées fidèles, télégraphes).
 
 **Lot S2 (17 octobre 2026, au soir)** : sur la planche des cinq autres jouables, Raphaël garde **la Forgeuse qui tient le manche de son marteau** (« Oui, garder »). Pour les retouches Aseprite de la Scaphandrière, qui bloquaient sa régénération sans contenir de retouche faite à la main : « pourquoi ça bloque ? refait les a neuf sil faut » → anciennes retouches retirées, retouches neuves recréées depuis le nouveau rendu.
+
+**Lot S3, choisi en autonomie (17 octobre 2026, au soir)** : Raphaël demande un plan ouvert « sur lequel tu pourras avancer un bon moment (en faire le plus possible sans retour de ma part) », jusqu'à épuiser son quota de la semaine. Proposition retenue : plan 54 S3. Réponses :
+- chantier : **S3, le reste du bestiaire** ;
+- livraison : **export direct en jeu** par sous-lots, jugement de l'ensemble à la fin (git permet de revenir) ;
+- s'il reste du quota : **Zones au sol** (plan 25, suite des §164 et §172) ;
+- tour des questions du tableau de bord (§48) : **sauté cette fois**, les lignes du §2 restent telles quelles.
+

@@ -8,6 +8,8 @@ Reprise du 11 octobre (plan 37 M4), deux fois :
   plaques de peau nue. Pas de crâne : le cou finit en une gueule ouverte, crocs d'os en haut et en bas, les yeux
   vert-acide plantés de travers sur le cou. Six pattes grêles aux genoux relevés comme un insecte, griffes pâles,
   longue queue nue.
+Plan 54 S3 : garrot, taille, croupe et cou fondus en une seule échine (`smin`), os et crocs qui accrochent la
+lumière ; trot heurté (poussée, suspension, réception tassée) et morsure qui claque à la réception du bond.
 """
 from __future__ import annotations
 
@@ -17,17 +19,17 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, smin, sphere
 
 FRAME_SIZE = (40, 36)
 FRAME_PIVOT = (20.0, 27.0)
 
 FUR, FUR_DARK, SKIN, BONE, LEG, MAW, EYE = range(7)
 MATERIALS = [
-    make_material("fur", "#8A5236"),
-    make_material("fur_dark", "#4C2C28"),
-    make_material("skin", "#B8968A"),
-    make_material("bone", "#E4D8BE", contrast=0.6),
+    make_material("fur", "#8A5236", contrast=1.12),
+    make_material("fur_dark", "#4C2C28", contrast=1.12),
+    make_material("skin", "#B8968A", contrast=1.05),
+    make_material("bone", "#E4D8BE", contrast=0.75, specular=0.6),
     make_material("leg", "#2E2333"),
     make_material("maw", "#2A1830", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
@@ -75,16 +77,16 @@ def parts(b: Beast) -> list[Part]:
     head_rotation = rotation @ rotation_x(0.25 + 0.3 * b.nod)
     jaw_rotation = head_rotation @ rotation_x(0.35 + 0.55 * b.jaw)
     result = [
-        # Garrot haut et massif, taille creusée, croupe plus basse : la pente d'une hyène.
-        Part(lambda p: ellipsoid(p, at((0.0, 1.6 * K, 4.6 * K)), (4.4 * K, 4.6 * K, 4.8 * K), rotation), FUR),
-        Part(lambda p: ellipsoid(p, at((0.0, 0.2 * K, -0.8 * K)), (3.0 * K, 3.0 * K, 4.6 * K), rotation), FUR),
-        Part(lambda p: ellipsoid(p, at((0.0, -0.2 * K, -6.0 * K)), (3.8 * K, 3.6 * K, 4.0 * K), rotation), FUR),
+        # Garrot haut et massif, taille creusée, croupe plus basse : la pente d'une hyène, d'un seul tenant avec le cou.
+        Part(lambda p: smin(smin(smin(
+            ellipsoid(p, at((0.0, 1.6 * K, 4.6 * K)), (4.4 * K, 4.6 * K, 4.8 * K), rotation),
+            ellipsoid(p, at((0.0, 0.2 * K, -0.8 * K)), (3.0 * K, 3.0 * K, 4.6 * K), rotation), 0.7 * K),
+            ellipsoid(p, at((0.0, -0.2 * K, -6.0 * K)), (3.8 * K, 3.6 * K, 4.0 * K), rotation), 0.7 * K),
+            capsule(p, at((0.2 * K, 2.2 * K, 7.4 * K)), head, 3.2 * K, 2.4 * K), 0.6 * K), FUR),
         Part(lambda p: ellipsoid(p, at((0.0, -2.0 * K, 1.0 * K)), (2.8 * K, 1.8 * K, 6.4 * K), rotation), FUR_DARK),
         # Plaques de peau nue, pelée par la gale.
         Part(lambda p: ellipsoid(p, at((2.6 * K, 0.4 * K, -6.4 * K)), (1.6 * K, 2.0 * K, 2.2 * K), rotation), SKIN),
         Part(lambda p: ellipsoid(p, at((-3.4 * K, 2.2 * K, 4.8 * K)), (1.4 * K, 1.8 * K, 1.8 * K), rotation), SKIN),
-        # Cou épais, tendu vers l'avant et un peu vers le bas.
-        Part(lambda p: capsule(p, at((0.2 * K, 2.2 * K, 7.4 * K)), head, 3.2 * K, 2.4 * K), FUR),
         # Pas de crâne : le cou finit en museau fendu, la gueule béante, la mâchoire qui pend.
         Part(lambda p: ellipsoid(p, head + head_rotation @ np.array([0.0, 0.7 * K, 1.8 * K]), (2.6 * K, 1.3 * K, 3.0 * K),
                                  head_rotation), FUR_DARK),
@@ -144,27 +146,35 @@ def parts(b: Beast) -> list[Part]:
 
 def _animations() -> dict[str, list[Beast]]:
     stand = Beast()
-    walk = [replace(stand, phase=i * np.pi / 2, stride=3.6 * K, lift=2.6 * K, bob=0.7 * K * (i % 2),
-                    pitch=0.06, nod=0.3 * (i % 2), jaw=0.4, tail=(-1.0, 0.0, 1.0, 0.0)[i]) for i in range(4)]
+    # Trot heurté : poussée nez bas, suspension étirée, réception tassée, reprise. La tête suit avec un temps de
+    # retard et la queue fouette à contretemps.
+    beats = [
+        dict(bob=0.2 * K, pitch=0.1, stretch=1.04, nod=0.1, jaw=0.4, tail=-1.0),
+        dict(bob=1.0 * K, pitch=-0.05, stretch=1.08, nod=-0.1, jaw=0.5, tail=-0.3),
+        dict(bob=-0.2 * K, crouch=0.6 * K, pitch=0.13, stretch=0.95, nod=0.45, jaw=0.3, tail=1.0),
+        dict(bob=0.45 * K, pitch=0.04, stretch=1.0, nod=0.3, jaw=0.45, tail=0.3),
+    ]
+    walk = [replace(stand, phase=i * np.pi / 2, stride=3.6 * K, lift=2.6 * K, **beat) for i, beat in enumerate(beats)]
     return {
         # Nerveux à l'arrêt : la gueule claque, la tête se baisse, la queue fouette.
         "idle": [
             stand,
-            replace(stand, bob=0.3, tail=0.6, jaw=0.6, nod=0.2),
-            replace(stand, bob=0.5, pitch=-0.06, tail=1.0, jaw=0.2),
-            replace(stand, bob=0.3, tail=0.3, jaw=0.7, nod=0.3),
+            replace(stand, bob=0.3, tail=0.6, jaw=0.7, nod=0.2),
+            replace(stand, bob=0.5, pitch=-0.06, tail=1.0, jaw=0.1, nod=-0.1),
+            replace(stand, bob=0.3, tail=0.3, jaw=0.8, nod=0.35),
         ],
         "walk": walk,
-        # Bond : corps étiré en vol, gueule grande ouverte, puis réception accroupie.
+        # Bond, joué au départ du saut (l'annonce est la posture accroupie du jeu) : détente étirée, vol gueule
+        # grande ouverte, réception où la gueule claque, puis reprise.
         "attack": [
-            replace(stand, stretch=1.12, pitch=-0.22, tuck=0.6, bob=4.0 * K, jaw=0.8, tail=-1.0, nod=-0.4),
-            replace(stand, stretch=1.08, pitch=0.1, tuck=0.3, bob=2.0 * K, jaw=1.2, tail=-0.5, nod=-0.2),
-            replace(stand, crouch=2.0 * K, pitch=0.22, jaw=0.5, stride=1.2 * K, nod=0.5),
-            replace(stand, crouch=1.0 * K, pitch=0.08, jaw=0.3, nod=0.2),
+            replace(stand, stretch=1.16, pitch=-0.3, bob=2.6 * K, tuck=0.2, jaw=0.9, tail=-1.0, nod=-0.45),
+            replace(stand, stretch=1.1, pitch=-0.05, tuck=0.6, bob=3.6 * K, jaw=1.3, tail=-0.6, nod=-0.25),
+            replace(stand, crouch=2.2 * K, stretch=0.92, pitch=0.28, jaw=0.0, stride=1.2 * K, nod=0.6, tail=0.8),
+            replace(stand, crouch=0.9 * K, pitch=0.08, jaw=0.35, nod=0.2, tail=0.3),
         ],
         # Renversé sur le flanc, pattes repliées.
         "death": [
-            replace(stand, pitch=-0.3, jaw=1.1, bob=1.0 * K, tail=1.0, nod=-0.4),
+            replace(stand, pitch=-0.3, jaw=1.2, bob=1.2 * K, tail=1.0, nod=-0.5),
             replace(stand, roll=0.6, crouch=2.0 * K, tuck=0.4, jaw=0.8),
             replace(stand, roll=1.15, crouch=3.5 * K, tuck=0.8, jaw=0.6),
             replace(stand, roll=1.45, crouch=4.4 * K, tuck=1.0, jaw=0.5),

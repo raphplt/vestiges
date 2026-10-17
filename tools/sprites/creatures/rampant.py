@@ -5,6 +5,8 @@ l'avant, une gueule ronde à trois mandibules et deux yeux vert-acide enfoncés 
 dressant, la gueule ouverte.
 Reprise du 11 octobre (plan 37 M4) : brun sur brun, il se lisait comme une bûche. Chair de larve blême entre des
 plaques d'ardoise sombres, mandibules d'os plus grandes.
+Plan 54 S3 : ardoise et mandibules qui accrochent la lumière ; il avance par vagues de contraction (les anneaux se
+serrent puis s'étirent, la tête tâte le sol) et se ramasse avant de surgir.
 """
 from __future__ import annotations
 
@@ -21,10 +23,10 @@ FRAME_PIVOT = (24.0, 31.0)
 
 HIDE, PLATE, EARTH, MANDIBLE, MAW, EYE = range(6)
 MATERIALS = [
-    make_material("hide", "#CDB99C"),
-    make_material("plate", "#555C6A"),
-    make_material("earth", "#4C3A2E"),
-    make_material("mandible", "#C9BFA6", contrast=0.6),
+    make_material("hide", "#CDB99C", contrast=1.1),
+    make_material("plate", "#555C6A", contrast=1.15, specular=0.4),
+    make_material("earth", "#4C3A2E", contrast=1.05),
+    make_material("mandible", "#C9BFA6", contrast=0.75, specular=0.6),
     make_material("maw", "#2B1B2A", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
 ]
@@ -41,10 +43,13 @@ class Larva:
     jaw: float = 0.2
     roll: float = 0.0
     sink: float = 0.0
+    # Contraction des anneaux (reptation) : les écarts entre segments se serrent et s'étirent avec la vague.
+    squeeze: float = 0.0
 
 
 def _segment(l: Larva, index: int) -> tuple[np.ndarray, float]:
-    z = (2.5 - index) * 3.4 * K
+    gap = 3.4 * K * (1.0 + 0.16 * l.squeeze * np.cos(l.wave + index * 1.1))
+    z = (2.5 - index) * gap
     x = np.sin(l.wave + index * 1.1) * l.amplitude * K
     # Les segments de tête se dressent quand il surgit.
     lift = max(0.0, 2.0 - index) * l.rear * 3.5 * K
@@ -87,12 +92,17 @@ def parts(l: Larva) -> list[Part]:
 def _animations() -> dict[str, list[Larva]]:
     rest = Larva()
     return {
-        "idle": [replace(rest, wave=i * np.pi / 2, amplitude=0.3, jaw=0.2 + 0.1 * (i % 2)) for i in range(4)],
-        "walk": [replace(rest, wave=i * np.pi / 2, amplitude=1.1) for i in range(4)],
-        # Surgissement : il se dresse gueule ouverte, puis retombe.
-        "attack": [replace(rest, rear=0.5, jaw=0.6), replace(rest, rear=1.0, jaw=1.0), replace(rest, rear=0.7, jaw=0.8, amplitude=0.8),
+        "idle": [replace(rest, wave=i * np.pi / 2, amplitude=0.3, jaw=0.2 + 0.15 * (i % 2), squeeze=0.4,
+                         rear=(0.0, 0.06, 0.1, 0.04)[i]) for i in range(4)],
+        # Reptation : la vague de contraction parcourt les anneaux, la tête tâte le sol au temps où le corps se serre.
+        "walk": [replace(rest, wave=i * np.pi / 2, amplitude=1.1, squeeze=1.0, rear=(0.12, 0.0, 0.05, 0.0)[i],
+                         jaw=(0.4, 0.2, 0.3, 0.2)[i]) for i in range(4)],
+        # Surgissement : il se ramasse, se dresse gueule grande ouverte, s'abat, puis retombe.
+        "attack": [replace(rest, rear=0.15, jaw=0.1, squeeze=-1.0, sink=0.12, amplitude=0.2),
+                   replace(rest, rear=1.15, jaw=1.2, squeeze=0.6),
+                   replace(rest, rear=0.6, jaw=0.7, amplitude=0.8, squeeze=1.0),
                    replace(rest, rear=0.2, jaw=0.3)],
-        "death": [replace(rest, rear=0.4, jaw=1.0), replace(rest, roll=0.5, jaw=0.7, sink=0.2),
+        "death": [replace(rest, rear=0.5, jaw=1.1), replace(rest, roll=0.5, jaw=0.7, sink=0.2),
                   replace(rest, roll=1.0, jaw=0.4, sink=0.4), replace(rest, roll=1.4, jaw=0.2, sink=0.55)],
     }
 

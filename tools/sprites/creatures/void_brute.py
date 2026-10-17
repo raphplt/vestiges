@@ -7,6 +7,8 @@ pas. Elle charge tête baissée (plan 07 lot B).
 Reprise du 11 octobre (plan 37 M4) : chair violacée uniforme, elle se lisait comme un ours violet. Chair à vif
 couturée, débris plus clairs et plus saillants : dalle de béton pâle, fers à béton rouillés plus épais et plus
 nombreux, portière rouge.
+Plan 54 S3 : bosse d'épaules fondue dans la masse (`smin`), métal et pierre qui accrochent la lumière ; marche lourde
+et boiteuse (le pilier de béton écrase le sol, le corps roule de son côté), charge qui part d'une poussée brutale.
 """
 from __future__ import annotations
 
@@ -16,20 +18,20 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, smin, sphere
 
 FRAME_SIZE = (64, 56)
 FRAME_PIVOT = (32.0, 47.0)
 
 FLESH, FLESH_DARK, CONCRETE, REBAR, DOOR, WOOD, STONE, MAW, EYE = range(9)
 MATERIALS = [
-    make_material("flesh", "#7A5258"),
-    make_material("flesh_dark", "#3E2830"),
-    make_material("concrete", "#ABA79E"),
-    make_material("rebar", "#A0603A", contrast=0.7),
-    make_material("door", "#A8402E"),
-    make_material("wood", "#94704A"),
-    make_material("stone", "#8E8A82"),
+    make_material("flesh", "#7A5258", contrast=1.1),
+    make_material("flesh_dark", "#3E2830", contrast=1.1),
+    make_material("concrete", "#ABA79E", contrast=1.12),
+    make_material("rebar", "#A0603A", contrast=0.85, specular=0.5),
+    make_material("door", "#A8402E", contrast=1.1, specular=0.4),
+    make_material("wood", "#94704A", contrast=1.05),
+    make_material("stone", "#8E8A82", contrast=1.15, specular=0.3),
     make_material("maw", "#221A2A", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
 ]
@@ -66,8 +68,9 @@ def parts(b: Brute) -> list[Part]:
     head = at((0.6 * K, -0.4 * K - b.head_drop, 12.0 * K * b.stretch))
     result = [
         # Masse du corps, plus haute aux épaules : une bosse de muscle et de débris.
-        Part(lambda p: ellipsoid(p, center, (7.2 * K, 5.8 * K, 10.5 * K * b.stretch), rotation), FLESH),
-        Part(lambda p: ellipsoid(p, at((0.4 * K, 2.4 * K, 4.0 * K)), (7.6 * K, 5.6 * K, 6.0 * K), rotation), FLESH),
+        Part(lambda p: smin(ellipsoid(p, center, (7.2 * K, 5.8 * K, 10.5 * K * b.stretch), rotation),
+                            ellipsoid(p, at((0.4 * K, 2.4 * K, 4.0 * K)), (7.6 * K, 5.6 * K, 6.0 * K), rotation), 1.2 * K),
+             FLESH),
         Part(lambda p: ellipsoid(p, at((0.0, -2.8 * K, 0.0)), (5.6 * K, 3.0 * K, 9.0 * K * b.stretch), rotation), FLESH_DARK),
         # Dalle de béton enfoncée dans le dos, fers à béton tordus qui en sortent.
         Part(lambda p: rounded_box(p, at((-0.8 * K, 5.6 * K, -1.5 * K)), (4.2 * K, 1.3 * K, 5.0 * K), 0.3 * K,
@@ -114,26 +117,35 @@ def parts(b: Brute) -> list[Part]:
 
 def _animations() -> dict[str, list[Brute]]:
     stand = Brute()
-    walk = [replace(stand, phase=i * np.pi / 2, stride=3.0 * K, lift=1.6 * K, bob=0.5 * K * (i % 2), pitch=0.03,
-                    roll=(0.03, 0.0, -0.03, 0.0)[i]) for i in range(4)]
+    # Marche lourde : le pilier de béton (avant gauche) retombe sur le premier temps, le corps s'écrase et roule de
+    # son côté ; la patte de chair reprend plus vite, la tête suit en retard.
+    beats = [dict(bob=-0.35 * K, crouch=0.3 * K, pitch=0.06, roll=0.06, head_drop=0.5 * K, jaw=0.2),
+             dict(bob=0.35 * K, pitch=0.02, roll=0.02, head_drop=0.2 * K, jaw=0.1),
+             dict(bob=0.0, pitch=0.04, roll=-0.03, head_drop=0.3 * K, jaw=0.15),
+             dict(bob=0.55 * K, pitch=0.0, roll=0.0, head_drop=0.0, jaw=0.1)]
+    walk = [replace(stand, phase=i * np.pi / 2, stride=3.0 * K, lift=1.6 * K, **beat) for i, beat in enumerate(beats)]
     return {
+        # Souffle de bête : les épaules se soulèvent, la gueule bave, la tête se balance.
         "idle": [
             stand,
-            replace(stand, bob=0.3 * K, jaw=0.25),
-            replace(stand, bob=0.5 * K, head_drop=0.3 * K, jaw=0.35),
-            replace(stand, bob=0.3 * K, jaw=0.2),
+            replace(stand, bob=0.3 * K, jaw=0.3, roll=0.02),
+            replace(stand, bob=0.55 * K, head_drop=0.4 * K, jaw=0.4, pitch=-0.03),
+            replace(stand, bob=0.2 * K, jaw=0.15, roll=-0.02),
         ],
         "walk": walk,
-        # Charge : tête baissée sous la plaque, corps étiré vers l'avant, pattes qui poussent.
+        # Charge, jouée au départ (l'annonce est la posture accroupie du jeu) : poussée brutale tête sous la plaque,
+        # deux foulées étirées, puis le corps se redresse.
         "attack": [
-            replace(stand, crouch=1.2 * K, head_drop=1.6 * K, pitch=0.18, jaw=0.2),
-            replace(stand, stretch=1.08, head_drop=2.0 * K, pitch=0.24, jaw=0.6, phase=0.0, stride=4.0 * K, lift=1.2 * K),
-            replace(stand, stretch=1.1, head_drop=2.0 * K, pitch=0.22, jaw=0.8, phase=np.pi, stride=4.0 * K, lift=1.2 * K),
-            replace(stand, crouch=0.6 * K, head_drop=0.8 * K, pitch=0.08, jaw=0.3),
+            replace(stand, stretch=1.12, crouch=0.8 * K, head_drop=2.2 * K, pitch=0.26, jaw=0.4, phase=np.pi / 2,
+                    stride=4.4 * K, lift=0.6 * K),
+            replace(stand, stretch=1.1, head_drop=2.0 * K, pitch=0.22, jaw=0.7, phase=0.0, stride=4.0 * K, lift=1.4 * K,
+                    bob=0.4 * K),
+            replace(stand, stretch=1.1, head_drop=2.0 * K, pitch=0.24, jaw=0.9, phase=np.pi, stride=4.0 * K, lift=1.4 * K),
+            replace(stand, crouch=0.6 * K, head_drop=0.6 * K, pitch=0.04, jaw=0.3),
         ],
         # Effondrement sur le flanc : les débris restent, la chair s'affaisse.
         "death": [
-            replace(stand, pitch=-0.12, jaw=0.9, bob=0.6 * K),
+            replace(stand, pitch=-0.16, jaw=1.0, bob=0.8 * K),
             replace(stand, roll=0.3, crouch=2.5 * K, jaw=0.7),
             replace(stand, roll=0.7, crouch=4.5 * K, jaw=0.5, head_drop=1.0 * K),
             replace(stand, roll=0.95, crouch=5.8 * K, jaw=0.4, head_drop=1.6 * K),
