@@ -50,6 +50,15 @@ public partial class MemorialDirector : Node
     /// <summary>Mémoriaux ravivés sur la terre en cours : les lumières du gardien (P3).</summary>
     public int LitThisLand { get; private set; }
 
+#if TOOLS
+    /// <summary>Banc des terres : allume des lumières sans raviver de Mémorial, dont le réveil se joue en temps réel.</summary>
+    internal void SetLitForTests(int lit)
+    {
+        DevelopmentMode.RequireTestAccess();
+        LitThisLand = lit;
+    }
+#endif
+
     public void Setup(ChoiceScreen choices, LandmarkReveal reveal, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
     {
         _choices = choices;

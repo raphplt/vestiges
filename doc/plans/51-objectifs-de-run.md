@@ -593,3 +593,39 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
 **Vérifié** : banc des terres vert deux fois de suite. Sur une cellule tombée, l'Essence passe de 40 à 28 en 2 s et les PV ne bougent pas ; sans Essence, les PV passent de 70 à 63,7 en 2 s.
 
 **Banc rendu robuste** en route : le bot choisit les cartes d'un écran de niveau ou de choix comme un joueur pressé ; une créature déjà mourante au passage n'est plus comptée comme restée (elle finit sa mort puis revient au pool) ; les orbes des créatures tuées juste avant le passage reviennent aussi au joueur. Le niveau peut donc monter au passage, et c'est voulu.
+
+### Compte rendu P3, le gardien — 17 octobre 2026
+
+**Livré (branche `terres`, terres allumées seulement) :**
+- **Le repaire** (`GuardianLair`), au cœur, un peu au nord du départ : une masse endormie sous une colonne de lumière, avec une rangée de lumières qui s'allument une à une avec les Mémoriaux ravivés de la terre. Une fois les trois allumées, on le touche (« Réveiller le gardien ») pour le réveiller. Visuel provisoire.
+- **Le gardien** (`GuardianDirector`) : pour le prototype, un Souverain de la terre (variante champion), PV ×3, escorté de 6 créatures, avec sa barre de boss. Chaque lumière en plus ajoute 25 % de PV et un coffre rare à sa récompense ; il laisse aussi un coffre épique, en plus de celui de tout Souverain.
+- **Le gardien qui se lève seul** : si la terre est réduite à son cœur (horloge du front au cœur atteint), il se lève sans qu'on l'ait réveillé, enragé (PV ×1,5, dégâts ×1,3), au milieu de la foule.
+- **Le réveil** fait tomber d'un coup tout le sol qui n'est ni le cœur ni ancré par un Mémorial ravivé (`ErasureManager.CollapseUnanchored`), et fige le front jusqu'à la mort du gardien.
+- **Le passage** : 4 s après la mort du gardien, la terre suivante se recoud (`LandTransition`). Chaque terre franchie ajoute 3 points de Péril, la montée par rang, visible au HUD.
+- **Sur les terres**, la Barrière n'existe plus et l'Indicible ne vient plus à l'heure : le gardien de chaque terre les remplace.
+- **Réglages** : `data/world/guardian.json`, contrôlé en entier.
+
+**Défauts corrigés en route :**
+- **Une terre toute urbaine plaçait 0 Mémorial et 1 coffre** : le dégagement exigé autour des immeubles (176 px) est impossible dans des rues étroites. Un second essai, seulement quand le premier échoue, n'évite que les immeubles qui toucheraient le lieu. Il reste un coffre commun sans place sur 13 en ville. La grande carte reste identique à la ligne près (graines 7 et 42).
+- **Fuite intermittente à la fermeture** (965 formes physiques) : les créatures rendues au pool attendaient une libération différée, qui ne s'exécute plus quand le jeu quitte. Les passages de terre remplissent ce pool. Elles sont maintenant libérées tout de suite.
+
+**Vérifié :**
+- banc des terres vert trois fois d'affilée :
+  - repaire fermé avec 1 lumière, ouvert avec toutes ;
+  - réveil : terre debout 6 % → 2 %, front figé ;
+  - gardien tué : au moins deux coffres ;
+  - terre suivante recousue : Péril 0 → 3 ;
+  - sur cette terre laissée filer, le gardien se lève seul, enragé ;
+- suites de démarrage, chargement, catalogues, petits lieux, Effacement actif, phases de run, Indicible, parties de boss, capacités des créatures et mouvement intégré vertes.
+
+**Mesure au bot, sans conclusion sur le gardien** : run de 40 min, terres allumées, graines 7 et 42. Le gardien de la première terre se lève seul, enragé (16 060 PV et 3 267 PV), et le bot ne le tue jamais. Le bot ne joue pas la boucle des terres : il ne ravive pas de Mémorial, ne revient pas au cœur, et quand la terre se réduit à son cœur, il erre dans le Néant (6 334 Essence drainées sur la graine 7). **Pour mesurer le rythme d'une run en terres, il faut un bot qui joue la boucle** : aller aux Mémoriaux, tenir le cercle, revenir au cœur, réveiller et combattre le gardien.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant. Corrigé :
+- l'effondrement ne traite plus que les cellules qui tombent. Pire cas mesuré, une terre entière : 5 087 cellules en 7,3 ms dans la même image, sous charge moyenne ;
+- le passage après le gardien est lancé une seule fois, journalisé s'il échoue, et jamais si la run est finie ;
+- pendant le combat, un coffre ouvert ne relève plus le sol tombé (arène vraiment figée) ;
+- le repaire est posé dans la zone dégagée du départ (160 px à l'est), jamais dans un immeuble.
+
+Relevé : les quêtes « battre la Barrière » et « battre l'Indicible » ne sont pas atteignables sur les terres. Ce sera à revoir avec le catalogue des quêtes quand les terres seront allumées pour tous.
+
+**Reste du prototype** : P2c (anneau de terre restante, minimap du front), P1e (recousure), le bot des terres, puis la séance de jeu de Raphaël. La charte des gardiens (attaques qui brisent le sol, un vrai corps par terre) attend la production.

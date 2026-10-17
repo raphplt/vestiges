@@ -27,6 +27,7 @@ public partial class EndgameManager : Node
 	private Player _player;
 
 	private RunClock _clock;
+	private bool _landsRun;
 	private bool _lateGameReached;
 	private bool _bossSpawned;
 	private bool _bossDefeated;
@@ -47,6 +48,8 @@ public partial class EndgameManager : Node
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_gameManager = GetNode<GameManager>("/root/GameManager");
 		_clock = GetNode<RunClock>("../RunClock");
+		// Sur les terres (plan 51), chaque terre a son gardien : l'Indicible ne vient pas à l'heure.
+		_landsRun = GetParentOrNull<World.WorldSetup>()?.Land?.IsLand == true;
 		_crisisManager = GetParent().GetNodeOrNull<CrisisManager>("CrisisManager");
 		_erasureManager = GetParent().GetNodeOrNull<ErasureManager>("ErasureManager");
 
@@ -100,7 +103,7 @@ public partial class EndgameManager : Node
 
 	private bool ShouldForceBoss()
 	{
-		if (_player == null || !IsInstanceValid(_player))
+		if (_landsRun || _player == null || !IsInstanceValid(_player))
 			return false;
 
 		if (_crisisManager is { IsCrisisActive: true } && _crisisManager.CrisisNumber >= _bossCrisisThreshold)

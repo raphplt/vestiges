@@ -63,7 +63,10 @@ public sealed class SitePlacer
     public bool TryPlace(float bandMin, float bandMax, float minSpacingPx, out Vector2 position)
     {
         position = default;
-        if (!TryPickCell(bandMin, bandMax, minSpacingPx, out Vector2I cell))
+        // Une terre toute urbaine (plan 51) n'a pas de rue assez large pour le dégagement des immeubles : second essai
+        // où le lieu n'évite que les immeubles qui le toucheraient.
+        if (!TryPickCell(bandMin, bandMax, minSpacingPx, false, out Vector2I cell)
+            && (_urban == null || !TryPickCell(bandMin, bandMax, minSpacingPx, true, out cell)))
             return false;
 
         position = _ground.MapToLocal(cell);
@@ -73,7 +76,7 @@ public sealed class SitePlacer
     }
 
     /// <summary>Plusieurs candidats valides ; garde celui qui est sur un chemin et loin des autres lieux.</summary>
-    private bool TryPickCell(float bandMin, float bandMax, float minSpacingPx, out Vector2I best)
+    private bool TryPickCell(float bandMin, float bandMax, float minSpacingPx, bool nearBuildings, out Vector2I best)
     {
         best = default;
         float bestScore = float.MinValue;
@@ -90,7 +93,7 @@ public sealed class SitePlacer
             float distance = radius * Mathf.Sqrt(_rng.RandfRange(innerSq, outerSq));
             float angle = _rng.RandfRange(0f, Mathf.Tau);
             Vector2I cell = new(Mathf.RoundToInt(Mathf.Cos(angle) * distance), Mathf.RoundToInt(Mathf.Sin(angle) * distance * stretchY));
-            if (!IsCellAllowed(cell))
+            if (!IsCellAllowed(cell, nearBuildings))
                 continue;
 
             float nearest = NearestDistance(_ground.MapToLocal(cell));
@@ -111,7 +114,7 @@ public sealed class SitePlacer
         return valid > 0;
     }
 
-    private bool IsCellAllowed(Vector2I cell)
+    private bool IsCellAllowed(Vector2I cell, bool nearBuildings)
     {
         if (!_generator.IsWithinBounds(cell.X, cell.Y) || _generator.IsErased(cell.X, cell.Y))
             return false;
@@ -128,7 +131,7 @@ public sealed class SitePlacer
             return free;
 
         // Un immeuble posé devant le lieu, ou le lieu dans un îlot, le rendrait invisible.
-        ForEachCellInClearance(cell, _rules.BuildingClearance, c =>
+        ForEachCellInClearance(cell, nearBuildings ? _rules.Clearance : _rules.BuildingClearance, c =>
         {
             UrbanCellType type = UrbanCell(c);
             if (type == UrbanCellType.BuildingInterior || type == UrbanCellType.BuildingWall)

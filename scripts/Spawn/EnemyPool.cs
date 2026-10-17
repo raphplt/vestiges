@@ -29,12 +29,13 @@ public partial class EnemyPool : Node
 		if (Instance == this)
 			Instance = null;
 
-		// Les ennemis en réserve sont détachés de l'arbre : la destruction de la scène ne les atteint pas.
+		// Les ennemis en réserve sont détachés de l'arbre : la destruction de la scène ne les atteint pas. Libérés tout de
+		// suite : à la fermeture du jeu, une libération différée ne s'exécuterait plus et leurs formes physiques fuiraient.
 		while (_available.Count > 0)
 		{
 			Enemy enemy = _available.Dequeue();
 			if (IsInstanceValid(enemy))
-				enemy.QueueFree();
+				enemy.Free();
 		}
 		_totalCreated = 0;
 		_prewarmed = false;

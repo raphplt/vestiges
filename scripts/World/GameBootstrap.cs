@@ -219,7 +219,9 @@ public partial class GameBootstrap : Node
         EndgameManager endgameManager = new() { Name = "EndgameManager" };
         sceneRoot.AddChild(endgameManager);
 
-        sceneRoot.AddChild(new BarrierDirector { Name = "BarrierDirector" });
+        // Sur les terres (plan 51), le gardien de chaque terre remplace la Barrière.
+        if (!worldSetup.Land.IsLand)
+            sceneRoot.AddChild(new BarrierDirector { Name = "BarrierDirector" });
 
         ChoiceScreen choiceScreen = new() { Name = "ChoiceScreen" };
         sceneRoot.AddChild(choiceScreen);
@@ -260,6 +262,14 @@ public partial class GameBootstrap : Node
         landTransition.Setup(worldSetup, player, smallPlaces, erasureManager, GetNodeOrNull<CanvasModulate>("../CanvasModulate"));
         sceneRoot.AddChild(landTransition);
         landTransition.PlaceLandDetails();
+        // Gardien de chaque terre (plan 51 P3) : seulement quand les terres sont allumées.
+        if (worldSetup.Land.IsLand)
+        {
+            GuardianDirector guardian = new() { Name = "GuardianDirector" };
+            guardian.Setup(worldSetup, erasureManager, memorialDirector, landTransition,
+                GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), perilManager);
+            sceneRoot.AddChild(guardian);
+        }
         LoadProfiler.Mark("directeurs et petits lieux");
         // Jeu toujours en pause : rendre la main ici coupe la dernière image figée du chargement en deux (plan 37 R5).
         await NextLoadingFrame();

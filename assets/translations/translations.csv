@@ -61,6 +61,7 @@ RARITY_LEGENDARY,Légendaire,Legendary
 RARITY_LORE,Ancien,Ancient
 CHEST_OPEN_PROMPT,Ouvrir,Open
 MEMORIAL_WAKE_PROMPT,Raviver,Rekindle
+GUARDIAN_WAKE_PROMPT,Réveiller le gardien,Wake the guardian
 MEMORIAL_SERVICES_PROMPT,Honorer,Honor
 LANDMARK_MEMORIAL,Mémorial,Memorial
 MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s

@@ -87,6 +87,26 @@ public partial class ErasureManager : Node
     /// <summary>Front de chute de la terre en cours ; nul sur la grande carte.</summary>
     public LandFront Front => _front;
 
+    /// <summary>Front figé (combat du gardien, P3) : plus rien ne tombe, ni ne remonte.</summary>
+    public bool FrontFrozen { get; set; }
+
+    /// <summary>
+    /// Réveil du gardien (plan 51 P3) : tout le sol non ancré hors du cœur tombe d'un coup, l'arène est ce qu'on a
+    /// sauvé. Le sol et la minimap le montrent tout de suite.
+    /// </summary>
+    public void CollapseUnanchored()
+    {
+        if (_front == null)
+            return;
+        // Seules les cellules qui tombent maintenant changent : pas de rafale sur celles déjà tombées ou ancrées.
+        foreach (Vector2I cell in _front.CollapseUnanchored())
+        {
+            _activeCells.SetActive(cell, false);
+            StoreMemory(cell, 0f, false);
+        }
+        PublishGroundMemory();
+    }
+
     public override void _Ready()
     {
         LoadConfig();
@@ -245,6 +265,7 @@ public partial class ErasureManager : Node
     private void OnLandChanging(int toIndex)
     {
         _front = null;
+        FrontFrozen = false;
         _zoneMemory.Clear();
         _zonePhases.Clear();
         _activeCells.Clear();
@@ -304,7 +325,7 @@ public partial class ErasureManager : Node
     /// </summary>
     private void AdvanceFront()
     {
-        float step = _updateIntervalSec * _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
+        float step = FrontFrozen ? 0f : _updateIntervalSec * _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
         _front.Advance(step);
         Vector2I playerCell = WorldToCell(_player.GlobalPosition);
         int reach = Mathf.CeilToInt(_playerPresenceFalloffCells);
@@ -417,6 +438,9 @@ public partial class ErasureManager : Node
                 // Sur une terre, un lieu ravivé repousse la chute alentour, sans jamais l'avancer.
                 if (_front != null && _front.Contains(cell))
                 {
+                    // Arène figée pendant le combat du gardien : un coffre ouvert ne relève pas le sol tombé.
+                    if (FrontFrozen)
+                        continue;
                     _front.Restore(cell, stabilized);
                     StoreMemory(cell, _front.MemoryAt(cell), false);
                 }

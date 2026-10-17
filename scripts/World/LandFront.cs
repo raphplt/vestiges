@@ -100,6 +100,20 @@ public sealed class LandFront
             _fallAt[cell] = float.PositiveInfinity;
     }
 
+    /// <summary>Réveil du gardien (P3) : tout le sol qui n'est ni le cœur ni ancré tombe d'un coup ; rend les cellules tombées.</summary>
+    public List<Vector2I> CollapseUnanchored()
+    {
+        List<Vector2I> falling = new();
+        foreach (KeyValuePair<Vector2I, float> entry in _fallAt)
+        {
+            if (float.IsFinite(entry.Value) && entry.Value > Time)
+                falling.Add(entry.Key);
+        }
+        foreach (Vector2I cell in falling)
+            _fallAt[cell] = Time;
+        return falling;
+    }
+
     /// <summary>Part du sol de la terre encore debout, de 1 à l'arrivée à la part du cœur quand tout le reste est tombé.</summary>
     public float StandingShare()
     {

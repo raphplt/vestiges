@@ -51,6 +51,7 @@ public partial class LandChangeRegression : Node
             _chests = Chest.Closed.Count;
             await CheckMemorialCircle();
             await CheckVoidDrain();
+            await CheckGuardian();
             await CheckLands();
             GD.Print($"[LandChangeRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -170,7 +171,9 @@ public partial class LandChangeRegression : Node
             $"cercle tenu {config.CircleSeconds} s : Mémorial ravivé, {director.LitThisLand} lumière, bénédiction choisie");
 
         LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
-        front.Advance(front.Config.HeartReachedSeconds * 2f);
+        // Avant que la terre ne soit réduite à son cœur, avec la marge des contrôles suivants : au-delà, le gardien se
+        // lèverait seul.
+        front.Advance(front.Config.HeartReachedSeconds - 30f - front.Time);
         Vector2I memorialCell = new(Mathf.FloorToInt(memorial.GlobalPosition.X / 128f), Mathf.FloorToInt(memorial.GlobalPosition.Y / 128f));
         Check(front.MemoryAt(memorialCell) == 1f && front.StandingShare() < 0.2f,
             $"cercle : la zone du Mémorial est ancrée quand le reste est tombé (terre restante {front.StandingShare():P0})");
@@ -205,6 +208,76 @@ public partial class LandChangeRegression : Node
         await Frames(2);
     }
 
+    /// <summary>
+    /// Lot P3 : le repaire au cœur ne s'ouvre qu'avec assez de lumières ; le réveil effondre le sol non ancré et fige le
+    /// front ; le gardien vaincu laisse son butin (un coffre de plus par lumière en trop), puis la terre suivante se
+    /// recoud avec un rang de Péril de plus. Sur cette terre, attendre le cœur atteint lève le gardien seul, enragé.
+    /// </summary>
+    private async Task CheckGuardian()
+    {
+        GuardianConfig config = GuardianConfig.Load(out string error);
+        GuardianConfig invalid = GuardianConfig.Parse(FileAccess.GetFileAsString("res://data/world/guardian.json")
+            .Replace("\"chest_epic\"", "\"coffre_inconnu\""), out string unknown);
+        Check(config != null && invalid == null && unknown != null, $"gardien : réglages valides, coffre inconnu refusé ({error}{unknown})");
+        GuardianDirector director = _world.GetNode<GuardianDirector>("GuardianDirector");
+        MemorialDirector memorials = _world.GetNode<MemorialDirector>("MemorialDirector");
+        LandTransition transition = _world.GetNode<LandTransition>("LandTransition");
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
+        GuardianLair lair = _world.GetNode("PoiContainer").GetNodeOrNull<GuardianLair>("GuardianLair");
+        Check(lair != null && !_world.IsWaterAt(lair.GlobalPosition) && _world.GetBiomeAt(lair.GlobalPosition) != null,
+            $"gardien : repaire sur du sol praticable ({lair?.GlobalPosition})");
+        Check(lair != null && !lair.CanInteract && !director.IsFighting,
+            $"gardien : endormi au cœur, repaire fermé avec {memorials.LitThisLand} lumière(s) sur {config.WakeLights}");
+
+        memorials.SetLitForTests(config.WakeLights + 1);
+        await Frame();
+        Check(lair.CanInteract, "gardien : toutes les lumières allumées, le repaire s'ouvre");
+        float standingBefore = erasure.Front.StandingShare();
+        int chestsBefore = Chest.Closed.Count;
+        lair.Interact(_player);
+        Enemy guardian = director.Guardian;
+        Check(director.IsFighting && !director.Enraged && guardian is { IsActive: true } && guardian.VariantId == "champion",
+            $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.MaxHp:F0} PV)");
+        Check(erasure.FrontFrozen && erasure.Front.StandingShare() < standingBefore,
+            $"gardien : le sol non ancré s'effondre, le front se fige ({standingBefore:P0} → {erasure.Front.StandingShare():P0})");
+
+        int perilBefore = peril.Peril;
+        guardian.TakeDamage(guardian.MaxHp * 10f);
+        for (int frame = 0; frame < 30 && !director.IsDefeated; frame++)
+            await Frame();
+        await Frame();
+        // Son coffre, un de plus pour la lumière en trop, et celui que tout Souverain lâche à sa mort.
+        Check(director.IsDefeated && Chest.Closed.Count >= chestsBefore + 2,
+            $"gardien vaincu : son coffre et un de plus pour la lumière en trop ({Chest.Closed.Count - chestsBefore} coffres)");
+        int landBefore = transition.LandIndex;
+        for (int frame = 0; frame < 600 && transition.LandIndex == landBefore; frame++)
+        {
+            await Frame();
+            if (GetTree().Paused && !transition.IsChanging)
+                await SettleChoices();
+        }
+        while (transition.IsChanging)
+            await Frame();
+        await SettleChoices();
+        Check(transition.LandIndex == landBefore + 1 && peril.Peril == perilBefore + config.RankPeril && !director.IsFighting,
+            $"gardien vaincu : la terre {transition.LandIndex} se recoud, Péril {perilBefore} → {peril.Peril}");
+
+        // Pire cas de l'effondrement : une terre encore entière, toutes ses cellules tombent dans la même image.
+        LandFront front = erasure.Front;
+        float standing = front.StandingShare();
+        System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+        erasure.CollapseUnanchored();
+        watch.Stop();
+        Check(front.StandingShare() < standing && watch.Elapsed.TotalMilliseconds < 16.0,
+            $"effondrement d'une terre entière : {front.CellCount} cellules, {standing:P0} → {front.StandingShare():P0} en {watch.Elapsed.TotalMilliseconds:F1} ms");
+        front.Advance(front.Config.HeartReachedSeconds);
+        await Frames(45);
+        Check(director.IsFighting && director.Enraged && erasure.FrontFrozen,
+            $"gardien : la terre réduite à son cœur, il se lève seul, enragé ({director.Guardian?.DisplayName})");
+        _player.GlobalPosition = Vector2.Zero;
+    }
+
     private async Task Frames(int count)
     {
         for (int i = 0; i < count; i++)
@@ -218,16 +291,17 @@ public partial class LandChangeRegression : Node
     private async Task CheckLands()
     {
         LandTransition transition = _world.GetNode<LandTransition>("LandTransition");
+        int start = transition.LandIndex;
         HashSet<string> biomes = new() { _world.Land.BiomeIds[0] };
         Check(_world.Land.BiomeIds.Count == 1 && _world.Generator.MapRadiusX == _world.Land.MapRadius,
-            $"terre 0 : un biome ({_world.Land.BiomeIds[0]}), rayon {_world.Generator.MapRadiusX}");
+            $"terre {start} : un biome ({_world.Land.BiomeIds[0]}), rayon {_world.Generator.MapRadiusX}");
         int memorials = _memorials;
         int chests = _chests;
-        Check(GroundHoles() == 0, $"terre 0 : sol sans trou ({GroundHoles()})");
+        Check(GroundHoles() == 0, $"terre {start} : sol sans trou ({GroundHoles()})");
         Check(memorials > 0 && chests > 0 && ObstacleField.Count > 0,
-            $"terre 0 peuplée : {memorials} Mémoriaux, {chests} coffres, {ObstacleField.Count} obstacles");
+            $"terre {start} peuplée : {memorials} Mémoriaux, {chests} coffres, {ObstacleField.Count} obstacles");
 
-        for (int land = 1; land < Lands; land++)
+        for (int land = start + 1; land < start + Lands; land++)
         {
             Node enemies = _world.GetNode("EnemyContainer");
             PlaceCrowd(enemies);
@@ -256,13 +330,15 @@ public partial class LandChangeRegression : Node
             LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
             Check(front != null && front.Time == 0f && Mathf.IsEqualApprox(front.StandingShare(), 1f),
                 $"terre {land} : front neuf ({front?.CellCount ?? 0} cellules)");
-            Check(Memorial.All.Count == memorials && Chest.Closed.Count == chests && ObstacleField.Count > 0,
+            // Les coffres peuvent naître en jeu (élites, Résurgences) : au moins ceux de la terre, aucun Mémorial de trop.
+            Check(Memorial.All.Count == memorials && Chest.Closed.Count >= chests && ObstacleField.Count > 0,
                 $"terre {land} : seuls ses lieux comptent ({Memorial.All.Count} Mémoriaux, {Chest.Closed.Count} coffres, {ObstacleField.Count} obstacles)");
             Check(CountActive(enemies) == 0, $"terre {land} : aucune créature de la terre quittée ({CountActive(enemies)})");
             // L'orbe posée, plus celles des créatures tuées juste avant le passage.
             Check(gained >= OrbXp, $"terre {land} : les orbes restées au sol sont revenues ({gained} XP)");
             Check(_player.GlobalPosition == Vector2.Zero, $"terre {land} : joueur au départ ({_player.GlobalPosition})");
-            Check(after.SameRunAs(before), $"terre {land} : run intacte ({before} → {after})");
+            int rankPeril = GuardianConfig.Load(out _)?.RankPeril ?? 0;
+            Check(after.SameRunAs(before, rankPeril), $"terre {land} : run intacte, Péril +{rankPeril} ({before} → {after})");
 
             // Quelques secondes de jeu sur la terre neuve : apparitions, minimap, Effacement tournent sans erreur.
             _player.IsAIControlled = true;
@@ -287,19 +363,19 @@ public partial class LandChangeRegression : Node
         Check(command.Success && transition.IsChanging, $"commande « land next » : {command.Message}");
         while (transition.IsChanging)
             await Frame();
-        Check(transition.LandIndex == Lands, $"commande « land next » : terre {transition.LandIndex}");
+        Check(transition.LandIndex == start + Lands, $"commande « land next » : terre {transition.LandIndex}");
         bool levelUpShown = false;
         for (int frame = 0; frame < 30 && !levelUpShown; frame++)
         {
             await Frame();
             levelUpShown = GetTree().Paused && _world.GetNode<CanvasLayer>("LevelUpScreen").Visible;
         }
-        Check(levelUpShown, $"terre {Lands} : la montée de niveau des orbes ramassées garde la pause sous son écran");
+        Check(levelUpShown, $"terre {transition.LandIndex} : la montée de niveau des orbes ramassées garde la pause sous son écran");
     }
 
     /// <summary>
-    /// Ce que le passage ne doit jamais toucher : PV, armes, Essence, Péril, éliminations, horloge. Le niveau peut monter
-    /// avec les orbes ramassées au passage.
+    /// Ce que le passage ne doit jamais toucher : PV, armes, Essence, éliminations, horloge. Le niveau peut monter avec
+    /// les orbes ramassées au passage ; le Péril monte d'un rang par terre franchie (gardien, P3).
     /// </summary>
     private readonly record struct Snapshot(int Level, float Hp, int Weapons, int Essence, int Peril, int Kills, float Clock)
     {
@@ -308,8 +384,9 @@ public partial class LandChangeRegression : Node
             world.GetNode<EssenceTracker>("EssenceTracker").CurrentEssence, world.GetNode<PerilManager>("PerilManager").Peril,
             world.GetNode<ScoreManager>("ScoreManager").TotalKills, world.GetNode<RunClock>("RunClock").Seconds);
 
-        public bool SameRunAs(Snapshot before) => Level >= before.Level && Hp == before.Hp && Weapons == before.Weapons
-            && Essence == before.Essence && Peril == before.Peril && Kills == before.Kills && Clock == before.Clock;
+        public bool SameRunAs(Snapshot before, int rankPeril) => Level >= before.Level && Hp == before.Hp
+            && Weapons == before.Weapons && Essence == before.Essence && Peril == before.Peril + rankPeril
+            && Kills == before.Kills && Clock == before.Clock;
     }
 
     /// <summary>Cellules de sol de la carte sans tuile : un terrain que le biome ne sait pas dessiner laisse un trou.</summary>
