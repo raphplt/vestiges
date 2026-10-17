@@ -162,6 +162,29 @@ public partial class CatalogValuesProbe : Node
             lines.Add($"crises {type.Name} {string.Join(" ", fields)}");
             reader.Free();
         }
+        // Q7d-2 : erasure.json, champs du gestionnaire et des éclats (réflexion), échos et effets par phase.
+        foreach (Node reader in new Node[] { new Vestiges.World.ErasureManager(), new Vestiges.World.ErasureMotes() })
+        {
+            System.Type type = reader.GetType();
+            object enabled = type.GetMethod("LoadConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(reader, null);
+            List<string> fields = new();
+            foreach (System.Reflection.FieldInfo info in type.GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance))
+            {
+                if (info.FieldType == typeof(float) || info.FieldType == typeof(int) || info.FieldType == typeof(bool))
+                    fields.Add(Invariant($"{info.Name}={info.GetValue(reader)}"));
+            }
+            fields.Sort(StringComparer.Ordinal);
+            lines.Add($"erasure {type.Name} enabled={enabled} {string.Join(" ", fields)}");
+            reader.Free();
+        }
+        Vestiges.World.EchoConfig echoes = Vestiges.World.EchoConfig.Load();
+        List<string> echoFields = new();
+        foreach (System.Reflection.FieldInfo info in typeof(Vestiges.World.EchoConfig).GetFields())
+            echoFields.Add(Invariant($"{info.Name}={(info.GetValue(echoes) is List<string> list ? string.Join(",", list) : info.GetValue(echoes))}"));
+        echoFields.Sort(StringComparer.Ordinal);
+        lines.Add($"erasure echoes {string.Join(" ", echoFields)}");
+        foreach (Vestiges.World.ErasureManager.ErasureZonePhase phase in Enum.GetValues<Vestiges.World.ErasureManager.ErasureZonePhase>())
+            lines.Add(Invariant($"erasure effect {phase} {Vestiges.World.ErasureEffects.For(phase)}"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

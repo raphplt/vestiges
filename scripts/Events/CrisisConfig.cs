@@ -50,6 +50,8 @@ public sealed class CrisisConfig
         if (!_attempted)
         {
             _attempted = true;
+            // Une exception imprévue laisse ce diagnostic plutôt qu'un réglage nul sans erreur.
+            _loadError = $"{FilePath} : lecture interrompue";
             using FileAccess file = FileAccess.Open(FilePath, FileAccess.ModeFlags.Read);
             if (file == null)
                 _loadError = $"{FilePath} : fichier illisible";

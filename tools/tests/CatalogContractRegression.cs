@@ -41,6 +41,7 @@ public partial class CatalogContractRegression : Node
             CheckWorldGen();
             CheckSites();
             CheckCrises();
+            CheckErasure();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -777,6 +778,58 @@ public partial class CatalogContractRegression : Node
             && defaults.FirstCrisisDelaySec == 240f && defaults.IntervalVarianceSec == 45f && defaults.LateGameErasureThreshold == 0.68f
             && defaults.LateGameCrisisThreshold == 4 && defaults.CalmChestDistance == new Vector2(220f, 340f),
             "crises : fichier vide, secours d'avant gardés");
+    }
+
+    /// <summary>Effacement (plan 26 Q7d-2) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckErasure()
+    {
+        Func<string, bool> characterExists = id => CharacterDataLoader.Get(id) != null;
+        Func<string, bool> inhabitantExists = id => ResourceLoader.Exists($"res://assets/characters/{id}/char_{id}_S_idle_01.png");
+        Check(ErasureConfig.TryLoad(out ErasureConfig loaded, out string loadError) && loaded.Motes != null
+            && loaded.Echoes.Inhabitants.Count > 0 && loaded.ZoneEffects.Count == 4, $"Effacement du dépôt accepté {loadError}");
+        string valid = FileAccess.GetFileAsString(ErasureConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["cellsize"] = 128, "clé « cellsize » inconnue"),
+            ("cellule fractionnaire", root => root["cell_size"] = 127.5, "cell_size"),
+            ("mémoire semée hors borne", root => root["seeded_memory"] = 1.2, "seeded_memory"),
+            ("oubli négatif", root => root["base_decay_per_minute"] = -0.01, "base_decay_per_minute"),
+            ("présence nulle", root => root["player_presence_falloff_cells"] = 0, "player_presence_falloff_cells"),
+            ("seuil de fin hors borne", root => root["late_game_threshold"] = 2, "late_game_threshold"),
+            ("cadence nulle", root => root["update_interval_sec"] = 0, "update_interval_sec"),
+            ("rayon suivi nul", root => root["tracked_radius_cells"] = 0, "tracked_radius_cells"),
+            ("stabilisation non booléenne", root => root["stabilize_on_chest_open"] = "oui", "stabilize_on_chest_open"),
+            ("Néant négatif", root => root["void_damage_ratio_per_second"] = -1, "void_damage_ratio_per_second"),
+            ("front invalide", root => root["land_front"]!["heart_radius"] = 1.5, "heart_radius"),
+            ("éclats inconnus", root => root["motes"]!["speed"] = 50, "clé « speed » inconnue"),
+            ("éclats trop nombreux", root => root["motes"]!["count"] = 100, "count"),
+            ("vitesses inversées", root => root["motes"]!["speed_min"] = 200, "speed_min ≤ speed_max"),
+            ("vie nulle", root => root["motes"]!["life_min"] = 0, "life_min"),
+            ("écho inconnu", root => root["echoes"]!["delay"] = 60, "clé « delay » inconnue"),
+            ("intervalle d'écho inversé", root => root["echoes"]!["interval_min_sec"] = 120, "intervalles min ≤ max"),
+            ("mémoire d'écho hors borne", root => root["echoes"]!["max_memory"] = 1.5, "max_memory"),
+            ("fondu nul", root => root["echoes"]!["fade_sec"] = 0, "fade_sec"),
+            ("dissolution nulle", root => root["echoes"]!["dissolve_sec"] = 0, "dissolve_sec"),
+            ("murmures fractionnaires", root => root["echoes"]!["whisper_count"] = 2.5, "whisper_count"),
+            ("personnage inconnu", root => root["echoes"]!["characters"]![0] = "chevalier", "personnage « chevalier » inconnu"),
+            ("habitant sans dessin", root => root["echoes"]!["inhabitants"]![0] = "habitant_fantome", "habitant « habitant_fantome » inconnu"),
+            ("habitant en double", root => root["echoes"]!["inhabitants"]!.AsArray().Add("habitant_ecoliere"), "en double"),
+            ("phase inconnue", root => root["zone_effects"]!["anchored"] = new JsonObject(), "clé « anchored » inconnue"),
+            ("vitesse de phase nulle", root => root["zone_effects"]!["void"]!["speed"] = 0, "speed"),
+            ("voile hors borne", root => root["zone_effects"]!["erased"]!["veil"] = 1.5, "veil"),
+            ("effet de phase inconnu", root => root["zone_effects"]!["frayed"]!["score"] = 1, "clé « score » inconnue"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"cell_size\": " : Mutated(valid, mutate);
+            bool refused = !ErasureConfig.TryParse(text, characterExists, inhabitantExists, out ErasureConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"Effacement, {name} refusé ({error})");
+        }
+        Check(ErasureConfig.TryParse("{}", characterExists, inhabitantExists, out ErasureConfig defaults, out _)
+            && defaults.CellSize == 128 && defaults.BaseDecayPerMinute == 0.012f && defaults.StabilizeOnChestOpen && defaults.Motes == null
+            && defaults.Echoes.Enabled && defaults.Echoes.FirstDelaySec == 60f && defaults.ZoneEffects.Count == 0,
+            "Effacement : fichier vide, secours d'avant gardés (sans éclats ni effets de phase)");
     }
 
     private void CheckAtmosphere()

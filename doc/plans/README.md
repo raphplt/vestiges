@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**17 octobre, nuit — Résurgences et Effacement lus strictement ([plan 26 Q7d-1, Q7d-2](26-qualite-et-dette-technique.md), §68) :** `crises.json` et `erasure.json` ont chacun un lecteur unique et strict au lieu de sept lectures indépendantes qui ignoraient un fichier invalide ; mêmes valeurs effectives.
+
 **17 octobre, nuit — fermes et chantiers lus strictement ([plan 26 Q7c-4c](26-qualite-et-dette-technique.md), §68) :** `farms.json` et `quarry_sites.json` sont contrôlés (décors présents, positions, rangées, scènes) ; un fichier absent ou invalide arrête le chargement au lieu de désactiver le lieu en silence ; mêmes valeurs effectives.
 
 **17 octobre, nuit — réglages du monde lus strictement ([plan 26 Q7c-4b](26-qualite-et-dette-technique.md), lot sans décision de design, §68) :** `world_gen.json` est contrôlé champ par champ (biomes, décors, zones, terres, chemins) et un fichier refusé arrête le chargement au lieu de générer en silence une carte de 30 cellules ; mêmes valeurs effectives. Corrigé dans la foulée : une panne aux catalogues ne lance plus de génération orpheline derrière l'écran d'erreur (`test_loading.sh` de nouveau vert).

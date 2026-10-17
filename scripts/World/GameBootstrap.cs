@@ -146,6 +146,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(WorldGenConfig.TryLoad(out _, out string worldError), worldError);
         RequireCatalog(FarmConfig.TryLoad(out _, out string farmsError), farmsError);
         RequireCatalog(CrisisConfig.TryLoad(out _, out string crisesError), crisesError);
+        RequireCatalog(ErasureConfig.TryLoad(out _, out string erasureError), erasureError);
         RequireCatalog(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers",
             out _, out string quarryError), quarryError);
         RequireCatalog(CampUpgradeDataLoader.TryLoad(out string campError), campError);
