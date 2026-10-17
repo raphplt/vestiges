@@ -87,7 +87,10 @@ public partial class SpawnManager : Node2D
 	private float _endgameHpMultiplier = 1.55f;
 	private float _endgameDamageMultiplier = 1.32f;
 
-	private float _elapsedTime;
+	private RunClock _clock;
+	// Outil de dev : décale l'horloge des tables et courbes de spawn seules, sans toucher à celle de la run. Assigné
+	// seulement sous TOOLS : l'initialiseur évite l'avertissement « jamais assigné » du build d'export.
+	private float _developmentTimeOffset = 0f;
 	private float _spawnTimer;
 	private float _cullTimer;
 	private float _localDensityTimer;
@@ -134,6 +137,7 @@ public partial class SpawnManager : Node2D
 		Difficulty = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId);
 		_nextEliteAtSec = EnemyVariantDataLoader.NaturalElites.StartSec;
 
+		_clock = GetNode<RunClock>("../RunClock");
 		_pool = GetNode<EnemyPool>("../EnemyPool");
 		_enemyContainer = GetNode("../EnemyContainer");
 
@@ -167,7 +171,7 @@ public partial class SpawnManager : Node2D
 				_extraElites = Mathf.RoundToInt(total);
 				// Une élite de plus : elle arrive tout de suite, pas au prochain tirage d'intervalle.
 				if (_extraElites > previous)
-					_nextEliteAtSec = _elapsedTime;
+					_nextEliteAtSec = ElapsedSeconds;
 				break;
 			case "affix_chance":
 				_affixChanceBonus = total;
@@ -202,7 +206,6 @@ public partial class SpawnManager : Node2D
 			return;
 
 		float dt = (float)delta;
-		_elapsedTime += dt;
 		_cullTimer += dt;
 
 		if (_cullTimer >= 1f)
@@ -212,10 +215,10 @@ public partial class SpawnManager : Node2D
 		}
 
 		// Répit d'ouverture : rien n'apparaît, et le minuteur n'accumule pas de rafale à rattraper.
-		if (_elapsedTime < _openingGraceSec)
+		if (ElapsedSeconds < _openingGraceSec)
 			return;
 
-		float elapsedMinutes = _elapsedTime / 60f;
+		float elapsedMinutes = ElapsedSeconds / 60f;
 		_spawnTimer += dt;
 		int safety = 0;
 		while (safety < 8)
@@ -236,7 +239,7 @@ public partial class SpawnManager : Node2D
 			EnsureDayLocalDensity(elapsedMinutes);
 		}
 
-		if (_elapsedTime >= _nextEliteAtSec)
+		if (ElapsedSeconds >= _nextEliteAtSec)
 			TrySpawnNaturalElite(elapsedMinutes);
 	}
 
@@ -333,7 +336,7 @@ public partial class SpawnManager : Node2D
 			enemy.ApplyVariant(variant, _affixPick);
 			return;
 		}
-		float peril = PerilPoints(_elapsedTime / 60f);
+		float peril = PerilPoints(ElapsedSeconds / 60f);
 		enemy.ApplyVariant(variant, _affixPick, scaling.Hp(_playerLevel) * PerilDataLoader.EnemyHpMultiplier(peril) * Difficulty.EnemyHp,
 			scaling.DamageScale(_playerLevel) * PerilDataLoader.EnemyDamageMultiplier(peril) * Difficulty.EnemyDamage);
 	}
@@ -359,7 +362,7 @@ public partial class SpawnManager : Node2D
 
 		for (int attempt = 0; attempt < 8; attempt++)
 		{
-			string id = PickWeighted(pool, _elapsedTime / 60f);
+			string id = PickWeighted(pool, ElapsedSeconds / 60f);
 			if (EnemyDataLoader.Get(id)?.Tier == EnemyTier.Normal)
 				return id;
 		}
@@ -372,7 +375,7 @@ public partial class SpawnManager : Node2D
 		EnemyData data = EnemyDataLoader.Get(enemyId);
 		if (data == null)
 			return null;
-		Enemy enemy = SpawnAt(data, spawnPos, _elapsedTime / 60f);
+		Enemy enemy = SpawnAt(data, spawnPos, ElapsedSeconds / 60f);
 		if (!string.IsNullOrEmpty(variantId))
 			MakeVariant(enemy, variantId);
 		return enemy;
@@ -382,7 +385,8 @@ public partial class SpawnManager : Node2D
 
 	public Vector2 ViewHalfExtents => _player != null ? GetViewHalfExtents() : FallbackViewHalfExtents;
 
-	public float ElapsedSeconds => _elapsedTime;
+	/// <summary>Temps de la run qui règle les tables et courbes de spawn (horloge de la run, plus le décalage de dev).</summary>
+	public float ElapsedSeconds => _clock.Seconds + _developmentTimeOffset;
 
 	/// <summary>Part de la foule locale visée pendant un combat de boss (la Barrière la réduit), 1 hors combat.</summary>
 	public float EncounterDensityMultiplier { get; set; } = 1f;
@@ -392,7 +396,7 @@ public partial class SpawnManager : Node2D
 		NaturalEliteConfig config = EnemyVariantDataLoader.NaturalElites;
 		// Fin de run (plan 47) : élites plus fréquentes, plus nombreuses et plus fortes, progressivement.
 		float ramp = config.LateRamp(elapsedMinutes);
-		_nextEliteAtSec = _elapsedTime + RunRandom.Spawn.RandfRange(Mathf.Lerp(config.IntervalMinSec, config.LateIntervalMinSec, ramp),
+		_nextEliteAtSec = ElapsedSeconds + RunRandom.Spawn.RandfRange(Mathf.Lerp(config.IntervalMinSec, config.LateIntervalMinSec, ramp),
 			Mathf.Lerp(config.IntervalMaxSec, config.LateIntervalMaxSec, ramp)) / Difficulty.EliteFrequency;
 		int maxAlive = Mathf.RoundToInt(Mathf.Lerp(config.MaxAlive, config.LateMaxAlive, ramp));
 
@@ -415,7 +419,7 @@ public partial class SpawnManager : Node2D
 		if (ramp > 0f)
 			enemy.Empower(Mathf.Lerp(1f, config.LateHpMult, ramp), Mathf.Lerp(1f, config.LateDamageMult, ramp));
 		_naturalElites.Add(enemy);
-		GD.Print($"[SpawnManager] Élite : {enemy.DisplayName} à {_elapsedTime:F0} s");
+		GD.Print($"[SpawnManager] Élite : {enemy.DisplayName} à {ElapsedSeconds:F0} s");
 	}
 
 	// =========================================================
@@ -501,7 +505,7 @@ public partial class SpawnManager : Node2D
 	/// <summary>0 à la fin du répit, 1 une fois la montée d'ouverture terminée.</summary>
 	private float OpeningProgress => _openingRampSec <= 0f
 		? 1f
-		: Mathf.Clamp((_elapsedTime - _openingGraceSec) / _openingRampSec, 0f, 1f);
+		: Mathf.Clamp((ElapsedSeconds - _openingGraceSec) / _openingRampSec, 0f, 1f);
 
 	private bool IsInDayInvasionWindow()
 	{
@@ -612,7 +616,7 @@ public partial class SpawnManager : Node2D
 		DevelopmentMode.RequireTestAccess();
 		if (!float.IsFinite(seconds) || seconds < 0f || seconds > 86400f)
 			throw new System.ArgumentOutOfRangeException(nameof(seconds));
-		_elapsedTime = seconds;
+		_developmentTimeOffset = seconds - _clock.Seconds;
 		_spawnTimer = 0f;
 		_localDensityTimer = 0f;
 		_nextEliteAtSec = seconds + EnemyVariantDataLoader.NaturalElites.IntervalMinSec;
@@ -688,7 +692,7 @@ public partial class SpawnManager : Node2D
 			return _clusterEnemyId;
 		}
 
-		string picked = PickWeighted(pool, _elapsedTime / 60f);
+		string picked = PickWeighted(pool, ElapsedSeconds / 60f);
 
 		if (RunRandom.Spawn.Randf() < _sameTypeClusterChance)
 		{
@@ -826,7 +830,7 @@ public partial class SpawnManager : Node2D
 		CachePlayer();
 		if (_player == null || !IsInstanceValid(_player))
 			return;
-		float elapsedMinutes = _elapsedTime / 60f;
+		float elapsedMinutes = ElapsedSeconds / 60f;
 		int burstCount = _crisisBurstBase + _crisisBurstPerIntensity * Mathf.Max(0, intensity - 1);
 		for (int i = 0; i < burstCount; i++)
 			TrySpawnEnemy(elapsedMinutes);

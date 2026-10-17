@@ -11,8 +11,8 @@ namespace Vestiges.Infrastructure;
 public partial class RunTracker : Node
 {
     private EventBus _eventBus;
-    // Temps de jeu écoulé, pauses exclues (écran de niveau, butin, menu) : durée, score de survie, cadences.
-    private float _runTime;
+    // Horloge de la run (plan 51 P0), pauses exclues (écran de niveau, butin, menu) : durée, score de survie, cadences.
+    private RunClock _clock;
     // L'horloge s'arrête à la mort (plan 02 lot A) : le bilan et le score de survie lisent la durée de la run jouée.
     private bool _frozen;
 
@@ -72,7 +72,7 @@ public partial class RunTracker : Node
     public List<string> PerkIds => _perkIds;
     public string LastHitByEnemyId => _lastHitByEnemyId;
     public string CurrentPhase => _currentPhase;
-    public float RunDurationSeconds => _runTime;
+    public float RunDurationSeconds => _clock.Seconds;
     public RunJourney Journey => _journey;
     public int ElitesKilled => _elitesKilled;
     public int SovereignsKilled => _sovereignsKilled;
@@ -83,9 +83,9 @@ public partial class RunTracker : Node
     {
         float held = _weaponHeldBefore.GetValueOrDefault(weaponId);
         if (_weaponHeldSince.TryGetValue(weaponId, out float since))
-            held += _runTime - since;
+            held += _clock.Seconds - since;
         else if (!_weaponsSeen)
-            held = _runTime;
+            held = _clock.Seconds;
         return held;
     }
 
@@ -101,7 +101,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _runTime;
+            float now = _clock.Seconds;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _spawnTimestamps)
@@ -117,7 +117,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _runTime;
+            float now = _clock.Seconds;
             float windowStart = now - RateWindowSeconds;
             int count = 0;
             foreach (float t in _killTimestamps)
@@ -147,7 +147,7 @@ public partial class RunTracker : Node
     {
         get
         {
-            float now = _runTime;
+            float now = _clock.Seconds;
             float windowStart = now - DpsWindowSeconds;
             float total = 0f;
             foreach ((float time, float damage) entry in _damageEvents)
@@ -173,6 +173,7 @@ public partial class RunTracker : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _clock = GetNode<RunClock>("../RunClock");
         _eventBus.GameStateChanged += OnGameStateChanged;
         _eventBus.EnemySpawned += OnEnemySpawned;
         _eventBus.EnemyKilled += OnEnemyKilled;
@@ -221,7 +222,6 @@ public partial class RunTracker : Node
     {
         if (!_frozen)
         {
-            _runTime += (float)delta;
             _journeyTimer += (float)delta;
             if (_journeyTimer >= _journeyStep)
             {
@@ -234,7 +234,7 @@ public partial class RunTracker : Node
             return;
         _maintenanceTimer = 0f;
 
-        float now = _runTime;
+        float now = _clock.Seconds;
 
         // Purge old DPS entries
         float dpsWindowStart = now - DpsWindowSeconds;
@@ -269,14 +269,14 @@ public partial class RunTracker : Node
         _totalSpawned++;
         _lastHpScale = hpScale;
         _lastDmgScale = dmgScale;
-        float now = _runTime;
+        float now = _clock.Seconds;
         _spawnTimestamps.Add(now);
     }
 
     private void OnEnemyKilled(string enemyId, Vector2 position)
     {
         _totalKilled++;
-        float now = _runTime;
+        float now = _clock.Seconds;
         _killTimestamps.Add(now);
 
         EnemyTier? tier = EnemyDataLoader.Get(enemyId)?.Tier;
@@ -296,7 +296,7 @@ public partial class RunTracker : Node
     {
         if (_groups.GetPlayer() is not Player player)
             return;
-        float entry = _weaponsSeen ? _runTime : 0f;
+        float entry = _weaponsSeen ? _clock.Seconds : 0f;
         _weaponsSeen = true;
         _weaponsLeft.Clear();
         foreach (string id in _weaponHeldSince.Keys)
@@ -308,7 +308,7 @@ public partial class RunTracker : Node
         }
         foreach (string id in _weaponsLeft)
         {
-            _weaponHeldBefore[id] = _weaponHeldBefore.GetValueOrDefault(id) + _runTime - _weaponHeldSince[id];
+            _weaponHeldBefore[id] = _weaponHeldBefore.GetValueOrDefault(id) + _clock.Seconds - _weaponHeldSince[id];
             _weaponHeldSince.Remove(id);
         }
     }
@@ -319,7 +319,7 @@ public partial class RunTracker : Node
         if (entity is not Player)
         {
             _totalDamageDealt += amount;
-            float now = _runTime;
+            float now = _clock.Seconds;
             _damageEvents.Add((now, amount));
         }
     }

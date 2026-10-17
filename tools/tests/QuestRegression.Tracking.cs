@@ -21,6 +21,7 @@ public partial class QuestRegression
     private Player _player;
     private Node _run;
     private QuestTracker _tracker;
+    private RunClock _clock;
     private EventBus _bus;
     private readonly List<string> _signalled = new();
     private ulong _life;
@@ -92,6 +93,10 @@ public partial class QuestRegression
     {
         _run = new Node { Name = "Run" };
         AddChild(_run);
+        // Horloge de run (plan 51 P0) avancée à la main avec le suivi, par AdvanceRun.
+        _clock = new RunClock { Name = "RunClock" };
+        _run.AddChild(_clock);
+        _clock.SetProcess(false);
         ErasureManager erasure = new() { Name = "ErasureManager", ProcessMode = ProcessModeEnum.Disabled };
         _run.AddChild(erasure);
         RunTracker runTracker = new() { Name = "RunTracker", ProcessMode = ProcessModeEnum.Disabled };
@@ -102,6 +107,13 @@ public partial class QuestRegression
         typeof(QuestTracker).GetField("_player", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(_tracker, _player);
         SetHp(1f);
         _player.Velocity = new Vector2(120f, 0f);
+    }
+
+    /// <summary>Avance l'horloge de la run, puis le suivi des quêtes qui la lit.</summary>
+    private void AdvanceRun(float seconds)
+    {
+        _clock.Advance(seconds);
+        _tracker._Process(seconds);
     }
 
     private void EndRun()
@@ -126,10 +138,10 @@ public partial class QuestRegression
         switch (condition.Stat)
         {
             case QuestStat.HealthyTime:
-                _tracker._Process(condition.Target - 1f);
+                AdvanceRun(condition.Target - 1f);
                 Check(!expectOpen || !MetaSaveManager.HasCompletedQuest(quest), $"{quest} : {condition.Target - 1f} s à PV pleins, pas encore");
                 if (finish)
-                    _tracker._Process(1f);
+                    AdvanceRun(1f);
                 return;
             case QuestStat.DistanceMeters:
                 RunTracker runTracker = _run.GetNode<RunTracker>("RunTracker");
@@ -140,7 +152,7 @@ public partial class QuestRegression
                     position += new Vector2(0f, 64f);
                     runTracker.Journey.Track(position);
                 }
-                _tracker._Process(0.5f);
+                AdvanceRun(0.5f);
                 Check(!expectOpen || !MetaSaveManager.HasCompletedQuest(quest), $"{quest} : {runTracker.Journey.TravelledMeters:F0} m, pas encore");
                 if (!finish)
                     return;
@@ -149,7 +161,7 @@ public partial class QuestRegression
                     position += new Vector2(0f, 64f);
                     runTracker.Journey.Track(position);
                 }
-                _tracker._Process(0.5f);
+                AdvanceRun(0.5f);
                 return;
         }
         if (IsMaximum(condition.Stat))
@@ -253,7 +265,7 @@ public partial class QuestRegression
         bool burning = false, string weapon = null, Vector2? position = null, bool advance = true)
     {
         if (advance)
-            _tracker._Process(0.1f);
+            AdvanceRun(0.1f);
         WeaponInstance instance = weapon != null ? new WeaponInstance(WeaponDataLoader.Get(weapon)) : null;
         AttackContext source = instance != null ? new AttackContext(_player.GetInstanceId(), instance, 1, DamageKind.DirectWeapon) : default;
         DamageResult damage = new DamageResult(new EnemyLife(++_life, 1), source, 10f, 10f, 0f, 10f, true, true) { Critical = critical };
@@ -358,7 +370,7 @@ public partial class QuestRegression
     private void CheckDeadline()
     {
         StartRun();
-        _tracker._Process(601f);
+        AdvanceRun(601f);
         _bus.EmitSignal(EventBus.SignalName.LevelUp, 30);
         Check(!MetaSaveManager.HasCompletedQuest("against_the_clock") && MetaSaveManager.HasCompletedQuest("grow"),
             "niveau 30 après la 10ᵉ minute : Grandir oui, Contre la montre non");

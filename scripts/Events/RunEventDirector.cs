@@ -29,7 +29,7 @@ public partial class RunEventDirector : Node
     private RunEventSchedule _schedule;
     private RunEvent _active;
     private RunEventData _activeData;
-    private float _elapsed;
+    private RunClock _clock;
     private float _nextEventAt;
     private float _calmUntil;
     private float _progressTimer;
@@ -52,6 +52,7 @@ public partial class RunEventDirector : Node
         _schedule = RunEventDataLoader.Schedule;
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _gameManager = GetNode<GameManager>("/root/GameManager");
+        _clock = GetNode<RunClock>("../RunClock");
         _crisisManager = GetParent().GetNodeOrNull<CrisisManager>("CrisisManager");
 
         Node2D world = GetParent<Node2D>();
@@ -84,7 +85,6 @@ public partial class RunEventDirector : Node
             return;
 
         float dt = (float)delta;
-        _elapsed += dt;
 
         if (_active != null)
         {
@@ -99,13 +99,13 @@ public partial class RunEventDirector : Node
         if (TryStartFixedEvent())
             return;
 
-        if (_elapsed < _nextEventAt)
+        if (_clock.Seconds < _nextEventAt)
             return;
 
         RunEventData next = IsBlockedByCrisis() ? null : PickEvent();
         if (next == null)
         {
-            _nextEventAt = _elapsed + BlockedRetrySec;
+            _nextEventAt = _clock.Seconds + BlockedRetrySec;
             return;
         }
         StartEvent(next);
@@ -133,7 +133,7 @@ public partial class RunEventDirector : Node
         // Un boss (la Barrière) est lui aussi le temps fort du moment : aucun événement ne s'y ajoute.
         if (_bossEncounters.Count > 0)
             return true;
-        if (_elapsed < _calmUntil)
+        if (_clock.Seconds < _calmUntil)
             return true;
         return _crisisManager != null && (_crisisManager.IsCrisisActive || _crisisManager.IsWarningActive);
     }
@@ -141,10 +141,10 @@ public partial class RunEventDirector : Node
     /// <summary>Rendez-vous fixe échu : il part dès que ni une Résurgence ni son accalmie ne l'en empêchent.</summary>
     private bool TryStartFixedEvent()
     {
-        if (_nextFixed >= _schedule.FixedEvents.Count || _elapsed < _fixedRetryAt)
+        if (_nextFixed >= _schedule.FixedEvents.Count || _clock.Seconds < _fixedRetryAt)
             return false;
         FixedRunEvent next = _schedule.FixedEvents[_nextFixed];
-        if (_elapsed < next.AtSec || IsBlockedByCrisis())
+        if (_clock.Seconds < next.AtSec || IsBlockedByCrisis())
             return false;
         RunEventData data = RunEventDataLoader.Find(next.EventId);
         if (data == null)
@@ -159,7 +159,7 @@ public partial class RunEventDirector : Node
         if (_active == null)
         {
             // Mise en place impossible ici : le rendez-vous reste dû, nouvel essai un peu plus loin.
-            _fixedRetryAt = _elapsed + BlockedRetrySec;
+            _fixedRetryAt = _clock.Seconds + BlockedRetrySec;
             return false;
         }
         _nextFixed++;
@@ -174,8 +174,8 @@ public partial class RunEventDirector : Node
     {
         float window = CrisisWindow();
         // Seul un rendez-vous à venir réserve sa place : échu mais retenu (ou impossible à poser), il n'empêche pas le tirage.
-        if (_nextFixed < _schedule.FixedEvents.Count && _schedule.FixedEvents[_nextFixed].AtSec > _elapsed)
-            window = Mathf.Min(window, _schedule.FixedEvents[_nextFixed].AtSec - _elapsed - _schedule.CrisisMarginSec);
+        if (_nextFixed < _schedule.FixedEvents.Count && _schedule.FixedEvents[_nextFixed].AtSec > _clock.Seconds)
+            window = Mathf.Min(window, _schedule.FixedEvents[_nextFixed].AtSec - _clock.Seconds - _schedule.CrisisMarginSec);
         return window;
     }
 
@@ -191,7 +191,7 @@ public partial class RunEventDirector : Node
         float total = 0f;
         foreach (RunEventData data in RunEventDataLoader.Events)
         {
-            if (data.Weight <= 0f || _elapsed < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
+            if (data.Weight <= 0f || _clock.Seconds < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
                 continue;
             _candidates.Add(data);
             total += Weight(data);
@@ -218,7 +218,7 @@ public partial class RunEventDirector : Node
         if (_active == null)
         {
             GD.PushWarning($"[RunEventDirector] Unknown event kind: {data.Kind}");
-            _nextEventAt = _elapsed + BlockedRetrySec;
+            _nextEventAt = _clock.Seconds + BlockedRetrySec;
             return;
         }
 
@@ -227,18 +227,18 @@ public partial class RunEventDirector : Node
         if (_active.IsFinished)
         {
             // Impossible à mettre en place ici (aucun sol praticable) : abandon silencieux, nouvel essai bientôt.
-            GD.Print($"[RunEventDirector] {data.Id} abandonné à la mise en place ({_elapsed:F0} s)");
+            GD.Print($"[RunEventDirector] {data.Id} abandonné à la mise en place ({_clock.Seconds:F0} s)");
             _active.Cleanup();
             _active = null;
             _activeData = null;
-            _nextEventAt = _elapsed + BlockedRetrySec;
+            _nextEventAt = _clock.Seconds + BlockedRetrySec;
             return;
         }
 
         _recent.Add(data.Id);
         while (_recent.Count > _schedule.RecentMemory)
             _recent.RemoveAt(0);
-        GD.Print($"[RunEventDirector] {data.Id} à {_elapsed:F0} s");
+        GD.Print($"[RunEventDirector] {data.Id} à {_clock.Seconds:F0} s");
         _eventBus.EmitSignal(EventBus.SignalName.RandomEventTriggered, data.Id, _active.Title);
         _eventBus.EmitSignal(EventBus.SignalName.RunEventStarted, data.Id, _active.Title, _active.Objective, data.DurationSec);
         Infrastructure.AudioManager.Play("sfx_danger_building", 0f, -6f);
@@ -270,10 +270,10 @@ public partial class RunEventDirector : Node
         RunEvent ended = _active;
         _active = null;
         ended.Cleanup();
-        GD.Print($"[RunEventDirector] {_activeData.Id} {(ended.Succeeded ? "réussi" : "échoué")} à {_elapsed:F0} s");
+        GD.Print($"[RunEventDirector] {_activeData.Id} {(ended.Succeeded ? "réussi" : "échoué")} à {_clock.Seconds:F0} s");
         _eventBus.EmitSignal(EventBus.SignalName.RunEventEnded, _activeData.Id, ended.Succeeded, ended.Summary);
         _eventBus.EmitSignal(EventBus.SignalName.RandomEventEnded, _activeData.Id);
-        _nextEventAt = _elapsed + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
+        _nextEventAt = _clock.Seconds + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
         _activeData = null;
     }
 
@@ -283,7 +283,7 @@ public partial class RunEventDirector : Node
 
     private void OnCrisisEnded(int crisisNumber)
     {
-        _calmUntil = _elapsed + _schedule.AfterCrisisCalmSec;
+        _calmUntil = _clock.Seconds + _schedule.AfterCrisisCalmSec;
         _nextEventAt = Mathf.Max(_nextEventAt, _calmUntil);
     }
 

@@ -133,7 +133,7 @@ public partial class QuestRegression
             else
             {
                 if (condition.Stat == QuestStat.KillBurst)
-                    _tracker._Process(10f);
+                    AdvanceRun(10f);
                 ItemFact(condition, (int)condition.Target - 1);
             }
             float progress = _tracker.RunProgress(quest.Id)[i];
@@ -159,13 +159,13 @@ public partial class QuestRegression
             RunJourney journey = _run.GetNode<RunTracker>("RunTracker").Journey;
             if (journey.TravelledMeters == 0f) journey.Track(Vector2.Zero);
             journey.Track(new Vector2(count * RunSummaryConfig.Load().PixelsPerMeter, 0f));
-            _tracker._Process(0.5f);
+            AdvanceRun(0.5f);
             return;
         }
         for (int i = 0; i < count; i++)
         {
             if (condition.Stat != QuestStat.KillBurst)
-                _tracker._Process(1f);
+                AdvanceRun(1f);
             switch (condition.Stat)
             {
                 case QuestStat.HpHealed:
@@ -227,7 +227,7 @@ public partial class QuestRegression
                 or QuestStat.MeleeKills or QuestStat.RangedKills)
                 Check(_tracker.RunProgress(quest.Id)[quest.Conditions.IndexOf(condition)] == 0,
                     $"{quest.Id} : mauvais faits ignorés pour {condition.Stat}");
-        _tracker._Process(10f);
+        AdvanceRun(10f);
     }
 
     private void PurchaseLastQuestChest(QuestDefinition quest)

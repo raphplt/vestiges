@@ -82,7 +82,7 @@ public partial class QuestTracker : Node
     private Player _player;
     private RunTracker _runTracker;
     private ErasureManager _erasure;
-    private float _runTime;
+    private RunClock _clock;
     private float _pollTimer;
     private bool _ended;
     private bool _crisisActive;
@@ -96,6 +96,7 @@ public partial class QuestTracker : Node
     public override void _Ready()
     {
         _eventBus = GetNode<EventBus>("/root/EventBus");
+        _clock = GetNode<RunClock>("../RunClock");
         _groups = GetNode<GroupCache>("/root/GroupCache");
         _runTracker = GetParent()?.GetNodeOrNull<RunTracker>("RunTracker");
         _erasure = GetParent()?.GetNodeOrNull<ErasureManager>("ErasureManager");
@@ -147,12 +148,11 @@ public partial class QuestTracker : Node
         _eventBus.GameStateChanged -= OnGameStateChanged;
     }
 
-    /// <summary>Horloge de jeu de la run, pauses exclues : délais (« avant la 12ᵉ minute ») et fenêtres d'éliminations.</summary>
+    /// <summary>Lit l'horloge de la run (pauses exclues) : délais (« avant la 12ᵉ minute ») et fenêtres d'éliminations.</summary>
     public override void _Process(double delta)
     {
         if (_ended)
             return;
-        _runTime += (float)delta;
         _pollTimer += (float)delta;
         if (_pollTimer < PollInterval)
             return;
@@ -214,7 +214,7 @@ public partial class QuestTracker : Node
         WeaponInstance weapon = kill.Damage.Source.IsWeaponWork ? kill.Damage.Source.Weapon : null;
         bool erased = _needsErasure && _erasure != null
             && _erasure.GetZonePhaseAt(kill.Position) >= ErasureManager.ErasureZonePhase.Frayed;
-        _killTimes[_killCursor] = _runTime;
+        _killTimes[_killCursor] = _clock.Seconds;
         _killCursor = (_killCursor + 1) % BurstCapacity;
         _killCount = Mathf.Min(_killCount + 1, BurstCapacity);
 
@@ -252,7 +252,7 @@ public partial class QuestTracker : Node
     private int KillsWithin(float window)
     {
         int count = 0;
-        float since = _runTime - window;
+        float since = _clock.Seconds - window;
         for (int i = 1; i <= _killCount; i++)
         {
             if (_killTimes[(_killCursor - i + BurstCapacity) % BurstCapacity] < since)
@@ -382,7 +382,7 @@ public partial class QuestTracker : Node
             if (ratio < watch.Condition.Param)
                 watch.Broken = true;
             else
-                Update(watch, _runTime, false);
+                Update(watch, _clock.Seconds, false);
         }
     }
 
@@ -409,7 +409,7 @@ public partial class QuestTracker : Node
     /// <summary>Ajoute <paramref name="amount"/>, ou retient le maximum ; un délai passé gèle la condition.</summary>
     private void Update(Watch watch, float amount, bool additive)
     {
-        if (_ended || watch.Owner.Done || (watch.Condition.BeforeSec > 0f && _runTime >= watch.Condition.BeforeSec))
+        if (_ended || watch.Owner.Done || (watch.Condition.BeforeSec > 0f && _clock.Seconds >= watch.Condition.BeforeSec))
             return;
         float value = additive ? watch.Value + amount : Mathf.Max(watch.Value, amount);
         if (value <= watch.Value)
@@ -431,7 +431,7 @@ public partial class QuestTracker : Node
             return;
         if (!saved.Succeeded)
             GD.PushError($"[QuestTracker] Quête {tracked.Quest.Id} non enregistrée : {saved.Error}");
-        GD.Print($"[QuestTracker] Quête accomplie à {_runTime:F0} s : {tracked.Quest.Id}");
+        GD.Print($"[QuestTracker] Quête accomplie à {_clock.Seconds:F0} s : {tracked.Quest.Id}");
         _eventBus.EmitSignal(EventBus.SignalName.QuestCompleted, tracked.Quest.Id);
     }
 

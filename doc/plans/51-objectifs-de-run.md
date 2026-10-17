@@ -31,7 +31,7 @@
 >
 > **Élan ouvert** : jauge ou seulement une traînée ; l'Élan gardé ou non d'une terre à l'autre ; une créature tombée dans le Néant comptée comme éliminée (proposé : oui).
 >
-> **Prochaine étape** : P0, l'horloge de run unique.
+> **P0 livré le 17 octobre** (horloge de run unique, §12). **Prochaine étape** : découper P1, changer de terre.
 >
 > **Sur un autre poste** (Mac) : `git pull`, puis `tools/elan_sandbox.sh`. `GODOT_BIN` désigne le binaire Godot .NET 4.7.2 s'il ne s'appelle pas `godot-mono`.
 
@@ -391,3 +391,21 @@ Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par
    - **P2** ajoute le cercle à tenir, les ancres, l'anneau et le vide traversable ;
    - **P3** fait le réveil par trois lumières, l'effondrement au réveil, le gardien qui se lève seul et le multiplicateur de rang.
    La 4e carte et les gardiens dédiés viennent en production, après le prototype.
+
+## 12. Compte rendu P0, l'horloge de run unique — 17 octobre 2026
+
+**Livré :**
+- **`RunClock`** (`scripts/Core/RunClock.cs`) : un nœud de `Main`, frère des systèmes de la run. Il compte le temps de jeu depuis le début de la run, pauses exclues, seulement dans l'état Run, donc il s'arrête à la mort. Il est traité avant les autres systèmes à chaque image (priorité -100), pour que tous lisent la même date. La somme se fait en double, pour ne pas dériver sur une run d'une heure.
+- **Sept horloges retirées**. Apparitions, Résurgences, micro-événements, fin de partie, Effacement, bilan et quêtes lisent `../RunClock`. Leurs minuteurs propres (cadence des apparitions, durée d'une crise, pas de l'Effacement) restent locaux. La Barrière et les micro-événements, qui lisaient déjà le temps des apparitions, suivent.
+- **L'outil de dev qui avance la difficulté** garde son sens : il décale seulement les tables et courbes de spawn (`_developmentTimeOffset`), sans toucher au reste de la run.
+- **Bancs** : ceux qui créent ces systèmes seuls posent une horloge à côté et l'avancent avec le pas (temps, Effacement actif, quêtes, phases de run, mouvement, présages).
+
+**Vérifié :**
+- build sans avertissement ;
+- suites vertes : démarrage, temps, phases de run, quêtes, mouvement seul et intégré, trace de run, Effacement actif ;
+- **même calendrier avant et après**, sur deux graines et 10 min de jeu (`tools/measure_run.sh`, un worktree pour la référence) : micro-événements à 74, 168, 240 et 470 s, première élite à 150 s, Résurgence au même moment.
+- **Le reste varie autant qu'entre deux passes de la référence**. La mesure n'est pas déterministe au-delà de 30 s : sur la graine 42, les deux passes de référence donnent 665 et 688 éliminations, la passe après P0 601. L'XP varie jusqu'à 25 % d'une passe à l'autre.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant. Corrigé : code mort retiré, commentaire du bilan, date de l'Effacement jamais négative pendant le chargement, contrôle de la pause renforcé (l'horloge elle-même, état Run, se fige). Changement voulu : le temps ne part qu'à l'état Run, à la fin du chargement ; avant, les apparitions et l'Effacement comptaient déjà pendant le chargement.
+
+**Ce que P0 prépare** : les terres pourront pousser une horloge de terre, arrêter le temps pendant la recousure et caler leurs calendriers sur une seule source (P1).

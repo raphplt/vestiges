@@ -125,10 +125,19 @@ public partial class TemporalRegression : Node
         }
     }
 
+    /// <summary>
+    /// Effacement neuf avec sa propre horloge de run (plan 51 P0), dans un conteneur : chaque scénario repart de zéro et
+    /// <see cref="Tick"/> avance l'horloge avant le pas, comme le fait la scène Main.
+    /// </summary>
     private ErasureManager NewErasure(bool inVoid = false)
     {
+        Node holder = new() { ProcessMode = ProcessModeEnum.Pausable };
+        AddChild(holder);
+        RunClock clock = new() { Name = "RunClock" };
+        holder.AddChild(clock);
+        clock.SetProcess(false);
         ErasureManager erasure = new() { ProcessMode = ProcessModeEnum.Pausable };
-        AddChild(erasure);
+        holder.AddChild(erasure);
         erasure.SetProcess(false);
         Set(erasure, "_player", _player);
         // Une seule cellule suffit à la comparaison des horloges ; la texture et les signaux restent réels.
@@ -137,49 +146,74 @@ public partial class TemporalRegression : Node
         return erasure;
     }
 
+    /// <summary>L'horloge de run (plan 51 P0) avance seule pendant la run et se fige sous la pause.</summary>
+    private async Task RunClockPause()
+    {
+        // Le banc tourne déjà dans l'état Run (début de _Ready).
+        RunClock clock = new() { Name = "PausedRunClock", ProcessMode = ProcessModeEnum.Pausable };
+        AddChild(clock);
+        await Frame(); await Frame();
+        float running = clock.Seconds;
+        GetTree().Paused = true;
+        await Frame(); await Frame();
+        float paused = clock.Seconds;
+        GetTree().Paused = false;
+        Check(running > 0f && paused == running, $"pause : horloge de run figée ({running:F3} s → {paused:F3} s)");
+        clock.Free();
+    }
+
+    private static void Tick(ErasureManager erasure, double delta)
+    {
+        erasure.GetNode<RunClock>("../RunClock").Advance(delta);
+        erasure._Process(delta);
+    }
+
+    private static void Release(ErasureManager erasure) => erasure.GetParent().Free();
+
     private async Task Erasure()
     {
         float reference = 0;
         foreach (int hz in new[] { 60, 30, 144, 1 })
         {
             ErasureManager erasure = NewErasure();
-            for (int i = 0; i < hz * 600; i++) erasure._Process(1.0 / hz);
+            for (int i = 0; i < hz * 600; i++) Tick(erasure, 1.0 / hz);
             float global = erasure.GlobalErasurePercent;
             _results.Add(new { scenario = "erasure_clock", hz, seconds = 600, global });
             if (hz == 60) reference = global;
             else Check(Mathf.Abs(global - reference) < 0.0001f, $"600 s à {hz} Hz équivalent à 60 Hz");
-            erasure.Free();
+            Release(erasure);
         }
         ErasureManager regular = NewErasure();
-        for (int i = 0; i < 20; i++) regular._Process(0.5);
+        for (int i = 0; i < 20; i++) Tick(regular, 0.5);
         float tenSeconds = regular.GlobalErasurePercent;
-        regular.Free();
+        Release(regular);
         ErasureManager stalled = NewErasure();
         int publications = 0;
         void Updated(float amount) => publications++;
         _bus.ErasureUpdated += Updated;
-        stalled._Process(10);
+        Tick(stalled, 10);
         Check(publications > 0 && publications <= 4, "hitch de 10 s : au plus 4 pas par image");
-        for (int i = 0; i < 10; i++) stalled._Process(0);
+        for (int i = 0; i < 10; i++) Tick(stalled, 0);
         Check(Mathf.Abs(stalled.GlobalErasurePercent - tenSeconds) < 0.000001f, "dette de 10 s rattrapée sans perte");
         _bus.ErasureUpdated -= Updated;
-        stalled.Free();
+        Release(stalled);
         ErasureManager jitter = NewErasure();
-        for (int i = 0; i < 50; i++) { jitter._Process(0.13); jitter._Process(0.07); }
+        for (int i = 0; i < 50; i++) { Tick(jitter, 0.13); Tick(jitter, 0.07); }
         Check(Mathf.Abs(jitter.GlobalErasurePercent - tenSeconds) < 0.000001f, "reste temporel conservé sous jitter");
-        double elapsedBefore = Convert.ToDouble(Field(jitter, "_totalElapsed"));
+        double elapsedBefore = Convert.ToDouble(Field(jitter, "_updateTimer"));
         jitter.SetProcess(true);
         GetTree().Paused = true;
         await Frame(); await Frame();
-        Check(Convert.ToDouble(Field(jitter, "_totalElapsed")) == elapsedBefore, "pause : horloge d’Effacement figée");
-        jitter.SetProcess(false); GetTree().Paused = false; jitter.Free();
+        Check(Convert.ToDouble(Field(jitter, "_updateTimer")) == elapsedBefore, "pause : horloge d’Effacement figée");
+        jitter.SetProcess(false); GetTree().Paused = false; Release(jitter);
+        await RunClockPause();
         // Le delta fourni est déjà multiplié par Engine.TimeScale : simuler dix secondes à demi-vitesse.
         ErasureManager slowed = NewErasure();
-        for (int i = 0; i < 600; i++) slowed._Process(0.5 / 60);
+        for (int i = 0; i < 600; i++) Tick(slowed, 0.5 / 60);
         ErasureManager fiveSeconds = NewErasure();
-        for (int i = 0; i < 10; i++) fiveSeconds._Process(0.5);
+        for (int i = 0; i < 10; i++) Tick(fiveSeconds, 0.5);
         Check(Mathf.Abs(slowed.GlobalErasurePercent - fiveSeconds.GlobalErasurePercent) < 0.000001f, "ralenti : cinq secondes simulées, pas dix secondes murales");
-        slowed.Free(); fiveSeconds.Free();
+        Release(slowed); Release(fiveSeconds);
         // Signal des dégâts et perte de PV réelle, sans invulnérabilité ni bouclier sur ce chemin.
         foreach (double delta in new[] { 0.5, 1.0 })
         {
@@ -189,11 +223,11 @@ public partial class TemporalRegression : Node
             int hits = 0;
             void Hit(string source, float amount) { if (source == "void") hits++; }
             _bus.PlayerHitBy += Hit;
-            for (int i = 0; i < 2 / delta; i++) erasure._Process(delta);
+            for (int i = 0; i < 2 / delta; i++) Tick(erasure, delta);
             _bus.PlayerHitBy -= Hit;
             _player.IsGodMode = true;
             Check(hits == 4 && Mathf.Abs(hp - _player.CurrentHp - _player.EffectiveMaxHp * 0.12f) < 0.001f, $"Néant : 4 impacts et 12 % des PV en 2 s, delta={delta}");
-            erasure.Free();
+            Release(erasure);
         }
         // Déclin accéléré du fixture : quatre changements de phase doivent survivre au rattrapage.
         ErasureManager transitions = NewErasure();
@@ -205,9 +239,9 @@ public partial class TemporalRegression : Node
         List<int> phases = new();
         void Phase(int x, int y, int phase) { if (x == 0 && y == 0) phases.Add(phase); }
         _bus.ZonePhaseChanged += Phase;
-        transitions._Process(2);
+        Tick(transitions, 2);
         _bus.ZonePhaseChanged -= Phase;
         Check(phases.Count == 4 && phases[0] == 1 && phases[1] == 2 && phases[2] == 3 && phases[3] == 4, "rattrapage conserve les quatre transitions de phase");
-        transitions.Free();
+        Release(transitions);
     }
 }

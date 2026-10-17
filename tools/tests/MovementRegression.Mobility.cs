@@ -774,6 +774,9 @@ public partial class MovementRegression
             wall.QueueFree(); wall = null;
             await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
             Reset();
+            // L'Effacement lit l'horloge de run sa sœur (plan 51 P0).
+            if (GetNodeOrNull("RunClock") == null)
+                AddChild(new RunClock { Name = "RunClock" });
             erasure = new ErasureManager(); AddChild(erasure); erasure.SetProcess(false);
             Dictionary<Vector2I, ErasureManager.ErasureZonePhase> phases =
                 (Dictionary<Vector2I, ErasureManager.ErasureZonePhase>)typeof(ErasureManager).GetField("_zonePhases", flags).GetValue(erasure);

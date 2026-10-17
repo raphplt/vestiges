@@ -21,7 +21,7 @@ public partial class CrisisManager : Node
     private GameManager _gameManager;
     private RandomNumberGenerator _rng = new();
 
-    private float _elapsed;
+    private RunClock _clock;
     private float _nextCrisisAtSec;
     private bool _warningIssued;
     private bool _isCrisisActive;
@@ -32,7 +32,7 @@ public partial class CrisisManager : Node
 
     public bool IsCrisisActive => _isCrisisActive;
     public bool IsWarningActive => !_isCrisisActive && _warningIssued && TimeUntilNextCrisis > 0f;
-    public float TimeUntilNextCrisis => Mathf.Max(0f, _nextCrisisAtSec - _elapsed);
+    public float TimeUntilNextCrisis => Mathf.Max(0f, _nextCrisisAtSec - _clock.Seconds);
     public float CrisisTimeRemaining => Mathf.Max(0f, _crisisTimeRemaining);
     public int CrisisNumber => _crisisNumber;
     public int CurrentIntensity => _currentIntensity;
@@ -49,6 +49,7 @@ public partial class CrisisManager : Node
 
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _gameManager = GetNode<GameManager>("/root/GameManager");
+        _clock = GetNode<RunClock>("../RunClock");
 
         _rng.Seed = RunRandom.SeedFor("crises");
         ScheduleNextCrisis(_firstCrisisDelaySec);
@@ -69,7 +70,7 @@ public partial class CrisisManager : Node
         float previous = _intervalFactor;
         _intervalFactor = Mathf.Max(MinIntervalFactor, 1f - total);
         if (!_isCrisisActive && previous > 0f)
-            _nextCrisisAtSec = _elapsed + TimeUntilNextCrisis * (_intervalFactor / previous);
+            _nextCrisisAtSec = _clock.Seconds + TimeUntilNextCrisis * (_intervalFactor / previous);
     }
 
     public override void _Process(double delta)
@@ -78,7 +79,6 @@ public partial class CrisisManager : Node
             return;
 
         float dt = (float)delta;
-        _elapsed += dt;
 
         if (_isCrisisActive)
         {
@@ -95,7 +95,7 @@ public partial class CrisisManager : Node
             _eventBus.EmitSignal(EventBus.SignalName.CrisisWarning, _crisisNumber + 1, timeUntilCrisis);
         }
 
-        if (_elapsed >= _nextCrisisAtSec)
+        if (_clock.Seconds >= _nextCrisisAtSec)
             StartCrisis();
     }
 
@@ -132,7 +132,7 @@ public partial class CrisisManager : Node
 
     private void ScheduleNextCrisis(float delaySec)
     {
-        _nextCrisisAtSec = _elapsed + Mathf.Max(20f, delaySec);
+        _nextCrisisAtSec = _clock.Seconds + Mathf.Max(20f, delaySec);
     }
 
     private void LoadConfig()

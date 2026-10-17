@@ -26,6 +26,8 @@ public partial class RunPhaseRegression : Node
         {
             _manager = GetNode<GameManager>("/root/GameManager");
             _manager.ChangeState(GameManager.GameState.Run);
+            // Résurgences et fin de partie lisent l'horloge de run, leur sœur (plan 51 P0).
+            AddChild(new RunClock { Name = "RunClock" });
             _crises = new CrisisManager { Name = "CrisisManager" };
             AddChild(_crises);
             _endgame = new EndgameManager { Name = "EndgameManager" };

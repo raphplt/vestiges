@@ -26,7 +26,7 @@ public partial class EndgameManager : Node
 	private ErasureManager _erasureManager;
 	private Player _player;
 
-	private float _elapsed;
+	private RunClock _clock;
 	private bool _lateGameReached;
 	private bool _bossSpawned;
 	private bool _bossDefeated;
@@ -46,6 +46,7 @@ public partial class EndgameManager : Node
 
 		_eventBus = GetNode<EventBus>("/root/EventBus");
 		_gameManager = GetNode<GameManager>("/root/GameManager");
+		_clock = GetNode<RunClock>("../RunClock");
 		_crisisManager = GetParent().GetNodeOrNull<CrisisManager>("CrisisManager");
 		_erasureManager = GetParent().GetNodeOrNull<ErasureManager>("ErasureManager");
 
@@ -76,7 +77,6 @@ public partial class EndgameManager : Node
 		if (_gameManager == null || _gameManager.CurrentState != GameManager.GameState.Run)
 			return;
 
-		_elapsed += (float)delta;
 		CachePlayer();
 		UpdateLateGameState();
 
@@ -106,7 +106,7 @@ public partial class EndgameManager : Node
 		if (_crisisManager is { IsCrisisActive: true } && _crisisManager.CrisisNumber >= _bossCrisisThreshold)
 			return true;
 
-		return _elapsed >= _bossTimeThresholdSec;
+		return _clock.Seconds >= _bossTimeThresholdSec;
 	}
 
 	private void SpawnIndicible()

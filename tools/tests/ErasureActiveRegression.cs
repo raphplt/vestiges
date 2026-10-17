@@ -61,15 +61,25 @@ public partial class ErasureActiveRegression : Node
         catch (Exception ex) { GD.PushError(ex.ToString()); GetTree().Quit(2); }
     }
 
+    /// <summary>Effacement neuf avec sa propre horloge de run (plan 51 P0) ; <see cref="Tick"/> avance les deux.</summary>
     private ErasureManager NewErasure(int radius = 0)
     {
+        Node holder = new() { ProcessMode = ProcessModeEnum.Disabled };
+        AddChild(holder);
+        holder.AddChild(new RunClock { Name = "RunClock" });
         ErasureManager erasure = new() { ProcessMode = ProcessModeEnum.Disabled };
-        AddChild(erasure);
+        holder.AddChild(erasure);
         Set(erasure, "_player", _player);
         Set(erasure, "_trackedRadiusCells", radius);
         Set(erasure, "_voidDamageRatioPerSecond", 0f);
         _player.Position = Vector2.Zero;
         return erasure;
+    }
+
+    private static void Tick(ErasureManager erasure, double delta)
+    {
+        erasure.GetNode<RunClock>("../RunClock").Advance(delta);
+        erasure._Process(delta);
     }
 
     private static int Visits(ErasureManager erasure)
@@ -85,13 +95,13 @@ public partial class ErasureActiveRegression : Node
         ErasureManager erasure = NewErasure();
         for (int i = 0; i < 130; i++) erasure.OverrideMemory(new Vector2I(i - 65, -3), 0f);
         erasure.OverrideMemory(Vector2I.Zero, 0f);
-        erasure._Process(0.5);
+        Tick(erasure, 0.5);
         Check(erasure.GetMemoryAt(Vector2.Zero) == 0, "Néant conservé sans recréation à l'approche");
         foreach (int index in new[] { 0, 63, 64, 65, 127, 129 })
         {
             Vector2I cell = new(index - 65, -3);
             erasure.OverrideMemory(cell, 0.4f);
-            erasure._Process(0.5);
+            Tick(erasure, 0.5);
             float memory = erasure.GetMemoryAt(erasure.CellCenterToWorld(cell));
             Check(memory > 0 && memory < 0.4f, $"réactivation à l'indice {index}, coordonnées négatives et limites 64 bits");
             erasure.OverrideMemory(cell, 0f);
@@ -104,7 +114,7 @@ public partial class ErasureActiveRegression : Node
             if (source == "poi") _bus.EmitSignal(EventBus.SignalName.PoiDiscovered, "fixture", "fixture", Vector2.Zero);
             if (source == "souvenir") _bus.EmitSignal(EventBus.SignalName.SouvenirDiscovered, "fixture", "fixture", "fixture");
             float revived = erasure.GetMemoryAt(Vector2.Zero);
-            erasure._Process(0.5);
+            Tick(erasure, 0.5);
             Check(revived == 0.72f && erasure.GetMemoryAt(Vector2.Zero) < revived,
                 $"{source} : zone nulle ravivée puis déclin repris");
         }
@@ -112,7 +122,7 @@ public partial class ErasureActiveRegression : Node
         Check(erasure.GetMemoryAt(Vector2.Zero) == 1, "surcharge positive bornée à un");
         erasure.OverrideMemory(Vector2I.Zero, -1f);
         Check(erasure.GetMemoryAt(Vector2.Zero) == 0, "surcharge négative bornée à zéro");
-        erasure.Free();
+        erasure.GetParent().Free();
     }
 
     private void ReentrantSignals()
@@ -133,16 +143,16 @@ public partial class ErasureActiveRegression : Node
             erasure.OverrideMemory(d, 0.5f);
         }
         _bus.ZonePhaseChanged += Changed;
-        erasure._Process(0.5);
+        Tick(erasure, 0.5);
         _bus.ZonePhaseChanged -= Changed;
         Check(revived && erasure.GetMemoryAt(erasure.CellCenterToWorld(b)) < 0.5f,
             "signal réentrant : une ancienne zone encore à venir est traitée au même pas");
         Check(erasure.GetMemoryAt(Vector2.Zero) == 0.5f, "signal réentrant : zone déjà traitée attend le pas suivant");
         Check(erasure.GetMemoryAt(erasure.CellCenterToWorld(d)) == 0.5f, "signal réentrant : nouvelle zone attend le pas suivant");
-        erasure._Process(0.5);
+        Tick(erasure, 0.5);
         Check(erasure.GetMemoryAt(Vector2.Zero) < 0.5f && erasure.GetMemoryAt(erasure.CellCenterToWorld(d)) < 0.5f,
             "pas suivant : les deux zones différées reprennent leur déclin");
-        erasure.Free();
+        erasure.GetParent().Free();
     }
 
     private void Roaming()
@@ -165,7 +175,7 @@ public partial class ErasureActiveRegression : Node
             if (_step == 1500) _bus.EmitSignal(EventBus.SignalName.OubliEffectChanged, "erasure_speed", 0f);
             if (_step % 300 == 200) _bus.EmitSignal(EventBus.SignalName.MemorialAwakened, _player.Position);
             if (_step % 400 == 250) _bus.EmitSignal(EventBus.SignalName.ChestOpened, "fixture", "common", Vector2.Zero);
-            erasure._Process(0.5);
+            Tick(erasure, 0.5);
             Dictionary<Vector2I, float> memory = Get<Dictionary<Vector2I, float>>(erasure, "_zoneMemory");
             Dictionary<Vector2I, ErasureManager.ErasureZonePhase> phases = Get<Dictionary<Vector2I, ErasureManager.ErasureZonePhase>>(erasure, "_zonePhases");
             ulong hash = 14695981039346656037UL;
@@ -187,7 +197,7 @@ public partial class ErasureActiveRegression : Node
         _bus.PlayerErasurePhaseChanged -= PlayerPhase;
         Check(_events.Count > 1000 && erasure.GlobalErasurePercent == 1f, "parcours 45 min : nombreuses transitions, Effacement global complet");
         _results.Add(new { scenario = "roaming", seconds = 2700, visits = totalVisits, trace });
-        erasure.Free();
+        erasure.GetParent().Free();
     }
 
     private static void Hash(ref ulong hash, uint value) => hash = unchecked((hash ^ value) * 1099511628211UL);
@@ -198,14 +208,14 @@ public partial class ErasureActiveRegression : Node
         {
             ErasureManager erasure = NewErasure();
             for (int i = 0; i < count; i++) erasure.OverrideMemory(new Vector2I(i, 0), 0f);
-            for (int warm = 0; warm < 10; warm++) erasure._Process(0.5);
+            for (int warm = 0; warm < 10; warm++) Tick(erasure, 0.5);
             long allocated = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < 100; i++) erasure._Process(0.5);
+            for (int i = 0; i < 100; i++) Tick(erasure, 0.5);
             allocated = GC.GetAllocatedBytesForCurrentThread() - allocated;
             _results.Add(new { scenario = "zero_cells", cells = count, updates = 100, visits_per_update = Visits(erasure), allocated_bytes = allocated });
             Check(Get<Dictionary<Vector2I, float>>(erasure, "_zoneMemory").Count == count,
                 $"{count} zones nulles : mémoire historique conservée");
-            erasure.Free();
+            erasure.GetParent().Free();
         }
     }
 }

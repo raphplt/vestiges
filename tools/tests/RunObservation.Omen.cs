@@ -21,7 +21,7 @@ public partial class RunObservation
         _player.AIInputOverride = Vector2.Zero;
         Vestiges.Events.CrisisManager crisis = _world.GetNode<Vestiges.Events.CrisisManager>("CrisisManager");
         BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-        float elapsed = (float)typeof(Vestiges.Events.CrisisManager).GetField("_elapsed", flags).GetValue(crisis);
+        float elapsed = _world.GetNode<Vestiges.Core.RunClock>("RunClock").Seconds;
         float warning = crisis.WarningDurationSec;
         typeof(Vestiges.Events.CrisisManager).GetField("_nextCrisisAtSec", flags).SetValue(crisis, elapsed + warning + 1f);
         Save("omen-0-before.png");

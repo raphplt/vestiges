@@ -52,7 +52,7 @@ public partial class ErasureManager : Node
     // Budget de travail, pas règle d'équilibrage : conserver la dette au-delà évite de bloquer une image.
     private const int MaxUpdatesPerFrame = 4;
     private double _updateTimer;
-    private double _totalElapsed;
+    private RunClock _clock;
 
     private readonly Dictionary<Vector2I, float> _zoneMemory = new();
     private readonly Dictionary<Vector2I, ErasureZonePhase> _zonePhases = new();
@@ -84,6 +84,7 @@ public partial class ErasureManager : Node
         LoadConfig();
         _difficultySpeed = DifficultyDataLoader.Get(GetNode<GameManager>("/root/GameManager").DifficultyId).ErasureSpeed;
 
+        _clock = GetNode<RunClock>("../RunClock");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.SouvenirDiscovered += OnSouvenirDiscovered;
         _eventBus.PoiDiscovered += OnPoiDiscovered;
@@ -121,7 +122,6 @@ public partial class ErasureManager : Node
 
     public override void _Process(double delta)
     {
-        _totalElapsed += delta;
         _updateTimer += delta;
         // Tolérance au bruit d'addition des deltas, sans faire perdre le reste de temps à chaque pas.
         if (_updateTimer + 1e-9 < _updateIntervalSec)
@@ -138,7 +138,8 @@ public partial class ErasureManager : Node
             _updateTimer = System.Math.Max(0, _updateTimer - _updateIntervalSec);
             updates++;
             // Évaluer la montée du déclin à la date de ce pas, pas quatre fois à la fin du hitch.
-            AdvanceMemory((float)((_totalElapsed - _updateTimer) / 60.0));
+            // Le pas peut précéder le premier instant de la run (images du chargement) : jamais de date négative.
+            AdvanceMemory((float)(System.Math.Max(0.0, _clock.Seconds - _updateTimer) / 60.0));
             PublishPlayerPhase();
             HurtPlayerInVoid();
             if (_player.IsDead || GetTree().Paused)
