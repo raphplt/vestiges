@@ -3,11 +3,12 @@
     "map_radius_y": 400,
     "spawn_clearance": 4,
     "lands": {
-        "_doc": "Terres successives (plan 51) : une run traverse plusieurs cartes plus petites, chacune d'un seul biome tiré sans remise. enabled : allumées en run normale, la règle depuis le 17 octobre (plan 51 §15) ; une run de dev retrouve la grande carte en mosaïque par --no-lands (mesures, comparaisons). map_radius et map_radius_y : taille d'une terre (environ un tiers de la surface de la grande carte). count_scales : part gardée des coffres et de chaque sorte de lieu, comptes arrondis sans perte d'un groupe à l'autre.",
+        "_doc": "Terres successives (plan 51) : une run traverse plusieurs cartes plus petites, chacune d'un seul biome tiré sans remise. enabled : allumées en run normale, la règle depuis le 17 octobre (plan 51 §15) ; une run de dev retrouve la grande carte en mosaïque par --no-lands (mesures, comparaisons). map_radius et map_radius_y : taille d'une terre (environ un tiers de la surface de la grande carte). count_scales : part gardée des coffres et de chaque sorte de lieu, comptes arrondis sans perte d'un groupe à l'autre. memorial_band : couronne des Mémoriaux sur une terre (part du rayon) : on va les chercher vers le front, aucun près du départ.",
         "enabled": true,
         "map_radius": 116,
         "map_radius_y": 232,
-        "count_scales": { "chests": 0.34, "memorial": 0.5, "rift": 0.34, "workshop": 0.34, "peril_stele": 0.34, "well": 0.34 }
+        "count_scales": { "chests": 0.34, "memorial": 0.5, "rift": 0.34, "workshop": 0.34, "peril_stele": 0.34, "well": 0.34 },
+        "memorial_band": [0.35, 0.92]
     },
     "props": {
         "min_blocking_height": 18,

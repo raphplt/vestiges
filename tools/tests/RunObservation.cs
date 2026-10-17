@@ -677,6 +677,11 @@ public partial class RunObservation : Node
             frameStats?.CountKill();
         };
         eventBus.EnemyKilled += onKill;
+        // Étapes des terres (plan 51), datées en temps de jeu : lumières, réveil du gardien, victoire.
+        EventBus.LandObjectiveChangedEventHandler onLandObjective = (land, lights, needed, stage) =>
+            GD.Print(string.Create(CultureInfo.InvariantCulture,
+                $"[RunObservation] LAND t={gameTime:F0} terre={land} lumieres={lights}/{needed} etape={stage} niveau={_player.GetNode<Vestiges.Progression.PlayerProgression>("PlayerProgression").CurrentLevel}"));
+        eventBus.LandObjectiveChanged += onLandObjective;
         // Temps pour tuer (plan 20, R1-T) : PV des créatures apparues et dégâts infligés, cumulés ; le modèle en
         // déduit, par palier, le PV moyen d'une créature divisé par les dégâts infligés par seconde.
         double spawnedHp = 0, damageDealt = 0;
@@ -739,6 +744,8 @@ public partial class RunObservation : Node
         double nextChestSample = 0.0;
         List<(Rect2 Rect, float SortY, bool Canopy)> propRects = CollectPropRects();
         bool nomad = Array.IndexOf(OS.GetCmdlineUserArgs(), "--nomad") >= 0;
+        _landsBot = Array.IndexOf(OS.GetCmdlineUserArgs(), "--lands-bot") >= 0;
+        double landDetourUntil = 0.0;
         // --land-every S (plan 51) : passage à la terre suivante toutes les S secondes de jeu ; une image de chaque
         // terre neuve est gardée après le fondu de l'écran de passage (land-N.png) quand la run est capturée.
         double landEvery = double.Parse(Argument(OS.GetCmdlineUserArgs(), "--land-every", "0"), CultureInfo.InvariantCulture);
@@ -799,6 +806,11 @@ public partial class RunObservation : Node
                 pausedTime = pausedFrames == 0 ? 0.0 : pausedTime + GetProcessDeltaTime();
                 if (pausedTime >= choiceDelay)
                     AutoPickLevelUp();
+                // Le réveil animé d'un lieu et le passage d'une terre se déroulent en temps réel : leurs images, très rapides
+                // jeu en pause, ne comptent pas.
+                if (_world.GetNodeOrNull<Vestiges.UI.LandmarkReveal>("LandmarkReveal") is { IsPlaying: true }
+                    || _world.GetNodeOrNull<LandTransition>("LandTransition") is { IsChanging: true })
+                    continue;
                 if (++pausedFrames > 3000)
                     throw new InvalidOperationException($"Run en pause depuis 3 000 frames : écran bloquant non géré par le banc ({VisibleScreens()}).");
                 continue;
@@ -885,6 +897,22 @@ public partial class RunObservation : Node
                 }
             }
             bool holding = _visitPlaces && !director.IsEventActive && places.Steer(t, _player, ref waypoint);
+            // --lands-bot : la boucle des terres passe avant tout le reste ; bloqué deux secondes (eau, immeuble, décor), le
+            // bot contourne quelques secondes avant de reprendre sa cible.
+            if (t >= landDetourUntil && TrySteerLand(t, ref waypoint))
+            {
+                holding = false;
+                // Près de sa cible (combat, cercle), rester sur place n'est pas un blocage.
+                if (_player.GlobalPosition.DistanceTo(waypoint) < 140f)
+                    lastProgressTime = t;
+                else if (t - lastProgressTime > 2.0)
+                {
+                    landDetourUntil = t + LandDetourSeconds;
+                    Vector2 toward = (waypoint - _player.GlobalPosition).Normalized();
+                    waypoint = _player.GlobalPosition + toward.Rotated(rng.Randf() < 0.5f ? Mathf.Pi / 2f : -Mathf.Pi / 2f) * 420f;
+                    lastProgressTime = t;
+                }
+            }
             // Un objet au sol à portée de détour, s'il entre dans le sac : le bot va le ramasser (plan 35 I3).
             if (_visitPlaces && !holding && NearestTakeableItem(400f) is ItemPickup nearItem)
                 waypoint = nearItem.GlobalPosition;
@@ -1008,6 +1036,7 @@ public partial class RunObservation : Node
         eventBus.PlayerHitBy -= onHit;
         eventBus.XpGained -= onXp;
         eventBus.EnemyKilled -= onKill;
+        eventBus.LandObjectiveChanged -= onLandObjective;
         eventBus.EnemySpawned -= onSpawned;
         eventBus.EntityDamaged -= onDamaged;
         eventBus.EssenceChanged -= onEssence;
@@ -1211,6 +1240,7 @@ public partial class RunObservation : Node
 
     private string[] _preferredCards = Array.Empty<string>();
     private const double EventDetourSeconds = 3.0;
+    private const double LandDetourSeconds = 2.5;
     private const string PerilObjectId = "sifflet_d_arbitre";
 
     private Rect2 VisibleWorldRect()

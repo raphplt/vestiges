@@ -12,6 +12,67 @@ namespace Vestiges.Tests;
 /// </summary>
 public partial class RunObservation
 {
+    // --lands-bot (plan 51) : le bot joue la boucle des terres au lieu d'errer.
+    private bool _landsBot;
+    private const float CircleOrbitPx = 110f;
+    private const float ReachPx = 60f;
+
+    /// <summary>
+    /// Cible du bot sur une terre, par priorité : le gardien levé, le repaire prêt, le cercle d'un Mémorial en cours (il
+    /// y tourne), le Mémorial endormi le plus proche dont le sol tient encore, sinon le cœur. Rend vrai s'il a une cible.
+    /// </summary>
+    private bool TrySteerLand(double time, ref Vector2 waypoint)
+    {
+        GuardianDirector guardian = _world.GetNodeOrNull<GuardianDirector>("GuardianDirector");
+        if (!_landsBot || guardian == null || guardian.IsDefeated)
+            return false;
+        Vector2 position = _player.GlobalPosition;
+        if (guardian.IsFighting && guardian.Guardian is { IsActive: true } boss)
+        {
+            waypoint = boss.GlobalPosition + (position - boss.GlobalPosition).Normalized() * 70f;
+            return true;
+        }
+        GuardianLair lair = GuardianLair.Current;
+        if (lair != null && lair.CanInteract)
+        {
+            waypoint = lair.GlobalPosition;
+            if (position.DistanceTo(lair.GlobalPosition) < ReachPx)
+                lair.Interact(_player);
+            return true;
+        }
+        for (int i = 0; i < Memorial.All.Count; i++)
+        {
+            if (Memorial.All[i].State != Memorial.MemorialState.Gathering)
+                continue;
+            waypoint = Memorial.All[i].GlobalPosition + Vector2.FromAngle((float)time * 1.3f) * CircleOrbitPx;
+            return true;
+        }
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        Memorial target = null;
+        float nearest = float.MaxValue;
+        for (int i = 0; i < Memorial.All.Count; i++)
+        {
+            Memorial memorial = Memorial.All[i];
+            float distance = position.DistanceTo(memorial.GlobalPosition);
+            if (memorial.State == Memorial.MemorialState.Dormant && erasure.GetMemoryAt(memorial.GlobalPosition) > 0.3f && distance < nearest)
+            {
+                nearest = distance;
+                target = memorial;
+            }
+        }
+        if (target != null)
+        {
+            waypoint = target.GlobalPosition;
+            if (nearest < ReachPx)
+                GetNode<Core.EventBus>("/root/EventBus").EmitSignal(Core.EventBus.SignalName.MemorialInteracted, target);
+            return true;
+        }
+        if (lair == null)
+            return false;
+        waypoint = lair.GlobalPosition;
+        return true;
+    }
+
     private async Task CaptureLands()
     {
         _player.IsGodMode = true;

@@ -157,6 +157,8 @@ public partial class GuardianDirector : Node
         _lair.Awaken();
         _erasure.CollapseUnanchored();
         _erasure.FrontFrozen = true;
+        // Foule allégée pendant le combat : les armes automatiques visent le plus proche (comme pour la Barrière).
+        _spawner.EncounterDensityMultiplier = _config.FightCrowdDensity;
         ScreenShake.Instance?.ShakeMedium();
         AudioManager.PlayUI("sfx_barrier_rise");
 
@@ -170,7 +172,12 @@ public partial class GuardianDirector : Node
             return;
         }
         float extra = Mathf.Max(0, _lights - _config.WakeLights) * _config.ExtraLightHp;
-        _guardian.Empower(_config.HpMultiplier * (1f + extra) * (enraged ? _config.RageHp : 1f), enraged ? _config.RageDamage : 1f);
+        float hpMultiplier = _config.HpMultiplier * (1f + extra) * (enraged ? _config.RageHp : 1f);
+        // Plancher par rang : un Souverain calé sur un niveau encore bas ne tiendrait pas le combat d'un gardien.
+        float floor = _config.MinHp * Mathf.Pow(_config.MinHpRankGrowth, _transition.LandIndex) * (1f + extra) * (enraged ? _config.RageHp : 1f);
+        if (_guardian.MaxHp * hpMultiplier < floor)
+            hpMultiplier = floor / Mathf.Max(1f, _guardian.MaxHp);
+        _guardian.Empower(hpMultiplier, enraged ? _config.RageDamage : 1f);
         _guardian.Modifiers.IsEventBound = true;
         for (int i = 0; i < _config.Escorts; i++)
         {
@@ -202,6 +209,7 @@ public partial class GuardianDirector : Node
     private void Defeat(Vector2 position)
     {
         _phase = Phase.Defeated;
+        _spawner.EncounterDensityMultiplier = 1f;
         _bar?.End(true);
         _bar = null;
         _guardian = null;
@@ -226,6 +234,7 @@ public partial class GuardianDirector : Node
 
     private void OnLandChanging(int toIndex)
     {
+        _spawner.EncounterDensityMultiplier = 1f;
         _bar?.End(false);
         _bar = null;
         _guardian = null;

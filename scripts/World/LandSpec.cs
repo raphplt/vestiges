@@ -23,6 +23,9 @@ public sealed class LandSpec
     public int BiomeCount { get; private init; }
     private IReadOnlyDictionary<string, float> CountScales { get; init; }
 
+    /// <summary>Couronne imposée aux Mémoriaux d'une terre ; nulle sur la grande carte (couronnes de landmarks.json).</summary>
+    public Vector2? MemorialBand { get; private init; }
+
     public static LandSpec For(int index, WorldGenConfig config, ulong runSeed)
     {
         LandsConfig lands = config.Lands;
@@ -41,6 +44,7 @@ public sealed class LandSpec
             Index = index, IsLand = true, Seed = seed, MapRadius = lands.MapRadius, MapRadiusY = lands.MapRadiusY,
             BiomeIds = new[] { BiomeOf(index, config.AvailableBiomes) }, BiomeCount = 1,
             CountScales = lands.CountScales,
+            MemorialBand = lands.MemorialBand,
         };
     }
 

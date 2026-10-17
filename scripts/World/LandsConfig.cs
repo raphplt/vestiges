@@ -19,6 +19,9 @@ public sealed class LandsConfig
     /// <summary>Part gardée par sorte de lieu (« chests », « memorial », « rift », « workshop », « peril_stele », « well »).</summary>
     public IReadOnlyDictionary<string, float> CountScales { get; init; } = new Dictionary<string, float>();
 
+    /// <summary>Couronne des Mémoriaux sur une terre, en part du rayon : loin du départ, vers le front.</summary>
+    public Vector2 MemorialBand { get; init; } = new(0f, 1f);
+
     public static LandsConfig Parse(Godot.Collections.Dictionary section)
     {
         Dictionary<string, float> scales = new();
@@ -39,6 +42,9 @@ public sealed class LandsConfig
             MapRadius = (int)section["map_radius"].AsDouble(),
             MapRadiusY = (int)section["map_radius_y"].AsDouble(),
             CountScales = scales,
+            MemorialBand = section.ContainsKey("memorial_band")
+                ? new Vector2((float)section["memorial_band"].AsGodotArray()[0].AsDouble(), (float)section["memorial_band"].AsGodotArray()[1].AsDouble())
+                : new Vector2(0f, 1f),
         };
     }
 }

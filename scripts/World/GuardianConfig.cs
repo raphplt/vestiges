@@ -13,6 +13,9 @@ public sealed class GuardianConfig
     public int WakeLights { get; init; }
     public Vector2 LairOffset { get; init; }
     public float HpMultiplier { get; init; }
+    public float MinHp { get; init; }
+    public float MinHpRankGrowth { get; init; }
+    public float FightCrowdDensity { get; init; }
     public float ExtraLightHp { get; init; }
     public string ExtraLightChest { get; init; }
     public string Chest { get; init; }
@@ -40,7 +43,7 @@ public sealed class GuardianConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_multiplier", "extra_light_hp",
+            reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_multiplier", "min_hp", "min_hp_rank_growth", "fight_crowd_density", "extra_light_hp",
                 "extra_light_chest", "chest", "rage_hp", "rage_damage", "escorts", "passage_delay_seconds", "rank_peril");
             List<JsonElement> offset = reader.List(root, "lair_offset_px", 2);
             HashSet<string> chests = new();
@@ -51,6 +54,9 @@ public sealed class GuardianConfig
                 WakeLights = reader.Integer(root, "wake_lights", 1, 20),
                 LairOffset = offset.Count == 2 ? new Vector2((float)offset[0].GetDouble(), (float)offset[1].GetDouble()) : Vector2.Zero,
                 HpMultiplier = reader.Positive(root, "hp_multiplier"),
+                MinHp = reader.NonNegative(root, "min_hp"),
+                MinHpRankGrowth = reader.Positive(root, "min_hp_rank_growth"),
+                FightCrowdDensity = reader.Positive(root, "fight_crowd_density"),
                 ExtraLightHp = reader.NonNegative(root, "extra_light_hp"),
                 ExtraLightChest = reader.OneOf(root, "extra_light_chest", chests),
                 Chest = reader.OneOf(root, "chest", chests),

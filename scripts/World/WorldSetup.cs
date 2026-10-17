@@ -612,6 +612,7 @@ public partial class WorldSetup : Node2D
         SitePlacer placer = new(_generator, _ground, _usedCells, LandSeed, _urbanLayout, _wildFieldsLayout, ChestDataLoader.LoadPlacement())
         {
             CountScale = _land.CountScale,
+            MemorialBand = _land.MemorialBand,
         };
         ChestSpawner.SpawnChests(placer, _poiContainer);
         LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);

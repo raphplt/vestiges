@@ -666,3 +666,14 @@ Relevé : les quêtes « battre la Barrière » et « battre l'Indicible » ne s
 - **la terre suivante** : champs, « Terre 2 · Mémoriaux ravivés 0/3 », repaire près du départ.
 
 Corrigé en regardant : le repaire empruntait la stèle des Mémoriaux et redevenait blanc une fois prêt, donc identique à un Mémorial. Il reste maintenant violet, plus clair quand il est prêt.
+
+### Rythme mesuré et premier réglage — 17 octobre 2026
+
+**Bot des terres** (`--lands-bot` dans l'outil de mesure) : il va au Mémorial debout le plus proche, tourne dans son cercle, revient réveiller le gardien au repaire, puis le combat. Bloqué, il contourne. Il est invincible et ne choisit pas ses cartes comme un joueur : ses durées sont un plancher, pas une cible. Les étapes de chaque terre sont tracées en temps de jeu (`[RunObservation] LAND`).
+
+**Mesures, 40 min de jeu, graines 7 et 42 :**
+1. **Réglages de départ** : une terre bouclée en 2 min 30. Les Mémoriaux étaient trop près du départ (lumières en 76 à 93 s), et le gardien trop faible, car ses PV suivent le niveau du joueur (130 et 1 209 PV).
+2. **Mémoriaux repoussés vers le front** (couronne de 35 à 92 % du rayon, `lands.memorial_band`) **et plancher de PV du gardien** : lumières en 1 min 30 à 2 min 30. Mais le combat durait 7 à 15 min : le gardien se bat au milieu de la foule, et les armes automatiques visent le plus proche (environ 25 dégâts par seconde sur lui).
+3. **Foule réduite de moitié pendant le combat**, comme pour la Barrière (§85), et **gardien allégé** (PV ×1,5, plancher de 2 500 PV ×1,8 par terre, 4 escortes) : combat de 64 à 177 s quand on le réveille, 1 à 5 min s'il se lève seul, enragé. Graine 7 : terres 1 et 2 en 3 min environ chacune ; **à partir de la terre 4, la puissance du bot dépasse la montée de difficulté** (terres 5 et 6 en 2 min). Le late game doit durcir la run. Graine 42 : le bot reste bloqué sur certaines terres, une limite de son pilotage.
+
+**La durée visée de 10 min par terre** repose sur deux systèmes déjà en place, gardés tels quels jusqu'à la séance de Raphaël : l'anneau (la terre tombe en 12 min au plus, puis le gardien se lève seul, enragé), et la difficulté qui monte avec le temps, plus d'un rang par terre. Un joueur rapide finit vite, un joueur lent le paie en difficulté : le modèle de Risk of Rain 2.

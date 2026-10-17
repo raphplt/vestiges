@@ -18,7 +18,8 @@ public static class LandmarkSpawner
             int count = placer.Scaled("memorial", band.Count);
             for (int i = 0; i < count; i++)
             {
-                if (!placer.TryPlace(band.Min, band.Max, memorial.MinSpacingPx, out Vector2 position))
+                Vector2 ring = placer.MemorialBand ?? new Vector2(band.Min, band.Max);
+                if (!placer.TryPlace(ring.X, ring.Y, memorial.MinSpacingPx, out Vector2 position))
                 {
                     GD.PushWarning($"[LandmarkSpawner] No room for a memorial in band {band.Min}-{band.Max}");
                     continue;
