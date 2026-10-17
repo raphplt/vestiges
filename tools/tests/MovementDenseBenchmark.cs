@@ -107,6 +107,7 @@ public partial class MovementDenseBenchmark : Node
             // Temps de rendu CPU/GPU du viewport : décompose la frame au-delà du temps mural (investigation perf).
             RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), true);
             GetWindow().Mode = Window.ModeEnum.Windowed;
+            GetWindow().AlwaysOnTop = true;
             GetWindow().ContentScaleSize = size;
             GetWindow().ContentScaleFactor = 1;
             GetWindow().Size = size;
@@ -530,6 +531,8 @@ public partial class MovementDenseBenchmark : Node
         do
         {
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (Engine.GetFramesDrawn() <= previous)
+                RenderingServer.ForceDraw(false);
             if (Time.GetTicksMsec() > deadline)
                 throw new TimeoutException("Aucune nouvelle image rendue depuis 5 s.");
         }

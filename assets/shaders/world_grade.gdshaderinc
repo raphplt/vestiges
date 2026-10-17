@@ -24,6 +24,12 @@ vec3 world_grade(vec3 color, float amount) {
 global uniform vec4 world_clouds;
 // 1 / taille moyenne d'un nuage au sol, en px.
 global uniform float world_cloud_scale;
+// Texture de bruit précalculée 256×256 répétable (plan 53 V2) :
+// R : bruit de nuages 2 octaves (période 32 cellules) ;
+// G : bruit de taches 3 octaves (période 32 cellules) ;
+// B : bruit de moisissure 2 octaves (période 32 cellules) ;
+// A : bruit de valeur de base (période 256 cellules, filtré en bilinéaire matériel).
+global uniform sampler2D world_noise_lut : filter_linear, repeat_enable;
 
 // L'ombre garde un peu du bleu du ciel : le rouge et le vert baissent plus que le bleu.
 const vec3 CLOUD_SHADOW_TINT = vec3(1.0, 0.94, 0.8);
@@ -35,11 +41,7 @@ float cloud_hash(vec2 p) {
 }
 
 float cloud_noise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	return mix(mix(cloud_hash(i), cloud_hash(i + vec2(1.0, 0.0)), f.x),
-		mix(cloud_hash(i + vec2(0.0, 1.0)), cloud_hash(i + vec2(1.0, 1.0)), f.x), f.y);
+	return texture(world_noise_lut, (p + 0.5) * (1.0 / 256.0)).a;
 }
 
 // Ombre au pixel monde p, de 0 (plein soleil) à la noirceur w. Repère au sol : la vue 2:1 écrase la profondeur de
@@ -47,7 +49,7 @@ float cloud_noise(vec2 p) {
 // la lisière reste du pixel art, pas un dégradé lisse.
 float cloud_shadow(vec2 p) {
 	vec2 q = (p + world_clouds.xy) * vec2(1.0, 2.0) * world_cloud_scale;
-	float n = cloud_noise(q) * 0.65 + cloud_noise(q * 2.7 + 13.1) * 0.35;
+	float n = texture(world_noise_lut, q * (1.0 / 32.0)).r;
 	float cover = smoothstep(1.0 - world_clouds.z, 1.0 - world_clouds.z + 0.12, n);
 	vec2 cell = mod(floor(p), 2.0);
 	float dither = mod(cell.x * 2.0 + cell.y * 3.0, 4.0) * 0.25 + 0.125;
@@ -91,23 +93,11 @@ vec3 world_grime_at(vec3 color, vec2 p) {
 	if (amount <= 0.0)
 		return color;
 	vec2 cell = floor(p);
+	float grain_sample = texelFetch(world_noise_lut, ivec2(cell) & ivec2(255), 0).a;
 	// Nom local distinct de l'uniforme « grain » du sol, qui inclut ce fichier.
-	float speckle = (cloud_hash(cell + 71.3) - 0.5) * 2.0 * world_grime.y
-		+ (cloud_noise(cell / 6.0 + 23.0) - 0.5) * 2.0 * world_grime.z;
+	float speckle = (grain_sample - 0.5) * 2.0 * world_grime.y
+		+ (cloud_noise(cell * (1.0 / 6.0) + 23.0) - 0.5) * 2.0 * world_grime.z;
 	return grime_palette(color, amount) * (1.0 + speckle * amount);
-}
-
-float stain_noise(vec2 q, int octaves) {
-	float total = 0.0;
-	float weight = 0.5;
-	float norm = 0.0;
-	for (int i = 0; i < octaves; i++) {
-		total += cloud_noise(q) * weight;
-		norm += weight;
-		q = q * 2.03 + 17.7;
-		weight *= 0.5;
-	}
-	return total / norm;
 }
 
 // Taches (G2) : auréoles d'eau ou de thé, l'intérieur à peine plus sombre et le bord marqué, plus quelques plaques de
@@ -120,13 +110,16 @@ vec3 world_stains_at(vec3 color, vec2 p) {
 	// Paliers nets tramés au pixel (Bayer 2×2, comme les nuages) : un bord lissé faisait un trait flou sur l'écran.
 	vec2 bayer = mod(cell, 2.0);
 	float dither = (mod(bayer.x * 2.0 + bayer.y * 3.0, 4.0) * 0.25 - 0.375) * 0.012;
-	float n = stain_noise(cell * world_stain_scale + 3.7, 3) + dither;
+	float n = texture(world_noise_lut, (cell * world_stain_scale + 3.7) * (1.0 / 32.0)).g + dither;
 	float inside = step(0.6, n);
-	// Auréole rompue par endroits : une ligne continue se lirait comme un trait de contour.
-	float rim = inside * (1.0 - step(0.614, n)) * step(0.35, cloud_noise(cell * 0.18 + 9.1));
-	// La tache brunit : le bleu baisse plus que le rouge.
-	color *= vec3(1.0) - (inside * 0.11 + rim * 0.14) * strength * vec3(0.48, 0.66, 0.99);
-	float mold = step(0.68, stain_noise(cell * world_stain_scale * 1.8 + 41.3, 2) + dither);
+	if (inside > 0.0) {
+		// Auréole rompue par endroits : une ligne continue se lirait comme un trait de contour.
+		float rim_band = 1.0 - step(0.614, n);
+		float rim = rim_band > 0.0 ? rim_band * step(0.35, cloud_noise(cell * 0.18 + 9.1)) : 0.0;
+		// La tache brunit : le bleu baisse plus que le rouge.
+		color *= vec3(1.0) - (inside * 0.11 + rim * 0.14) * strength * vec3(0.48, 0.66, 0.99);
+	}
+	float mold = step(0.68, texture(world_noise_lut, (cell * world_stain_scale * 1.8 + 41.3) * (1.0 / 32.0)).b + dither);
 	return mix(color, vec3(0.1, 0.12, 0.06), mold * 0.1 * strength);
 }
 

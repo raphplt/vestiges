@@ -1,6 +1,34 @@
 # Fonctions communes aux scripts de tools/, pour qu'ils tournent à l'identique sous Linux et macOS.
 # À sourcer : source "$(dirname "$0")/lib/portable.sh"
 
+# Résout le binaire Godot 4.7.2 .NET : GODOT_BIN s'il est défini, sinon godot-mono dans le PATH, sinon les emplacements
+# macOS standards (~/Applications/Godot_mono.app ou /Applications/Godot_mono.app).
+_REAL_USER_HOME="${HOME:-/Users/$(id -un)}"
+resolve_godot_bin() {
+    if [[ -n "${GODOT_BIN:-}" ]]; then
+        echo "$GODOT_BIN"
+        return 0
+    fi
+    if command -v godot-mono >/dev/null 2>&1; then
+        echo "godot-mono"
+        return 0
+    fi
+    local candidate
+    for candidate in \
+        "$_REAL_USER_HOME/Applications/Godot_mono.app/Contents/MacOS/Godot" \
+        "/Applications/Godot_mono.app/Contents/MacOS/Godot"; do
+        if [[ -x "$candidate" ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+    echo "godot-mono"
+}
+export GODOT_BIN="$(resolve_godot_bin)"
+if [[ $(uname) == Darwin && -z "${DOTNET_CLI_HOME:-}" ]]; then
+    export DOTNET_CLI_HOME="$_REAL_USER_HOME"
+fi
+
 # Chemin absolu, même si le dossier n'existe pas encore (`realpath -m` n'existe pas sous macOS).
 abs_path() {
     python3 -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' "$1"
@@ -46,8 +74,8 @@ isolate_godot_profile() {
     dir=$(abs_path "$1") || return 1
     export XDG_DATA_HOME="$dir/data" XDG_CONFIG_HOME="$dir/config" XDG_CACHE_HOME="$dir/cache"
     if [[ $(uname) == Darwin ]]; then
-        export NUGET_PACKAGES="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
-        export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$HOME}"
+        export NUGET_PACKAGES="${NUGET_PACKAGES:-$_REAL_USER_HOME/.nuget/packages}"
+        export DOTNET_CLI_HOME="${DOTNET_CLI_HOME:-$_REAL_USER_HOME}"
         export HOME="$dir/home"
         # Godot y crée son cache de shaders avant d'avoir créé le dossier user:// lui-même.
         mkdir -p "$HOME/Library/Application Support/Godot/app_userdata/Vestiges"

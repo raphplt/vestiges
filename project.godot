@@ -159,6 +159,10 @@ erasure_memory={
 "type": "sampler2D",
 "value": ""
 }
+world_noise_lut={
+"type": "sampler2D",
+"value": ""
+}
 erasure_window={
 "type": "vec4",
 "value": Vector4(0, 0, 0, 0)

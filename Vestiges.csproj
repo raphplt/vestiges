@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>Vestiges</RootNamespace>
+    <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)' != 'Debug'">

@@ -106,41 +106,58 @@ public static class GroundMaterial
     }
 
     /// <summary>
-    /// Alpha = 255 pour les cellules à moins de deux cases d'un autre biome : le shader ne cherche la frontière
-    /// que là, les autres pixels sortent après une seule lecture. En grille « stacked », deux cases de distance
-    /// valent ±2 colonnes et ±4 rangs.
+    /// Encode dans le canal A de <c>cell_map</c> la présence et l'ordre des identifiants de mélange voisins dans le
+    /// rayon maximal de frontière (band_px + déformation) :
+    /// 0 = aucun voisin différent ; 85 = voisins d'identifiant supérieur uniquement ; 170 = inférieur uniquement ;
+    /// 255 = les deux. Permet au shader d'écarter immédiatement la moitié des pixels où le bruit de lisière avance du
+    /// côté opposé (plan 53 V3).
     /// </summary>
     private static void MarkBorderCells(byte[] cells, Vector2I size)
     {
         for (int gy = 0; gy < size.Y; gy++)
         {
-            for (int gx = 0; gx < size.X; gx++)
+            int cx = gxCenter(0, gy);
+            for (int gx = 0; gx < size.X; gx++, cx += 64)
             {
                 int offset = (gy * size.X + gx) * 4;
                 byte biome = cells[offset];
                 if (biome == NoBlend)
                     continue;
-                bool border = false;
-                for (int dy = -4; dy <= 4 && !border; dy++)
+                bool hasHigher = false;
+                bool hasLower = false;
+                for (int dy = -3; dy <= 3 && !(hasHigher && hasLower); dy++)
                 {
                     int ny = gy + dy;
                     if (ny < 0 || ny >= size.Y)
                         continue;
+                    int nShift = (ny & 1) * 32;
                     for (int dx = -2; dx <= 2; dx++)
                     {
                         int nx = gx + dx;
                         if (nx < 0 || nx >= size.X)
                             continue;
+                        int nxCenter = nx * 64 + nShift;
+                        if (Mathf.Abs(nxCenter - cx) > 108)
+                            continue;
                         byte other = cells[(ny * size.X + nx) * 4];
-                        if (other != NoBlend && other != biome)
-                        {
-                            border = true;
-                            break;
-                        }
+                        if (other == NoBlend || other == biome)
+                            continue;
+                        if (other > biome)
+                            hasHigher = true;
+                        else
+                            hasLower = true;
                     }
                 }
-                cells[offset + 3] = border ? (byte)255 : (byte)0;
+                cells[offset + 3] = (hasHigher, hasLower) switch
+                {
+                    (true, true) => 255,
+                    (true, false) => 85,
+                    (false, true) => 170,
+                    _ => 0,
+                };
             }
         }
+
+        static int gxCenter(int gx, int gy) => gx * 64 + (gy & 1) * 32;
     }
 }

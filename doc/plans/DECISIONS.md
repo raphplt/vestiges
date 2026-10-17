@@ -2215,3 +2215,16 @@ Reprise du plan 51 pour formaliser la boucle avant de l'implémenter. Raphaël r
 - **Victoire** : le troisième gardien vaincu, la run est gagnée (boss battu, difficulté suivante débloquée, phase endgame). Un gardien vaut la Barrière pour les quêtes, le troisième vaut l'Indicible.
 - **4e terre** : sans repaire ni passage, le cœur ne tombe jamais ; un écho de gardien se lève toutes les 2 min 30, plus fort à chaque fois, avec un coffre et un point de Péril. La run finit à la mort.
 - **Gardien de référence** : charge annoncée, frappe qui ouvre le vide (brèches de 20 s, cœur compris), onde à traverser en dash, trois phases. Corps du Souverain grossi en attendant l'art.
+
+## 187. Optimisation macOS, shaders du monde et paramètres vidéo — 17 octobre 2026
+
+Constat de Raphaël : le jeu tourne à +150 FPS sur PC Windows/Linux, mais tombe à 30–40 FPS sur Mac (M5 Pro 18 Go et M1 Pro 16 Go). Diagnostic : (1) résolution Retina × `canvas_items` (6 à 8 Mpx de fragments), (2) bruits procéduraux recalculés par fragment dans `world_grade.gdshaderinc`, (3) 48 recherches de cellules par fragment aux frontières dans `ground.gdshader`, (4) couche OpenGL dépréciée sur macOS + verrouillage V-Sync et absence de réglages vidéo.
+
+Raphaël : « ouais ok ca me va totalement. je serai d'avis de travailler sur ces quatre leviers !! Et en profiter d'ailleurs pour dans les menus du jeu pouvoir régler la résolution, les fps max, ect... »
+
+**Découpé au [plan 53](53-optimisation-macos-et-parametres-video.md)** en quatre lots :
+- **V1** : Paramètres vidéo dans **Paramètres › Graphismes** (Plein écran persisté, Résolution, Échelle de rendu / Retina, V-Sync, FPS max).
+- **V2** : Pré-calcul en texture répétable des bruits de `world_grade.gdshaderinc` (nuages, grain, taches).
+- **V3** : Pré-calcul CPU des jonctions de biomes dans `GroundMaterial` / `ground.gdshader`.
+- **V4** : Moteur de rendu Metal / macOS et validation globale A/B sur Mac.
+

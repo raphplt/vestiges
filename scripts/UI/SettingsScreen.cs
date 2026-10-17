@@ -115,6 +115,7 @@ public partial class SettingsScreen : CanvasLayer
 		_root.Visible = false;
 		AudioManager.Instance?.SaveSettings();
 		CombatFxSettings.Save();
+		DisplaySettings.Save();
 		EmitSignal(SignalName.Closed);
 		if (_returnFocus != null && IsInstanceValid(_returnFocus) && _returnFocus.IsVisibleInTree())
 			_returnFocus.GrabFocus();
@@ -477,23 +478,56 @@ public partial class SettingsScreen : CanvasLayer
 		MarginContainer margin = new();
 		margin.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddThemeConstantOverride("margin_left", 30);
-		margin.AddThemeConstantOverride("margin_top", 24);
+		margin.AddThemeConstantOverride("margin_top", 20);
 		margin.AddThemeConstantOverride("margin_right", 30);
-		margin.AddThemeConstantOverride("margin_bottom", 16);
+		margin.AddThemeConstantOverride("margin_bottom", 12);
 
 		VBoxContainer vbox = new();
-		vbox.AddThemeConstantOverride("separation", 16);
+		vbox.AddThemeConstantOverride("separation", 12);
 		vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 		margin.AddChild(vbox);
 
 		// Fullscreen toggle
 		vbox.AddChild(BuildToggleRow("Plein écran",
-			DisplayServer.WindowGetMode() != DisplayServer.WindowMode.Windowed,
+			DisplaySettings.Fullscreen,
 			(toggled) =>
 			{
-				DisplayServer.WindowSetMode(toggled
-					? DisplayServer.WindowMode.Fullscreen
-					: DisplayServer.WindowMode.Windowed);
+				DisplaySettings.Fullscreen = toggled;
+			}));
+
+		// Windowed resolution
+		vbox.AddChild(BuildCycleRow("Résolution (fenêtré)",
+			DisplaySettings.ResolutionLabel(DisplaySettings.CurrentResolution),
+			(btn) =>
+			{
+				DisplaySettings.CycleResolution();
+				btn.Text = DisplaySettings.ResolutionLabel(DisplaySettings.CurrentResolution);
+			}));
+
+		// Internal render scale (Retina / HiDPI)
+		vbox.AddChild(BuildCycleRow("Échelle de rendu",
+			DisplaySettings.RenderScaleLabel(DisplaySettings.RenderScale),
+			(btn) =>
+			{
+				DisplaySettings.CycleRenderScale();
+				btn.Text = DisplaySettings.RenderScaleLabel(DisplaySettings.RenderScale);
+			}));
+
+		// V-Sync toggle
+		vbox.AddChild(BuildToggleRow("Synchronisation verticale (V-Sync)",
+			DisplaySettings.VSync,
+			(toggled) =>
+			{
+				DisplaySettings.VSync = toggled;
+			}));
+
+		// Max FPS cap
+		vbox.AddChild(BuildCycleRow("FPS max",
+			DisplaySettings.MaxFpsLabel(DisplaySettings.CurrentMaxFps),
+			(btn) =>
+			{
+				DisplaySettings.CycleMaxFps();
+				btn.Text = DisplaySettings.MaxFpsLabel(DisplaySettings.CurrentMaxFps);
 			}));
 
 		// Colorblind filter
