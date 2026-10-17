@@ -43,6 +43,13 @@ public partial class Minimap : Control
     private static readonly Color WorkshopColor = new(0.91f, 0.52f, 0.24f);
     private static readonly Color WellColor = new(0.55f, 0.72f, 0.83f);
     private static readonly Color PlaceColor = new(0.78f, 0.86f, 0.92f);
+    private static readonly Color GuardianColor = new(0.86f, 0.55f, 0.95f);
+    // Anneau de terre restante autour du radar (plan 51 P2c) : il se vide avec la terre, jusqu'au cœur.
+    private static readonly Color LandRingBack = new(0.08f, 0.07f, 0.11f, 0.85f);
+    private static readonly Color LandRingCalm = new(0.92f, 0.78f, 0.45f);
+    private static readonly Color LandRingLow = new(0.95f, 0.4f, 0.32f);
+    private const float LandRingLowShare = 0.25f;
+    private float _landRemaining = -1f;
     private ErasureManager _erasure;
     private WorldSetup _world;
     private SmallPlaceDirector _places;
@@ -211,6 +218,7 @@ public partial class Minimap : Control
             (_playerIcon, PlayerColor, "MAP_LEGEND_YOU"),
             (_chestIcon, RarityPalette.Main("rare"), "MAP_LEGEND_CHEST"),
             (_memorialIcon, MemorialColor, "MAP_LEGEND_MEMORIAL"),
+            (_memorialIcon, GuardianColor, "MAP_LEGEND_GUARDIAN"),
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
             (_steleIcon, PlayerSheet.PerilColor, "MAP_LEGEND_PERIL_STELE"),
             (_workshopIcon, WorkshopColor, "MAP_LEGEND_WORKSHOP"),
@@ -227,6 +235,9 @@ public partial class Minimap : Control
             (null, _palette.PhaseColor(4), "MAP_LEGEND_VOID"),
         })
         {
+            // Le gardien n'existe que sur les terres.
+            if (key == "MAP_LEGEND_GUARDIAN" && GuardianLair.Current == null)
+                continue;
             HBoxContainer row = new() { MouseFilter = MouseFilterEnum.Ignore };
             row.AddThemeConstantOverride("separation", 4);
             row.AddChild(new MapLegendIcon(icon, color, key == "MAP_LEGEND_VOID"));
@@ -272,6 +283,7 @@ public partial class Minimap : Control
             _legend.Visible = false;
         }
         _playerPosition = player.GlobalPosition;
+        UpdateLandRemaining();
         // Fenêtre de monde montrée : la carte entière, ou un carré centré sur le joueur, calé sur la grille d'une unité du
         // radar pour que les cellules glissent pixel par pixel.
         float worldSize = RadarCells * _cellSize;
@@ -338,14 +350,37 @@ public partial class Minimap : Control
     }
 
     /// <summary>Anneau de pierre du radar, ou simple filet doré autour de la carte entière.</summary>
+    /// <summary>Part de la terre encore debout hors du cœur, de 1 à l'arrivée à 0 quand le gardien se lève seul.</summary>
+    private void UpdateLandRemaining()
+    {
+        LandFront front = _erasure.Front;
+        float remaining = front == null ? -1f
+            : Mathf.Clamp((front.StandingShare() - front.HeartShare) / Mathf.Max(0.0001f, 1f - front.HeartShare), 0f, 1f);
+        if (Mathf.IsEqualApprox(remaining, _landRemaining))
+            return;
+        _landRemaining = remaining;
+        _bezel.QueueRedraw();
+    }
+
     private void DrawBezel(MinimapLayer layer)
     {
         if (_raster == null)
             return;
         if (_full)
+        {
             layer.DrawRect(new Rect2(Vector2.Zero, Size).Grow(2f), Border, false, 1f);
-        else
-            layer.DrawTexture(_ring, -Vector2.One * BezelWidth);
+            return;
+        }
+        layer.DrawTexture(_ring, -Vector2.One * BezelWidth);
+        if (_landRemaining < 0f)
+            return;
+        // Depuis midi, dans le sens des aiguilles : la terre qui reste ; vide, le gardien se lève seul.
+        Vector2 center = Vector2.One * RadarSize / 2f;
+        float radius = RadarSize / 2f + BezelWidth + 3f;
+        layer.DrawArc(center, radius, 0f, Mathf.Tau, 64, LandRingBack, 3f);
+        if (_landRemaining > 0f)
+            layer.DrawArc(center, radius, -Mathf.Pi / 2f, -Mathf.Pi / 2f + Mathf.Tau * _landRemaining, 64,
+                _landRemaining <= LandRingLowShare ? LandRingLow : LandRingCalm, 3f);
     }
 
     private void DrawContent(MinimapLayer layer)
@@ -397,6 +432,9 @@ public partial class Minimap : Control
         for (int i = 0; i < Well.All.Count; i++)
             if (!Well.All[i].IsLost && InView(Well.All[i].GlobalPosition) && Known(Well.All[i].GlobalPosition))
                 DrawIcon(layer, Well.All[i].GlobalPosition, _wellIcon, WellColor);
+        // Le repaire du gardien se voit dès l'arrivée : c'est le but de la terre.
+        if (GuardianLair.Current is { Visible: true } lair && InView(lair.GlobalPosition))
+            DrawIcon(layer, lair.GlobalPosition, _memorialIcon, GuardianColor);
         DrawIcon(layer, _playerPosition, _playerIcon, PlayerColor);
     }
 

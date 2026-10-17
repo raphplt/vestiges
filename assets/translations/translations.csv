@@ -397,6 +397,7 @@ UI_SHOW_MAP,Carte,Map
 MAP_LEGEND_YOU,Toi,You
 MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
 MAP_LEGEND_MEMORIAL,Mémorial,Memorial
+MAP_LEGEND_GUARDIAN,Gardien,Guardian
 MAP_LEGEND_RIFT,Faille,Rift
 MAP_LEGEND_PERIL_STELE,Stèle du Péril,Peril stele
 MAP_LEGEND_WORKSHOP,Atelier,Workshop
@@ -595,3 +596,8 @@ UI_CREDITS_LICENSES,Licences,Licenses
 UI_CREDITS_LICENSE,Licence,License
 UI_CREDITS_ENGINE_NOTICE,"Ce jeu utilise Godot Engine, distribué sous la licence MIT ci-dessous.","This game uses Godot Engine, available under the MIT license below."
 UI_CREDITS_COMPONENTS,Composants tiers de Godot Engine,Godot Engine third-party components
+LAND_OBJECTIVE_LIGHTS,"Terre {0} · Mémoriaux ravivés {1}/{2}","Land {0} · Memorials rekindled {1}/{2}"
+LAND_OBJECTIVE_READY,"Terre {0} · Réveille le gardien, au cœur","Land {0} · Wake the guardian, at the heart"
+LAND_OBJECTIVE_FIGHT,"Terre {0} · Bats le gardien","Land {0} · Defeat the guardian"
+LAND_OBJECTIVE_RAGE,"Terre {0} · Le gardien s'est levé seul","Land {0} · The guardian rose on its own"
+LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · The next land is stitching itself"

@@ -230,9 +230,14 @@ public partial class LandChangeRegression : Node
         Check(lair != null && !lair.CanInteract && !director.IsFighting,
             $"gardien : endormi au cœur, repaire fermé avec {memorials.LitThisLand} lumière(s) sur {config.WakeLights}");
 
+        Label objective = (Label)_world.FindChild("LandObjective", true, false);
+        string collecting = objective?.Text;
+        Check(objective is { Visible: true } && !string.IsNullOrEmpty(collecting), $"objectif de la terre affiché : « {collecting} »");
         memorials.SetLitForTests(config.WakeLights + 1);
         await Frame();
+        await Frame();
         Check(lair.CanInteract, "gardien : toutes les lumières allumées, le repaire s'ouvre");
+        Check(objective != null && objective.Text != collecting, $"objectif : « {objective?.Text} »");
         float standingBefore = erasure.Front.StandingShare();
         int chestsBefore = Chest.Closed.Count;
         lair.Interact(_player);

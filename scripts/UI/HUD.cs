@@ -156,6 +156,7 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(new ChestPointers { Name = "ChestPointers" });
         _hudRoot.AddChild(new DashHint { Name = "DashHint" });
         _hudRoot.AddChild(new Minimap { Name = "Minimap" });
+        _hudRoot.AddChild(new LandObjective { Name = "LandObjective" });
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
         _hudRoot.AddChild(new BossHealthBar { Name = "BossHealthBar" });

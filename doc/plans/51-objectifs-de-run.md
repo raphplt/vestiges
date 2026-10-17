@@ -644,3 +644,16 @@ Relevé : les quêtes « battre la Barrière » et « battre l'Indicible » ne s
 **Branché par défaut (branche `terres`), même jour.** `lands.enabled` passe à vrai ; `--no-lands` rend la grande carte aux runs de dev. Validation complète : 36 suites sur 40 vertes au premier passage.
 - Trois échecs, les bancs des effets de perks, des armes et des objets en combat, venaient d'un nouvel oubli de P0 : ils créent un Effacement seul, sans horloge à côté. L'Effacement cherche désormais l'horloge sans l'exiger au démarrage, et l'exige au premier pas ; les trois suites sont vertes.
 - Un échec ne vient pas de ce chantier : le banc de navigation des menus attend une Scaphandrière sans portrait, or un portrait lui a été ajouté le 14 octobre (`c46e20e2`). Il faudra le mettre à jour.
+
+### Compte rendu P2c, lire la terre — 17 octobre 2026
+
+**Livré (branche `terres`) :**
+- **Ligne d'objectif** (`LandObjective`), au-dessus de la minimap. Elle suit les étapes : « Terre 1 · Mémoriaux ravivés 0/3 », puis « Réveille le gardien, au cœur » en doré, « Bats le gardien », « Le gardien s'est levé seul » en rouge, et enfin « La terre suivante se recoud ». Le gardien la publie par le signal `LandObjectiveChanged`, seulement quand elle change.
+- **Anneau de terre restante** autour du radar. Il part de midi dans le sens des aiguilles et se vide avec la terre hors du cœur. Il rougit sous un quart ; vide, le gardien se lève seul.
+- **Repaire du gardien sur la minimap**, visible dès l'arrivée, avec sa ligne de légende (seulement sur les terres).
+- Clés de traduction en français et en anglais.
+
+**Vérifié :**
+- banc des terres vert : la ligne s'affiche (« Terre 1 · Mémoriaux ravivés 1/3 ») et change quand les lumières sont toutes allumées (« Terre 1 · Réveille le gardien, au cœur ») ;
+- suites de démarrage, catalogues, cartographie et art de l'interface vertes ;
+- **captures en vraie run regardées** : la fenêtre de capture est de nouveau dessinée. Sur une terre de champs (graine 7) puis une terre de marais (graine 42) : ligne d'objectif, anneau plein, repaire violet et Mémorial doré sur la minimap, colonne de lumière du repaire à l'écran.

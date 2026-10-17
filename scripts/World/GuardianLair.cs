@@ -47,9 +47,21 @@ public partial class GuardianLair : Node2D, IInteractable
         AddChild(_sprite);
     }
 
-    public override void _EnterTree() => Interactables.Register(this);
+    /// <summary>Repaire de la terre en cours, montré par la minimap dès l'arrivée ; nul hors des terres.</summary>
+    public static GuardianLair Current { get; private set; }
 
-    public override void _ExitTree() => Interactables.Unregister(this);
+    public override void _EnterTree()
+    {
+        Current = this;
+        Interactables.Register(this);
+    }
+
+    public override void _ExitTree()
+    {
+        if (Current == this)
+            Current = null;
+        Interactables.Unregister(this);
+    }
 
     public void Interact(Player player) => _director.WakeByPlayer();
 

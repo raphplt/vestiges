@@ -33,6 +33,10 @@ public sealed class LandFront
 
     public int CellCount => _fallAt.Count;
 
+    /// <summary>Part du cœur dans la terre : ce qui reste debout quand tout le reste est tombé.</summary>
+    public float HeartShare => _fallAt.Count == 0 ? 1f : (float)_heartCells / _fallAt.Count;
+    private int _heartCells;
+
     public IEnumerable<Vector2I> Cells => _fallAt.Keys;
 
     /// <summary>
@@ -44,6 +48,7 @@ public sealed class LandFront
         if (distance <= _config.HeartRadius)
         {
             _fallAt[cell] = float.PositiveInfinity;
+            _heartCells++;
             return;
         }
         // Au carré de la distance : la surface d'une couronne croît avec elle, la terre perd donc une part égale chaque

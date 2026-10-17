@@ -32,6 +32,7 @@ public partial class GuardianDirector : Node
     private Phase _phase;
     private int _lights;
     private float _passageIn;
+    private (int Land, int Lights, int Stage) _published = (-1, -1, -1);
 
     /// <summary>Le gardien de la terre en cours s'est-il levé de lui-même (terre réduite à son cœur) ?</summary>
     public bool Enraged { get; private set; }
@@ -78,6 +79,7 @@ public partial class GuardianDirector : Node
 
     public override void _Process(double delta)
     {
+        PublishObjective();
         switch (_phase)
         {
             case Phase.Sleeping:
@@ -95,6 +97,23 @@ public partial class GuardianDirector : Node
                     StartPassage();
                 break;
         }
+    }
+
+    /// <summary>L'objectif de la terre, publié seulement quand il change.</summary>
+    private void PublishObjective()
+    {
+        int lights = _phase == Phase.Sleeping ? _memorials.LitThisLand : _lights;
+        int stage = _phase switch
+        {
+            Phase.Sleeping => lights >= _config.WakeLights ? 1 : 0,
+            Phase.Fighting => Enraged ? 3 : 2,
+            _ => 4,
+        };
+        (int, int, int) objective = (_transition.LandIndex, lights, stage);
+        if (objective == _published)
+            return;
+        _published = objective;
+        _eventBus.EmitSignal(EventBus.SignalName.LandObjectiveChanged, _transition.LandIndex, lights, _config.WakeLights, stage);
     }
 
     /// <summary>Passage vers la terre suivante, une seule fois ; jamais derrière l'écran de fin de run.</summary>
