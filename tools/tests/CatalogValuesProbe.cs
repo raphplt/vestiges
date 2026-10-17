@@ -270,6 +270,13 @@ public partial class CatalogValuesProbe : Node
             WeaponUpgradeStatConfig config = WeaponUpgradeDataLoader.GetStatConfig(stat);
             lines.Add(config == null ? $"upgrade {stat} null" : Invariant($"upgrade {config.Key} step={config.Step:R} additive={config.Additive} integer={config.Integer} max={config.Max:R}"));
         }
+        // Q7g-1 : tables de butin.
+        foreach (string tableId in new[] { "chest_common", "chest_rare", "chest_epic", "chest_lore", "poi_anomaly", "poi_cache", "poi_sanctuary", "poi_searchable", "loot_table_id" })
+        {
+            LootTableData table = LootTableLoader.Exists(tableId) ? LootTableLoader.Get(tableId) : null;
+            lines.Add(table == null ? $"loot {tableId} null"
+                : $"loot {table.Id} " + string.Join(";", table.Entries.ConvertAll(e => Invariant($"{e.Type}:{e.Item}:{e.Weight:R}:{e.MinAmount}-{e.MaxAmount}:{e.FallbackEssence}"))));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

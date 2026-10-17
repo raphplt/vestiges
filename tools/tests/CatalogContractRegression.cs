@@ -50,6 +50,7 @@ public partial class CatalogContractRegression : Node
             CheckPerks();
             CheckSouvenirs();
             CheckWeaponUpgrades();
+            CheckLootTables();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1172,6 +1173,56 @@ public partial class CatalogContractRegression : Node
         }
         Check(WeaponUpgradeDataLoader.Apply(valid) == null && !ReferenceEquals(WeaponUpgradeDataLoader.GetStatConfig("damage"), damage)
             && WeaponUpgradeDataLoader.GetWeaponMaxLevel() == 50, "montées d'armes du dépôt republiées");
+    }
+
+    /// <summary>Tables de butin (plan 26 Q7g-1) : catalogue du dépôt accepté, refus sans publication.</summary>
+    private void CheckLootTables()
+    {
+        Check(LootTableLoader.TryLoad(out string loadError) && LootTableLoader.Exists("poi_sanctuary") && !LootTableLoader.Exists("loot_table_id"),
+            $"tables de butin du dépôt acceptées, modèle ignoré {loadError}");
+        LootTableData cache = LootTableLoader.Get("poi_cache");
+        List<(string Name, string Text)> files = new();
+        foreach (string name in DirAccess.GetFilesAt(LootTableLoader.DirectoryPath))
+            if (name.EndsWith(".json", StringComparison.Ordinal) && !name.StartsWith('_'))
+                files.Add((name, FileAccess.GetFileAsString($"{LootTableLoader.DirectoryPath}/{name}")));
+        int sanctuary = files.FindIndex(file => file.Name == "poi_sanctuary.json");
+        Func<string, bool> souvenirExists = id => SouvenirDataLoader.Get(id) != null;
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("champ inconnu", root => root["rolls"] = 2, "clé « rolls » inconnue"),
+            ("id différent du fichier", root => root["id"] = "poi_temple", "différent du nom du fichier"),
+            ("entrées vides", root => root["entries"] = new JsonArray(), "entries"),
+            ("entrée non objet", root => root["entries"]![0] = 5, "entries[0] : objet attendu"),
+            ("champ d'entrée inconnu", root => root["entries"]![0]!["chance"] = 1, "clé « chance » inconnue"),
+            ("sorte inconnue", root => root["entries"]![0]!["type"] = "resource", "« resource » inconnu"),
+            ("article inattendu", root => root["entries"]![2]!["item"] = "gold", "article « gold » inattendu pour essence"),
+            ("Souvenir inconnu", root => root["entries"]![0]!["item"] = "carte_postale", "article « carte_postale » inattendu pour souvenir"),
+            ("poids nul", root => root["entries"]![0]!["weight"] = 0, "weight"),
+            ("montant fractionnaire", root => root["entries"]![2]!["min_amount"] = 12.5, "min_amount"),
+            ("montants inversés", root => root["entries"]![2]!["min_amount"] = 30, "min_amount ≤ max_amount"),
+            ("secours hors niveaux d'objet", root => root["entries"]![2]!["fallback_essence"] = 4, "réservé à object_level"),
+            ("secours négatif", root => root["entries"]![1]!["fallback_essence"] = -6, "fallback_essence"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[sanctuary] = (files[sanctuary].Name, Mutated(files[sanctuary].Text, mutate));
+            string error = LootTableLoader.Apply(candidate, souvenirExists);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(LootTableLoader.Get("poi_cache"), cache),
+                $"tables de butin, {name} refusé sans publication ({error})");
+        }
+        List<(string, string)> broken = new(files) { ("poi_vide.json", "{ \"id\": ") };
+        Check(LootTableLoader.Apply(broken, souvenirExists)?.Contains("poi_vide.json : JSON invalide", StringComparison.Ordinal) == true,
+            "tables de butin, JSON invalide refusé avec son fichier");
+        List<(string, string)> copy = new(files) { ("poi_cache_copie.json", files.Find(file => file.Name == "poi_cache.json").Text) };
+        string copyError = LootTableLoader.Apply(copy, souvenirExists);
+        Check(copyError?.Contains("différent du nom du fichier", StringComparison.Ordinal) == true, $"tables de butin, copie d'une table refusée ({copyError})");
+        JsonObject named = JsonNode.Parse(files[sanctuary].Text)!.AsObject();
+        named["entries"]![0]!["item"] = "billet_de_train";
+        List<(string, string)> withNamed = new(files);
+        withNamed[sanctuary] = (files[sanctuary].Name, named.ToJsonString());
+        Check(LootTableLoader.Apply(withNamed, souvenirExists) == null && LootTableLoader.Apply(files, souvenirExists) == null
+            && !ReferenceEquals(LootTableLoader.Get("poi_cache"), cache), "tables de butin : Souvenir nommé admis, dépôt republié");
     }
 
     private void CheckAtmosphere()
