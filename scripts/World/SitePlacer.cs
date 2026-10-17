@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
@@ -36,6 +37,24 @@ public sealed class SitePlacer
     }
 
     public int PlacedCount => _placed.Count;
+
+    /// <summary>Part gardée par sorte de lieu sur une terre plus petite que la grande carte (plan 51) ; 1 par défaut.</summary>
+    public Func<string, float> CountScale { get; init; } = _ => 1f;
+
+    // Reste de chaque sorte d'un groupe à l'autre : la somme des comptes réduits suit la part, arrondie au plus près.
+    private readonly Dictionary<string, float> _countCarry = new();
+
+    /// <summary>Compte d'un groupe de lieux réduit à la part de la terre, sans perte d'un groupe à l'autre.</summary>
+    public int Scaled(string kind, int count)
+    {
+        float scale = CountScale(kind);
+        if (scale == 1f)
+            return count;
+        float carry = _countCarry.GetValueOrDefault(kind, 0.5f) + count * scale;
+        int kept = Mathf.FloorToInt(carry);
+        _countCarry[kind] = carry - kept;
+        return kept;
+    }
 
     /// <summary>
     /// Emplacement dans la couronne [<paramref name="bandMin"/>, <paramref name="bandMax"/>] (fraction du rayon de carte),

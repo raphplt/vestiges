@@ -253,7 +253,7 @@ public partial class GameBootstrap : Node
 
         // Petits lieux (plan 22, lot C1) : des décors déjà posés qui se souviennent.
         SmallPlaceDirector smallPlaces = new() { Name = "SmallPlaceDirector" };
-        smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.Seed);
+        smallPlaces.Setup(GetNode<Vestiges.Spawn.SpawnManager>("../SpawnManager"), erasureManager, worldSetup.LandSeed);
         sceneRoot.AddChild(smallPlaces);
         smallPlaces.PlacePlaces(GetNode("../PropContainer"), GetNode<Node2D>("../PoiContainer"));
         // Cabines qui sonnent (plan 39 C1) : après les petits lieux, dont les cabines.

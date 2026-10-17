@@ -2,6 +2,13 @@
     "map_radius": 200,
     "map_radius_y": 400,
     "spawn_clearance": 4,
+    "lands": {
+        "_doc": "Terres successives (plan 51) : une run traverse plusieurs cartes plus petites, chacune d'un seul biome tiré sans remise. enabled : allumées en run normale ; faux tant que le prototype n'est pas jouable (une run de dev les allume par --lands). map_radius et map_radius_y : taille d'une terre (environ un tiers de la surface de la grande carte). count_scales : part gardée des coffres et de chaque sorte de lieu, comptes arrondis sans perte d'un groupe à l'autre.",
+        "enabled": false,
+        "map_radius": 116,
+        "map_radius_y": 232,
+        "count_scales": { "chests": 0.34, "memorial": 0.5, "rift": 0.34, "workshop": 0.34, "peril_stele": 0.34, "well": 0.34 }
+    },
     "props": {
         "min_blocking_height": 18,
         "min_blocking_pixels": 150,

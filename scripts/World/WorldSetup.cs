@@ -28,10 +28,18 @@ public partial class WorldSetup : Node2D
 
     private WorldGenerator _generator;
     private WorldGenConfig _config;
+    private LandSpec _land;
+    private TileSet _baseTileSet;
     private BiomeTileMapper _tileMapper;
 
     /// <summary>Seed de la run : celle du Hub, ou tirée à l'entrée dans l'arbre (voir <see cref="_EnterTree"/>).</summary>
     public ulong Seed { get; set; }
+
+    /// <summary>Terre en cours (plan 51) : la grande carte de la run tant que les terres sont éteintes.</summary>
+    public LandSpec Land => _land;
+
+    /// <summary>Graine de la carte en cours : celle de la run sur la première terre, dérivée de son rang ensuite.</summary>
+    public ulong LandSeed => _land.Seed;
 
     /// <summary>Si true, aucun POI n'est généré (mutateur "Isolement"). Les coffres restent.</summary>
     public bool PoisDisabled { get; set; }
@@ -148,6 +156,8 @@ public partial class WorldSetup : Node2D
         _poiContainer = GetNode<Node2D>("PoiContainer");
 
         _config = WorldGenConfig.Load();
+        _land = LandSpec.For(0, _config, Seed);
+        _land.ApplyTo(_config);
         PropRules.Current = _config.PropRules;
         // Ombres portées des décors (plan 39 A3) : réglées avant leur création. Fichier invalide : ombres de contact seules.
         // Paramètres › Ombres : désactivées, les décors ne créent même pas leur ombre (aucun coût).
@@ -169,6 +179,7 @@ public partial class WorldSetup : Node2D
     }
 
     private Task _generation;
+    private WorldGenerator _builtGenerator;
     private RandomNumberGenerator _loreRng;
     // Décors en attente, hors de l'arbre, entre les placeurs et le découpage en tronçons.
     private Node2D _propStaging;
@@ -181,13 +192,15 @@ public partial class WorldSetup : Node2D
     {
         LoadGuard.InjectFault("génération");
         ulong step = Time.GetTicksUsec();
-        _generator = new WorldGenerator(
+        // Générateur local, échangé sur le fil principal après l'attente : le joueur, les apparitions et la minimap lisent
+        // Generator en continu, ils ne doivent jamais voir une carte à moitié construite (plan 51, changement de terre).
+        WorldGenerator generator = new WorldGenerator(
             _config.MapRadius,
             _config.MapRadiusY,
             _config.SpawnClearance,
             _config.CaIterations,
             _config.Zones,
-            Seed,
+            LandSeed,
             _config.EdgeFadeWidth
         )
         {
@@ -196,49 +209,53 @@ public partial class WorldSetup : Node2D
 
         // Générer le terrain (CPU pur, rapide)
         List<BiomeData> availableBiomes = LoadAvailableBiomes();
-        if (availableBiomes.Count >= 2)
-            _terrain = _generator.Generate(availableBiomes, _config.BiomeCount);
+        // Une terre n'a qu'un biome (plan 51) ; sans biome du tout, la génération retombe sur le terrain générique.
+        if (availableBiomes.Count >= 1)
+            _terrain = generator.Generate(availableBiomes, _config.BiomeCount);
         else
-            _terrain = _generator.Generate();
+            _terrain = generator.Generate();
         LoadProfiler.Span("terrain et biomes (thread)", ref step);
 
         // Layouts urbains/marais (CPU pur)
-        if (_generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
+        if (generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
         {
-            UrbanLayoutGenerator urbanGen = new(Seed, _config.MapRadius, _config.MapRadiusY);
-            _urbanLayout = urbanGen.Apply(_terrain, _generator, "urban_ruins");
+            UrbanLayoutGenerator urbanGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY);
+            _urbanLayout = urbanGen.Apply(_terrain, generator, "urban_ruins");
             _roadTiles = RoadTileGenerator.Build(_urbanLayout);
         }
-        if (_generator.ActiveBiomes.Any(b => b.Id == "swamp"))
-            _swampLayout = SwampPropPlacer.BuildLayout(_generator, Seed);
-        if (_generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
+        if (generator.ActiveBiomes.Any(b => b.Id == "swamp"))
+            _swampLayout = SwampPropPlacer.BuildLayout(generator, LandSeed);
+        if (generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
         {
-            WildFieldsLayoutGenerator wildFieldsGen = new(Seed, _config.MapRadius, _config.MapRadiusY);
-            _wildFieldsLayout = wildFieldsGen.Apply(_terrain, _generator, "wild_fields");
+            WildFieldsLayoutGenerator wildFieldsGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY);
+            _wildFieldsLayout = wildFieldsGen.Apply(_terrain, generator, "wild_fields");
         }
 
         LoadProfiler.Span("plans de la ville, de ses chaussées, du marais et des champs (thread)", ref step);
         // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
-        _pathNetwork = PathNetworkGenerator.Build(_generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
-                                                  _config.BiomeLayout.RegionSpacing, Seed);
+        _pathNetwork = PathNetworkGenerator.Build(generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
+                                                  _config.BiomeLayout.RegionSpacing, LandSeed);
         _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
         LoadProfiler.Span("chemins (thread)", ref step);
 
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
-        _farms = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _farmConfig.Site, Seed);
+        _farms = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _farmConfig.Site, LandSeed);
         // Chantiers de la carrière : galerie étayée, voie et wagonnets, baraque et machines groupées.
         _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
                                     "res://assets/props/collapsed_quarry/", "chantiers");
-        _quarrySites = SiteComposer.Plan(_generator, _pathNetwork, _usedCells, _quarryPlan, Seed);
+        _quarrySites = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _quarryPlan, LandSeed);
         LoadProfiler.Span("fermes et chantiers (thread)", ref step);
+        _builtGenerator = generator;
 
     }
 
     /// <summary>TileSet dupliqué, correspondance des tuiles et routes générées : sur le thread principal, après la génération.</summary>
     private void PrepareTiles()
     {
-        _ground.TileSet = _ground.TileSet.Duplicate() as TileSet;
+        // Toujours depuis le TileSet de la scène : une terre suivante ne recopie pas l'atlas de la précédente.
+        _baseTileSet ??= _ground.TileSet;
+        _ground.TileSet = _baseTileSet.Duplicate() as TileSet;
         EnsureRoadOverlayLayer();
         _tileMapper = new BiomeTileMapper();
         _tileMapper.Initialize(_ground.TileSet, _generator.ActiveBiomes);
@@ -269,6 +286,8 @@ public partial class WorldSetup : Node2D
 
         await _generation;
         LoadGuard.EnsureAlive(this);
+        _generator = _builtGenerator;
+        _builtGenerator = null;
         PrepareTiles();
         LoadProfiler.Mark("génération attendue, tuiles préparées");
         await ApplyTerrainAsync(_terrain, _urbanLayout, onProgress);
@@ -301,7 +320,7 @@ public partial class WorldSetup : Node2D
 
         if (_urbanLayout != null)
         {
-            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, Seed);
+            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, LandSeed);
             LoadProfiler.Mark("décors de la ville");
             await YieldFrame();
         }
@@ -331,7 +350,7 @@ public partial class WorldSetup : Node2D
 
         IsWorldReady = true;
         LoadProfiler.Mark("atmosphère");
-        GD.Print($"[WorldSetup] World generated with seed {Seed}");
+        GD.Print($"[WorldSetup] Terre {_land.Index} générée, graine {LandSeed} (run {Seed})");
     }
 
     /// <summary>Rend la main au moteur pour une image, puis s'arrête si la scène a été quittée entre-temps.</summary>
@@ -518,7 +537,10 @@ public partial class WorldSetup : Node2D
 
     private void SpawnSites()
     {
-        SitePlacer placer = new(_generator, _ground, _usedCells, Seed, _urbanLayout, _wildFieldsLayout, ChestDataLoader.LoadPlacement());
+        SitePlacer placer = new(_generator, _ground, _usedCells, LandSeed, _urbanLayout, _wildFieldsLayout, ChestDataLoader.LoadPlacement())
+        {
+            CountScale = _land.CountScale,
+        };
         ChestSpawner.SpawnChests(placer, _poiContainer);
         LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);
     }
@@ -592,22 +614,22 @@ public partial class WorldSetup : Node2D
 
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
-        SiteComposer.Place(_farms, _farmConfig.Site, propContainer, Seed);
+        SiteComposer.Place(_farms, _farmConfig.Site, propContainer, LandSeed);
         LoadProfiler.Mark("décors des fermes");
         await YieldFrame();
-        SiteComposer.Place(_quarrySites, _quarryPlan, propContainer, Seed);
+        SiteComposer.Place(_quarrySites, _quarryPlan, propContainer, LandSeed);
         HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
         LoadProfiler.Mark("décors des carrières");
         await YieldFrame();
-        WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
+        WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, LandSeed);
         await YieldFrame();
-        _storyScenes = WildFieldsComposer.PlaceScenes(_generator, _farmConfig, _usedCells, blockedCells, _ground, propContainer, Seed);
+        _storyScenes = WildFieldsComposer.PlaceScenes(_generator, _farmConfig, _usedCells, blockedCells, _ground, propContainer, LandSeed);
         LoadProfiler.Mark("décors des champs");
         await YieldFrame();
-        JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, Seed);
+        JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, LandSeed);
         LoadProfiler.Mark("décors des carrefours");
         await YieldLoadSlice();
-        await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, Seed, LoadSliceSpent,
+        await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, LandSeed, LoadSliceSpent,
             YieldLoadSlice, blockedCells, _wildFieldsLayout);
     }
 
@@ -980,6 +1002,7 @@ public class WorldGenConfig
     public GroundBlendConfig GroundBlend = GroundBlendConfig.Default;
     public PathNetworkConfig Paths = PathNetworkConfig.Default;
     public JunctionPropPlacer.Config JunctionProps;
+    public LandsConfig Lands = LandsConfig.Disabled;
 
     public static WorldGenConfig Load()
     {
@@ -1068,6 +1091,9 @@ public class WorldGenConfig
 
         if (dict.ContainsKey("paths"))
             config.Paths = PathNetworkConfig.Parse(dict["paths"].AsGodotDictionary());
+
+        if (dict.ContainsKey("lands"))
+            config.Lands = LandsConfig.Parse(dict["lands"].AsGodotDictionary());
 
         if (dict.ContainsKey("junction_props"))
             config.JunctionProps = JunctionPropPlacer.Config.Parse(dict["junction_props"].AsGodotDictionary());

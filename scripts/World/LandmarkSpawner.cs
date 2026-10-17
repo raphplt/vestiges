@@ -15,7 +15,8 @@ public static class LandmarkSpawner
         int spawned = 0;
         foreach (LandmarkBand band in memorial.Placement)
         {
-            for (int i = 0; i < band.Count; i++)
+            int count = placer.Scaled("memorial", band.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(band.Min, band.Max, memorial.MinSpacingPx, out Vector2 position))
                 {
@@ -33,7 +34,8 @@ public static class LandmarkSpawner
         int rifts = 0;
         foreach (LandmarkBand band in rift.Placement)
         {
-            for (int i = 0; i < band.Count; i++)
+            int count = placer.Scaled("rift", band.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(band.Min, band.Max, rift.MinSpacingPx, out Vector2 position))
                 {
@@ -52,7 +54,8 @@ public static class LandmarkSpawner
         int workshops = 0;
         foreach (LandmarkBand band in workshop.Placement)
         {
-            for (int i = 0; i < band.Count; i++)
+            int count = placer.Scaled("workshop", band.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(band.Min, band.Max, workshop.MinSpacingPx, out Vector2 position))
                 {
@@ -71,7 +74,8 @@ public static class LandmarkSpawner
         int steles = 0;
         foreach (LandmarkBand band in stele.Placement)
         {
-            for (int i = 0; i < band.Count; i++)
+            int count = placer.Scaled("peril_stele", band.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(band.Min, band.Max, stele.MinSpacingPx, out Vector2 position))
                 {
@@ -90,7 +94,8 @@ public static class LandmarkSpawner
         int wells = 0;
         foreach (LandmarkBand band in well.Placement)
         {
-            for (int i = 0; i < band.Count; i++)
+            int count = placer.Scaled("well", band.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(band.Min, band.Max, well.MinSpacingPx, out Vector2 position))
                 {

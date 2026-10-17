@@ -430,3 +430,21 @@ Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par
 - **Les comptes de lieux sont divisés par trois** avec la surface : environ 13 coffres, 3 Mémoriaux, 2 Failles, 3 Ateliers, 2 stèles et 3 Puits par terre, à régler en jouant. Le cercle à tenir des Mémoriaux vient en P2.
 
 **Défaut existant relevé en passant** : les chemins de terre n'apparaissent jamais sur la minimap (`WorldSetup.PathCells` est libéré avant que la minimap ne les échantillonne). À corriger avec P1c, qui reprend la minimap.
+
+### Compte rendu P1a — 17 octobre 2026
+
+**Livré (branche `terres`) :**
+- **`LandSpec`** : une terre à construire, avec son rang, sa graine, sa taille, son biome et la part de lieux gardée. **`LandsConfig`** : section `lands` de `world_gen.json`, éteinte, allumée pour une run de dev par `--lands`.
+- **`WorldSetup` construit la terre en cours.** La graine de carte (`LandSeed`) est celle de la run sur la terre 0, puis `RunRandom.SeedFor("land/n")`. La graine de run (`Seed`) reste celle du bilan et des records. Les petits lieux suivent la graine de terre.
+- **Générateur local**, échangé sur le fil principal après l'attente : plus jamais de carte à moitié construite lue par le joueur ou les apparitions.
+- **TileSet d'origine gardé** pour les terres suivantes ; une terre d'un seul biome est acceptée.
+- **Comptes réduits** par `SitePlacer.Scaled`, arrondis sans perte d'un groupe à l'autre : 13 coffres, 5 Mémoriaux, 2 Failles, 3 Ateliers, 3 stèles et 2 Puits par terre.
+- **Biomes tirés sans remise** sur la run (ordre mélangé par la graine de run).
+
+**Vérifié :**
+- **terres éteintes : la génération est identique à la ligne près** (40 lignes de génération, coffres, lieux et décors) sur les graines 7 et 42, comparée à la mesure d'après P0 ;
+- **terres allumées** : 116 × 232 cellules, un seul biome (champs sur la graine 7, marais sur la 42), construction du monde en 1,8 à 2,1 s contre 5 s pour la grande carte, sous la même charge ; 9 301 décors aux champs, 3 667 au marais ;
+- capture de la carte d'une terre de champs, regardée ;
+- suites vertes : démarrage, chargement, catalogues, cartographie, petits lieux, mouvement intégré.
+
+**Relevé pour la production** : une terre de champs seule répète beaucoup ses fermes (une par région). Les terres d'un seul biome demanderont des pièces plus variées (§5).

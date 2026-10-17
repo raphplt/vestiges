@@ -21,7 +21,8 @@ public static class ChestSpawner
             if (data == null)
                 continue;
 
-            for (int i = 0; i < group.Count; i++)
+            int count = placer.Scaled("chests", group.Count);
+            for (int i = 0; i < count; i++)
             {
                 if (!placer.TryPlace(group.BandMin, group.BandMax, placement.MinSpacingPx, out Vector2 position))
                 {
