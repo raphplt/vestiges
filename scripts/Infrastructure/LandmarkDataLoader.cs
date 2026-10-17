@@ -24,6 +24,12 @@ public class MemorialConfig
     /// <summary>Dernières secondes du ramassage : le tic-tac presse et le compte à rebours rougit (DECISIONS §154).</summary>
     public float ShardUrgentTime;
     public float ShardPickupPx;
+    /// <summary>Cercle à tenir des terres (plan 51 P2b) : durée, rayon, redescente hors du cercle, abandon, foule.</summary>
+    public float CircleSeconds;
+    public float CircleRadiusPx;
+    public float CircleLeaveDecay;
+    public float CircleAbandonPx;
+    public float CircleCrowdDensity;
     public int BlessingChoices;
     public string BlessingMinRarity;
     public int HealCost;
@@ -194,7 +200,9 @@ public static class LandmarkDataLoader
             JsonElement m = reader.Section("memorial");
             reader.AllowOnly(m, "memorial", "sprite_dormant", "sprite_awake", "sprite_shard", "placement", "min_spacing_px",
                 "hold_time", "shards", "shard_distance_px", "shard_time", "shard_urgent_time", "shard_pickup_px", "blessing_choices",
-                "blessing_min_rarity", "services");
+                "blessing_min_rarity", "services", "circle");
+            JsonElement mc = reader.Section(m, "circle");
+            reader.AllowOnly(mc, "memorial.circle", "seconds", "radius_px", "leave_decay", "abandon_px", "crowd_density");
             JsonElement ms = reader.Section(m, "services");
             reader.AllowOnly(ms, "memorial.services", "heal_cost", "heal_percent", "cost_growth", "lift_oubli_cost", "blessing_reroll_cost");
             (float shardMin, float shardMax) = reader.Range(m, "shard_distance_px", 0f);
@@ -212,6 +220,11 @@ public static class LandmarkDataLoader
                 ShardTime = reader.Positive(m, "shard_time"),
                 ShardUrgentTime = reader.Positive(m, "shard_urgent_time"),
                 ShardPickupPx = reader.Positive(m, "shard_pickup_px"),
+                CircleSeconds = reader.Positive(mc, "seconds"),
+                CircleRadiusPx = reader.Positive(mc, "radius_px"),
+                CircleLeaveDecay = reader.NonNegative(mc, "leave_decay"),
+                CircleAbandonPx = reader.Positive(mc, "abandon_px"),
+                CircleCrowdDensity = reader.Positive(mc, "crowd_density"),
                 BlessingChoices = reader.Count(m, "blessing_choices", 6),
                 BlessingMinRarity = reader.OneOf(m, "blessing_min_rarity", rarityIds),
                 HealCost = reader.Integer(ms, "heal_cost", 0, 100_000),
@@ -220,6 +233,8 @@ public static class LandmarkDataLoader
                 LiftOubliCost = reader.Integer(ms, "lift_oubli_cost", 0, 100_000),
                 BlessingRerollCost = reader.Integer(ms, "blessing_reroll_cost", 0, 100_000),
             };
+            if (reader.Error == null && memorial.CircleAbandonPx <= memorial.CircleRadiusPx)
+                reader.Fail("memorial.circle.abandon_px : doit dépasser radius_px");
             if (memorial.ShardUrgentTime >= memorial.ShardTime)
                 reader.Fail("memorial.shard_urgent_time : doit rester sous shard_time");
 

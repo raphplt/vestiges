@@ -21,13 +21,14 @@
     "void_damage_ratio_per_second": 0.06,
     "crisis_decay_multiplier": 1.5,
     "land_front": {
-        "_doc": "Front de chute d'une terre (plan 51 P2a), seulement quand les terres sont allumées. Chaque cellule tombe à une date tirée de sa distance au cœur : first_fall_seconds au bord le plus exposé, heart_reached_seconds pour le dernier sol hors du cœur (la terre réduite à son cœur), noise_seconds d'écart dessinés par un bruit de fréquence noise_frequency (langues et baies). warning_seconds : préavis entier, trois états visibles d'un tiers chacun avant le Néant. heart_radius : rayon du cœur en part du rayon de la terre, il ne tombe jamais. L'horloge du front avance avec le temps de jeu, plus vite sous les Oublis, aux niveaux durs et pendant les Résurgences ; la présence du joueur retarde la chute autour de lui (player_presence_falloff_cells, player_decay_reduction).",
+        "_doc": "Front de chute d'une terre (plan 51 P2a), seulement quand les terres sont allumées. Chaque cellule tombe à une date tirée de sa distance au cœur : first_fall_seconds au bord le plus exposé, heart_reached_seconds pour le dernier sol hors du cœur (la terre réduite à son cœur), noise_seconds d'écart dessinés par un bruit de fréquence noise_frequency (langues et baies). warning_seconds : préavis entier, trois états visibles d'un tiers chacun avant le Néant. heart_radius : rayon du cœur en part du rayon de la terre, il ne tombe jamais. anchor_radius_cells : un Mémorial ravivé ancre les cellules à cette distance (en cellules d'Effacement), qui ne tomberont plus (P2b). L'horloge du front avance avec le temps de jeu, plus vite sous les Oublis, aux niveaux durs et pendant les Résurgences ; la présence du joueur retarde la chute autour de lui (player_presence_falloff_cells, player_decay_reduction).",
         "first_fall_seconds": 60,
         "heart_reached_seconds": 720,
         "warning_seconds": 100,
         "heart_radius": 0.12,
         "noise_seconds": 90,
-        "noise_frequency": 0.12
+        "noise_frequency": 0.12,
+        "anchor_radius_cells": 4
     },
     "motes": {
         "_doc": "Plan 16 O2 : en zone Effacée, des éclats du Néant s'élèvent des décors hauts proches du joueur.",

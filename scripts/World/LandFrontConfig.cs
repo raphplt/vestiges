@@ -24,6 +24,8 @@ public sealed class LandFrontConfig
     public float NoiseSeconds { get; init; }
     /// <summary>Fréquence du bruit, par cellule d'Effacement.</summary>
     public float NoiseFrequency { get; init; }
+    /// <summary>Rayon ancré par un Mémorial ravivé, en cellules d'Effacement (P2b).</summary>
+    public float AnchorRadiusCells { get; init; }
 
     public static LandFrontConfig Load(out string error)
     {
@@ -44,7 +46,7 @@ public sealed class LandFrontConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement front = reader.Section("land_front");
             reader.AllowOnly(front, "land_front", "_doc", "first_fall_seconds", "heart_reached_seconds", "warning_seconds",
-                "heart_radius", "noise_seconds", "noise_frequency");
+                "heart_radius", "noise_seconds", "noise_frequency", "anchor_radius_cells");
             LandFrontConfig config = new()
             {
                 FirstFallSeconds = reader.Positive(front, "first_fall_seconds"),
@@ -53,6 +55,7 @@ public sealed class LandFrontConfig
                 HeartRadius = reader.Ratio(front, "heart_radius"),
                 NoiseSeconds = reader.NonNegative(front, "noise_seconds"),
                 NoiseFrequency = reader.Positive(front, "noise_frequency"),
+                AnchorRadiusCells = reader.Positive(front, "anchor_radius_cells"),
             };
             if (reader.Error == null && config.HeartReachedSeconds <= config.FirstFallSeconds)
                 reader.Fail("land_front : heart_reached_seconds doit suivre first_fall_seconds");

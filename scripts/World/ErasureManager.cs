@@ -525,6 +525,33 @@ public partial class ErasureManager : Node
     private void OnMemorialAwakened(Vector2 position)
     {
         StabilizeZone(position);
+        if (_front != null)
+            AnchorZone(position);
+    }
+
+    /// <summary>
+    /// Mémorial ravivé sur une terre (plan 51 P2b) : sa zone est ancrée, elle ne tombera plus. Elle reste un îlot quand
+    /// le front l'entoure, et fera partie de l'arène du gardien (P3).
+    /// </summary>
+    private void AnchorZone(Vector2 position)
+    {
+        Vector2I center = WorldToCell(position);
+        float radius = _front.Config.AnchorRadiusCells;
+        int reach = Mathf.CeilToInt(radius);
+        for (int dx = -reach; dx <= reach; dx++)
+        {
+            for (int dy = -reach; dy <= reach; dy++)
+            {
+                if (dx * dx + dy * dy > radius * radius)
+                    continue;
+                Vector2I cell = new(center.X + dx, center.Y + dy);
+                if (!_front.Contains(cell) || _front.MemoryAt(cell) == 0f)
+                    continue;
+                _front.Anchor(cell);
+                StoreMemory(cell, 1f, false);
+            }
+        }
+        PublishGroundMemory();
     }
 
     private void OnChestOpened(string chestId, string rarity, Vector2 position)

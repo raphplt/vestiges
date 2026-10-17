@@ -93,10 +93,10 @@ public sealed class LandFront
             _fallAt[cell] = Mathf.Max(fall, Time + Mathf.Clamp(memory, 0f, 1f) * _config.WarningSeconds);
     }
 
-    /// <summary>Ancre une cellule (Mémorial ravivé, P2b) : elle ne tombera plus.</summary>
+    /// <summary>Ancre une cellule encore debout (Mémorial ravivé, P2b) : elle ne tombera plus. Le sol déjà tombé le reste.</summary>
     public void Anchor(Vector2I cell)
     {
-        if (_fallAt.ContainsKey(cell))
+        if (_fallAt.TryGetValue(cell, out float fall) && fall > Time)
             _fallAt[cell] = float.PositiveInfinity;
     }
 

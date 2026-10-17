@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.UI;
@@ -43,6 +44,7 @@ public partial class LandmarkReveal : CanvasLayer
     private float _duration;
     private Action<float> _onProgress;
     private Action<bool> _onFinished;
+    private EventBus _eventBus;
     private Vector2 _panFrom;
     private Vector2 _panTo;
     private ulong _startUsec;
@@ -70,12 +72,38 @@ public partial class LandmarkReveal : CanvasLayer
         AddChild(overlay);
         Visible = false;
         SetProcess(false);
+        _eventBus = GetNode<EventBus>("/root/EventBus");
+        _eventBus.LandChanging += OnLandChanging;
     }
 
     public override void _ExitTree()
     {
         if (_playing)
             AudioManager.SetWorldMuffle(0f);
+        if (_eventBus != null)
+            _eventBus.LandChanging -= OnLandChanging;
+    }
+
+    /// <summary>
+    /// Changement de terre (plan 51) : un réveil en cours s'arrête sans rappel, le lieu qu'il montrait part avec la
+    /// terre ; la caméra revient sur le joueur.
+    /// </summary>
+    private void OnLandChanging(int toIndex)
+    {
+        if (!_playing && !_returning)
+            return;
+        _playing = false;
+        _returning = false;
+        _onProgress = null;
+        _onFinished = null;
+        Visible = false;
+        AudioManager.SetWorldMuffle(0f);
+        if (_camera != null)
+        {
+            _camera.Offset = Vector2.Zero;
+            _camera.ProcessMode = ProcessModeEnum.Inherit;
+        }
+        SetProcess(false);
     }
 
     /// <summary>

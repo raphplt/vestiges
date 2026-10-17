@@ -6,6 +6,8 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Progression;
 using Vestiges.Score;
+using Vestiges.UI;
+using Vestiges.Infrastructure;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -23,6 +25,8 @@ public partial class LandChangeRegression : Node
     private WorldSetup _world;
     private Player _player;
     private int _failures;
+    private int _memorials;
+    private int _chests;
 
     public override async void _Ready()
     {
@@ -42,6 +46,10 @@ public partial class LandChangeRegression : Node
             _player.SurviveFatalHitsForTests = true;
             CheckFrontRules();
             CheckFrontOnLand();
+            // Comptes de la terre 0 avant que le cercle n'y fasse tomber le reste : chaque terre doit en avoir autant.
+            _memorials = Memorial.All.Count;
+            _chests = Chest.Closed.Count;
+            await CheckMemorialCircle();
             await CheckLands();
             GD.Print($"[LandChangeRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);
@@ -113,6 +121,69 @@ public partial class LandChangeRegression : Node
         Check(Mathf.IsEqualApprox(front.StandingShare(), 1f), "front de la terre 0 : toute la terre debout à l'arrivée");
     }
 
+    /// <summary>
+    /// Lot P2b : sur une terre, raviver un Mémorial, c'est tenir son cercle. S'éloigner l'abandonne ; le tenir jusqu'au
+    /// bout le ravive, allume une lumière et ancre sa zone, qui ne tombe plus même quand tout le reste est tombé.
+    /// </summary>
+    private async Task CheckMemorialCircle()
+    {
+        MemorialConfig config = Vestiges.Infrastructure.LandmarkDataLoader.Memorial;
+        MemorialDirector director = _world.GetNode<MemorialDirector>("MemorialDirector");
+        Vestiges.Spawn.SpawnManager spawner = _world.GetNode<Vestiges.Spawn.SpawnManager>("SpawnManager");
+        EventBus bus = GetNode<EventBus>("/root/EventBus");
+        Memorial memorial = Memorial.All[0];
+        _player.IsGodMode = true;
+        // Sans apparitions ni créatures : pas d'XP, donc pas d'écran de niveau qui figerait le maintien.
+        spawner.ProcessMode = ProcessModeEnum.Disabled;
+        foreach (Node child in _world.GetNode("EnemyContainer").GetChildren())
+        {
+            if (child is Enemy enemy)
+                enemy.Withdraw();
+        }
+
+        _player.GlobalPosition = memorial.GlobalPosition;
+        bus.EmitSignal(EventBus.SignalName.MemorialInteracted, memorial);
+        Check(memorial.State == Memorial.MemorialState.Gathering && _world.GetNode("PoiContainer").GetNodeOrNull("MemorialCircle") != null
+            && Mathf.IsEqualApprox(spawner.EncounterDensityMultiplier, config.CircleCrowdDensity),
+            $"cercle : il apparaît, la foule se resserre (×{spawner.EncounterDensityMultiplier})");
+        await Frames(60);
+        _player.GlobalPosition = memorial.GlobalPosition + new Vector2(config.CircleAbandonPx + 50f, 0f);
+        await Frames(2);
+        Check(memorial.State == Memorial.MemorialState.Dormant && spawner.EncounterDensityMultiplier == 1f,
+            "cercle : trop loin, la tentative s'arrête et la foule se relâche");
+
+        _player.GlobalPosition = memorial.GlobalPosition;
+        bus.EmitSignal(EventBus.SignalName.MemorialInteracted, memorial);
+        await Frames(Mathf.CeilToInt(config.CircleSeconds * Engine.PhysicsTicksPerSecond) + 10);
+        ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
+        // Le réveil animé se déroule en temps réel, même quand le banc accélère le jeu : l'attendre à l'horloge.
+        ulong deadline = Time.GetTicksMsec() + 15_000;
+        while (!choices.IsOpen && Time.GetTicksMsec() < deadline)
+            await Frame();
+        for (int attempt = 0; attempt < 10 && choices.IsOpen; attempt++)
+        {
+            choices.Activate(choices.FirstEnabled());
+            await Frame();
+        }
+        Check(memorial.State == Memorial.MemorialState.Awake && director.LitThisLand == 1 && !GetTree().Paused,
+            $"cercle tenu {config.CircleSeconds} s : Mémorial ravivé, {director.LitThisLand} lumière, bénédiction choisie");
+
+        LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
+        front.Advance(front.Config.HeartReachedSeconds * 2f);
+        Vector2I memorialCell = new(Mathf.FloorToInt(memorial.GlobalPosition.X / 128f), Mathf.FloorToInt(memorial.GlobalPosition.Y / 128f));
+        Check(front.MemoryAt(memorialCell) == 1f && front.StandingShare() < 0.2f,
+            $"cercle : la zone du Mémorial est ancrée quand le reste est tombé (terre restante {front.StandingShare():P0})");
+        _player.GlobalPosition = Vector2.Zero;
+        _player.IsGodMode = false;
+        spawner.ProcessMode = ProcessModeEnum.Inherit;
+    }
+
+    private async Task Frames(int count)
+    {
+        for (int i = 0; i < count; i++)
+            await Frame();
+    }
+
     private static ErasureManager.ErasureZonePhase Phase(float memory) => memory <= 0f ? ErasureManager.ErasureZonePhase.Void
         : memory <= 0.25f ? ErasureManager.ErasureZonePhase.Erased : memory <= 0.5f ? ErasureManager.ErasureZonePhase.Frayed
         : memory <= 0.75f ? ErasureManager.ErasureZonePhase.Fragile : ErasureManager.ErasureZonePhase.Anchored;
@@ -123,8 +194,8 @@ public partial class LandChangeRegression : Node
         HashSet<string> biomes = new() { _world.Land.BiomeIds[0] };
         Check(_world.Land.BiomeIds.Count == 1 && _world.Generator.MapRadiusX == _world.Land.MapRadius,
             $"terre 0 : un biome ({_world.Land.BiomeIds[0]}), rayon {_world.Generator.MapRadiusX}");
-        int memorials = Memorial.All.Count;
-        int chests = Chest.Closed.Count;
+        int memorials = _memorials;
+        int chests = _chests;
         Check(GroundHoles() == 0, $"terre 0 : sol sans trou ({GroundHoles()})");
         Check(memorials > 0 && chests > 0 && ObstacleField.Count > 0,
             $"terre 0 peuplée : {memorials} Mémoriaux, {chests} coffres, {ObstacleField.Count} obstacles");

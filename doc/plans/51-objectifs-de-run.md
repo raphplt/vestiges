@@ -560,3 +560,23 @@ P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli pr
   Avec une date linéaire en distance, la moitié de la terre était tombée dès 5 min et 10 % restaient à 9 min.
 
 **Pas vérifié à l'image** : le front se dessine avec le rendu existant des états d'Effacement, mais aucune capture n'a pu être prise (fenêtre de capture non dessinée, voir P1d).
+
+### Compte rendu P2b, les Mémoriaux à tenir — 17 octobre 2026
+
+**Livré (branche `terres`, terres allumées seulement) :**
+- **Le cercle à tenir.** Activer un Mémorial fait apparaître un cercle de 220 px au sol (`MemorialCircle`), qui se remplit du centre vers le bord tant que le joueur s'y trouve. Il assez large pour y courir.
+  - Hors du cercle, le temps tenu redescend à moitié de la vitesse de montée.
+  - Au-delà de 560 px, la tentative s'arrête.
+  - Pendant le maintien, la foule est 1,6 fois plus dense.
+  - 20 s tenues ravivent le Mémorial par le réveil actuel (animation, bénédictions).
+  - Un Mémorial que le Néant atteint pendant le maintien est perdu, comme avant.
+- **L'ancre** : sur une terre, un Mémorial ravivé fixe les cellules à 4 cellules d'Effacement de lui (environ 512 px). Elles ne tomberont plus ; le sol déjà tombé reste tombé.
+- **Les lumières** : `MemorialDirector.LitThisLand` compte les Mémoriaux ravivés sur la terre en cours, remis à zéro à chaque terre. Le gardien les lira (P3).
+- **Réglages** : `memorial.circle` dans `data/world/landmarks.json`, `land_front.anchor_radius_cells` dans `data/scaling/erasure.json`, tous contrôlés.
+- **Défaut évité en route** : un passage de terre pendant l'animation de réveil d'un lieu libérait ce lieu en pleine animation. L'animation s'arrête maintenant au passage, sans rappel, et la caméra revient sur le joueur.
+
+**Vérifié :**
+- banc des terres vert : le cercle apparaît et resserre la foule ; s'éloigner arrête la tentative et rend la foule normale ; 20 s tenues ravivent le Mémorial, allument une lumière, et la bénédiction se choisit ; quand tout le reste est tombé, sa zone tient (terre restante : 2 %, cœur compris) ;
+- suites de démarrage, catalogues, petits lieux, Effacement actif et écran de choix vertes.
+
+**Pas encore** : aucune indication à l'écran du temps tenu, à part le remplissage du cercle, ni de son et de tic-tac du maintien. À juger en jouant. Le compte à rebours des éclats reste propre à la grande carte.

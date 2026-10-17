@@ -41,6 +41,14 @@ public partial class MemorialDirector : Node
     private int _collected;
     private float _lossTimer = LossCheckInterval;
     private int _collapsed;
+    // Cercle à tenir des terres (plan 51 P2b).
+    private Memorial _holding;
+    private MemorialCircle _circle;
+    private float _held;
+    private Spawn.SpawnManager _spawner;
+
+    /// <summary>Mémoriaux ravivés sur la terre en cours : les lumières du gardien (P3).</summary>
+    public int LitThisLand { get; private set; }
 
     public void Setup(ChoiceScreen choices, LandmarkReveal reveal, EssenceTracker essence, ErasureManager erasure, PerilManager peril)
     {
@@ -75,6 +83,8 @@ public partial class MemorialDirector : Node
         float dt = (float)delta;
         if (_gathering != null)
             UpdateGathering(dt);
+        if (_holding != null)
+            UpdateHolding(dt);
 
         _lossTimer -= dt;
         if (_lossTimer <= 0f)
@@ -88,7 +98,9 @@ public partial class MemorialDirector : Node
     {
         if (node is not Memorial memorial || !CachePlayer())
             return;
-        if (memorial.State == Memorial.MemorialState.Dormant)
+        if (memorial.State == Memorial.MemorialState.Dormant && _world.Land?.IsLand == true)
+            StartHolding(memorial);
+        else if (memorial.State == Memorial.MemorialState.Dormant)
             StartGathering(memorial);
         else if (memorial.State == Memorial.MemorialState.Awake)
             OpenServices(memorial, null);
@@ -109,6 +121,66 @@ public partial class MemorialDirector : Node
         _shards.Clear();
         _collected = 0;
         _gatherRemaining = 0f;
+        // Le cercle part avec les lieux de la terre ; la foule retrouve sa densité.
+        if (_holding != null && _spawner != null)
+            _spawner.EncounterDensityMultiplier = 1f;
+        _holding = null;
+        _circle = null;
+        LitThisLand = 0;
+    }
+
+    // ==============================
+    // Cercle à tenir (terres, plan 51 P2b)
+    // ==============================
+
+    /// <summary>Le cercle apparaît autour du Mémorial ; la foule se resserre tant qu'on le tient.</summary>
+    private void StartHolding(Memorial memorial)
+    {
+        if (_gathering != null)
+            EndGathering(false);
+        if (_holding != null)
+            EndHolding(false);
+        _holding = memorial;
+        _held = 0f;
+        memorial.SetState(Memorial.MemorialState.Gathering);
+        _circle = new MemorialCircle { Name = "MemorialCircle", GlobalPosition = memorial.GlobalPosition };
+        _circle.Setup(_config.CircleRadiusPx, RarityPalette.Colors("memorial").Light);
+        _world.GetNode<Node2D>("PoiContainer").AddChild(_circle);
+        _spawner ??= _world.GetNode<Spawn.SpawnManager>("SpawnManager");
+        _spawner.EncounterDensityMultiplier = _config.CircleCrowdDensity;
+        AudioManager.PlayUI("sfx_chest_opening");
+    }
+
+    /// <summary>Dans le cercle, le temps tenu monte ; dehors, il redescend ; trop loin, la tentative s'arrête.</summary>
+    private void UpdateHolding(float dt)
+    {
+        float distance = _player.GlobalPosition.DistanceTo(_holding.GlobalPosition);
+        if (distance > _config.CircleAbandonPx)
+        {
+            EndHolding(false);
+            return;
+        }
+        _held = distance <= _config.CircleRadiusPx
+            ? _held + dt
+            : Mathf.Max(0f, _held - dt * _config.CircleLeaveDecay);
+        _circle.SetProgress(_held / _config.CircleSeconds);
+        if (_held >= _config.CircleSeconds)
+            EndHolding(true);
+    }
+
+    private void EndHolding(bool success)
+    {
+        Memorial memorial = _holding;
+        _holding = null;
+        _circle?.QueueFree();
+        _circle = null;
+        _spawner.EncounterDensityMultiplier = 1f;
+        if (!success)
+        {
+            memorial.SetState(Memorial.MemorialState.Dormant);
+            return;
+        }
+        Revive(memorial, _config.Shards);
     }
 
     private void StartGathering(Memorial memorial)
@@ -221,14 +293,18 @@ public partial class MemorialDirector : Node
             memorial.SetState(Memorial.MemorialState.Dormant);
             return;
         }
+        Revive(memorial, _collected);
+    }
 
+    /// <summary>Réveil animé du Mémorial, autant d'éclats montés que <paramref name="collected"/>, puis ses bénédictions.</summary>
+    private void Revive(Memorial memorial, int collected)
+    {
         if (_reveal == null)
         {
             Awaken(memorial, true);
             return;
         }
         Texture2D shardTexture = GD.Load<Texture2D>($"res://{_config.SpriteShard}");
-        int collected = _collected;
         _reveal.Play(memorial.GlobalPosition + RevivalFocus, RarityPalette.Colors("memorial").Light, RevivalSec,
             progress =>
             {
@@ -254,6 +330,8 @@ public partial class MemorialDirector : Node
             AudioManager.PlayUI("sfx_memorial_wake");
         }
         EmitSparks(memorial.GlobalPosition + new Vector2(0f, -20f), 22);
+        if (_world.Land?.IsLand == true)
+            LitThisLand++;
         _eventBus.EmitSignal(EventBus.SignalName.MemorialAwakened, memorial.GlobalPosition);
         OpenBlessings(memorial, animate);
     }
@@ -439,6 +517,8 @@ public partial class MemorialDirector : Node
                 continue;
             if (memorial == _gathering)
                 EndGathering(false);
+            if (memorial == _holding)
+                EndHolding(false);
             memorial.SetState(Memorial.MemorialState.Lost);
         }
     }
