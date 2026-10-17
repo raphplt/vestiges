@@ -200,8 +200,9 @@ public static class PathNetworkGenerator
         if (length < 24f)
             return null;
 
-        // Ondulation latérale au sol, nulle aux extrémités pour que les raccords restent en place.
-        FastNoiseLite wobble = new()
+        // Ondulation latérale au sol, nulle aux extrémités pour que les raccords restent en place. Libérée aussitôt :
+        // la génération tourne sur un thread, un bruit laissé au ramasse-miettes peut survivre à la fermeture du jeu.
+        using FastNoiseLite wobble = new()
         {
             Seed = (int)(CellHash.Of(cells[0], cells[^1], seed) & 0x7FFFFFFF),
             NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex,
@@ -421,7 +422,7 @@ public static class PathNetworkGenerator
             _parent = new int[total];
             _stamp = new int[total];
 
-            FastNoiseLite noise = new()
+            using FastNoiseLite noise = new()
             {
                 Seed = (int)((seed ^ 0x7A745UL) & 0x7FFFFFFF),
                 NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex,

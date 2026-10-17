@@ -35,6 +35,12 @@ public partial class GameBootstrap : Node
     private string _loadStep = "";
     private GameLoadingOverlay _overlay;
 
+    /// <summary>
+    /// Chargement déjà en échec. Une panne aux catalogues survient pendant le _Ready de ce nœud, avant celui de
+    /// <see cref="WorldSetup"/> : la génération ne doit pas partir derrière l'écran d'erreur.
+    /// </summary>
+    public bool HasFailed => _loadState == LoadState.Failed;
+
     public override void _Ready()
     {
         // L'écran de chargement entre dans l'arbre avant le premier rendu de la scène : sans lui, la toute première

@@ -72,7 +72,7 @@ public partial class PropSpawner : Node2D
 		Dictionary<string, Texture2D> textureCache = new();
 
 		// Bruit de Perlin pour la distribution naturelle
-		FastNoiseLite noise = new()
+		using FastNoiseLite noise = new()
 		{
 			Seed = (int)(seed & 0x7FFFFFFF),
 			NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,

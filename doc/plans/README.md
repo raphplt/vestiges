@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**17 octobre, nuit — réglages du monde lus strictement ([plan 26 Q7c-4b](26-qualite-et-dette-technique.md), lot sans décision de design, §68) :** `world_gen.json` est contrôlé champ par champ (biomes, décors, zones, terres, chemins) et un fichier refusé arrête le chargement au lieu de générer en silence une carte de 30 cellules ; mêmes valeurs effectives. Échec préexistant de `test_loading.sh` (`fault-catalogues`) consigné.
+**17 octobre, nuit — réglages du monde lus strictement ([plan 26 Q7c-4b](26-qualite-et-dette-technique.md), lot sans décision de design, §68) :** `world_gen.json` est contrôlé champ par champ (biomes, décors, zones, terres, chemins) et un fichier refusé arrête le chargement au lieu de générer en silence une carte de 30 cellules ; mêmes valeurs effectives. Corrigé dans la foulée : une panne aux catalogues ne lance plus de génération orpheline derrière l'écran d'erreur (`test_loading.sh` de nouveau vert).
 
 **17 octobre, nuit — zones au sol rondes mais travaillées ([plan 25 S12](25-sprites-et-design.md), §164, §172) :** toutes les zones redeviennent des cercles au bord rugueux d'un texel, avec un rendu beaucoup plus fouillé : annonces à tirets qui tournent, sol fissuré et ondes qui convergent ; couloirs à chevrons ; flaques à ondes ; feu à couronne de braises ; éclats à onde de choc et débris ; auras d'affixe tournantes. Coût relatif −29 % par rapport aux anciennes zones (gardes exactes hors du bord) ; [planche](planches/25-s12-zones-avant-apres.png). À juger en combat.
 

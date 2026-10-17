@@ -149,8 +149,9 @@ public partial class WorldSetup : Node2D
         // Les décors de la run précédente ne bloquent plus les créatures ; ceux de celle-ci vont s'inscrire.
         ObstacleField.Clear();
         EnemyDataLoader.Load();
-        // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé.
-        if (!BiomeDataLoader.TryLoad(out _))
+        // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé. Une génération
+        // lancée derrière l'écran d'erreur tournerait encore sur son thread après le retour au camp.
+        if (GetNodeOrNull<GameBootstrap>("GameBootstrap") is { HasFailed: true } || !BiomeDataLoader.TryLoad(out _))
             return;
         PoiDataLoader.Load();
         LootTableLoader.Load();
