@@ -16,7 +16,7 @@
 >
 > **Encore ouvert** (§11.6) : la 4e carte, les questions de l'Élan, la place des Résurgences, les durées ; Raphaël doit jouer la Barrière et l'Indicible avant de décider de leur sort.
 >
-> **Boucle, rien n'est codé.** Ordre retenu : l'Élan d'abord (E2, E3), puis le prototype des terres (P0 à P3, recadrés au §11.7), soit 3 à 4 semaines.
+> **Ordre changé le 17 octobre** (registre §186) : le prototype des terres (P0 à P3, recadrés au §11.7, 3 à 4 semaines) passe avant la suite de l'Élan. E2 (l'esquive parfaite) est livré et jugé « un peu difficile, mais c'est une bonne chose ».
 >
 > **Élan acté** : c'est la mécanique centrale, en version « maîtrise ». La vitesse et les gestes bien faits (esquive parfaite, saut du vide, percussion, glissade) rendent plus fort. La décision du 13 octobre est annulée.
 >
@@ -31,7 +31,7 @@
 >
 > **Élan ouvert** : jauge ou seulement une traînée ; l'Élan gardé ou non d'une terre à l'autre ; une créature tombée dans le Néant comptée comme éliminée (proposé : oui).
 >
-> **Prochaine étape** : E2, l'esquive parfaite, puis E3, le saut du vide (plan 52).
+> **Prochaine étape** : P0, l'horloge de run unique.
 >
 > **Sur un autre poste** (Mac) : `git pull`, puis `tools/elan_sandbox.sh`. `GODOT_BIN` désigne le binaire Godot .NET 4.7.2 s'il ne s'appelle pas `godot-mono`.
 
@@ -385,8 +385,8 @@ Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par
 
 ### 11.7 Ordre de travail
 
-1. **L'Élan d'abord** (plan 52) : E2, l'esquive parfaite, puis E3, le saut du vide, dont dépend la traversée des trous.
-2. **Ensuite, le prototype des terres** : lots P0 à P3 du §8, recadrés ainsi :
+1. ~~L'Élan d'abord~~ : **changé le 17 octobre**, le prototype passe en premier. E2 est livré ; E3 à E6 viennent après le prototype. En attendant E3, le vide se traverse à pied, en payant.
+2. **Le prototype des terres** : lots P0 à P3 du §8, recadrés ainsi :
    - **P1** construit la recousure au lieu du pont ;
    - **P2** ajoute le cercle à tenir, les ancres, l'anneau et le vide traversable ;
    - **P3** fait le réveil par trois lumières, l'effondrement au réveil, le gardien qui se lève seul et le multiplicateur de rang.

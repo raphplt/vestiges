@@ -2205,3 +2205,5 @@ Reprise du plan 51 pour formaliser la boucle avant de l'implémenter. Raphaël r
 - **La jauge** : un anneau de terre restante autour de la minimap, avec un repère qui marque quand le gardien se lève seul. Aucun chiffre.
 - **La charte des gardiens** (plan 51 §10) est validée telle quelle.
 - **Ordre** : « valider ça, puis ensuite, quand ça sera bon, on passera sur l'Élan » ; le prototype des terres vient après les lots E2 et E3.
+
+**17 octobre, après essai du bac à sable** : l'esquive parfaite (lot E2) « c'est un peu difficile mais c'est une bonne chose ». **Ordre changé** : « je voudrais d'abord bosser sur la boucle de jeu et le cycle plutôt ». Le prototype des terres (plan 51, P0 à P3) passe avant les lots E3 à E6 de l'Élan ; le vide s'y traverse d'abord à pied, en payant, et le saut d'Élan viendra avec E3.
