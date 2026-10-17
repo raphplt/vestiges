@@ -64,6 +64,22 @@ def humanoid_animations(gait: Gait = Gait()) -> dict[str, list[Pose]]:
     }
 
 
+def hold_arm(animations: dict[str, list[Pose]], side: str, shoulder: float, elbow: float, arm_in: float = 0.0,
+             follow: float = 0.2, actions: tuple[str, ...] = ("idle", "walk", "dash")) -> dict[str, list[Pose]]:
+    """
+    Bras qui tient son équipement (manche du marteau, rabat de la sacoche) au lieu de balancer dans le vide (plan 54) :
+    pose fixe dont le balancier commun ne garde que `follow`, pour que le coude respire encore avec le pas.
+    """
+    held = dict(animations)
+    for action in actions:
+        held[action] = [replace(pose, **{
+            f"shoulder_{side}": shoulder + follow * getattr(pose, f"shoulder_{side}"),
+            f"elbow_{side}": elbow,
+            f"arm_in_{side}": arm_in,
+        }) for pose in animations[action]]
+    return held
+
+
 IDLE_FRAMES = 6
 
 

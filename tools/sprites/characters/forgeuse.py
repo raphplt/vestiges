@@ -10,10 +10,10 @@ import numpy as np
 
 from ._body import LimbStyle, limbs
 from ..palette import make_emissive, make_material
-from ..poses import Gait, playable_animations
+from ..poses import Gait, hold_arm, playable_animations
 from ..render import Part
 from ..rig import Proportions, Skeleton
-from ..sdf import capsule, cylinder, ellipsoid, rounded_box, sphere
+from ..sdf import capsule, ellipsoid, rounded_box, smin, sphere
 
 CHARACTER_ID = "forgeuse"
 FRAME_SIZE = (44, 44)
@@ -32,7 +32,7 @@ MATERIALS = [
     make_material("goggles", "#A08050", contrast=1.15),
     make_material("lens", "#D84A3A", contrast=1.0),
     make_material("handle", "#8A6440"),
-    make_material("hammer", "#4A4C5A", contrast=1.45),
+    make_material("hammer", "#4A4C5A", contrast=1.45, specular=0.5),
     make_material("gloves", "#5A3E2A", contrast=1.1),
     make_emissive("ember", "#F08A3A"),
     make_material("bandana", "#C44A3A"),
@@ -42,19 +42,23 @@ MATERIALS = [
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
-    # Braise qui palpite dans la masse et marteau qui se cale sur l'épaule à chaque souffle.
+    # Braise qui palpite dans la masse ; la tête du marteau, lourde, reste en l'air quand le corps retombe (lift).
     d = s.drape
+    lift = s.drape_lift
     k = DIMENSIONS.head_radius / 6.2
 
     def h(x: float, y: float, z: float) -> np.ndarray:
         return s.on_head((x * k, y * k, z * k))
 
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
+    hammer_y = 10.5 - 0.9 * d + 0.6 * lift
+    handle_top = s.on_torso("chest", (-7.0, hammer_y - 1.5, -6.0))
+    grip = s.point("hand_r")
     parts = [
-        # Buste en tonneau, épaules rondes et massives.
-        Part(lambda p, c=torso_center: ellipsoid(p, c, (8.0, 7.4, 5.0), s.torso), SHIRT),
-        Part(lambda p: sphere(p, s.on_torso("chest", (7.6, -1.6, 0)), 3.6), SHIRT),
-        Part(lambda p: sphere(p, s.on_torso("chest", (-7.6, -1.6, 0)), 3.6), SHIRT),
+        # Buste en tonneau, épaules rondes et massives fondues dans le buste (plus de rotule visible à l'épaule).
+        Part(lambda p, c=torso_center: smin(smin(ellipsoid(p, c, (8.0, 7.4, 5.0), s.torso),
+                                                 sphere(p, s.on_torso("chest", (7.6, -1.6, 0)), 3.6), 2.0),
+                                            sphere(p, s.on_torso("chest", (-7.6, -1.6, 0)), 3.6), 2.0), SHIRT),
         Part(lambda p: capsule(p, s.on_torso("pelvis", (0, 1.0, 0)), s.on_torso("pelvis", (0, -3.5, 0)), 5.6, 6.0), LEGS),
         # Tablier de cuir épais, du torse aux genoux, bretelles rouges et poche.
         Part(lambda p: rounded_box(p, s.on_torso("pelvis", (0, 3.2, 4.8)), (6.0, 10.4, 1.0), 0.8, s.torso), APRON),
@@ -77,11 +81,13 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: sphere(p, h(2.3, 6.4, 2.4), 2.0 * k), GOGGLES),
         Part(lambda p: sphere(p, h(-2.3, 7.2, 3.0), 1.4 * k), LENS),
         Part(lambda p: sphere(p, h(2.3, 7.2, 3.0), 1.4 * k), LENS),
-        # Marteau démesuré sur l'épaule droite : long manche, tête plus grosse que la sienne, braise dans la masse.
-        Part(lambda p: capsule(p, s.on_torso("chest", (-6.0, -10.0, 3.0)), s.on_torso("chest", (-7.0, 9.0 - 0.9 * d, -6.0)), 1.3), HANDLE),
-        Part(lambda p: rounded_box(p, s.on_torso("chest", (-7.2, 10.5 - 0.9 * d, -6.6)), (6.0, 4.4, 4.6), 0.8, s.torso), HAMMER),
-        Part(lambda p: rounded_box(p, s.on_torso("chest", (-13.4, 10.5 - 0.9 * d, -6.6)), (0.8, 4.8, 5.0), 0.3, s.torso), HAMMER),
-        Part(lambda p: sphere(p, s.on_torso("chest", (-3.2, 10.5 - 0.9 * d, -2.0)), 1.1 + 0.5 * max(d, 0.0)), EMBER),
+        # Marteau démesuré sur l'épaule droite : tête plus grosse que la sienne, braise dans la masse.
+        Part(lambda p: rounded_box(p, s.on_torso("chest", (-7.2, hammer_y, -6.6)), (6.0, 4.4, 4.6), 0.8, s.torso), HAMMER),
+        Part(lambda p: rounded_box(p, s.on_torso("chest", (-13.4, hammer_y, -6.6)), (0.8, 4.8, 5.0), 0.3, s.torso), HAMMER),
+        Part(lambda p: sphere(p, s.on_torso("chest", (-3.2, hammer_y, -2.0)), 1.1 + 0.5 * max(d, 0.0)), EMBER),
+        # Le manche passe dans le poing droit et dépasse dessous : la main tient le marteau au lieu de balancer.
+        Part(lambda p: capsule(p, grip + (grip - handle_top) / np.linalg.norm(grip - handle_top) * 3.5, handle_top, 1.3),
+             HANDLE),
     ]
     parts += limbs(s, LimbStyle(sleeve=SHIRT, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=2.9, hand_radius=3.0,
                                 leg_radius=3.0, boot_radius=3.1, boot_height=4.2, foot_radius=2.8))
@@ -92,4 +98,6 @@ def build(skeleton: Skeleton) -> list[Part]:
     return parts
 
 
-ANIMATIONS = playable_animations(Gait(lean=0.02, arm_out=0.36, stride=0.85, arm_swing=0.8, bounce=0.6, heavy=1.0))
+# Main droite au manche du marteau, devant la poitrine ; la gauche garde le balancier lourd.
+ANIMATIONS = hold_arm(playable_animations(Gait(lean=0.02, arm_out=0.36, stride=0.85, arm_swing=0.8, bounce=0.6, heavy=1.0)),
+                      "r", shoulder=0.5, elbow=1.9, arm_in=0.2)

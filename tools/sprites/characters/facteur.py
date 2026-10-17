@@ -37,21 +37,23 @@ MATERIALS = [
     make_material("eyes", "#1E1614", contrast=0.3),
     make_material("cap", "#2E3C58", contrast=1.15),
     make_material("visor", "#1E2230", contrast=0.6),
-    make_material("badge", "#E0B040", contrast=0.8),
+    make_material("badge", "#E0B040", contrast=0.8, specular=0.4),
     make_material("bag", "#C0923A", contrast=1.15),
     make_material("flap", "#8E6A2C", contrast=1.1),
     make_material("letter", "#ECE4D6", contrast=0.5),
     make_material("string", "#C44A3A", contrast=0.8),
     make_material("strap", "#6A4A26"),
     make_material("board", "#B08A58", contrast=1.1),
-    make_material("wheel", "#8C8888", contrast=1.2),
+    make_material("wheel", "#8C8888", contrast=1.2, specular=0.5),
 ]
 
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
-    # Lettres envolées et liasses de la sacoche ballottent en retard sur le corps.
+    # Lettres envolées et sacoche ballottent en retard sur le corps : recul (d), soulèvement (lift), fouet (sway).
     d = s.drape
+    lift = s.drape_lift
+    sway = s.drape_sway
     k = DIMENSIONS.head_radius / 6.2
 
     # Penché comme un patineur, il garde la tête droite et regarde devant lui.
@@ -66,7 +68,7 @@ def build(skeleton: Skeleton) -> list[Part]:
         return lambda p: rounded_box(p, center, size, 0.1, rotation)
 
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
-    bag = s.on_torso("pelvis", (8.6 + 0.3 * d, 2.0, 1.4))
+    bag = s.on_torso("pelvis", (8.6 + 0.3 * d + 0.3 * sway, 2.0 + 0.5 * lift, 1.4))
     parts = [
         # Veste d'uniforme boutonnée, col rabattu plus sombre, deux boutons dorés.
         Part(lambda p, c=torso_center: ellipsoid(p, c, (5.6, 7.4, 4.0), s.torso), JACKET),
@@ -106,9 +108,9 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: rounded_box(p, bag + s.torso @ [-0.2, 6.6, 1.6], (1.4, 1.9, 2.3), 0.3, s.torso), LETTER),
         Part(lambda p: rounded_box(p, bag + s.torso @ [-0.2, 6.6, 1.6], (1.5, 0.4, 2.4), 0.1, s.torso), STRING),
         # Lettres envolées derrière lui : l'élan de la tournée.
-        Part(letter(s.on_torso("chest", (8.0 + 1.6 * d, 4.0 + 1.2 * d, -8.0)), 0.7 + 0.3 * d, 0.4), LETTER),
-        Part(letter(s.on_torso("chest", (3.0 - 1.0 * d, 9.0 - 0.8 * d, -11.0)), -0.6, 0.9), LETTER),
-        Part(letter(s.on_torso("chest", (13.0 + 0.8 * d, 3.0 - 1.0 * d, -3.0)), -1.2 - 0.3 * d, 0.5), LETTER),
+        Part(letter(s.on_torso("chest", (8.0 + 1.6 * d + 0.6 * sway, 4.0 + 1.2 * d + 0.8 * lift, -8.0)), 0.7 + 0.3 * d, 0.4), LETTER),
+        Part(letter(s.on_torso("chest", (3.0 - 1.0 * d + 0.6 * sway, 9.0 - 0.8 * d + 0.8 * lift, -11.0)), -0.6, 0.9), LETTER),
+        Part(letter(s.on_torso("chest", (13.0 + 0.8 * d + 0.6 * sway, 3.0 - 1.0 * d + 0.8 * lift, -3.0)), -1.2 - 0.3 * d, 0.5), LETTER),
     ]
     parts += limbs(s, LimbStyle(sleeve=JACKET, hand=SKIN, leg=TROUSERS, boot=SHOES, arm_radius=2.0, hand_radius=2.0,
                                 leg_radius=2.2, boot_radius=2.2, boot_height=3.5, foot_radius=2.1))

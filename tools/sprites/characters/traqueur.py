@@ -42,7 +42,10 @@ MATERIALS = [
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
+    # Pans de cape, pointe de capuche et écharpe : recul (d), soulèvement (lift) et fouet latéral (sway).
     d = s.drape
+    lift = s.drape_lift
+    sway = s.drape_sway
     # Capuche, visage et yeux suivent la taille de la tête : changer les proportions ne demande pas de les redessiner.
     k = DIMENSIONS.head_radius / 6.2
 
@@ -57,13 +60,13 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: capsule(p, s.on_torso("neck", (-3.5, -1.0, 3.0)), s.on_torso("pelvis", (3.8, 2.0, 3.2)), 0.9), WRAP),
         # Mantelet qui couvre les épaules, puis deux pans effilés qui battent en retard derrière les jambes.
         Part(lambda p: ellipsoid(p, s.on_torso("chest", (0, -1.6, -0.6)), (7.0, 5.0, 5.0), s.torso), CLOAK),
-        Part(lambda p: capsule(p, s.on_torso("chest", (-2.6, -2.0, -3.6)), s.on_torso("pelvis", (-4.2 - 1.2 * d, -9.0, -6.5 - 1.6 * d)), 3.0, 0.5), CLOAK),
-        Part(lambda p: capsule(p, s.on_torso("chest", (2.6, -2.0, -3.6)), s.on_torso("pelvis", (4.0 + 1.0 * d, -10.5, -6.0 - 2.0 * d)), 3.0, 0.5), CLOAK),
+        Part(lambda p: capsule(p, s.on_torso("chest", (-2.6, -2.0, -3.6)), s.on_torso("pelvis", (-4.2 - 1.2 * d + 0.8 * sway, -9.0 + 1.2 * lift, -6.5 - 1.6 * d)), 3.0, 0.5), CLOAK),
+        Part(lambda p: capsule(p, s.on_torso("chest", (2.6, -2.0, -3.6)), s.on_torso("pelvis", (4.0 + 1.0 * d + 0.8 * sway, -10.5 + 1.2 * lift, -6.0 - 2.0 * d)), 3.0, 0.5), CLOAK),
         # Capuche : volume plus gros que la tête, creusée à l'avant (ombre où brillent les yeux), pointe longue.
         Part(lambda p: np.maximum(ellipsoid(p, h(0, 0.8, -0.6), (7.0 * k, 7.2 * k, 7.0 * k), s.head),
                                   -ellipsoid(p, h(0, -0.6, 5.2), (4.6 * k, 4.6 * k, 3.6 * k), s.head)), CLOAK),
         Part(lambda p: sphere(p, h(0, -0.6, 0.0), 5.0 * k), FACE),
-        Part(lambda p: capsule(p, h(0, 4.0, -3.0), h(2.6 * d, 10.5 - 0.8 * d, -9.5), 3.6 * k, 0.4), CLOAK),
+        Part(lambda p: capsule(p, h(0, 4.0, -3.0), h(2.6 * d + 0.8 * sway, 10.5 - 0.8 * d + 0.8 * lift, -9.5), 3.6 * k, 0.4), CLOAK),
         # Doublure plus sombre au bord de la capuche, puis écharpe claire qui sépare la tête du buste.
         Part(lambda p: np.maximum(ellipsoid(p, h(0, 0.6, 3.6), (5.6 * k, 5.8 * k, 1.4 * k), s.head),
                                   -ellipsoid(p, h(0, -0.6, 5.0), (4.4 * k, 4.4 * k, 3.0 * k), s.head)), CLOAK_LINING),
@@ -77,10 +80,10 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: capsule(p, s.on_torso("chest", (-3.0, -1.0, -7.4)), s.on_torso("chest", (9.5, 19.5, -5.0)), 1.8, 1.1), BOW),
         Part(lambda p: capsule(p, s.on_torso("chest", (-12.4, -16.6, -4.0)), s.on_torso("chest", (9.0, 19.0, -4.0)), 0.5), STRING),
         # Longue écharpe claire nouée au cou, dont le bout flotte derrière l'épaule.
-        Part(lambda p: capsule(p, s.on_torso("neck", (2.5, -1.0, -2.0)), s.on_torso("chest", (7.5 + 1.5 * d, -6.5, -6.0 - 1.5 * d)), 1.8, 0.8), WRAP),
+        Part(lambda p: capsule(p, s.on_torso("neck", (2.5, -1.0, -2.0)), s.on_torso("chest", (7.5 + 1.5 * d + 0.8 * sway, -6.5 + 1.2 * lift, -6.0 - 1.5 * d)), 1.8, 0.8), WRAP),
         # Carquois et empennages rouges qui dépassent de l'épaule.
         Part(lambda p: capsule(p, s.on_torso("chest", (3.2, -6.0, -5.0)), s.on_torso("chest", (4.6, 3.5, -5.6)), 1.8, 2.0), QUIVER),
-        Part(lambda p: ellipsoid(p, s.on_torso("chest", (4.8 + 0.9 * d, 5.6, -5.8)), (2.2, 1.8, 1.8), s.torso), FLETCH),
+        Part(lambda p: ellipsoid(p, s.on_torso("chest", (4.8 + 0.9 * d, 5.6 + 0.4 * lift, -5.8)), (2.2, 1.8, 1.8), s.torso), FLETCH),
     ]
     parts += limbs(s, LimbStyle(sleeve=TUNIC, hand=GLOVES, leg=LEGS, boot=BOOTS, arm_radius=1.8, hand_radius=2.1,
                                 leg_radius=1.9, boot_radius=2.3, boot_height=5.0, foot_radius=2.1))

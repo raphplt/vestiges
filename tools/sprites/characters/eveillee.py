@@ -36,7 +36,7 @@ MATERIALS = [
     make_material("eyes", "#2A2030", contrast=0.3),
     make_material("bakelite", "#2A2428", contrast=0.8),
     make_material("cord", "#9A4A50", contrast=0.9),
-    make_material("brass", "#C8A050", contrast=1.0),
+    make_material("brass", "#C8A050", contrast=1.0, specular=0.4),
     make_emissive("glow", "#5EC4C4"),
     make_material("shoes", "#4A4458"),
 ]
@@ -49,8 +49,11 @@ def _lock(p: np.ndarray, a: np.ndarray, b: np.ndarray, c: np.ndarray, radius: fl
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
-    # La robe, les mèches et les cordons flottent en retard sur le corps, même à l'arrêt.
+    # La robe, les mèches et les cordons flottent en retard sur le corps, même à l'arrêt : recul (d), soulèvement
+    # (lift) et fouet latéral (sway).
     d = s.drape
+    lift = s.drape_lift
+    sway = s.drape_sway
     k = DIMENSIONS.head_radius / 6.2
 
     def h(x: float, y: float, z: float) -> np.ndarray:
@@ -59,7 +62,7 @@ def build(skeleton: Skeleton) -> list[Part]:
     torso_center = (s.point("pelvis") + s.point("chest")) * 0.5
     waist = s.on_torso("pelvis", (0, 1.5, 0))
     # L'ourlet est emporté sur le côté par un vent qui n'existe pas, et ondule avec lui.
-    hem = s.on_torso("pelvis", (2.0 + 1.2 * d, -17.0, -2.0 - 1.0 * d))
+    hem = s.on_torso("pelvis", (2.0 + 1.2 * d + 0.8 * sway, -17.0 + 0.6 * lift, -2.0 - 1.0 * d))
 
     def skirt(p: np.ndarray) -> np.ndarray:
         """Robe évasée jusqu'aux chevilles, plissée : les plis s'ouvrent vers l'ourlet."""
@@ -88,10 +91,10 @@ def build(skeleton: Skeleton) -> list[Part]:
         # Mèches longues qui flottent vers le haut, toutes emportées sur sa gauche par le même vent que l'ourlet, comme
         # sous l'eau : une flamme de cheveux plutôt que deux pointes symétriques.
         *[Part(lambda p, a=a, b=b, c=c: _lock(p, h(*a), h(*b), h(*c), 1.7 * k), HAIR) for a, b, c in (
-            ((-3.0, 2.0, -3.0), (-1.6 + 0.6 * d, 7.6, -5.6), (1.4 + 1.2 * d, 12.0 - 0.6 * d, -7.0)),
-            ((-0.4, 3.0, -3.4), (2.4 + 0.8 * d, 8.0, -5.4), (6.0 + 1.6 * d, 10.6 - 0.6 * d, -5.0)),
-            ((2.6, 2.2, -3.4), (6.0 + 0.8 * d, 5.8, -5.0), (9.4 + 1.2 * d, 7.0 - 0.8 * d, -4.0)),
-            ((0.0, 0.0, -5.4), (2.0 - 0.6 * d, 3.6, -9.4), (5.6 - 1.4 * d, 5.2 - 0.8 * d, -11.0)))],
+            ((-3.0, 2.0, -3.0), (-1.6 + 0.6 * d, 7.6, -5.6), (1.4 + 1.2 * d + 0.6 * sway, 12.0 - 0.6 * d + 0.8 * lift, -7.0)),
+            ((-0.4, 3.0, -3.4), (2.4 + 0.8 * d, 8.0, -5.4), (6.0 + 1.6 * d + 0.6 * sway, 10.6 - 0.6 * d + 0.8 * lift, -5.0)),
+            ((2.6, 2.2, -3.4), (6.0 + 0.8 * d, 5.8, -5.0), (9.4 + 1.2 * d + 0.6 * sway, 7.0 - 0.8 * d + 0.8 * lift, -4.0)),
+            ((0.0, 0.0, -5.4), (2.0 - 0.6 * d, 3.6, -9.4), (5.6 - 1.4 * d + 0.6 * sway, 5.2 - 0.8 * d + 0.8 * lift, -11.0)))],
         # Casque d'opératrice : serre-tête, écouteur sur l'oreille droite, cornet pendu sur la poitrine.
         Part(lambda p: np.abs(ellipsoid(p, h(0, 0.6, -0.4), (6.3 * k, 6.4 * k, 1.0 * k), s.head)) - 0.35 * k, BAKELITE),
         Part(lambda p: ellipsoid(p, h(-6.4, -0.4, 0.4), (1.4 * k, 2.3 * k, 2.3 * k), s.head), BAKELITE),
@@ -107,10 +110,10 @@ def build(skeleton: Skeleton) -> list[Part]:
         [hand_l, hand_l + s.torso @ np.array([2.6, -1.5, -0.5]),
          hand_l + s.torso @ np.array([6.0 + 0.8 * d, 4.0, -2.5]),
          hand_l + s.torso @ np.array([7.0 + 1.4 * d, 11.0 - 0.8 * d, -4.5]),
-         hand_l + s.torso @ np.array([5.0 + 2.0 * d, 18.0 - 1.2 * d, -6.0 - 1.0 * d])],
+         hand_l + s.torso @ np.array([5.0 + 2.0 * d + 0.8 * sway, 18.0 - 1.2 * d + 1.0 * lift, -6.0 - 1.0 * d])],
         [hand_r, hand_r + s.torso @ np.array([-1.6, -3.4, -1.8]),
          hand_r + s.torso @ np.array([-3.4 - 0.6 * d, -3.0, -6.0]),
-         hand_r + s.torso @ np.array([-5.0 - 1.2 * d, 0.6 - 0.6 * d, -9.6 - 0.8 * d])],
+         hand_r + s.torso @ np.array([-5.0 - 1.2 * d + 0.8 * sway, 0.6 - 0.6 * d + 1.0 * lift, -9.6 - 0.8 * d])],
     ]
     for cord in cords:
         heading = (cord[-1] - cord[-2]) / np.linalg.norm(cord[-1] - cord[-2])

@@ -31,8 +31,8 @@ SUIT, SEAM, COPPER, BRASS, GLASS, GLINT, PATINA, BOLT, TANK, HOSE, LEAD, BELT, G
 MATERIALS = [
     make_material("suit", "#A08E6E"),
     make_material("seam", "#7A6A50"),
-    make_material("copper", "#B8743A", contrast=1.2),
-    make_material("brass", "#C8A050", contrast=1.15),
+    make_material("copper", "#B8743A", contrast=1.2, specular=0.4),
+    make_material("brass", "#C8A050", contrast=1.15, specular=0.4),
     make_material("glass", "#1E3438", contrast=0.5),
     make_emissive("glint", "#CDE8E0"),
     make_material("patina", "#5E9A84", contrast=0.8),
@@ -49,8 +49,10 @@ MATERIALS = [
 
 def build(skeleton: Skeleton) -> list[Part]:
     s = skeleton
-    # Tuyau et filin ballottent en retard sur le corps.
+    # Tuyau et filin ballottent en retard sur le corps : recul (d), soulèvement (lift) et fouet latéral (sway).
     d = s.drape
+    lift = s.drape_lift
+    sway = s.drape_sway
     k = DIMENSIONS.head_radius / 6.2
 
     def h(x: float, y: float, z: float) -> np.ndarray:
@@ -61,8 +63,9 @@ def build(skeleton: Skeleton) -> list[Part]:
     porthole = s.head @ rotation_x(np.pi / 2)
     # Tuyau d'air : de l'arrière du casque, il pend en boucle sur le flanc droit jusqu'au pied de la bouteille.
     hose = [h(-3.4, -2.8, -4.4), s.on_torso("chest", (-6.6, -0.5, -6.0)),
-            s.on_torso("chest", (-9.0 - 0.6 * d, -6.5, -5.0)), s.on_torso("chest", (-8.4 - 0.9 * d, -12.0, -5.6)),
-            s.on_torso("chest", (-4.0 - 0.4 * d, -12.4, -7.6)), s.on_torso("chest", (-1.2, -10.0, -7.4))]
+            s.on_torso("chest", (-9.0 - 0.6 * d + 0.4 * sway, -6.5 + 0.5 * lift, -5.0)),
+            s.on_torso("chest", (-8.4 - 0.9 * d + 0.6 * sway, -12.0 + 0.8 * lift, -5.6)),
+            s.on_torso("chest", (-4.0 - 0.4 * d + 0.4 * sway, -12.4 + 0.6 * lift, -7.6)), s.on_torso("chest", (-1.2, -10.0, -7.4))]
     parts = [
         # Scaphandre de toile épaisse, gonflé, coutures plus sombres sur le devant.
         Part(lambda p, c=torso_center: ellipsoid(p, c, (6.6, 7.6, 5.0), s.torso), SUIT),
@@ -75,7 +78,7 @@ def build(skeleton: Skeleton) -> list[Part]:
         Part(lambda p: rounded_box(p, s.on_torso("pelvis", (-5.8, 1.6, 2.0)), (0.9, 1.6, 1.5), 0.3, s.torso), LEAD),
         Part(lambda p: rounded_box(p, s.on_torso("pelvis", (5.8, 1.6, 2.0)), (0.9, 1.6, 1.5), 0.3, s.torso), LEAD),
         # Filin de sécurité enroulé à la hanche gauche, qui se balance.
-        Part(lambda p: np.abs(ellipsoid(p, s.on_torso("pelvis", (7.0 + 0.4 * d, -1.4, 1.4)), (1.2, 3.2, 3.0), s.torso)) - 0.8, ROPE),
+        Part(lambda p: np.abs(ellipsoid(p, s.on_torso("pelvis", (7.0 + 0.4 * d + 0.4 * sway, -1.4 + 0.5 * lift, 1.4)), (1.2, 3.2, 3.0), s.torso)) - 0.8, ROPE),
         # Pèlerine de laiton boulonnée sur les épaules, plus large que le buste : elle porte le casque.
         Part(lambda p: ellipsoid(p, s.on_torso("neck", (0, -2.2, 0)), (9.0, 3.4, 7.4), s.torso), BRASS),
         *[Part(lambda p, a=a: sphere(p, s.on_torso("neck", (np.sin(a) * 8.0, -1.8, np.cos(a) * 6.4)), 0.9), BOLT)

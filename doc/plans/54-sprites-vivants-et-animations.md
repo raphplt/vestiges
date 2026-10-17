@@ -112,10 +112,36 @@ Conformément aux règles du projet, nous avançons **un lot à la fois**, en co
 - [x] **Lot G2 — Améliorations Godot Runtime sur les Ennemis (Désynchronisation d'Idle et Tempo de marche lié à la vitesse)**
   - Implémenté dans [`Enemy.cs`](../../scripts/Combat/Enemy.cs) : phase initiale aléatoire sur `Idle` pour éviter que les meutes respirent à l'unisson, et modulation du `SpeedScale` de `Walk` par `Velocity.Length() / _baseSpeed` (`[0.72, 1.45]`).
 
-- [ ] **Lot S2 — Déclinaison SDF 2.0 aux 5 autres personnages jouables + retouches Aseprite optionnelles**
+- [x] **Lot S2 — Déclinaison SDF 2.0 aux 5 autres personnages jouables + retouches Aseprite optionnelles**
   - Appliquer les nouveaux matériaux, membres sculptés, accessoires tenus et allures propres à **La Forgeuse**, **Le Traqueur**, **Le Facteur**, **L'Éveillée** et **La Scaphandrière** (`tools/sprites/characters/*.py`).
   - Planche comparative de contrôle pour validation, puis export et test avec `tools/capture_run.sh`.
 
 - [ ] **Lot S3 — Déclinaison SDF 2.0 au reste du bestiaire**
   - Appliquer les fusions organiques `smin`, textures de surface, démarches et attaques avec anticipation/*smear* aux autres créatures de `tools/sprites/creatures/*.py`.
   - Planche bestiaire comparative, export et validation complète (`tools/validate.sh`).
+
+---
+
+## 4. Lot S2 livré — 17 octobre 2026
+
+Duo pilote validé en jeu par Raphaël, échelle gardée (DECISIONS §188). Les cinq autres jouables sont régénérés avec le moteur du pilote.
+
+**Fait :**
+- Le cycle commun (`playable_animations` : marche asymétrique en huit poses, dash en quatre temps, coup reçu, mort) s'applique maintenant aux six jouables ; seule la Scaphandrière garde son dash propre.
+- **Forgeuse** : la main droite tient le manche du marteau devant la poitrine (`hold_arm` dans `poses.py` : pose fixe, 20 % du balancier commun gardé, appliquée à l'attente, la marche et le dash) ; le manche passe dans le poing et dépasse dessous ; la tête du marteau reste en l'air quand le corps retombe (`drape_lift`) ; épaules fondues dans le buste (`smin`) ; reflet sur l'acier.
+- **Traqueur** : pans de cape, pointe de capuche, écharpe et empennages sur les trois axes d'inertie (`drape`, `drape_lift`, `drape_sway`).
+- **Facteur** : sacoche qui rebondit, lettres envolées sur les trois axes ; reflet sur les roues et l'insigne.
+- **Éveillée** : ourlet, mèches et cordons sur les trois axes ; reflet sur le laiton.
+- **Scaphandrière** : tuyau d'air et filin sur les trois axes ; reflet sur le cuivre et le laiton.
+- Règles du §188 tenues : pas de détail d'un pixel ajouté, pas de nouvel `emissive`, pas de `stretch` dans le squelette.
+
+**Retouches de la Scaphandrière :** ses 40 retouches Aseprite verrouillaient tous ses PNG. Les 216 PNG étaient identiques pixel pour pixel au rendu brut du générateur : aucune retouche faite à la main n'avait été exportée. Avec l'accord de Raphaël, les anciennes sont retirées et 40 retouches neuves sont recréées depuis le nouveau rendu (`--editable`).
+
+**Vérifié :**
+- Planche avant/après : [`planches/plan54_lot_S2_jouables.png`](planches/plan54_lot_S2_jouables.png) (marche SE, dash E, attente S, marche N, taille réelle sur sol).
+- Régénération reproductible (deux passes de la Forgeuse, PNG identiques octet pour octet).
+- `tools/smoke_test.sh` vert ; aucun nouveau PNG (mêmes noms et nombres de frames), donc aucun `.import` nouveau.
+- Captures en vraie run (Forgeuse, Scaphandrière, 16 s, seed 221092026) regardées : marteau tenu lisible, pas de bavure sur le sol.
+- Pas de banc : mêmes cadres, mêmes nombres de frames, aucun code du jeu modifié.
+
+**Reste au plan :** S3 (bestiaire), et la partie Godot non découpée du volet B (traînée du dash à la silhouette exacte, vibration et écrasement des créatures avant l'attaque, écrasement orienté selon le coup reçu), à proposer en lot G3.
