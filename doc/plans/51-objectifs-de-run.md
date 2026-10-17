@@ -511,3 +511,19 @@ Livrés ensemble : le vidage seul fait planter les systèmes qui gardent la cart
 **Pas vérifié à l'image** : toutes les images de la capture, y compris celle prise à 30 s avant tout passage, montrent la même vue figée de l'écran de chargement initial. macOS ne dessinait plus la fenêtre de capture, masquée pendant le travail sur la machine. La capture de l'esquive parfaite (lot E2), prise sur `main` avant ce chantier, avait le même défaut. C'est à refaire fenêtre visible, ou à voir en jouant.
 
 **Banc dense** : non relancé, aucune boucle par image n'a changé (le passage n'existe qu'à la demande, et les nouvelles réactions ne tournent qu'au changement de terre).
+
+## 14. Découpage de P2, la terre se défait — 17 octobre 2026
+
+P1e (la recousure) passe après P2. Elle est purement visuelle, avec un repli prévu (le portail), et ne peut pas être jugée à l'image tant que la fenêtre de capture n'est pas dessinée. P2 est le cœur du prototype.
+
+**Choix pris pour le prototype, à revoir en jouant :**
+- **Le cœur est le centre de la terre, là où le joueur arrive.** On part du lieu sûr, on va chercher Mémoriaux et butin vers les bords qui tombent, et on revient au cœur réveiller le gardien. Le gardien endormi s'y voit dès l'arrivée (P3).
+- **Le front ne vaut que sur les terres allumées.** La grande carte garde son Effacement actuel tant que les terres sont éteintes.
+- **Rythme de départ** : premier sol qui tombe vers 1 min ; la terre réduite à son cœur vers 12 min si on la laisse filer ; chaque état de préavis (fragile, effiloché, effacé) dure 25 s. Tout est réglé en données.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **P2a Le front** | Date de chute par cellule, calculée à la construction de la terre : distance au cœur, bruit en langues et en baies, cœur qui ne tombe jamais. La mémoire d'une cellule devient le temps qui lui reste avant sa chute, donc les mêmes états et le même rendu qu'aujourd'hui. La présence du joueur retarde la chute autour de lui. Toutes les cellules de la terre suivies (quelques milliers) | Banc : états dans l'ordre et à l'heure, cœur intact, présence qui retarde ; mesure de la terre restante par minute ; capture du front |
+| **P2b Les Mémoriaux à tenir** | Sur les terres, raviver un Mémorial, c'est tenir son cercle environ 20 s (au lieu de rassembler ses éclats) ; une fois ravivé, sa zone est ancrée et ne tombe plus ; chaque Mémorial ravivé allume une lumière comptée pour le gardien (P3) ; un Mémorial atteint par le front avant d'être ravivé est perdu | Banc : cercle tenu, quitté, ravivé ; zone ancrée qui ne tombe pas ; compteur de lumières |
+| **P2c Lire la terre** | Anneau de terre restante autour de la minimap, avec le repère du réveil forcé ; la minimap montre le front et ce qui tombe dans la minute | Capture, à juger par Raphaël |
+| **P2d Le vide** | Marcher dans le Néant draine l'Essence, puis les PV quand elle est épuisée (au lieu des seuls PV aujourd'hui) | Banc : drain d'Essence puis de PV |
