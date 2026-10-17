@@ -409,3 +409,24 @@ Proposés le même soir pour s'éloigner du squelette de Megabonk, écartés par
 **Relecture (`godot-reviewer`)** : rien de bloquant. Corrigé : code mort retiré, commentaire du bilan, date de l'Effacement jamais négative pendant le chargement, contrôle de la pause renforcé (l'horloge elle-même, état Run, se fige). Changement voulu : le temps ne part qu'à l'état Run, à la fin du chargement ; avant, les apparitions et l'Effacement comptaient déjà pendant le chargement.
 
 **Ce que P0 prépare** : les terres pourront pousser une horloge de terre, arrêter le temps pendant la recousure et caler leurs calendriers sur une seule source (P1).
+
+## 13. Découpage de P1, changer de terre — 17 octobre 2026
+
+Étude du 17 octobre (inventaire complet du code) : **la racine de `Main` est elle-même le monde** (`WorldSetup`). Il n'y a pas de nœud « carte » à libérer d'un bloc : changer de terre veut dire libérer une liste précise d'enfants de `Main`, vider les index statiques, et remettre à zéro une quinzaine de systèmes. Le joueur et les systèmes qui portent l'état de run (niveau, armes, objets, Essence, Péril, quêtes, score, horloge) ne bougent pas. Travail sur la branche `terres`, dans un worktree séparé (un autre agent travaille sur `main`).
+
+**Un interrupteur, comme l'Élan** : les terres restent éteintes dans les runs normales (`lands.enabled` à faux dans `data/world/world_gen.json`) tant que le prototype n'est pas jouable de bout en bout. La run actuelle ne change pas pendant P1 à P3.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **P1a Construire une terre** | `BuildLandAsync(LandSpec)` extrait de l'initialisation : rang, graine, rayons, biome, coefficient sur les comptes de lieux et de coffres. Génération dans un `WorldGenerator` local, échangé sur le fil principal (aujourd'hui affecté depuis le thread, lu en continu par le joueur et les apparitions). TileSet d'origine gardé. Graine par terre : la terre 0 garde la graine de run, les suivantes `RunRandom.SeedFor("land/n")`, sans jamais relancer `RunRandom.Begin`. Une terre avec un seul biome est acceptée (seuil de deux biomes aujourd'hui). Section `lands` dans `world_gen.json` : rayons environ ×0,58 (surface ÷3), comptes ×1/3, biomes tirés sans remise | Terres éteintes : même carte qu'avant (mêmes lignes de génération, même nombre de décors et de coffres), chargement vert. Une petite terre à un biome mesurée (carte, durée de construction) |
+| **P1b Vider la carte** | `ClearWorld` : libère par tranches les nœuds de carte (fond, bord, chemins, décalques, occlusion, tronçons de décors, placeurs, lore), vide le sol et les routes, `ObstacleField`, les lieux et les coffres (`PoiContainer`), les créatures (nouveau `EnemyPool.ReturnAll`), les orbes et les bonus au sol. Signaux `LandChanging` et `LandChanged` dans l'EventBus | Après le vidage : tous les index statiques vides (Mémoriaux, coffres, Failles, Ateliers, Puits, stèles, petits lieux, interactifs, obstacles), aucun nœud orphelin |
+| **P1c Remettre les systèmes à zéro** | Sur `LandChanged` : Effacement (dont un `Clear` de son index), minimap, brouillard (double abonnement corrigé), faune ; petits lieux, cabines, fausses lumières et occlusion recréés (`ErasureMotes` rafraîchi) ; directeurs des Mémoriaux, Ateliers et Failles ; micro-événement et Barrière interrompus. Joueur ramené au départ (caméra, harpon, mouvement) ; horloge arrêtée pendant la construction | Nouveau banc qui enchaîne trois terres sous le bot invincible : niveau, armes, objets, PV, Essence, Péril, quêtes et score identiques avant et après chaque passage, aucune erreur, lieux de la nouvelle terre comptés |
+| **P1d Passage jouable** | Commande de dev « terre suivante » ; écran de chargement par terre ; génération lancée sur le thread pendant le passage ; mesure de durée par terre | Capture d'un passage, durée par terre, banc dense sans régression |
+| **P1e La recousure** | La terre suivante monte du Néant autour du joueur, du plus proche au plus lointain, et cache la fin de la construction. Repli : un portail | Capture, à juger par Raphaël |
+
+**Choix pris pour le prototype**, à revoir en jouant :
+- **L'Effacement repart de zéro à chaque terre.** P2 le refait de toute façon (date de chute par cellule).
+- **Le premier biome** est tiré comme les suivants ; la terre 0 n'est plus la carte en mosaïque d'aujourd'hui, dès que les terres sont allumées.
+- **Les comptes de lieux sont divisés par trois** avec la surface : environ 13 coffres, 3 Mémoriaux, 2 Failles, 3 Ateliers, 2 stèles et 3 Puits par terre, à régler en jouant. Le cercle à tenir des Mémoriaux vient en P2.
+
+**Défaut existant relevé en passant** : les chemins de terre n'apparaissent jamais sur la minimap (`WorldSetup.PathCells` est libéré avant que la minimap ne les échantillonne). À corriger avec P1c, qui reprend la minimap.
