@@ -120,7 +120,7 @@ public partial class GameBootstrap : Node
 
         Step("Catalogues");
         LoadGuard.InjectFault("catalogues");
-        CharacterDataLoader.Load();
+        RequireCatalog(CharacterDataLoader.TryLoad(out string charactersError), charactersError);
         WeaponDataLoader.Load();
         WeaponUpgradeDataLoader.Load();
         PerkDataLoader.Load();

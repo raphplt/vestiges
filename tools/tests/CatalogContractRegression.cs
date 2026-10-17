@@ -46,6 +46,7 @@ public partial class CatalogContractRegression : Node
             CheckSpawnFlow();
             CheckCrowd();
             CheckVariants();
+            CheckCharacters();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1008,6 +1009,46 @@ public partial class CatalogContractRegression : Node
         Check(EnemyVariantDataLoader.Apply(repeated.ToJsonString(), chestExists) == null
             && EnemyVariantDataLoader.PhaseModifiers.AffixPool.Count == 4, "variantes : affixe de phase répété admis (il pèse davantage)");
         Check(EnemyVariantDataLoader.Apply(valid, chestExists) == null, "variantes du dépôt republiées");
+    }
+
+    /// <summary>Personnages (plan 26 Q7f-1) : fichier du dépôt accepté, références contrôlées, refus sans publication.</summary>
+    private void CheckCharacters()
+    {
+        Check(CharacterDataLoader.TryLoad(out string loadError) && CharacterDataLoader.GetAll().Count == 6
+            && CharacterDataLoader.Get("facteur")?.MobilityProfile == "glide", $"personnages du dépôt acceptés {loadError}");
+        CharacterData vagabond = CharacterDataLoader.Get("vagabond");
+        CharacterDataLoader.References references = CharacterDataLoader.GameReferences();
+        string valid = FileAccess.GetFileAsString(CharacterDataLoader.DataPath);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de personnages attendue"),
+            ("liste vide", _ => new JsonArray(), "liste de personnages attendue"),
+            ("champ inconnu", list => { list[0]!["exclusive_perks"] = new JsonArray(); return list; }, "clé « exclusive_perks » inconnue"),
+            ("identifiant en double", list => { list.Add(list[0]!.DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("nom vide", list => { list[0]!["name"] = ""; return list; }, "name"),
+            ("statistiques absentes", list => { list[0]!.AsObject().Remove("base_stats"); return list; }, "base_stats"),
+            ("statistique inconnue", list => { list[0]!["base_stats"]!["armor"] = 5; return list; }, "clé « armor » inconnue"),
+            ("vitesse nulle", list => { list[0]!["base_stats"]!["speed"] = 0; return list; }, "speed"),
+            ("PV nuls", list => { list[0]!["base_stats"]!["max_hp"] = 0; return list; }, "max_hp"),
+            ("régénération négative", list => { list[0]!["base_stats"]!["regen_rate"] = -1; return list; }, "regen_rate"),
+            ("arme inconnue", list => { list[0]!["starting_weapon"] = "excalibur"; return list; }, "arme « excalibur » inconnue"),
+            ("signature inconnue", list => { list[0]!["passive_perk"] = "traqueur_piercing"; return list; }, "n'est pas une signature de traqueur"),
+            ("signature d'un autre", list => { list[0]!["passive_perk"] = "vagabond_harvest"; return list; }, "n'est pas une signature de traqueur"),
+            ("mobilité inconnue", list => { list[0]!["mobility"] = "teleport"; return list; }, "Profil de mobilité inconnu : teleport"),
+            ("sprites absents", list => { list[0]!["sprite_folder"] = "vagabond"; return list; }, "sans char_traqueur_S_idle_01.png"),
+            ("dossier hors des personnages", list => { list[0]!["sprite_folder"] = "../traqueur"; return list; }, "sprite_folder"),
+            ("couleur à trois composantes", list => { list[0]!["visual_color"] = new JsonArray(0.2, 0.7, 0.3); return list; }, "visual_color"),
+            ("accent hors borne", list => { list[0]!["accent_color"] = new JsonArray(0.2, 0.7, 1.3, 1); return list; }, "accent_color"),
+            ("pieds négatifs", list => { list[0]!["sprite_feet_offset"] = -4; return list; }, "sprite_feet_offset"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = CharacterDataLoader.Apply(text, references);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(CharacterDataLoader.Get("vagabond"), vagabond),
+                $"personnages, {name} refusé sans publication ({error})");
+        }
     }
 
     private void CheckAtmosphere()

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**17 octobre, nuit — personnages lus strictement ([plan 26 Q7f-1](26-qualite-et-dette-technique.md), §68) :** `characters.json` est contrôlé (arme, signature, mobilité, sprites) ; les « perks exclusifs » hérités du craft, jamais lus, sont retirés du fichier. Mêmes valeurs effectives.
+
 **17 octobre, nuit — apparition, foule et variantes lues strictement ([plan 26 Q7e-1, Q7e-2](26-qualite-et-dette-technique.md), §68) :** `spawn_flow.json` a un lecteur strict ; le jeu ne retombe plus sur d'anciens réglages oubliés si le fichier est cassé, et une créature de secours inconnue refuse le fichier au lieu d'être retirée en silence. Mêmes valeurs effectives. Puis `crowd.json` et `_variants.json` (Q7e-2) : un fichier de variantes cassé ne fait plus disparaître en silence élites et Souverains, il arrête le chargement en nommant le champ.
 
 **17 octobre, nuit — Résurgences et Effacement lus strictement ([plan 26 Q7d-1, Q7d-2](26-qualite-et-dette-technique.md), §68) :** `crises.json` et `erasure.json` ont chacun un lecteur unique et strict au lieu de sept lectures indépendantes qui ignoraient un fichier invalide ; mêmes valeurs effectives. Puis `run_events.json` (Q7d-3) : contrat par sorte d'événement. Q7d terminé ; une vingtaine de lecteurs restent à durcir (Q7e à Q7g proposés).

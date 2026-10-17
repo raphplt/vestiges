@@ -243,6 +243,12 @@ public partial class CatalogValuesProbe : Node
         lines.Add(Invariant($"elites start={elites.StartSec:R} interval={elites.IntervalMinSec:R}-{elites.IntervalMaxSec:R} alive={elites.MaxAlive} pool=[{string.Join(",", elites.AffixPool)}] late={elites.LateFromMinute:R}-{elites.LateFullMinute:R} {elites.LateIntervalMinSec:R}-{elites.LateIntervalMaxSec:R} alive={elites.LateMaxAlive} hp={elites.LateHpMult:R} dmg={elites.LateDamageMult:R} extra={elites.LateExtraAffixAt:R}"));
         PhaseModifierConfig phases = EnemyVariantDataLoader.PhaseModifiers;
         lines.Add(Invariant($"phases aberration={phases.CrisisAberrationChance:R}+{phases.CrisisAberrationChancePerIntensity:R} affix={phases.AffixChanceCrisis:R},{phases.AffixChanceLateGame:R},{phases.AffixChanceEndgame:R} pool=[{string.Join(",", phases.AffixPool)}]"));
+        // Q7f-1 : personnages (characters.json), dans l'ordre du fichier.
+        foreach (CharacterData character in CharacterDataLoader.GetAll())
+        {
+            CharacterStats stats = character.BaseStats;
+            lines.Add(Invariant($"character {character.Id} [{character.Name}|{character.Description}] weapon={character.StartingWeaponId} passive={character.PassivePerk} speed={stats.Speed:R} dmg={stats.AttackDamage:R} as={stats.AttackSpeed:R} range={stats.AttackRange:R} hp={stats.MaxHp:R} regen={stats.RegenRate:R} shield={stats.Shield:R} interact={stats.InteractRange:R} color={character.VisualColor.ToHtml()} accent={character.AccentColor.ToHtml()} sprite={character.SpriteFolder} feet={character.SpriteFeetOffset:R} mobility={character.MobilityProfile ?? "null"}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
