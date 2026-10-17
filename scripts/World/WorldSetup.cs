@@ -196,7 +196,8 @@ public partial class WorldSetup : Node2D
 
     /// <summary>
     /// Terrain, biomes, plans de la ville, du marais et des champs, chemins, fermes et chantiers. Calcul pur, sans nœud
-    /// ni ressource du moteur hors bruits, lectures de fichiers et ResourceLoader.Exists (sûrs hors du thread principal) : peut tourner hors du thread principal. Chronométré étape par étape.
+    /// ni ressource du moteur hors bruits, lectures de fichiers et ResourceLoader.Exists : peut tourner hors du thread
+    /// principal. Chronométré étape par étape.
     /// </summary>
     private void GenerateWorld()
     {
