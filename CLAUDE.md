@@ -7,15 +7,16 @@
 ## Reprise de session
 
 1. `git status` : des fichiers modifiés par Raphaël pendant ses tests sont **volontaires**, ne pas les annuler.
-2. Lire `doc/plans/README.md` (état du dossier, mises à jour datées) et `doc/plans/DECISIONS.md` (ce qui est acquis).
+2. Lire `doc/LE-JEU.md` (la forme du jeu, verrouillée, et l'ordre de travail), puis `doc/plans/README.md` (mises à jour datées) et `doc/plans/DECISIONS.md` (ce qui est acquis).
 3. `git log --oneline -15` pour le dernier lot livré.
-4. **Avant tout travail, poser à Raphaël toutes les questions qui l'attendent** (demande du 1er octobre 2026, DECISIONS §48) : reprendre chaque ligne de `doc/plans/TABLEAU-DE-BORD.md` §2, et les points ouverts du plan concerné, en question concrète avec options et recommandation ; les poser avec `AskUserQuestion` (quatre par appel, autant d'appels qu'il faut). Consigner ses réponses dans `DECISIONS.md` et mettre à jour le tableau de bord, puis seulement choisir un chantier. Une question qu'il reporte reste au §2.
+4. **Aucun point en suspens** (DECISIONS §190, remplace la règle du §48) : le §2 de `doc/plans/TABLEAU-DE-BORD.md` reste vide. Toute question nouvelle reçoit aussitôt une décision par défaut de l'agent, franche, consignée dans `DECISIONS.md` et réversible par Raphaël, ou une place dans l'ordre de `doc/LE-JEU.md`. Ne poser à Raphaël (avec `AskUserQuestion`, recommandation en premier) que ce qui change la forme du jeu ou ce qu'il doit jouer.
 
 Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implémenter sans accord explicite.
 
 ## Boucle de travail
 
-- **Un lot à la fois.** Découpage proposé dans le plan concerné avant de coder, puis implémentation, vérification, documentation, commit.
+- **Un lot à la fois**, dans l'ordre de `doc/LE-JEU.md`. Découpage proposé dans le plan concerné avant de coder, puis implémentation, vérification, documentation, commit.
+- **Estimer en effort** (faible, moyen, élevé), jamais en durée (DECISIONS §190).
 - **Vérifier par le bon moyen :**
   - compile : hook de build automatique en fin de tour (0 warning exigé) ;
   - démarrage : `/smoke-test` ;

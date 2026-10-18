@@ -327,3 +327,23 @@ tools/bench_ab.sh c50c660d /tmp/vestiges-ab-e4
 - les sons, provisoires (`sfx_impact_blunt`, `sfx_relic_fall`).
 
 **Suite proposée** : la semaine d'essai de Raphaël dans le bac à sable, puis E5 (la glissade) et E6 (retours et réglages) selon le verdict.
+
+## 13. La Série remplace la jauge d'Élan — découpage du 18 octobre
+
+[Registre §190](DECISIONS.md). Raphaël : « l'idée de combo avec la série, ça me va ». La jauge nourrie par la course ne se sentait pas ; dans un jeu à tir automatique, le combo, c'est la série d'éliminations. On garde la mécanique de la jauge (paliers, perte au coup, affichage), le saut du vide et la percussion ; seul change ce qui la nourrit.
+
+| Lot | Contenu | Effort | Vérification |
+|---|---|---|---|
+| **S1 La Série** | Voir la liste sous le tableau | Faible | Suite de mouvement : gain par élimination, fenêtre écoulée, palier perdu au coup, chute qui vaut plus, course sans effet. Capture du compteur |
+| S2 Réglages | Seuils, fenêtre, effets et Chance réglés d'après une mesure au bot et la séance de Raphaël | Faible | Mesure, séance de jeu |
+
+Contenu de S1 :
+- la jauge devient un compteur d'éliminations, affiché « ×N » et coloré par palier ;
+- chaque élimination ajoute 1 et relance une fenêtre de 2,5 s ; une chute dans le vide ajoute 3 ;
+- fenêtre écoulée : la Série retombe au début du palier inférieur et la fenêtre repart ;
+- un coup reçu fait perdre un palier ; une esquive parfaite relance la fenêtre ;
+- paliers à 20, 60 et 150 éliminations, valeurs de départ ;
+- effets des paliers : dégâts et vitesse comme l'Élan, plus de la Chance ;
+- la course ne la nourrit plus ;
+- le saut (allonge par palier) et la percussion sont inchangés ;
+- allumée dans le bac à sable, éteinte en run normale jusqu'à l'essai.

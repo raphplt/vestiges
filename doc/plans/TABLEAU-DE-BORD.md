@@ -4,7 +4,7 @@
 
 Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
 
-> **18 octobre 2026 : gel des nouveautés et tranche verticale ([§189](DECISIONS.md), [LE-JEU.md](../LE-JEU.md)).** Jusqu'à fin novembre, un seul chantier : le vide comme arme en bac à sable (une semaine), puis le rythme, deux terres et un gardien. La structure de run est en exploration sur papier jusqu'au 25 octobre. Les lignes ci-dessous hors de ce périmètre attendent la fin du gel.
+> **18 octobre 2026 : forme du jeu verrouillée, gel des nouveautés ([§189, §190](DECISIONS.md), [LE-JEU.md](../LE-JEU.md)).** Un seul ordre de travail, en effort : la Série, le rythme du départ, l'essai du bac à sable, les terres complètes, la Montée et l'Indicible, un vrai gardien, la clarté, les testeurs. Tout ce qui est « à juger en jeu » au §1 est acquis tel quel ; on n'y revient que sur retour de test.
 
 ## 1. En cours
 
@@ -55,34 +55,41 @@ Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le dé
 
 ## 2. Décisions attendues de Raphaël
 
-| Sujet | Plan | Question |
+> **Règle depuis le 18 octobre ([§190](DECISIONS.md)) : cette section reste vide.** Toute question reçoit aussitôt une décision par défaut de l'agent, consignée au registre et réversible par Raphaël, ou une place dans l'ordre de [LE-JEU.md](../LE-JEU.md). Les étapes citées ci-dessous sont celles de cet ordre.
+
+Triage du 18 octobre des lignes qui attendaient ici :
+
+| Sujet | Tranché par défaut | Où ça vit |
 |---|---|---|
-| L'Élan | [52](52-elan.md), [§185](DECISIONS.md), [§189](DECISIONS.md) | **18 octobre : E3 (saut du vide) et E4 (percussion, chute dans le vide) livrés, à jouer dans `tools/elan_sandbox.sh`** ; Élan toujours éteint en run normale. La semaine d'essai commence : critère d'arrêt au [LE-JEU.md](../LE-JEU.md). À juger : percussion dès le palier 0 ou au palier II (`--percussion-tier 2`), lisibilité du bord du vide et de la chute. À trancher avant les runs normales : une chute compte-t-elle pour les quêtes d'éliminations ? |
-| Run en terres | [51 §11](51-objectifs-de-run.md), [§186](DECISIONS.md), [§189](DECISIONS.md) | **18 octobre : structure non verrouillée, « explorer encore ».** Exploration sur papier jusqu'au 25 octobre : la boucle actuelle face à l'île qui dérive (et une idée de Raphaël au plus), chaque format raconté minute par minute. Terres refaites en lieux de Vaulme, pièces faites main et génération structurée. Historique : **boucle arrêtée le 16 octobre au soir** : trois terres d'environ 10 min, tirées, plus petites, puis une 4e carte de late game sans fin ; Mémoriaux à tenir 20 s (clés, ancres, puissance), gardien réveillé dès trois lumières, arène = sol sauvé, recousure (portail en repli), anneau de terre restante, charte des gardiens validée. **Prototype livré le 17 octobre (branche `terres`, terres par défaut)** : trois terres, gardien de référence (charge, frappe qui ouvre le vide, onde, trois phases), victoire au troisième gardien, 4e terre sans fin avec échos de gardien, recousure (plan 51 §16). **À trancher en jouant** : la durée (anneau de 12 min et difficulté qui monte, sans chronomètre affiché, ou un chronomètre), la longueur des combats contre un gardien enragé, la montée des échos, la place des Résurgences, le sort de la Barrière et de l'Indicible. Fusion vers `main` après le commit de l'agent des optimisations macOS. |
-| Atmosphère | [39 §13](39-atmosphere.md) | Juger en jeu les ambiances intégrées, le voile du marais (force 0,6), l'étalonnage, les nuages, les ombres portées, la météo et la réverbération. |
-| Direction artistique | 08, 25 | Personnages joués validés provisoirement (§62) ; retouches possibles plus tard. |
-| Lore | 19 | Textes de la [planche L1](19-planche-L1.md) **validés le 7 octobre (§78)**, intégration à planifier ; seconde planche courte à produire pour les autres armes dont la dernière phrase commente. Rien n'est branché. |
-| Audio | 15 | **Passe de mix X1–X8 livrée, à juger en jouant** : curseurs à 100 %, sons placés à l'écran, coups au contact sans son de créature (§112), tir visé et réveil de la Faille intégrés, soin et bouclier muets par choix (§113). Restent : fichiers écrêtés à remplacer (orage, coffre), basses des musiques de combat et de nuit, nouvelles musiques plus tard. |
-| Barrière et Indicible | 07 B2–B5 | **À jouer** : l'Indicible refait au niveau du jeu (nuit, pluie et éclairs, mains qui sortent de terre, marée et vague dessinées, l'œil, la mort ; neuf sons à écouter sur `~/.local/share/vestiges-audio/2026-10-10/indicible/index.html`), durée du combat, réserve de 288 000 PV à 22 min ; la grille, sa distance de levée (150 px), la durée du combat (20 000 PV pour un battant, 80 000 pour cinq ; un battant suffit pour passer), la levée animée, les poings et la chaîne. **Les huit sons de la Barrière sont validés pour l'instant (§92).** Planche B2a intégrée sans validation : gantelet ou main de noyé, silhouette, diagonale à revoir si besoin (§89). |
-| Réveil du Mémorial et de la Faille | 24 L6b, 15 | Durée gardée ; son à changer (§49), à traiter avec l'audio |
-| Classement | 09 | Toutes les décisions, plus tard. Weekly gardé pour toutes les runs, un tableau par semaine (§64, livré par Q3). Steam réel : App ID du jeu à obtenir par Raphaël quand il le souhaite |
-| Audio, classement | 15, 09 | L'audio reprend après l'écoute de la planche ; mort et bilan validés pour l'instant (§62), retouches d'affichage possibles |
-| Steam | 26 Q3, Q12 | Inscription Steamworks faite le 13 octobre (fiscal, banque) ; vérification d'identité en cours (10 à 15 jours ouvrés), puis frais et App ID, à remplacer dans `SteamManager.cs` (480 en dur) ; test réel des classements ensuite. |
-| Sortie commerciale | [31](31-sortie-commerciale.md) | **Proposé le 10 octobre** : format (accès anticipé ou 1.0), sortie à l'automne 2027 après le Next Fest de juin, visage dans les vidéos, temps et budget, éditeur, démo (plan 31 §12). **Nouveau nom à trouver** : « Vestiges » est une marque INPI pour les jeux vidéo (§156). |
-| Conformité | [31 §9 bis](31-sortie-commerciale.md) | Remplacer musiques, sons ElevenLabs et images IA (avec l'ami compositeur et dessinateur) ; nettoyer l'export. |
-| Sprites des héros à venir | 32 | Valider les huit designs sur les planches ([casting](planches/32-casting.png), H1, H2, H3) ; l'Enfant du Bas-Port porte l'écharpe orange du Vagabond et le bonnet de sa sœur (proposition, pas dans le lore). Les yeux des trois joués sont repris (H4, accord du 10 octobre). |
-| Quêtes de déblocage | [06 §10](06-personnages-quetes-defis.md) | **Livrées le 10 octobre (Q1–Q4, branche `quetes-deblocage`), à jouer.** Critiques tranchés le 12 octobre (§131, lot à découper) ; reste le tirage du critique pour les armes en arc. Trancher Recopier (deux ascensions, niveau 50). Relire le reste des Chroniques et de la Collection. Images soignées des personnages : `assets/characters/<id>/portrait.png`. |
-| Bornes hautes dépassées d'une unité | [26 Q7g-1](26-qualite-et-dette-technique.md) | Relevé le 17 octobre : trois tirages font `RandiRange(min, max + 1)` alors que la borne haute est déjà incluse. Butin des lieux (Essence, XP ; un niveau d'objet `1–1` donne 1 ou 2), nombre de lieux par biome, taille des grappes de même type. Retirer le `+ 1` (valeurs conformes aux fichiers) ou relever les maxima pour garder le jeu actuel ? |
-| Équilibrage et calendrier de la run | [33](33-equilibrage-ouverture.md), §101, §103, §108 | **Q1 et calendrier de 30 min livrés le 10 octobre, à jouer** : Cracheur en crachat en cloche, créatures solides échelonnées, XP 15 / 1,4 ; Souverains à 4:00, 9:30, 21:00, 27:00, Résurgences toutes les 6 min, Barrière à 15:00, Indicible vers 30:00. Juger la lisibilité du crachat, les combats de boss (réserve de la Barrière recalée, Indicible inchangé) et le rythme des niveaux. |
-| Late game (après l'Indicible) | [34](34-late-game.md), §108, §109 | **Orientations du 11 octobre** : Marées et boss en boucle oui, Péril toujours visible et montant seul (pas de compteur à part), monde d'après plus tard. Lots G0 (Péril au HUD) à G4. Restent : score et reflux. |
-| **Inventaire du joueur** | [35](35-inventaire-du-joueur.md), [I10](35-raretes-des-objets.md), §133/§136 | **I1–I7, I9–I11 implémentés et vérifiés par lots** : [56 objets](35-catalogue-objets-v2.md), cumul simple sans limite ordinaire, raretés fixes/Chance, coffres payants, soins et stats exhaustives, quantités orbitales communes. 27 objets initiaux dont trois épiques/deux légendaires ; [15 quêtes intégrées](35-quetes-objets-v2.md), activation vérifiée (§138). I8 et équilibre humain I12 restent à jouer. |
-| **Progression permanente** | [36](36-progression-permanente.md), §109, §110 | **Le Campement livré le 11 octobre (M0–M3), à jouer.** 13 améliorations payées en Vestiges, armes de 2 à 4, remboursement libre ; 41 runs moyennes pour tout acheter. À trancher (36 §13) : noms des améliorations, quête « Quatre airs » qui demande maintenant le Râtelier, début à deux armes (78 % des éliminations d'un départ à quatre armes, 28 % de « morts » en plus), armure +1 par rang. Poches livrées (M4) : sac de 10 à 25 places, Campement plein à 98 450 Vestiges. |
-| Campement | [42 §4](42-signature.md), [§152](DECISIONS.md), [50 T2](50-retours-premier-testeur.md) | Puissance brute retirée du jeu le 15 octobre. XP, Chance et Aimant gardés (§184). Reste : d'autres usages des Vestiges. |
-| Zones au sol | [25 S12](25-sprites-et-design.md), §164, §172 | **Livré le 17 octobre (Z5 à Z7), à juger en combat** : cercles au bord rugueux, annonces à tirets, fissures et ondes, couloirs à chevrons, flaques, feu et éclats refaits, auras d'affixe tournantes ; [planche](planches/25-s12-zones-avant-apres.png). |
-| Lisibilité des effets d'objets et d'Écussons | [35 I18](35-raretes-des-objets.md), §172 | **Livré le 14 octobre, à juger en jouant** : une phrase courte par objet, ligne de stat et phrase d'ambiance pour les objets de stat ; limites techniques retirées partout, ambiance en petit et en gris dans la Collection (retour du soir). Relire les 72 textes en jeu. |
-| Portée de ramassage de l'XP | 33, §172 | **Livré le 14 octobre, à juger en jouant** : attraction de base 150 → 80 px, sans dérive (avant : 250 px à l'arrêt), réglée dans `data/scaling/progression.json` ; bonus d'aimant gardés en pourcentage ; bonus Aimant au sol inchangé. |
-| **Level-up au fil** | [04 §11](04-interfaces-et-hub.md#11-level-up-au-fil--14-octobre-2026), §182 | **Livré le 14 octobre (F1 et F2), à juger en jouant** : fragments de papier pendus à un fil, tirages photo virés à la rareté, ceinture d'inventaire, étiquette de ce qui change, stats à la touche du journal. Juger la lisibilité sur papier clair, le rythme des chutes et la place de l'étiquette. |
-| Points à vérifier en jeu | `A-VERIFIER.md` | 63 cases non cochées ; Raphaël les coche en jouant (§64) ; quatre points tranchés retirés par N1 |
+| L'Élan | Remplacé par la Série, un combo d'éliminations ; saut et percussion gardés | Étape 1, [plan 52 §13](52-elan.md) |
+| Run en terres | Forme verrouillée : trois terres tirées, des gardiens, la Montée et l'Indicible en finale, la fin sans fin | Étape 5 |
+| Atmosphère | Acquise telle quelle ; retouches seulement sur retour de test | — |
+| Direction artistique (personnages joués) | Acquise ; retouches avec l'ami artiste | Après l'étape 8 |
+| Lore (planche L1) | Intégré avec la Montée : un fragment par gardien, textes de la planche L1 | Étape 5 |
+| Audio (mix, fichiers écrêtés, musiques) | Mix acquis ; remplacements avec l'ami compositeur | Étape 8 (conformité) |
+| Barrière et Indicible | L'Indicible devient le boss final de la Montée ; la Barrière sort des boss (§186) et part en réserve | Étape 5 |
+| Son du réveil du Mémorial et de la Faille | Avec les remplacements audio | Étape 8 |
+| Classement | Gelé tel quel (C1 et C2 livrés) ; test Steam réel avec l'App ID | Après l'étape 8 |
+| Mort et bilan | Acquis | — |
+| Steam (App ID) | Démarche administrative de Raphaël, hors design | — |
+| Sortie commerciale (format, date, éditeur, démo, nom) | Tranchée en une séance après les testeurs, le nom en premier | Étape 8 |
+| Conformité (sons ElevenLabs, images IA) | Avec l'ami artiste et compositeur, avant toute page publique | Étape 8 |
+| Sprites des héros à venir | Gelés ; la tranche se joue avec le Vagabond | Après l'étape 8 |
+| Quêtes de déblocage (critiques, Recopier, Chroniques) | Gelées telles quelles | Après l'étape 8 |
+| Bornes hautes `RandiRange(min, max + 1)` | Corriger le code et relever d'une unité les maxima des fichiers : le jeu ne change pas, les fichiers deviennent exacts | Petit lot technique, quand une session autonome est libre |
+| Calendrier de 30 min (Souverains, Résurgences, Barrière à 15:00) | Caduc : remplacé par les terres | — |
+| Late game (Marées, boss en boucle) | Caduc : la fin sans fin vit après l'Indicible, dans la Montée | Étape 5 |
+| Inventaire (I8, I12) | Gelé ; la tranche garde une vingtaine d'objets | Étape 7 |
+| Progression permanente (noms, « Quatre airs », départ à deux armes, armure) | Gardée telle quelle pendant le gel | Après l'étape 8 |
+| Campement : autres usages des Vestiges | En réserve | Après l'étape 8 |
+| Zones au sol | Acquises | — |
+| Lisibilité des effets d'objets | Acquise | — |
+| Portée de ramassage de l'XP (80 px) | Revue avec le rythme du départ | Étape 2 |
+| Level-up au fil | Acquis | — |
+| Points à vérifier en jeu (`A-VERIFIER.md`) | Plus suivis : les retours des testeurs les remplacent ; la liste reste pour mémoire | Étape 8 |
+| Percussion dès le palier 0 ou au palier II | Palier 0 par défaut ; l'essai peut le changer | Étape 3 |
+| Chute dans le vide et quêtes | Une chute compte comme une élimination, quêtes comprises ; revu si une quête casse | — |
+| Terres : réserves par rang ou tout mélangé | Tout mélangé d'abord ; réserves par rang quand il y aura plus de terres | Étape 4 |
 
 ## 3. Validé, pas encore fait
 

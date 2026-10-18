@@ -2272,3 +2272,23 @@ Raphaël demande une revue de mentor, pas d'implémentation : « dégrossir, sim
 **Proposé, sans réponse explicite** : trois piliers (le vide, menace et arme ; la horde et la puissance ; Vaulme), une page [LE-JEU.md](../LE-JEU.md) qui fait autorité, la méthode de travail (une chose à la fois, rien par défaut sans séance de jeu, test extérieur toutes les deux semaines, l'IA donne deux options au plus et dit ce qu'on retire), le jalon « boucle verrouillée et fun pour cinq testeurs extérieurs » fin novembre.
 
 **Tour des questions du tableau de bord (§48)** : sauté. Les deux premières lignes du §2 (Élan, run en terres) sont traitées ici ; les autres attendent la fin du gel.
+
+## 190. La forme du jeu verrouillée, la Série, la Montée en finale — 18 octobre 2026
+
+Raphaël, après la revue du §189, puis E3 et E4 livrés : « pas sûr pour la mécanique d'élan, j'aurais plus vu un truc de combo, mais genre en vrai c'est dur à faire dans un jeu à tir automatique » ; « honnêtement je suis perdu et découragé, j'évolue dans le brouillard sans certitudes. J'ai besoin de concret et de propositions fortes de ta part pour réduire les doutes et avancer vers une version du jeu jouable… il va falloir prioriser. » Concepts clés qu'il rappelle : de l'innovation qui suscite l'intérêt, des dizaines d'heures avec une progression qu'on sent, frustrant mais très plaisant une fois maîtrisé, de l'aléatoire et du gambling, une histoire forte et un lore présent, un sentiment de puissance.
+
+Il avait écarté la veille l'île qui dérive : « le jeu proposé s'éloigne trop du genre (Megabonk etc.) et semble trop complexe à comprendre, à coder ». L'agent a retiré sa recommandation : il avait fait d'un geste (pousser dans le vide) la structure du jeu. L'île est rangée définitivement.
+
+**Tranché :**
+- **La forme : un survivors-like**, trois terres avec un gardien chacune, puis une fin sans fin. Raphaël : « l'idée de combo avec la série, ça me va ».
+- **La Série remplace la jauge d'Élan nourrie par la course.** C'est un combo d'éliminations : chaque élimination la nourrit, elle retombe sans élimination, un coup fait perdre un palier, une chute dans le vide compte plus, et ses paliers donnent dégâts, vitesse et Chance. Le saut du vide et la percussion restent.
+- **Le vide comme arme reste à tester** : « tomber dans le vide, ça reste à tester. Pourquoi pas, mais je ne l'ai jamais encore testé. »
+- **Les trois terres sont tirées au sort** : « soit il faut 2-3 maps possibles par niveau, soit tout mélanger. Et dans tous les cas il y aura un gros chantier pour les rendre plus complètes et suffisantes à elles-mêmes. » Choix par défaut de l'agent : tout mélanger d'abord (les cinq terres actuelles, le danger venant du rang) ; des réserves par rang quand il y aura plus de terres.
+- **La Montée et l'Indicible en finale** : « terres tirées […] et montée et indicible à la fin quand même ». Lecture de l'agent : après les trois terres tirées, la Montée est une étape fixe, avec l'Indicible au bout. Le vaincre gagne la run, et la fin sans fin continue de là. Elle remplace la 4e terre actuelle.
+- **Les priorités se disent en effort, jamais en durée** : « ça n'a aucun intérêt de parler en termes de durée (6 semaines etc.) car ce sont des métriques totalement biaisées et impossibles à calculer. Plutôt parler en effort. » L'ordre est au [LE-JEU.md](../LE-JEU.md).
+- **Aucun point en suspens** : « et pendant qu'on y est, ne plus avoir de points en suspens ». Le §2 du tableau de bord reste vide. Toute question reçoit aussitôt une décision par défaut de l'agent, consignée ici et réversible, ou une place dans l'ordre de [LE-JEU.md](../LE-JEU.md). Triage du jour des 26 lignes qui attendaient au §2 du [tableau de bord](TABLEAU-DE-BORD.md). Défauts notables :
+  - la percussion dès le palier 0 ;
+  - une chute compte comme une élimination, quêtes comprises ;
+  - les bornes `RandiRange(min, max + 1)` corrigées sans changer le jeu ;
+  - la sortie commerciale tranchée en une séance après les testeurs, le nom en premier ;
+  - `A-VERIFIER.md` n'est plus suivi.

@@ -741,3 +741,11 @@ Lots, dans l'ordre :
 - le combat contre un gardien enragé, quand le joueur est faible et la foule épaisse : c'est la punition d'avoir laissé filer la terre, mais 7 à 16 min au bot, c'est trop si un joueur moyen s'en approche ;
 - la montée des échos : +80 % de PV par écho, sans plafond absolu. C'est voulu pour que la run finisse, à confirmer par une run jouée ;
 - foule de la 4e terre : 460 à 720 créatures, avec un pic à 1 247 pendant une Résurgence (graine 7, t ≈ 43 min). À surveiller au banc de coût.
+
+## 17. Structure verrouillée — 18 octobre 2026
+
+[Registre §190](DECISIONS.md), [LE-JEU.md](../LE-JEU.md).
+- **Trois terres tirées au sort** parmi les cinq, mélangées (le danger vient du rang), un gardien chacune. Des réserves par rang viendront quand il y aura plus de terres.
+- **Puis la Montée**, étape fixe, avec **l'Indicible** au bout. Le vaincre gagne la run ; la fin sans fin continue de là et remplace la 4e terre actuelle (L2, échos de gardien).
+- **L'île qui dérive est rangée définitivement**. Raphaël : « le jeu proposé s'éloigne trop du genre (Megabonk etc.) et semble trop complexe à comprendre, à coder ».
+- **Gros chantier à venir** (étape 4 de LE-JEU) : rendre chaque terre « plus complète et suffisante à elle-même ». Lieux de Vaulme, pièces faites main, génération structurée ; à découper dans un plan dédié quand on y arrive.
