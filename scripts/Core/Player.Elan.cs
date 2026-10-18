@@ -16,7 +16,6 @@ public partial class Player
 
     private int _appliedStreakRank;
     private int _lastDodgedDash = -1;
-    private StreakCounter _streakCounter;
 
     /// <summary>Esquives parfaites de la run (affichage de réglage du bac à sable).</summary>
     public int PerfectDodges { get; private set; }
@@ -33,7 +32,6 @@ public partial class Player
         int count = Streak.Count, rank = Streak.Rank;
         Streak.SetEnabled(enabled);
         ApplyStreakRank();
-        ShowStreak();
         if (!enabled && count > 0)
             PublishStreak(StreakChangeKind.Reset, count, rank, 0);
     }
@@ -49,7 +47,6 @@ public partial class Player
         ApplyStreakRank();
         if (essence >= 0)
             PublishStreak(StreakChangeKind.CashOut, count, rank, essence);
-        ShowStreak();
     }
 
     /// <summary>
@@ -61,10 +58,17 @@ public partial class Player
         if (!Streak.Enabled || kill.Damage.Source.OwnerId != GetInstanceId() || kill.EnemyId == EnemyGrammar.BossPartId)
             return;
         bool fall = kill.Damage.Source.Kind == DamageKind.Void;
+        AddStreakKills(fall ? Streak.Config.StreakFallWeight : 1, fall ? "chute dans le vide" : "élimination");
+    }
+
+    /// <summary>Fait monter la Série comme des éliminations, publiée comme elles (bac à sable, captures).</summary>
+    public void AddStreakKills(int weight, string source)
+    {
+        if (!Streak.Enabled)
+            return;
         int count = Streak.Count, rank = Streak.Rank;
-        Streak.Kill(fall ? Streak.Config.StreakFallWeight : 1, fall ? "chute dans le vide" : "élimination");
+        Streak.Kill(weight, source);
         ApplyStreakRank();
-        ShowStreak();
         PublishStreak(StreakChangeKind.Gain, count, rank, 0);
     }
 
@@ -98,24 +102,11 @@ public partial class Player
         int count = Streak.Count, rank = Streak.Rank;
         Streak.Hit();
         ApplyStreakRank();
-        ShowStreak();
         PublishStreak(StreakChangeKind.Hit, count, rank, 0);
     }
 
     private void PublishStreak(StreakChangeKind kind, int previousCount, int previousRank, int essence) =>
         _eventBus?.PublishStreakChange(new StreakChange(kind, Streak.Count, Streak.Rank, previousCount, previousRank, essence, GlobalPosition));
-
-    private void ShowStreak()
-    {
-        _mobilityFeedback?.SetStreak(Streak.WindowFraction, Streak.Rank);
-        // Le compteur n'existe qu'une fois la Série allumée : une run normale n'a aucun nœud de plus.
-        if (_streakCounter == null && Streak.Enabled)
-        {
-            _streakCounter = new StreakCounter { Name = "StreakCounter" };
-            AddChild(_streakCounter);
-        }
-        _streakCounter?.SetStreak(Streak.Count, Streak.Rank);
-    }
 
     /// <summary>Seul le changement de rang touche les stats, pour ne pas relancer les minuteurs d'armes à chaque élimination.</summary>
     private void ApplyStreakRank()

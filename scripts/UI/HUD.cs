@@ -9,8 +9,8 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// HUD de run, allégé (plan 24 L2) : l'écran montre la vie, le temps, le score et les éliminations, l'XP et la minimap.
-/// Haut-gauche : niveau et PV. Haut-centre : le temps seul, violet pendant une Résurgence, et le nom du biome quand on
-/// y entre. Haut-droite : score, éliminations, Essence. Bas : armes et objets, puis la barre d'XP sur toute la largeur.
+/// Haut-gauche : niveau et PV. Haut-centre : le temps, violet pendant une Résurgence, la Série, et le nom du biome quand
+/// on y entre. Haut-droite : score, éliminations, Essence. Bas : armes et objets, puis la barre d'XP sur toute la largeur.
 /// Aucune annonce écrite : les Résurgences se lisent par le présage et la couleur du temps. Les PV sont doublés
 /// par une jauge sous le héros (<see cref="PlayerHealthGauge"/>) pour rester visibles en combat.
 ///
@@ -52,6 +52,7 @@ public partial class HUD : CanvasLayer
     private VitalsDisplay _vitals;
     private XpBar _xpBar;
     private EssenceFlights _essenceFlights;
+    private StreakHud _streakHud;
     private float _essencePulse;
     private static readonly Color EssencePulseModulate = new(1.8f, 1.8f, 1.8f, 1f);
 
@@ -141,11 +142,12 @@ public partial class HUD : CanvasLayer
 
         BuildVitals();
         _hudRoot.AddChild(new HudLootFlight(WeaponSlotIconOf, id => _inventoryBar?.ItemIconOf(id)) { Name = "LootFlight" });
-        _hudRoot.AddChild(new KillStreakDisplay { Name = "KillStreak", Position = new Vector2(PlateMargin + 4f, PlateMargin + _vitals.Size.Y + 6f) });
         _essenceFlights = new EssenceFlights { Name = "EssenceFlights" };
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
         BuildRunClock();
+        _streakHud = new StreakHud { Name = "StreakHud" };
+        _hudRoot.AddChild(_streakHud);
         BuildScoreArea();
         _hudRoot.AddChild(_essenceFlights);
         BuildWeaponBar();
@@ -289,6 +291,7 @@ public partial class HUD : CanvasLayer
         if (player == null)
             return;
         player.AddChild(new PlayerHealthGauge { Name = "HealthGauge" });
+        _streakHud?.SetStreak(player.Streak);
         UpdateHpDisplay(player.CurrentHp, player.EffectiveMaxHp);
         OnShieldChanged(player.Shield, player.MaxShield);
     }
@@ -323,7 +326,10 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(_fpsLabel);
     }
 
-    /// <summary>Le temps en haut au centre, seul, et le nom du biome qui passe dessous quand on y entre.</summary>
+    /// <summary>
+    /// Le temps en haut au centre, la Série dessous (<see cref="StreakHud"/>), puis le nom du biome qui passe quand on y
+    /// entre.
+    /// </summary>
     private void BuildRunClock()
     {
         Control anchor = new() { MouseFilter = Control.MouseFilterEnum.Ignore };
@@ -339,7 +345,7 @@ public partial class HUD : CanvasLayer
 
         _biomeLabel = MakeLabel("", 10, PalGrayLight, 3);
         UITheme.SetCompactTitle(_biomeLabel, 16);
-        _biomeLabel.Position = new Vector2(-120f, PlateMargin + 22f);
+        _biomeLabel.Position = new Vector2(-120f, StreakHud.Bottom + 2f);
         _biomeLabel.Size = new Vector2(240f, 14f);
         _biomeLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _biomeLabel.Modulate = Colors.Transparent;

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**18 octobre — la Série au HUD ([plan 52 S3](52-elan.md)) :** gros « ×N » et nom du rang en haut au centre, jauge de la fenêtre, animations de gain, de rang, de coup reçu (÷2) et d'encaissement (+N ESSENCE) ; le compteur de tête, la fenêtre sous les pieds et « EN RAFALE » sont retirés. Capture : `tools/elan_sandbox.sh --screen 1 -- --capture <dossier> --scenario streak --enemies 0`.
+
 **18 octobre — la Série en trois règles ([plan 52 S2](52-elan.md), §192) :** six rangs de ×10 (ÉVEIL) à ×320 (MONSTRE), fenêtre de 4 s à 2 s ; un coup coupe la Série en deux ; une jauge vide l'encaisse en Essence (Série × taux du rang) ; un coup au gardien relance la fenêtre. Toujours éteinte en run normale jusqu'à S5.
 
 **18 octobre — la Série essayée, version finie proposée ([plan 52 §15](52-elan.md), §191) :** retours de Raphaël (compteur au HUD, plus gros, plus de retours, doute sur « touché, on perd tout ») ; proposition en trois règles (six rangs, coup qui coupe en deux, jauge vide qui encaisse en Essence), retours, lots S2 à S5. Nouvelle règle : boucler une mécanique de bout en bout avant le sujet suivant. Ensuite, revue de la boucle de run.

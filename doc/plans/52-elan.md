@@ -512,3 +512,23 @@ Le code de S2 est arrivé dans `dd9ffc0d` (commit de reprise) ; ce lot le vérif
   - coupe en deux, encaissement à CARNAGE, une Série de ×100 qui rapporte plus que dix de ×10 ;
   - sur le vrai joueur : vitesse ×1,04 à ÉVEIL, dégâts et Chance à FURIE, coup qui retire le rang, retour exact à l'extinction ;
   - un coup au gardien relance la fenêtre ; ×100 encaissée en 50 Essence publiée sur l'EventBus.
+
+## 17. Compte rendu S3, la Série au HUD — 18 octobre 2026
+
+**Livré :**
+- **`StreakHud`**, en haut au centre sous le temps : un « ×N » de 32 px (deux fois le temps) à la couleur du rang, le nom du rang dessous, puis la jauge de la fenêtre (128 px). Visible dès ×2, toujours à l'écran tant que la Série vit.
+- **Animations**, toutes dessinées par le même nœud, au repos hors Série :
+  - élimination : le chiffre rebondit, au plus dix fois par seconde ;
+  - rang gagné : le nom claque (×1,6 puis posé, blanchi) ;
+  - jauge sous 30 % : clignotement rouge, de 4 à 12 battements par seconde à mesure qu'elle se vide ;
+  - coup reçu : le chiffre vire au rouge et tremble, « ÷2 » s'affiche, le nom du rang perdu tombe en rouge avant que le nouveau n'arrive ;
+  - encaissement : le chiffre et le nom se figent en or, « +N ESSENCE » monte dessous, puis le bloc s'efface.
+- **Textes** : noms des six rangs et « +{0} ESSENCE » traduits (français, anglais), noms traduits une fois au branchement, compteurs mis en cache.
+- **Mise en page** : le nom du biome, la ligne d'aide des événements, la barre de boss et le bandeau de quête passent sous le bloc (constante `StreakHud.Bottom`).
+- **Retiré** : le compteur au-dessus de la tête (`StreakCounter`), la fenêtre sous les pieds, `KillStreakDisplay` (« EN RAFALE ») et sa clé de traduction.
+- **Bac à sable** : `Player.AddStreakKills` fait monter la Série en la publiant (le HUD la voit) ; scénario de capture `--scenario streak` (avec `--enemies 0`) : rang gagné, coup reçu, encaissement, une image chacun.
+
+**Vérifié :**
+- build sans avertissement, smoke test vert ;
+- `tools/test_movement.sh` et `tools/test_enemy_abilities.sh` verts ;
+- captures 4K du bac à sable regardées : « ×40 FURIE » au claquement, « ×20 ÷2 » avec FURIE qui tombe, « ×20 FERVEUR +4 ESSENCE » en or. Corrigés d'après les images : les deux noms se mêlaient au coup reçu, le nom claqué paraissait terne.

@@ -19,11 +19,6 @@ public partial class MobilityFeedback : Node2D
     private static ShaderMaterial _silhouetteMaterial;
     private static readonly Color ReadyColor = new(0.55f, 0.88f, 0.9f, 0.9f);
     private static readonly Color BarBackColor = new(0.04f, 0.06f, 0.09f, 0.8f);
-    // Un palier de la Série de plus, une couleur plus chaude : du sable à l'ambre puis au blanc chaud.
-    private static readonly Color[] StreakColors =
-    {
-        new(0.62f, 0.56f, 0.46f, 0.85f), new(0.86f, 0.62f, 0.3f, 0.9f), new(0.98f, 0.78f, 0.38f, 0.95f), new(1f, 0.94f, 0.8f, 1f),
-    };
     // Esquive parfaite (plan 52 E2) : une onde qui s'ouvre au sol en quatre rayons, cuits au chargement.
     private const float DodgeRingSeconds = 0.3f;
     private static readonly int[] DodgeRingRadii = { 16, 21, 26, 31 };
@@ -43,8 +38,6 @@ public partial class MobilityFeedback : Node2D
     private bool _wasDashing;
     private bool _dashVisible;
     private int _nextTrail;
-    private float _streakWindow;
-    private int _streakTier;
     private float _dodgeRemaining;
     private float _landingRemaining;
 
@@ -118,19 +111,6 @@ public partial class MobilityFeedback : Node2D
         }
         QueueRedraw();
     }
-
-    /// <summary>
-    /// Fenêtre de la Série sous la recharge du dash, à la couleur de son palier : le temps qui reste avant qu'elle
-    /// retombe ; masquée tant que la Série est vide.
-    /// </summary>
-    public void SetStreak(float window, int tier)
-    {
-        _streakWindow = window;
-        _streakTier = tier;
-    }
-
-    /// <summary>Couleur d'un palier de la Série, partagée avec son compteur.</summary>
-    public static Color StreakColor(int tier) => StreakColors[Mathf.Clamp(tier, 0, StreakColors.Length - 1)];
 
     /// <summary>Un coup évité pendant le dash : son clair et onde au sol, lisibles au milieu de la foule.</summary>
     public void PerfectDodge(string audio)
@@ -222,11 +202,6 @@ public partial class MobilityFeedback : Node2D
     {
         DrawRect(new Rect2(-12f, 20f, 24f, 2f), BarBackColor);
         DrawRect(new Rect2(-12f, 20f, 24f * Mathf.Clamp(_charge, 0f, 1f), 2f), ReadyColor);
-        if (_streakWindow > 0f)
-        {
-            DrawRect(new Rect2(-12f, 23f, 24f, 2f), BarBackColor);
-            DrawRect(new Rect2(-12f, 23f, Mathf.Round(24f * _streakWindow), 2f), StreakColor(_streakTier));
-        }
         if (_dodgeRemaining > 0f)
             DrawRing(1f - _dodgeRemaining / DodgeRingSeconds, DodgeRingColor);
         if (_landingRemaining > 0f)

@@ -16,7 +16,7 @@ namespace Vestiges.Tests;
 /// Bac à sable de l'Élan (plan 52), jouable à la main : la vraie scène Main sans apparitions ni événements, l'Effacement
 /// figé, une foule entretenue autour du joueur, des bandes de vide de 1, 2 et 3 cellules à l'est du départ (saut du
 /// vide, E3), l'Élan allumé et un affichage de réglage. Un coup fatal remet les PV au maximum : on y essaie les gestes
-/// sans fin de partie. La Série (combo d'éliminations) s'affiche au-dessus de la tête et dans l'affichage de réglage.
+/// sans fin de partie. La Série (combo d'éliminations) s'affiche au HUD, en haut au centre, et dans l'affichage de réglage.
 /// Lancement : tools/elan_sandbox.sh.
 /// </summary>
 public partial class ElanSandbox : Node
@@ -55,6 +55,8 @@ public partial class ElanSandbox : Node
     private bool _columnSpawned;
     private float _columnSpawnedAt;
     private int _framesSinceFall = -1;
+    private int _streakStep;
+    private float _streakCashedAt;
     private EventBus _eventBus;
     private GameLoadingOverlay _overlay;
 
@@ -72,7 +74,8 @@ public partial class ElanSandbox : Node
             // --scenario leap : le joueur, au rang FURIE, court vers la première bande de vide et la saute ; l'image est
             // gardée en l'air. --scenario percussion : il longe le bord de la première bande et dashe dans une colonne de
             // créatures ; l'image est gardée pendant leur chute. Sans scénario : il fonce sur la foule et dashe au contact
-            // (esquive parfaite).
+            // (esquive parfaite). --scenario streak : la Série seule au HUD, sans foule (--enemies 0) : rang gagné, coup
+            // reçu puis encaissement, une image à chaque fois.
             _scenario = Argument(args, "--scenario", "dodge");
             GameManager manager = GetNode<GameManager>("/root/GameManager");
             manager.RunSeed = Seed;
@@ -200,6 +203,8 @@ public partial class ElanSandbox : Node
             StepLeapCapture();
         else if (_scenario == "percussion")
             StepPercussionCapture();
+        else if (_scenario == "streak")
+            StepStreakCapture();
         else
             StepDodgeCapture();
     }
@@ -217,7 +222,7 @@ public partial class ElanSandbox : Node
             return;
         }
         if (_player.Streak.Rank < 3)
-            _player.Streak.Kill(_player.Streak.Config.Ranks[2].From, "bac à sable");
+            _player.AddStreakKills(_player.Streak.Config.Ranks[2].From, "bac à sable");
         if (!_columnSpawned)
             SpawnEdgeColumn();
         _player.AIInputOverride = Vector2.Down;
@@ -229,6 +234,55 @@ public partial class ElanSandbox : Node
         if (_framesSinceFall < 5 && _elapsed < _columnSpawnedAt + 6f)
             return;
         SaveCapture("percussion");
+    }
+
+    /// <summary>
+    /// La Série au HUD : ×38, puis deux éliminations qui donnent FURIE (image pendant le claquement du nom), un coup reçu
+    /// (image du « ÷2 » et du nom qui tombe), puis la fenêtre qui se vide (image de l'encaissement).
+    /// </summary>
+    private void StepStreakCapture()
+    {
+        _player.AIInputOverride = Vector2.Zero;
+        float t = _elapsed - _captureSeconds;
+        if (t < 0f)
+            return;
+        switch (_streakStep)
+        {
+            case 0:
+                _player.AddStreakKills(38, "bac à sable");
+                _streakStep++;
+                break;
+            case 1 when t > 0.8f:
+                _player.AddStreakKills(2, "bac à sable");
+                _streakStep++;
+                break;
+            case 2 when t > 0.86f:
+                SaveFrame("serie_rang");
+                _streakStep++;
+                break;
+            case 3 when t > 1.8f:
+                _player.TakeDamage(1f);
+                _streakStep++;
+                break;
+            case 4 when t > 1.95f:
+                SaveFrame("serie_coup");
+                _streakStep++;
+                break;
+            case 5 when _player.Streak.Count == 0:
+                _streakCashedAt = t;
+                _streakStep++;
+                break;
+            case 6 when t > _streakCashedAt + 0.3f:
+                SaveCapture("serie_encaisse");
+                break;
+        }
+    }
+
+    private void SaveFrame(string name)
+    {
+        DirAccess.MakeDirRecursiveAbsolute(_captureDir);
+        GetViewport().GetTexture().GetImage().SavePng($"{_captureDir}/{name}.png");
+        GD.Print($"[ElanSandbox] Capture : {_captureDir}/{name}.png (série ×{_player.Streak.Count}, rang {_player.Streak.Rank})");
     }
 
     private void SpawnEdgeColumn()
@@ -262,7 +316,7 @@ public partial class ElanSandbox : Node
             return;
         }
         if (_player.Streak.Rank < 3)
-            _player.Streak.Kill(_player.Streak.Config.Ranks[2].From, "bac à sable");
+            _player.AddStreakKills(_player.Streak.Config.Ranks[2].From, "bac à sable");
         _player.AIInputOverride = Vector2.Right;
         if (!_player.Mobility.IsDashing && _player.Mobility.CooldownRemaining <= 0f
             && IsVoidAt(_player.GlobalPosition + new Vector2(14f, 0f)) && !IsVoidAt(_player.GlobalPosition))

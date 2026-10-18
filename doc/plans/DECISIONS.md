@@ -2330,3 +2330,4 @@ Raphaël, à la reprise : « on finit la Série de bout en bout (lots S2 à S5 d
 
 **Tranché par défaut, réversible :**
 - **La Série s'encaisse en Essence** quand sa jauge se vide (défaut du §191, déjà codé). « Elle perd un rang, sans récompense » reste possible d'un mot.
+- **HUD de la Série** (S3) : bloc en haut au centre, sous le temps ; le nom du biome, l'aide, la barre de boss et le bandeau de quête passent dessous. Visible dès ×2. « EN RAFALE » est retiré.

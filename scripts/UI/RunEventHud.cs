@@ -11,7 +11,8 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class RunEventHud : Control
 {
-    private const float HintTop = 44f;
+    // Sous la Série et le nom du biome.
+    private const float HintTop = StreakHud.Bottom + 16f;
     private const float HintWidth = 320f;
     private const float HintHoldSec = 3.5f;
     private const float PointerMargin = 26f;

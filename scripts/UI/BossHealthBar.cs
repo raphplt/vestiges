@@ -5,13 +5,13 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Barre de boss en haut de l'écran (plan 07 B1b, DECISIONS §85) : nom et PV du Souverain, de la Barrière ou de
-/// l'Indicible, un cran par partie à PV propres (battant). Sous le temps, le nom du biome et la ligne d'aide des
-/// événements, qu'elle ne recouvre pas. La traînée claire montre le coup qui vient d'être porté.
+/// l'Indicible, un cran par partie à PV propres (battant). Sous le temps, la Série, le nom du biome et la ligne d'aide
+/// des événements, qu'elle ne recouvre pas. La traînée claire montre le coup qui vient d'être porté.
 /// Enfant de la racine mise à l'échelle du HUD : coordonnées en unités de référence 960×540.
 /// </summary>
 public partial class BossHealthBar : Control
 {
-	private const float Top = 62f;
+	private const float Top = StreakHud.Bottom + 34f;
 	private const float Width = 300f;
 	private const float NameHeight = 14f;
 	private const float BarHeight = 7f;
