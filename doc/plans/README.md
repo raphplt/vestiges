@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**18 octobre — la Série essayée, version finie proposée ([plan 52 §15](52-elan.md), §191) :** retours de Raphaël (compteur au HUD, plus gros, plus de retours, doute sur « touché, on perd tout ») ; proposition en trois règles (six rangs, coup qui coupe en deux, jauge vide qui encaisse en Essence), retours, lots S2 à S5. Nouvelle règle : boucler une mécanique de bout en bout avant le sujet suivant. Ensuite, revue de la boucle de run.
+
 **18 octobre — la Série ([plan 52 S1](52-elan.md)) :** combo d'éliminations (« ×N » au-dessus de la tête), fenêtre de 2,5 s, palier perdu au coup, chute dans le vide qui vaut 3 ; paliers à 20, 60 et 150 (vitesse, dégâts, Chance). À essayer avec le vide dans `tools/elan_sandbox.sh` ; toujours éteinte en run normale.
 
 **18 octobre — forme du jeu verrouillée, aucun point en suspens ([LE-JEU.md](../LE-JEU.md), §190) :** survivors-like, trois terres tirées puis la Montée et l'Indicible en finale ; la Série (combo d'éliminations) remplace la jauge d'Élan ; ordre de travail en effort ; le §2 du tableau de bord est trié et reste vide.

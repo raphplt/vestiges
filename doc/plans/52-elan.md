@@ -396,3 +396,96 @@ Contenu de S1 :
 - les seuils (20, 60, 150) et la fenêtre (2,5 s) ;
 - la Chance ;
 - le compteur au-dessus de la tête, qui fait la même taille que les chiffres de dégâts. Sa place au HUD vient avec l'étape « clarté ».
+
+## 15. La Série finie — retours de l'essai et proposition du 18 octobre (à reprendre)
+
+**Retours de Raphaël** après l'essai du bac à sable ([DECISIONS §191](DECISIONS.md)) :
+- le compteur doit quitter la tête du joueur pour un coin de l'écran (en haut à gauche, à droite ou au milieu), toujours visible, plus gros, plus attractif ;
+- « c'était sympa mais ça manquait de retour visuel, ça manquait de retour tout court » ; il n'a pas dépassé 20 ;
+- doute sur « dès qu'on est touché, on perd tout » ;
+- la barre : une version finie, prête pour Steam, pas un prototype. La règle : simple à comprendre et à prendre en main, très dure à maîtriser ;
+- le vide : pas de retour.
+
+**Diagnostic de l'agent :**
+- **« On perd tout » était littéral** : sous 20 (palier I), un coup ou une fenêtre vide ramenait à 0.
+- **La Série bute sur la densité du départ.** Éliminations du bot rejouées (mesure du profil normal, seeds 7 et 42, 420 s : 130 et 48 éliminations) :
+
+  | Fenêtre | Meilleure Série (seed 7, seed 42) |
+  |---|---|
+  | 2,5 s | 9, 6 |
+  | 4 s | 19, 8 |
+
+  Le réglage dépend de l'étape « rythme du départ » ([LE-JEU.md](../LE-JEU.md)).
+- **Le compteur fait 16 px**, la taille des chiffres de dégâts, et aucun son ni effet ne marque un palier.
+- **Doublon** : `KillStreakDisplay` (HUD, haut gauche, « EN RAFALE », « ×N » dès 5 éliminations à moins de 1,5 s) vit à côté de la Série. Défaut de l'agent : le retirer quand la Série entre au HUD.
+
+### La proposition : trois règles affichées au joueur
+
+1. **Chaque élimination fait monter la Série.** Six rangs : ÉVEIL ×10, FERVEUR ×20, FURIE ×40, CARNAGE ×80, HÉCATOMBE ×160, MONSTRE ×320. Chaque rang donne dégâts, vitesse et Chance (valeurs de départ : dégâts +8 à +60 %, vitesse +4 à +24 %, Chance +3 à +28 %).
+2. **Un coup reçu la coupe en deux** (arrondi inférieur). Les rangs doublent : c'est un rang de moins. On ne perd jamais tout d'un coup, mais à ×300 la perte compte.
+3. **Sans élimination, la jauge se vide, la Série s'arrête et s'encaisse en Essence**, la monnaie des coffres. Valeur de départ : Série × taux du rang atteint, de 0,1 à ÉVEIL à 1,0 à MONSTRE, rien sous ×10. Pour mémoire : environ 1,5 Essence par élimination mesurée, coffre commun à 20.
+
+**Leviers de maîtrise**, découverts en jouant, jamais expliqués :
+- **la fenêtre raccourcit à chaque rang**, de 4 s au rang 0 à 2 s à MONSTRE. Ultrakill fait pareil : sa jauge se vide jusqu'à 8 fois plus vite au rang maximal ;
+- **l'encaissement croît plus vite que la Série** : une Série de ×100 rapporte bien plus que dix Séries de ×10 ;
+- **décrocher pour encaisser ou pousser encore** : le pari de Tony Hawk, où une chute fait perdre le combo en cours ;
+- **les gestes déjà faits relancent la fenêtre** : esquive parfaite, saut du vide, percussion. Une chute dans le vide vaut 3 ;
+- défaut de l'agent : **un coup porté à un gardien ou un mini-boss relance la fenêtre**, pour qu'un combat de gardien ne casse pas une Série agressive.
+
+**Retours (ce qui fait « fini ») :**
+- **HUD en haut au centre**, sous le chrono (défaut de l'agent ; la barre de boss et la ligne d'aide passent dessous) :
+  - un gros « ×N » et le nom du rang, à la couleur du rang ;
+  - la jauge de la fenêtre ;
+  - visible dès ×2.
+- **Élimination** : le chiffre rebondit (au plus une dizaine de fois par seconde).
+- **Rang gagné** :
+  - le nom claque à l'écran (grossi puis posé) ;
+  - un son de plus en plus aigu à chaque rang, une onde autour du joueur, une secousse légère.
+- **Jauge presque vide** : elle clignote en rouge et le tic s'accélère.
+- **Coup reçu** : le chiffre se fend et vire au rouge, puis « ÷2 » s'affiche ; son de verre ; le nom du rang perdu tombe.
+- **Encaissement** : le chiffre se fige en or, l'Essence vole jusqu'à son compteur et un « +N Essence » s'affiche.
+- **Le personnage change** : une aura au sol par rang, un contour à la couleur du rang dès FURIE, des images rémanentes continues à MONSTRE.
+- **Musique** : l'intention « combat » forcée dès CARNAGE. Il n'y a pas de couches : c'est le relais le plus proche de Metal: Hellsinger, qui ajoute un instrument par multiplicateur.
+- **Bilan de fin de run** : meilleure Série et rang atteint, et le record par personnage.
+
+**Retiré** : le compteur au-dessus de la tête, la fenêtre sous les pieds, la règle « perd un palier », `KillStreakDisplay`.
+
+**Avocat du diable** : l'encaissement ajoute une règle et touche l'économie des coffres. Sans lui, la fin d'une Série ne se remarque pas. Un niveau vraiment digne d'une sortie demandera aussi un habillage par l'ami artiste et des sons composés (étape « clarté »).
+
+**Question posée à Raphaël, sans réponse** (pause demandée avant de répondre) : quand la jauge se vide, la Série s'encaisse (recommandé) ou perd un rang (sans récompense, comme aujourd'hui) ? **Décision par défaut : elle s'encaisse.** À confirmer d'un mot à la reprise, avant S2.
+
+### Lots
+
+| Lot | Contenu | Effort |
+|---|---|---|
+| S2 | Règles : six rangs lus dans `elan.json` (seuil, nom, couleur, fenêtre, bonus, taux d'encaissement), coup qui coupe en deux, encaissement, gardien qui relance ; contrôles | Moyen |
+| S3 | HUD en haut au centre, animations, textes traduits ; retrait du compteur de tête, de la fenêtre sous les pieds et de `KillStreakDisplay` | Moyen |
+| S4 | Retours : sons, onde, secousse, fente, envol d'Essence, aura, contour et images rémanentes, musique de combat | Moyen |
+| S5 | Réglage mesuré (bot et bac à sable : temps par rang, Essence par minute contre prix des coffres), meilleure Série au bilan et au record, Série allumée en vraie run ; captures | Faible à moyen |
+
+Puis Raphaël joue une vraie run. Le vide s'allume avec la Série (même interrupteur), jugé dans la même séance.
+
+### Points d'accroche (inventaire du 18 octobre)
+
+- **HUD** :
+  - `scripts/UI/HUD.cs`, CanvasLayer 10, construit en code sur une référence 960×540 ;
+  - le chrono en haut au centre (`BuildRunClock`, l. 327) ;
+  - en haut au centre aussi : `RunEventHud` (`HintTop` 44), `BossHealthBar` (`Top` 62), `QuestToast` (`Top` 96) ;
+  - une seule police, Alkhemikal ; tailles de 16 à 64 (`UITheme`, Banner 64).
+- **Secousse** : `ScreenShake.Instance.AddTrauma`, `ShakeLight` 0,15. `Hitstop` est vide volontairement (jugé désagréable) : ne pas s'en servir.
+- **Sons** :
+  - `AudioManager.Play(clé, variance, dB, basePitch)` ; la hauteur monte comme pour `XpOrb` (pas de 0,035) ;
+  - candidats : `sfx_compte_tic`, `sfx_compte_tic_presse`, `sfx_impact_glass`, `sfx_shield_break`, `sfx_level_up`, `sfx_rare_fragment`, `sfx_resurgence_accent` ;
+  - non enregistrés dans `assets/audio/sfx/selected/` : `bell_pulse.wav`, `void_slash.wav`, `chain_jump.wav`.
+- **Musique** : `MusicDirector`, fondus entre morceaux entiers et intentions par priorité, sans couches.
+- **Essence** : `EventBus.EssenceGained(montant, position)` fait voler les grains vers le compteur (`EssenceFlights`) ; `EssenceTracker.AddEssence`.
+- **Coup reçu** : `Player.LoseHp` → `LoseStreakOnHit` (`Player.cs:1582`) ; invulnérabilité de 0,25 s après un coup.
+- **Bilan** :
+  - `GameOverScreen.BuildFacts` (l. 490) ;
+  - `RunRecord`, champs récents nullables ;
+  - `RunTracker`, et `MetaStats` dans `MetaSaveManager`.
+- **Visuel du joueur** :
+  - `entity.gdshader` : `outline_color` et `outline_width`, `flash_*`. Pas d'uniforme de lueur ;
+  - les traînées en silhouette de `MobilityFeedback` (quatre sprites recyclés) servent aux images rémanentes.
+
+Sources : [DMC 5, rangs et coups reçus](https://shacknews.com/article/110322/stylish-points-and-style-ranks-in-devil-may-cry-5), [DMC 4, jauge qui décroît](https://strategywiki.org/wiki/Devil_May_Cry_4/Gameplay), [Ultrakill, décroissance par rang](https://ultrakill.fandom.com/wiki/Style_Index), [Tony Hawk, chute et combo](https://www.gfinityesports.com/article/tony-hawks-pro-skater-1-2-remake-remaster-manual-how-to-guide), [Metal: Hellsinger, couches par multiplicateur](https://checkpointgaming.net/reviews/2022/09/metal-hellsinger-review-riff-tear/), [Bloodborne, regain](https://bloodborne.wiki.fextralife.com/Rally), [facile à apprendre, dur à maîtriser](https://www.gamedeveloper.com/design/what-makes-games-easy-to-learn-and-hard-to-master), [combo qui fait du bien](https://bugnet.io/blog/how-to-build-a-combo-system-that-feels-good).

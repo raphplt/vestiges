@@ -2293,3 +2293,33 @@ Il avait écarté la veille l'île qui dérive : « le jeu proposé s'éloigne t
   - la sortie commerciale tranchée en une séance après les testeurs, le nom en premier ;
   - `A-VERIFIER.md` n'est plus suivi.
 - **Défauts de l'agent au lot S1 (la Série), réversibles** : seules les éliminations du joueur nourrissent la Série (pas les explosions de créatures, les dégâts d'événements ni les parties de boss) ; le compteur « ×N » ne rebondit qu'à chaque dizaine et au palier gagné ; trois paliers au plus.
+
+## 191. Retours sur la Série, boucler de bout en bout — 18 octobre 2026
+
+Raphaël, après avoir joué la Série dans le bac à sable ([plan 52 §15](52-elan.md)) :
+- « Il faut vraiment qu'on essaie de boucler les trucs de bout en bout, au lieu de passer d'un sujet à l'autre. »
+- Le compteur : « il ne faut pas que ce soit au-dessus de la tête du joueur, mais sur un coin de l'écran, en haut à gauche, en haut à droite ou en haut au milieu, et que ça reste toujours à l'écran », « affiché plus gros », « plus attractif, que ça saute plus aux yeux ».
+- « C'était sympa mais ça manquait de retour visuel, ça manquait de retour tout court. » Il n'a pas dépassé 20.
+- « Dans l'idée c'est bien, je pense que c'est une très bonne chose. Il faudra juste la peaufiner au fur et à mesure. Même peut-être maintenant. »
+- La barre : « si c'était un jeu nommé aux Game Awards […] comment faudrait-il que la mécanique soit ? Pas juste un POC, mais une version vraiment finie, prête à être distribuée sur Steam. »
+- « Le truc qui fait que dès qu'on est touché on perd tout, je ne sais pas si c'est bien ou si c'est un peu compliqué. »
+- « Il faut que la mécanique soit simple à comprendre, pas trop compliquée à commencer à utiliser, mais que pour la maîtriser il faille être très fort au jeu », un principe qu'il veut « appliquer partout dans le jeu ».
+- Le vide : pas de retour.
+
+**Tranché :**
+- **Boucler de bout en bout** : une mécanique est finie quand elle est au niveau d'une sortie. Règles lisibles, retours visuels et sonores à chaque changement, place au HUD, réglage mesuré, jouée en vraie run. Pas de sujet suivant avant ([LE-JEU.md](../LE-JEU.md), méthode).
+- **Simple à comprendre, dur à maîtriser**, pour chaque mécanique du jeu.
+- **La Série est gardée et doit être finie maintenant**, avant tout autre chantier.
+- **Ensuite, une revue de la boucle de run** (terres 1 à 3, finale, fin sans fin), aussi appuyée que celle de la Série : « voir si c'est toujours ça qu'on prend ». La forme du §190 peut y changer. Rangée à l'étape 2 du [LE-JEU.md](../LE-JEU.md).
+
+**Proposé par l'agent, en attente d'un mot de Raphaël** (pause demandée avant sa réponse ; détail au [plan 52 §15](52-elan.md)) :
+- trois règles affichées : six rangs de ×10 à ×320, un coup qui coupe en deux, une jauge vide qui encaisse la Série en Essence ;
+- les leviers de maîtrise, les retours, le HUD en haut au centre ;
+- les lots S2 à S5.
+
+**Décision par défaut sur la seule question posée : la Série s'encaisse** quand sa jauge se vide. L'autre choix, « elle perd un rang, sans récompense », reste possible d'un mot.
+
+**Défauts de l'agent**, réversibles :
+- le compteur « EN RAFALE » du HUD disparaît au profit de la Série ;
+- un coup porté à un gardien ou un mini-boss relance la fenêtre ;
+- le vide reste branché sur la Série et se juge avec elle en vraie run.
