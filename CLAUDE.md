@@ -53,3 +53,5 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 | `godot-reviewer` | Sous-agent de relecture d'un diff C#/Godot |
 | Hooks | JSON de `data/` et manifestes de décors validés à l'écriture ; `dotnet build` en fin de tour si du C# a changé |
 | `.claude/rules/` | Règles chargées selon les fichiers touchés : C#, JSON, pixel art, monde et décors |
+| Plugin `csharp-lsp` | Diagnostics et navigation C# après chaque édition ; serveur `csharp-ls` (dotnet tool global), lancé par `~/.local/bin/csharp-ls` qui fixe `DOTNET_ROOT` |
+| MCP `godot` (`.mcp.json`) | Lancer le jeu fenêtré et lire sa sortie de débogage en direct ; ne remplace ni `/capture` ni les régressions. Ne pas appeler `update_project_uids` (uid référencés) |
