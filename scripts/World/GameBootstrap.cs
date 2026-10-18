@@ -153,6 +153,9 @@ public partial class GameBootstrap : Node
         RequireCatalog(RunEventDataLoader.TryLoad(out string runEventsError), runEventsError);
         RequireCatalog(SpawnFlowConfig.TryLoad(out _, out string spawnFlowError), spawnFlowError);
         RequireCatalog(CrowdDataLoader.TryLoad(out string crowdError), crowdError);
+        RequireCatalog(Combat.EnemyTracking.TryLoad(out string trackingError), trackingError);
+        RequireCatalog(Combat.FxBudget.TryLoad(out string fxBudgetError), fxBudgetError);
+        RequireCatalog(DefenseConfig.TryLoad(out _, out string defenseError), defenseError);
         RequireCatalog(EnemyVariantDataLoader.TryLoad(out string variantsError), variantsError);
         RequireCatalog(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers",
             out _, out string quarryError), quarryError);

@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -21,12 +23,16 @@ public static class FxBudget
     private const string ConfigPath = "res://data/scaling/fx_budget.json";
     private static readonly string[] KindKeys = { "sparks_per_frame", "shapes_per_frame", "deaths_per_frame", "numbers_per_frame" };
 
-    private static readonly int[] Full = { 320, 32, 12, 24 };
-    private static readonly int[] Reduced = { 120, 12, 5, 12 };
+    /// <summary>Plafonds d'avant le fichier, gardés pour une catégorie absente.</summary>
+    private static readonly int[] DefaultFull = { 320, 32, 12, 24 };
+    private static readonly int[] DefaultReduced = { 120, 12, 5, 12 };
+    private static readonly int[] Full = (int[])DefaultFull.Clone();
+    private static readonly int[] Reduced = (int[])DefaultReduced.Clone();
     private static readonly int[] Used = new int[KindKeys.Length];
     private static readonly long[] Dropped = new long[KindKeys.Length];
     private static ulong _frame = ulong.MaxValue;
     private static bool _loaded;
+    private static string _loadError;
 
     /// <summary>
     /// Accorde jusqu'à <paramref name="wanted"/> unités de la catégorie pour la frame en cours ;
@@ -61,32 +67,74 @@ public static class FxBudget
     /// <summary>Unités écartées depuis le lancement, pour les bancs.</summary>
     public static long DroppedCount(FxBudgetKind kind) => Dropped[(int)kind];
 
+    /// <summary>
+    /// Plafonds lus strictement une fois (plan 26 Q7g-3) ; refusés, ceux d'avant restent et la raison est rendue (le
+    /// chargement de la run s'arrête, GameBootstrap).
+    /// </summary>
+    public static bool TryLoad(out string error)
+    {
+        EnsureLoaded();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void EnsureLoaded()
     {
         if (_loaded)
             return;
         _loaded = true;
+        _loadError = $"{ConfigPath} : lecture interrompue";
         using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
         if (file == null)
-            return;
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
+            _loadError = $"{ConfigPath} : fichier illisible";
+        else if (TryParse(file.GetAsText(), out int[] full, out int[] reduced, out _loadError))
         {
-            GD.PushError($"[FxBudget] {ConfigPath} invalide : {json.GetErrorMessage()}");
-            return;
+            full.CopyTo(Full, 0);
+            reduced.CopyTo(Reduced, 0);
         }
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        Read(root, "full", Full);
-        Read(root, "reduced", Reduced);
+        else
+            _loadError = $"{ConfigPath} : {_loadError}";
+        if (_loadError != null)
+            GD.PushError($"[FxBudget] {_loadError}");
     }
 
-    private static void Read(Godot.Collections.Dictionary root, string level, int[] limits)
+    /// <summary>Plafonds par niveau ; un niveau ou une catégorie absents gardent les valeurs d'avant, le réduit ne dépasse pas le plein.</summary>
+    public static bool TryParse(string text, out int[] full, out int[] reduced, out string error)
     {
-        if (!root.ContainsKey(level))
+        full = (int[])DefaultFull.Clone();
+        reduced = (int[])DefaultReduced.Clone();
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(text);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "budget d'effets", "full", "reduced");
+            Read(reader, "full", full);
+            Read(reader, "reduced", reduced);
+            for (int i = 0; i < KindKeys.Length && reader.Error == null; i++)
+            {
+                if (reduced[i] > full[i])
+                    reader.Fail($"reduced.{KindKeys[i]} ≤ full.{KindKeys[i]} attendu ({reduced[i]} > {full[i]})");
+            }
+            error = reader.Error;
+            return error == null;
+        }
+        catch (JsonException exception)
+        {
+            error = $"JSON invalide : {exception.Message}";
+            return false;
+        }
+    }
+
+    private static void Read(JsonConfigReader reader, string level, int[] limits)
+    {
+        if (!JsonConfigReader.Has(reader.Root, level))
             return;
-        Godot.Collections.Dictionary values = root[level].AsGodotDictionary();
+        JsonElement values = reader.Section(level);
+        reader.AllowOnly(values, level, KindKeys);
         for (int i = 0; i < KindKeys.Length; i++)
-            if (values.ContainsKey(KindKeys[i]))
-                limits[i] = Mathf.Max(0, (int)values[KindKeys[i]].AsDouble());
+        {
+            if (JsonConfigReader.Has(values, KindKeys[i]))
+                limits[i] = reader.Integer(values, KindKeys[i], 0, 10000);
+        }
     }
 }

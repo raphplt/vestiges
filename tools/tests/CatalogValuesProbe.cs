@@ -280,6 +280,16 @@ public partial class CatalogValuesProbe : Node
         // Q7g-2 : lieux (pois.json), dans l'ordre du fichier.
         foreach (PoiData poi in PoiDataLoader.GetAll())
             lines.Add(Invariant($"poi {poi.Id} [{poi.Name}] {poi.Type} size={poi.Size} dist={poi.MinDistanceFromSpawn}-{poi.MaxDistanceFromSpawn} white=[{string.Join(",", poi.BiomeWhitelist)}] black=[{string.Join(",", poi.BiomeBlacklist)}] color={poi.Color.R:R},{poi.Color.G:R},{poi.Color.B:R},{poi.Color.A:R} outline={poi.OutlineColor.R:R},{poi.OutlineColor.G:R},{poi.OutlineColor.B:R},{poi.OutlineColor.A:R} shape={poi.Shape} interaction={poi.InteractionType} search={poi.SearchTime:R} loot={poi.LootTableId}x{poi.LootRolls} guards=[{string.Join(",", poi.EnemyGuards)}]"));
+        // Q7g-3 : défense, pistage, budget d'effets (champs privés par réflexion, présents des deux côtés).
+        DefenseConfig defense = DefenseConfig.Load();
+        lines.Add(Invariant($"defense {defense.HurtInvulnerabilitySeconds:R} {defense.RegenDelayAfterDamageSeconds:R} {defense.ShieldRechargeDelaySeconds:R} {defense.ShieldRechargeSeconds:R} {defense.ArmorHalfValue:R} {defense.ArmorMaxReduction:R} {defense.LifestealMaxHpPerSecond:R} {defense.LifestealTickSeconds:R}"));
+        System.Reflection.BindingFlags staticHidden = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+        typeof(Vestiges.Combat.EnemyTracking).GetMethod("LoadConfig", staticHidden)!.Invoke(null, null);
+        foreach (string trackingField in new[] { "_engageDistanceSq", "_loseTrackDistanceSq", "_loseTrackSeconds", "_wanderSpeedFactor", "_wanderTurnSeconds" })
+            lines.Add(Invariant($"tracking {trackingField}={typeof(Vestiges.Combat.EnemyTracking).GetField(trackingField, staticHidden)!.GetValue(null):R}"));
+        typeof(Vestiges.Combat.FxBudget).GetMethod("EnsureLoaded", staticHidden)!.Invoke(null, null);
+        foreach (string budgetField in new[] { "Full", "Reduced" })
+            lines.Add($"fx_budget {budgetField}=[{string.Join(",", (int[])typeof(Vestiges.Combat.FxBudget).GetField(budgetField, staticHidden)!.GetValue(null)!)}]");
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

@@ -52,6 +52,7 @@ public partial class CatalogContractRegression : Node
             CheckWeaponUpgrades();
             CheckLootTables();
             CheckPois();
+            CheckCombatSettings();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1263,6 +1264,69 @@ public partial class CatalogContractRegression : Node
                 $"lieux, {name} refusé sans publication ({error})");
         }
         Check(PoiDataLoader.Apply(valid, references) == null && !ReferenceEquals(PoiDataLoader.Get("anomaly"), anomaly), "lieux du dépôt republiés");
+    }
+
+    /// <summary>Défense, pistage et budget d'effets (plan 26 Q7g-3) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckCombatSettings()
+    {
+        bool defenseLoaded = DefenseConfig.TryLoad(out DefenseConfig defense, out string defenseError);
+        bool trackingLoaded = Vestiges.Combat.EnemyTracking.TryLoad(out string trackingError);
+        bool budgetLoaded = Vestiges.Combat.FxBudget.TryLoad(out string budgetError);
+        Check(defenseLoaded && defense.ArmorHalfValue == 30f && trackingLoaded && budgetLoaded,
+            $"défense, pistage et budget d'effets du dépôt acceptés {defenseError}{trackingError}{budgetError}");
+        string validDefense = FileAccess.GetFileAsString(DefenseConfig.FilePath);
+        (string, Action<JsonObject>, string)[] defenseCases =
+        {
+            ("champ inconnu", root => root["armor"] = 30, "clé « armor » inconnue"),
+            ("invulnérabilité négative", root => root["hurt_invulnerability_seconds"] = -0.1, "hurt_invulnerability_seconds"),
+            ("recharge nulle", root => root["shield_recharge_seconds"] = 0, "shield_recharge_seconds"),
+            ("demi-valeur nulle", root => root["armor_half_value"] = 0, "armor_half_value"),
+            ("réduction au-delà du tout", root => root["armor_max_reduction"] = 1.2, "armor_max_reduction"),
+            ("vol de vie au-delà des PV", root => root["lifesteal_max_hp_per_second"] = 2, "lifesteal_max_hp_per_second"),
+            ("rythme du vol nul", root => root["lifesteal_tick_seconds"] = 0, "lifesteal_tick_seconds"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in defenseCases)
+        {
+            bool refused = !DefenseConfig.TryParse(Mutated(validDefense, mutate), out DefenseConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"défense, {name} refusé ({error})");
+        }
+        Check(DefenseConfig.TryParse("{}", out DefenseConfig defaults, out _) && defaults.ArmorHalfValue == 15f && defaults.ArmorMaxReduction == 0.75f,
+            "défense : fichier vide, secours d'avant gardés");
+
+        string validTracking = FileAccess.GetFileAsString("res://data/scaling/enemy_tracking.json");
+        (string, Action<JsonObject>, string)[] trackingCases =
+        {
+            ("champ inconnu", root => root["engage"] = 450, "clé « engage » inconnue"),
+            ("repérage nul", root => root["engage_distance"] = 0, "engage_distance"),
+            ("trace perdue avant le repérage", root => root["lose_track_distance"] = 300, "engage_distance ≤ lose_track_distance"),
+            ("délai négatif", root => root["lose_track_seconds"] = -1, "lose_track_seconds"),
+            ("errance non numérique", root => root["wander_speed_factor"] = "lente", "wander_speed_factor"),
+            ("virage nul", root => root["wander_turn_seconds"] = 0, "wander_turn_seconds"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in trackingCases)
+        {
+            bool refused = !Vestiges.Combat.EnemyTracking.TryParse(Mutated(validTracking, mutate), out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"pistage, {name} refusé ({error})");
+        }
+        Check(Vestiges.Combat.EnemyTracking.TryParse("{}", out Vestiges.Combat.EnemyTracking.Settings tracking, out _)
+            && tracking == new Vestiges.Combat.EnemyTracking.Settings(450f, 800f, 4f, 0.35f, 2.5f), "pistage : fichier vide, secours d'avant gardés");
+
+        string validBudget = FileAccess.GetFileAsString("res://data/scaling/fx_budget.json");
+        (string, Action<JsonObject>, string)[] budgetCases =
+        {
+            ("niveau inconnu", root => root["off"] = new JsonObject(), "clé « off » inconnue"),
+            ("catégorie inconnue", root => root["full"]!["trails_per_frame"] = 10, "clé « trails_per_frame » inconnue"),
+            ("plafond négatif", root => root["full"]!["sparks_per_frame"] = -1, "sparks_per_frame"),
+            ("plafond fractionnaire", root => root["reduced"]!["deaths_per_frame"] = 4.5, "deaths_per_frame"),
+            ("réduit au-dessus du plein", root => root["reduced"]!["numbers_per_frame"] = 40, "reduced.numbers_per_frame ≤ full.numbers_per_frame"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in budgetCases)
+        {
+            bool refused = !Vestiges.Combat.FxBudget.TryParse(Mutated(validBudget, mutate), out _, out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"budget d'effets, {name} refusé ({error})");
+        }
+        Check(Vestiges.Combat.FxBudget.TryParse("{}", out int[] full, out int[] reduced, out _)
+            && string.Join(",", full) == "320,32,12,24" && string.Join(",", reduced) == "120,12,5,12", "budget d'effets : fichier vide, plafonds d'avant gardés");
     }
 
     private void CheckAtmosphere()
