@@ -55,6 +55,7 @@ public partial class CatalogContractRegression : Node
             CheckCombatSettings();
             CheckInterfaceSettings();
             CheckMusicStatsMobility();
+            CheckSoundBank();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1457,6 +1458,34 @@ public partial class CatalogContractRegression : Node
                 $"stats, {name} refusé sans publication ({error})");
         }
         Check(StatCatalog.Apply(stats, translated) == null && StatCatalog.Name("damage") == damageName, "stats du dépôt republiées");
+    }
+
+    /// <summary>Banque de sons (plan 26 Q7h-1) : fichier du dépôt accepté, chaque règle refusée avec le son en cause.</summary>
+    private void CheckSoundBank()
+    {
+        string valid = FileAccess.GetFileAsString(AudioManager.SoundBankPath);
+        Func<string, bool> resourceExists = path => ResourceLoader.Exists(path);
+        Func<string, bool> busExists = bus => AudioServer.GetBusIndex(bus) >= 0;
+        Check(SoundBank.TryParse(valid, resourceExists, busExists, "World", out Dictionary<string, SoundBankEntry> bank, out string loadError)
+            && bank.Count > 100 && bank["sfx_menu_survol"].Variants.Count >= 2, $"banque de sons du dépôt acceptée {loadError}");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("son non objet", root => root["sfx_test"] = 3, "son sfx_test : objet attendu"),
+            ("champ inconnu", root => root["mus_hub"]!["pitch"] = 1, "clé « pitch » inconnue"),
+            ("fichier absent", root => root["mus_hub"]!["path"] = "res://assets/audio/musique/absente.ogg", "« res://assets/audio/musique/absente.ogg » introuvable"),
+            ("volume démesuré", root => root["mus_hub"]!["volume_db"] = 40, "volume_db"),
+            ("intervalle négatif", root => root["sfx_level_up"]!["min_interval_ms"] = -1, "min_interval_ms"),
+            ("voix nulles", root => root["sfx_level_up"]!["max_voices"] = 0, "max_voices"),
+            ("bus inconnu", root => root["sfx_level_up"]!["bus"] = "Reverb", "bus « Reverb » inconnu"),
+            ("écart négatif", root => root["sfx_hit_ennemi"]!["volume_variance_db"] = -1, "volume_variance_db"),
+            ("atténuation sans durée", root => root["sfx_level_up"]!.AsObject().Remove("duck_sec"), "duck_sec"),
+            ("atténuation qui monte", root => root["sfx_level_up"]!["duck_music_db"] = 3, "duck_music_db"),
+            ("une seule variante", root => root["sfx_menu_survol"]!["variants"] = new JsonArray("res://assets/audio/sfx/ui/menu_hover_1.wav"), "variants"),
+        })
+        {
+            bool refused = !SoundBank.TryParse(Mutated(valid, mutate), resourceExists, busExists, "World", out Dictionary<string, SoundBankEntry> parsed, out string error);
+            Check(refused && parsed == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"banque de sons, {name} refusé ({error})");
+        }
     }
 
     private void CheckAtmosphere()

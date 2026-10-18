@@ -326,10 +326,35 @@ public partial class CatalogValuesProbe : Node
             MobilityConfig m = MobilityConfig.Load(profile);
             lines.Add(Invariant($"mobility {profile ?? "-"} [{m.Name}|{m.Description}] {m.DurationSeconds:R} {m.SpeedMultiplier:R} {m.CooldownSeconds:R} {m.InputBufferSeconds:R} {m.BriefResponse} {m.AccelerationSeconds:R} {m.BrakingSeconds:R} {m.HurtRecoverySeconds:R} {m.InvulnerabilitySeconds:R} {m.TrialInvulnerabilitySeconds:R} {m.WaterSpeedFactor:R} {m.TurnRateDegrees:R} {m.SlidesAlongWalls} {m.VisualHeightPixels:R} {m.IgnoreWaterWhileActive} {m.StartAudio} {m.EndAudio}"));
         }
+        // Q7h-1 : banque de sons, dictionnaires de l'AudioManager par réflexion (présents des deux côtés).
+        AudioManager audio = AudioManager.Instance;
+        foreach (string bankField in new[] { "_paths", "_soundVolumes", "_sfxMinIntervals", "_soundPriorities", "_soundMaxVoices", "_soundBuses", "_soundVolumeVariance", "_soundDucks", "_soundVariants" })
+        {
+            System.Collections.IDictionary bank = (System.Collections.IDictionary)typeof(AudioManager).GetField(bankField, hidden)!.GetValue(audio);
+            List<string> entries = new();
+            foreach (System.Collections.DictionaryEntry entry in bank)
+            {
+                object value = entry.Value;
+                FormatBankValue(ref value);
+                entries.Add(Invariant($"{entry.Key}={value}"));
+            }
+            entries.Sort(StringComparer.Ordinal);
+            lines.Add($"sounds {bankField} {entries.Count} {string.Join(";", entries)}");
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
         GetTree().Quit(0);
+    }
+
+    /// <summary>Variantes d'un son : chemins des flux, dans l'ordre.</summary>
+    private static void FormatBankValue(ref object value)
+    {
+        System.Reflection.FieldInfo streams = value?.GetType().GetField("Streams");
+        if (streams != null)
+            value = string.Join(",", Array.ConvertAll((AudioStream[])streams.GetValue(value)!, stream => stream.ResourcePath));
+        else if (value is float number)
+            value = number.ToString("R", CultureInfo.InvariantCulture);
     }
 
     private static string Bands(List<LandmarkBand> bands) =>
