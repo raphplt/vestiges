@@ -726,37 +726,26 @@ public partial class ErasureManager : Node
 
     private void LoadConfig()
     {
-        FileAccess file = FileAccess.Open("res://data/scaling/erasure.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            return;
-
-        string jsonText = file.GetAsText();
-        file.Close();
-
-        Json json = new();
-        if (json.Parse(jsonText) != Error.Ok)
-            return;
-
-        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-        _cellSize = dict.ContainsKey("cell_size") ? (int)dict["cell_size"].AsDouble() : _cellSize;
-        _seededMemory = dict.ContainsKey("seeded_memory") ? (float)dict["seeded_memory"].AsDouble() : _seededMemory;
-        _baseDecayPerMinute = dict.ContainsKey("base_decay_per_minute") ? (float)dict["base_decay_per_minute"].AsDouble() : _baseDecayPerMinute;
-        _globalAccelerationPerMinute = dict.ContainsKey("acceleration_per_minute") ? (float)dict["acceleration_per_minute"].AsDouble() : _globalAccelerationPerMinute;
-        _distanceDecayMultiplier = dict.ContainsKey("distance_decay_multiplier") ? (float)dict["distance_decay_multiplier"].AsDouble() : _distanceDecayMultiplier;
-        _distanceDecayMaxCells = dict.ContainsKey("distance_decay_max_cells") ? (float)dict["distance_decay_max_cells"].AsDouble() : _distanceDecayMaxCells;
-        _globalDecayFactor = dict.ContainsKey("global_decay_factor") ? (float)dict["global_decay_factor"].AsDouble() : _globalDecayFactor;
-        _playerPresenceFalloffCells = dict.ContainsKey("player_presence_falloff_cells") ? (float)dict["player_presence_falloff_cells"].AsDouble() : _playerPresenceFalloffCells;
-        _playerDecayReduction = dict.ContainsKey("player_decay_reduction") ? (float)dict["player_decay_reduction"].AsDouble() : _playerDecayReduction;
-        _spawnDensityAtZeroMemory = dict.ContainsKey("spawn_density_at_zero_memory") ? (float)dict["spawn_density_at_zero_memory"].AsDouble() : _spawnDensityAtZeroMemory;
-        _enemySpeedBonusAtZeroMemory = dict.ContainsKey("enemy_speed_bonus_at_zero_memory") ? (float)dict["enemy_speed_bonus_at_zero_memory"].AsDouble() : _enemySpeedBonusAtZeroMemory;
-        _lateGameThreshold = dict.ContainsKey("late_game_threshold") ? (float)dict["late_game_threshold"].AsDouble() : _lateGameThreshold;
-        _updateIntervalSec = dict.ContainsKey("update_interval_sec") ? (float)dict["update_interval_sec"].AsDouble() : _updateIntervalSec;
-        _trackedRadiusCells = dict.ContainsKey("tracked_radius_cells") ? (int)dict["tracked_radius_cells"].AsDouble() : _trackedRadiusCells;
-        _seedDistancePenalty = dict.ContainsKey("seed_distance_penalty") ? (float)dict["seed_distance_penalty"].AsDouble() : _seedDistancePenalty;
-        _stabilizeRadiusCells = dict.ContainsKey("stabilize_radius_cells") ? (float)dict["stabilize_radius_cells"].AsDouble() : _stabilizeRadiusCells;
-        _stabilizeMemoryFloor = dict.ContainsKey("stabilize_memory_floor") ? (float)dict["stabilize_memory_floor"].AsDouble() : _stabilizeMemoryFloor;
-        _stabilizeOnChestOpen = !dict.ContainsKey("stabilize_on_chest_open") || dict["stabilize_on_chest_open"].AsBool();
-        _voidDamageRatioPerSecond = dict.ContainsKey("void_damage_ratio_per_second") ? (float)dict["void_damage_ratio_per_second"].AsDouble() : _voidDamageRatioPerSecond;
-        _crisisDecayMultiplier = dict.ContainsKey("crisis_decay_multiplier") ? (float)dict["crisis_decay_multiplier"].AsDouble() : _crisisDecayMultiplier;
+        ErasureConfig config = ErasureConfig.Load();
+        _cellSize = config.CellSize;
+        _seededMemory = config.SeededMemory;
+        _baseDecayPerMinute = config.BaseDecayPerMinute;
+        _globalAccelerationPerMinute = config.AccelerationPerMinute;
+        _distanceDecayMultiplier = config.DistanceDecayMultiplier;
+        _distanceDecayMaxCells = config.DistanceDecayMaxCells;
+        _globalDecayFactor = config.GlobalDecayFactor;
+        _playerPresenceFalloffCells = config.PlayerPresenceFalloffCells;
+        _playerDecayReduction = config.PlayerDecayReduction;
+        _spawnDensityAtZeroMemory = config.SpawnDensityAtZeroMemory;
+        _enemySpeedBonusAtZeroMemory = config.EnemySpeedBonusAtZeroMemory;
+        _lateGameThreshold = config.LateGameThreshold;
+        _updateIntervalSec = config.UpdateIntervalSec;
+        _trackedRadiusCells = config.TrackedRadiusCells;
+        _seedDistancePenalty = config.SeedDistancePenalty;
+        _stabilizeRadiusCells = config.StabilizeRadiusCells;
+        _stabilizeMemoryFloor = config.StabilizeMemoryFloor;
+        _stabilizeOnChestOpen = config.StabilizeOnChestOpen;
+        _voidDamageRatioPerSecond = config.VoidDamageRatioPerSecond;
+        _crisisDecayMultiplier = config.CrisisDecayMultiplier;
     }
 }

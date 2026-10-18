@@ -168,43 +168,38 @@ public partial class AudioManager : Node
 
 	public const string SoundBankPath = "res://data/audio/sounds.json";
 
+	/// <summary>Banque contrôlée par <see cref="SoundBank"/> (plan 26 Q7h-1) ; refusée, l'accueil s'arrête sur la raison.</summary>
 	private void LoadSoundBank()
 	{
 		using FileAccess file = FileAccess.Open(SoundBankPath, FileAccess.ModeFlags.Read);
 		if (file == null)
 			throw new System.InvalidOperationException("Banque audio introuvable.");
-		using Json json = new();
-		if (json.Parse(file.GetAsText()) != Error.Ok)
-			throw new System.InvalidOperationException($"Banque audio invalide : {json.GetErrorMessage()}");
-		foreach (System.Collections.Generic.KeyValuePair<Variant, Variant> entry in json.Data.AsGodotDictionary())
+		if (!SoundBank.TryParse(file.GetAsText(), path => ResourceLoader.Exists(path), bus => AudioServer.GetBusIndex(bus) >= 0, BusWorld,
+				out Dictionary<string, SoundBankEntry> bank, out string error))
+			throw new System.InvalidOperationException($"Banque audio refusée, {SoundBankPath} : {error}");
+		foreach ((string key, SoundBankEntry sound) in bank)
 		{
-			string key = entry.Key.AsString();
-			Godot.Collections.Dictionary settings = entry.Value.AsGodotDictionary();
-			_paths[key] = settings["path"].AsString();
-			_soundVolumes[key] = (float)settings["volume_db"].AsDouble();
-			_sfxMinIntervals[key] = (ulong)settings["min_interval_ms"].AsInt64();
-			_soundPriorities[key] = settings.ContainsKey("priority") ? settings["priority"].AsInt32() : 20;
-			_soundMaxVoices[key] = settings.ContainsKey("max_voices") ? Mathf.Max(1, settings["max_voices"].AsInt32()) : 2;
-			_soundBuses[key] = settings.ContainsKey("bus") ? settings["bus"].AsString() : BusWorld;
-			if (settings.ContainsKey("volume_variance_db"))
-				_soundVolumeVariance[key] = (float)settings["volume_variance_db"].AsDouble();
-			if (settings.ContainsKey("duck_music_db"))
-				_soundDucks[key] = ((float)settings["duck_music_db"].AsDouble(), (float)settings["duck_sec"].AsDouble());
-			if (settings.ContainsKey("variants"))
+			_paths[key] = sound.Path;
+			_soundVolumes[key] = sound.VolumeDb;
+			_sfxMinIntervals[key] = sound.MinIntervalMs;
+			_soundPriorities[key] = sound.Priority;
+			_soundMaxVoices[key] = sound.MaxVoices;
+			_soundBuses[key] = sound.Bus;
+			if (sound.VolumeVarianceDb is float variance)
+				_soundVolumeVariance[key] = variance;
+			if (sound.MusicDuck is (float, float) duck)
+				_soundDucks[key] = duck;
+			if (sound.Variants.Count == 0)
+				continue;
+			AudioStream[] variants = new AudioStream[sound.Variants.Count];
+			for (int i = 0; i < variants.Length; i++)
 			{
-				Godot.Collections.Array paths = settings["variants"].AsGodotArray();
-				if (paths.Count < 2)
-					throw new System.InvalidOperationException($"{key} : au moins deux variantes nécessaires.");
-				AudioStream[] variants = new AudioStream[paths.Count];
-				for (int i = 0; i < paths.Count; i++)
-				{
-					variants[i] = GD.Load<AudioStream>(paths[i].AsString())
-						?? throw new System.InvalidOperationException($"{key} : variante absente {paths[i]}.");
-					if (variants[i] is AudioStreamWav wav)
-						wav.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
-				}
-				_soundVariants[key] = new SoundVariants { Streams = variants };
+				variants[i] = GD.Load<AudioStream>(sound.Variants[i])
+					?? throw new System.InvalidOperationException($"{key} : variante absente {sound.Variants[i]}.");
+				if (variants[i] is AudioStreamWav wav)
+					wav.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
 			}
+			_soundVariants[key] = new SoundVariants { Streams = variants };
 		}
 	}
 

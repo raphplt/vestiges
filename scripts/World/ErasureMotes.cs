@@ -85,29 +85,20 @@ public partial class ErasureMotes : Node
         return _player != null && _erasure != null && IsInstanceValid(_occlusion);
     }
 
+    /// <summary>Réglages contrôlés avec tout le fichier par <see cref="ErasureConfig"/> (plan 26 Q7d-2) ; sans section, pas d'éclats.</summary>
     private bool LoadConfig()
     {
-        using FileAccess file = FileAccess.Open("res://data/scaling/erasure.json", FileAccess.ModeFlags.Read);
-        if (file == null)
+        ErasureConfig.MotesConfig motes = ErasureConfig.Load().Motes;
+        if (motes == null)
             return false;
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
-        {
-            GD.PushError($"[ErasureMotes] erasure.json invalide : {json.GetErrorMessage()}");
-            return false;
-        }
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        if (!root.ContainsKey("motes"))
-            return false;
-        Godot.Collections.Dictionary d = root["motes"].AsGodotDictionary();
-        _interval = Mathf.Max(0.05f, (float)d.GetValueOrDefault("interval_sec", _interval).AsDouble());
-        _maxMemory = (float)d.GetValueOrDefault("max_memory", _maxMemory).AsDouble();
-        _propsPerTick = (int)d.GetValueOrDefault("props_per_tick", _propsPerTick).AsDouble();
-        _count = (int)d.GetValueOrDefault("count", _count).AsDouble();
-        _speedMin = (float)d.GetValueOrDefault("speed_min", _speedMin).AsDouble();
-        _speedMax = (float)d.GetValueOrDefault("speed_max", _speedMax).AsDouble();
-        _lifeMin = (float)d.GetValueOrDefault("life_min", _lifeMin).AsDouble();
-        _lifeMax = (float)d.GetValueOrDefault("life_max", _lifeMax).AsDouble();
-        return d.GetValueOrDefault("enabled", true).AsBool();
+        _interval = Mathf.Max(0.05f, motes.IntervalSec);
+        _maxMemory = motes.MaxMemory;
+        _propsPerTick = motes.PropsPerTick;
+        _count = motes.Count;
+        _speedMin = motes.SpeedMin;
+        _speedMax = motes.SpeedMax;
+        _lifeMin = motes.LifeMin;
+        _lifeMax = motes.LifeMax;
+        return motes.Enabled;
     }
 }

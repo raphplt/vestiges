@@ -70,7 +70,7 @@ public partial class PixelFx : Sprite2D
     public void Play(Vector2 position, in PixelFxSpec spec, float opacity, Node2D follow = null)
     {
         FxRamp ramp = PixelPalette.Ramp(spec.Family);
-        // Une zone au sol déborde de son rayon : lobes du bord, gouttes autour d'une flaque, langues d'un feu.
+        // Une zone au sol déborde de son rayon : grain du bord, gouttes d'une flaque, langues d'un feu, débris d'un éclat.
         float reach = spec.Shape == PixelFxShape.Zone ? spec.Radius * 1.4f + 8f : spec.Radius + spec.Thickness + 6f;
         Vector2 size = new(reach * 2f, reach * 2f / Mathf.Max(spec.Squash, 1f));
         // Taille paire : les bords du quad tombent sur la grille des texels.

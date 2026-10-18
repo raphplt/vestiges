@@ -639,6 +639,40 @@ Raphaël : les zones posées au sol, du joueur comme des créatures, sont « sou
 
 **Vérification :** build sans avertissement ; captures en run de la bile, des armes à zone, des capacités ennemies, des statuts (annonce d'explosion) et du combat de l'Indicible, toutes inspectées, sans erreur de shader. Coût non mesuré au banc : le banc dense n'emploie aucune de ces armes. Le shader évalue désormais cinq fois la forme par pixel de zone, et jusqu'à six fois de plus pour les langues de feu.
 
+### S12 — zones au sol rondes mais travaillées, 17 octobre (DECISIONS §164 soir, §172)
+
+Retours après S10 : « le pb n'était pas tant la forme […] le cercle ça allait globalement mais plutôt le rendu et le manque d'animation / de détail ou de côté rugueux » ; puis « il faut que les contours soient plus réguliers en cercle, mais que ça soit bcp plus travaillé et créatif en terme d'effet (je parle de tout ce qui fait des zones au sol) ». Lancé en autonomie le 17 octobre au soir (§188, fin).
+
+Constat sur la galerie avant ([`tools/capture_ground_zones.sh`](../../tools/capture_ground_zones.sh), douze zones à graine fixe sur trois sols) : bords en lobes de 7 à 15 % du rayon, qui font des patates ; intérieur d'annonce en taches sombres presque immobiles ; front d'un seul trait ; éclat en étoile ; couloir qui ondule de 18 %.
+
+| Lot | Contenu |
+|---|---|
+| Z5 | **Contour rond et rugueux pour toutes les zones** : cercle exact au sol, grain d'un texel au plus sur le bord (bruit continu le long du cercle), contour sombre. **Annonce** : liseré intérieur en tirets qui tournent, sol assombri grenu, fissures qui gagnent avec le front, front clair doublé d'une frange tramée, ondes qui convergent vers le centre entre le front et le bord ; impact plein texturé ; limite de portée en tirets. **Couloir** : bords droits, chevrons qui filent dans le sens du bond. |
+| Z6 | **Matières posées** : flaque ronde (ondes concentriques qui s'élargissent, surface qui dérive, ménisque), feu rond (couronne de braises qui scintille, anneau calciné, fissures rougeoyantes), éclat rond (onde de choc qui s'élargit, débris projetés, brûlure tramée). Cadran inchangé hors contour. |
+| Z7 | Aura d'affixe et dessins en code (`PixelBlob`) au même contour rond et rugueux. |
+
+**Vérification prévue :** galerie avant/après regardée à chaque lot ; coût relatif mesuré par la galerie en mode banc (mêmes zones en nombre, rendu logiciel, avant/après au même commit de base) ; captures en vraie run (bile, Présage, charge, armes à zone) ; build, smoke et capacités ennemies.
+
+**Livré (Z5 à Z7), 17 octobre au soir :**
+
+- **Contour** (`pixel_fx.gdshader`) : les lobes (`lobes`, trois harmoniques de 7 à 15 % du rayon) disparaissent. Le bord est un cercle exact au sol (`rim_radius`), avec un grain d'au plus 1 à 1,5 texel tiré d'un bruit continu le long du bord et propre à chaque graine. Contour sombre ébréché par endroits, liseré intérieur clair ou moyen selon le bruit (`worn_outline`, `worn_rim`). Anneaux d'un texel d'écran quelle que soit leur position (`on_ring`), fissures en crêtes de bruit (`crack`).
+- **Annonce** : seize tirets qui tournent à six texels du bord ; sol assombri et grenu derrière le front, fissuré ; front clair doublé d'une frange tramée ; deux ondes qui convergent du bord vers le front ; impact plein texturé (fissures et grain) ; limite de portée en tirets.
+- **Couloir** (`lane_color`) : bords droits au grain d'un texel (l'ondulation de 18 % disparaît), chevrons qui filent dans le sens du coup devant le front.
+- **Flaque** : ronde ; deux ondes concentriques qui s'élargissent, taches qui dérivent ; reflet, ménisque, bulles et gouttes gardés.
+- **Feu** : rond ; couronne de braises qui scintille à chaque pose, anneau calciné au bord, fissures rougeoyantes ; flammèches et langues gardées.
+- **Éclat** : rond au lieu d'une étoile ; onde de choc claire puis moyenne, seconde onde tramée, huit débris projetés jusqu'à 1,4 rayon, sol roussi et fissuré ; rayons gardés.
+- **Cadran** : inchangé (déjà rond).
+- **Dessins en code** : `PixelBlob` (aura d'affixe, trou des mains de l'Indicible) passe au même cercle rugueux (bruit périodique sur le tour, environ une cellule par pixel de circonférence) ; l'aura d'affixe gagne douze tirets plus vifs qui tournent d'un quart de pas à chaque pose.
+- **Outil** : galerie [`tools/capture_ground_zones.sh`](../../tools/capture_ground_zones.sh) (scène `tools/tests/GroundZoneGallery`) : douze zones à graine fixe sur trois sols, quatre poses ; `--bench N` mesure le temps par image avec les zones répétées.
+
+**Vérifié :** build sans avertissement ; `tools/validate.sh` smoke, capacités ennemies, armes, Indicible : 4/4, sources inchangées ; galerie avant/après regardée à chaque étape ([planche](planches/25-s12-zones-avant-apres.png)) ; captures en vraie run regardées (Lanterne, Gants d'écho, Aiguille de l'Horloge, Pétard mouillé et Chewing-gum ; Cracheur, Présage, Brute, Charognard avec l'affixe explosif), aucune erreur de shader.
+
+**À juger en jeu par Raphaël :** l'ensemble en combat ; la vitesse des ondes de l'annonce et des tirets ; la densité des fissures.
+
+**Mesuré :** galerie en mode banc, 144 zones, rendu logiciel (Xvfb, llvmpipe), deux passes chacun au même commit : avant 111,3 et 115,3 ms par image, après 116,5 et 115,0 ms (+2 %, dans le bruit des passes). Le banc suit bien la charge (12 zones : 23 ms ; 144 : 117 ms). Pas de mesure GPU : à recouper sur Mac si une scène chargée en zones baisse.
+
+**Après relecture `godot-reviewer` :** rien de bloquant (pas de `return` dans `fragment()`, pas de division par zéro, raccords continus au saut de ±π). Optimisations appliquées : gardes exactes hors de la bande du bord dans `edge_class` (le grain borne le bord à ± rough, un voisin déplace q d'au plus squash), bruit sauté quand le grain est nul (cadran, couloir), gouttes, langues de feu et débris sautés loin de la zone ; paramètre inutile retiré ; galerie lancée en `--fixed-fps 60`, désormais reproductible (deux passes identiques au pixel). Images de la galerie identiques au pixel avec et sans gardes. Banc à 144 zones : **80,6 et 80,1 ms** par image, contre 116,3 et 117,9 ms sans les gardes et 112,9 ms avant S12, soit **−29 % par rapport aux anciennes zones**.
+
 ### S11 — distinguer la Rallonge de la Pelle à neige en attaque, 15 octobre 2026
 
 Retour de Raphaël : leurs sprites d'attaque en jeu se ressemblent trop (DECISIONS §183). Les styles `cleave` et `whirl` dessinent la même traînée orange, avec une ouverture et une épaisseur différentes.

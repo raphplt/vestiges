@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
-using Godot;
+using System.Text.Json;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
@@ -30,50 +32,61 @@ public sealed class EchoConfig
     /// <summary>Habitants dessinés pour les échos (dossiers assets/characters/&lt;id&gt;) ; les personnages ne servent qu'à défaut.</summary>
     public List<string> Inhabitants = new();
 
-    public static EchoConfig Load()
-    {
-        EchoConfig config = new();
-        using FileAccess file = FileAccess.Open("res://data/scaling/erasure.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            return config;
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
-        {
-            GD.PushError($"[EchoConfig] erasure.json invalide : {json.GetErrorMessage()}");
-            return config;
-        }
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        if (!root.ContainsKey("echoes"))
-            return config;
+    /// <summary>Réglages du jeu, contrôlés avec tout le fichier par <see cref="ErasureConfig"/> (plan 26 Q7d-2).</summary>
+    public static EchoConfig Load() => ErasureConfig.Load().Echoes;
 
-        Godot.Collections.Dictionary d = root["echoes"].AsGodotDictionary();
-        config.Enabled = d.GetValueOrDefault("enabled", config.Enabled).AsBool();
-        config.FirstDelaySec = (float)d.GetValueOrDefault("first_delay_sec", config.FirstDelaySec).AsDouble();
-        config.IntervalMinSec = (float)d.GetValueOrDefault("interval_min_sec", config.IntervalMinSec).AsDouble();
-        config.IntervalMaxSec = (float)d.GetValueOrDefault("interval_max_sec", config.IntervalMaxSec).AsDouble();
-        config.MinMemory = (float)d.GetValueOrDefault("min_memory", config.MinMemory).AsDouble();
-        config.MaxMemory = (float)d.GetValueOrDefault("max_memory", config.MaxMemory).AsDouble();
-        config.MinDistancePx = (float)d.GetValueOrDefault("min_distance_px", config.MinDistancePx).AsDouble();
-        config.MaxDistancePx = (float)d.GetValueOrDefault("max_distance_px", config.MaxDistancePx).AsDouble();
-        config.LifetimeSec = (float)d.GetValueOrDefault("lifetime_sec", config.LifetimeSec).AsDouble();
-        config.FadeSec = (float)d.GetValueOrDefault("fade_sec", config.FadeSec).AsDouble();
-        config.DissolveSec = (float)d.GetValueOrDefault("dissolve_sec", config.DissolveSec).AsDouble();
-        config.DissolveDistancePx = (float)d.GetValueOrDefault("dissolve_distance_px", config.DissolveDistancePx).AsDouble();
-        config.WalkSpeedPx = (float)d.GetValueOrDefault("walk_speed_px", config.WalkSpeedPx).AsDouble();
-        config.WalkChance = (float)d.GetValueOrDefault("walk_chance", config.WalkChance).AsDouble();
-        config.WhisperCount = (int)d.GetValueOrDefault("whisper_count", config.WhisperCount).AsDouble();
-        config.WhisperSec = (float)d.GetValueOrDefault("whisper_sec", config.WhisperSec).AsDouble();
-        config.WhisperRisePx = (float)d.GetValueOrDefault("whisper_rise_px", config.WhisperRisePx).AsDouble();
-        if (d.ContainsKey("characters"))
+    /// <summary>Section <c>echoes</c> lue strictement ; un champ absent garde sa valeur d'avant.</summary>
+    public static EchoConfig Read(JsonConfigReader reader, JsonElement section, Func<string, bool> characterExists,
+        Func<string, bool> inhabitantExists)
+    {
+        reader.AllowOnly(section, "echoes", "enabled", "first_delay_sec", "interval_min_sec", "interval_max_sec", "min_memory",
+            "max_memory", "min_distance_px", "max_distance_px", "lifetime_sec", "fade_sec", "dissolve_sec",
+            "dissolve_distance_px", "walk_speed_px", "walk_chance", "whisper_count", "whisper_sec", "whisper_rise_px",
+            "characters", "inhabitants");
+        EchoConfig d = new();
+        EchoConfig config = new()
         {
-            foreach (Variant id in d["characters"].AsGodotArray())
-                config.Characters.Add(id.AsString());
-        }
-        if (d.ContainsKey("inhabitants"))
-        {
-            foreach (Variant id in d["inhabitants"].AsGodotArray())
-                config.Inhabitants.Add(id.AsString());
-        }
+            Enabled = !JsonConfigReader.Has(section, "enabled") || reader.Flag(section, "enabled"),
+            FirstDelaySec = ErasureConfig.NonNegative(reader, section, "first_delay_sec", d.FirstDelaySec),
+            IntervalMinSec = ErasureConfig.Positive(reader, section, "interval_min_sec", d.IntervalMinSec),
+            IntervalMaxSec = ErasureConfig.Positive(reader, section, "interval_max_sec", d.IntervalMaxSec),
+            MinMemory = ErasureConfig.Chance(reader, section, "min_memory", d.MinMemory),
+            MaxMemory = ErasureConfig.Chance(reader, section, "max_memory", d.MaxMemory),
+            MinDistancePx = ErasureConfig.NonNegative(reader, section, "min_distance_px", d.MinDistancePx),
+            MaxDistancePx = ErasureConfig.NonNegative(reader, section, "max_distance_px", d.MaxDistancePx),
+            LifetimeSec = ErasureConfig.Positive(reader, section, "lifetime_sec", d.LifetimeSec),
+            FadeSec = ErasureConfig.Positive(reader, section, "fade_sec", d.FadeSec),
+            DissolveSec = ErasureConfig.Positive(reader, section, "dissolve_sec", d.DissolveSec),
+            DissolveDistancePx = ErasureConfig.NonNegative(reader, section, "dissolve_distance_px", d.DissolveDistancePx),
+            WalkSpeedPx = ErasureConfig.NonNegative(reader, section, "walk_speed_px", d.WalkSpeedPx),
+            WalkChance = ErasureConfig.Chance(reader, section, "walk_chance", d.WalkChance),
+            WhisperCount = JsonConfigReader.Has(section, "whisper_count") ? reader.Integer(section, "whisper_count", 0, 99) : d.WhisperCount,
+            WhisperSec = ErasureConfig.Positive(reader, section, "whisper_sec", d.WhisperSec),
+            WhisperRisePx = ErasureConfig.NonNegative(reader, section, "whisper_rise_px", d.WhisperRisePx),
+        };
+        if (reader.Error == null && (config.IntervalMinSec > config.IntervalMaxSec || config.MinMemory > config.MaxMemory
+                || config.MinDistancePx > config.MaxDistancePx))
+            reader.Fail("echoes : intervalles min ≤ max attendus (interval, memory, distance)");
+        config.Characters = Ids(reader, section, "characters", characterExists, "personnage");
+        config.Inhabitants = Ids(reader, section, "inhabitants", inhabitantExists, "habitant");
         return config;
+    }
+
+    private static List<string> Ids(JsonConfigReader reader, JsonElement section, string key, Func<string, bool> exists, string what)
+    {
+        List<string> ids = new();
+        if (!JsonConfigReader.Has(section, key))
+            return ids;
+        foreach (JsonElement item in reader.List(section, key, 0))
+        {
+            string id = item.ValueKind == JsonValueKind.String ? item.GetString() : null;
+            if (string.IsNullOrEmpty(id) || id.Contains('/') || id.Contains('.') || !exists(id))
+                reader.Fail($"echoes.{key} : {what} « {id} » inconnu");
+            else if (ids.Contains(id))
+                reader.Fail($"echoes.{key} : {what} « {id} » en double");
+            else
+                ids.Add(id);
+        }
+        return ids;
     }
 }

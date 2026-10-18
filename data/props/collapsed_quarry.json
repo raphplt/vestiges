@@ -9,8 +9,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_rock_outcrop.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "rock_outcrop_v2",
@@ -19,8 +18,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_rock_outcrop_v2.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "boulder",
@@ -29,8 +27,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_boulder.png",
             "blocking": true,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "gravel_pile",
@@ -39,8 +36,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_gravel_pile.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "ore_pile",
@@ -49,8 +45,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_ore_pile.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "crystal_vein",
@@ -59,8 +54,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_crystal_vein.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "crystal_cluster",
@@ -69,8 +63,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_crystal_cluster.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "mine_cart",
@@ -79,8 +72,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_mine_cart.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "rails",
@@ -89,8 +81,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_rails.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "excavator_bucket",
@@ -99,8 +90,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_excavator_bucket.png",
             "blocking": true,
-            "min_distance": 8,
-            "variants": 1
+            "min_distance": 8
         },
         {
             "id": "conveyor",
@@ -109,8 +99,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_conveyor.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "cable_drum",
@@ -119,8 +108,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_cable_drum.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "safety_lamp",
@@ -129,8 +117,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_safety_lamp.png",
             "blocking": false,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "mine_supports",
@@ -139,8 +126,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_mine_supports.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "worker_locker",
@@ -149,8 +135,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_worker_locker.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "explosives_crate",
@@ -159,8 +144,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_explosives_crate.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "danger_sign",
@@ -169,8 +153,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_danger_sign.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "pickaxe_rock",
@@ -179,8 +162,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/collapsed_quarry/prop_pickaxe_rock.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "concrete_debris",
@@ -189,8 +171,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_concrete_debris.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "steel_beam",
@@ -199,8 +180,7 @@
             "terrain": ["concrete", "forest", "grass"],
             "sprite_base": "assets/props/urban_ruins/prop_steel_beam.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         }
     ]
 }

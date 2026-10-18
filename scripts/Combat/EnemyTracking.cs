@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.Combat;
 
@@ -12,7 +15,9 @@ namespace Vestiges.Combat;
 /// </summary>
 public sealed class EnemyTracking
 {
+    private const string ConfigPath = "res://data/scaling/enemy_tracking.json";
     private static bool _configLoaded;
+    private static string _loadError;
     private static float _engageDistanceSq = 450f * 450f;
     private static float _loseTrackDistanceSq = 800f * 800f;
     private static float _loseTrackSeconds = 4f;
@@ -97,31 +102,73 @@ public sealed class EnemyTracking
         return IsLost;
     }
 
+    /// <summary>
+    /// Réglages lus strictement une fois (plan 26 Q7g-3) ; refusés, les valeurs d'avant restent et la raison est rendue
+    /// (le chargement de la run s'arrête, GameBootstrap).
+    /// </summary>
+    public static bool TryLoad(out string error)
+    {
+        LoadConfig();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void LoadConfig()
     {
         if (_configLoaded)
             return;
         _configLoaded = true;
-
-        using FileAccess file = FileAccess.Open("res://data/scaling/enemy_tracking.json", FileAccess.ModeFlags.Read);
+        _loadError = $"{ConfigPath} : lecture interrompue";
+        using FileAccess file = FileAccess.Open(ConfigPath, FileAccess.ModeFlags.Read);
         if (file == null)
+            _loadError = $"{ConfigPath} : fichier illisible";
+        else if (TryParse(file.GetAsText(), out Settings settings, out _loadError))
         {
-            GD.PushWarning("[EnemyTracking] enemy_tracking.json introuvable : réglages par défaut");
-            return;
+            _engageDistanceSq = settings.EngageDistance * settings.EngageDistance;
+            _loseTrackDistanceSq = settings.LoseTrackDistance * settings.LoseTrackDistance;
+            _loseTrackSeconds = settings.LoseTrackSeconds;
+            _wanderSpeedFactor = settings.WanderSpeedFactor;
+            _wanderTurnSeconds = settings.WanderTurnSeconds;
         }
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
+        else
+            _loadError = $"{ConfigPath} : {_loadError}";
+        if (_loadError != null)
+            GD.PushError($"[EnemyTracking] {_loadError}");
+    }
+
+    public readonly record struct Settings(float EngageDistance, float LoseTrackDistance, float LoseTrackSeconds,
+        float WanderSpeedFactor, float WanderTurnSeconds);
+
+    /// <summary>Un champ absent garde le réglage d'avant ; la trace se perd plus loin qu'elle ne s'engage.</summary>
+    public static bool TryParse(string text, out Settings settings, out string error)
+    {
+        settings = default;
+        try
         {
-            GD.PushError($"[EnemyTracking] enemy_tracking.json invalide : {json.GetErrorMessage()}");
-            return;
+            using JsonDocument document = JsonDocument.Parse(text);
+            JsonConfigReader reader = new(document.RootElement);
+            JsonElement root = reader.Root;
+            reader.AllowOnly(root, "pistage", "engage_distance", "lose_track_distance", "lose_track_seconds", "wander_speed_factor",
+                "wander_turn_seconds");
+            Settings parsed = new(
+                JsonConfigReader.Has(root, "engage_distance") ? reader.Positive(root, "engage_distance") : 450f,
+                JsonConfigReader.Has(root, "lose_track_distance") ? reader.Positive(root, "lose_track_distance") : 800f,
+                JsonConfigReader.Has(root, "lose_track_seconds") ? reader.NonNegative(root, "lose_track_seconds") : 4f,
+                JsonConfigReader.Has(root, "wander_speed_factor") ? reader.NonNegative(root, "wander_speed_factor") : 0.35f,
+                JsonConfigReader.Has(root, "wander_turn_seconds") ? reader.Positive(root, "wander_turn_seconds") : 2.5f);
+            if (reader.Error == null && parsed.EngageDistance > parsed.LoseTrackDistance)
+                reader.Fail(FormattableString.Invariant(
+                    $"engage_distance ≤ lose_track_distance attendu ({parsed.EngageDistance} > {parsed.LoseTrackDistance})"));
+            error = reader.Error;
+            if (error != null)
+                return false;
+            settings = parsed;
+            return true;
         }
-        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-        float engage = (float)dict.GetValueOrDefault("engage_distance", 450f).AsDouble();
-        float lose = (float)dict.GetValueOrDefault("lose_track_distance", 800f).AsDouble();
-        _engageDistanceSq = engage * engage;
-        _loseTrackDistanceSq = lose * lose;
-        _loseTrackSeconds = (float)dict.GetValueOrDefault("lose_track_seconds", 4f).AsDouble();
-        _wanderSpeedFactor = (float)dict.GetValueOrDefault("wander_speed_factor", 0.35f).AsDouble();
-        _wanderTurnSeconds = (float)dict.GetValueOrDefault("wander_turn_seconds", 2.5f).AsDouble();
+        catch (JsonException exception)
+        {
+            error = $"JSON invalide : {exception.Message}";
+            return false;
+        }
     }
 }

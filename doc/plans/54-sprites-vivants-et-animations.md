@@ -122,7 +122,7 @@ Conformément aux règles du projet, nous avançons **un lot à la fois**, en co
   - [`HitFeedback.cs`](../../scripts/Combat/HitFeedback.cs) : l'écrasement suit l'axe dominant du coup (coup de côté : écrasé en largeur ; coup du haut ou du bas : écrasé en hauteur).
   - Vérification : build, smoke test, `tools/test_enemy_abilities.sh`, capture en run, banc A/B si le coût bouge.
 
-- [ ] **Lot S3 — Déclinaison SDF 2.0 au reste du bestiaire**
+- [x] **Lot S3 — Déclinaison SDF 2.0 au reste du bestiaire**
   - Appliquer les fusions organiques `smin`, textures de surface, démarches et attaques avec anticipation/*smear* aux autres créatures de `tools/sprites/creatures/*.py`.
   - Planche bestiaire comparative, export et validation complète (`tools/validate.sh`).
 
@@ -168,3 +168,41 @@ Duo pilote validé en jeu par Raphaël, échelle gardée (DECISIONS §188). Les 
 **Vérifié :** build 0 avertissement ; `tools/smoke_test.sh` ; `tools/test_enemy_abilities.sh` 0 échec, dont quatre contrôles nouveaux (tremblement d'un pixel, détente étirée, retour au repos, annulation sans étirement) et le contrôle d'écrasement mis à jour pour un coup de côté ; `tools/test_movement.sh`, `tools/test_weapons.sh`, `tools/test_dev_mode.sh` verts ; `tools/test_shader_warmup.sh` valide (premier passage expiré sous charge machine, second passage à 360 s valide). Relecture `godot-reviewer` : trois remarques traitées (remise au repos à l'arrêt, recul d'un coup préservé à la détente, même visuel ciblé que le retour de coup) et l'échelle copiée sur la traînée. Captures de la galerie d'armes avec dash (Vagabond, Forgeuse) regardées.
 
 **Non mesuré :** pas de banc ; quatre sprites recyclés par dash, une créature à la fois en annonce, aucun nœud créé. Le tremblement et la détente ne se jugent qu'en mouvement : à regarder en jeu.
+
+---
+
+## 6. Lot S3 livré — 17 octobre 2026
+
+Raphaël a choisi ce lot en autonomie (export direct en jeu, jugement à la fin). Les onze créatures restantes passent au moteur du pilote, avec les règles du §188 : pas de détail d'un pixel ajouté, pas de nouvel `emissive`, pas de `stretch` dans le squelette. Mêmes cadres, mêmes pivots, quatre images par action : aucun PNG ajouté ni retiré, donc aucun `.import` nouveau.
+
+**Méthode commune :**
+- **Matières** : contraste relevé (≈ 1,1) sur les chairs, cuirs et pierres ; reflet (`specular`) sur l'os, les crocs, les mandibules, la chitine, l'ardoise, la rouille, la fonte et la poche de bile ; bord éclairé (`rim`) sur les silhouettes sombres ou pâles (Ombre, Présage, Rampant d'Ombre, Hurleur, Tisseuse, Sentinelle, nœuds du Tréant).
+- **Fusions `smin`** : seulement entre volumes d'un même matériau, avec un rayon court (0,6 à 1,2 K). Un rayon plus grand gonfle la masse et avale les détails voisins : sur l'Ombre, la flaque couvrait ses reflets et ses filaments ; sur le Charognard, les côtes et la crête d'échine. Le Rampant reste en anneaux séparés : sa segmentation est sa lecture.
+- **Animations** : poses clés écrites à la main au lieu du cycle commun symétrique. Marche en quatre temps inégaux (appui lourd, rebond, reprise), attaque en quatre temps (anticipation, détente, impact, retour). L'attaque se joue au moment où le jeu l'appelle (`PlayAttackAnim`) : pour le bond du Charognard et la charge de la Brute, c'est au départ du saut, l'annonce étant déjà la posture accroupie du jeu (G3). Leur première image est donc la détente, pas une anticipation.
+
+**Par créature :**
+- **Ombre** : buste et flaque d'un seul tenant ; reptation en quatre temps (la main s'agrippe, le buste se hisse, la flaque se rattrape) ; se ramasse dans l'encre avant de jaillir.
+- **Charognard** : garrot, taille, croupe et cou fondus ; trot heurté, tête en retard, queue à contretemps ; la gueule claque à la réception du bond.
+- **Présage** : bosse fondue dans le voile ; dérive par à-coups, fil à plomb en retard sur le corps ; se recueille (manches closes, capuche baissée) avant l'incantation.
+- **Rampant d'Ombre** : cou fondu dans le tronc, masque de porcelaine ; détale par saccades ; se cabre cou rentré avant de frapper.
+- **Cracheur Pâli** : traîne la jambe droite (épaule qui plonge côté boiteux, poche qui ballotte) ; se cambre plus loin en arrière avant de cracher (son attaque se joue dès l'annonce).
+- **Rampant** : reptation par vagues de contraction des anneaux (`squeeze`), la tête tâte le sol ; se ramasse avant de surgir.
+- **Brute du Vide** : bosse d'épaules fondue ; marche boiteuse, le pilier de béton écrase le sol et le corps roule de son côté ; charge partie d'une poussée brutale.
+- **Hurleur** : colonne d'un seul tenant ; tangue sur ses racines ; se ramasse plus bas avant de hurler.
+- **Tisseuse** : à-coups d'insecte (deux pas vifs, un arrêt où une patte tressaille) ; se tasse au ras du sol avant de se cabrer.
+- **Sentinelle** : bourrelets de chair fondus en une coulée ; cligne en veillant ; plisse les paupières et avance la tête pour viser.
+- **Tréant Corrompu** : tronc d'un seul tenant ; se déracine une souche après l'autre ; coup de branche en arc complet, de l'armé haut à l'impact au sol.
+
+**Outil :** [`tools/creature_compare.py`](../../tools/creature_compare.py) compose une planche avant/après d'une ou plusieurs créatures, sans rien écrire dans `assets/` ; `--before <ref>` lit les PNG « avant » dans un commit.
+
+**Vérifié :**
+- Planche avant/après des onze créatures (direction SE, toutes les actions, taille réelle sur sol ancré et effacé) : [`planches/plan54_lot_S3_bestiaire.png`](planches/plan54_lot_S3_bestiaire.png). Chaque créature regardée aussi en E, N et W pendant le réglage.
+- Régénération reproductible : Présage régénéré deux fois, PNG identiques octet pour octet.
+- 1 408 PNG réécrits (11 × 128), aucun fichier ajouté ni supprimé ; Rôdeur inchangé.
+- `tools/validate.sh` : smoke, capacités ennemies, parties de boss, déplacements, 4/4 vertes, sources inchangées pendant les tests.
+- Captures en vraie run (`--capture-bestiary`, onze créatures en deux groupes) regardées.
+
+**Non mesuré :** pas de banc ; mêmes cadres, mêmes nombres d'images, aucun code du jeu modifié.
+
+**À juger en jeu par Raphaël :** les marches à contretemps (Charognard, Rampant d'Ombre, Tisseuse) et la boiterie du Cracheur et de la Brute, qui ne se lisent qu'en mouvement ; le bord éclairé de l'Ombre et du Rampant d'Ombre sur sol sombre.
+

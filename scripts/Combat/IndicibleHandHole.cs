@@ -4,7 +4,7 @@ namespace Vestiges.Combat;
 
 /// <summary>
 /// Trou au pied d'une main de l'Indicible (plan 07 B5b) : terre retournée autour d'un fond noir, ou cercle de remous si
-/// la main sort de l'eau. Décalque au sol en pixels, au bord en lobes (plan 25 S10) ; sa présence varie par l'opacité du
+/// la main sort de l'eau. Décalque au sol en pixels, au bord rond et rugueux (plan 25 S12) ; sa présence varie par l'opacité du
 /// nœud, sans redessin.
 /// </summary>
 public partial class IndicibleHandHole : Node2D

@@ -4,16 +4,8 @@
         "id": "vagabond_harvest",
         "name": "Endurci par la route",
         "description": "Explorer du terrain inédit recharge jusqu’à 3 charges. Chaque charge réduit de moitié une blessure. Le Néant conserve ses dangers.",
-        "icon": "assets/ui/icons/ui_icon_perk_vagabond_harvest.png",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "vagabond",
-        "tags": [
-            "exploration",
-            "defense"
-        ],
         "route_endurance": {
             "cells_per_charge": 2000,
             "max_charges": 3,
@@ -24,16 +16,8 @@
         "id": "forgeuse_fortify",
         "name": "Redresser",
         "description": "Chaque quatrième attaque réussie déclenche une onde au point touché : 60% de dégâts supplémentaires autour de l’impact, avec recul.",
-        "icon": "assets/ui/icons/ui_icon_perk_forgeuse_fortify.png",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "forgeuse",
-        "tags": [
-            "damage",
-            "area"
-        ],
         "shockwave": {
             "attacks_per_wave": 4,
             "radius": 90,
@@ -45,15 +29,8 @@
         "id": "traqueur_precision",
         "name": "Œil d'Aigle",
         "description": "Premier impact direct contre une cible indemne : +10 points de chance de critique au niveau 1, +0,25 point par niveau, jusqu’à +50 points.",
-        "icon": "assets/ui/icons/ui_icon_perk_traqueur_precision.png",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "traqueur",
-        "tags": [
-            "damage"
-        ],
         "opening_strike": {
             "base_chance": 0.1,
             "gain_per_level": 0.0025,
@@ -64,9 +41,6 @@
         "id": "facteur_round",
         "name": "Tournée",
         "description": "En avançant, jusqu'à +25% de vitesse et +15% de cadence en 4 s. Un arrêt, une touche ou l'eau remettent l'élan à zéro.",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "facteur",
         "momentum": {
@@ -74,43 +48,25 @@
             "speed_bonus": 0.25,
             "attack_speed_bonus": 0.15,
             "stop_grace_seconds": 0.5
-        },
-        "tags": [
-            "mobility",
-            "attack_speed"
-        ]
+        }
     },
     {
         "id": "eveillee_double",
         "name": "Double",
         "description": "Après sa mobilité, une rémanence reste 1,5 s à son point de départ et répète sa prochaine attaque à 50% des dégâts (hors orbitales continues).",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "eveillee",
         "echo": {
             "seconds": 1.5,
             "damage_ratio": 0.5
-        },
-        "tags": [
-            "mobility",
-            "projectile"
-        ]
+        }
     },
     {
         "id": "scaphandriere_air",
         "name": "Pression",
         "description": "+25% de dégâts en zone effilochée, +50% en zone effacée, après les malus de zone. Aucun bonus dans le Néant.",
-        "category": "passive",
-        "rarity": "passive",
-        "max_stacks": 1,
         "is_passive": true,
         "character_id": "scaphandriere",
-        "tags": [
-            "damage",
-            "erasure"
-        ],
         "pressure": {
             "frayed_bonus": 0.25,
             "erased_bonus": 0.5

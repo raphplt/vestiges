@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -24,8 +26,11 @@ public readonly struct RarityColors
 /// </summary>
 public static class RarityPalette
 {
-    private static readonly Dictionary<string, (RarityColors Colors, string NameKey)> _byId = new();
+    public const string FilePath = "res://data/ui/rarities.json";
+
+    private static Dictionary<string, (RarityColors Colors, string NameKey)> _byId = new();
     private static bool _loaded;
+    private static string _loadError;
 
     public static RarityColors Colors(string rarityId) => Entry(rarityId).Colors;
 
@@ -45,32 +50,78 @@ public static class RarityPalette
             : (new RarityColors(Godot.Colors.White, Godot.Colors.White, Godot.Colors.Gray), "RARITY_COMMON");
     }
 
+    /// <summary>Palette contrôlée une fois (plan 26 Q7g-4a) ; refusée, la raison, et la run ne démarre pas (GameBootstrap).</summary>
+    public static bool TryLoad(out string error)
+    {
+        if (!_loaded)
+            Load();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void Load()
     {
         _loaded = true;
-        using FileAccess file = FileAccess.Open("res://data/ui/rarities.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            GD.PushError("[RarityPalette] Cannot open data/ui/rarities.json");
-            return;
-        }
+        _loadError = $"{FilePath} : lecture interrompue";
+        using FileAccess file = FileAccess.Open(FilePath, FileAccess.ModeFlags.Read);
+        _loadError = file == null ? $"{FilePath} : fichier illisible"
+            : Apply(file.GetAsText(), key => TranslationServer.Translate(key) != key) is string error ? $"{FilePath} : {error}" : null;
+        if (_loadError != null)
+            GD.PushError($"[RarityPalette] {_loadError}");
+    }
 
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
+    /// <summary>
+    /// Contrôle <paramref name="text"/> et ne publie qu'un fichier accepté ; rend l'erreur, nulle si tout est publié.
+    /// La rareté commune est obligatoire : elle sert de secours à une rareté inconnue. Ton clair et sombre facultatifs.
+    /// </summary>
+    public static string Apply(string text, Func<string, bool> translated)
+    {
+        try
         {
-            GD.PushError($"[RarityPalette] Parse error: {json.GetErrorMessage()}");
-            return;
+            using JsonDocument document = JsonDocument.Parse(text);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "raretés", "rarities");
+            Dictionary<string, (RarityColors, string)> byId = new();
+            foreach (JsonElement item in reader.List(reader.Root, "rarities", 1))
+            {
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    reader.Fail("rarities : objet attendu");
+                    break;
+                }
+                reader.AllowOnly(item, "rareté", "id", "name_key", "color", "light", "dark");
+                string id = reader.Text(item, "id");
+                string nameKey = reader.Text(item, "name_key");
+                Color main = Html(reader, item, "color");
+                Color light = JsonConfigReader.Has(item, "light") ? Html(reader, item, "light") : main.Lightened(0.4f);
+                Color dark = JsonConfigReader.Has(item, "dark") ? Html(reader, item, "dark") : main.Darkened(0.5f);
+                if (reader.Error != null)
+                    break;
+                if (byId.ContainsKey(id))
+                    reader.Fail($"rareté « {id} » déjà déclarée");
+                else if (!translated(nameKey))
+                    reader.Fail($"rareté « {id} » : name_key « {nameKey} » sans traduction");
+                byId[id] = (new RarityColors(main, light, dark), nameKey);
+            }
+            if (reader.Error == null && !byId.ContainsKey("common"))
+                reader.Fail("rareté « common » attendue (secours d'une rareté inconnue)");
+            if (reader.Error != null)
+                return reader.Error;
+            _byId = byId;
+            return null;
         }
+        catch (JsonException exception)
+        {
+            return $"JSON invalide : {exception.Message}";
+        }
+    }
 
-        foreach (Variant item in json.Data.AsGodotDictionary()["rarities"].AsGodotArray())
-        {
-            Godot.Collections.Dictionary dict = item.AsGodotDictionary();
-            Color main = Color.FromHtml(dict["color"].AsString());
-            RarityColors colors = new(
-                main,
-                dict.ContainsKey("light") ? Color.FromHtml(dict["light"].AsString()) : main.Lightened(0.4f),
-                dict.ContainsKey("dark") ? Color.FromHtml(dict["dark"].AsString()) : main.Darkened(0.5f));
-            _byId[dict["id"].AsString()] = (colors, dict["name_key"].AsString());
-        }
+    private static Color Html(JsonConfigReader reader, JsonElement owner, string key)
+    {
+        string html = reader.Text(owner, key);
+        if (html != null && Color.HtmlIsValid(html))
+            return Color.FromHtml(html);
+        reader.Fail($"{key} : couleur « {html} » invalide");
+        return default;
     }
 }

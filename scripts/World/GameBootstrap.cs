@@ -35,6 +35,12 @@ public partial class GameBootstrap : Node
     private string _loadStep = "";
     private GameLoadingOverlay _overlay;
 
+    /// <summary>
+    /// Chargement déjà en échec. Une panne aux catalogues survient pendant le _Ready de ce nœud, avant celui de
+    /// <see cref="WorldSetup"/> : la génération ne doit pas partir derrière l'écran d'erreur.
+    /// </summary>
+    public bool HasFailed => _loadState == LoadState.Failed;
+
     public override void _Ready()
     {
         // L'écran de chargement entre dans l'arbre avant le premier rendu de la scène : sans lui, la toute première
@@ -114,13 +120,16 @@ public partial class GameBootstrap : Node
 
         Step("Catalogues");
         LoadGuard.InjectFault("catalogues");
-        CharacterDataLoader.Load();
+        RequireCatalog(PerkDataLoader.TryLoad(out string perksError), perksError);
+        RequireCatalog(CharacterDataLoader.TryLoad(out string charactersError), charactersError);
+        // Les armes contrôlent leurs stats montables contre ce fichier.
+        RequireCatalog(WeaponUpgradeDataLoader.TryLoad(out string upgradesError), upgradesError);
         WeaponDataLoader.Load();
-        WeaponUpgradeDataLoader.Load();
-        PerkDataLoader.Load();
         PassiveSouvenirDataLoader.Load();
         MetaSaveManager.Load();
-        SouvenirDataLoader.Load();
+        RequireCatalog(SouvenirDataLoader.TryLoad(out string souvenirsError), souvenirsError);
+        RequireCatalog(LootTableLoader.TryLoad(out string lootError), lootError);
+        RequireCatalog(PoiDataLoader.TryLoad(out string poisError), poisError);
         // Catalogues contrôlés en entier (plan 26 Q7) : un refus arrête le chargement sur l'écran d'erreur, avec son message.
         RequireCatalog(XpCurveConfig.TryLoad(out _, out string xpError), xpError);
         RequireCatalog(ScoreConfig.TryLoad(out _, out string scoreError), scoreError);
@@ -137,6 +146,27 @@ public partial class GameBootstrap : Node
         RequireCatalog(SmallPlaceDataLoader.TryLoad(out string placesError), placesError);
         RequireCatalog(WaymarkDataLoader.TryLoad(out string waymarksError), waymarksError);
         RequireCatalog(BiomeDataLoader.TryLoad(out string biomesError), biomesError);
+        RequireCatalog(MapPalette.TryLoad(out string mapError), mapError);
+        RequireCatalog(PropSpawner.TryLoadConfigs(out string propsError), propsError);
+        RequireCatalog(WorldGenConfig.TryLoad(out _, out string worldError), worldError);
+        RequireCatalog(FarmConfig.TryLoad(out _, out string farmsError), farmsError);
+        RequireCatalog(CrisisConfig.TryLoad(out _, out string crisesError), crisesError);
+        RequireCatalog(ErasureConfig.TryLoad(out _, out string erasureError), erasureError);
+        RequireCatalog(RunEventDataLoader.TryLoad(out string runEventsError), runEventsError);
+        RequireCatalog(SpawnFlowConfig.TryLoad(out _, out string spawnFlowError), spawnFlowError);
+        RequireCatalog(CrowdDataLoader.TryLoad(out string crowdError), crowdError);
+        RequireCatalog(Combat.EnemyTracking.TryLoad(out string trackingError), trackingError);
+        RequireCatalog(Combat.FxBudget.TryLoad(out string fxBudgetError), fxBudgetError);
+        RequireCatalog(DefenseConfig.TryLoad(out _, out string defenseError), defenseError);
+        RequireCatalog(RunSummaryConfig.TryLoad(out _, out string summaryError), summaryError);
+        RequireCatalog(RarityPalette.TryLoad(out string paletteError), paletteError);
+        RequireCatalog(WeaponVisualConfig.TryLoad(out _, out string weaponVisualsError), weaponVisualsError);
+        RequireCatalog(StatCatalog.TryLoad(out string statsError), statsError);
+        RequireCatalog(MusicConfig.TryLoad(MusicConfig.DefaultPath, out _, out string musicError), musicError);
+        RequireCatalog(MobilityConfig.TryLoad(out string mobilityError), mobilityError);
+        RequireCatalog(EnemyVariantDataLoader.TryLoad(out string variantsError), variantsError);
+        RequireCatalog(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers",
+            out _, out string quarryError), quarryError);
         RequireCatalog(CampUpgradeDataLoader.TryLoad(out string campError), campError);
         RequireCatalog(InventoryConfig.TryLoad(out string inventoryError), inventoryError);
         RequireCatalog(ItemLootConfig.TryLoad(out string itemLootError), itemLootError);

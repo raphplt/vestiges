@@ -13,8 +13,7 @@
             "sprite_base": "assets/props/forest/prop_tree_large_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_large_canopy.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "tree_large_v2",
@@ -27,8 +26,7 @@
             "sprite_base": "assets/props/forest/prop_tree_large_v2_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_large_v2_canopy.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "tree_medium",
@@ -41,8 +39,7 @@
             "sprite_base": "assets/props/forest/prop_tree_medium_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_medium_canopy.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "tree_birch",
@@ -55,8 +52,7 @@
             "sprite_base": "assets/props/forest/prop_tree_birch_base.png",
             "sprite_canopy": "assets/props/forest/prop_tree_birch_canopy.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "tree_strangled",
@@ -67,8 +63,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_tree_strangled.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "bush",
@@ -80,8 +75,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_bush.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "bush_v2",
@@ -93,8 +87,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_bush_v2.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "fern",
@@ -105,8 +98,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_fern.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "stump",
@@ -118,8 +110,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_stump.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "rock_mossy",
@@ -131,8 +122,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_rock_mossy.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "rock_mossy_v2",
@@ -144,8 +134,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_rock_mossy_v2.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "fallen_log",
@@ -156,8 +145,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_fallen_log.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "car_overgrown",
@@ -169,8 +157,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_car_overgrown.png",
             "blocking": true,
-            "min_distance": 5,
-            "variants": 1
+            "min_distance": 5
         },
         {
             "id": "lamppost_broken",
@@ -181,8 +168,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_lamppost.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "sign_rusty",
@@ -194,8 +180,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_sign_rusty.png",
             "blocking": false,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "ruin_wall",
@@ -206,8 +191,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_ruin_wall.png",
             "blocking": true,
-            "min_distance": 5,
-            "variants": 1
+            "min_distance": 5
         },
         {
             "id": "mushroom_cluster",
@@ -218,8 +202,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_mushrooms.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "flowers",
@@ -230,8 +213,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_flowers.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "flowers_v2",
@@ -243,8 +225,7 @@
             ],
             "sprite_base": "assets/props/forest/prop_flowers_v2.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         }
     ]
 }

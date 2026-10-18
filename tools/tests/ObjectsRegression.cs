@@ -27,6 +27,8 @@ public partial class ObjectsRegression : Node2D
     {
         try
         {
+            // Les cartes sont contrôlées sur leur texte français : sans cela, la langue du système décide.
+            TranslationServer.SetLocale("fr");
             GetNode<GameManager>("/root/GameManager").ChangeState(GameManager.GameState.Run);
             CheckCatalogue();
             CheckSlots();

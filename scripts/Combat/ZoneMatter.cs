@@ -6,14 +6,14 @@ namespace Vestiges.Combat;
 /// </summary>
 public enum ZoneMatter
 {
-    /// <summary>Annonce d'un coup : bord net, sol assombri, front de remplissage.</summary>
+    /// <summary>Annonce d'un coup : tirets qui tournent, sol assombri et fissuré, front, ondes qui convergent.</summary>
     Mark = 0,
-    /// <summary>Flaque : lobes, volume, reflet, bulles, gouttes autour.</summary>
+    /// <summary>Flaque : volume, reflet, ondes concentriques, taches qui dérivent, bulles, gouttes autour.</summary>
     Liquid = 1,
-    /// <summary>Feu au sol : sol roussi, flammèches qui montent, braises.</summary>
+    /// <summary>Feu au sol : couronne de braises, anneau calciné, fissures rougeoyantes, flammèches qui montent.</summary>
     Fire = 2,
     /// <summary>Cadran couché : graduations et aiguille qui tourne.</summary>
     Dial = 3,
-    /// <summary>Éclat bref : bord hérissé qui s'ouvre, rayons depuis le centre.</summary>
+    /// <summary>Éclat bref : onde de choc ronde qui s'élargit, rayons depuis le centre, débris projetés.</summary>
     Burst = 4,
 }

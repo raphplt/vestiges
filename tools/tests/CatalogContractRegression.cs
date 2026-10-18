@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
+using Vestiges.World;
 
 namespace Vestiges.Tests;
 
@@ -37,6 +38,25 @@ public partial class CatalogContractRegression : Node
             CheckSmallPlaces();
             CheckWaymarks();
             CheckBiomes();
+            CheckWorldGen();
+            CheckSites();
+            CheckCrises();
+            CheckErasure();
+            CheckRunEvents();
+            CheckSpawnFlow();
+            CheckCrowd();
+            CheckVariants();
+            CheckCharacters();
+            CheckPerks();
+            CheckSouvenirs();
+            CheckWeaponUpgrades();
+            CheckLootTables();
+            CheckPois();
+            CheckCombatSettings();
+            CheckInterfaceSettings();
+            CheckMusicStatsMobility();
+            CheckSoundBank();
+            CheckBiomeProps();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -560,6 +580,954 @@ public partial class CatalogContractRegression : Node
             && ((IDictionary<string, IReadOnlyList<string>>)forest.TileSources).IsReadOnly
             && ((IList<string>)forest.TileSources["forest"]).IsReadOnly && ((ISet<string>)forest.WangTileGroups).IsReadOnly,
             "définitions et collections imbriquées publiées en lecture seule");
+    }
+
+    /// <summary>Réglages du monde (plan 26 Q7c-4b) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckWorldGen()
+    {
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        Func<string, bool> propExists = path => ResourceLoader.Exists($"res://assets/props/{path}.png");
+        Check(WorldGenConfig.TryLoad(out WorldGenConfig loaded, out string loadError), $"réglages du monde du dépôt acceptés {loadError}");
+        Check(loaded.Zones.Count == 3 && loaded.AvailableBiomes.Count == 5 && loaded.Lands.CountScales.Count == 6,
+            "réglages du monde : trois zones, cinq biomes, six parts de terre");
+        Check(!ReferenceEquals(WorldGenConfig.Load(), WorldGenConfig.Load()), "chaque lecture rend une copie neuve, ajustable par la terre");
+        string valid = FileAccess.GetFileAsString(WorldGenConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["map_radiuss"] = 200, "clé « map_radiuss » inconnue"),
+            ("rayon absent", root => root.Remove("map_radius"), "map_radius absent"),
+            ("rayon fractionnaire", root => root["map_radius"] = 200.5, "map_radius"),
+            ("rayon trop petit", root => root["map_radius"] = 2, "map_radius"),
+            ("hauteur non numérique", root => root["map_radius_y"] = "grand", "map_radius_y"),
+            ("lissage absent", root => root.Remove("ca_iterations"), "ca_iterations absent"),
+            ("dégagement négatif", root => root["spawn_clearance"] = -1, "spawn_clearance"),
+            ("brouillard non entier", root => root["fog_reveal_radius"] = 2.5, "fog_reveal_radius"),
+            ("lieux V1 non booléens", root => root["pois_enabled"] = 0, "pois_enabled"),
+            ("biomes non liste", root => root["available_biomes"] = "swamp", "available_biomes"),
+            ("biome inconnu", root => root["available_biomes"]![0] = "volcan", "biome « volcan » inconnu"),
+            ("biome en double", root => root["available_biomes"]!.AsArray().Add("swamp"), "biome « swamp » en double"),
+            ("trop de biomes par carte", root => root["biome_count"] = 6, "biome_count"),
+            ("espacement nul", root => root["biome_layout"]!["region_spacing"] = 0, "region_spacing"),
+            ("décalage hors borne", root => root["biome_layout"]!["spawn_offset_factor"] = 1.5, "spawn_offset_factor"),
+            ("disposition inconnue", root => root["biome_layout"]!["spacing"] = 28, "clé « spacing » inconnue"),
+            ("fondu non booléen", root => root["ground_blend"]!["enabled"] = "oui", "enabled"),
+            ("bande de fondu nulle", root => root["ground_blend"]!["band_px"] = 0, "band_px"),
+            ("grain hors borne", root => root["ground_blend"]!["grain"] = 2, "grain"),
+            ("bruit de bord négatif", root => root["ground_blend"]!["edge_noise"] = -0.1, "edge_noise"),
+            ("chance de boucle hors borne", root => root["paths"]!["extra_edge_chance"] = 1.5, "extra_edge_chance"),
+            ("coût nul", root => root["paths"]!["costs"]!["road"] = 0, "road"),
+            ("coût inconnu", root => root["paths"]!["costs"]!["lava"] = 1, "clé « lava » inconnue"),
+            ("liaisons fractionnaires", root => root["paths"]!["spawn_links"] = 1.5, "spawn_links"),
+            ("exploration nulle", root => root["paths"]!["max_expansions"] = 0, "max_expansions"),
+            ("style de chemin invalide", root => root["paths"]!["default_style"]!["tone"] = "bleu", "paths.default_style.tone"),
+            ("style de chemin inconnu", root => root["paths"]!["default_style"]!["width"] = 28, "clé « width » inconnue"),
+            ("jonction hors borne", root => root["junction_props"]!["chance"] = 1.2, "chance"),
+            ("bande de jonction négative", root => root["junction_props"]!["band_cells"] = -1, "band_cells"),
+            ("paire non triée", root => root["junction_props"]!["pairs"]!["wild_fields+forest_reclaimed"] = new JsonArray("forest/prop_bush"), "wild_fields+forest_reclaimed"),
+            ("paire de biome inconnu", root => root["junction_props"]!["pairs"]!["forest_reclaimed+volcan"] = new JsonArray("forest/prop_bush"), "forest_reclaimed+volcan"),
+            ("paire sans décor", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"] = new JsonArray(), "swamp+wild_fields"),
+            ("décor introuvable", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"]![0] = "swamp/prop_inconnu", "décor « swamp/prop_inconnu »"),
+            ("décor hors dossier", root => root["junction_props"]!["pairs"]!["swamp+wild_fields"]![0] = "../tiles/foret/tile_foret_sol_w00", "décor « ../tiles"),
+            ("terre sans rayon", root => root["lands"]!.AsObject().Remove("map_radius"), "map_radius absent"),
+            ("terre non booléenne", root => root["lands"]!["enabled"] = 1, "enabled"),
+            ("part de terre inconnue", root => root["lands"]!["count_scales"]!["fountain"] = 0.3, "sorte de lieu « fountain »"),
+            ("part de terre négative", root => root["lands"]!["count_scales"]!["chests"] = -0.1, "chests"),
+            ("couronne inversée", root => root["lands"]!["memorial_band"] = new JsonArray(0.9, 0.3), "memorial_band"),
+            ("couronne hors borne", root => root["lands"]!["memorial_band"] = new JsonArray(0.3, 1.2), "memorial_band"),
+            ("champ de terre inconnu", root => root["lands"]!["radius"] = 116, "clé « radius » inconnue"),
+            ("décor bloquant négatif", root => root["props"]!["min_blocking_height"] = -1, "min_blocking_height"),
+            ("emprise nulle", root => root["props"]!["footprint_scale"] = 0, "footprint_scale"),
+            ("préfixe vide", root => root["props"]!["trample_prefixes"]![0] = "", "trample_prefixes"),
+            ("règle de décor inconnue", root => root["props"]!["min_height"] = 18, "clé « min_height » inconnue"),
+            ("zones absentes", root => root.Remove("zones"), "zones"),
+            ("zones vides", root => root["zones"] = new JsonArray(), "zones"),
+            ("rayons non croissants", root => root["zones"]![1]!["max_radius"] = 10, "rayons strictement croissants"),
+            ("terrain de zone inconnu", root => root["zones"]![0]!["weights"]!["lava"] = 0.1, "clé « lava » inconnue"),
+            ("poids de zone absent", root => root["zones"]![0]!["weights"]!.AsObject().Remove("water"), "water absent"),
+            ("poids de zone négatif", root => root["zones"]![0]!["weights"]!["grass"] = -0.5, "grass"),
+            ("zone sans poids", root => root["zones"]![0]!["weights"] = new JsonObject { ["grass"] = 0, ["concrete"] = 0, ["water"] = 0, ["forest"] = 0 }, "total strictement positif"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"map_radius\": " : Mutated(valid, mutate);
+            bool refused = !WorldGenConfig.TryParse(text, biomeExists, propExists, out WorldGenConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true,
+                $"monde, {name} refusé ({error})");
+        }
+        string minimal = Mutated(valid, root =>
+        {
+            foreach (string key in new[] { "map_radius_y", "spawn_clearance", "lands", "props", "ground_blend", "paths", "junction_props",
+                         "edge_fade_width", "biome_count", "biome_layout", "poi_min_distance_between", "pois_enabled",
+                         "lore_elements_enabled", "fog_reveal_radius", "fog_initial_clear_radius" })
+                root.Remove(key);
+        });
+        Check(WorldGenConfig.TryParse(minimal, biomeExists, propExists, out WorldGenConfig defaults, out string minimalError)
+            && defaults.MapRadiusY == defaults.MapRadius && defaults.SpawnClearance == 4 && defaults.BiomeCount == 3
+            && !defaults.Lands.Enabled && defaults.JunctionProps == null && defaults.Paths.MaxExpansions == PathNetworkConfig.Default.MaxExpansions
+            && defaults.PropRules.FootprintScale == PropRules.Default.FootprintScale && defaults.FogRevealRadius == 6,
+            $"monde : champs facultatifs absents, secours d'avant gardés {minimalError}");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root => root.Remove("available_biomes")), biomeExists, propExists, out WorldGenConfig all, out _)
+            && all.AvailableBiomes.Count == 0, "monde : biomes absents, liste vide (tous les biomes du catalogue)");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root => root["available_biomes"] = new JsonArray()), biomeExists, propExists, out _, out _),
+            "monde : liste de biomes vide admise (tous les biomes du catalogue)");
+        Check(WorldGenConfig.TryParse(Mutated(valid, root =>
+            {
+                root["lands"]!["count_scales"]!["rift"] = 1.5;
+                root["ground_blend"]!["edge_noise"] = 1.5;
+                root["junction_props"]!["band_cells"] = 0;
+                root["zones"]![0]!.AsObject().Remove("name");
+            }), biomeExists, propExists, out WorldGenConfig loose, out string looseError)
+            && loose.Lands.CountScales["rift"] == 1.5f && loose.GroundBlend.EdgeNoise == 1.5f && loose.JunctionProps.BandCells == 0,
+            $"monde : part de terre au-delà de 1, bruit de bord ample, bande nulle et zone sans nom admis {looseError}");
+    }
+
+    /// <summary>Fermes et chantiers de la carrière (plan 26 Q7c-4c) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckSites()
+    {
+        Func<string, bool> farmSprite = stem => ResourceLoader.Exists($"{WildFieldsComposer.Folder}{stem}.png");
+        Func<string, bool> quarrySprite = stem => ResourceLoader.Exists($"{WorldSetup.QuarryFolder}{stem}.png");
+        Check(FarmConfig.TryLoad(out FarmConfig farm, out string farmError) && farm.Site.Enabled && farm.Site.Elements.Count > 0
+            && farm.OrchardTrees.Count == 2 && farm.BlockingScenes.Length == 1, $"fermes du dépôt acceptées {farmError}");
+        Check(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", out SitePlan quarry,
+            out string quarryError) && quarry.Enabled && quarry.Elements.Count == 23, $"chantiers du dépôt acceptés {quarryError}");
+        string quarryText = FileAccess.GetFileAsString(WorldSetup.QuarrySitesPath);
+        (string, Action<JsonObject>, string)[] planCases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["enable"] = true, "clé « enable » inconnue"),
+            ("activation non booléenne", root => root["enabled"] = 1, "enabled"),
+            ("recherche nulle", root => root["search_radius_cells"] = 0, "search_radius_cells"),
+            ("emprise à une dimension", root => root["half_extent_px"] = new JsonArray(480), "half_extent_px"),
+            ("emprise nulle", root => root["half_extent_px"] = new JsonArray(0, 140), "half_extent_px"),
+            ("emprise non numérique", root => root["half_extent_px"] = new JsonArray("large", 140), "half_extent_px"),
+            ("portée négative", root => root["path_reach_px"] = -1, "path_reach_px"),
+            ("largeur nulle", root => root["spur_width_factor"] = 0, "spur_width_factor"),
+            ("éléments non liste", root => root["elements"] = 1, "elements"),
+            ("élément sans décor", root => root["elements"]![0]!.AsObject().Remove("sprites"), "sprites"),
+            ("liste de décors vide", root => root["elements"]![0]!["sprites"] = new JsonArray(), "sprites"),
+            ("décor introuvable", root => root["elements"]![0]!["sprites"]![0] = "prop_inconnu", "décor « prop_inconnu »"),
+            ("décor hors dossier", root => root["elements"]![0]!["sprites"]![0] = "../forest/prop_bush", "décor « ../forest/prop_bush »"),
+            ("élément sans position", root => root["elements"]![0]!.AsObject().Remove("at"), "at"),
+            ("champ d'élément inconnu", root => root["elements"]![0]!["blocked"] = true, "clé « blocked » inconnue"),
+            ("chance hors borne", root => root["elements"]![3]!["chance"] = 1.5, "chance"),
+            ("rangée sans pas", root => root["elements"]![1]!.AsObject().Remove("step"), "to et step vont ensemble"),
+            ("pas sans rangée", root => root["elements"]![0]!["step"] = 10, "to et step vont ensemble"),
+            ("pas nul", root => root["elements"]![1]!["step"] = 0, "step"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in planCases)
+        {
+            string text = mutate == null ? "{ \"enabled\": " : Mutated(quarryText, mutate);
+            bool refused = !SitePlan.TryParse(text, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", quarrySprite,
+                out SitePlan plan, out string error);
+            Check(refused && plan == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"chantiers, {name} refusé ({error})");
+        }
+        string farmText = FileAccess.GetFileAsString(FarmConfig.FilePath);
+        (string, Action<JsonObject>, string)[] farmCases =
+        {
+            ("champ inconnu", root => root["scene"] = new JsonArray(), "clé « scene » inconnue"),
+            ("bord de parcelle introuvable", root => root["parcel_edges"]![0] = "prop_haie", "décor « prop_haie »"),
+            ("verger à un décor", root => root["orchard_trees"]![0] = new JsonArray("prop_orchard_tree_base"), "orchard_trees"),
+            ("verger introuvable", root => root["orchard_trees"]![0]![1] = "prop_canopee", "prop_canopee"),
+            ("scène introuvable", root => root["scenes"]![0] = "prop_scene_inconnue", "décor « prop_scene_inconnue »"),
+            ("scène bloquante hors des scènes", root => root["blocking_scenes"]![0] = "prop_hedge_h", "absente de scenes"),
+            ("chance de scène hors borne", root => root["scene_chance_per_region"] = 2, "scene_chance_per_region"),
+            ("élément de ferme invalide", root => root["elements"]![0]!["at"] = new JsonArray(1, 2, 3), "at"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in farmCases)
+        {
+            bool refused = !FarmConfig.TryParse(Mutated(farmText, mutate), farmSprite, out FarmConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"fermes, {name} refusé ({error})");
+        }
+        string minimal = Mutated(quarryText, root =>
+        {
+            foreach (string key in new[] { "search_radius_cells", "half_extent_px", "path_reach_px", "spur_start", "spur_width_factor", "elements" })
+                root.Remove(key);
+        });
+        SitePlan defaults = new();
+        Check(SitePlan.TryParse(minimal, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers", quarrySprite, out SitePlan bare, out string bareError)
+            && bare.SearchRadiusCells == defaults.SearchRadiusCells && bare.HalfExtentPx == defaults.HalfExtentPx
+            && bare.PathReachPx == defaults.PathReachPx && bare.SpurWidthFactor == defaults.SpurWidthFactor && bare.Elements.Count == 0,
+            $"chantiers : champs facultatifs absents, secours d'avant gardés {bareError}");
+        Check(FarmConfig.TryParse("{ \"enabled\": false }", farmSprite, out FarmConfig emptyFarm, out _) && !emptyFarm.Site.Enabled
+            && emptyFarm.Scenes.Length == 0 && emptyFarm.SceneChancePerRegion == 0.5f, "fermes : fichier minimal, secours d'avant gardés");
+    }
+
+    /// <summary>Résurgences, late game et accalmie (plan 26 Q7d-1) : fichier du dépôt accepté, règles refusées.</summary>
+    private void CheckCrises()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Check(Vestiges.Events.CrisisConfig.TryLoad(out Vestiges.Events.CrisisConfig loaded, out string loadError)
+            && loaded.FirstCrisisDelaySec == 360f && loaded.BossCrisisThreshold == 5 && loaded.CalmChest == "chest_rare",
+            $"crises du dépôt acceptées {loadError}");
+        string valid = FileAccess.GetFileAsString(Vestiges.Events.CrisisConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["interval"] = 290, "clé « interval » inconnue"),
+            ("premier délai nul", root => root["first_crisis_delay_sec"] = 0, "first_crisis_delay_sec"),
+            ("intervalle non numérique", root => root["interval_sec"] = "souvent", "interval_sec"),
+            ("variance négative", root => root["interval_variance_sec"] = -5, "interval_variance_sec"),
+            ("annonce négative", root => root["warning_duration_sec"] = -1, "warning_duration_sec"),
+            ("crise nulle", root => root["crisis_duration_sec"] = 0, "crisis_duration_sec"),
+            ("seuil d'oubli hors borne", root => root["late_game_erasure_threshold"] = 1.2, "late_game_erasure_threshold"),
+            ("seuil de crises nul", root => root["late_game_crisis_threshold"] = 0, "late_game_crisis_threshold"),
+            ("seuil de boss fractionnaire", root => root["boss_crisis_threshold"] = 4.5, "boss_crisis_threshold"),
+            ("heure du boss nulle", root => root["boss_time_threshold_sec"] = 0, "boss_time_threshold_sec"),
+            ("PV du boss nuls", root => root["boss_hp_scale"] = 0, "boss_hp_scale"),
+            ("tempo de fin nul", root => root["endgame_interval_multiplier"] = 0, "endgame_interval_multiplier"),
+            ("Essence d'accalmie nulle", root => root["calm_essence_multiplier"] = 0, "calm_essence_multiplier"),
+            ("accalmie négative", root => root["calm_essence_seconds"] = -1, "calm_essence_seconds"),
+            ("coffre inconnu", root => root["calm_chest"] = "chest_mythique", "coffre « chest_mythique » inconnu"),
+            ("coffre vide", root => root["calm_chest"] = "", "calm_chest"),
+            ("distance inversée", root => root["calm_chest_distance"] = new JsonArray(340, 220), "calm_chest_distance"),
+            ("distance négative", root => root["calm_chest_distance"] = new JsonArray(-10, 220), "calm_chest_distance"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"interval_sec\": " : Mutated(valid, mutate);
+            bool refused = !Vestiges.Events.CrisisConfig.TryParse(text, chestExists, out Vestiges.Events.CrisisConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"crises, {name} refusé ({error})");
+        }
+        Check(Vestiges.Events.CrisisConfig.TryParse("{}", chestExists, out Vestiges.Events.CrisisConfig defaults, out _)
+            && defaults.FirstCrisisDelaySec == 240f && defaults.IntervalVarianceSec == 45f && defaults.LateGameErasureThreshold == 0.68f
+            && defaults.LateGameCrisisThreshold == 4 && defaults.CalmChestDistance == new Vector2(220f, 340f),
+            "crises : fichier vide, secours d'avant gardés");
+    }
+
+    /// <summary>Effacement (plan 26 Q7d-2) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckErasure()
+    {
+        Func<string, bool> characterExists = id => CharacterDataLoader.Get(id) != null;
+        Func<string, bool> inhabitantExists = id => ResourceLoader.Exists($"res://assets/characters/{id}/char_{id}_S_idle_01.png");
+        Check(ErasureConfig.TryLoad(out ErasureConfig loaded, out string loadError) && loaded.Motes != null
+            && loaded.Echoes.Inhabitants.Count > 0 && loaded.ZoneEffects.Count == 4, $"Effacement du dépôt accepté {loadError}");
+        string valid = FileAccess.GetFileAsString(ErasureConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["cellsize"] = 128, "clé « cellsize » inconnue"),
+            ("cellule fractionnaire", root => root["cell_size"] = 127.5, "cell_size"),
+            ("mémoire semée hors borne", root => root["seeded_memory"] = 1.2, "seeded_memory"),
+            ("oubli négatif", root => root["base_decay_per_minute"] = -0.01, "base_decay_per_minute"),
+            ("présence nulle", root => root["player_presence_falloff_cells"] = 0, "player_presence_falloff_cells"),
+            ("seuil de fin hors borne", root => root["late_game_threshold"] = 2, "late_game_threshold"),
+            ("cadence nulle", root => root["update_interval_sec"] = 0, "update_interval_sec"),
+            ("rayon suivi nul", root => root["tracked_radius_cells"] = 0, "tracked_radius_cells"),
+            ("stabilisation non booléenne", root => root["stabilize_on_chest_open"] = "oui", "stabilize_on_chest_open"),
+            ("Néant négatif", root => root["void_damage_ratio_per_second"] = -1, "void_damage_ratio_per_second"),
+            ("front invalide", root => root["land_front"]!["heart_radius"] = 1.5, "heart_radius"),
+            ("éclats inconnus", root => root["motes"]!["speed"] = 50, "clé « speed » inconnue"),
+            ("éclats trop nombreux", root => root["motes"]!["count"] = 100, "count"),
+            ("vitesses inversées", root => root["motes"]!["speed_min"] = 200, "speed_min ≤ speed_max"),
+            ("vie nulle", root => root["motes"]!["life_min"] = 0, "life_min"),
+            ("écho inconnu", root => root["echoes"]!["delay"] = 60, "clé « delay » inconnue"),
+            ("intervalle d'écho inversé", root => root["echoes"]!["interval_min_sec"] = 120, "intervalles min ≤ max"),
+            ("mémoire d'écho hors borne", root => root["echoes"]!["max_memory"] = 1.5, "max_memory"),
+            ("fondu nul", root => root["echoes"]!["fade_sec"] = 0, "fade_sec"),
+            ("dissolution nulle", root => root["echoes"]!["dissolve_sec"] = 0, "dissolve_sec"),
+            ("murmures fractionnaires", root => root["echoes"]!["whisper_count"] = 2.5, "whisper_count"),
+            ("personnage inconnu", root => root["echoes"]!["characters"]![0] = "chevalier", "personnage « chevalier » inconnu"),
+            ("habitant sans dessin", root => root["echoes"]!["inhabitants"]![0] = "habitant_fantome", "habitant « habitant_fantome » inconnu"),
+            ("habitant en double", root => root["echoes"]!["inhabitants"]!.AsArray().Add("habitant_ecoliere"), "en double"),
+            ("phase inconnue", root => root["zone_effects"]!["anchored"] = new JsonObject(), "clé « anchored » inconnue"),
+            ("vitesse de phase nulle", root => root["zone_effects"]!["void"]!["speed"] = 0, "speed"),
+            ("voile hors borne", root => root["zone_effects"]!["erased"]!["veil"] = 1.5, "veil"),
+            ("effet de phase inconnu", root => root["zone_effects"]!["frayed"]!["score"] = 1, "clé « score » inconnue"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"cell_size\": " : Mutated(valid, mutate);
+            bool refused = !ErasureConfig.TryParse(text, characterExists, inhabitantExists, out ErasureConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"Effacement, {name} refusé ({error})");
+        }
+        Check(ErasureConfig.TryParse("{}", characterExists, inhabitantExists, out ErasureConfig defaults, out _)
+            && defaults.CellSize == 128 && defaults.BaseDecayPerMinute == 0.012f && defaults.StabilizeOnChestOpen && defaults.Motes == null
+            && defaults.Echoes.Enabled && defaults.Echoes.FirstDelaySec == 60f && defaults.ZoneEffects.Count == 0,
+            "Effacement : fichier vide, secours d'avant gardés (sans éclats ni effets de phase)");
+    }
+
+    /// <summary>Micro-événements (plan 26 Q7d-3) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckRunEvents()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        Check(RunEventDataLoader.TryLoad(out string loadError) && RunEventDataLoader.Events.Count > 0
+            && RunEventDataLoader.Schedule.FixedEvents.Count > 0, $"micro-événements du dépôt acceptés {loadError}");
+        RunEventData hunt = RunEventDataLoader.Find("hunt");
+        string valid = FileAccess.GetFileAsString(RunEventDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ racine inconnu", root => root["event"] = new JsonArray(), "clé « event » inconnue"),
+            ("cadence absente", root => root.Remove("schedule"), "schedule"),
+            ("cadence inconnue", root => root["schedule"]!["gap"] = 60, "clé « gap » inconnue"),
+            ("premier événement inversé", root => root["schedule"]!["first_event_min_sec"] = 200, "first_event_min_sec ≤ first_event_max_sec"),
+            ("mémoire fractionnaire", root => root["schedule"]!["recent_memory"] = 1.5, "recent_memory"),
+            ("poids récent hors borne", root => root["schedule"]!["recent_weight_factor"] = 2, "recent_weight_factor"),
+            ("rendez-vous inconnu", root => root["schedule"]!["fixed_events"]![0]!["id"] = "pluie", "événement « pluie » inconnu"),
+            ("rendez-vous à zéro", root => root["schedule"]!["fixed_events"]![0]!["at_sec"] = 0, "at_sec"),
+            ("événements vides", root => root["events"] = new JsonArray(), "events"),
+            ("sorte inconnue", root => root["events"]![0]!["kind"] = "carnaval", "« carnaval » inconnu"),
+            ("id en double", root => root["events"]![1]!["id"] = root["events"]![0]!["id"]!.GetValue<string>(), "en double"),
+            ("titre sans traduction", root => root["events"]![0]!["title_key"] = "EVENT_INCONNU", "sans traduction"),
+            ("réglage d'une autre sorte", root => root["events"]![0]!["band_width"] = 280, "clé « band_width » inconnue"),
+            ("réglage négatif", root => root["events"]![0]!["reward_essence"] = -5, "reward_essence"),
+            ("durée nulle", root => root["events"]![0]!["duration_sec"] = 0, "duration_sec"),
+            ("poids négatif", root => root["events"]![1]!["weight"] = -1, "weight"),
+            ("coffre inconnu", root => root["events"]![1]!["reward_chest"] = "chest_mythique", "coffre « chest_mythique »"),
+            ("créature inconnue", root => root["events"]![1]!["preferred_enemies"]![0] = "dragon", "créature « dragon »"),
+            ("distances inversées", root => root["events"]![0]!["spawn_distance_min"] = 9999, "spawn_distance_min ≤ spawn_distance_max"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"events\": " : Mutated(valid, mutate);
+            string error = RunEventDataLoader.Apply(text, chestExists, EnemyDataLoader.Exists, translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(RunEventDataLoader.Find("hunt"), hunt),
+                $"micro-événements, {name} refusé sans publication ({error})");
+        }
+    }
+
+    /// <summary>Flux d'apparition (plan 26 Q7e-1) : fichier du dépôt accepté, chaque règle refusée avec son champ.</summary>
+    private void CheckSpawnFlow()
+    {
+        Check(Vestiges.Spawn.SpawnFlowConfig.TryLoad(out Vestiges.Spawn.SpawnFlowConfig loaded, out string loadError)
+            && loaded.Integer("max_enemies_on_screen") == 110 && loaded.HpSegments.Count == 4
+            && loaded.FallbackResurgencePool.Count(id => id == "shade") == 2, $"flux d'apparition du dépôt accepté {loadError}");
+        string valid = FileAccess.GetFileAsString(Vestiges.Spawn.SpawnFlowConfig.FilePath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["max_enemies"] = 110, "clé « max_enemies » inconnue"),
+            ("intervalle absent", root => root.Remove("base_spawn_interval"), "base_spawn_interval"),
+            ("intervalle nul", root => root["base_spawn_interval"] = 0, "base_spawn_interval"),
+            ("intervalle minimal au-dessus du normal", root => root["min_spawn_interval"] = 3, "min_spawn_interval ≤ base_spawn_interval"),
+            ("plafond fractionnaire", root => root["max_enemies_on_screen"] = 110.5, "max_enemies_on_screen"),
+            ("plafond nul", root => root["max_enemies_on_screen"] = 0, "max_enemies_on_screen"),
+            ("décroissance négative", root => root["spawn_interval_decay_per_minute"] = -0.01, "spawn_interval_decay_per_minute"),
+            ("PV d'emblée nuls", root => root["flat_hp_multiplier"] = 0, "flat_hp_multiplier"),
+            ("chance de groupe hors borne", root => root["same_type_cluster_chance"] = 1.5, "same_type_cluster_chance"),
+            ("groupe inversé", root => root["same_type_cluster_min"] = 6, "same_type_cluster_min ≤ same_type_cluster_max"),
+            ("écart inversé", root => root["same_type_cluster_spacing_min"] = 60, "same_type_cluster_spacing_min ≤ same_type_cluster_spacing_max"),
+            ("marge inversée", root => root["spawn_screen_margin_min"] = 200, "spawn_screen_margin_min ≤ spawn_screen_margin_max"),
+            ("rafale de crise fractionnaire", root => root["crisis_burst_base"] = 8.5, "crisis_burst_base"),
+            ("arc au-delà du tour", root => root["spawn_forward_arc_degrees"] = 400, "spawn_forward_arc_degrees"),
+            ("biais hors borne", root => root["spawn_forward_bias"] = -0.1, "spawn_forward_bias"),
+            ("Péril négatif", root => root["time_peril_per_minute"] = -0.5, "time_peril_per_minute"),
+            ("secours inconnu", root => root["fallback_exploration_pool"]![0] = "dragon", "créature « dragon » inconnue"),
+            ("secours vide", root => root["fallback_resurgence_pool"] = new JsonArray(), "fallback_resurgence_pool"),
+            ("secours absent", root => root.Remove("fallback_exploration_pool"), "fallback_exploration_pool"),
+            ("segment inconnu", root => root["hp_scaling_segments"]![0]!["slope"] = 1.1, "clé « slope » inconnue"),
+            ("pente nulle", root => root["damage_scaling_segments"]![0]!["per_minute"] = 0, "per_minute"),
+            ("minute négative", root => root["hp_scaling_segments"]![1]!["from_minute"] = -4, "from_minute"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"base_spawn_interval\": " : Mutated(valid, mutate);
+            bool refused = !Vestiges.Spawn.SpawnFlowConfig.TryParse(text, EnemyDataLoader.Exists, out Vestiges.Spawn.SpawnFlowConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"flux d'apparition, {name} refusé ({error})");
+        }
+        const string minimal = "{ \"base_spawn_interval\": 2, \"min_spawn_interval\": 0.3, \"spawn_interval_decay_per_minute\": 0.05, "
+            + "\"max_enemies_on_screen\": 120, \"fallback_exploration_pool\": [\"shade\"], \"fallback_resurgence_pool\": [\"shade\"], "
+            + "\"local_enemy_target_base\": 10 }";
+        Check(Vestiges.Spawn.SpawnFlowConfig.TryParse(minimal, EnemyDataLoader.Exists, out Vestiges.Spawn.SpawnFlowConfig defaults, out string minimalError)
+            && defaults.Number("opening_local_target_start") == 10f && defaults.Number("local_enemy_radius") == 900f
+            && defaults.Integer("local_spawn_burst_max") == 4 && defaults.Number("crisis_spawn_multiplier") == 1.65f
+            && defaults.Number("spawn_forward_arc_degrees") == 140f && defaults.HpSegments.Count == 1 && defaults.HpSegments[0] == (0f, 1f),
+            $"flux d'apparition : fichier minimal, secours d'avant gardés {minimalError}");
+    }
+
+    /// <summary>Foule (plan 26 Q7e-2) : fichier du dépôt accepté, règles refusées, secours d'avant.</summary>
+    private void CheckCrowd()
+    {
+        Check(CrowdDataLoader.TryLoad(out string loadError) && CrowdDataLoader.SeparationRadius == 26f, $"foule du dépôt acceptée {loadError}");
+        string valid = FileAccess.GetFileAsString(CrowdDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["separation"] = 26, "clé « separation » inconnue"),
+            ("rayon négatif", root => root["separation_radius_px"] = -1, "separation_radius_px"),
+            ("force non numérique", root => root["separation_strength"] = "forte", "separation_strength"),
+            ("contact négatif", root => root["contact_distance_px"] = -22, "contact_distance_px"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"separation_radius_px\": " : Mutated(valid, mutate);
+            bool refused = !CrowdDataLoader.TryParse(text, out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"foule, {name} refusé ({error})");
+        }
+        Check(CrowdDataLoader.TryParse("{}", out CrowdDataLoader.Settings defaults, out _)
+            && defaults == new CrowdDataLoader.Settings(26f, 0.9f, 1.5f, 22f), "foule : fichier vide, secours d'avant gardés");
+    }
+
+    /// <summary>Variantes et affixes (plan 26 Q7e-2) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckVariants()
+    {
+        Func<string, bool> chestExists = id => ChestDataLoader.Get(id) != null;
+        Check(EnemyVariantDataLoader.TryLoad(out string loadError) && EnemyVariantDataLoader.GetVariant("champion")?.LevelScaling != null
+            && EnemyVariantDataLoader.NaturalElites.LateMaxAlive == 8, $"variantes du dépôt acceptées {loadError}");
+        EnemyVariantData elite = EnemyVariantDataLoader.GetVariant("elite");
+        NaturalEliteConfig natural = EnemyVariantDataLoader.NaturalElites;
+        string valid = FileAccess.GetFileAsString(EnemyVariantDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("section inconnue", root => root["bosses"] = new JsonObject(), "clé « bosses » inconnue"),
+            ("section absente", root => root.Remove("phase_modifiers"), "phase_modifiers"),
+            ("variante inconnue du code", root => root["variants"]!["legend"] = new JsonObject(), "variante « legend » inconnue du code"),
+            ("variante absente", root => root["variants"]!.AsObject().Remove("aberration"), "variante « aberration » absente"),
+            ("variante non objet", root => root["variants"]!["elite"] = 5, "variante elite : objet attendu"),
+            ("affixe non objet", root => root["affixes"]!["swift"] = new JsonArray(), "affixe swift : objet attendu"),
+            ("champ de variante inconnu", root => root["variants"]!["elite"]!["hp"] = 5, "clé « hp » inconnue"),
+            ("PV nuls", root => root["variants"]!["elite"]!["hp_mult"] = 0, "hp_mult"),
+            ("bornes de PV inversées", root => root["variants"]!["elite"]!["hp_mult_min"] = 6, "hp_mult_min ≤ hp_mult"),
+            ("taille nulle", root => root["variants"]!["aberration"]!["scale"] = 0, "scale"),
+            ("affixes fractionnaires", root => root["variants"]!["elite"]!["affix_count"] = 1.5, "affix_count"),
+            ("Essence négative", root => root["variants"]!["elite"]!["bonus_essence"] = -3, "bonus_essence"),
+            ("coffre inconnu", root => root["variants"]!["elite"]!["reward_chest"] = "chest_mythique", "« chest_mythique » inconnu"),
+            ("chance de coffre hors borne", root => root["variants"]!["elite"]!["reward_chest_chance"] = 1.5, "reward_chest_chance"),
+            ("couleur invalide", root => root["variants"]!["elite"]!["outline_color"] = "doré", "couleur « doré » invalide"),
+            ("secousse inconnue", root => root["variants"]!["champion"]!["death_shake"] = "huge", "« huge » inconnu"),
+            ("plaque non booléenne", root => root["variants"]!["elite"]!["nameplate"] = "oui", "nameplate"),
+            ("titre non textuel", root => root["variants"]!["champion"]!["title_m"] = 3, "title_m"),
+            ("affixe de variante inconnu", root => root["variants"]!["champion"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+            ("affixe de variante en double", root => root["variants"]!["champion"]!["affix_pool"]!.AsArray().Add("swift"), "« swift » en double"),
+            ("échelle de niveau inconnue", root => root["variants"]!["champion"]!["level_scaling"]!["slope"] = 1, "clé « slope » inconnue"),
+            ("combat nul", root => root["variants"]!["champion"]!["level_scaling"]!["fight_seconds"] = 0, "fight_seconds"),
+            ("champ d'affixe inconnu", root => root["affixes"]!["swift"]!["speed"] = 1.45, "clé « speed » inconnue"),
+            ("nom d'affixe vide", root => root["affixes"]!["swift"]!["name_m"] = "", "name_m"),
+            ("dégâts subis nuls", root => root["affixes"]!["armored"]!["damage_taken_mult"] = 0, "damage_taken_mult"),
+            ("régénération hors borne", root => root["affixes"]!["regenerant"]!["regen_ratio_per_sec"] = 1.5, "regen_ratio_per_sec"),
+            ("explosion négative", root => root["affixes"]!["explosive"]!["death_explosion_radius"] = -64, "death_explosion_radius"),
+            ("élites inversées", root => root["natural_elites"]!["interval_min_sec"] = 90, "interval_min_sec ≤ interval_max_sec"),
+            ("élites fractionnaires", root => root["natural_elites"]!["max_alive"] = 2.5, "max_alive"),
+            ("élites tardives inconnues", root => root["natural_elites"]!["late"]!["count"] = 8, "clé « count » inconnue"),
+            ("élites tardives inversées", root => root["natural_elites"]!["late"]!["interval_min_sec"] = 30, "interval_min_sec ≤ interval_max_sec"),
+            ("affixe d'élite inconnu", root => root["natural_elites"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+            ("chance de phase hors borne", root => root["phase_modifiers"]!["affix_chance_endgame"] = 1.2, "affix_chance_endgame"),
+            ("affixe de phase inconnu", root => root["phase_modifiers"]!["affix_pool"]![0] = "maudit", "affixe « maudit » inconnu"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"variants\": " : Mutated(valid, mutate);
+            string error = EnemyVariantDataLoader.Apply(text, chestExists);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(EnemyVariantDataLoader.GetVariant("elite"), elite)
+                && ReferenceEquals(EnemyVariantDataLoader.NaturalElites, natural), $"variantes, {name} refusé sans publication ({error})");
+        }
+        JsonObject repeated = JsonNode.Parse(valid)!.AsObject();
+        repeated["phase_modifiers"]!["affix_pool"]!.AsArray().Add("enraged");
+        Check(EnemyVariantDataLoader.Apply(repeated.ToJsonString(), chestExists) == null
+            && EnemyVariantDataLoader.PhaseModifiers.AffixPool.Count == 4, "variantes : affixe de phase répété admis (il pèse davantage)");
+        Check(EnemyVariantDataLoader.Apply(valid, chestExists) == null, "variantes du dépôt republiées");
+    }
+
+    /// <summary>Personnages (plan 26 Q7f-1) : fichier du dépôt accepté, références contrôlées, refus sans publication.</summary>
+    private void CheckCharacters()
+    {
+        Check(CharacterDataLoader.TryLoad(out string loadError) && CharacterDataLoader.GetAll().Count == 6
+            && CharacterDataLoader.Get("facteur")?.MobilityProfile == "glide", $"personnages du dépôt acceptés {loadError}");
+        CharacterData vagabond = CharacterDataLoader.Get("vagabond");
+        CharacterDataLoader.References references = CharacterDataLoader.GameReferences();
+        string valid = FileAccess.GetFileAsString(CharacterDataLoader.DataPath);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de personnages attendue"),
+            ("liste vide", _ => new JsonArray(), "liste de personnages attendue"),
+            ("champ inconnu", list => { list[0]!["exclusive_perks"] = new JsonArray(); return list; }, "clé « exclusive_perks » inconnue"),
+            ("identifiant en double", list => { list.Add(list[0]!.DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("nom vide", list => { list[0]!["name"] = ""; return list; }, "name"),
+            ("statistiques absentes", list => { list[0]!.AsObject().Remove("base_stats"); return list; }, "base_stats"),
+            ("statistique inconnue", list => { list[0]!["base_stats"]!["armor"] = 5; return list; }, "clé « armor » inconnue"),
+            ("vitesse nulle", list => { list[0]!["base_stats"]!["speed"] = 0; return list; }, "speed"),
+            ("PV nuls", list => { list[0]!["base_stats"]!["max_hp"] = 0; return list; }, "max_hp"),
+            ("régénération négative", list => { list[0]!["base_stats"]!["regen_rate"] = -1; return list; }, "regen_rate"),
+            ("arme inconnue", list => { list[0]!["starting_weapon"] = "excalibur"; return list; }, "arme « excalibur » inconnue"),
+            ("signature inconnue", list => { list[0]!["passive_perk"] = "traqueur_piercing"; return list; }, "n'est pas une signature de traqueur"),
+            ("signature d'un autre", list => { list[0]!["passive_perk"] = "vagabond_harvest"; return list; }, "n'est pas une signature de traqueur"),
+            ("mobilité inconnue", list => { list[0]!["mobility"] = "teleport"; return list; }, "Profil de mobilité inconnu : teleport"),
+            ("sprites absents", list => { list[0]!["sprite_folder"] = "vagabond"; return list; }, "sans char_traqueur_S_idle_01.png"),
+            ("dossier hors des personnages", list => { list[0]!["sprite_folder"] = "../traqueur"; return list; }, "sprite_folder"),
+            ("couleur à trois composantes", list => { list[0]!["visual_color"] = new JsonArray(0.2, 0.7, 0.3); return list; }, "visual_color"),
+            ("accent hors borne", list => { list[0]!["accent_color"] = new JsonArray(0.2, 0.7, 1.3, 1); return list; }, "accent_color"),
+            ("pieds négatifs", list => { list[0]!["sprite_feet_offset"] = -4; return list; }, "sprite_feet_offset"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = CharacterDataLoader.Apply(text, references);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(CharacterDataLoader.Get("vagabond"), vagabond),
+                $"personnages, {name} refusé sans publication ({error})");
+        }
+    }
+
+    /// <summary>Signatures (plan 26 Q7f-2) : fichier du dépôt accepté, règles refusées sans publication.</summary>
+    private void CheckPerks()
+    {
+        Check(PerkDataLoader.TryLoad(out string loadError) && PerkDataLoader.GetAll().Count == 6, $"signatures du dépôt acceptées {loadError}");
+        PerkData round = PerkDataLoader.GetAll().Find(perk => perk.Id == "facteur_round");
+        string valid = FileAccess.GetFileAsString(PerkDataLoader.DataPath);
+        JsonObject Perk(JsonArray list, string id) => list.OfType<JsonObject>().First(perk => perk["id"]!.GetValue<string>() == id);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de signatures attendue"),
+            ("liste de commentaires", _ => new JsonArray("_seul commentaire"), "aucune signature"),
+            ("texte hors commentaire", list => { list.Add("signature"); return list; }, "objet attendu"),
+            ("champ mort", list => { Perk(list, "facteur_round")["rarity"] = "passive"; return list; }, "clé inconnue « rarity »"),
+            ("identifiant en double", list => { list.Add(Perk(list, "facteur_round").DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("nom vide", list => { Perk(list, "facteur_round")["name"] = ""; return list; }, "name : texte non vide requis"),
+            ("passif non booléen", list => { Perk(list, "facteur_round")["is_passive"] = 1; return list; }, "is_passive : booléen requis"),
+            ("statistique inconnue", list => { JsonObject perk = Perk(list, "facteur_round"); perk["stat"] = "charisma"; perk["modifier"] = 1.1; perk["modifier_type"] = "multiplicative"; return list; }, "« charisma » en multiplicative n'est pas appliqué"),
+            ("modificateur incomplet", list => { Perk(list, "facteur_round")["stat"] = "speed"; return list; }, "modifier_type : texte requis"),
+            ("effet sans type", list => { Perk(list, "facteur_round")["effects"] = new JsonArray(new JsonObject { ["stat"] = "speed", ["modifier"] = 1.1 }); return list; }, "modifier_type"),
+            ("effet inconnu", list => { Perk(list, "facteur_round")["effects"] = new JsonArray(new JsonObject { ["stat"] = "speed", ["modifier"] = 1.1, ["modifier_type"] = "multiplicative", ["until"] = 3 }); return list; }, "clé inconnue « until »"),
+            ("élan trop court", list => { Perk(list, "facteur_round")["momentum"]!["ramp_seconds"] = 0.05; return list; }, "Élan"),
+            ("élan négatif", list => { Perk(list, "facteur_round")["momentum"]!["speed_bonus"] = -0.25; return list; }, "Élan"),
+            ("élan inconnu", list => { Perk(list, "facteur_round")["momentum"]!["decay"] = 1; return list; }, "clé inconnue « decay »"),
+            ("rémanence au-delà des dégâts", list => { Perk(list, "eveillee_double")["echo"]!["damage_ratio"] = 1.5; return list; }, "Rémanence"),
+            ("rémanence non numérique", list => { Perk(list, "eveillee_double")["echo"]!["seconds"] = "1.5"; return list; }, "seconds : nombre requis"),
+            ("pression inversée", list => { Perk(list, "scaphandriere_air")["pressure"]!["frayed_bonus"] = 1; return list; }, "Pression"),
+            ("onde sans rayon", list => { Perk(list, "forgeuse_fortify")["shockwave"]!["radius"] = 0; return list; }, "Redresser"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = PerkDataLoader.Apply(text);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true
+                && ReferenceEquals(PerkDataLoader.GetAll().Find(perk => perk.Id == "facteur_round"), round),
+                $"signatures, {name} refusé sans publication ({error})");
+        }
+    }
+
+    /// <summary>Constellations et Souvenirs (plan 26 Q7f-3) : catalogues du dépôt acceptés, refus sans publication.</summary>
+    private void CheckSouvenirs()
+    {
+        Check(SouvenirDataLoader.TryLoad(out string loadError) && SouvenirDataLoader.GetAllConstellations().Count == 6
+            && SouvenirDataLoader.GetAll().Count == 19, $"Souvenirs du dépôt acceptés {loadError}");
+        SouvenirData ticket = SouvenirDataLoader.Get("billet_de_train");
+        string constellations = FileAccess.GetFileAsString(SouvenirDataLoader.ConstellationsPath);
+        string souvenirs = FileAccess.GetFileAsString(SouvenirDataLoader.SouvenirsPath);
+        (string, Func<JsonArray, JsonNode>, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("constellations vides", _ => new JsonArray(), null, "liste non vide attendue"),
+            ("champ de constellation inconnu", list => { list[0]!["icon"] = "x"; return list; }, null, "clé « icon » inconnue"),
+            ("constellation en double", list => { list.Add(list[0]!.DeepClone()); list[^1]!["order"] = 9; return list; }, null, "identifiant déjà déclaré"),
+            ("rang pris", list => { list[1]!["order"] = 0; return list; }, null, "rang 0 déjà pris"),
+            ("rang fractionnaire", list => { list[0]!["order"] = 0.5; return list; }, null, "order"),
+            ("couleur invalide", list => { list[0]!["color"] = "sépia"; return list; }, null, "couleur « sépia » invalide"),
+            ("description vide", list => { list[0]!["description"] = ""; return list; }, null, "description"),
+            ("Souvenirs non liste", null, _ => new JsonObject(), "liste non vide attendue"),
+            ("champ de Souvenir inconnu", null, list => { list[0]!["weight"] = 2; return list; }, "clé « weight » inconnue"),
+            ("Souvenir en double", null, list => { list.Add(list[0]!.DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("constellation inconnue", null, list => { list[0]!["constellation"] = "apres"; return list; }, "constellation « apres » inconnue"),
+            ("texte vide", null, list => { list[0]!["text"] = ""; return list; }, "text"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutateConstellations, Func<JsonArray, JsonNode> mutateSouvenirs, string expected) in cases)
+        {
+            string constellationsText = mutateConstellations == null ? constellations : mutateConstellations(JsonNode.Parse(constellations)!.AsArray()).ToJsonString();
+            string souvenirsText = mutateSouvenirs == null ? souvenirs : mutateSouvenirs(JsonNode.Parse(souvenirs)!.AsArray()).ToJsonString();
+            string error = SouvenirDataLoader.Apply(constellationsText, souvenirsText);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(SouvenirDataLoader.Get("billet_de_train"), ticket),
+                $"Souvenirs, {name} refusé sans publication ({error})");
+        }
+        ConstellationData before = SouvenirDataLoader.GetConstellation("avant");
+        JsonArray orphan = JsonNode.Parse(souvenirs)!.AsArray();
+        orphan[0]!["constellation"] = "apres";
+        SouvenirDataLoader.Apply(constellations, orphan.ToJsonString());
+        Check(ReferenceEquals(SouvenirDataLoader.GetConstellation("avant"), before), "Souvenirs refusés : constellations valides non publiées seules");
+        Check(SouvenirDataLoader.Apply(constellations, "[ 3 ]")?.Contains("entrée 0 : objet attendu", StringComparison.Ordinal) == true,
+            "Souvenirs : entrée non objet refusée");
+        Check(SouvenirDataLoader.Apply(constellations, souvenirs) == null && !ReferenceEquals(SouvenirDataLoader.Get("billet_de_train"), ticket)
+            && SouvenirDataLoader.GetAllConstellations().Count == 6, "Souvenirs du dépôt republiés");
+        string invalid = SouvenirDataLoader.Apply(constellations, "[ { \"id\": ");
+        Check(invalid?.Contains("JSON invalide", StringComparison.Ordinal) == true, $"Souvenirs, JSON invalide refusé ({invalid})");
+    }
+
+    /// <summary>Montées d'armes (plan 26 Q7f-3) : fichier du dépôt accepté, refus sans publication.</summary>
+    private void CheckWeaponUpgrades()
+    {
+        Check(WeaponUpgradeDataLoader.TryLoad(out string loadError) && WeaponUpgradeDataLoader.GetWeaponMaxLevel() == 50
+            && WeaponUpgradeDataLoader.GetStatConfig("projectile_count") is { Integer: true, Additive: true }, $"montées d'armes du dépôt acceptées {loadError}");
+        WeaponUpgradeStatConfig damage = WeaponUpgradeDataLoader.GetStatConfig("damage");
+        string valid = FileAccess.GetFileAsString(WeaponUpgradeDataLoader.DataPath);
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["max_level"] = 50, "clé « max_level » inconnue"),
+            ("niveau maximal nul", root => root["weapon_max_level"] = 0, "weapon_max_level"),
+            ("niveau maximal fractionnaire", root => root["weapon_max_level"] = 50.5, "weapon_max_level"),
+            ("stats absentes", root => root.Remove("stats"), "section stats absente"),
+            ("stats vides", root => root["stats"] = new JsonObject(), "au moins une stat montable"),
+            ("stat non objet", root => root["stats"]!["damage"] = 0.18, "stats.damage : objet attendu"),
+            ("champ de stat inconnu", root => root["stats"]!["damage"]!["weight"] = 1, "clé « weight » inconnue"),
+            ("pas absent", root => root["stats"]!["damage"]!.AsObject().Remove("step"), "step"),
+            ("pas nul", root => root["stats"]!["damage"]!["step"] = 0, "step"),
+            ("mode inconnu", root => root["stats"]!["damage"]!["mode"] = "exponential", "« exponential » inconnu"),
+            ("entier non booléen", root => root["stats"]!["projectile_count"]!["integer"] = 1, "integer"),
+            ("plafond négatif", root => root["stats"]!["arc_angle"]!["max"] = -360, "max"),
+        };
+        string duplicated = valid.Replace("\"weapon_max_level\": 50,", "\"weapon_max_level\": 50, \"weapon_max_level\": 40,", StringComparison.Ordinal);
+        string duplicateError = WeaponUpgradeDataLoader.Apply(duplicated);
+        Check(duplicated != valid && duplicateError?.Contains("en double", StringComparison.Ordinal) == true, $"montées d'armes, clé en double refusée ({duplicateError})");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"stats\": " : Mutated(valid, mutate);
+            string error = WeaponUpgradeDataLoader.Apply(text);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(WeaponUpgradeDataLoader.GetStatConfig("damage"), damage),
+                $"montées d'armes, {name} refusé sans publication ({error})");
+        }
+        Check(WeaponUpgradeDataLoader.Apply(valid) == null && !ReferenceEquals(WeaponUpgradeDataLoader.GetStatConfig("damage"), damage)
+            && WeaponUpgradeDataLoader.GetWeaponMaxLevel() == 50, "montées d'armes du dépôt republiées");
+    }
+
+    /// <summary>Tables de butin (plan 26 Q7g-1) : catalogue du dépôt accepté, refus sans publication.</summary>
+    private void CheckLootTables()
+    {
+        Check(LootTableLoader.TryLoad(out string loadError) && LootTableLoader.Exists("poi_sanctuary") && !LootTableLoader.Exists("loot_table_id"),
+            $"tables de butin du dépôt acceptées, modèle ignoré {loadError}");
+        LootTableData cache = LootTableLoader.Get("poi_cache");
+        List<(string Name, string Text)> files = new();
+        foreach (string name in DirAccess.GetFilesAt(LootTableLoader.DirectoryPath))
+            if (name.EndsWith(".json", StringComparison.Ordinal) && !name.StartsWith('_'))
+                files.Add((name, FileAccess.GetFileAsString($"{LootTableLoader.DirectoryPath}/{name}")));
+        int sanctuary = files.FindIndex(file => file.Name == "poi_sanctuary.json");
+        Func<string, bool> souvenirExists = id => SouvenirDataLoader.Get(id) != null;
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("champ inconnu", root => root["rolls"] = 2, "clé « rolls » inconnue"),
+            ("id différent du fichier", root => root["id"] = "poi_temple", "différent du nom du fichier"),
+            ("entrées vides", root => root["entries"] = new JsonArray(), "entries"),
+            ("entrée non objet", root => root["entries"]![0] = 5, "entries[0] : objet attendu"),
+            ("champ d'entrée inconnu", root => root["entries"]![0]!["chance"] = 1, "clé « chance » inconnue"),
+            ("sorte inconnue", root => root["entries"]![0]!["type"] = "resource", "« resource » inconnu"),
+            ("article inattendu", root => root["entries"]![2]!["item"] = "gold", "article « gold » inattendu pour essence"),
+            ("Souvenir inconnu", root => root["entries"]![0]!["item"] = "carte_postale", "article « carte_postale » inattendu pour souvenir"),
+            ("poids nul", root => root["entries"]![0]!["weight"] = 0, "weight"),
+            ("montant fractionnaire", root => root["entries"]![2]!["min_amount"] = 12.5, "min_amount"),
+            ("montants inversés", root => root["entries"]![2]!["min_amount"] = 30, "min_amount ≤ max_amount"),
+            ("secours hors niveaux d'objet", root => root["entries"]![2]!["fallback_essence"] = 4, "réservé à object_level"),
+            ("secours négatif", root => root["entries"]![1]!["fallback_essence"] = -6, "fallback_essence"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[sanctuary] = (files[sanctuary].Name, Mutated(files[sanctuary].Text, mutate));
+            string error = LootTableLoader.Apply(candidate, souvenirExists);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(LootTableLoader.Get("poi_cache"), cache),
+                $"tables de butin, {name} refusé sans publication ({error})");
+        }
+        List<(string, string)> broken = new(files) { ("poi_vide.json", "{ \"id\": ") };
+        Check(LootTableLoader.Apply(broken, souvenirExists)?.Contains("poi_vide.json : JSON invalide", StringComparison.Ordinal) == true,
+            "tables de butin, JSON invalide refusé avec son fichier");
+        List<(string, string)> copy = new(files) { ("poi_cache_copie.json", files.Find(file => file.Name == "poi_cache.json").Text) };
+        string copyError = LootTableLoader.Apply(copy, souvenirExists);
+        Check(copyError?.Contains("différent du nom du fichier", StringComparison.Ordinal) == true, $"tables de butin, copie d'une table refusée ({copyError})");
+        JsonObject named = JsonNode.Parse(files[sanctuary].Text)!.AsObject();
+        named["entries"]![0]!["item"] = "billet_de_train";
+        List<(string, string)> withNamed = new(files);
+        withNamed[sanctuary] = (files[sanctuary].Name, named.ToJsonString());
+        Check(LootTableLoader.Apply(withNamed, souvenirExists) == null && LootTableLoader.Apply(files, souvenirExists) == null
+            && !ReferenceEquals(LootTableLoader.Get("poi_cache"), cache), "tables de butin : Souvenir nommé admis, dépôt republié");
+    }
+
+    /// <summary>Lieux (plan 26 Q7g-2) : fichier du dépôt accepté, références contrôlées, refus sans publication.</summary>
+    private void CheckPois()
+    {
+        Check(PoiDataLoader.TryLoad(out string loadError) && PoiDataLoader.GetAll().Count == 6
+            && PoiDataLoader.Get("sanctuary")?.EnemyGuards.Count == 3, $"lieux du dépôt acceptés {loadError}");
+        PoiData anomaly = PoiDataLoader.Get("anomaly");
+        PoiDataLoader.References references = new(LootTableLoader.Exists, EnemyDataLoader.Exists);
+        string valid = FileAccess.GetFileAsString(PoiDataLoader.DataPath);
+        JsonObject Poi(JsonArray list, string id) => list.OfType<JsonObject>().First(poi => poi["id"]!.GetValue<string>() == id);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de lieux attendue"),
+            ("entrée non objet", list => { list.Add(3); return list; }, "objet attendu"),
+            ("poids de tirage mort", list => { Poi(list, "anomaly")["spawn_weight"] = 10; return list; }, "clé « spawn_weight » inconnue"),
+            ("identifiant en double", list => { list.Add(Poi(list, "anomaly").DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("taille nulle", list => { Poi(list, "anomaly")["size"] = 0; return list; }, "size"),
+            ("distances inversées", list => { Poi(list, "anomaly")["min_distance_from_spawn"] = 200; return list; }, "min_distance_from_spawn ≤ max_distance_from_spawn"),
+            ("couleur invalide", list => { Poi(list, "anomaly")["color"] = "violet sombre"; return list; }, "couleur « violet sombre » invalide"),
+            ("forme inconnue", list => { Poi(list, "anomaly")["shape"] = "tower"; return list; }, "« tower » inconnu"),
+            ("interaction inconnue", list => { Poi(list, "anomaly")["interaction_type"] = "pray"; return list; }, "« pray » inconnu"),
+            ("fouille négative", list => { Poi(list, "anomaly")["search_time"] = -1; return list; }, "search_time"),
+            ("table inconnue", list => { Poi(list, "anomaly")["loot_table_id"] = "poi_temple"; return list; }, "table « poi_temple » inconnue"),
+            ("tirages fractionnaires", list => { Poi(list, "sanctuary")["loot_rolls"] = 2.5; return list; }, "loot_rolls"),
+            ("gardien inconnu", list => { Poi(list, "sanctuary")["enemy_guards"]![0] = "dragon"; return list; }, "créature « dragon » inconnue"),
+            ("biome en double", list => { Poi(list, "anomaly")["biome_blacklist"] = new JsonArray("swamp", "swamp"); return list; }, "biome « swamp » en double"),
+            ("biome non textuel", list => { Poi(list, "anomaly")["biome_whitelist"] = new JsonArray(3); return list; }, "biome_whitelist : texte non vide attendu"),
+            ("biome autorisé et exclu", list => { JsonObject poi = Poi(list, "anomaly"); poi["biome_whitelist"] = new JsonArray("swamp"); poi["biome_blacklist"] = new JsonArray("swamp"); return list; }, "à la fois autorisé et exclu"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = PoiDataLoader.Apply(text, references);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(PoiDataLoader.Get("anomaly"), anomaly),
+                $"lieux, {name} refusé sans publication ({error})");
+        }
+        Check(PoiDataLoader.Apply(valid, references) == null && !ReferenceEquals(PoiDataLoader.Get("anomaly"), anomaly), "lieux du dépôt republiés");
+    }
+
+    /// <summary>Défense, pistage et budget d'effets (plan 26 Q7g-3) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckCombatSettings()
+    {
+        bool defenseLoaded = DefenseConfig.TryLoad(out DefenseConfig defense, out string defenseError);
+        bool trackingLoaded = Vestiges.Combat.EnemyTracking.TryLoad(out string trackingError);
+        bool budgetLoaded = Vestiges.Combat.FxBudget.TryLoad(out string budgetError);
+        Check(defenseLoaded && defense.ArmorHalfValue == 30f && trackingLoaded && budgetLoaded,
+            $"défense, pistage et budget d'effets du dépôt acceptés {defenseError}{trackingError}{budgetError}");
+        string validDefense = FileAccess.GetFileAsString(DefenseConfig.FilePath);
+        (string, Action<JsonObject>, string)[] defenseCases =
+        {
+            ("champ inconnu", root => root["armor"] = 30, "clé « armor » inconnue"),
+            ("invulnérabilité négative", root => root["hurt_invulnerability_seconds"] = -0.1, "hurt_invulnerability_seconds"),
+            ("recharge nulle", root => root["shield_recharge_seconds"] = 0, "shield_recharge_seconds"),
+            ("demi-valeur nulle", root => root["armor_half_value"] = 0, "armor_half_value"),
+            ("réduction au-delà du tout", root => root["armor_max_reduction"] = 1.2, "armor_max_reduction"),
+            ("vol de vie au-delà des PV", root => root["lifesteal_max_hp_per_second"] = 2, "lifesteal_max_hp_per_second"),
+            ("rythme du vol nul", root => root["lifesteal_tick_seconds"] = 0, "lifesteal_tick_seconds"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in defenseCases)
+        {
+            bool refused = !DefenseConfig.TryParse(Mutated(validDefense, mutate), out DefenseConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"défense, {name} refusé ({error})");
+        }
+        Check(DefenseConfig.TryParse("{}", out DefenseConfig defaults, out _) && defaults.ArmorHalfValue == 15f && defaults.ArmorMaxReduction == 0.75f,
+            "défense : fichier vide, secours d'avant gardés");
+
+        string validTracking = FileAccess.GetFileAsString("res://data/scaling/enemy_tracking.json");
+        (string, Action<JsonObject>, string)[] trackingCases =
+        {
+            ("champ inconnu", root => root["engage"] = 450, "clé « engage » inconnue"),
+            ("repérage nul", root => root["engage_distance"] = 0, "engage_distance"),
+            ("trace perdue avant le repérage", root => root["lose_track_distance"] = 300, "engage_distance ≤ lose_track_distance"),
+            ("délai négatif", root => root["lose_track_seconds"] = -1, "lose_track_seconds"),
+            ("errance non numérique", root => root["wander_speed_factor"] = "lente", "wander_speed_factor"),
+            ("virage nul", root => root["wander_turn_seconds"] = 0, "wander_turn_seconds"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in trackingCases)
+        {
+            bool refused = !Vestiges.Combat.EnemyTracking.TryParse(Mutated(validTracking, mutate), out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"pistage, {name} refusé ({error})");
+        }
+        Check(Vestiges.Combat.EnemyTracking.TryParse("{}", out Vestiges.Combat.EnemyTracking.Settings tracking, out _)
+            && tracking == new Vestiges.Combat.EnemyTracking.Settings(450f, 800f, 4f, 0.35f, 2.5f), "pistage : fichier vide, secours d'avant gardés");
+
+        string validBudget = FileAccess.GetFileAsString("res://data/scaling/fx_budget.json");
+        (string, Action<JsonObject>, string)[] budgetCases =
+        {
+            ("niveau inconnu", root => root["off"] = new JsonObject(), "clé « off » inconnue"),
+            ("catégorie inconnue", root => root["full"]!["trails_per_frame"] = 10, "clé « trails_per_frame » inconnue"),
+            ("plafond négatif", root => root["full"]!["sparks_per_frame"] = -1, "sparks_per_frame"),
+            ("plafond fractionnaire", root => root["reduced"]!["deaths_per_frame"] = 4.5, "deaths_per_frame"),
+            ("réduit au-dessus du plein", root => root["reduced"]!["numbers_per_frame"] = 40, "reduced.numbers_per_frame ≤ full.numbers_per_frame"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in budgetCases)
+        {
+            bool refused = !Vestiges.Combat.FxBudget.TryParse(Mutated(validBudget, mutate), out _, out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"budget d'effets, {name} refusé ({error})");
+        }
+        Check(Vestiges.Combat.FxBudget.TryParse("{}", out int[] full, out int[] reduced, out _)
+            && string.Join(",", full) == "320,32,12,24" && string.Join(",", reduced) == "120,12,5,12", "budget d'effets : fichier vide, plafonds d'avant gardés");
+    }
+
+    /// <summary>Bilan, carte, raretés et visuels d'armes (plan 26 Q7g-4a) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckInterfaceSettings()
+    {
+        bool summaryLoaded = RunSummaryConfig.TryLoad(out _, out string summaryError);
+        bool mapLoaded = MapPalette.TryLoad(out string mapError);
+        bool raritiesLoaded = RarityPalette.TryLoad(out string raritiesError);
+        bool visualsLoaded = WeaponVisualConfig.TryLoad(out _, out string visualsError);
+        Check(summaryLoaded && mapLoaded && raritiesLoaded && visualsLoaded,
+            $"bilan, carte, raretés et visuels d'armes du dépôt acceptés {summaryError}{mapError}{raritiesError}{visualsError}");
+
+        string summary = FileAccess.GetFileAsString(RunSummaryConfig.FilePath);
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["meters"] = 16, "clé « meters » inconnue"),
+            ("échelle nulle", root => root["pixels_per_meter"] = 0, "pixels_per_meter"),
+            ("pas négatif", root => root["distance_step_seconds"] = -0.25, "distance_step_seconds"),
+        })
+        {
+            bool refused = !RunSummaryConfig.TryParse(Mutated(summary, mutate), out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"bilan, {name} refusé ({error})");
+        }
+
+        string map = FileAccess.GetFileAsString(MapPalette.FilePath);
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["river"] = "#4A6A5E", "clé « river » inconnue"),
+            ("route invalide", root => root["road"] = "beige", "couleur « beige » invalide"),
+            ("biome inconnu", root => root["biomes"]!["desert"] = new JsonArray("#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"), "biome « desert » inconnu"),
+            ("forêt absente", root => root["biomes"]!.AsObject().Remove("forest_reclaimed"), "forest_reclaimed attendu"),
+            ("terrain manquant", root => root["biomes"]!["swamp"]!.AsArray().RemoveAt(3), "biomes.swamp : 4 couleurs attendues"),
+            ("teinte de phase manquante", root => root["phase_tints"]!.AsArray().RemoveAt(4), "phase_tints : 5 couleurs attendues"),
+            ("mélange hors borne", root => root["phase_blends"]![2] = 1.5, "phase_blends"),
+        })
+        {
+            bool refused = !MapPalette.TryParse(Mutated(map, mutate), biomeExists, out MapPalette palette, out string error);
+            Check(refused && palette == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"carte, {name} refusé ({error})");
+        }
+        Check(!MapPalette.TryParse("[]", biomeExists, out _, out string rootError) && rootError == "objet attendu à la racine",
+            $"carte, racine non objet refusée ({rootError})");
+
+        RarityColors common = RarityPalette.Colors("common");
+        string rarities = FileAccess.GetFileAsString(RarityPalette.FilePath);
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["rarities"]![0]!["glow"] = "#FFFFFF", "clé « glow » inconnue"),
+            ("rareté en double", root => root["rarities"]!.AsArray().Add(root["rarities"]![1]!.DeepClone()), "déjà déclarée"),
+            ("commune absente", root => root["rarities"]!.AsArray().RemoveAt(0), "« common » attendue"),
+            ("nom sans traduction", root => root["rarities"]![2]!["name_key"] = "RARITY_MYTHIQUE", "sans traduction"),
+            ("couleur invalide", root => root["rarities"]![3]!["dark"] = "pourpre", "couleur « pourpre » invalide"),
+        })
+        {
+            string error = RarityPalette.Apply(Mutated(rarities, mutate), translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && RarityPalette.Colors("common").Main == common.Main,
+                $"raretés, {name} refusé sans publication ({error})");
+        }
+        Check(RarityPalette.Apply(rarities, translated) == null && RarityPalette.Colors("legendary").Main == Color.FromHtml("#F0C85C"),
+            "raretés du dépôt republiées");
+
+        string visuals = FileAccess.GetFileAsString(WeaponVisualConfig.FilePath);
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["scale"] = 2, "clé « scale » inconnue"),
+            ("réglage absent", root => root.Remove("wave_interval_s"), "wave_interval_s"),
+            ("plafond sous 1", root => root["max_scale"] = 0.5, "max_scale"),
+            ("part au-delà du tout", root => root["shot_cooldown_share"] = 1.5, "shot_cooldown_share"),
+            ("son amplifié", root => root["chained_shot_volume_db"] = 3, "chained_shot_volume_db"),
+            ("fronts fractionnaires", root => root["cone_max_fronts"] = 2.5, "cone_max_fronts"),
+        })
+        {
+            bool refused = !WeaponVisualConfig.TryParse(Mutated(visuals, mutate), out WeaponVisualConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"visuels d'armes, {name} refusé ({error})");
+        }
+    }
+
+    /// <summary>Musique, catalogue des stats et mobilité (plan 26 Q7g-4b) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckMusicStatsMobility()
+    {
+        bool musicLoaded = MusicConfig.TryLoad(MusicConfig.DefaultPath, out _, out string musicError);
+        bool statsLoaded = StatCatalog.TryLoad(out string statsError);
+        bool mobilityLoaded = MobilityConfig.TryLoad(out string mobilityError);
+        Check(musicLoaded && statsLoaded && mobilityLoaded, $"musique, stats et mobilité du dépôt acceptées {musicError}{statsError}{mobilityError}");
+
+        string music = FileAccess.GetFileAsString(MusicConfig.DefaultPath);
+        Func<string, bool> soundExists = DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains;
+        Func<string, bool> variantExists = id => Array.IndexOf(EnemyVariantDataLoader.VariantIds, id) >= 0;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("section inconnue", root => root["mix"] = new JsonObject(), "clé « mix » inconnue"),
+            ("intention inconnue", root => root["intents"]!["boss"] = new JsonObject { ["music"] = "mus_mort" }, "intention « boss » inconnue"),
+            ("morceau absent", root => root["intents"]!["hub"]!["music"] = "mus_accueil", "« mus_accueil » absent de la banque de sons"),
+            ("morceau manquant", root => root["intents"]!["hub"]!.AsObject().Remove("music"), "music"),
+            ("fondu nul", root => root["intents"]!["combat"]!["fade_sec"] = 0, "fade_sec"),
+            ("départ négatif", root => root["intents"]!["warning"]!["start_sec"] = -1, "start_sec"),
+            ("boucle non booléenne", root => root["intents"]!["death"]!["loop"] = "non", "loop"),
+            ("échantillonnage trop serré", root => root["combat"]!["sample_sec"] = 0.01, "sample_sec"),
+            ("variante inconnue", root => root["combat"]!["peak_variants"]![0] = "boss", "variante « boss » inconnue"),
+            ("sortie au-dessus de l'entrée", root => root["combat"]!["exit_enemies"] = 90, "exit_enemies ≤ enter_enemies"),
+            ("seuil fractionnaire", root => root["combat"]!["enter_enemies"] = 85.5, "enter_enemies"),
+        })
+        {
+            bool refused = !MusicConfig.TryParse(Mutated(music, mutate), soundExists, variantExists, out MusicConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"musique, {name} refusé ({error})");
+        }
+        Check(MusicConfig.TryParse("{ \"intents\": {} }", soundExists, variantExists, out MusicConfig quiet, out _) && quiet.Cues.Count == 0
+            && quiet.CombatEnterEnemies == 4 && quiet.CombatPeakVariants.Contains("champion"), "musique : sans morceau ni combat, secours d'avant gardés");
+
+        string damageName = StatCatalog.Name("damage");
+        string stats = FileAccess.GetFileAsString(StatCatalog.FilePath);
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["stats"]![0]!["icon"] = "x", "clé « icon » inconnue"),
+            ("stat en double", root => root["stats"]!.AsArray().Add(root["stats"]![0]!.DeepClone()), "déjà déclarée"),
+            ("affichage inconnu", root => root["stats"]![0]!["display"] = "stars", "« stars » inconnu"),
+            ("libellé sans traduction", root => root["stats"]![0]!["name_key"] = "STAT_INCONNUE", "sans traduction"),
+            ("propriété inconnue", root => root["stats"]![0]!["property"] = "luck", "propriété « luck » inconnue"),
+            ("unité vide", root => root["stats"]![0]!["unit"] = "", "unit"),
+        })
+        {
+            string error = StatCatalog.Apply(Mutated(stats, mutate), translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && StatCatalog.Name("damage") == damageName,
+                $"stats, {name} refusé sans publication ({error})");
+        }
+        Check(StatCatalog.Apply(stats, translated) == null && StatCatalog.Name("damage") == damageName, "stats du dépôt republiées");
+    }
+
+    /// <summary>Banque de sons (plan 26 Q7h-1) : fichier du dépôt accepté, chaque règle refusée avec le son en cause.</summary>
+    private void CheckSoundBank()
+    {
+        string valid = FileAccess.GetFileAsString(AudioManager.SoundBankPath);
+        Func<string, bool> resourceExists = path => ResourceLoader.Exists(path);
+        Func<string, bool> busExists = bus => AudioServer.GetBusIndex(bus) >= 0;
+        Check(SoundBank.TryParse(valid, resourceExists, busExists, "World", out Dictionary<string, SoundBankEntry> bank, out string loadError)
+            && bank.Count > 100 && bank["sfx_menu_survol"].Variants.Count >= 2, $"banque de sons du dépôt acceptée {loadError}");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("son non objet", root => root["sfx_test"] = 3, "son sfx_test : objet attendu"),
+            ("champ inconnu", root => root["mus_hub"]!["pitch"] = 1, "clé « pitch » inconnue"),
+            ("fichier absent", root => root["mus_hub"]!["path"] = "res://assets/audio/musique/absente.ogg", "« res://assets/audio/musique/absente.ogg » introuvable"),
+            ("volume démesuré", root => root["mus_hub"]!["volume_db"] = 40, "volume_db"),
+            ("intervalle négatif", root => root["sfx_level_up"]!["min_interval_ms"] = -1, "min_interval_ms"),
+            ("voix nulles", root => root["sfx_level_up"]!["max_voices"] = 0, "max_voices"),
+            ("bus inconnu", root => root["sfx_level_up"]!["bus"] = "Reverb", "bus « Reverb » inconnu"),
+            ("écart négatif", root => root["sfx_hit_ennemi"]!["volume_variance_db"] = -1, "volume_variance_db"),
+            ("atténuation sans durée", root => root["sfx_level_up"]!.AsObject().Remove("duck_sec"), "duck_sec"),
+            ("atténuation qui monte", root => root["sfx_level_up"]!["duck_music_db"] = 3, "duck_music_db"),
+            ("une seule variante", root => root["sfx_menu_survol"]!["variants"] = new JsonArray("res://assets/audio/sfx/ui/menu_hover_1.wav"), "variants"),
+        })
+        {
+            bool refused = !SoundBank.TryParse(Mutated(valid, mutate), resourceExists, busExists, "World", out Dictionary<string, SoundBankEntry> parsed, out string error);
+            Check(refused && parsed == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"banque de sons, {name} refusé ({error})");
+        }
+    }
+
+    /// <summary>Décors par biome (plan 26 Q7h-2) : dossier du dépôt accepté, chaque règle refusée avec son fichier.</summary>
+    private void CheckBiomeProps()
+    {
+        Check(PropSpawner.TryLoadConfigs(out string loadError), $"décors par biome du dépôt acceptés {loadError}");
+        List<(string Name, string Text)> files = new();
+        foreach (string name in DirAccess.GetFilesAt(PropSpawner.PropsDirectory))
+            if (name.EndsWith(".json", StringComparison.Ordinal) && !name.StartsWith('_'))
+                files.Add((name, FileAccess.GetFileAsString($"{PropSpawner.PropsDirectory}/{name}")));
+        int swamp = files.FindIndex(file => file.Name == "swamp.json");
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        Func<string, bool> spriteExists = path => ResourceLoader.Exists($"res://{path}");
+        Check(PropSpawner.TryParseConfigs(files, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> configs) == null
+            && configs.Count == 5 && configs["swamp"].Props.Count > 20, "décors : cinq biomes publiés");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["seed"] = 3, "clé « seed » inconnue"),
+            ("biome d'un autre fichier", root => root["biome_id"] = "urban_ruins", "différent du nom du fichier"),
+            ("densité hors borne", root => root["density"] = 1.5, "density"),
+            ("aucun décor", root => root["props"] = new JsonArray(), "props"),
+            ("variantes mortes", root => root["props"]![0]!["variants"] = 1, "clé « variants » inconnue"),
+            ("poids nul", root => root["props"]![0]!["weight"] = 0, "weight"),
+            ("terrain inconnu", root => root["props"]![0]!["terrain"]![0] = "sand", "terrain « sand » inconnu"),
+            ("terrain en double", root => root["props"]![0]!["terrain"] = new JsonArray("grass", "grass"), "terrain « grass » en double"),
+            ("sans terrain", root => root["props"]![0]!["terrain"] = new JsonArray(), "terrain"),
+            ("sprite absent", root => root["props"]![0]!["sprite_base"] = "assets/props/swamp/prop_absent.png", "image « assets/props/swamp/prop_absent.png » introuvable"),
+            ("canopée absente", root => root["props"]![0]!["sprite_canopy"] = "assets/props/swamp/prop_absent_canopy.png", "introuvable"),
+            ("distance nulle", root => root["props"]![0]!["min_distance"] = 0, "min_distance"),
+            ("emprise nulle", root => root["props"]![0]!["footprint_scale"] = 0, "footprint_scale"),
+            ("décor en double", root => root["props"]!.AsArray().Add(root["props"]![0]!.DeepClone()), "déjà déclaré"),
+        })
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[swamp] = (files[swamp].Name, Mutated(files[swamp].Text, mutate));
+            string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
+        }
+        List<(string, string)> unknown = new(files) { ("desert.json", "{ \"biome_id\": \"desert\", \"density\": 0.1, \"props\": [] }") };
+        string unknownError = PropSpawner.TryParseConfigs(unknown, biomeExists, spriteExists, out _);
+        Check(unknownError?.Contains("biome_id « desert » inconnu", StringComparison.Ordinal) == true, $"décors, biome inconnu refusé ({unknownError})");
     }
 
     private void CheckAtmosphere()

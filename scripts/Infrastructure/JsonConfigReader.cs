@@ -169,6 +169,10 @@ public sealed class JsonConfigReader
         return items;
     }
 
+    /// <summary>La clé est présente : un champ facultatif absent garde son secours, présent il est contrôlé.</summary>
+    public static bool Has(JsonElement owner, string key) =>
+        owner.ValueKind == JsonValueKind.Object && owner.TryGetProperty(key, out _);
+
     /// <summary>La valeur figure dans la collection (identifiants d'un autre catalogue).</summary>
     public static bool Contains(IReadOnlyCollection<string> values, string value)
     {

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -25,8 +27,17 @@ public enum StatDisplay
 /// </summary>
 public static class StatCatalog
 {
-    private static readonly Dictionary<string, (string NameKey, StatDisplay Display, string Unit)> _stats = new();
-    private static readonly Dictionary<string, string> _properties = new();
+    public const string FilePath = "res://data/ui/stats.json";
+
+    private static readonly Dictionary<string, StatDisplay> Displays = new()
+    {
+        ["value"] = StatDisplay.Value, ["count"] = StatDisplay.Count, ["percent"] = StatDisplay.Percent,
+        ["fraction"] = StatDisplay.Fraction, ["share"] = StatDisplay.Share,
+    };
+
+    private static Dictionary<string, (string NameKey, StatDisplay Display, string Unit)> _stats = new();
+    private static Dictionary<string, string> _properties = new();
+    private static string _loadError;
     private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
     private static bool _loaded;
     private const float UnlimitedCount = 999f;
@@ -110,32 +121,73 @@ public static class StatCatalog
         return _stats.TryGetValue(stat, out (string, StatDisplay, string) entry) ? entry : (stat, StatDisplay.Percent, "");
     }
 
+    /// <summary>Catalogue contrôlé une fois (plan 26 Q7g-4b) ; refusé, la raison, et la run ne démarre pas (GameBootstrap).</summary>
+    public static bool TryLoad(out string error)
+    {
+        if (!_loaded)
+            Load();
+        error = _loadError;
+        return error == null;
+    }
+
     private static void Load()
     {
         _loaded = true;
-        using FileAccess file = FileAccess.Open("res://data/ui/stats.json", FileAccess.ModeFlags.Read);
-        Json json = new();
-        if (file == null || json.Parse(file.GetAsText()) != Error.Ok)
-        {
-            GD.PushError("[StatCatalog] Cannot read data/ui/stats.json");
-            return;
-        }
+        _loadError = $"{FilePath} : lecture interrompue";
+        using FileAccess file = FileAccess.Open(FilePath, FileAccess.ModeFlags.Read);
+        _loadError = file == null ? $"{FilePath} : fichier illisible"
+            : Apply(file.GetAsText(), key => TranslationServer.Translate(key) != key) is string error ? $"{FilePath} : {error}" : null;
+        if (_loadError != null)
+            GD.PushError($"[StatCatalog] {_loadError}");
+    }
 
-        foreach (Variant item in json.Data.AsGodotDictionary()["stats"].AsGodotArray())
+    /// <summary>
+    /// Contrôle <paramref name="text"/> et ne publie qu'un fichier accepté ; rend l'erreur, nulle si tout est publié.
+    /// Libellé traduit, forme d'affichage connue, propriété de la grammaire commune traduite (PROPERTY_…).
+    /// </summary>
+    public static string Apply(string text, Func<string, bool> translated)
+    {
+        try
         {
-            Godot.Collections.Dictionary dict = item.AsGodotDictionary();
-            StatDisplay display = dict["display"].AsString() switch
+            using JsonDocument document = JsonDocument.Parse(text);
+            JsonConfigReader reader = new(document.RootElement);
+            reader.AllowOnly(reader.Root, "stats", "stats");
+            Dictionary<string, (string, StatDisplay, string)> stats = new();
+            Dictionary<string, string> properties = new();
+            foreach (JsonElement item in reader.List(reader.Root, "stats", 1))
             {
-                "value" => StatDisplay.Value,
-                "count" => StatDisplay.Count,
-                "fraction" => StatDisplay.Fraction,
-                "share" => StatDisplay.Share,
-                _ => StatDisplay.Percent,
-            };
-            string id = dict["id"].AsString();
-            _stats[id] = (dict["name_key"].AsString(), display, dict.ContainsKey("unit") ? dict["unit"].AsString() : "");
-            if (dict.ContainsKey("property"))
-                _properties[id] = dict["property"].AsString();
+                if (item.ValueKind != JsonValueKind.Object)
+                {
+                    reader.Fail("stats : objet attendu");
+                    break;
+                }
+                reader.AllowOnly(item, "stat", "id", "name_key", "display", "unit", "property");
+                string id = reader.Text(item, "id");
+                string nameKey = reader.Text(item, "name_key");
+                string display = reader.OneOf(item, "display", Displays.Keys);
+                string unit = JsonConfigReader.Has(item, "unit") ? reader.Text(item, "unit") : "";
+                string property = JsonConfigReader.Has(item, "property") ? reader.Text(item, "property") : null;
+                if (reader.Error != null)
+                    break;
+                if (stats.ContainsKey(id))
+                    reader.Fail($"stat « {id} » déjà déclarée");
+                else if (!translated(nameKey))
+                    reader.Fail($"stat « {id} » : name_key « {nameKey} » sans traduction");
+                else if (property != null && !translated("PROPERTY_" + property.ToUpperInvariant()))
+                    reader.Fail($"stat « {id} » : propriété « {property} » inconnue (sans PROPERTY_{property.ToUpperInvariant()})");
+                stats[id] = (nameKey, Displays[display], unit);
+                if (property != null)
+                    properties[id] = property;
+            }
+            if (reader.Error != null)
+                return reader.Error;
+            _stats = stats;
+            _properties = properties;
+            return null;
+        }
+        catch (JsonException exception)
+        {
+            return $"JSON invalide : {exception.Message}";
         }
     }
 }

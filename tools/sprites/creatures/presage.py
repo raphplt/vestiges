@@ -4,6 +4,9 @@ capuche vide, des éclats de pierre qui flottent au-dessus. Sous lui pend un fil
 se lève vers l'endroit visé et luit du même vert que la marque au sol.
 Reprise du 11 octobre (plan 37 M4) : le voile droit se lisait comme une gélule ; il s'évase en cloche, la capuche
 pointe et penche vers l'avant pour montrer son vide, les franges pendent plus bas et la couronne de pierres s'écarte.
+Plan 54 S3 : bosse fondue dans le voile (`smin`), voile au bord éclairé, pierres qui accrochent la lumière ; il dérive
+par à-coups, le fil à plomb en retard sur le corps, et se recueille (manches refermées, capuche baissée) avant de
+s'ouvrir pour l'incantation.
 """
 from __future__ import annotations
 
@@ -13,17 +16,17 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, smin, sphere
 
 FRAME_SIZE = (32, 48)
 FRAME_PIVOT = (16.0, 45.0)
 
 VEIL, VEIL_DARK, MAW, STONE, STRING, EYE, WEIGHT = range(7)
 MATERIALS = [
-    make_material("veil", "#A294C8", contrast=0.8),
-    make_material("veil_dark", "#4E3F72"),
+    make_material("veil", "#A294C8", contrast=0.9, rim=0.6),
+    make_material("veil_dark", "#4E3F72", contrast=1.1),
     make_material("maw", "#231632", contrast=0.5),
-    make_material("stone", "#A39C94"),
+    make_material("stone", "#A39C94", contrast=1.15, specular=0.45),
     make_material("string", "#D8D0C0", contrast=0.4),
     make_emissive("eye", "#7FFF00"),
     make_emissive("weight", "#B8FF5A"),
@@ -58,8 +61,8 @@ def parts(s: Shroud) -> list[Part]:
     hood = rotation @ rotation_x(0.35)
     result = [
         # Voile en cloche, évasé vers le bas, bosse asymétrique à l'épaule droite.
-        Part(lambda p: capsule(p, at((0, 4.0, 0)), at((0, 23.0, 0)), 8.2 + 2.0 * s.collapse, 3.6), VEIL),
-        Part(lambda p: ellipsoid(p, at((-3.6, 20.5, -0.5)), (3.4, 3.0, 3.2), rotation), VEIL),
+        Part(lambda p: smin(capsule(p, at((0, 4.0, 0)), at((0, 23.0, 0)), 8.2 + 2.0 * s.collapse, 3.6),
+                            ellipsoid(p, at((-3.6, 20.5, -0.5)), (3.4, 3.0, 3.2), rotation), 1.8), VEIL),
         # Capuche vide : on ne voit que les yeux, en colonne, jamais alignés.
         Part(lambda p: np.maximum(ellipsoid(p, head, (5.4, 5.8, 5.4), hood),
                                   -ellipsoid(p, head + hood @ np.array([0, -0.6, 4.6]), (3.6, 4.6, 2.8), hood)), VEIL_DARK),
@@ -98,19 +101,24 @@ def parts(s: Shroud) -> list[Part]:
 def _animations() -> dict[str, list[Shroud]]:
     rest = Shroud()
     return {
-        "idle": [replace(rest, hover=h, wave=w, pendulum=a)
-                 for h, w, a in ((0.0, 0.0, 0.12), (0.8, 1.6, 0.04), (1.2, 3.1, -0.1), (0.8, 4.7, 0.04))],
-        "walk": [replace(rest, hover=h, wave=w, lean=0.16, trail=1.0, pendulum=-0.35)
-                 for h, w in ((0.4, 0.0), (1.0, 1.6), (0.6, 3.1), (0.0, 4.7))],
-        # Incantation : le voile s'ouvre, le poids se lève vers l'endroit où le joueur sera.
+        # Flottement : le fil à plomb oscille à contretemps du voile.
+        "idle": [replace(rest, hover=h, wave=w, pendulum=a, lean=l)
+                 for h, w, a, l in ((0.0, 0.0, 0.14, 0.02), (0.8, 1.6, 0.02, -0.02), (1.3, 3.1, -0.12, -0.04),
+                                    (0.7, 4.7, 0.0, 0.0))],
+        # Dérive par à-coups : élan penché, le poids traîne derrière puis rattrape le corps quand il ralentit.
+        "walk": [replace(rest, hover=h, wave=w, lean=l, trail=t, pendulum=a)
+                 for h, w, l, t, a in ((0.2, 0.0, 0.22, 1.2, -0.48), (1.2, 1.6, 0.15, 0.9, -0.32),
+                                       (0.9, 3.1, 0.08, 0.6, -0.08), (0.0, 4.7, 0.18, 1.1, -0.36))],
+        # Incantation : il se recueille (manches closes, capuche baissée), puis le voile s'ouvre et le poids se lève
+        # vers l'endroit où le joueur sera.
         "attack": [
-            replace(rest, hover=1.5, spread=0.5, pendulum=0.6, lean=-0.08),
-            replace(rest, hover=3.0, spread=1.0, pendulum=1.25, lean=-0.12, wave=1.0),
-            replace(rest, hover=2.5, spread=0.8, pendulum=0.95, lean=-0.06, wave=2.0),
+            replace(rest, hover=-0.6, spread=-0.25, pendulum=-0.3, lean=0.22),
+            replace(rest, hover=3.4, spread=1.15, pendulum=1.35, lean=-0.18, wave=1.0),
+            replace(rest, hover=2.8, spread=0.9, pendulum=1.0, lean=-0.08, wave=2.0),
             replace(rest, hover=1.0, spread=0.3, pendulum=0.3, wave=3.0),
         ],
         "death": [
-            replace(rest, hover=2.0, spread=0.9, pendulum=-0.5, lean=-0.15),
+            replace(rest, hover=2.4, spread=1.0, pendulum=-0.6, lean=-0.2),
             replace(rest, collapse=0.35, spread=0.6, lean=0.15, wave=1.0),
             replace(rest, collapse=0.7, spread=0.4, lean=0.3, wave=2.0),
             replace(rest, collapse=1.0, spread=0.2, lean=0.35, wave=3.0),

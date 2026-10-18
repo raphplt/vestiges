@@ -4,6 +4,8 @@ Corps long et noir, quatre membres trop longs aux coudes relevés comme une arai
 Au bout du cou, un masque pâle et lisse, sans expression, percé de deux yeux vert-acide inégaux. Il poursuit vite.
 Reprise du 11 octobre (plan 37 M4) : masque agrandi, traînées rouges plus vives, membres un ton au-dessus du corps
 pour que les pattes se détachent du tronc.
+Plan 54 S3 : cou fondu dans le tronc (`smin`), masque de porcelaine et traînées humides qui accrochent la lumière ;
+il détale par saccades (le masque en retard sur le corps) et se cabre, cou rentré, avant de se détendre.
 """
 from __future__ import annotations
 
@@ -13,17 +15,17 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, sphere
+from ..sdf import capsule, ellipsoid, rotation_x, rotation_z, smin, sphere
 
 FRAME_SIZE = (40, 36)
 FRAME_PIVOT = (20.0, 28.0)
 
 BODY, STREAK, LIMB, MASK, EYE = range(5)
 MATERIALS = [
-    make_material("body", "#22182A", contrast=0.7),
-    make_material("streak", "#B0342E"),
-    make_material("limb", "#3E2E4C", contrast=0.7),
-    make_material("mask", "#D8D0C0", contrast=0.6),
+    make_material("body", "#22182A", contrast=0.8, rim=0.5),
+    make_material("streak", "#B0342E", contrast=1.1, specular=0.45),
+    make_material("limb", "#3E2E4C", contrast=0.85),
+    make_material("mask", "#D8D0C0", contrast=0.75, specular=0.6),
     make_emissive("eye", "#7FFF00"),
 ]
 
@@ -56,11 +58,12 @@ def parts(c: Crawler) -> list[Part]:
     neck_base = at((0.0, 0.6 * K, 6.5 * K))
     head = at((0.6 * K, (2.2 + c.neck * 2.0) * K, (9.5 + c.neck * 2.5) * K))
     result = [
-        Part(lambda p: ellipsoid(p, center, (3.4 * K, 2.8 * K, 7.8 * K), rotation), BODY),
+        # Tronc et cou d'un seul tenant : l'ombre s'étire jusqu'au masque.
+        Part(lambda p: smin(ellipsoid(p, center, (3.4 * K, 2.8 * K, 7.8 * K), rotation),
+                            capsule(p, neck_base, head, 1.4 * K, 1.1 * K), 0.8 * K), BODY),
         Part(lambda p: capsule(p, at((-1.0 * K, 2.5 * K, -5.0 * K)), at((0.8 * K, 2.7 * K, 4.0 * K)), 0.8 * K, 0.5 * K), STREAK),
         Part(lambda p: capsule(p, at((1.8 * K, 2.1 * K, -2.0 * K)), at((2.2 * K, 1.7 * K, 2.5 * K)), 0.55 * K, 0.4 * K), STREAK),
         Part(lambda p: capsule(p, at((-2.2 * K, 1.8 * K, -1.0 * K)), at((-2.0 * K, 2.0 * K, -6.0 * K)), 0.5 * K, 0.35 * K), STREAK),
-        Part(lambda p: capsule(p, neck_base, head, 1.4 * K, 1.1 * K), BODY),
         # Masque pâle et lisse, tourné un peu de travers.
         Part(lambda p: ellipsoid(p, head + rotation @ np.array([0.0, 0.0, 0.8 * K]), (2.6 * K, 3.0 * K, 1.4 * K),
                                  rotation @ rotation_z(0.2)), MASK),
@@ -85,15 +88,22 @@ def parts(c: Crawler) -> list[Part]:
 
 def _animations() -> dict[str, list[Crawler]]:
     rest = Crawler()
-    walk = [replace(rest, phase=i * np.pi / 2, stride=4.0 * K, lift=2.2 * K, bob=0.5 * K * (i % 2), roll=(0.05, 0.0, -0.05, 0.0)[i])
-            for i in range(4)]
+    # Saccades : deux temps rapides où le corps file au ras du sol, un temps où il se soulève, un où le masque
+    # rattrape le corps.
+    beats = [dict(bob=0.1 * K, pitch=0.06, neck=-0.1, roll=0.06), dict(bob=0.7 * K, pitch=-0.04, neck=0.25, roll=0.0),
+             dict(bob=-0.1 * K, crouch=0.4 * K, pitch=0.1, neck=0.05, roll=-0.06), dict(bob=0.4 * K, pitch=0.0, neck=0.4)]
+    walk = [replace(rest, phase=i * np.pi / 2, stride=4.0 * K, lift=2.2 * K, **beat) for i, beat in enumerate(beats)]
     return {
-        "idle": [rest, replace(rest, neck=0.2, bob=0.3), replace(rest, neck=0.35, bob=0.5, roll=0.04), replace(rest, neck=0.15, bob=0.2)],
+        # À l'arrêt, le masque se penche de côté comme pour imiter quelqu'un qu'il regarde.
+        "idle": [rest, replace(rest, neck=0.25, bob=0.3, roll=-0.03), replace(rest, neck=0.4, bob=0.5, roll=0.06),
+                 replace(rest, neck=0.1, bob=0.15, roll=0.02)],
         "walk": walk,
-        # Frappe : le cou se détend vers l'avant, le corps plonge.
-        "attack": [replace(rest, neck=-0.4, crouch=1.2 * K, pitch=0.1), replace(rest, neck=1.0, pitch=0.25),
-                   replace(rest, neck=1.2, pitch=0.3, crouch=0.8 * K), replace(rest, neck=0.4, pitch=0.1)],
-        "death": [replace(rest, pitch=-0.25, neck=0.8), replace(rest, roll=0.6, crouch=2.0 * K, tuck=0.4),
+        # Frappe : il se cabre cou rentré, puis le cou se détend vers l'avant et le corps plonge.
+        "attack": [replace(rest, neck=-0.7, crouch=1.4 * K, pitch=-0.22, bob=0.4 * K),
+                   replace(rest, neck=1.4, pitch=0.3, bob=0.3 * K),
+                   replace(rest, neck=1.2, pitch=0.36, crouch=1.0 * K),
+                   replace(rest, neck=0.3, pitch=0.08)],
+        "death": [replace(rest, pitch=-0.3, neck=0.9, bob=0.5 * K), replace(rest, roll=0.6, crouch=2.0 * K, tuck=0.4),
                   replace(rest, roll=1.1, crouch=3.5 * K, tuck=0.8), replace(rest, roll=1.45, crouch=4.5 * K, tuck=1.0)],
     }
 

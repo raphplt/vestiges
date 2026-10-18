@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using Godot;
 
 namespace Vestiges.Infrastructure;
@@ -12,7 +13,10 @@ public sealed class WeaponVisualConfig
     /// <summary>Manifeste des sprites de projectiles, lu par le combat et par le contrôle des armes.</summary>
     public const string ProjectileManifestPath = "res://assets/vfx/projectiles/projectiles_manifest.json";
 
+    public const string FilePath = "res://data/weapons/weapon_visuals.json";
+
     private static WeaponVisualConfig _cached;
+    private static string _loadError;
 
     public float SizeResponse { get; private init; }
     public float MaxScale { get; private init; }
@@ -29,28 +33,63 @@ public sealed class WeaponVisualConfig
     /// <summary>Échelle d'un visuel d'arme pour un multiplicateur de taille donné, jamais sous 1 ni au-delà du plafond.</summary>
     public float ScaleFor(float sizeMultiplier) => Mathf.Clamp(1f + (sizeMultiplier - 1f) * SizeResponse, 1f, MaxScale);
 
+    /// <summary>Les réglages du jeu ; refusés, une exception qui nomme le champ (le bootstrap les a déjà contrôlés).</summary>
     public static WeaponVisualConfig Load()
     {
-        if (_cached != null)
-            return _cached;
+        if (!TryLoad(out WeaponVisualConfig config, out string error))
+            throw new InvalidOperationException(error);
+        return config;
+    }
 
-        using FileAccess file = FileAccess.Open("res://data/weapons/weapon_visuals.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            throw new InvalidOperationException("Échelle visuelle des armes absente.");
-        using Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok || json.Data.VariantType != Variant.Type.Dictionary)
-            throw new InvalidOperationException("Échelle visuelle des armes invalide.");
-        Godot.Collections.Dictionary data = json.Data.AsGodotDictionary();
-        _cached = new WeaponVisualConfig
+    /// <summary>Lus strictement une fois (plan 26 Q7g-4a) ; refusés, la raison, et la run ne démarre pas (GameBootstrap).</summary>
+    public static bool TryLoad(out WeaponVisualConfig config, out string error)
+    {
+        if (_cached == null && _loadError == null)
         {
-            SizeResponse = (float)data["size_response"].AsDouble(),
-            MaxScale = (float)data["max_scale"].AsDouble(),
-            ShotCooldownShare = (float)data["shot_cooldown_share"].AsDouble(),
-            ChainedShotVolumeDb = (float)data["chained_shot_volume_db"].AsDouble(),
-            ChainedShotPitchVariance = (float)data["chained_shot_pitch_variance"].AsDouble(),
-            WaveInterval = (float)data["wave_interval_s"].AsDouble(),
-            ConeMaxFronts = (int)data["cone_max_fronts"].AsDouble(),
-        };
-        return _cached;
+            using FileAccess file = FileAccess.Open(FilePath, FileAccess.ModeFlags.Read);
+            _loadError = file == null ? $"{FilePath} : fichier illisible"
+                : TryParse(file.GetAsText(), out _cached, out string parseError) ? null : $"{FilePath} : {parseError}";
+        }
+        config = _cached;
+        error = _loadError;
+        return error == null;
+    }
+
+    /// <summary>Tous les réglages sont obligatoires.</summary>
+    public static bool TryParse(string text, out WeaponVisualConfig config, out string error)
+    {
+        config = null;
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(text);
+            JsonConfigReader reader = new(document.RootElement);
+            JsonElement root = reader.Root;
+            reader.AllowOnly(root, "visuels d'armes", "size_response", "max_scale", "shot_cooldown_share", "chained_shot_volume_db",
+                "chained_shot_pitch_variance", "wave_interval_s", "cone_max_fronts");
+            WeaponVisualConfig parsed = new()
+            {
+                SizeResponse = reader.NonNegative(root, "size_response"),
+                MaxScale = reader.Positive(root, "max_scale"),
+                ShotCooldownShare = reader.Chance(root, "shot_cooldown_share"),
+                ChainedShotVolumeDb = reader.Number(root, "chained_shot_volume_db"),
+                ChainedShotPitchVariance = reader.Chance(root, "chained_shot_pitch_variance"),
+                WaveInterval = reader.NonNegative(root, "wave_interval_s"),
+                ConeMaxFronts = reader.Integer(root, "cone_max_fronts", 1, 32),
+            };
+            if (reader.Error == null && parsed.MaxScale < 1f)
+                reader.Fail(FormattableString.Invariant($"max_scale : {parsed.MaxScale} (au moins 1, l'échelle ne descend jamais sous 1)"));
+            if (reader.Error == null && parsed.ChainedShotVolumeDb > 0f)
+                reader.Fail(FormattableString.Invariant($"chained_shot_volume_db : {parsed.ChainedShotVolumeDb} (atténuation, 0 ou moins attendu)"));
+            error = reader.Error;
+            if (error != null)
+                return false;
+            config = parsed;
+            return true;
+        }
+        catch (JsonException exception)
+        {
+            error = $"JSON invalide : {exception.Message}";
+            return false;
+        }
     }
 }

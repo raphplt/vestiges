@@ -4,6 +4,8 @@ porté haut par huit longues pattes filandreuses et pâles, genoux relevés au-d
 Une filière pend sous l'abdomen ; elle tisse les fils d'effacement qui immobilisent (plan 07).
 Reprise du 11 octobre (plan 37 M4) : remplace l'ancien générateur en voxels (scripts/generate_tisseuse.py, quatre
 directions, 64 × 64), d'un autre style que le reste du bestiaire.
+Plan 54 S3 : pattes de chitine pâle qui accrochent la lumière, abdomen au bord éclairé ; elle avance par à-coups
+d'insecte (deux pas vifs, un arrêt où une patte tressaille) et se tasse au ras du sol avant de se cabrer.
 """
 from __future__ import annotations
 
@@ -20,10 +22,10 @@ FRAME_PIVOT = (24.0, 40.0)
 
 BODY, BODY_DARK, LEG, JOINT, THREAD, CORE, EYE = range(7)
 MATERIALS = [
-    make_material("body", "#3A2A4A", contrast=0.8),
-    make_material("body_dark", "#1E1528", contrast=0.6),
-    make_material("leg", "#BDB5AA", contrast=0.7),
-    make_material("joint", "#5C5168"),
+    make_material("body", "#3A2A4A", contrast=0.9, rim=0.5),
+    make_material("body_dark", "#1E1528", contrast=0.7),
+    make_material("leg", "#BDB5AA", contrast=0.8, specular=0.45),
+    make_material("joint", "#5C5168", contrast=1.1),
     make_material("thread", "#DCE6E8", contrast=0.4),
     make_emissive("core", "#9DFF3A"),
     make_emissive("eye", "#7FFF00"),
@@ -107,14 +109,15 @@ def _animations() -> dict[str, list[Weaver]]:
     rest = Weaver()
     return {
         "idle": [replace(rest, pulse=pl, bob=b, twitch=t)
-                 for pl, b, t in ((0.0, 0.0, 0.0), (0.6, 0.4, 0.8), (1.0, 0.6, 0.0), (0.5, 0.3, -0.8))],
-        "walk": [replace(rest, phase=i * np.pi / 2, stride=3.2, lift=3.0, bob=0.6 * (i % 2), pulse=0.3 * (i % 2))
-                 for i in range(4)],
-        # Elle se cabre, pattes avant levées, le cœur s'emballe, puis crache sa toile.
+                 for pl, b, t in ((0.0, 0.0, 0.0), (0.6, 0.4, 0.9), (1.0, 0.6, 0.0), (0.5, 0.2, -0.9))],
+        # À-coups d'insecte : deux pas vifs, corps qui file bas, puis un arrêt haut où une patte tressaille.
+        "walk": [replace(rest, phase=i * np.pi / 2, stride=3.4, lift=3.2, bob=b, pulse=pl, twitch=t)
+                 for i, (b, pl, t) in enumerate(((0.2, 0.2, 0.0), (-0.4, 0.4, 0.0), (0.9, 0.1, 1.0), (0.5, 0.3, -0.4)))],
+        # Elle se tasse au ras du sol, se cabre pattes avant levées, le cœur s'emballe, puis crache sa toile.
         "attack": [
-            replace(rest, rear=0.5, pulse=0.5, bob=0.6),
-            replace(rest, rear=1.0, pulse=1.0, bob=1.4),
-            replace(rest, rear=0.8, pulse=1.0, bob=1.0, twitch=1.0),
+            replace(rest, bob=-2.0, pulse=0.6, twitch=0.6),
+            replace(rest, rear=1.0, pulse=1.0, bob=1.6),
+            replace(rest, rear=0.85, pulse=1.0, bob=1.1, twitch=1.0),
             replace(rest, rear=0.3, pulse=0.4, bob=0.3),
         ],
         "death": [

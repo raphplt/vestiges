@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Godot;
 
 namespace Vestiges.World;
 
@@ -24,39 +23,13 @@ public static class ErasureEffects
         return ByPhase.TryGetValue(phase, out Effect effect) ? effect : Effect.None;
     }
 
+    /// <summary>Effets contrôlés avec tout le fichier par <see cref="ErasureConfig"/> (plan 26 Q7d-2).</summary>
     private static void Load()
     {
         if (_loaded)
             return;
+        foreach ((ErasureManager.ErasureZonePhase phase, Effect effect) in ErasureConfig.Load().ZoneEffects)
+            ByPhase[phase] = effect;
         _loaded = true;
-        using FileAccess file = FileAccess.Open("res://data/scaling/erasure.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-            return;
-        Json json = new();
-        if (json.Parse(file.GetAsText()) != Error.Ok)
-        {
-            GD.PushError($"[ErasureEffects] erasure.json invalide : {json.GetErrorMessage()}");
-            return;
-        }
-        Godot.Collections.Dictionary root = json.Data.AsGodotDictionary();
-        if (!root.ContainsKey("zone_effects"))
-            return;
-        Godot.Collections.Dictionary effects = root["zone_effects"].AsGodotDictionary();
-        Read(effects, "fragile", ErasureManager.ErasureZonePhase.Fragile);
-        Read(effects, "frayed", ErasureManager.ErasureZonePhase.Frayed);
-        Read(effects, "erased", ErasureManager.ErasureZonePhase.Erased);
-        Read(effects, "void", ErasureManager.ErasureZonePhase.Void);
-    }
-
-    private static void Read(Godot.Collections.Dictionary effects, string key, ErasureManager.ErasureZonePhase phase)
-    {
-        if (!effects.ContainsKey(key))
-            return;
-        Godot.Collections.Dictionary entry = effects[key].AsGodotDictionary();
-        ByPhase[phase] = new Effect(
-            (float)entry.GetValueOrDefault("speed", 1f).AsDouble(),
-            (float)entry.GetValueOrDefault("damage", 1f).AsDouble(),
-            (float)entry.GetValueOrDefault("veil", 0f).AsDouble(),
-            (float)entry.GetValueOrDefault("essence_chance", 0f).AsDouble());
     }
 }

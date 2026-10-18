@@ -41,20 +41,6 @@ public static class CampUpgradeDataLoader
         ["stat"] = CampEffect.Stat,
     };
 
-    /// <summary>
-    /// Couples statistique / modificateur que <see cref="Player.ApplyPerkModifier"/> applique. Le contrat des objets ne
-    /// convient pas : il n'admet que l'additif pour les PV, alors que le Campement les donne en pourcentage.
-    /// </summary>
-    private static readonly HashSet<(string Stat, string Modifier)> PlayerModifiers = new()
-    {
-        ("max_hp", "additive"), ("max_hp", "multiplicative"), ("damage", "multiplicative"), ("speed", "multiplicative"),
-        ("attack_speed", "multiplicative"), ("aoe_radius", "multiplicative"), ("attack_range", "multiplicative"),
-        ("regen_rate", "additive"), ("lifesteal", "additive"), ("armor", "additive"), ("crit_chance", "additive"),
-        ("crit_multiplier", "additive"), ("projectile_pierce", "additive"), ("xp_magnet_radius", "multiplicative"),
-        ("luck", "additive"), ("xp_gain", "multiplicative"), ("dash_recharge", "multiplicative"),
-        ("projectile_bonus", "additive"), ("status_duration", "multiplicative"),
-    };
-
     public static IReadOnlyList<CampUpgradeData> All
     {
         get
@@ -156,7 +142,7 @@ public static class CampUpgradeDataLoader
         {
             upgrade.Stat = item.Text(entry, "stat");
             upgrade.ModifierType = item.Text(entry, "modifier_type");
-            if (item.Error == null && !PlayerModifiers.Contains((upgrade.Stat, upgrade.ModifierType)))
+            if (item.Error == null && !PlayerModifiers.Applies(upgrade.Stat, upgrade.ModifierType))
                 item.Fail($"stat : « {upgrade.Stat} » en {upgrade.ModifierType} n'est pas lu par le joueur");
             upgrade.Step = item.Positive(entry, "step");
         }

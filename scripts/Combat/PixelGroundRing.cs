@@ -5,8 +5,9 @@ using Vestiges.Core;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Halo au sol en pixel art : bord en lobes propre à chaque porteur (plan 25 S10), lueur tramée plus dense près du bord,
-/// qui respire par poses (trois rayons) plutôt qu'en glissement continu ; la trame se décale à chaque pose et scintille.
+/// Halo au sol en pixel art : bord rond au grain propre à chaque porteur (plan 25 S12), lueur tramée plus dense près du
+/// bord, qui respire par poses (trois rayons) plutôt qu'en glissement continu ; la trame se décale à chaque pose et
+/// scintille, des tirets plus vifs tournent sur le bord.
 /// Aura des créatures à affixe (une par créature, réutilisée par le pool), repère des armes au sol.
 /// Le dessin ne se refait qu'au changement de pose.
 /// </summary>
@@ -96,8 +97,13 @@ public partial class PixelGroundRing : Node2D
                 DrawRect(new Rect2(shape.Inside[i], Vector2.One), fillColor);
         }
         Color rimColor = color with { A = RimAlpha };
+        Color rimDim = color with { A = RimAlpha * 0.55f };
         foreach (Vector2I pixel in shape.Rim)
-            DrawRect(new Rect2(pixel, Vector2.One), rimColor);
+        {
+            // Douze tirets qui avancent d'un quart de pas à chaque pose : l'aura tourne autour du porteur.
+            float turn = Mathf.Atan2((pixel.Y + 0.5f) * Iso.GroundSquash, pixel.X + 0.5f) / Mathf.Tau * 12f + _pose * 0.25f;
+            DrawRect(new Rect2(pixel, Vector2.One), turn - Mathf.Floor(turn) < 0.5f ? rimColor : rimDim);
+        }
     }
 
     /// <summary>

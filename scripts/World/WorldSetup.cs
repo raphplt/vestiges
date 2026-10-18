@@ -149,8 +149,9 @@ public partial class WorldSetup : Node2D
         // Les décors de la run précédente ne bloquent plus les créatures ; ceux de celle-ci vont s'inscrire.
         ObstacleField.Clear();
         EnemyDataLoader.Load();
-        // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé.
-        if (!BiomeDataLoader.TryLoad(out _))
+        // Le bootstrap affiche le diagnostic ; ne pas lancer de génération sur un catalogue refusé. Une génération
+        // lancée derrière l'écran d'erreur tournerait encore sur son thread après le retour au camp.
+        if (GetNodeOrNull<GameBootstrap>("GameBootstrap") is { HasFailed: true } || !BiomeDataLoader.TryLoad(out _))
             return;
         PoiDataLoader.Load();
         LootTableLoader.Load();
@@ -159,7 +160,9 @@ public partial class WorldSetup : Node2D
         _ground = GetNode<TileMapLayer>("Ground");
         _poiContainer = GetNode<Node2D>("PoiContainer");
 
-        _config = WorldGenConfig.Load();
+        // Réglages du monde refusés : même règle que les biomes, le bootstrap affiche le diagnostic.
+        if (!WorldGenConfig.TryLoad(out _config, out _))
+            return;
         _land = LandSpec.For(0, _config, Seed);
         _land.ApplyTo(_config);
         PropRules.Current = _config.PropRules;
@@ -183,6 +186,9 @@ public partial class WorldSetup : Node2D
     }
 
     private Task _generation;
+    /// <summary>Chantiers de la carrière (plan 08), contrôlés au chargement par <see cref="GameBootstrap"/>.</summary>
+    public const string QuarrySitesPath = "res://data/world/quarry_sites.json";
+    public const string QuarryFolder = "res://assets/props/collapsed_quarry/";
     private WorldGenerator _builtGenerator;
     private RandomNumberGenerator _loreRng;
     // Décors en attente, hors de l'arbre, entre les placeurs et le découpage en tronçons.
@@ -190,7 +196,8 @@ public partial class WorldSetup : Node2D
 
     /// <summary>
     /// Terrain, biomes, plans de la ville, du marais et des champs, chemins, fermes et chantiers. Calcul pur, sans nœud
-    /// ni ressource du moteur hors bruits : peut tourner hors du thread principal. Chronométré étape par étape.
+    /// ni ressource du moteur hors bruits, lectures de fichiers et ResourceLoader.Exists : peut tourner hors du thread
+    /// principal. Chronométré étape par étape.
     /// </summary>
     private void GenerateWorld()
     {
@@ -246,8 +253,7 @@ public partial class WorldSetup : Node2D
         _farmConfig = FarmConfig.Load();
         _farms = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _farmConfig.Site, LandSeed);
         // Chantiers de la carrière : galerie étayée, voie et wagonnets, baraque et machines groupées.
-        _quarryPlan = SitePlan.Load("res://data/world/quarry_sites.json", "collapsed_quarry",
-                                    "res://assets/props/collapsed_quarry/", "chantiers");
+        _quarryPlan = SitePlan.Load(QuarrySitesPath, "collapsed_quarry", QuarryFolder, "chantiers");
         _quarrySites = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _quarryPlan, LandSeed);
         LoadProfiler.Span("fermes et chantiers (thread)", ref step);
         _builtGenerator = generator;
@@ -465,14 +471,9 @@ public partial class WorldSetup : Node2D
 
         if (_config.AvailableBiomes != null && _config.AvailableBiomes.Count > 0)
         {
+            // Biomes connus : WorldGenConfig refuse un identifiant absent du catalogue.
             foreach (string biomeId in _config.AvailableBiomes)
-            {
-                BiomeData biome = BiomeDataLoader.Get(biomeId);
-                if (biome != null)
-                    biomes.Add(biome);
-                else
-                    GD.PushWarning($"[WorldSetup] Biome '{biomeId}' not found in data");
-            }
+                biomes.Add(BiomeDataLoader.Get(biomeId));
         }
         else
         {
@@ -1052,188 +1053,4 @@ public partial class WorldSetup : Node2D
         AddChild(new FaunaDirector { Name = "FaunaDirector" });
     }
 
-}
-
-/// <summary>
-/// Données de configuration chargées depuis world_gen.json.
-/// </summary>
-public class WorldGenConfig
-{
-    /// <summary>Demi-largeur de la carte, en colonnes de cellules (map_radius).</summary>
-    public int MapRadius;
-    /// <summary>Demi-hauteur, en rangées (map_radius_y, plan 22 C6) ; égale à la largeur si absente.</summary>
-    public int MapRadiusY;
-    public int SpawnClearance;
-    public int CaIterations;
-    public List<WorldGenerator.ZoneConfig> Zones = new();
-    public int BiomeCount = 3;
-    public int EdgeFadeWidth = 5;
-    public int PoiMinDistanceBetween = 8;
-    /// <summary>POI et éléments de lore V1, désactivés jusqu'à leur refonte (plan 18 §5, plan 17 lot 0B).</summary>
-    public bool PoisEnabled = true;
-    public bool LoreElementsEnabled = true;
-    public int FogRevealRadius = 6;
-    public int FogInitialClearRadius = 8;
-    public List<string> AvailableBiomes = new();
-    public WorldGenerator.BiomeLayoutConfig BiomeLayout = WorldGenerator.BiomeLayoutConfig.Default;
-    public PropRules PropRules = PropRules.Default;
-    public GroundBlendConfig GroundBlend = GroundBlendConfig.Default;
-    public PathNetworkConfig Paths = PathNetworkConfig.Default;
-    public JunctionPropPlacer.Config JunctionProps;
-    public LandsConfig Lands = LandsConfig.Disabled;
-
-    public static WorldGenConfig Load()
-    {
-        WorldGenConfig config = new();
-
-        FileAccess file = FileAccess.Open("res://data/world/world_gen.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            GD.PushError("[WorldGenConfig] Cannot open world_gen.json, using defaults");
-            config.SetDefaults();
-            return config;
-        }
-
-        string jsonText = file.GetAsText();
-        file.Close();
-
-        Json json = new();
-        if (json.Parse(jsonText) != Error.Ok)
-        {
-            GD.PushError($"[WorldGenConfig] Parse error: {json.GetErrorMessage()}");
-            config.SetDefaults();
-            return config;
-        }
-
-        Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-
-        config.MapRadius = (int)dict["map_radius"].AsDouble();
-        config.MapRadiusY = dict.ContainsKey("map_radius_y") ? (int)dict["map_radius_y"].AsDouble() : config.MapRadius;
-        config.SpawnClearance = dict.ContainsKey("spawn_clearance")
-            ? (int)dict["spawn_clearance"].AsDouble()
-            : 4;
-        config.CaIterations = (int)dict["ca_iterations"].AsDouble();
-
-        if (dict.ContainsKey("biome_count"))
-            config.BiomeCount = (int)dict["biome_count"].AsDouble();
-
-        if (dict.ContainsKey("edge_fade_width"))
-            config.EdgeFadeWidth = (int)dict["edge_fade_width"].AsDouble();
-
-        if (dict.ContainsKey("poi_min_distance_between"))
-            config.PoiMinDistanceBetween = (int)dict["poi_min_distance_between"].AsDouble();
-
-        if (dict.ContainsKey("pois_enabled"))
-            config.PoisEnabled = dict["pois_enabled"].AsBool();
-
-        if (dict.ContainsKey("lore_elements_enabled"))
-            config.LoreElementsEnabled = dict["lore_elements_enabled"].AsBool();
-
-        if (dict.ContainsKey("fog_reveal_radius"))
-            config.FogRevealRadius = (int)dict["fog_reveal_radius"].AsDouble();
-
-        if (dict.ContainsKey("fog_initial_clear_radius"))
-            config.FogInitialClearRadius = (int)dict["fog_initial_clear_radius"].AsDouble();
-
-        if (dict.ContainsKey("available_biomes"))
-        {
-            Godot.Collections.Array biomesArray = dict["available_biomes"].AsGodotArray();
-            foreach (Variant biomeItem in biomesArray)
-                config.AvailableBiomes.Add(biomeItem.AsString());
-        }
-
-        if (dict.ContainsKey("biome_layout"))
-        {
-            Godot.Collections.Dictionary layout = dict["biome_layout"].AsGodotDictionary();
-            config.BiomeLayout = new WorldGenerator.BiomeLayoutConfig
-            {
-                RegionSpacing = (float)layout.GetValueOrDefault("region_spacing", config.BiomeLayout.RegionSpacing).AsDouble(),
-                WarpStrength = (float)layout.GetValueOrDefault("warp_strength", config.BiomeLayout.WarpStrength).AsDouble(),
-                SpawnOffsetFactor = (float)layout.GetValueOrDefault("spawn_offset_factor", config.BiomeLayout.SpawnOffsetFactor).AsDouble(),
-            };
-        }
-
-        if (dict.ContainsKey("ground_blend"))
-        {
-            Godot.Collections.Dictionary blend = dict["ground_blend"].AsGodotDictionary();
-            GroundBlendConfig defaults = GroundBlendConfig.Default;
-            config.GroundBlend = new GroundBlendConfig
-            {
-                Enabled = blend.GetValueOrDefault("enabled", defaults.Enabled).AsBool(),
-                BandPx = (float)blend.GetValueOrDefault("band_px", defaults.BandPx).AsDouble(),
-                EdgeNoise = (float)blend.GetValueOrDefault("edge_noise", defaults.EdgeNoise).AsDouble(),
-                NoiseScale = (float)blend.GetValueOrDefault("noise_scale", defaults.NoiseScale).AsDouble(),
-                Grain = (float)blend.GetValueOrDefault("grain", defaults.Grain).AsDouble(),
-            };
-        }
-
-        if (dict.ContainsKey("paths"))
-            config.Paths = PathNetworkConfig.Parse(dict["paths"].AsGodotDictionary());
-
-        if (dict.ContainsKey("lands"))
-            config.Lands = LandsConfig.Parse(dict["lands"].AsGodotDictionary());
-
-        if (dict.ContainsKey("junction_props"))
-            config.JunctionProps = JunctionPropPlacer.Config.Parse(dict["junction_props"].AsGodotDictionary());
-
-        if (dict.ContainsKey("props"))
-        {
-            Godot.Collections.Dictionary props = dict["props"].AsGodotDictionary();
-            PropRules defaults = PropRules.Default;
-            config.PropRules = new PropRules
-            {
-                MinBlockingHeight = (float)props.GetValueOrDefault("min_blocking_height", defaults.MinBlockingHeight).AsDouble(),
-                MinBlockingPixels = (int)props.GetValueOrDefault("min_blocking_pixels", defaults.MinBlockingPixels).AsDouble(),
-                FootprintScale = (float)props.GetValueOrDefault("footprint_scale", defaults.FootprintScale).AsDouble(),
-                GroundDecalMaxHeight = (float)props.GetValueOrDefault("ground_decal_max_height", defaults.GroundDecalMaxHeight).AsDouble(),
-                OccluderMinHeight = (float)props.GetValueOrDefault("occluder_min_height", defaults.OccluderMinHeight).AsDouble(),
-                TrampleMaxHeight = (float)props.GetValueOrDefault("trample_max_height", defaults.TrampleMaxHeight).AsDouble(),
-                TramplePrefixes = props.ContainsKey("trample_prefixes") ? props["trample_prefixes"].AsStringArray() : defaults.TramplePrefixes,
-            };
-        }
-
-        Godot.Collections.Array zonesArray = dict["zones"].AsGodotArray();
-        foreach (Variant zoneVar in zonesArray)
-        {
-            Godot.Collections.Dictionary zoneDict = zoneVar.AsGodotDictionary();
-            Godot.Collections.Dictionary weights = zoneDict["weights"].AsGodotDictionary();
-
-            WorldGenerator.ZoneConfig zone = new()
-            {
-                MaxRadius = (float)zoneDict["max_radius"].AsDouble(),
-                GrassWeight = (float)weights["grass"].AsDouble(),
-                ConcreteWeight = (float)weights["concrete"].AsDouble(),
-                WaterWeight = (float)weights["water"].AsDouble(),
-                ForestWeight = (float)weights["forest"].AsDouble()
-            };
-            config.Zones.Add(zone);
-        }
-
-        GD.Print($"[WorldGenConfig] Loaded — radius={config.MapRadius}×{config.MapRadiusY}, zones={config.Zones.Count}, biomes={config.BiomeCount}");
-        return config;
-    }
-
-    private void SetDefaults()
-    {
-        MapRadius = 30;
-        MapRadiusY = 30;
-        SpawnClearance = 4;
-        CaIterations = 4;
-
-        Zones.Add(new WorldGenerator.ZoneConfig
-        {
-            MaxRadius = 10, GrassWeight = 0.75f, ConcreteWeight = 0.20f,
-            WaterWeight = 0f, ForestWeight = 0.05f
-        });
-        Zones.Add(new WorldGenerator.ZoneConfig
-        {
-            MaxRadius = 20, GrassWeight = 0.45f, ConcreteWeight = 0.20f,
-            WaterWeight = 0.10f, ForestWeight = 0.25f
-        });
-        Zones.Add(new WorldGenerator.ZoneConfig
-        {
-            MaxRadius = 999, GrassWeight = 0.25f, ConcreteWeight = 0.15f,
-            WaterWeight = 0.20f, ForestWeight = 0.40f
-        });
-    }
 }

@@ -5,6 +5,8 @@ et luisante. Membres grêles et inégaux, deux yeux vert-acide à des hauteurs d
 la poche se contracte et la tête se projette vers l'avant.
 Reprise du 11 octobre (plan 37 M4) : mannequin blême sans repère, sa poche se voyait à peine. Lambeaux d'une
 chemise délavée sur le torse (il a été quelqu'un), poche plus grosse au reflet luisant, bras qui pendent.
+Plan 54 S3 : côtes et poche qui accrochent la lumière ; il traîne la jambe droite (pas inégaux, épaule qui plonge du
+côté boiteux), la poche ballotte au rythme des pas, et il se cambre plus loin en arrière avant de cracher.
 """
 from __future__ import annotations
 
@@ -25,11 +27,11 @@ DIMENSIONS = Proportions(ankle=2.2, shin=13.0, thigh=12.5, spine=14.5, neck=2.4,
 
 SKIN, SKIN_DARK, SAC, SAC_DARK, RIB, MAW, EYE, CLOTH, GLINT = range(9)
 MATERIALS = [
-    make_material("skin", "#B8B0A0"),
-    make_material("skin_dark", "#7E766A"),
-    make_material("sac", "#CC5533"),
-    make_material("sac_dark", "#8A3A24"),
-    make_material("rib", "#D8D0C0", contrast=0.6),
+    make_material("skin", "#B8B0A0", contrast=1.1),
+    make_material("skin_dark", "#7E766A", contrast=1.1),
+    make_material("sac", "#CC5533", contrast=1.1, specular=0.5),
+    make_material("sac_dark", "#8A3A24", contrast=1.1),
+    make_material("rib", "#D8D0C0", contrast=0.75, specular=0.5),
     make_material("maw", "#2B2230", contrast=0.5),
     make_emissive("eye", "#7FFF00"),
     make_material("cloth", "#6E84A0"),
@@ -80,14 +82,35 @@ def _animations() -> dict[str, list[Pose]]:
     base = {name: [replace(pose, shoulder_l=pose.shoulder_l + gait.lean, shoulder_r=pose.shoulder_r + gait.lean)
                    for pose in poses] for name, poses in base.items()}
     stance = base["idle"][0]
-    # Tir : il se cambre en arrière, gonfle, puis projette la tête et crache.
-    attack = [
-        replace(stance, lean=0.2, head_pitch=-0.4, breath=0.9, arm_out=0.4),
-        replace(stance, lean=0.1, head_pitch=-0.5, breath=1.0, arm_out=0.45, crouch=0.8),
-        replace(stance, lean=0.7, head_pitch=0.6, crouch=1.2, shoulder_l=-0.6, shoulder_r=-0.5),
-        replace(stance, lean=0.55, head_pitch=0.3, crouch=0.6),
+    arms = gait.lean
+    # Idle : la poche se gonfle et se vide, la tête dodeline.
+    idle = [
+        stance,
+        replace(stance, breath=0.6, bob=0.15, head_pitch=-0.08, lean_side=-0.03),
+        replace(stance, breath=1.1, bob=0.3, head_pitch=-0.14, shrug_l=0.3),
+        replace(stance, breath=0.5, bob=0.1, head_pitch=0.04, lean_side=0.03),
     ]
-    return {"idle": base["idle"], "walk": base["walk"], "attack": attack, "death": base["death"]}
+    # Il traîne la jambe droite : grand pas franc à gauche, pas court et raide à droite, l'épaule plonge côté boiteux
+    # et la poche ballotte avec un temps de retard (breath).
+    walk = [
+        replace(stance, bob=-0.5, crouch=0.4, lean_side=0.05, twist=0.12, hip_l=0.42, knee_l=0.1, hip_r=-0.3,
+                knee_r=0.25, shoulder_l=arms - 0.35, shoulder_r=arms + 0.3, elbow_r=0.4, breath=0.2),
+        replace(stance, bob=0.5, lean_side=0.02, hip_l=0.0, knee_l=0.08, hip_r=0.12, knee_r=0.55,
+                shoulder_l=arms - 0.1, shoulder_r=arms + 0.1, breath=0.9, head_pitch=-0.06),
+        replace(stance, bob=-0.9, crouch=1.0, lean_side=-0.09, twist=-0.08, shrug_r=-0.6, hip_l=-0.22,
+                knee_l=0.5, hip_r=0.2, knee_r=0.05, shoulder_l=arms + 0.25, shoulder_r=arms - 0.15, breath=0.5,
+                head_pitch=0.08),
+        replace(stance, bob=0.2, lean_side=-0.03, hip_l=-0.05, knee_l=0.9, hip_r=-0.08, knee_r=0.1,
+                shoulder_l=arms + 0.05, shoulder_r=arms, breath=0.1),
+    ]
+    # Tir, joué dès l'annonce : il se cambre loin en arrière en gonflant la poche, puis projette la tête et crache.
+    attack = [
+        replace(stance, lean=0.12, head_pitch=-0.5, breath=1.1, arm_out=0.45, shrug_l=0.5, shrug_r=0.5),
+        replace(stance, lean=-0.05, head_pitch=-0.65, breath=1.3, arm_out=0.5, crouch=1.0, shrug_l=0.7, shrug_r=0.7),
+        replace(stance, lean=0.8, head_pitch=0.7, crouch=1.4, shoulder_l=-0.7, shoulder_r=-0.6),
+        replace(stance, lean=0.58, head_pitch=0.3, crouch=0.6),
+    ]
+    return {"idle": idle, "walk": walk, "attack": attack, "death": base["death"]}
 
 
 ANIMATIONS = _animations()

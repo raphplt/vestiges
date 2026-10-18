@@ -104,97 +104,176 @@ public class PerkMomentum
     public float StopGraceSeconds { get; set; }
 }
 
+/// <summary>
+/// Signatures des personnages (data/perks/perks.json), contrôlées en entier au chargement (plan 26 Q7f-2) : clés connues,
+/// identifiants uniques, statistiques que le joueur applique, réglages de chaque mécanique bornés. Un fichier refusé
+/// n'est pas publié et arrête le chargement de la run (GameBootstrap). Les blocs restent lus en <see cref="Variant"/> :
+/// leurs bancs (PerkEffectsRegression) les appellent ainsi.
+/// </summary>
 public static class PerkDataLoader
 {
-    private static readonly List<PerkData> _allPerks = new();
+    public const string DataPath = "res://data/perks/perks.json";
+
+    private static readonly string[] PerkKeys =
+    {
+        "id", "name", "description", "stat", "modifier", "modifier_type", "is_passive", "character_id", "effects", "momentum",
+        "echo", "opening_strike", "pressure", "route_endurance", "shockwave",
+    };
+
+    private static List<PerkData> _allPerks = new();
     private static bool _loaded;
+    private static string _loadError;
+
+    /// <summary>Le fichier lu et contrôlé ; faux, avec la raison, s'il a été refusé (la run ne démarre pas).</summary>
+    public static bool TryLoad(out string error)
+    {
+        Load();
+        error = _loadError;
+        return error == null;
+    }
 
     public static void Load()
     {
         if (_loaded)
             return;
-
-        FileAccess file = FileAccess.Open("res://data/perks/perks.json", FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            GD.PushError("[PerkDataLoader] Cannot open perks.json");
-            return;
-        }
-
-        string jsonText = file.GetAsText();
-        file.Close();
-
-        Json json = new();
-        if (json.Parse(jsonText) != Error.Ok)
-        {
-            GD.PushError($"[PerkDataLoader] Parse error: {json.GetErrorMessage()}");
-            return;
-        }
-
-        // Ne publier aucune signature si un réglage du fichier est refusé.
-        List<PerkData> parsed = new();
-        foreach (Variant item in json.Data.AsGodotArray())
-        {
-            if (item.VariantType != Variant.Type.Dictionary)
-                continue;
-
-            Godot.Collections.Dictionary dict = item.AsGodotDictionary();
-
-            List<PerkEffect> effects = null;
-            if (dict.ContainsKey("effects"))
-            {
-                effects = new List<PerkEffect>();
-                foreach (Variant effectItem in dict["effects"].AsGodotArray())
-                {
-                    Godot.Collections.Dictionary effectDict = effectItem.AsGodotDictionary();
-                    effects.Add(new PerkEffect
-                    {
-                        Stat = effectDict.ContainsKey("stat") ? effectDict["stat"].AsString() : null,
-                        Modifier = effectDict.ContainsKey("modifier") ? (float)effectDict["modifier"].AsDouble() : 0f,
-                        ModifierType = effectDict.ContainsKey("modifier_type") ? effectDict["modifier_type"].AsString() : null
-                    });
-                }
-            }
-
-            PerkData perk = new()
-            {
-                Id = dict["id"].AsString(),
-                Name = dict["name"].AsString(),
-                Description = dict.ContainsKey("description") ? dict["description"].AsString() : "",
-                Stat = dict.ContainsKey("stat") ? dict["stat"].AsString() : null,
-                Modifier = dict.ContainsKey("modifier") ? (float)dict["modifier"].AsDouble() : 0f,
-                ModifierType = dict.ContainsKey("modifier_type") ? dict["modifier_type"].AsString() : null,
-                IsPassive = dict.ContainsKey("is_passive") && dict["is_passive"].AsBool(),
-                CharacterId = dict.ContainsKey("character_id") ? dict["character_id"].AsString() : null,
-                Effects = effects,
-                Momentum = dict.ContainsKey("momentum") ? ReadMomentum(dict["momentum"].AsGodotDictionary()) : null,
-                Echo = dict.ContainsKey("echo") ? ReadEcho(dict["echo"].AsGodotDictionary()) : null,
-                OpeningStrike = dict.ContainsKey("opening_strike") ? ReadOpeningStrike(dict["opening_strike"]) : null,
-                Pressure = dict.ContainsKey("pressure") ? ReadPressure(dict["pressure"]) : null,
-                RouteEndurance = dict.ContainsKey("route_endurance") ? ReadRouteEndurance(dict["route_endurance"]) : null,
-                Shockwave = dict.ContainsKey("shockwave") ? ReadShockwave(dict["shockwave"]) : null,
-            };
-            parsed.Add(perk);
-        }
-
-        _allPerks.AddRange(parsed);
         _loaded = true;
+        _loadError = $"{DataPath} : lecture interrompue";
+        using FileAccess file = FileAccess.Open(DataPath, FileAccess.ModeFlags.Read);
+        _loadError = file == null ? $"{DataPath} : fichier illisible" : Apply(file.GetAsText());
+        if (_loadError != null)
+        {
+            GD.PushError($"[PerkDataLoader] {_loadError}");
+            return;
+        }
         GD.Print($"[PerkDataLoader] Loaded {_allPerks.Count} character signatures");
     }
 
-    private static PerkMomentum ReadMomentum(Godot.Collections.Dictionary dict) => new()
+    /// <summary>Contrôle <paramref name="text"/> et ne publie qu'un fichier accepté ; rend l'erreur, nulle si tout est publié.</summary>
+    public static string Apply(string text)
     {
-        RampSeconds = Mathf.Max(0.1f, (float)dict["ramp_seconds"].AsDouble()),
-        SpeedBonus = (float)dict["speed_bonus"].AsDouble(),
-        AttackSpeedBonus = (float)dict["attack_speed_bonus"].AsDouble(),
-        StopGraceSeconds = (float)dict["stop_grace_seconds"].AsDouble(),
-    };
+        using Json json = new();
+        if (json.Parse(text) != Error.Ok)
+            return $"JSON invalide : {json.GetErrorMessage()}";
+        if (json.Data.VariantType != Variant.Type.Array)
+            return "liste de signatures attendue à la racine";
+        List<PerkData> parsed = new();
+        HashSet<string> ids = new();
+        foreach (Variant item in json.Data.AsGodotArray())
+        {
+            // Un texte commençant par « _ » commente la liste.
+            if (item.VariantType == Variant.Type.String && item.AsString().StartsWith('_'))
+                continue;
+            string where = item.VariantType == Variant.Type.Dictionary && item.AsGodotDictionary().TryGetValue("id", out Variant id)
+                ? $"signature « {id} »" : "signature sans identifiant";
+            try
+            {
+                PerkData perk = ReadPerk(item);
+                if (!ids.Add(perk.Id))
+                    throw new InvalidOperationException("identifiant déjà déclaré.");
+                parsed.Add(perk);
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or ArgumentOutOfRangeException)
+            {
+                return $"{where} : {exception.Message}";
+            }
+        }
+        if (parsed.Count == 0)
+            return "aucune signature";
+        _allPerks = parsed;
+        return null;
+    }
 
-    private static PerkEcho ReadEcho(Godot.Collections.Dictionary dict) => new()
+    private static PerkData ReadPerk(Variant item)
     {
-        Seconds = Mathf.Max(0.1f, (float)dict["seconds"].AsDouble()),
-        DamageRatio = Mathf.Clamp((float)dict["damage_ratio"].AsDouble(), 0f, 1f),
-    };
+        Godot.Collections.Dictionary dict = ReadSettings(item, "signature", PerkKeys);
+        (string stat, float modifier, string modifierType) = ReadModifier(dict, "signature", optional: true);
+        List<PerkEffect> effects = null;
+        if (dict.TryGetValue("effects", out Variant effectsValue))
+        {
+            if (effectsValue.VariantType != Variant.Type.Array)
+                throw new InvalidOperationException("effects : liste attendue.");
+            effects = new List<PerkEffect>();
+            foreach (Variant effectItem in effectsValue.AsGodotArray())
+            {
+                (string effectStat, float effectModifier, string effectType) = ReadModifier(
+                    ReadSettings(effectItem, "effects", "stat", "modifier", "modifier_type"), "effects", optional: false);
+                effects.Add(new PerkEffect { Stat = effectStat, Modifier = effectModifier, ModifierType = effectType });
+            }
+        }
+        return new PerkData
+        {
+            Id = ReadText(dict, "id", required: true),
+            Name = ReadText(dict, "name", required: true),
+            Description = ReadText(dict, "description", required: false) ?? "",
+            Stat = stat,
+            Modifier = modifier,
+            ModifierType = modifierType,
+            IsPassive = dict.ContainsKey("is_passive") && ReadFlag(dict, "is_passive"),
+            CharacterId = ReadText(dict, "character_id", required: false),
+            Effects = effects,
+            Momentum = dict.TryGetValue("momentum", out Variant momentum) ? ReadMomentum(momentum) : null,
+            Echo = dict.TryGetValue("echo", out Variant echo) ? ReadEcho(echo) : null,
+            OpeningStrike = dict.TryGetValue("opening_strike", out Variant opening) ? ReadOpeningStrike(opening) : null,
+            Pressure = dict.TryGetValue("pressure", out Variant pressure) ? ReadPressure(pressure) : null,
+            RouteEndurance = dict.TryGetValue("route_endurance", out Variant route) ? ReadRouteEndurance(route) : null,
+            Shockwave = dict.TryGetValue("shockwave", out Variant shockwave) ? ReadShockwave(shockwave) : null,
+        };
+    }
+
+    /// <summary>Statistique appliquée au joueur : les trois champs ensemble, un couple que le joueur sait appliquer.</summary>
+    private static (string Stat, float Modifier, string ModifierType) ReadModifier(Godot.Collections.Dictionary dict, string where,
+        bool optional)
+    {
+        if (optional && !dict.ContainsKey("stat") && !dict.ContainsKey("modifier") && !dict.ContainsKey("modifier_type"))
+            return (null, 0f, null);
+        string stat = ReadText(dict, "stat", required: true);
+        string modifierType = ReadText(dict, "modifier_type", required: true);
+        if (!PlayerModifiers.Applies(stat, modifierType))
+            throw new InvalidOperationException($"{where} : « {stat} » en {modifierType} n'est pas appliqué au joueur.");
+        return (stat, ReadNumber(dict, "modifier"), modifierType);
+    }
+
+    private static string ReadText(Godot.Collections.Dictionary dict, string key, bool required)
+    {
+        if (!dict.TryGetValue(key, out Variant value))
+            return required ? throw new InvalidOperationException($"{key} : texte requis.") : null;
+        if (value.VariantType != Variant.Type.String || (required && value.AsString().Length == 0))
+            throw new InvalidOperationException($"{key} : texte{(required ? " non vide" : "")} requis.");
+        return value.AsString();
+    }
+
+    private static bool ReadFlag(Godot.Collections.Dictionary dict, string key)
+    {
+        if (dict[key].VariantType != Variant.Type.Bool)
+            throw new InvalidOperationException($"{key} : booléen requis.");
+        return dict[key].AsBool();
+    }
+
+    internal static PerkMomentum ReadMomentum(Variant value)
+    {
+        Godot.Collections.Dictionary dict = ReadSettings(value, "momentum", "ramp_seconds", "speed_bonus", "attack_speed_bonus",
+            "stop_grace_seconds");
+        PerkMomentum config = new()
+        {
+            RampSeconds = ReadNumber(dict, "ramp_seconds"),
+            SpeedBonus = ReadNumber(dict, "speed_bonus"),
+            AttackSpeedBonus = ReadNumber(dict, "attack_speed_bonus"),
+            StopGraceSeconds = ReadNumber(dict, "stop_grace_seconds"),
+        };
+        if (config.RampSeconds < 0.1f || config.RampSeconds > 60f || config.SpeedBonus < 0f || config.SpeedBonus > 5f
+            || config.AttackSpeedBonus < 0f || config.AttackSpeedBonus > 5f || config.StopGraceSeconds < 0f || config.StopGraceSeconds > 10f)
+            throw new InvalidOperationException("Élan : montée de 0,1 à 60 s, bonus de 0 à 5, arrêt toléré de 0 à 10 s.");
+        return config;
+    }
+
+    internal static PerkEcho ReadEcho(Variant value)
+    {
+        Godot.Collections.Dictionary dict = ReadSettings(value, "echo", "seconds", "damage_ratio");
+        PerkEcho config = new() { Seconds = ReadNumber(dict, "seconds"), DamageRatio = ReadNumber(dict, "damage_ratio") };
+        if (config.Seconds < 0.1f || config.Seconds > 30f || config.DamageRatio < 0f || config.DamageRatio > 1f)
+            throw new InvalidOperationException("Rémanence : durée de 0,1 à 30 s, part des dégâts de 0 à 1.");
+        return config;
+    }
 
     internal static PerkOpeningStrike ReadOpeningStrike(Variant value)
     {
@@ -219,7 +298,7 @@ public static class PerkDataLoader
             throw new InvalidOperationException($"{name} : objet attendu.");
         Godot.Collections.Dictionary dict = value.AsGodotDictionary();
         foreach (Variant key in dict.Keys)
-            if (Array.IndexOf(allowed, key.AsString()) < 0)
+            if (!key.AsString().StartsWith('_') && Array.IndexOf(allowed, key.AsString()) < 0)
                 throw new InvalidOperationException($"{name} : clé inconnue « {key} ».");
         return dict;
     }

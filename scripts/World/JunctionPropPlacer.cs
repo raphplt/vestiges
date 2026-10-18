@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using Godot;
+using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
@@ -17,19 +20,41 @@ public static class JunctionPropPlacer
         public float Chance = 0.07f;
         public readonly Dictionary<string, string[]> Pairs = new();
 
-        public static Config Parse(Godot.Collections.Dictionary dict)
+        /// <summary>
+        /// Section <c>junction_props</c> lue strictement : chaque paire « a+b » réunit deux biomes connus dans l'ordre
+        /// des identifiants, et ne propose que des décors présents (chemins relatifs à assets/props, sans extension).
+        /// </summary>
+        public static Config Read(JsonConfigReader reader, JsonElement section, Func<string, bool> biomeExists,
+            Func<string, bool> propExists)
         {
-            Config config = new()
+            reader.AllowOnly(section, "junction_props", "enabled", "band_cells", "chance", "pairs");
+            Config config = new() { Enabled = reader.Flag(section, "enabled") };
+            if (JsonConfigReader.Has(section, "band_cells"))
+                config.BandCells = reader.Integer(section, "band_cells", 0, 16);
+            if (JsonConfigReader.Has(section, "chance"))
+                config.Chance = reader.Chance(section, "chance");
+            if (!JsonConfigReader.Has(section, "pairs"))
+                return config;
+            JsonElement pairs = reader.Section(section, "pairs");
+            foreach ((string key, JsonElement _) in reader.Entries(pairs, "junction_props.pairs"))
             {
-                Enabled = dict.GetValueOrDefault("enabled", false).AsBool(),
-                BandCells = (int)dict.GetValueOrDefault("band_cells", 2).AsDouble(),
-                Chance = (float)dict.GetValueOrDefault("chance", 0.07f).AsDouble(),
-            };
-            if (dict.ContainsKey("pairs"))
-            {
-                Godot.Collections.Dictionary pairs = dict["pairs"].AsGodotDictionary();
-                foreach (Variant key in pairs.Keys)
-                    config.Pairs[key.AsString()] = pairs[key].AsStringArray();
+                string[] biomes = key.Split('+');
+                if (biomes.Length != 2 || !biomeExists(biomes[0]) || !biomeExists(biomes[1])
+                    || string.CompareOrdinal(biomes[0], biomes[1]) >= 0)
+                {
+                    reader.Fail($"junction_props.pairs : « {key} » (deux biomes connus, triés, joints par +, attendus)");
+                    continue;
+                }
+                List<string> sprites = new();
+                foreach (JsonElement item in reader.List(pairs, key, 1))
+                {
+                    string path = item.ValueKind == JsonValueKind.String ? item.GetString() : null;
+                    if (string.IsNullOrEmpty(path) || path.Contains("..", StringComparison.Ordinal) || !propExists(path))
+                        reader.Fail($"junction_props.pairs.{key} : décor « {path} » introuvable");
+                    else
+                        sprites.Add(path);
+                }
+                config.Pairs[key] = sprites.ToArray();
             }
             return config;
         }

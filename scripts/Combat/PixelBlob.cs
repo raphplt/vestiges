@@ -5,8 +5,8 @@ using Vestiges.Core;
 namespace Vestiges.Combat;
 
 /// <summary>
-/// Tache au sol en pixels pour les dessins faits en code : ellipse 2:1 au bord en lobes, mêmes harmoniques que les
-/// zones de pixel_fx.gdshader (plan 25 S10). Une graine donne une forme ; les formes sont calculées une fois et partagées.
+/// Tache au sol en pixels pour les dessins faits en code : ellipse 2:1 au bord rond et rugueux, comme les zones de
+/// pixel_fx.gdshader (plan 25 S12). Une graine donne un grain ; les formes sont calculées une fois et partagées.
 /// </summary>
 public static class PixelBlob
 {
@@ -18,7 +18,7 @@ public static class PixelBlob
 
     private static readonly Dictionary<(int Radius, int Variant, int Amp), Shape> Cache = new();
 
-    /// <summary>Tache de demi-largeur <paramref name="radius"/> pixels ; <paramref name="amp"/> règle la force des lobes.</summary>
+    /// <summary>Tache de demi-largeur <paramref name="radius"/> pixels ; <paramref name="amp"/> règle le grain du bord.</summary>
     public static Shape Get(int radius, int variant, float amp)
     {
         (int, int, int) key = (radius, variant % Variants, Mathf.RoundToInt(amp * 100f));
@@ -64,13 +64,30 @@ public static class PixelBlob
 
     private static int Bayer2(int x, int y) => ((x ^ y) << 1) | y;
 
+    /// <summary>Grain d'au plus 1,2 × amp pixels au sol, continu le long du bord : cercle exact, jamais une patate.</summary>
     private static float Relative(int x, int y, float radius, float phase, float amp)
     {
         float groundX = x + 0.5f;
         float groundY = (y + 0.5f) * Iso.GroundSquash;
         float theta = Mathf.Atan2(groundY, groundX);
-        float lobes = 1f + amp * (0.07f * Mathf.Sin(3f * theta + phase) + 0.05f * Mathf.Sin(5f * theta + phase * 2.3f)
-            + 0.03f * Mathf.Sin(9f * theta + phase * 4.1f));
-        return Mathf.Sqrt(groundX * groundX + groundY * groundY) / (radius * lobes);
+        float rim = radius + amp * 1.2f * (RimNoise(theta, phase, radius) - 0.5f) * 2f;
+        return Mathf.Sqrt(groundX * groundX + groundY * groundY) / rim;
+    }
+
+    /// <summary>Bruit de valeur périodique sur le tour du bord, une cellule tous les deux pixels de circonférence environ.</summary>
+    private static float RimNoise(float theta, float phase, float radius)
+    {
+        int cells = Mathf.Max(8, Mathf.RoundToInt(radius * 2.8f));
+        float u = (theta / Mathf.Tau + 0.5f) * cells;
+        int index = Mathf.FloorToInt(u);
+        float t = u - index;
+        t = t * t * (3f - 2f * t);
+        return Mathf.Lerp(Hash(Mathf.PosMod(index, cells), phase), Hash(Mathf.PosMod(index + 1, cells), phase), t);
+    }
+
+    private static float Hash(int index, float phase)
+    {
+        float value = Mathf.Sin(index * 12.9898f + phase * 78.233f) * 43758.5453f;
+        return value - Mathf.Floor(value);
     }
 }

@@ -202,18 +202,7 @@ public static class BiomeDataLoader
             bool blend = reader.Flag(root, "blend_terrains");
             PathStyle? style = null;
             if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("path_style", out _))
-            {
-                JsonElement path = reader.Section("path_style");
-                reader.AllowOnly(path, "path_style", "tone", "ruts", "width_px");
-                string tone = OptionalText(reader, path, "tone", "#6f5d46");
-                if (tone != null && !Color.HtmlIsValid(tone))
-                    reader.Fail("path_style.tone : couleur HTML attendue");
-                float ruts = path.ValueKind == JsonValueKind.Object && path.TryGetProperty("ruts", out _)
-                    ? reader.Chance(path, "ruts") : PathStyle.Default.Ruts;
-                float width = path.ValueKind == JsonValueKind.Object && path.TryGetProperty("width_px", out _)
-                    ? reader.Positive(path, "width_px") : PathStyle.Default.WidthPx;
-                style = new PathStyle { Tone = reader.Error == null ? new Color(tone) : default, Ruts = ruts, WidthPx = width };
-            }
+                style = PathStyle.Read(reader, reader.Section("path_style"), "path_style");
             BiomeAtmosphereStyle atmosphere = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("atmosphere", out _)
                 ? Atmosphere(reader, reader.Section("atmosphere")) : BiomeAtmosphereStyle.Neutral;
             BiomeAmbience ambience = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("ambience", out _)

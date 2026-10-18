@@ -5,6 +5,8 @@ cerclée de dents ; quand elle s'ouvre, la lumière verte de l'intérieur éclai
 décalés sur le flanc. Son cri appelle des renforts (plan 07 lot B) : la cible à abattre en premier.
 Reprise du 11 octobre (plan 37 M4) : il était un petit tube vert-de-gris, perdu dans l'herbe. Chair livide
 veinée de lie-de-vin, plus grand, plis plus marqués : la cible prioritaire doit se voir de loin.
+Plan 54 S3 : tronçons de la colonne fondus (`smin`), dents qui accrochent la lumière ; il se traîne en tanguant
+(il s'affaisse sur la racine qui porte, se redresse en tirant l'autre) et se ramasse plus bas avant de hurler.
 """
 from __future__ import annotations
 
@@ -14,17 +16,17 @@ import numpy as np
 
 from ..palette import make_emissive, make_material
 from ..render import Part
-from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_z, sphere
+from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_z, smin, sphere
 
 FRAME_SIZE = (32, 48)
 FRAME_PIVOT = (16.0, 45.0)
 
 FLESH, FOLD, ROOT, TOOTH, THROAT, EYE = range(6)
 MATERIALS = [
-    make_material("flesh", "#A9807F"),
-    make_material("fold", "#5E2E40"),
-    make_material("root", "#3A2832"),
-    make_material("tooth", "#C9BFA6", contrast=0.6),
+    make_material("flesh", "#A9807F", contrast=1.1, rim=0.4),
+    make_material("fold", "#5E2E40", contrast=1.1),
+    make_material("root", "#3A2832", contrast=1.05),
+    make_material("tooth", "#C9BFA6", contrast=0.75, specular=0.6),
     make_emissive("throat", "#7FFF00"),
     make_emissive("eye", "#B8FF6A"),
 ]
@@ -53,11 +55,12 @@ def parts(t: Tube) -> list[Part]:
     top = at(height)
     result = [
         # Colonne : trois tronçons d'épaisseur inégale, plis sombres entre eux.
-        Part(lambda p: capsule(p, at(2.0 * K), at(height * 0.45, 0.4 * K), 4.2 * K, 3.8 * K), FLESH),
-        # Le haut est creusé : une vraie ouverture, visible d'en haut.
-        Part(lambda p: np.maximum(capsule(p, at(height * 0.45, 0.4 * K), top, 3.8 * K, 3.4 * K + t.mouth * 0.6 * K),
-                                  -ellipsoid(p, top + rotation @ np.array([0.0, 1.2 * K, 0.0]),
-                                             ((3.0 + t.mouth) * K, 2.6 * K, (3.0 + t.mouth) * K), rotation)), FLESH),
+        # Le haut est creusé : une vraie ouverture, visible d'en haut. Les deux tronçons sont fondus.
+        Part(lambda p: smin(capsule(p, at(2.0 * K), at(height * 0.45, 0.4 * K), 4.2 * K, 3.8 * K),
+                            np.maximum(capsule(p, at(height * 0.45, 0.4 * K), top, 3.8 * K, 3.4 * K + t.mouth * 0.6 * K),
+                                       -ellipsoid(p, top + rotation @ np.array([0.0, 1.2 * K, 0.0]),
+                                                  ((3.0 + t.mouth) * K, 2.6 * K, (3.0 + t.mouth) * K), rotation)),
+                            0.8 * K), FLESH),
         Part(lambda p: ellipsoid(p, at(height * 0.22, 0.5 * K), (4.5 * K, 0.8 * K, 4.4 * K), rotation), FOLD),
         Part(lambda p: ellipsoid(p, at(height * 0.44, 0.4 * K), (4.3 * K, 0.9 * K, 4.2 * K), rotation), FOLD),
         Part(lambda p: ellipsoid(p, at(height * 0.72, 0.2 * K), (4.0 * K, 0.8 * K, 3.9 * K), rotation), FOLD),
@@ -97,14 +100,17 @@ def parts(t: Tube) -> list[Part]:
 def _animations() -> dict[str, list[Tube]]:
     rest = Tube()
     return {
-        "idle": [rest, replace(rest, squash=1.03, mouth=0.3), replace(rest, squash=1.05, mouth=0.35, sway=0.04),
-                 replace(rest, squash=1.02, mouth=0.25)],
-        "walk": [replace(rest, step=i * np.pi / 2, sway=(0.08, 0.0, -0.08, 0.0)[i], squash=(1.0, 0.97, 1.0, 0.97)[i])
-                 for i in range(4)],
-        # Cri : il se tasse, puis s'étire bouche grande ouverte, gorge en pleine lumière.
-        "attack": [replace(rest, squash=0.88, mouth=0.1, lean=0.2), replace(rest, squash=1.12, mouth=1.0, lean=-0.05),
-                   replace(rest, squash=1.15, mouth=1.2, lean=-0.1), replace(rest, squash=1.0, mouth=0.5)],
-        "death": [replace(rest, mouth=1.0, squash=0.95, fall=0.15), replace(rest, mouth=0.6, squash=0.85, fall=0.45),
+        # La bouche s'entrouvre en soufflant, la colonne gonfle et retombe.
+        "idle": [rest, replace(rest, squash=1.03, mouth=0.35, sway=-0.02), replace(rest, squash=1.06, mouth=0.45, sway=0.04),
+                 replace(rest, squash=1.01, mouth=0.15)],
+        # Il tangue : affaissé sur la racine qui porte, redressé en tirant l'autre, avec un temps de retard en haut.
+        "walk": [replace(rest, step=i * np.pi / 2, sway=sw, squash=sq, lean=le, mouth=mo)
+                 for i, (sw, sq, le, mo) in enumerate(((0.11, 0.93, 0.18, 0.3), (0.04, 1.03, 0.1, 0.15),
+                                                       (-0.07, 0.96, 0.15, 0.25), (-0.02, 1.02, 0.08, 0.2)))],
+        # Cri : il se ramasse bas, puis s'étire bouche grande ouverte, gorge en pleine lumière.
+        "attack": [replace(rest, squash=0.82, mouth=0.0, lean=0.26), replace(rest, squash=1.16, mouth=1.1, lean=-0.08),
+                   replace(rest, squash=1.18, mouth=1.3, lean=-0.12, sway=0.04), replace(rest, squash=1.0, mouth=0.5)],
+        "death": [replace(rest, mouth=1.1, squash=0.95, fall=0.15), replace(rest, mouth=0.6, squash=0.85, fall=0.45),
                   replace(rest, mouth=0.3, squash=0.75, fall=0.85), replace(rest, mouth=0.0, squash=0.7, fall=1.2)],
     }
 
