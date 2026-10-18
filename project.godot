@@ -39,6 +39,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="Vestiges"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/wick/plugin.cfg")
+
 [gui]
 
 theme/custom="res://assets/ui/theme/vestiges_ui_theme.tres"
