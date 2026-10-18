@@ -56,7 +56,7 @@ public partial class Enemy
             return false;
         Vector2 step = next - GlobalPosition;
         if (CanFallIntoVoid && step != Vector2.Zero
-            && _knockVelocity.Dot(step.Normalized()) > _player.Elan.Config.FallMinKnockSpeed)
+            && _knockVelocity.Dot(step.Normalized()) > _player.Streak.Config.FallMinKnockSpeed)
         {
             FallIntoVoid(next);
             return true;
@@ -105,7 +105,7 @@ public partial class Enemy
     /// <summary>Image de la chute, à la place de la dissolution : la créature glisse dans le vide, rapetisse et s'efface.</summary>
     private void PlayVoidFall()
     {
-        PlayNearbyAudio(_player.Elan.Config.FallAudio);
+        PlayNearbyAudio(_player.Streak.Config.FallAudio);
         Tween tween = CreateTween();
         tween.SetParallel();
         tween.TweenProperty(this, "global_position", GlobalPosition + _voidFallDirection * VoidFallSlide + new Vector2(0f, VoidFallDrop),

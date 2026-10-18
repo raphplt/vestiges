@@ -243,6 +243,7 @@ public partial class Player : CharacterBody2D
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.GameStateChanged += OnMovementGameStateChanged;
         _eventBus.EnemyDamageResolved += CollectLifesteal;
+        _eventBus.EnemyKillResolved += OnStreakKill;
         _eventBus.PlayerErasurePhaseChanged += OnErasurePhaseChanged;
         _gameManager = GetNode<GameManager>("/root/GameManager");
     }
@@ -254,6 +255,7 @@ public partial class Player : CharacterBody2D
             _eventBus.PlayerErasurePhaseChanged -= OnErasurePhaseChanged;
             _eventBus.GameStateChanged -= OnMovementGameStateChanged;
             _eventBus.EnemyDamageResolved -= CollectLifesteal;
+            _eventBus.EnemyKillResolved -= OnStreakKill;
         }
     }
 
@@ -649,7 +651,7 @@ public partial class Player : CharacterBody2D
 
         _mobilityFeedback.UpdateFeedback(dt, Mobility, previousPosition, GlobalPosition, movementVelocity.LengthSquared() > 0.01f);
         float movementSpeed = movementVelocity.Length();
-        StepElan(dt, movementSpeed);
+        StepStreak(dt);
         float movementRate = movementSpeed > MovementSpeedEpsilon && Speed > 0f ? movementSpeed / Speed : 0f;
         UpdateSpriteAnimation(dt, movementVelocity, movementRate);
         ProcessFootsteps(dt, dashMovement ? 0f : movementRate);
@@ -1577,7 +1579,7 @@ public partial class Player : CharacterBody2D
             if (_hasSprite)
                 _hurtAnimTimer = Mobility.Config.HurtRecoverySeconds;
             if (result.HpLost > 0f)
-                LoseElanOnHit();
+                LoseStreakOnHit();
         }
 
         // Le résultat publié reste fatal (rien ne se récupère sur ce coup) ; seul le ticket empêche la mort.

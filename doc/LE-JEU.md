@@ -34,7 +34,7 @@ Pas de durées, qui sont impossibles à estimer honnêtement. Chaque étape comm
 
 | Ordre | Étape | Effort |
 |---|---|---|
-| 1 | **La Série** remplace la jauge d'Élan nourrie par la course ([plan 52 §13](plans/52-elan.md)) | Faible |
+| 1 | **La Série** remplace la jauge d'Élan nourrie par la course ([plan 52 §13–14](plans/52-elan.md)) : **livrée le 18 octobre**, à essayer | Faible |
 | 2 | **Le rythme du départ** : premier niveau vite, écran plein tôt, aimant d'XP revu ; mesuré au bot | Faible |
 | 3 | **Ton essai du bac à sable** : la Série et le vide, avec le critère d'arrêt ci-dessous | Ton temps |
 | 4 | **Les terres complètes** : cinq lieux de Vaulme, pièces faites main, génération structurée ; à découper dans un plan dédié | Élevé, le gros chantier |

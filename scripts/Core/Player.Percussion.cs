@@ -6,7 +6,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Percussion (plan 52 E4) : à partir d'un palier d'Élan, le dash projette les créatures qu'il traverse, vers l'extérieur
+/// Percussion (plan 52 E4) : à partir d'un palier de la Série, le dash projette les créatures qu'il traverse, vers l'extérieur
 /// de son trajet et en avant. Élan allumé, le vide devient une arme : une créature ordinaire projetée dans le Néant y
 /// tombe (voir <c>Enemy.Void.cs</c>).
 /// </summary>
@@ -17,9 +17,8 @@ public partial class Player
 
     // Créatures déjà projetées par le dash en cours : une seule fois chacune.
     private readonly HashSet<ulong> _percussed = new();
-    private float _percussionGain;
-    // Un seul son de percussion par dash, même si chaque pas en touche dans une foule.
-    private bool _percussionSounded;
+    // Un seul son et une seule relance de la Série par dash, même si chaque pas en touche dans une foule.
+    private bool _percussionLanded;
 
     /// <summary>Palier à partir duquel le dash projette ; réglage du fichier, que le bac à sable peut changer.</summary>
     public int PercussionMinTier { get; set; }
@@ -31,7 +30,7 @@ public partial class Player
     /// Le vide est une arme, allumé avec l'Élan : les créatures évitent le Néant en marchant et y tombent quand on les y
     /// pousse. Éteint (runs normales), elles l'ignorent comme avant.
     /// </summary>
-    public bool VoidIsWeapon => Elan.Enabled;
+    public bool VoidIsWeapon => Streak.Enabled;
 
     /// <summary>Après le déplacement : projette les créatures que le trajet de ce pas de dash a traversées.</summary>
     private void StepPercussion(Vector2 from, bool dashMovement)
@@ -39,18 +38,17 @@ public partial class Player
         if (Mobility.StartedThisStep)
         {
             _percussed.Clear();
-            _percussionGain = 0f;
-            _percussionSounded = false;
+            _percussionLanded = false;
         }
-        if (!dashMovement || !Elan.Enabled || Elan.Tier < PercussionMinTier)
+        if (!dashMovement || !Streak.Enabled || Streak.Tier < PercussionMinTier)
             return;
         Vector2 to = GlobalPosition;
         float length = from.DistanceTo(to);
         if (length <= 0.01f)
             return;
-        ElanConfig config = Elan.Config;
+        ElanConfig config = Streak.Config;
         Vector2 direction = (to - from) / length;
-        float distance = config.PercussionDistanceAt(Elan.Tier);
+        float distance = config.PercussionDistanceAt(Streak.Tier);
         float reach = config.PercussionReachPixels;
         int hits = 0;
         using CrowdQuery crowd = CrowdIndex.Near((from + to) * 0.5f, length * 0.5f + reach * PercussionQueryMargin);
@@ -66,17 +64,11 @@ public partial class Player
         if (hits == 0)
             return;
         Percussions += hits;
-        if (!_percussionSounded)
-        {
-            _percussionSounded = true;
-            AudioManager.Play(config.PercussionAudio, 0.06f, -5f, 1.1f);
-        }
-        float gain = Mathf.Min(hits * config.PercussionGainPerCreature, config.PercussionMaxGainPerDash - _percussionGain);
-        if (gain <= 0f)
+        if (_percussionLanded)
             return;
-        _percussionGain += gain;
-        Elan.Gain(gain, "percussion");
-        ApplyElanTier();
+        _percussionLanded = true;
+        AudioManager.Play(config.PercussionAudio, 0.06f, -5f, 1.1f);
+        Streak.Refresh("percussion");
     }
 
     /// <summary>Vers l'extérieur du trajet, plus une part dans le sens du dash ; une créature pile sur le trajet part d'un côté fixe.</summary>

@@ -16,7 +16,8 @@ namespace Vestiges.Tests;
 /// Bac à sable de l'Élan (plan 52), jouable à la main : la vraie scène Main sans apparitions ni événements, l'Effacement
 /// figé, une foule entretenue autour du joueur, des bandes de vide de 1, 2 et 3 cellules à l'est du départ (saut du
 /// vide, E3), l'Élan allumé et un affichage de réglage. Un coup fatal remet les PV au maximum : on y essaie les gestes
-/// sans fin de partie. Lancement : tools/elan_sandbox.sh.
+/// sans fin de partie. La Série (combo d'éliminations) s'affiche au-dessus de la tête et dans l'affichage de réglage.
+/// Lancement : tools/elan_sandbox.sh.
 /// </summary>
 public partial class ElanSandbox : Node
 {
@@ -157,13 +158,15 @@ public partial class ElanSandbox : Node
             _refillClock = RefillInterval;
             RefillCrowd();
         }
-        PlayerElan elan = _player.Elan;
+        PlayerStreak streak = _player.Streak;
         _label.Text = string.Format(CultureInfo.InvariantCulture,
-            "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\nesquives parfaites {7}  sauts du vide {8}\n"
+            "SÉRIE ×{0}  palier {1}  ({2})  fenêtre {12:0.0} s  meilleure ×{13}\n"
+            + "vitesse ×{3:0.00}  dégâts ×{4:0.00}  Chance +{14:0}%\nesquives parfaites {7}  sauts du vide {8}\n"
             + "percussion dès le palier {9} : {10} créatures projetées, {11} tombées\n"
             + "créatures {5}  apparues {6}\nvide à l'est : bandes de 1, 2 et 3 cellules",
-            elan.Value, elan.Tier, elan.LastChange, elan.SpeedAt(elan.Tier), elan.DamageAt(elan.Tier), _crowd.Count, _spawned,
-            _player.PerfectDodges, _player.VoidLeaps, _player.PercussionMinTier, _player.Percussions, _falls);
+            streak.Count, streak.Tier, streak.LastChange, streak.SpeedAt(streak.Tier), streak.DamageAt(streak.Tier), _crowd.Count,
+            _spawned, _player.PerfectDodges, _player.VoidLeaps, _player.PercussionMinTier, _player.Percussions, _falls,
+            streak.WindowRemaining, streak.Best, streak.LuckAt(streak.Tier) * 100f);
     }
 
     /// <summary>
@@ -213,8 +216,8 @@ public partial class ElanSandbox : Node
             _player.AIInputOverride = Vector2.Zero;
             return;
         }
-        if (_player.Elan.Tier < 2)
-            _player.Elan.Gain(0.7f, "bac à sable");
+        if (_player.Streak.Tier < 2)
+            _player.Streak.Kill(_player.Streak.Config.Tiers[1].From, "bac à sable");
         if (!_columnSpawned)
             SpawnEdgeColumn();
         _player.AIInputOverride = Vector2.Down;
@@ -258,8 +261,8 @@ public partial class ElanSandbox : Node
             _player.AIInputOverride = Vector2.Zero;
             return;
         }
-        if (_player.Elan.Tier < 2)
-            _player.Elan.Gain(0.7f, "bac à sable");
+        if (_player.Streak.Tier < 2)
+            _player.Streak.Kill(_player.Streak.Config.Tiers[1].From, "bac à sable");
         _player.AIInputOverride = Vector2.Right;
         if (!_player.Mobility.IsDashing && _player.Mobility.CooldownRemaining <= 0f
             && IsVoidAt(_player.GlobalPosition + new Vector2(14f, 0f)) && !IsVoidAt(_player.GlobalPosition))
@@ -297,7 +300,7 @@ public partial class ElanSandbox : Node
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Elan.Tier}, "
+        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Streak.Tier}, "
             + $"percussions {_player.Percussions}, chutes {_falls})");
         GetTree().Quit(0);
         _captureDir = null;

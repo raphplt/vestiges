@@ -4,8 +4,9 @@ using Vestiges.World;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Saut du vide (plan 52 E3) : dès que l'Élan donne une allonge, le dash est porté au-dessus du Néant et s'y prolonge.
-/// Retomber sur le sol après avoir franchi assez de vide nourrit l'Élan ; retomber dans le vide revient à y marcher.
+/// Saut du vide (plan 52 E3) : dès que le palier de la Série donne une allonge, le dash est porté au-dessus du Néant et
+/// s'y prolonge. Retomber sur le sol après avoir franchi assez de vide relance la Série ; retomber dans le vide revient à
+/// y marcher.
 /// Sans allonge (palier 0, Élan éteint), le dash s'arrête au bord comme avant.
 /// </summary>
 public partial class Player
@@ -32,7 +33,7 @@ public partial class Player
     /// <summary>Avant le pas de mobilité : allonge du palier actuel, et le joueur est-il au-dessus du vide.</summary>
     private void PrepareVoidLeap()
     {
-        Mobility.LeapExtensionPixels = Elan.Enabled ? Elan.Config.VoidLeapExtensionAt(Elan.Tier) : 0f;
+        Mobility.LeapExtensionPixels = Streak.Enabled ? Streak.Config.VoidLeapExtensionAt(Streak.Tier) : 0f;
         Mobility.OverVoid = _dashLeaps && IsVoidAt(GlobalPosition);
     }
 
@@ -58,23 +59,22 @@ public partial class Player
             _leapVoidPixels += VoidDistanceAlong(previousPosition, GlobalPosition);
         if (_dashLeaps && !Mobility.IsDashing)
             LandFromLeap();
-        float target = IsLeaping && IsVoidAt(GlobalPosition) ? Elan.Config.VoidLeapHeightPixels : 0f;
+        float target = IsLeaping && IsVoidAt(GlobalPosition) ? Streak.Config.VoidLeapHeightPixels : 0f;
         _leapHeight = Mathf.MoveToward(_leapHeight, target, LeapHeightRate * delta);
     }
 
     /// <summary>
     /// Fin d'un dash porté. Retombée sur le sol après assez de vide parcouru (un dash parti du Néant qui en sort compte
-    /// aussi, le séjour y a été payé) : gain, onde et son.
+    /// aussi, le séjour y a été payé) : la fenêtre de la Série repart, avec une onde et un son.
     /// </summary>
     private void LandFromLeap()
     {
         _dashLeaps = false;
-        if (_leapVoidPixels < Elan.Config.VoidLeapMinVoidPixels || IsVoidAt(GlobalPosition))
+        if (_leapVoidPixels < Streak.Config.VoidLeapMinVoidPixels || IsVoidAt(GlobalPosition))
             return;
         VoidLeaps++;
-        Elan.Gain(Elan.Config.VoidLeapGain, "saut du vide");
-        ApplyElanTier();
-        _mobilityFeedback?.VoidLeapLanded(Elan.Config.VoidLeapLandingAudio);
+        Streak.Refresh("saut du vide");
+        _mobilityFeedback?.VoidLeapLanded(Streak.Config.VoidLeapLandingAudio);
     }
 
     /// <summary>Pause, menu ou mort : le saut retombe aussitôt à l'écran.</summary>

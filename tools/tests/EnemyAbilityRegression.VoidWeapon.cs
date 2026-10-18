@@ -70,14 +70,16 @@ public partial class EnemyAbilityRegression
             Despawn(target);
 
             await WaitDashReady();
+            _player.Streak.Kill(5, "essai");
+            await Step(60);
             List<Enemy> line = new();
             for (int i = 0; i < 8; i++)
                 line.Add(await SpawnReady("shade", new Vector2(-20f - i * 6f, i % 2 == 0 ? 3f : -3f)));
-            float before = _player.Elan.Value;
+            float windowBefore = _player.Streak.WindowRemaining;
+            percussions = _player.Percussions;
             await DashNow(Vector2.Left);
-            float gained = _player.Elan.Value - before;
-            Check(gained <= _player.Elan.Config.PercussionMaxGainPerDash + 0.02f && gained >= _player.Elan.Config.PercussionMaxGainPerDash - 0.02f,
-                $"percussion : huit créatures, gain plafonné à {_player.Elan.Config.PercussionMaxGainPerDash:F2} ({gained:F3})");
+            Check(_player.Percussions >= percussions + 5 && _player.Streak.WindowRemaining > windowBefore + 0.5f,
+                $"percussion : une foule projetée d'un dash ({_player.Percussions - percussions}), la Série relancée ({windowBefore:F2} → {_player.Streak.WindowRemaining:F2} s)");
             foreach (Enemy enemy in line)
                 Despawn(enemy);
 
@@ -85,10 +87,13 @@ public partial class EnemyAbilityRegression
             _player.Position = new Vector2(40f, 20f);
             await WaitDashReady();
             Enemy faller = await SpawnReady("shade", new Vector2(70f, 0f), 1f);
+            int streakBefore = _player.Streak.Count;
             await DashNow(Vector2.Right);
             await Step(10);
             Check(faller.IsDying && falls == 1 && kills == killsBefore + 1,
                 $"chute : projetée dans le Néant, la créature tombe et compte comme éliminée (chutes {falls}, éliminations {kills - killsBefore})");
+            Check(_player.Streak.Count == streakBefore + _player.Streak.Config.StreakFallWeight,
+                $"chute : elle vaut {_player.Streak.Config.StreakFallWeight} éliminations dans la Série ({streakBefore} → {_player.Streak.Count})");
             Despawn(faller);
 
             _player.Position = new Vector2(0f, 20f);
@@ -126,6 +131,15 @@ public partial class EnemyAbilityRegression
                 $"chute : une élite poussée s'arrête au bord (x={elite.Position.X:0})");
             Despawn(elite);
 
+            // Le joueur de ce banc reste dans l'arbre : ses abonnements à l'EventBus tiennent (le banc de mouvement le
+            // retire puis le remet, ce qui les coupe).
+            int before = _player.Streak.Count;
+            bus.PublishEnemyKill(KillBy(_player.GetInstanceId(), "shade"));
+            Check(_player.Streak.Count == before + 1, $"série : une élimination du joueur ajoute 1 ({before} → {_player.Streak.Count})");
+            bus.PublishEnemyKill(KillBy(0, "shade"));
+            bus.PublishEnemyKill(KillBy(_player.GetInstanceId(), EnemyGrammar.BossPartId));
+            Check(_player.Streak.Count == before + 1, "série : une explosion de créature et une partie de boss ne comptent pas");
+
             _player.PercussionMinTier = 2;
             await WaitDashReady();
             target = await SpawnReady("shade", new Vector2(-40f, 0f));
@@ -133,7 +147,7 @@ public partial class EnemyAbilityRegression
             await DashNow(Vector2.Left);
             Check(_player.Percussions == percussions, "percussion : sous le palier minimum réglé, le dash ne projette rien");
             Despawn(target);
-            _player.PercussionMinTier = _player.Elan.Config.PercussionMinTier;
+            _player.PercussionMinTier = _player.Streak.Config.PercussionMinTier;
         }
         finally
         {
@@ -188,6 +202,13 @@ public partial class EnemyAbilityRegression
             main.QueueFree();
             await Step(1);
         }
+    }
+
+    /// <summary>Élimination publiée comme par une créature : propriétaire du coup et espèce choisis.</summary>
+    private static EnemyKillResult KillBy(ulong owner, string enemyId)
+    {
+        DamageResult damage = DamageResult.Resolve(default, new AttackContext(owner, null, 0, DamageKind.DirectWeapon), 10f, 10f, 0f);
+        return new EnemyKillResult(default, enemyId, Vector2.Zero, damage, default, default);
     }
 
     /// <summary>La créature marche vers le joueur immobile ; vrai si elle a mis le pied dans le Néant.</summary>

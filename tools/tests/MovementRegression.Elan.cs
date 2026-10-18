@@ -9,7 +9,10 @@ using Vestiges.World;
 
 namespace Vestiges.Tests;
 
-/// <summary>Élan (plan 52) : règles du module seul, effet réel sur la course du joueur, puis les gestes (lots E2 et suivants).</summary>
+/// <summary>
+/// Élan (plan 52) : la Série seule, son effet réel sur le joueur (paliers, coup reçu, élimination), puis les gestes
+/// (esquive parfaite, saut du vide).
+/// </summary>
 public partial class MovementRegression
 {
     private const float ElanStep = 1f / 60f;
@@ -17,8 +20,8 @@ public partial class MovementRegression
     private async Task RunElanChecks()
     {
         CheckElanConfig();
-        CheckElanModule();
-        await CheckElanPlayer();
+        CheckStreakModule();
+        await CheckStreakPlayer();
         await CheckPerfectDodge();
         CheckLeapExtensionInPixels();
         await CheckVoidLeap();
@@ -27,14 +30,15 @@ public partial class MovementRegression
     private void CheckElanConfig()
     {
         ElanConfig config = ElanConfig.Load();
-        Check(config.Tiers.Count == 3 && !config.EnabledInRuns, $"élan : trois paliers, éteint en run ({config.Tiers.Count})");
+        Check(config.Tiers.Count == 3 && !config.EnabledInRuns && config.Tiers[0].From == 20 && config.StreakFallWeight > 1,
+            $"série : trois paliers dès 20 éliminations, éteinte en run, une chute vaut {config.StreakFallWeight}");
         string valid = FileAccess.GetFileAsString("res://data/movement/elan.json");
-        Check(ElanConfig.Parse(valid.Replace("\"from\": 0.67", "\"from\": 0.2"), out string order) == null && order.Contains("croissants"),
-            $"élan : seuils non croissants refusés ({order})");
-        Check(ElanConfig.Parse(valid.Replace("\"hit_loss\"", "\"hit_lost\""), out string unknown) == null && unknown.Contains("inconnue"),
-            $"élan : clé inconnue refusée ({unknown})");
-        Check(ElanConfig.Parse(valid.Replace("\"cap\": 0.34", "\"cap\": 0.2"), out string cap) == null && cap.Contains("premier palier"),
-            $"élan : plafond de course sous le premier palier refusé ({cap})");
+        Check(ElanConfig.Parse(valid.Replace("\"from\": 60", "\"from\": 10"), out string order) == null && order.Contains("croissants"),
+            $"série : seuils non croissants refusés ({order})");
+        Check(ElanConfig.Parse(valid.Replace("\"window_seconds\"", "\"window_second\""), out string unknown) == null && unknown.Contains("inconnue"),
+            $"série : clé inconnue refusée ({unknown})");
+        Check(ElanConfig.Parse(valid.Replace("\"window_seconds\": 2.5", "\"window_seconds\": 0"), out string window) == null && window.Contains("window_seconds"),
+            $"série : fenêtre nulle refusée ({window})");
         Check(config.VoidLeapExtensionAt(0) == 0f && config.VoidLeapExtensionAt(3) > config.VoidLeapExtensionAt(1),
             $"saut du vide : pas d'allonge au palier 0, plus longue au palier III ({config.VoidLeapExtensionAt(3)} px)");
         Check(ElanConfig.Parse(valid.Replace("[0, 64, 128, 192]", "[0, 64, 128]"), out string count) == null && count.Contains("palier 0 compris"),
@@ -49,92 +53,102 @@ public partial class MovementRegression
             $"percussion : une distance par palier exigée ({distances})");
     }
 
-    private void CheckElanModule()
+    private void CheckStreakModule()
     {
         ElanConfig config = ElanConfig.Load();
-        PlayerElan elan = new(config);
-        elan.Gain(0.5f, "geste");
-        Check(elan.Value == 0f, "élan éteint : un geste ne donne rien");
+        PlayerStreak streak = new(config);
+        streak.Kill(5, "essai");
+        Check(streak.Count == 0, "série éteinte : une élimination ne donne rien");
 
-        elan.SetEnabled(true);
-        Advance(elan, 2f, config.SpeedMinRatio - 0.05f);
-        Check(elan.Value == 0f, $"élan : une course trop lente ne le nourrit pas ({elan.Value:F3})");
-        Advance(elan, 12f, 1f);
-        Check(Mathf.IsEqualApprox(elan.Value, config.SpeedCap) && elan.Tier == 1,
-            $"élan : la course seule plafonne au premier palier ({elan.Value:F3}, palier {elan.Tier})");
+        streak.SetEnabled(true);
+        streak.Kill(config.Tiers[0].From, "élimination");
+        Check(streak.Tier == 1 && Mathf.IsEqualApprox(streak.WindowRemaining, config.StreakWindowSeconds),
+            $"série : {config.Tiers[0].From} éliminations donnent le premier palier, fenêtre pleine ({streak.Count}, palier {streak.Tier})");
+        Advance(streak, config.StreakWindowSeconds * 0.5f);
+        streak.Refresh("geste");
+        Check(streak.Count == config.Tiers[0].From && Mathf.IsEqualApprox(streak.WindowRemaining, config.StreakWindowSeconds),
+            "série : un geste relance la fenêtre sans ajouter d'élimination");
+        Advance(streak, config.StreakWindowSeconds + ElanStep);
+        Check(streak.Count == 0 && streak.Tier == 0, $"série : fenêtre écoulée au premier palier, elle retombe à zéro ({streak.Count})");
 
-        elan.Gain(0.5f, "geste");
-        float boosted = elan.Value;
-        Check(elan.Tier == 2 && elan.LastChange == "geste", $"élan : un geste dépasse le plafond de la course ({boosted:F3}, palier {elan.Tier})");
-        Advance(elan, 1f, 1f);
-        Check(Math.Abs(boosted - config.UpkeepDecayPerSecond - elan.Value) < 0.002f,
-            $"élan : au-dessus du plafond, il s'érode en courant ({boosted:F3} → {elan.Value:F3})");
-
-        float beforeStop = elan.Value;
-        Advance(elan, config.StillGraceSeconds * 0.5f, 0f);
-        Check(elan.Value == beforeStop, "élan : un arrêt bref est toléré");
-        Advance(elan, 1f, 0f);
-        Check(elan.Value < beforeStop - config.StillDecayPerSecond * 0.5f, $"élan : il fond à l'arrêt ({beforeStop:F3} → {elan.Value:F3})");
-
-        elan.Gain(1f, "geste");
-        elan.Hit();
-        Check(Mathf.IsEqualApprox(elan.Value, 1f - config.HitLoss) && elan.Tier == 2,
-            $"élan : un coup fait perdre un palier ({elan.Value:F3}, palier {elan.Tier})");
-        elan.SetEnabled(false);
-        Check(elan.Value == 0f && elan.Tier == 0, "élan éteint : remis à zéro");
+        streak.Kill(config.Tiers[1].From + 5, "élimination");
+        Check(streak.Tier == 2, $"série : {config.Tiers[1].From} éliminations donnent le deuxième palier ({streak.Count})");
+        Advance(streak, config.StreakWindowSeconds + ElanStep);
+        Check(streak.Count == config.Tiers[0].From && streak.Tier == 1 && streak.WindowRemaining > 0f,
+            $"série : fenêtre écoulée au deuxième palier, retour au début du premier et nouvelle fenêtre ({streak.Count})");
+        streak.Kill(config.Tiers[2].From, "élimination");
+        streak.Hit();
+        Check(streak.Count == config.Tiers[1].From && streak.Tier == 2,
+            $"série : un coup reçu au troisième palier ramène au début du deuxième ({streak.Count})");
+        Check(streak.Best >= config.Tiers[2].From, $"série : la meilleure est gardée ({streak.Best})");
+        streak.SetEnabled(false);
+        Check(streak.Count == 0 && streak.Tier == 0, "série éteinte : remise à zéro");
     }
 
-    /// <summary>Le palier atteint en courant accélère vraiment le joueur ; un coup le retire.</summary>
-    private async Task CheckElanPlayer()
+    /// <summary>Le palier gagné par les éliminations accélère vraiment le joueur ; la course seule ne donne rien ; un coup le retire.</summary>
+    private async Task CheckStreakPlayer()
     {
+        ElanConfig config = ElanConfig.Load();
         await ReadyMobility();
         SetActions(Vector2.Right);
         await Step(10);
         float baseSpeed = (await Measure(60)).Length();
         _player.SetElanEnabled(true);
-        float runSeconds = ElanConfig.Load().SpeedCap / ElanConfig.Load().SpeedGainPerSecond + 1f;
-        for (int second = 0; second < Mathf.CeilToInt(runSeconds); second++)
+        for (int second = 0; second < 4; second++)
         {
             _player.Position = Vector2.Zero;
             await Step(60);
         }
-        Check(_player.Elan.Tier == 1, $"élan du joueur : premier palier après {runSeconds:F1} s de course ({_player.Elan.Value:F3})");
-        float elanSpeed = (await Measure(60)).Length();
-        float expected = _player.Elan.SpeedAt(1);
-        Check(Math.Abs(elanSpeed / baseSpeed - expected) < 0.01f,
-            $"élan du joueur : la course va ×{elanSpeed / baseSpeed:F3} (attendu ×{expected:F2})");
+        Check(_player.Streak.Count == 0, "série du joueur : la course seule ne la nourrit pas");
+        _player.Streak.Kill(config.Tiers[0].From, "essai");
+        await Step(1);
+        float streakSpeed = (await Measure(60)).Length();
+        float expected = _player.Streak.SpeedAt(1);
+        Check(_player.Streak.Tier == 1 && Math.Abs(streakSpeed / baseSpeed - expected) < 0.01f,
+            $"série du joueur : au premier palier, la course va ×{streakSpeed / baseSpeed:F3} (attendu ×{expected:F2})");
 
         _player.TakeDamage(1f);
-        Check(_player.Elan.Tier == 0, $"élan du joueur : un coup retire le palier ({_player.Elan.Value:F3})");
+        Check(_player.Streak.Tier == 0, $"série du joueur : un coup retire le palier ({_player.Streak.Count})");
         await Step(30);
+
+        float baseDamage = _player.DamageMultiplier / _player.Streak.DamageAt(_player.Streak.Tier);
+        float baseLuck = _player.LuckBonus - _player.Streak.LuckAt(_player.Streak.Tier);
+        _player.Streak.Kill(config.Tiers[2].From, "essai");
+        await Step(1);
+        Check(_player.Streak.Tier == 3 && Mathf.IsEqualApprox(_player.DamageMultiplier, baseDamage * _player.Streak.DamageAt(3))
+            && Mathf.IsEqualApprox(_player.LuckBonus, baseLuck + _player.Streak.LuckAt(3)),
+            $"série du joueur : au troisième palier, dégâts ×{_player.DamageMultiplier / baseDamage:F2} et Chance +{_player.LuckBonus - baseLuck:F2}");
         _player.SetElanEnabled(false);
         float restored = (await Measure(60)).Length();
-        Check(Math.Abs(restored - baseSpeed) < 0.5f, $"élan éteint : vitesse de base rendue ({restored:F1} / {baseSpeed:F1})");
+        Check(Math.Abs(restored - baseSpeed) < 0.5f && Math.Abs(_player.DamageMultiplier - baseDamage) < 0.0001f
+            && Math.Abs(_player.LuckBonus - baseLuck) < 0.0001f,
+            $"élan éteint : vitesse ({restored:F1} / {baseSpeed:F1}), dégâts et Chance de base rendus");
         SetActions(Vector2.Zero);
     }
 
-    /// <summary>Lot E2 : un coup évité pendant le dash donne de l'Élan et rend de la recharge, une fois par dash.</summary>
+    /// <summary>Lot E2 : un coup évité pendant le dash relance la Série et rend de la recharge, une fois par dash.</summary>
     private async Task CheckPerfectDodge()
     {
         ElanConfig config = ElanConfig.Load();
         await ReadyMobility();
         _player.SetElanEnabled(true);
+        _player.Streak.Kill(5, "essai");
+        await Step(30);
+        float windowBefore = _player.Streak.WindowRemaining;
         SetActions(Vector2.Right);
         PressMobility();
         await Step(1);
         ReleaseMobility();
         float cooldownBefore = _player.Mobility.CooldownRemaining;
         PlayerDamageResult dodged = _player.TakeDamage(5f);
-        // La course de l'image du dash ajoute une miette d'Élan : tolérance de 0,01.
-        float afterDodge = _player.Elan.Value;
-        Check(!dodged.Applied && Math.Abs(afterDodge - config.PerfectDodgeGain) < 0.01f && _player.PerfectDodges == 1,
-            $"esquive parfaite : coup évité, Élan {_player.Elan.Value:F2} (attendu {config.PerfectDodgeGain:F2})");
+        Check(!dodged.Applied && _player.PerfectDodges == 1 && windowBefore < config.StreakWindowSeconds - 0.4f
+            && Mathf.IsEqualApprox(_player.Streak.WindowRemaining, config.StreakWindowSeconds),
+            $"esquive parfaite : coup évité, fenêtre de la Série relancée ({windowBefore:F2} → {_player.Streak.WindowRemaining:F2} s)");
         float refunded = cooldownBefore - _player.Mobility.CooldownRemaining;
         Check(Math.Abs(refunded - _player.Mobility.CooldownSeconds * config.PerfectDodgeCooldownRefund) < 0.001f,
             $"esquive parfaite : {refunded:F2} s de recharge rendues");
         _player.TakeDamage(5f);
-        Check(Math.Abs(_player.Elan.Value - afterDodge) < 0.01f && _player.PerfectDodges == 1,
-            "esquive parfaite : une seule par dash, même sous plusieurs coups");
+        Check(_player.PerfectDodges == 1, "esquive parfaite : une seule par dash, même sous plusieurs coups");
         await Step(12);
         SetActions(Vector2.Zero);
         Check(_player.TakeDamage(1f).Applied, "esquive parfaite : hors du dash, le coup porte");
@@ -144,15 +158,15 @@ public partial class MovementRegression
         PressMobility();
         await Step(1);
         ReleaseMobility();
-        Check(!_player.TakeDamage(5f).Applied && _player.Elan.Value == 0f && _player.PerfectDodges == 1,
+        Check(!_player.TakeDamage(5f).Applied && _player.Streak.Count == 0 && _player.PerfectDodges == 1,
             "élan éteint : le dash protège toujours, sans esquive parfaite");
         await Step(12);
     }
 
     /// <summary>
     /// Lot E3 : une bande de Néant d'une cellule (x de 128 à 256) dans un gestionnaire synthétique. Au palier 0, le dash
-    /// s'arrête au bord ; au palier II, il la franchit en l'air et nourrit l'Élan ; au palier I, parti trop loin, il
-    /// retombe dans le vide sans rien gagner.
+    /// s'arrête au bord ; au palier II, il la franchit en l'air et relance la Série ; au palier I, parti trop loin, il
+    /// retombe dans le vide sans rien relancer.
     /// </summary>
     private async Task CheckVoidLeap()
     {
@@ -182,7 +196,7 @@ public partial class MovementRegression
 
         await ReadyMobility();
         managerField.SetValue(_player, erasure);
-        _player.Elan.Gain(0.4f, "essai");
+        _player.Streak.Kill(ElanConfig.Load().Tiers[0].From, "essai");
         _player.Mobility.BlinkDistance = 0.8f;
         (leaped, _) = await DashFrom(new Vector2(edge - 25f, 20f));
         _player.Mobility.BlinkDistance = 0f;
@@ -191,17 +205,18 @@ public partial class MovementRegression
 
         await ReadyMobility();
         managerField.SetValue(_player, erasure);
-        _player.Elan.Gain(0.7f, "essai");
-        float before = _player.Elan.Value;
+        _player.Streak.Kill(ElanConfig.Load().Tiers[1].From, "essai");
+        await Step(40);
+        float windowBefore = _player.Streak.WindowRemaining;
         (leaped, raised) = await DashFrom(new Vector2(edge - 10f, 20f));
         Check(_player.Position.X >= 2f * edge && leaped && raised,
             $"saut du vide : au palier II, le dash franchit une cellule de vide en l'air (x={_player.Position.X:0})");
-        Check(_player.VoidLeaps == 1 && _player.Elan.Value > before + config.VoidLeapGain - 0.03f,
-            $"saut du vide : la retombée sur le sol donne de l'Élan ({before:F2} → {_player.Elan.Value:F2})");
+        Check(_player.VoidLeaps == 1 && _player.Streak.WindowRemaining > windowBefore,
+            $"saut du vide : la retombée sur le sol relance la Série ({windowBefore:F2} → {_player.Streak.WindowRemaining:F2} s)");
 
         await ReadyMobility();
         managerField.SetValue(_player, erasure);
-        _player.Elan.Gain(0.7f, "essai");
+        _player.Streak.Kill(ElanConfig.Load().Tiers[1].From, "essai");
         _player.Position = new Vector2(edge - 10f, 20f);
         await Step(1);
         SetActions(Vector2.Right);
@@ -230,7 +245,7 @@ public partial class MovementRegression
         managerField.SetValue(_player, erasure);
         _player.SetElanEnabled(false);
         _player.SetElanEnabled(true);
-        _player.Elan.Gain(0.4f, "essai");
+        _player.Streak.Kill(ElanConfig.Load().Tiers[0].From, "essai");
         (leaped, _) = await DashFrom(new Vector2(edge - 40f, 20f));
         Check(_player.Position.X > edge && _player.Position.X < 2f * edge && leaped && _player.VoidLeaps == 2,
             $"saut du vide : au palier I, parti trop loin, il retombe dans le vide sans gain (x={_player.Position.X:0})");
@@ -300,9 +315,9 @@ public partial class MovementRegression
         return (leaped, raised);
     }
 
-    private static void Advance(PlayerElan elan, float seconds, float speedRatio)
+    private static void Advance(PlayerStreak streak, float seconds)
     {
         for (float elapsed = 0f; elapsed < seconds - 0.0001f; elapsed += ElanStep)
-            elan.Step(ElanStep, speedRatio);
+            streak.Step(ElanStep);
     }
 }

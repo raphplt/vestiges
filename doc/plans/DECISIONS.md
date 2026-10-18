@@ -2292,3 +2292,4 @@ Il avait écarté la veille l'île qui dérive : « le jeu proposé s'éloigne t
   - les bornes `RandiRange(min, max + 1)` corrigées sans changer le jeu ;
   - la sortie commerciale tranchée en une séance après les testeurs, le nom en premier ;
   - `A-VERIFIER.md` n'est plus suivi.
+- **Défauts de l'agent au lot S1 (la Série), réversibles** : seules les éliminations du joueur nourrissent la Série (pas les explosions de créatures, les dégâts d'événements ni les parties de boss) ; le compteur « ×N » ne rebondit qu'à chaque dizaine et au palier gagné ; trois paliers au plus.

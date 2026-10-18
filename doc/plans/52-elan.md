@@ -24,6 +24,8 @@ Raphaël, en annulant la décision du 13 octobre (§151) : « il faut un systèm
 
 ## 2. Les règles (valeurs de départ, à régler en jouant)
 
+> **Remplacé le 18 octobre par la Série (§13 et §14)** : la course ne nourrit plus rien, les éliminations nourrissent la Série. `PlayerElan` est devenu `PlayerStreak`. Les sections suivantes restent pour l'historique.
+
 L'Élan va de 0 à 1, en **trois paliers** : I à 0,34, II à 0,67, III à 1. Tous les réglages sont dans `data/movement/elan.json`.
 
 **Gains :**
@@ -347,3 +349,50 @@ Contenu de S1 :
 - la course ne la nourrit plus ;
 - le saut (allonge par palier) et la percussion sont inchangés ;
 - allumée dans le bac à sable, éteinte en run normale jusqu'à l'essai.
+
+## 14. Compte rendu S1, la Série — 18 octobre 2026
+
+**Livré :**
+- **`PlayerStreak`** (ex-`PlayerElan`, fichier et uid renommés) : la Série est un compteur d'éliminations.
+  - `Kill` ajoute et relance la fenêtre de 2,5 s ; `Step` la fait couler, et une fenêtre vide fait retomber la Série au début du palier inférieur, puis repart s'il en reste.
+  - `Hit` fait perdre un palier ; `Refresh` relance la fenêtre sans rien ajouter.
+  - La meilleure Série est gardée pour l'affichage de réglage.
+- **Branchement au joueur** (`Player.Elan.cs`) :
+  - toute élimination (`EventBus.EnemyKillResolved`) nourrit la Série, et une chute dans le Néant vaut 3 ;
+  - l'esquive parfaite, le saut du vide réussi et la percussion qui touche relancent la fenêtre ;
+  - les paliers (20, 60, 150) donnent vitesse et dégâts comme l'Élan, plus de la Chance (+5, +10, +20 %), appliqués seulement au changement de palier ;
+  - la course ne nourrit plus rien.
+- **Affichage** :
+  - « ×N » au-dessus de la tête (`StreakCounter`, police du thème, couleur du palier), avec un rebond à chaque élimination, plus fort au palier gagné, et un éclair rouge quand elle retombe ;
+  - sous les pieds, la fenêtre restante remplace l'ancienne jauge ;
+  - textes mis en cache, nœud au repos hors animation.
+- **Réglages** : `elan.json` réécrit et lu strictement. Les clés de la course (`speed`, `still`, `upkeep_decay_per_second`, `hit_loss`) et les gains d'Élan (esquive, saut, percussion) sont retirés ; la section `streak` (fenêtre, poids d'une chute) et `luck` par palier sont ajoutés.
+- **Bac à sable** : la Série, son palier, sa fenêtre, la meilleure et la Chance à l'affichage de réglage.
+
+**Vérifié :**
+- build sans avertissement ;
+- `tools/test_movement.sh`, avec et sans `--run-integration`, et `tools/test_enemy_abilities.sh` verts. Contrôles réécrits ou ajoutés :
+  - réglages lus strictement ;
+  - la Série seule : palier à 20, geste qui relance, fenêtre écoulée qui ramène au palier inférieur, coup qui fait perdre un palier, meilleure gardée ;
+  - sur le vrai joueur : la course seule ne la nourrit pas, et le premier palier accélère de ×1,080 ;
+  - l'esquive parfaite, le saut réussi et la percussion relancent la fenêtre ;
+  - une chute vaut 3 éliminations ;
+- capture du bac à sable regardée : « ×1 » lisible au-dessus du joueur dans la foule.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant ; l'Élan éteint ne change rien. Corrigé ou tranché :
+- **seules les éliminations du joueur nourrissent la Série** (décision par défaut de l'agent). Les morts sans propriétaire (explosion d'une créature, dégât d'un événement) et les parties de boss ne comptent pas, comme pour les quêtes. Sinon un kamikaze qui en emporte quatre ajoutait +5 d'un coup, et en coop chaque joueur aurait reçu toutes les éliminations ;
+- **le compteur ne rebondit qu'à chaque dizaine et au palier gagné** (décision par défaut) : en foule, il tremblait en continu. Son texte et sa largeur ne sont refaits qu'au changement ; il passe à −58 px, au-dessus de la jauge d'interaction ; `Show` devient `SetStreak` ;
+- le compteur n'est créé qu'à l'allumage de la Série : une run normale n'a aucun nœud de plus ;
+- trois paliers au plus dans `elan.json` (une couleur et une valeur de saut et de percussion par palier) ;
+- contrôles ajoutés :
+  - Chance et dégâts au palier III ;
+  - retour exact des stats à l'extinction ;
+  - une élimination du joueur ajoute 1 ;
+  - une explosion de créature et une partie de boss ne comptent pas. Ce dernier contrôle est dans le banc des capacités ennemies : le banc de mouvement retire puis remet son joueur dans l'arbre, ce qui coupe ses abonnements à l'EventBus.
+
+**Instable, sans lien avec la Série** : un contrôle antérieur au lot, « dash défaut : invulnérable pendant tout le dash », a échoué 2 fois sur 5 passes sous une charge de 10 à 26, puis passé. Élan éteint ; l'entrée simulée arrive probablement après l'image physique quand la machine rame. Reproduction prévue au prochain lancement sur machine calme ; s'il échoue encore, le test recevra une attente d'une image de plus.
+
+**À juger en jouant** (l'essai, étape 3) :
+- les seuils (20, 60, 150) et la fenêtre (2,5 s) ;
+- la Chance ;
+- le compteur au-dessus de la tête, qui fait la même taille que les chiffres de dégâts. Sa place au HUD vient avec l'étape « clarté ».
