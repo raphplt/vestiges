@@ -53,6 +53,7 @@ public partial class CatalogContractRegression : Node
             CheckLootTables();
             CheckPois();
             CheckCombatSettings();
+            CheckInterfaceSettings();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1327,6 +1328,82 @@ public partial class CatalogContractRegression : Node
         }
         Check(Vestiges.Combat.FxBudget.TryParse("{}", out int[] full, out int[] reduced, out _)
             && string.Join(",", full) == "320,32,12,24" && string.Join(",", reduced) == "120,12,5,12", "budget d'effets : fichier vide, plafonds d'avant gardés");
+    }
+
+    /// <summary>Bilan, carte, raretés et visuels d'armes (plan 26 Q7g-4a) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckInterfaceSettings()
+    {
+        bool summaryLoaded = RunSummaryConfig.TryLoad(out _, out string summaryError);
+        bool mapLoaded = MapPalette.TryLoad(out string mapError);
+        bool raritiesLoaded = RarityPalette.TryLoad(out string raritiesError);
+        bool visualsLoaded = WeaponVisualConfig.TryLoad(out _, out string visualsError);
+        Check(summaryLoaded && mapLoaded && raritiesLoaded && visualsLoaded,
+            $"bilan, carte, raretés et visuels d'armes du dépôt acceptés {summaryError}{mapError}{raritiesError}{visualsError}");
+
+        string summary = FileAccess.GetFileAsString(RunSummaryConfig.FilePath);
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["meters"] = 16, "clé « meters » inconnue"),
+            ("échelle nulle", root => root["pixels_per_meter"] = 0, "pixels_per_meter"),
+            ("pas négatif", root => root["distance_step_seconds"] = -0.25, "distance_step_seconds"),
+        })
+        {
+            bool refused = !RunSummaryConfig.TryParse(Mutated(summary, mutate), out _, out string error);
+            Check(refused && error?.Contains(expected, StringComparison.Ordinal) == true, $"bilan, {name} refusé ({error})");
+        }
+
+        string map = FileAccess.GetFileAsString(MapPalette.FilePath);
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["river"] = "#4A6A5E", "clé « river » inconnue"),
+            ("route invalide", root => root["road"] = "beige", "couleur « beige » invalide"),
+            ("biome inconnu", root => root["biomes"]!["desert"] = new JsonArray("#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"), "biome « desert » inconnu"),
+            ("forêt absente", root => root["biomes"]!.AsObject().Remove("forest_reclaimed"), "forest_reclaimed attendu"),
+            ("terrain manquant", root => root["biomes"]!["swamp"]!.AsArray().RemoveAt(3), "biomes.swamp : 4 couleurs attendues"),
+            ("teinte de phase manquante", root => root["phase_tints"]!.AsArray().RemoveAt(4), "phase_tints : 5 couleurs attendues"),
+            ("mélange hors borne", root => root["phase_blends"]![2] = 1.5, "phase_blends"),
+        })
+        {
+            bool refused = !MapPalette.TryParse(Mutated(map, mutate), biomeExists, out MapPalette palette, out string error);
+            Check(refused && palette == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"carte, {name} refusé ({error})");
+        }
+        Check(!MapPalette.TryParse("[]", biomeExists, out _, out string rootError) && rootError == "objet attendu à la racine",
+            $"carte, racine non objet refusée ({rootError})");
+
+        RarityColors common = RarityPalette.Colors("common");
+        string rarities = FileAccess.GetFileAsString(RarityPalette.FilePath);
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["rarities"]![0]!["glow"] = "#FFFFFF", "clé « glow » inconnue"),
+            ("rareté en double", root => root["rarities"]!.AsArray().Add(root["rarities"]![1]!.DeepClone()), "déjà déclarée"),
+            ("commune absente", root => root["rarities"]!.AsArray().RemoveAt(0), "« common » attendue"),
+            ("nom sans traduction", root => root["rarities"]![2]!["name_key"] = "RARITY_MYTHIQUE", "sans traduction"),
+            ("couleur invalide", root => root["rarities"]![3]!["dark"] = "pourpre", "couleur « pourpre » invalide"),
+        })
+        {
+            string error = RarityPalette.Apply(Mutated(rarities, mutate), translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && RarityPalette.Colors("common").Main == common.Main,
+                $"raretés, {name} refusé sans publication ({error})");
+        }
+        Check(RarityPalette.Apply(rarities, translated) == null && RarityPalette.Colors("legendary").Main == Color.FromHtml("#F0C85C"),
+            "raretés du dépôt republiées");
+
+        string visuals = FileAccess.GetFileAsString(WeaponVisualConfig.FilePath);
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["scale"] = 2, "clé « scale » inconnue"),
+            ("réglage absent", root => root.Remove("wave_interval_s"), "wave_interval_s"),
+            ("plafond sous 1", root => root["max_scale"] = 0.5, "max_scale"),
+            ("part au-delà du tout", root => root["shot_cooldown_share"] = 1.5, "shot_cooldown_share"),
+            ("son amplifié", root => root["chained_shot_volume_db"] = 3, "chained_shot_volume_db"),
+            ("fronts fractionnaires", root => root["cone_max_fronts"] = 2.5, "cone_max_fronts"),
+        })
+        {
+            bool refused = !WeaponVisualConfig.TryParse(Mutated(visuals, mutate), out WeaponVisualConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"visuels d'armes, {name} refusé ({error})");
+        }
     }
 
     private void CheckAtmosphere()

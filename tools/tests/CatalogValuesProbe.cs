@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Godot;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -290,6 +291,22 @@ public partial class CatalogValuesProbe : Node
         typeof(Vestiges.Combat.FxBudget).GetMethod("EnsureLoaded", staticHidden)!.Invoke(null, null);
         foreach (string budgetField in new[] { "Full", "Reduced" })
             lines.Add($"fx_budget {budgetField}=[{string.Join(",", (int[])typeof(Vestiges.Combat.FxBudget).GetField(budgetField, staticHidden)!.GetValue(null)!)}]");
+        // Q7g-4a : bilan de run, palette de la carte, palette de rareté, visuels d'armes.
+        RunSummaryConfig summary = RunSummaryConfig.Load();
+        lines.Add(Invariant($"run_summary {summary.PixelsPerMeter:R} {summary.DistanceStepSeconds:R}"));
+        MapPalette map = MapPalette.Load();
+        lines.Add($"map road={map.Road.ToHtml()} path={map.Path.ToHtml()}");
+        foreach (string biomeId in new[] { "forest_reclaimed", "urban_ruins", "wild_fields", "swamp", "collapsed_quarry", "inconnu" })
+            lines.Add($"map {biomeId} " + string.Join(",", Enum.GetValues<Vestiges.World.TerrainType>().Select(terrain => map.Terrain(biomeId, terrain).ToHtml())));
+        for (int phase = 0; phase < 5; phase++)
+            lines.Add($"map phase {phase} {map.PhaseColor(phase).ToHtml()} {map.ApplyPhase(Colors.White, phase, 1, 2).ToHtml()} {map.ApplyPhase(Colors.White, phase, 0, 0).ToHtml()}");
+        foreach (string rarityId in new[] { "common", "uncommon", "rare", "epic", "legendary", "lore", "memorial", "rift", "inconnue", "" })
+        {
+            RarityColors rarity = RarityPalette.Colors(rarityId);
+            lines.Add($"rarity [{rarityId}] {rarity.Main.ToHtml()} {rarity.Light.ToHtml()} {rarity.Dark.ToHtml()} {RarityPalette.DisplayName(rarityId)}");
+        }
+        WeaponVisualConfig visuals = WeaponVisualConfig.Load();
+        lines.Add(Invariant($"weapon_visuals {visuals.SizeResponse:R} {visuals.MaxScale:R} {visuals.ShotCooldownShare:R} {visuals.ChainedShotVolumeDb:R} {visuals.ChainedShotPitchVariance:R} {visuals.WaveInterval:R} {visuals.ConeMaxFronts}"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

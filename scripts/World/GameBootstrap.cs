@@ -146,6 +146,7 @@ public partial class GameBootstrap : Node
         RequireCatalog(SmallPlaceDataLoader.TryLoad(out string placesError), placesError);
         RequireCatalog(WaymarkDataLoader.TryLoad(out string waymarksError), waymarksError);
         RequireCatalog(BiomeDataLoader.TryLoad(out string biomesError), biomesError);
+        RequireCatalog(MapPalette.TryLoad(out string mapError), mapError);
         RequireCatalog(WorldGenConfig.TryLoad(out _, out string worldError), worldError);
         RequireCatalog(FarmConfig.TryLoad(out _, out string farmsError), farmsError);
         RequireCatalog(CrisisConfig.TryLoad(out _, out string crisesError), crisesError);
@@ -156,6 +157,9 @@ public partial class GameBootstrap : Node
         RequireCatalog(Combat.EnemyTracking.TryLoad(out string trackingError), trackingError);
         RequireCatalog(Combat.FxBudget.TryLoad(out string fxBudgetError), fxBudgetError);
         RequireCatalog(DefenseConfig.TryLoad(out _, out string defenseError), defenseError);
+        RequireCatalog(RunSummaryConfig.TryLoad(out _, out string summaryError), summaryError);
+        RequireCatalog(RarityPalette.TryLoad(out string paletteError), paletteError);
+        RequireCatalog(WeaponVisualConfig.TryLoad(out _, out string weaponVisualsError), weaponVisualsError);
         RequireCatalog(EnemyVariantDataLoader.TryLoad(out string variantsError), variantsError);
         RequireCatalog(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers",
             out _, out string quarryError), quarryError);

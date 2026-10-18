@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**18 octobre, nuit — réglages de combat lus strictement ([plan 26 Q7g-3](26-qualite-et-dette-technique.md), §68) :** défense, pistage des créatures et budget d'effets ; un fichier cassé ne ramène plus en silence l'armure d'avant le plan 47. Mêmes valeurs effectives.
+**18 octobre, nuit — réglages de combat et d'interface lus strictement ([plan 26 Q7g-3, Q7g-4a](26-qualite-et-dette-technique.md), §68) :** défense, pistage des créatures, budget d'effets, puis bilan de run, palettes de la carte et des raretés, visuels d'armes ; un fichier cassé ne ramène plus en silence l'armure d'avant le plan 47. Mêmes valeurs effectives. Validation complète de la branche : 40/40 suites.
 
 **17 octobre, nuit — tables de butin et lieux lus strictement ([plan 26 Q7g-1, Q7g-2](26-qualite-et-dette-technique.md), §68) :** mêmes valeurs ; un lieu à la forme, à la table ou au gardien inconnus, une sorte de butin inconnue ou un montant mal écrit arrêtent le chargement. **Question ajoutée au tableau de bord** : trois tirages dépassent leur borne haute d'une unité (butin des lieux, nombre de lieux, grappes de créatures).
 
