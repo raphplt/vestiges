@@ -83,7 +83,8 @@ public partial class Player
     /// <summary>Une suspension en plein saut au-dessus du vide garde le saut, qui reprend ensuite (pause, montée de niveau).</summary>
     private bool KeepsLeapThroughSuspension => IsLeaping && IsVoidAt(GlobalPosition);
 
-    private bool IsVoidAt(Vector2 position) =>
+    /// <summary>Phase Néant à cette position (saut du joueur, et créatures quand le vide est une arme).</summary>
+    internal bool IsVoidAt(Vector2 position) =>
         _erasureManager?.GetZonePhaseAt(position) == ErasureManager.ErasureZonePhase.Void;
 
     /// <summary>Longueur du trajet au-dessus du Néant, échantillonnée tous les quelques pixels (dash seulement).</summary>

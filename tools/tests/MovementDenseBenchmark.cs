@@ -152,6 +152,9 @@ public partial class MovementDenseBenchmark : Node
             _player = _world.GetNode<Player>("Player");
             _player.IsGodMode = true;
             _player.IsAIControlled = true;
+            // --elan : Élan allumé (plan 52), donc le vide comme arme : percussion du dash et créatures qui longent le Néant.
+            if (Array.IndexOf(args, "--elan") >= 0)
+                _player.SetElanEnabled(true);
             _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : TestArena.FindOpen(_player, _world);
             _player.GlobalPosition = _arena;
             // L'Effacement est coupé avant la fin de la recousure d'une terre : sans cela, le sol resterait en Néant.

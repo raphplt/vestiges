@@ -2,7 +2,8 @@ using Godot;
 
 namespace Vestiges.Combat;
 
-public enum DamageKind { Unknown, DirectWeapon, SecondaryWeapon, DamageOverTime, Passive, EnemyExplosion }
+/// <summary>Void : chute dans le Néant (le vide comme arme, plan 52 E4), portée par le joueur sans arme.</summary>
+public enum DamageKind { Unknown, DirectWeapon, SecondaryWeapon, DamageOverTime, Passive, EnemyExplosion, Void }
 
 /// <summary>
 /// Origine conservée même si l'arme quitte l'inventaire. LaunchId regroupe l'émission entière ; ReferenceDamage

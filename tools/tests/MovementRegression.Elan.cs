@@ -41,6 +41,12 @@ public partial class MovementRegression
             $"saut du vide : une allonge par palier exigée ({count})");
         Check(ElanConfig.Parse(valid.Replace("[0, 64, 128, 192]", "[0, 128, 64, 192]"), out string order2) == null && order2.Contains("croissantes"),
             $"saut du vide : allonges décroissantes refusées ({order2})");
+        Check(config.PercussionMinTier == 0 && config.PercussionDistanceAt(3) > config.PercussionDistanceAt(0),
+            $"percussion : dès le palier 0 par défaut, plus forte au palier III ({config.PercussionDistanceAt(3)} px)");
+        Check(ElanConfig.Parse(valid.Replace("\"min_tier\": 0", "\"min_tier\": 4"), out string tier) == null && tier.Contains("min_tier"),
+            $"percussion : palier minimum hors des paliers refusé ({tier})");
+        Check(ElanConfig.Parse(valid.Replace("[70, 100, 130, 160]", "[70, 100]"), out string distances) == null && distances.Contains("palier 0 compris"),
+            $"percussion : une distance par palier exigée ({distances})");
     }
 
     private void CheckElanModule()

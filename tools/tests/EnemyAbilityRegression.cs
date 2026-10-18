@@ -59,6 +59,7 @@ public partial class EnemyAbilityRegression : Node2D
             await RunAimedShotChecks();
             await RunBileLobChecks();
             await RunKnockbackChecks();
+            await RunVoidWeaponChecks();
 
             GD.Print($"[EnemyAbilityRegression] RESULT failures={_failures}");
             GetTree().Quit(_failures == 0 ? 0 : 1);

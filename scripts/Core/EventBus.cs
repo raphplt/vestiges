@@ -46,6 +46,10 @@ public partial class EventBus : Node
     public void PublishDashMoved(PlayerDashEvent dash) => PlayerDashMoved?.Invoke(dash);
     public void PublishDashFinished(PlayerDashEvent dash) => PlayerDashFinished?.Invoke(dash);
 
+    /// <summary>Une créature repoussée est tombée dans le Néant (plan 52 E4) ; position du bord d'où elle est partie.</summary>
+    public event System.Action<Vector2> CreatureFellIntoVoid;
+    public void PublishCreatureFellIntoVoid(Vector2 edge) => CreatureFellIntoVoid?.Invoke(edge);
+
 
     public void PublishEnemyDamage(Combat.DamageResult result) => EnemyDamageResolved?.Invoke(result);
     public void PublishEnemyKill(Combat.EnemyKillResult result) => EnemyKillResolved?.Invoke(result);

@@ -40,7 +40,8 @@ public partial class PlayTraceRecorder : Node
 
     private void OnDamage(DamageResult result)
     {
-        if (!result.Applied || !result.Source.IsPlayerOwned || result.HpLost <= 0f)
+        // Une chute dans le Néant (plan 52 E4) emporte tous les PV restants : ce ne sont pas des dégâts.
+        if (!result.Applied || !result.Source.IsPlayerOwned || result.HpLost <= 0f || result.Source.Kind == DamageKind.Void)
             return;
         (string, DamageKind) key = (result.Source.Weapon?.Id ?? "-", result.Source.Kind);
         _damage[key] = _damage.GetValueOrDefault(key) + result.HpLost;

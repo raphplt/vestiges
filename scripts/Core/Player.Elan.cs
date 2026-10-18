@@ -19,6 +19,7 @@ public partial class Player
     private void InitializeElan()
     {
         Elan = new PlayerElan(ElanConfig.Load());
+        PercussionMinTier = Elan.Config.PercussionMinTier;
     }
 
     /// <summary>Allume ou éteint l'Élan (bac à sable, réglage) ; éteint, ses bonus sont retirés.</summary>

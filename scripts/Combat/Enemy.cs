@@ -333,6 +333,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_xpReward = data.Stats.XpReward;
 		_tracking.Configure(data.GetStat("perception"), data.GetStat("leash"));
 		_isDying = false;
+		_fallingIntoVoid = false;
 		_killed = false;
 		_killCredited = false;
 		_attackTimer = 0f;
@@ -558,6 +559,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
 		IsActive = false;
 		_isDying = false;
+		_fallingIntoVoid = false;
 		_killed = false;
 		_killCredited = false;
 		_guardTarget = null;
@@ -715,7 +717,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				return;
 			if (lostTrack)
 			{
-				GlobalPosition += _tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor * dt;
+				MoveSimplified(_tracking.WanderDirection * _speed * _tracking.WanderSpeedFactor * MoveFactor * dt);
 				return;
 			}
 
@@ -723,11 +725,11 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			if (_mods.IsTraveling)
 			{
 				_mods.TickTravel(dt);
-				GlobalPosition += _mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * MoveFactor * dt;
+				MoveSimplified(_mods.TravelDirection * _speed * _mods.TravelSpeedMultiplier * MoveFactor * dt);
 				return;
 			}
 			Vector2 direction = (_player.GlobalPosition - GlobalPosition).Normalized();
-			GlobalPosition += direction * _speed * MoveFactor * dt;
+			MoveSimplified(direction * _speed * MoveFactor * dt);
 			return;
 		}
 
@@ -853,6 +855,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (HarpoonOwner != 0) return;
 		Vector2 next = GlobalPosition + Velocity * delta;
 		World.ObstacleField.Resolve(ref next, _bodyRadius);
+		if (ResolveVoid(ref next))
+			return;
 		GlobalPosition = next;
 	}
 
@@ -1293,8 +1297,10 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	{
 		if (_isDying || _tier is EnemyTier.Miniboss or EnemyTier.Boss || direction == Vector2.Zero)
 			return;
+		// Une projection de percussion (plan 52 E4), au-delà du plafond, n'est jamais raccourcie par le recul d'une arme.
+		float cap = Mathf.Max(MaxKnockbackDistance * KnockbackDecay, _knockVelocity.Length());
 		_knockVelocity += direction.Normalized() * (distance * KnockbackDecay / Mathf.Max(1f, Scale.X));
-		_knockVelocity = _knockVelocity.LimitLength(MaxKnockbackDistance * KnockbackDecay);
+		_knockVelocity = _knockVelocity.LimitLength(cap);
 		CombatPools.Instance?.EmitKnockbackDust(GlobalPosition, direction.Normalized());
 	}
 
@@ -1638,6 +1644,12 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				GrantVariantRewards();
 		}
 
+		if (_fallingIntoVoid)
+		{
+			PlayVoidFall();
+			return;
+		}
+
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
 		bool miniboss = _tier == EnemyTier.Miniboss;
 		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
@@ -1714,7 +1726,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				(float)GD.RandRange(-15, 15)
 			);
 			// Le butin jaillit du corps, poussé dans le sens du coup.
-			CombatPools.Instance?.SpawnXpOrb(GlobalPosition + offset * 1.6f + _lastHitDirection * 10f, xpPerOrb, GlobalPosition);
+			Vector2 spawn = _fallingIntoVoid ? VoidFallOrbPosition(offset) : GlobalPosition + offset * 1.6f + _lastHitDirection * 10f;
+			CombatPools.Instance?.SpawnXpOrb(spawn, xpPerOrb, GlobalPosition);
 		}
 	}
 

@@ -242,3 +242,88 @@ Contrôles ajoutés après relecture : Élan éteint (cas des runs normales), sa
 - **la lisibilité du bord** : le Néant se dessine en dégradé tramé sur environ une demi-cellule, mais la règle bascule net à la frontière de la cellule. Savoir où sauter peut être difficile. Un bord plus net est une piste pour E6 ;
 - les longueurs (64, 128, 192 px) : au palier I, il faut partir à moins de 8 px du bord pour franchir une cellule ;
 - le son de retombée.
+
+## 12. Compte rendu E4, la percussion et le vide comme arme — 18 octobre 2026
+
+**Livré :**
+- **La percussion** (`Player.Percussion.cs`, nouveau fichier partiel) : à partir du palier `percussion.min_tier`, chaque pas de dash projette les créatures à moins de 24 px au sol de son trajet.
+  - Une seule fois par créature et par dash.
+  - Projection vers l'extérieur du trajet, plus une part dans le sens du dash (`forward_bias` 0,6) ; une créature pile sur le trajet part d'un côté fixe.
+  - Distance selon le palier : 70, 100, 130, 160 px.
+  - +0,03 d'Élan par créature, 0,15 au plus par dash. Un son par pas qui touche.
+  - **Palier minimum à 0 par défaut** (recommandation de l'agent : le geste existe pour tous, les paliers l'amplifient) ; `tools/elan_sandbox.sh -- --percussion-tier 2` rend la version d'origine.
+- **`Enemy.Percuss`** (`Enemy.Void.cs`, nouveau fichier partiel) : remplace le recul en cours, sans le plafond des armes (80 px). Boss, mini-boss et parties de boss ne bougent pas ; une variante agrandie recule d'autant moins qu'elle est grande, comme pour le recul des armes.
+- **Le vide comme arme, Élan allumé** : à chaque pas d'une créature (`Enemy.MoveBody`), un pas qui mène du sol au Néant :
+  - **fait tomber** une créature ordinaire repoussée à plus de 40 px/s, quel que soit le recul : percussion ou arme ;
+  - **sinon, la créature longe le bord** (axe par axe), ou s'arrête. Une créature déjà dans le vide en sort librement.
+  - Élites, Souverains et boss ne tombent jamais.
+- **La chute** : un `DamageResult` de type `DamageKind.Void` (nouveau) passe par `Die`. L'élimination compte comme un coup fatal : score, Essence, quêtes, XP. L'XP rejaillit vers la terre depuis le bord.
+  - L'image remplace la dissolution : la créature glisse de 28 px vers le vide, rapetisse à 20 % et s'efface en 0,45 s.
+  - Son `sfx_relic_fall`, provisoire.
+  - Événement `EventBus.CreatureFellIntoVoid`.
+- **Élan éteint (runs normales)** : les créatures ignorent le Néant comme avant ; aucune percussion.
+- **Bac à sable** :
+  - compteurs « créatures projetées » et « tombées » ;
+  - `--percussion-tier N` ;
+  - `--scenario percussion` : le joueur longe le bord de la première bande et dashe dans une colonne de six Ombres.
+- **Banc dense** : option `--elan` (via `BENCH_EXTRA_ARGS`) pour mesurer avec le vide comme arme allumé.
+- **Bac à sable** : le temps des captures ne part qu'une fois le voile de chargement retiré.
+
+**Vérifié :**
+- build sans avertissement ;
+- `tools/test_enemy_abilities.sh` vert, avec huit contrôles nouveaux (`EnemyAbilityRegression.VoidWeapon.cs`, bande de Néant synthétique) :
+  - Élan éteint, la créature traverse le Néant comme avant ;
+  - Élan allumé, elle s'arrête au bord (x = 257) ;
+  - le dash projette la créature traversée (72 px) ;
+  - huit créatures sur le trajet : gain plafonné (0,159 avec la course) ;
+  - projetée dans le Néant, une Ombre tombe et compte comme éliminée ;
+  - le recul d'une arme fait aussi tomber ;
+  - une élite poussée s'arrête au bord ;
+  - sous le palier minimum réglé, rien n'est projeté ;
+- `tools/test_movement.sh` vert : réglages de la percussion lus strictement (palier hors bornes, compte des distances) ;
+- captures du bac à sable (`--scenario percussion`), regardées : percussions et chute comptées, élimination et Essence au HUD. **La chute se voyait mal** (une petite forme qui s'efface au bord tramé) : elle est amplifiée, avec une glissade de 52 px, une descente de 22 px, une réduction à 10 % et une durée de 0,6 s. La capture après amplification n'a pas pu être prise : sous une charge de 8 à 10, macOS ne redessinait plus la fenêtre et l'image gardait l'écran de chargement, alors que le scénario tournait (percussions et chute comptées). C'est le même défaut que la capture d'E2.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant ; l'Élan éteint ne change rien. Corrigé :
+- **seul le recul dirigé vers le vide fait tomber** : avant, une créature collée au bord et repoussée à l'opposé (ou de côté) tombait dès que sa marche la ramenait au bord, si bien que toute arme à recul tuait les créatures bloquées au bord ;
+- **le pas simplifié des créatures lointaines** (au-delà de 600 px, encore à l'écran) traversait le Néant : il longe maintenant le bord lui aussi ;
+- une créature terrée (Rampant) ne peut plus être projetée ni tomber ;
+- le recul d'une arme ne raccourcit plus une projection de percussion en vol (le plafond des armes ne s'applique qu'au-delà de la vitesse déjà acquise ; sans percussion, rien ne change) ;
+- l'XP d'une chute rejaillit à 30 px côté terre, jamais au-dessus du vide ;
+- les traces de jeu ne comptent pas une chute comme des dégâts ;
+- un seul son de percussion par dash ;
+- l'événement de chute est publié après la mort.
+
+Contrôles ajoutés après relecture : un recul à l'opposé du vide ne fait pas tomber, une créature lointaine longe aussi le bord, et une créature tombée revient du pool remise à neuf puis retombe (vrai `EnemyPool`, retour par la fin de la chute). Noté sans changement : `EventBus.CreatureFellIntoVoid` n'a encore pour abonnés que le bac à sable et le test.
+
+**Banc dense, non concluant sur les FPS.** `tools/bench_ab.sh` refuse de mesurer au-dessus d'une charge de 2, et la charge est restée entre 9 et 26 pendant toute la séance. Un A/B fait à la main contre `c50c660d` (E3), même instrument, une passe de 15 s, n'a donné que cinq mesures valides en 720p. Les autres ont échoué : fenêtre plus redessinée par macOS (« aucune nouvelle image rendue depuis 5 s »), ou initialisation de plus de 120 s.
+
+| Passe 720p | Images | Octets alloués par image | Nœuds créés | Scripts physiques |
+|---|---|---|---|---|
+| Base, Élan éteint | 2 115 | 3 347 | 0 | 0,239 ms |
+| E4, Élan éteint | 2 441 | 3 500 | 0 | 0,194 ms |
+| E4, Élan éteint, dash | 2 361 | 3 912 | 2 | 0,207 ms |
+| E4, Élan allumé | 2 343 | 3 601 | 1 | 0,209 ms |
+| E4, Élan allumé, dash | 2 091 | 4 310 | 0 | 0,242 ms |
+
+Lecture :
+- aucun nœud n'est créé ;
+- Élan éteint, les allocations par image restent dans l'écart d'une passe unique sous charge (+4 %). Le code d'E4 n'alloue rien sur ce chemin : une seule lecture de propriété par créature et par pas ;
+- Élan allumé, le dash alloue un peu plus (poussière et son de la percussion) ;
+- **les FPS sont à mesurer machine calme** :
+
+```bash
+tools/bench_ab.sh c50c660d /tmp/vestiges-ab-e4
+```
+
+  puis la même commande précédée de `BENCH_EXTRA_ARGS=--elan`. L'arène du banc est ouverte, sans vide : `--elan` mesure le coût du test de vide, pas une foule collée au bord.
+
+**Ouvert, à trancher avant d'allumer l'Élan en run normale** : une chute compte comme une élimination sans arme. Les quêtes d'éliminations proches, immobiles, à PV bas, en rafale ou en zone effacée la comptent (celle de la zone effacée presque toujours, puisqu'une chute a lieu au bord), comme le Ralliement et la Propagation. Le vol de vie, les objets et les Écussons, qui exigent une arme, ne la voient pas.
+
+**À juger en jouant (la semaine d'essai) :**
+- **le critère d'arrêt** du [LE-JEU.md](../LE-JEU.md) : pousse-t-on la horde dans le vide sans qu'on le dise, est-ce jouissif, un extrait de 10 s se comprend-il ;
+- la percussion dès le palier 0 ou au palier II (`--percussion-tier 2`) ;
+- **la lisibilité** du bord du vide (dégradé tramé) et de la chute amplifiée ;
+- le sens de la projection (`forward_bias`) : longer un bord en dashant pousse la moitié de la foule dans le vide ; foncer vers le bord la pousse surtout de côté ;
+- les sons, provisoires (`sfx_impact_blunt`, `sfx_relic_fall`).
+
+**Suite proposée** : la semaine d'essai de Raphaël dans le bac à sable, puis E5 (la glissade) et E6 (retours et réglages) selon le verdict.

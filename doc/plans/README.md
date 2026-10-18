@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**18 octobre — percussion et vide comme arme ([plan 52 E4](52-elan.md)) :** le dash projette les créatures traversées (dès le palier 0, plus fort par palier ; `--percussion-tier 2` pour la version d'origine) ; Élan allumé, une créature ordinaire poussée dans le Néant y tombe, éliminée, et les créatures longent le bord en marchant. Bac à sable prêt pour la semaine d'essai (critère d'arrêt au [LE-JEU.md](../LE-JEU.md)).
+
 **18 octobre — saut du vide ([plan 52 E0 et E3](52-elan.md)) :** le banc dense, invalide depuis le 17 octobre (arène hors de la terre), et le bac à sable sont reposés sur la terre ; dès le palier I d'Élan, le dash est porté au-dessus du Néant (64, 128, 192 px), +0,15 à la retombée sur le sol. Élan toujours éteint en run normale ; à essayer dans `tools/elan_sandbox.sh` (bandes de vide à l'est du départ).
 
 **18 octobre — revue de direction ([LE-JEU.md](../LE-JEU.md), §189), à lire avant tout :** gel des nouveautés jusqu'à fin novembre et tranche verticale (le Vagabond, deux terres de Vaulme, un gardien, environ 8 armes et 20 objets). Premier chantier : le vide comme arme en bac à sable, jauge d'Élan gardée, une semaine avec critère d'arrêt. Structure de run en exploration sur papier jusqu'au 25 octobre. Les terres deviennent des lieux de Vaulme, avec des pièces faites main et une génération structurée.

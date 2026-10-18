@@ -41,6 +41,24 @@ public sealed class ElanConfig
     public float VoidLeapHeightPixels { get; init; }
     public string VoidLeapLandingAudio { get; init; } = "";
 
+    /// <summary>Percussion (lot E4) : palier à partir duquel le dash projette les créatures qu'il traverse.</summary>
+    public int PercussionMinTier { get; init; }
+    /// <summary>Distance de projection, une valeur par palier, palier 0 compris.</summary>
+    public IReadOnlyList<float> PercussionDistance { get; init; } = Array.Empty<float>();
+    /// <summary>Distance au sol entre le trajet du dash et une créature touchée.</summary>
+    public float PercussionReachPixels { get; init; }
+    /// <summary>Part de la poussée dans le sens du dash, ajoutée à la poussée vers l'extérieur du trajet.</summary>
+    public float PercussionForwardBias { get; init; }
+    public float PercussionGainPerCreature { get; init; }
+    public float PercussionMaxGainPerDash { get; init; }
+    /// <summary>Vitesse de recul au-dessus de laquelle une créature qui entre dans le Néant y tombe au lieu de s'arrêter au bord.</summary>
+    public float FallMinKnockSpeed { get; init; }
+    public string PercussionAudio { get; init; } = "";
+    public string FallAudio { get; init; } = "";
+
+    public float PercussionDistanceAt(int tier) =>
+        PercussionDistance.Count == 0 ? 0f : PercussionDistance[Mathf.Clamp(tier, 0, PercussionDistance.Count - 1)];
+
     /// <summary>Allonge du saut au palier donné ; nulle si l'Élan n'a pas de réglage de saut.</summary>
     public float VoidLeapExtensionAt(int tier) =>
         VoidLeapExtension.Count == 0 ? 0f : VoidLeapExtension[Mathf.Clamp(tier, 0, VoidLeapExtension.Count - 1)];
@@ -72,7 +90,7 @@ public sealed class ElanConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
             reader.AllowOnly(root, "élan", "enabled_in_runs", "tiers", "speed", "still", "upkeep_decay_per_second", "hit_loss",
-                "perfect_dodge", "void_leap");
+                "perfect_dodge", "void_leap", "percussion");
             List<ElanTier> tiers = new();
             float previous = 0f;
             foreach (JsonElement entry in reader.List(root, "tiers", 1))
@@ -92,7 +110,11 @@ public sealed class ElanConfig
             reader.AllowOnly(dodge, "perfect_dodge", "gain", "cooldown_refund", "audio");
             JsonElement leap = reader.Section(root, "void_leap");
             reader.AllowOnly(leap, "void_leap", "extension_px", "min_void_px", "gain", "height_px", "landing_audio");
-            List<float> extensions = ReadExtensions(reader, leap, tiers.Count);
+            List<float> extensions = ReadPerTier(reader, leap, "void_leap", "extension_px", tiers.Count);
+            JsonElement percussion = reader.Section(root, "percussion");
+            reader.AllowOnly(percussion, "percussion", "min_tier", "distance_px", "reach_px", "forward_bias", "gain_per_creature",
+                "max_gain_per_dash", "fall_min_knock_speed", "audio", "fall_audio");
+            List<float> distances = ReadPerTier(reader, percussion, "percussion", "distance_px", tiers.Count);
             ElanConfig config = new()
             {
                 EnabledInRuns = reader.Flag(root, "enabled_in_runs"),
@@ -113,6 +135,15 @@ public sealed class ElanConfig
                 VoidLeapGain = reader.Chance(leap, "gain"),
                 VoidLeapHeightPixels = reader.NonNegative(leap, "height_px"),
                 VoidLeapLandingAudio = reader.Text(leap, "landing_audio"),
+                PercussionMinTier = reader.Integer(percussion, "min_tier", 0, tiers.Count),
+                PercussionDistance = distances,
+                PercussionReachPixels = reader.Positive(percussion, "reach_px"),
+                PercussionForwardBias = reader.NonNegative(percussion, "forward_bias"),
+                PercussionGainPerCreature = reader.Chance(percussion, "gain_per_creature"),
+                PercussionMaxGainPerDash = reader.Chance(percussion, "max_gain_per_dash"),
+                FallMinKnockSpeed = reader.NonNegative(percussion, "fall_min_knock_speed"),
+                PercussionAudio = reader.Text(percussion, "audio"),
+                FallAudio = reader.Text(percussion, "fall_audio"),
             };
             if (reader.Error == null && config.SpeedCap < tiers[0].From - 0.0001f)
                 reader.Fail("speed.cap sous le premier palier : la course n'en atteindrait aucun");
@@ -128,25 +159,28 @@ public sealed class ElanConfig
         }
     }
 
-    /// <summary>Une allonge par palier, palier 0 compris, positive et croissante : un palier de plus ne raccourcit jamais le saut.</summary>
-    private static List<float> ReadExtensions(JsonConfigReader reader, JsonElement leap, int tierCount)
+    /// <summary>
+    /// Une longueur par palier, palier 0 compris, positive et croissante : un palier de plus ne raccourcit jamais le saut
+    /// ni la projection.
+    /// </summary>
+    private static List<float> ReadPerTier(JsonConfigReader reader, JsonElement owner, string section, string key, int tierCount)
     {
-        List<float> extensions = new();
+        List<float> values = new();
         float previous = 0f;
-        foreach (JsonElement entry in reader.List(leap, "extension_px", 1))
+        foreach (JsonElement entry in reader.List(owner, key, 1))
         {
             if (entry.ValueKind != JsonValueKind.Number || !entry.TryGetSingle(out float value) || value < 0f)
             {
-                reader.Fail("void_leap.extension_px : longueurs positives ou nulles attendues");
-                return extensions;
+                reader.Fail($"{section}.{key} : longueurs positives ou nulles attendues");
+                return values;
             }
             if (value < previous)
-                reader.Fail("void_leap.extension_px : longueurs croissantes attendues");
+                reader.Fail($"{section}.{key} : longueurs croissantes attendues");
             previous = value;
-            extensions.Add(value);
+            values.Add(value);
         }
-        if (reader.Error == null && extensions.Count != tierCount + 1)
-            reader.Fail($"void_leap.extension_px : {tierCount + 1} longueurs attendues (palier 0 compris), {extensions.Count} lues");
-        return extensions;
+        if (reader.Error == null && values.Count != tierCount + 1)
+            reader.Fail($"{section}.{key} : {tierCount + 1} longueurs attendues (palier 0 compris), {values.Count} lues");
+        return values;
     }
 }

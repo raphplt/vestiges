@@ -7,6 +7,7 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Spawn;
+using Vestiges.UI;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -48,6 +49,13 @@ public partial class ElanSandbox : Node
     private int _dodgesBeforeCapture;
     private string _scenario;
     private int _leapFramesInAir;
+    private float _firstStripEdge;
+    private int _falls;
+    private bool _columnSpawned;
+    private float _columnSpawnedAt;
+    private int _framesSinceFall = -1;
+    private EventBus _eventBus;
+    private GameLoadingOverlay _overlay;
 
     public override async void _Ready()
     {
@@ -61,7 +69,9 @@ public partial class ElanSandbox : Node
             _captureDir = Argument(args, "--capture", null);
             _captureSeconds = float.Parse(Argument(args, "--seconds", "12"), CultureInfo.InvariantCulture);
             // --scenario leap : le joueur, au palier II, court vers la première bande de vide et la saute ; l'image est
-            // gardée en l'air. Sans scénario : il fonce sur la foule et dashe au contact (esquive parfaite).
+            // gardée en l'air. --scenario percussion : il longe le bord de la première bande et dashe dans une colonne de
+            // créatures ; l'image est gardée pendant leur chute. Sans scénario : il fonce sur la foule et dashe au contact
+            // (esquive parfaite).
             _scenario = Argument(args, "--scenario", "dodge");
             GameManager manager = GetNode<GameManager>("/root/GameManager");
             manager.RunSeed = Seed;
@@ -92,6 +102,12 @@ public partial class ElanSandbox : Node
             _player = _world.GetNode<Player>("Player");
             _player.SurviveFatalHitsForTests = true;
             _player.SetElanEnabled(true);
+            // --percussion-tier N : palier à partir duquel le dash projette (0 par défaut, 2 pour la version d'origine).
+            string percussionTier = Argument(args, "--percussion-tier", null);
+            if (percussionTier != null)
+                _player.PercussionMinTier = int.Parse(percussionTier, CultureInfo.InvariantCulture);
+            _eventBus = GetNode<EventBus>("/root/EventBus");
+            _eventBus.CreatureFellIntoVoid += OnCreatureFell;
             if (_captureDir != null)
                 _player.IsAIControlled = true;
             _player.GlobalPosition = TestArena.FindOpen(_player, _world);
@@ -107,6 +123,7 @@ public partial class ElanSandbox : Node
             _label.AddThemeConstantOverride("shadow_offset_x", 2);
             _label.AddThemeConstantOverride("shadow_offset_y", 2);
             layer.AddChild(_label);
+            _overlay = FindOverlay(GetTree().Root);
             _ready = true;
             GD.Print($"[ElanSandbox] Prêt : {_crowdSize} créatures entretenues, personnage {manager.SelectedCharacterId}.");
         }
@@ -117,11 +134,21 @@ public partial class ElanSandbox : Node
         }
     }
 
+    public override void _ExitTree()
+    {
+        if (_eventBus != null)
+            _eventBus.CreatureFellIntoVoid -= OnCreatureFell;
+    }
+
+    private void OnCreatureFell(Vector2 edge) => _falls++;
+
     public override void _Process(double delta)
     {
         if (!_ready || !IsInstanceValid(_player))
             return;
-        _elapsed += (float)delta;
+        // Le temps des captures ne part qu'une fois le voile de chargement retiré (il dure plus longtemps sous charge).
+        if (_overlay == null || !IsInstanceValid(_overlay) || _overlay.IsQueuedForDeletion())
+            _elapsed += (float)delta;
         if (_captureDir != null)
             StepCapture();
         _refillClock -= (float)delta;
@@ -133,9 +160,10 @@ public partial class ElanSandbox : Node
         PlayerElan elan = _player.Elan;
         _label.Text = string.Format(CultureInfo.InvariantCulture,
             "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\nesquives parfaites {7}  sauts du vide {8}\n"
+            + "percussion dès le palier {9} : {10} créatures projetées, {11} tombées\n"
             + "créatures {5}  apparues {6}\nvide à l'est : bandes de 1, 2 et 3 cellules",
             elan.Value, elan.Tier, elan.LastChange, elan.SpeedAt(elan.Tier), elan.DamageAt(elan.Tier), _crowd.Count, _spawned,
-            _player.PerfectDodges, _player.VoidLeaps);
+            _player.PerfectDodges, _player.VoidLeaps, _player.PercussionMinTier, _player.Percussions, _falls);
     }
 
     /// <summary>
@@ -148,6 +176,7 @@ public partial class ElanSandbox : Node
         Vector2 start = _player.GlobalPosition;
         int x = Mathf.CeilToInt((start.X + FirstStripDistance) / cell);
         int row = Mathf.FloorToInt(start.Y / cell);
+        _firstStripEdge = x * cell;
         foreach (int width in StripWidths)
         {
             for (int dx = 0; dx < width; dx++)
@@ -166,8 +195,55 @@ public partial class ElanSandbox : Node
         PickLevelUp();
         if (_scenario == "leap")
             StepLeapCapture();
+        else if (_scenario == "percussion")
+            StepPercussionCapture();
         else
             StepDodgeCapture();
+    }
+
+    /// <summary>
+    /// Percussion (E4) : après le délai, le joueur, au palier II, est posé au nord d'une colonne de six Ombres alignée sur
+    /// le bord ouest de la première bande ; il descend le long du bord et dashe dans la colonne. Une créature sur deux
+    /// est poussée vers le vide. L'image est gardée cinq pas après la première chute (milieu de la chute), ou six secondes après la colonne.
+    /// </summary>
+    private void StepPercussionCapture()
+    {
+        if (_elapsed < _captureSeconds)
+        {
+            _player.AIInputOverride = Vector2.Zero;
+            return;
+        }
+        if (_player.Elan.Tier < 2)
+            _player.Elan.Gain(0.7f, "bac à sable");
+        if (!_columnSpawned)
+            SpawnEdgeColumn();
+        _player.AIInputOverride = Vector2.Down;
+        Enemy nearest = NearestCrowd(out float distance);
+        if (nearest != null && distance < 40f && _player.Mobility.CooldownRemaining <= 0f)
+            _player.Mobility.Request();
+        if (_falls > 0)
+            _framesSinceFall++;
+        if (_framesSinceFall < 5 && _elapsed < _columnSpawnedAt + 6f)
+            return;
+        SaveCapture("percussion");
+    }
+
+    private void SpawnEdgeColumn()
+    {
+        _columnSpawned = true;
+        _columnSpawnedAt = _elapsed;
+        float x = _firstStripEdge - 12f;
+        float top = _player.GlobalPosition.Y - 60f;
+        _player.GlobalPosition = new Vector2(x, top - 100f);
+        for (int i = 0; i < 6; i++)
+        {
+            Enemy enemy = _pool.Get();
+            enemy.Position = new Vector2(x, top + i * 24f);
+            _container.AddChild(enemy);
+            enemy.Initialize(EnemyDataLoader.Get("shade"), 1f, 1f);
+            _crowd.Add(enemy);
+            _spawned++;
+        }
     }
 
     /// <summary>
@@ -221,7 +297,8 @@ public partial class ElanSandbox : Node
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Elan.Tier})");
+        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Elan.Tier}, "
+            + $"percussions {_player.Percussions}, chutes {_falls})");
         GetTree().Quit(0);
         _captureDir = null;
     }
@@ -284,6 +361,19 @@ public partial class ElanSandbox : Node
             _crowd.Add(enemy);
             _spawned++;
         }
+    }
+
+    private static GameLoadingOverlay FindOverlay(Node node)
+    {
+        if (node is GameLoadingOverlay overlay)
+            return overlay;
+        foreach (Node child in node.GetChildren())
+        {
+            GameLoadingOverlay found = FindOverlay(child);
+            if (found != null)
+                return found;
+        }
+        return null;
     }
 
     private static string Argument(string[] args, string name, string fallback)

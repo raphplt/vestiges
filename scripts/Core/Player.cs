@@ -643,6 +643,7 @@ public partial class Player : CharacterBody2D
         }
         Mobility.FinishMovement(movementVelocity);
         StepVoidLeap(dt, previousPosition, dashMovement);
+        StepPercussion(previousPosition, dashMovement);
         UpdateMobilityHeight();
         PublishItemDash(previousPosition, dashMovement);
 
