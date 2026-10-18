@@ -397,7 +397,7 @@ Contenu de S1 :
 - la Chance ;
 - le compteur au-dessus de la tête, qui fait la même taille que les chiffres de dégâts. Sa place au HUD vient avec l'étape « clarté ».
 
-## 15. La Série finie — retours de l'essai et proposition du 18 octobre (à reprendre)
+## 15. La Série finie — retours de l'essai et proposition du 18 octobre
 
 **Retours de Raphaël** après l'essai du bac à sable ([DECISIONS §191](DECISIONS.md)) :
 - le compteur doit quitter la tête du joueur pour un coin de l'écran (en haut à gauche, à droite ou au milieu), toujours visible, plus gros, plus attractif ;
@@ -452,7 +452,7 @@ Contenu de S1 :
 
 **Avocat du diable** : l'encaissement ajoute une règle et touche l'économie des coffres. Sans lui, la fin d'une Série ne se remarque pas. Un niveau vraiment digne d'une sortie demandera aussi un habillage par l'ami artiste et des sons composés (étape « clarté »).
 
-**Question posée à Raphaël, sans réponse** (pause demandée avant de répondre) : quand la jauge se vide, la Série s'encaisse (recommandé) ou perd un rang (sans récompense, comme aujourd'hui) ? **Décision par défaut : elle s'encaisse.** À confirmer d'un mot à la reprise, avant S2.
+**Question posée à Raphaël** : quand la jauge se vide, la Série s'encaisse (recommandé) ou perd un rang (sans récompense, comme aujourd'hui) ? **Elle s'encaisse** : défaut gardé à la reprise, déjà codé ([§192](DECISIONS.md)), réversible d'un mot.
 
 ### Lots
 
@@ -489,3 +489,26 @@ Puis Raphaël joue une vraie run. Le vide s'allume avec la Série (même interru
   - les traînées en silhouette de `MobilityFeedback` (quatre sprites recyclés) servent aux images rémanentes.
 
 Sources : [DMC 5, rangs et coups reçus](https://shacknews.com/article/110322/stylish-points-and-style-ranks-in-devil-may-cry-5), [DMC 4, jauge qui décroît](https://strategywiki.org/wiki/Devil_May_Cry_4/Gameplay), [Ultrakill, décroissance par rang](https://ultrakill.fandom.com/wiki/Style_Index), [Tony Hawk, chute et combo](https://www.gfinityesports.com/article/tony-hawks-pro-skater-1-2-remake-remaster-manual-how-to-guide), [Metal: Hellsinger, couches par multiplicateur](https://checkpointgaming.net/reviews/2022/09/metal-hellsinger-review-riff-tear/), [Bloodborne, regain](https://bloodborne.wiki.fextralife.com/Rally), [facile à apprendre, dur à maîtriser](https://www.gamedeveloper.com/design/what-makes-games-easy-to-learn-and-hard-to-master), [combo qui fait du bien](https://bugnet.io/blog/how-to-build-a-combo-system-that-feels-good).
+
+## 16. Compte rendu S2, les trois règles — 18 octobre 2026
+
+Le code de S2 est arrivé dans `dd9ffc0d` (commit de reprise) ; ce lot le vérifie, corrige ce qui cassait et le documente.
+
+**Livré :**
+- **Six rangs** lus strictement dans `elan.json` (`ranks`) : nom (clé de traduction), seuil, couleur, fenêtre, vitesse, dégâts, Chance, taux d'encaissement. ÉVEIL ×10, FERVEUR ×20, FURIE ×40, CARNAGE ×80, HÉCATOMBE ×160, MONSTRE ×320 ; fenêtre de 4 s au rang 0 à 2 s à MONSTRE.
+- **Un coup reçu coupe la Série en deux** (arrondi inférieur) ; la fenêtre continue de couler.
+- **La fenêtre vide encaisse la Série** : Série × taux du rang (0,1 à ÉVEIL, 1,0 à MONSTRE), rien au rang 0. `EssenceTracker` ajoute l'Essence et fait voler un grain depuis le joueur.
+- **Un coup porté à un gardien de terre, un mini-boss ou un boss relance la fenêtre.**
+- **`EventBus.StreakChanged`** publie chaque changement (`StreakChange` : gain, coup, encaissement, extinction, avec le compte et le rang d'avant et d'après) pour le HUD et les retours des lots suivants.
+- Le saut du vide et la percussion ont une valeur par rang (sept valeurs, rang 0 compris).
+- **Corrigé dans ce lot :**
+  - le rang ne touchait plus les stats quand la Série changeait hors élimination et coup reçu (bac à sable, bancs) : il est appliqué à chaque pas, ce qui ne coûte qu'une comparaison d'entiers ;
+  - le contrôle instable « dash invulnérable pendant tout le dash » (§14) : l'entrée simulée du banc est livrée tout de suite (`Input.FlushBufferedEvents`) ; elle arrivait une image trop tard quand la machine rame.
+
+**Vérifié :**
+- build sans avertissement ;
+- `tools/test_movement.sh` (avec et sans `--run-integration`) et `tools/test_enemy_abilities.sh` verts. Contrôles de S2 :
+  - six rangs, fenêtre plus courte et taux plus haut à chaque rang, réglages invalides refusés ;
+  - coupe en deux, encaissement à CARNAGE, une Série de ×100 qui rapporte plus que dix de ×10 ;
+  - sur le vrai joueur : vitesse ×1,04 à ÉVEIL, dégâts et Chance à FURIE, coup qui retire le rang, retour exact à l'extinction ;
+  - un coup au gardien relance la fenêtre ; ×100 encaissée en 50 Essence publiée sur l'EventBus.

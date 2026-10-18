@@ -44,11 +44,11 @@ public partial class Player
             return;
         int count = Streak.Count, rank = Streak.Rank;
         int essence = Streak.Step(delta);
+        // Chaque pas : un rang changé hors de ce fichier (bac à sable, banc) touche aussi les stats ; sans changement,
+        // ce n'est qu'une comparaison d'entiers.
+        ApplyStreakRank();
         if (essence >= 0)
-        {
-            ApplyStreakRank();
             PublishStreak(StreakChangeKind.CashOut, count, rank, essence);
-        }
         ShowStreak();
     }
 

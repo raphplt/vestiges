@@ -2323,3 +2323,10 @@ Raphaël, après avoir joué la Série dans le bac à sable ([plan 52 §15](52-e
 - le compteur « EN RAFALE » du HUD disparaît au profit de la Série ;
 - un coup porté à un gardien ou un mini-boss relance la fenêtre ;
 - le vide reste branché sur la Série et se juge avec elle en vraie run.
+
+## 192. La Série finie, lots S2 à S5 — 18 octobre 2026
+
+Raphaël, à la reprise : « on finit la Série de bout en bout (lots S2 à S5 du §15), au niveau d'une sortie Steam : simple à comprendre, dur à maîtriser », « enchaîne S2 à S5 avec un commit par lot, puis allume la Série en vraie run pour que je la joue ». Le code de S2 était déjà arrivé entre-temps (`dd9ffc0d`) ; sa réponse à la question du §191 n'a pas été écrite.
+
+**Tranché par défaut, réversible :**
+- **La Série s'encaisse en Essence** quand sa jauge se vide (défaut du §191, déjà codé). « Elle perd un rang, sans récompense » reste possible d'un mot.

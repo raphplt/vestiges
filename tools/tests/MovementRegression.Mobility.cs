@@ -620,6 +620,9 @@ public partial class MovementRegression
             Input.ParseInputEvent(new InputEventJoypadButton { Device = TestDevice, ButtonIndex = JoyButton.X, Pressed = pressed });
         else
             Input.ParseInputEvent(new InputEventKey { Device = TestDevice, PhysicalKeycode = Key.Space, Pressed = pressed });
+        // Livré tout de suite au joueur : sous charge, plusieurs images physiques passent par itération et l'événement
+        // mis en file arrivait une image trop tard (dash pas encore parti au contrôle).
+        Input.FlushBufferedEvents();
     }
 
     private T ReadPlayerField<T>(string name) => (T)typeof(Player)
