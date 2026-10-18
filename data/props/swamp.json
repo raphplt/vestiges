@@ -11,8 +11,7 @@
             "sprite_canopy": "assets/props/swamp/prop_dead_tree_large_canopy.png",
             "canopy_offset_y": -54,
             "blocking": true,
-            "min_distance": 5,
-            "variants": 1
+            "min_distance": 5
         },
         {
             "id": "dead_tree_mossy_large",
@@ -21,8 +20,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_mossy_large.png",
             "blocking": true,
-            "min_distance": 7,
-            "variants": 1
+            "min_distance": 7
         },
         {
             "id": "dead_tree_small",
@@ -31,8 +29,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_dead_tree_small.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "aerial_roots",
@@ -41,8 +38,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_aerial_roots.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "aerial_roots_twisted",
@@ -51,8 +47,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_aerial_roots_twisted.png",
             "blocking": true,
-            "min_distance": 5,
-            "variants": 1
+            "min_distance": 5
         },
         {
             "id": "root_mass_large",
@@ -61,8 +56,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_root_mass_large.png",
             "blocking": true,
-            "min_distance": 7,
-            "variants": 1
+            "min_distance": 7
         },
         {
             "id": "vine_curtain",
@@ -71,8 +65,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_vine_curtain.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "reeds",
@@ -81,8 +74,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_reeds.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "lily_pads",
@@ -91,8 +83,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/swamp/prop_lily_pads.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "fallen_log",
@@ -101,8 +92,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_fallen_log.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "rotten_stump",
@@ -111,8 +101,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_rotten_stump.png",
             "blocking": true,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "toxic_mushrooms",
@@ -121,8 +110,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_toxic_mushrooms.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "swamp_lantern",
@@ -131,8 +119,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_swamp_lantern.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "spore_patch",
@@ -141,8 +128,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_spore_patch.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "hanging_moss",
@@ -151,8 +137,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_hanging_moss.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "broken_walkway",
@@ -161,8 +146,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_broken_walkway.png",
             "blocking": false,
-            "min_distance": 5,
-            "variants": 1
+            "min_distance": 5
         },
         {
             "id": "sunken_boat",
@@ -171,8 +155,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_boat.png",
             "blocking": true,
-            "min_distance": 6,
-            "variants": 1
+            "min_distance": 6
         },
         {
             "id": "sunken_trunk_large",
@@ -181,8 +164,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_trunk_large.png",
             "blocking": true,
-            "min_distance": 7,
-            "variants": 1
+            "min_distance": 7
         },
         {
             "id": "drowned_cart",
@@ -191,8 +173,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_drowned_cart.png",
             "blocking": true,
-            "min_distance": 6,
-            "variants": 1
+            "min_distance": 6
         },
         {
             "id": "rusted_barrel",
@@ -201,8 +182,7 @@
             "terrain": ["grass", "concrete", "forest"],
             "sprite_base": "assets/props/swamp/prop_rusted_barrel.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "old_post",
@@ -211,8 +191,7 @@
             "terrain": ["grass", "forest", "concrete"],
             "sprite_base": "assets/props/swamp/prop_old_post.png",
             "blocking": false,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "bone_pile",
@@ -221,8 +200,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_bone_pile.png",
             "blocking": false,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "sunken_shrine",
@@ -231,8 +209,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_sunken_shrine.png",
             "blocking": true,
-            "min_distance": 9,
-            "variants": 1
+            "min_distance": 9
         },
         {
             "id": "collapsed_pontoon",
@@ -241,8 +218,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/swamp/prop_collapsed_pontoon.png",
             "blocking": true,
-            "min_distance": 9,
-            "variants": 1
+            "min_distance": 9
         },
         {
             "id": "bound_tree",
@@ -251,8 +227,7 @@
             "terrain": ["forest", "grass"],
             "sprite_base": "assets/props/swamp/prop_bound_tree.png",
             "blocking": true,
-            "min_distance": 10,
-            "variants": 1
+            "min_distance": 10
         }
     ]
 }

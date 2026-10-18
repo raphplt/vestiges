@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Infrastructure;
@@ -21,7 +22,6 @@ public class PropDefinition
 	public bool Blocking;
 	public float FootprintScale = 1f;
 	public int MinDistance;
-	public int Variants;
 }
 
 /// <summary>
@@ -429,101 +429,139 @@ public partial class PropSpawner : Node2D
 	// === Chargement des configs JSON ===
 	// =========================================================================
 
-	private static Dictionary<string, BiomePropConfig> LoadPropConfigs()
+	public const string PropsDirectory = "res://data/props";
+	private static readonly string[] TerrainNames = Array.ConvertAll(Enum.GetNames<TerrainType>(), name => name.ToLowerInvariant());
+	private static Dictionary<string, BiomePropConfig> _configs;
+	private static string _configsError;
+
+	/// <summary>Décors par biome contrôlés une fois (plan 26 Q7h-2) ; refusés, la raison, et la run ne démarre pas (GameBootstrap).</summary>
+	public static bool TryLoadConfigs(out string error)
 	{
-		Dictionary<string, BiomePropConfig> configs = new();
-
-		DirAccess dir = DirAccess.Open("res://data/props");
-		if (dir == null)
-		{
-			GD.PrintErr("[PropSpawner] Cannot open data/props/ directory!");
-			return configs;
-		}
-
-		dir.ListDirBegin();
-		string fileName = dir.GetNext();
-		int fileCount = 0;
-		while (!string.IsNullOrEmpty(fileName))
-		{
-			GD.Print($"[PropSpawner] Found in data/props/: '{fileName}'");
-			if (fileName.EndsWith(".json") && !fileName.StartsWith("_"))
-			{
-				BiomePropConfig config = LoadPropConfig($"res://data/props/{fileName}");
-				if (config != null)
-				{
-					configs[config.BiomeId] = config;
-					GD.Print($"[PropSpawner] => Registered biome '{config.BiomeId}' ({config.Props.Count} prop types, density={config.Density})");
-				}
-				else
-				{
-					GD.PrintErr($"[PropSpawner] => FAILED to load {fileName}");
-				}
-			}
-			fileCount++;
-			fileName = dir.GetNext();
-		}
-		dir.ListDirEnd();
-
-		GD.Print($"[PropSpawner] Directory scan done: {fileCount} entries, {configs.Count} configs loaded");
-		return configs;
+		LoadPropConfigs();
+		error = _configsError;
+		return error == null;
 	}
 
-	private static BiomePropConfig LoadPropConfig(string path)
+	/// <summary>Les décors acceptés ; un catalogue refusé n'en rend aucun (la génération s'arrête sur l'erreur journalisée).</summary>
+	private static Dictionary<string, BiomePropConfig> LoadPropConfigs()
 	{
-		FileAccess file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-		if (file == null)
+		if (_configs != null || _configsError != null)
+			return _configs ?? new Dictionary<string, BiomePropConfig>();
+		List<(string Name, string Text)> files = new();
+		using DirAccess dir = DirAccess.Open(PropsDirectory);
+		if (dir == null)
+			_configsError = $"{PropsDirectory} : dossier illisible";
+		else
 		{
-			GD.PrintErr($"[PropSpawner] Cannot open file: {path}");
-			return null;
+			foreach (string fileName in dir.GetFiles())
+			{
+				if (!fileName.EndsWith(".json", StringComparison.Ordinal) || fileName.StartsWith('_'))
+					continue;
+				using FileAccess file = FileAccess.Open($"{PropsDirectory}/{fileName}", FileAccess.ModeFlags.Read);
+				files.Add((fileName, file?.GetAsText()));
+			}
+			_configsError = TryParseConfigs(files, id => BiomeDataLoader.Get(id) != null, path => ResourceLoader.Exists($"res://{path}"),
+				out _configs);
 		}
-
-		string jsonText = file.GetAsText();
-		file.Close();
-
-		Json json = new();
-		if (json.Parse(jsonText) != Error.Ok)
+		if (_configsError != null)
 		{
-			GD.PrintErr($"[PropSpawner] JSON parse error in {path}: {json.GetErrorMessage()}");
-			return null;
+			GD.PushError($"[PropSpawner] {_configsError}");
+			return new Dictionary<string, BiomePropConfig>();
 		}
+		GD.Print($"[PropSpawner] {_configs.Count} biome prop configs loaded");
+		return _configs;
+	}
 
-		Godot.Collections.Dictionary dict = json.Data.AsGodotDictionary();
-		BiomePropConfig config = new()
+	/// <summary>
+	/// Un fichier par biome connu, nommé comme lui ; décors aux identifiants uniques, sur des terrains de la génération,
+	/// sprites présents. Rend l'erreur, nulle si tout est accepté.
+	/// </summary>
+	public static string TryParseConfigs(IReadOnlyList<(string Name, string Text)> files, Func<string, bool> biomeExists,
+		Func<string, bool> spriteExists, out Dictionary<string, BiomePropConfig> configs)
+	{
+		configs = null;
+		Dictionary<string, BiomePropConfig> parsed = new();
+		foreach ((string name, string text) in files)
 		{
-			BiomeId = dict["biome_id"].AsString(),
-			Density = (float)dict["density"].AsDouble(),
-		};
+			string where = $"{PropsDirectory}/{name}";
+			if (text == null)
+				return $"{where} : fichier illisible";
+			try
+			{
+				using JsonDocument document = JsonDocument.Parse(text);
+				JsonConfigReader reader = new(document.RootElement);
+				BiomePropConfig config = ParseConfig(reader, reader.Root, biomeExists, spriteExists);
+				if (reader.Error == null && config.BiomeId + ".json" != name)
+					reader.Fail($"biome_id « {config.BiomeId} » différent du nom du fichier");
+				if (reader.Error != null)
+					return $"{where} : {reader.Error}";
+				parsed[config.BiomeId] = config;
+			}
+			catch (JsonException exception)
+			{
+				return $"{where} : JSON invalide : {exception.Message}";
+			}
+		}
+		if (parsed.Count == 0)
+			return $"{PropsDirectory} : aucun fichier de décors";
+		configs = parsed;
+		return null;
+	}
 
-		Godot.Collections.Array propsArray = dict["props"].AsGodotArray();
-		foreach (Variant propVar in propsArray)
+	private static BiomePropConfig ParseConfig(JsonConfigReader reader, JsonElement root, Func<string, bool> biomeExists,
+		Func<string, bool> spriteExists)
+	{
+		reader.AllowOnly(root, "décors", "biome_id", "density", "props");
+		BiomePropConfig config = new() { BiomeId = reader.Text(root, "biome_id"), Density = reader.Chance(root, "density") };
+		if (reader.Error == null && !biomeExists(config.BiomeId))
+			reader.Fail($"biome_id « {config.BiomeId} » inconnu");
+		HashSet<string> ids = new();
+		foreach (JsonElement item in reader.List(root, "props", 1))
 		{
-			Godot.Collections.Dictionary propDict = propVar.AsGodotDictionary();
+			if (item.ValueKind != JsonValueKind.Object)
+			{
+				reader.Fail("props : objet attendu");
+				break;
+			}
+			reader.AllowOnly(item, "décor", "id", "name", "weight", "terrain", "sprite_base", "sprite_canopy", "canopy_offset_y", "blocking",
+				"footprint_scale", "min_distance");
 			PropDefinition prop = new()
 			{
-				Id = propDict["id"].AsString(),
-				Name = propDict.ContainsKey("name") ? propDict["name"].AsString() : "",
-				Weight = (float)propDict["weight"].AsDouble(),
-				SpriteBasePath = propDict["sprite_base"].AsString(),
-				Blocking = propDict.ContainsKey("blocking") && propDict["blocking"].AsBool(),
-				FootprintScale = propDict.ContainsKey("footprint_scale") ? (float)propDict["footprint_scale"].AsDouble() : 1f,
-				CanopyOffsetY = propDict.ContainsKey("canopy_offset_y") ? (float)propDict["canopy_offset_y"].AsDouble() : 0f,
-				MinDistance = propDict.ContainsKey("min_distance") ? (int)propDict["min_distance"].AsDouble() : 1,
-				Variants = propDict.ContainsKey("variants") ? (int)propDict["variants"].AsDouble() : 1,
+				Id = reader.Text(item, "id"),
+				Name = JsonConfigReader.Has(item, "name") ? reader.Text(item, "name") : "",
+				Weight = reader.Positive(item, "weight"),
+				SpriteBasePath = Sprite(reader, item, "sprite_base", spriteExists),
+				SpriteCanopyPath = JsonConfigReader.Has(item, "sprite_canopy") ? Sprite(reader, item, "sprite_canopy", spriteExists) : null,
+				CanopyOffsetY = JsonConfigReader.Has(item, "canopy_offset_y") ? reader.Number(item, "canopy_offset_y") : 0f,
+				Blocking = reader.Flag(item, "blocking"),
+				FootprintScale = JsonConfigReader.Has(item, "footprint_scale") ? reader.Positive(item, "footprint_scale") : 1f,
+				MinDistance = JsonConfigReader.Has(item, "min_distance") ? reader.Integer(item, "min_distance", 1, 64) : 1,
 			};
-
-			if (propDict.ContainsKey("sprite_canopy"))
-				prop.SpriteCanopyPath = propDict["sprite_canopy"].AsString();
-
-			if (propDict.ContainsKey("terrain"))
+			foreach (JsonElement terrain in reader.List(item, "terrain", 1))
 			{
-				Godot.Collections.Array terrainArray = propDict["terrain"].AsGodotArray();
-				foreach (Variant t in terrainArray)
-					prop.Terrain.Add(t.AsString());
+				string terrainName = terrain.ValueKind == JsonValueKind.String ? terrain.GetString() : null;
+				if (terrainName == null || Array.IndexOf(TerrainNames, terrainName) < 0)
+					reader.Fail($"décor {prop.Id} : terrain « {terrainName} » inconnu ({string.Join(", ", TerrainNames)})");
+				else if (prop.Terrain.Contains(terrainName))
+					reader.Fail($"décor {prop.Id} : terrain « {terrainName} » en double");
+				else
+					prop.Terrain.Add(terrainName);
 			}
-
+			if (reader.Error == null && !ids.Add(prop.Id))
+				reader.Fail($"décor « {prop.Id} » déjà déclaré");
+			if (reader.Error != null)
+				break;
 			config.Props.Add(prop);
 		}
-
 		return config;
+	}
+
+	/// <summary>Chemin d'image sans « res:// », qui doit exister.</summary>
+	private static string Sprite(JsonConfigReader reader, JsonElement item, string key, Func<string, bool> spriteExists)
+	{
+		string path = reader.Text(item, key);
+		if (path != null && !spriteExists(path))
+			reader.Fail($"{key} : image « {path} » introuvable");
+		return path;
 	}
 }

@@ -56,6 +56,7 @@ public partial class CatalogContractRegression : Node
             CheckInterfaceSettings();
             CheckMusicStatsMobility();
             CheckSoundBank();
+            CheckBiomeProps();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1486,6 +1487,47 @@ public partial class CatalogContractRegression : Node
             bool refused = !SoundBank.TryParse(Mutated(valid, mutate), resourceExists, busExists, "World", out Dictionary<string, SoundBankEntry> parsed, out string error);
             Check(refused && parsed == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"banque de sons, {name} refusé ({error})");
         }
+    }
+
+    /// <summary>Décors par biome (plan 26 Q7h-2) : dossier du dépôt accepté, chaque règle refusée avec son fichier.</summary>
+    private void CheckBiomeProps()
+    {
+        Check(PropSpawner.TryLoadConfigs(out string loadError), $"décors par biome du dépôt acceptés {loadError}");
+        List<(string Name, string Text)> files = new();
+        foreach (string name in DirAccess.GetFilesAt(PropSpawner.PropsDirectory))
+            if (name.EndsWith(".json", StringComparison.Ordinal) && !name.StartsWith('_'))
+                files.Add((name, FileAccess.GetFileAsString($"{PropSpawner.PropsDirectory}/{name}")));
+        int swamp = files.FindIndex(file => file.Name == "swamp.json");
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        Func<string, bool> spriteExists = path => ResourceLoader.Exists($"res://{path}");
+        Check(PropSpawner.TryParseConfigs(files, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> configs) == null
+            && configs.Count == 5 && configs["swamp"].Props.Count > 20, "décors : cinq biomes publiés");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["seed"] = 3, "clé « seed » inconnue"),
+            ("biome d'un autre fichier", root => root["biome_id"] = "urban_ruins", "différent du nom du fichier"),
+            ("densité hors borne", root => root["density"] = 1.5, "density"),
+            ("aucun décor", root => root["props"] = new JsonArray(), "props"),
+            ("variantes mortes", root => root["props"]![0]!["variants"] = 1, "clé « variants » inconnue"),
+            ("poids nul", root => root["props"]![0]!["weight"] = 0, "weight"),
+            ("terrain inconnu", root => root["props"]![0]!["terrain"]![0] = "sand", "terrain « sand » inconnu"),
+            ("terrain en double", root => root["props"]![0]!["terrain"] = new JsonArray("grass", "grass"), "terrain « grass » en double"),
+            ("sans terrain", root => root["props"]![0]!["terrain"] = new JsonArray(), "terrain"),
+            ("sprite absent", root => root["props"]![0]!["sprite_base"] = "assets/props/swamp/prop_absent.png", "image « assets/props/swamp/prop_absent.png » introuvable"),
+            ("canopée absente", root => root["props"]![0]!["sprite_canopy"] = "assets/props/swamp/prop_absent_canopy.png", "introuvable"),
+            ("distance nulle", root => root["props"]![0]!["min_distance"] = 0, "min_distance"),
+            ("emprise nulle", root => root["props"]![0]!["footprint_scale"] = 0, "footprint_scale"),
+            ("décor en double", root => root["props"]!.AsArray().Add(root["props"]![0]!.DeepClone()), "déjà déclaré"),
+        })
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[swamp] = (files[swamp].Name, Mutated(files[swamp].Text, mutate));
+            string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
+        }
+        List<(string, string)> unknown = new(files) { ("desert.json", "{ \"biome_id\": \"desert\", \"density\": 0.1, \"props\": [] }") };
+        string unknownError = PropSpawner.TryParseConfigs(unknown, biomeExists, spriteExists, out _);
+        Check(unknownError?.Contains("biome_id « desert » inconnu", StringComparison.Ordinal) == true, $"décors, biome inconnu refusé ({unknownError})");
     }
 
     private void CheckAtmosphere()

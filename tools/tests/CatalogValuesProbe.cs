@@ -341,6 +341,19 @@ public partial class CatalogValuesProbe : Node
             entries.Sort(StringComparer.Ordinal);
             lines.Add($"sounds {bankField} {entries.Count} {string.Join(";", entries)}");
         }
+        // Q7h-2 : décors par biome (data/props/*.json), lus par PropSpawner.LoadPropConfigs (présent des deux côtés).
+        System.Collections.IDictionary propConfigs = (System.Collections.IDictionary)typeof(Vestiges.World.PropSpawner)
+            .GetMethod("LoadPropConfigs", staticHidden)!.Invoke(null, null)!;
+        List<string> propLines = new();
+        foreach (System.Collections.DictionaryEntry entry in propConfigs)
+        {
+            Vestiges.World.BiomePropConfig config = (Vestiges.World.BiomePropConfig)entry.Value;
+            propLines.Add(Invariant($"props {entry.Key} {config.BiomeId} density={config.Density:R} count={config.Props.Count}"));
+            foreach (Vestiges.World.PropDefinition prop in config.Props)
+                propLines.Add(Invariant($"props {config.BiomeId} {prop.Id} [{prop.Name}] w={prop.Weight:R} terrain=[{string.Join(",", prop.Terrain)}] base={prop.SpriteBasePath} canopy={prop.SpriteCanopyPath ?? "-"} offset={prop.CanopyOffsetY:R} blocking={prop.Blocking} footprint={prop.FootprintScale:R} min={prop.MinDistance}"));
+        }
+        propLines.Sort(StringComparer.Ordinal);
+        lines.AddRange(propLines);
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

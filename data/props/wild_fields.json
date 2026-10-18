@@ -10,8 +10,7 @@
             "sprite_base": "assets/props/wild_fields/prop_solitary_tree_base.png",
             "sprite_canopy": "assets/props/wild_fields/prop_solitary_tree_canopy.png",
             "blocking": true,
-            "min_distance": 7,
-            "variants": 1
+            "min_distance": 7
         },
         {
             "id": "tall_grass",
@@ -20,8 +19,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "tall_grass_v2",
@@ -30,8 +28,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v2.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "tall_grass_v3",
@@ -40,8 +37,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_tall_grass_v3.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "poppies_red",
@@ -50,8 +46,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_red.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "poppies_blue",
@@ -60,8 +55,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_blue.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "poppies_mixed",
@@ -70,8 +64,7 @@
             "terrain": ["grass"],
             "sprite_base": "assets/props/wild_fields/prop_poppies_mixed.png",
             "blocking": false,
-            "min_distance": 1,
-            "variants": 1
+            "min_distance": 1
         },
         {
             "id": "low_stone_wall",
@@ -80,8 +73,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_low_stone_wall.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "low_stone_wall_broken",
@@ -90,8 +82,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_low_stone_wall_broken.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "wooden_fence",
@@ -100,8 +91,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "wooden_fence_broken",
@@ -110,8 +100,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_wooden_fence_broken.png",
             "blocking": true,
-            "min_distance": 4,
-            "variants": 1
+            "min_distance": 4
         },
         {
             "id": "hay_bale",
@@ -120,8 +109,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_hay_bale.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "hay_bale_rotten",
@@ -130,8 +118,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_hay_bale_rotten.png",
             "blocking": true,
-            "min_distance": 3,
-            "variants": 1
+            "min_distance": 3
         },
         {
             "id": "puddle",
@@ -140,8 +127,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_puddle.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "puddle_v2",
@@ -150,8 +136,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_puddle_v2.png",
             "blocking": false,
-            "min_distance": 2,
-            "variants": 1
+            "min_distance": 2
         },
         {
             "id": "scarecrow_broken",
@@ -160,8 +145,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_scarecrow_broken.png",
             "blocking": true,
-            "min_distance": 7,
-            "variants": 1
+            "min_distance": 7
         },
         {
             "id": "abandoned_well",
@@ -170,8 +154,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_abandoned_well.png",
             "blocking": true,
-            "min_distance": 10,
-            "variants": 1
+            "min_distance": 10
         },
         {
             "id": "standing_stone",
@@ -180,8 +163,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_standing_stone.png",
             "blocking": true,
-            "min_distance": 9,
-            "variants": 1
+            "min_distance": 9
         },
         {
             "id": "rusted_plow",
@@ -190,8 +172,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_rusted_plow.png",
             "blocking": true,
-            "min_distance": 8,
-            "variants": 1
+            "min_distance": 8
         },
         {
             "id": "tractor_remains",
@@ -200,8 +181,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_remains.png",
             "blocking": true,
-            "min_distance": 13,
-            "variants": 1
+            "min_distance": 13
         },
         {
             "id": "tractor_husk",
@@ -210,8 +190,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_tractor_husk.png",
             "blocking": true,
-            "min_distance": 12,
-            "variants": 1
+            "min_distance": 12
         },
         {
             "id": "windmill_ruin",
@@ -220,8 +199,7 @@
             "terrain": ["grass", "forest"],
             "sprite_base": "assets/props/wild_fields/prop_windmill_ruin.png",
             "blocking": true,
-            "min_distance": 15,
-            "variants": 1
+            "min_distance": 15
         },
         {
             "id": "silo_ruin",
@@ -230,8 +208,7 @@
             "terrain": ["grass", "concrete"],
             "sprite_base": "assets/props/wild_fields/prop_silo_ruin.png",
             "blocking": true,
-            "min_distance": 16,
-            "variants": 1
+            "min_distance": 16
         }
     ]
 }
