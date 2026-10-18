@@ -34,7 +34,7 @@ Pas de durées, qui sont impossibles à estimer honnêtement. Chaque étape comm
 
 | Ordre | Étape | Effort |
 |---|---|---|
-| 1 | **La Série, version finie** : S1 livrée et essayée le 18 octobre ; trois règles, retours, HUD et réglage proposés au [plan 52 §15](plans/52-elan.md) (lots S2 à S5), à implémenter jusqu'au bout puis jouer en vraie run | Moyen |
+| 1 | **La Série, version finie** : S1 à S5 livrés le 18 octobre ([plan 52 §16 à §19](plans/52-elan.md)), allumée en run normale avec le vide ; reste la séance de Raphaël en vraie run | Ton temps |
 | 2 | **Revue de la boucle de run** (terres 1 à 3, finale, fin sans fin), aussi appuyée que celle de la Série ; la forme ci-dessus peut y changer ([§191](plans/DECISIONS.md)) | Moyen |
 | 3 | **Le rythme du départ** : premier niveau vite, écran plein tôt, aimant d'XP revu ; mesuré au bot. La Série en dépend : le bot ne fait jamais ×10 en 7 minutes aujourd'hui | Faible |
 | 4 | **Ton essai du vide** : la Série est essayée, le vide pas encore ; critère d'arrêt ci-dessous | Ton temps |

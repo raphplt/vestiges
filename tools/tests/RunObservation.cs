@@ -648,6 +648,7 @@ public partial class RunObservation : Node
         using RunTimelineProbe timeline = Array.IndexOf(args, "--timeline") >= 0
             ? new RunTimelineProbe(_output, seed, GetTree(), _world, _player, eventBus, GetNode<GameManager>("/root/GameManager")) : null;
         using RunPaceProbe pace = new(_output, seed, GetTree(), _player, erasure, eventBus);
+        using StreakProbe streak = new(eventBus, GetTree(), _player.Streak.RankCount);
         // Souffle du tout début de run (retour du 26 septembre) : premier coup reçu et dégâts cumulés à 10 et 30 s.
         double firstHit = -1, damage10 = 0, damage30 = 0;
         // Plan 24 L3 : dégâts reçus avant et pendant la première Résurgence (4:00 à 5:10), armes portées à 4:00.
@@ -1064,6 +1065,7 @@ public partial class RunObservation : Node
             $" items_received={itemsReceived} bag={_player.BagCount}/{_player.BagCapacity} items_on_ground={GetTree().GetNodesInGroup("item_pickups").Count} elite_kills={eliteKills} sovereign_kills={sovereignKills}");
         summary.Append(CultureInfo.InvariantCulture, $" xp_gained={xpGained:F0} xp_dropped={CombatPools.Instance?.XpDropped ?? 0:F0}");
         pace.AppendSummary(summary);
+        streak.Append(summary);
         AppendProfile(summary);
         AppendBadgeUsage(summary);
         AppendBreakdown(summary, "hit_by", damageBySource);

@@ -132,6 +132,13 @@ public class RunRecord
     /// <summary>Terres dont le gardien est tombé (plan 51) ; null hors terres et dans les relevés plus anciens.</summary>
     [JsonPropertyName("lands_crossed")]
     public int? LandsCrossed { get; set; }
+
+    /// <summary>Meilleure Série de la run et son rang (plan 52 S5) ; null si la Série était éteinte et dans les relevés plus anciens.</summary>
+    [JsonPropertyName("best_streak")]
+    public int? BestStreak { get; set; }
+
+    [JsonPropertyName("best_streak_rank")]
+    public int? BestStreakRank { get; set; }
 }
 
 /// <summary>Une arme du build à la fin de la run : niveau, dégâts infligés et créatures achevées.</summary>

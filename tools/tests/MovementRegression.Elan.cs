@@ -45,7 +45,7 @@ public partial class MovementRegression
             $"série : seuils non croissants refusés ({order})");
         Check(ElanConfig.Parse(valid.Replace("\"cashout\"", "\"cash_out\""), out string unknown) == null && unknown.Contains("inconnue"),
             $"série : clé inconnue refusée ({unknown})");
-        Check(ElanConfig.Parse(valid.Replace("\"window_seconds\": 4.0", "\"window_seconds\": 0"), out string window) == null && window.Contains("window_seconds"),
+        Check(ElanConfig.Parse(valid.Replace("\"window_seconds\": 5.0", "\"window_seconds\": 0"), out string window) == null && window.Contains("window_seconds"),
             $"série : fenêtre nulle refusée ({window})");
         Check(ElanConfig.Parse(valid.Replace("\"color\": [0.62, 0.56, 0.46]", "\"color\": [0.62, 0.56]"), out string color) == null && color.Contains("color"),
             $"série : couleur incomplète refusée ({color})");
@@ -75,6 +75,8 @@ public partial class MovementRegression
     {
         ElanConfig config = ElanConfig.Load();
         PlayerStreak streak = new(config);
+        // Indépendant de enabled_in_runs : la Série part éteinte, puis s'allume.
+        streak.SetEnabled(false);
         streak.Kill(5, "essai");
         Check(streak.Count == 0, "série éteinte : une élimination ne donne rien");
 
@@ -164,6 +166,8 @@ public partial class MovementRegression
         ElanConfig config = ElanConfig.Load();
         await ReadyMobility();
         _player.SetElanEnabled(true);
+        // Allumée en run normale, la Série a pu compter des esquives dans les scénarios précédents.
+        int dodges = _player.PerfectDodges;
         _player.Streak.Kill(5, "essai");
         await Step(30);
         float windowBefore = _player.Streak.WindowRemaining;
@@ -173,14 +177,14 @@ public partial class MovementRegression
         ReleaseMobility();
         float cooldownBefore = _player.Mobility.CooldownRemaining;
         PlayerDamageResult dodged = _player.TakeDamage(5f);
-        Check(!dodged.Applied && _player.PerfectDodges == 1 && windowBefore < config.StreakWindowSeconds - 0.4f
+        Check(!dodged.Applied && _player.PerfectDodges == dodges + 1 && windowBefore < config.StreakWindowSeconds - 0.4f
             && Mathf.IsEqualApprox(_player.Streak.WindowRemaining, config.StreakWindowSeconds),
             $"esquive parfaite : coup évité, fenêtre de la Série relancée ({windowBefore:F2} → {_player.Streak.WindowRemaining:F2} s)");
         float refunded = cooldownBefore - _player.Mobility.CooldownRemaining;
         Check(Math.Abs(refunded - _player.Mobility.CooldownSeconds * config.PerfectDodgeCooldownRefund) < 0.001f,
             $"esquive parfaite : {refunded:F2} s de recharge rendues");
         _player.TakeDamage(5f);
-        Check(_player.PerfectDodges == 1, "esquive parfaite : une seule par dash, même sous plusieurs coups");
+        Check(_player.PerfectDodges == dodges + 1, "esquive parfaite : une seule par dash, même sous plusieurs coups");
         await Step(12);
         SetActions(Vector2.Zero);
         Check(_player.TakeDamage(1f).Applied, "esquive parfaite : hors du dash, le coup porte");
@@ -190,7 +194,7 @@ public partial class MovementRegression
         PressMobility();
         await Step(1);
         ReleaseMobility();
-        Check(!_player.TakeDamage(5f).Applied && _player.Streak.Count == 0 && _player.PerfectDodges == 1,
+        Check(!_player.TakeDamage(5f).Applied && _player.Streak.Count == 0 && _player.PerfectDodges == dodges + 1,
             "élan éteint : le dash protège toujours, sans esquive parfaite");
         await Step(12);
     }

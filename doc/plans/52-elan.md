@@ -556,3 +556,30 @@ Le code de S2 est arrivé dans `dd9ffc0d` (commit de reprise) ; ce lot le vérif
 **À juger en jouant :** les sons (choisis parmi ceux du jeu, pas composés pour la Série), l'intensité de l'aura et de la secousse.
 
 **Relecture (`godot-reviewer`)** : rien de bloquant. Corrigé : le contour de base est relu à chaque nouveau matériau du personnage, et le rang en cours s'y réapplique ; `StreakFeedback.Show` devient `Present` (il masquait `CanvasItem.Show`). Vérifié sans changement : à la mort, l'aura est masquée, le contour est coupé par la mort elle-même et la musique de mort passe avant le combat.
+
+## 19. Compte rendu S5, réglage, bilan et Série allumée en run — 18 octobre 2026
+
+**Livré :**
+- **La Série est allumée en run normale** (`enabled_in_runs: true`), et avec elle le saut du vide, la percussion et le vide comme arme (même interrupteur, §191).
+- **Fenêtre du rang 0 portée de 4 à 5 s** : le départ est clairsemé, la première Série doit pouvoir se lancer. Les rangs gardent leurs fenêtres (3,6 s à 2 s).
+- **Bilan de fin de run** : ligne « Meilleure Série », « ×N RANG », suivie du nouveau record du personnage ou du record à battre. `RunRecord` garde `best_streak` et `best_streak_rank` ; la sauvegarde méta garde la meilleure Série de chaque personnage (`streak_records`).
+- **Mesure** : `StreakProbe` dans `RunObservation` (premier passage à chaque rang, meilleure Série, encaissements, Essence encaissée, coupes) ; les champs `streak_*` sortent dans le résumé de `tools/measure_run.sh`.
+
+**Mesure au bot** (profil neuf, `MEASURE_PROFILE=normal`, 7 min, graines 7 et 42, Vagabond et Forgeuse ; le bot de mesure ne perd pas de PV, donc jamais de coupe) :
+
+| Fenêtre au rang 0 | Premier ÉVEIL | Meilleure Série | Essence encaissée (part de l'Essence de la run) |
+|---|---|---|---|
+| 4 s | 197 à 259 s | ×37 à ×109 (FERVEUR à CARNAGE) | 20 à 79 (10 à 24 %) |
+| 5 s | 156 à 268 s | ×48 à ×133 (FURIE à CARNAGE) | 27 à 110 (12 à 21 %) |
+
+Lecture :
+- l'écart entre deux runs du bot dépasse l'effet de la fenêtre : la mesure ne tranche pas, 5 s est gardé pour un départ plus facile à prendre en main ;
+- **le premier rang arrive après 3 min** chez le bot : la densité du départ (3 créatures à l'écran la première minute) freine la Série. C'est l'étape 3 du [LE-JEU.md](../LE-JEU.md), « le rythme du départ », pas un réglage de la Série ;
+- l'Essence encaissée vaut 1 à 5 coffres communs (20) par run de 7 min : la Série paie sans casser l'économie.
+
+**Vérifié :**
+- build sans avertissement, smoke test vert ;
+- `tools/test_movement.sh` (avec et sans `--run-integration`), `tools/test_enemy_abilities.sh`, `tools/test_music.sh`, `tools/test_weapons.sh` verts. Deux contrôles rendus indépendants de `enabled_in_runs` (la Série part éteinte, les esquives se comptent depuis le début du scénario) ;
+- captures 4K regardées : bilan de fin de run (Facteur, « Meilleure Série ×5 ») ; vraie run du Vagabond à 4 min 20, « ×35 FERVEUR » et sa jauge sous le temps, l'aura au sol, le bandeau de quête rangé dessous.
+
+**À jouer** : une vraie run avec la Série et le vide (critère d'arrêt au [LE-JEU.md](../LE-JEU.md)). Réglages dans `data/movement/elan.json`.

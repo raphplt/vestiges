@@ -501,11 +501,24 @@ public partial class GameOverScreen : CanvasLayer
                 : record.LandsCrossed.Value.ToString()));
         if (record?.BossesKilled is > 0)
             facts.Add((Tr("UI_END_BOSSES"), record.BossesKilled.Value.ToString("N0")));
+        if (record?.BestStreak is > 0)
+            facts.Add((Tr("UI_END_BEST_STREAK"), StreakText(record.BestStreak.Value, record.BestStreakRank ?? 0)));
         facts.Add((Tr("UI_END_TRAVELLED"), FormatMeters(record?.TravelledMeters ?? 0f)));
         facts.Add((Tr("UI_END_CRISES"), (record?.CrisesSurvived ?? 0).ToString()));
         facts.Add((Tr("UI_END_CHESTS"), (record?.ChestsOpened ?? 0).ToString("N0")));
         facts.Add((Tr("UI_END_DAMAGE_TAKEN"), Mathf.RoundToInt(record?.TotalDamageTaken ?? 0f).ToString("N0")));
         return facts;
+    }
+
+    /// <summary>« ×N RANG », puis le nouveau record du personnage ou celui à battre.</summary>
+    private string StreakText(int best, int rank)
+    {
+        IReadOnlyList<StreakRank> ranks = ElanConfig.Load().Ranks;
+        string text = rank > 0 && rank <= ranks.Count ? $"×{best} {Tr(ranks[rank - 1].Name)}" : $"×{best}";
+        int previous = _scoreManager?.PreviousStreakRecord ?? 0;
+        if (best > previous)
+            return previous > 0 ? string.Format(Tr("UI_END_STREAK_NEW_RECORD"), text) : text;
+        return string.Format(Tr("UI_END_STREAK_RECORD"), text, previous.ToString("N0"));
     }
 
     private string FormatMeters(float meters) => string.Format(Tr("UI_END_DISTANCE_M"), Mathf.RoundToInt(meters).ToString("N0"));

@@ -21,6 +21,7 @@ public partial class ScoreManager : Node
     private bool _endedWithCharacterRecord;
     private int _previousBest;
     private int _previousCharacterBest;
+    private int _previousStreakRecord;
 
     private int _totalKills;
     private EventBus _eventBus;
@@ -31,6 +32,8 @@ public partial class ScoreManager : Node
     /// <summary>Record global avant cette run : figé par SaveEndOfRun, qui écrit ensuite le nouveau record.</summary>
     public int BestKills => _endSettled ? _previousBest : MetaSaveManager.GetBestKills();
     /// <summary>Record du personnage joué avant cette run, figé de même.</summary>
+    /// <summary>Meilleure Série du personnage avant cette run (bilan, plan 52 S5).</summary>
+    public int PreviousStreakRecord => _endSettled ? _previousStreakRecord : MetaSaveManager.GetStreakRecord(CharacterId);
     public int CharacterBestKills => _endSettled ? _previousCharacterBest : MetaSaveManager.GetKillRecord(CharacterId)?.Kills ?? 0;
     /// <summary>Verdicts figés en fin de run, avant la sauvegarde qui écraserait la comparaison (plan 02 lot A).</summary>
     public bool IsNewRecord => _endSettled ? _endedWithRecord : _totalKills > BestKills;
@@ -79,6 +82,7 @@ public partial class ScoreManager : Node
 
         _previousBest = MetaSaveManager.GetBestKills();
         _previousCharacterBest = MetaSaveManager.GetKillRecord(CharacterId)?.Kills ?? 0;
+        _previousStreakRecord = MetaSaveManager.GetStreakRecord(CharacterId);
         _endedWithRecord = _totalKills > _previousBest;
         _endedWithCharacterRecord = _totalKills > _previousCharacterBest;
         _endSettled = true;
@@ -164,6 +168,12 @@ public partial class ScoreManager : Node
             record.SovereignsKilled = _runTracker.SovereignsKilled;
             record.BossesKilled = _runTracker.BossesKilled;
             record.LandsCrossed = _runTracker.LandsCrossed;
+        }
+
+        if (player?.Streak is { Enabled: true } streak)
+        {
+            record.BestStreak = streak.Best;
+            record.BestStreakRank = streak.BestRank;
         }
 
         if (player != null)

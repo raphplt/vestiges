@@ -102,6 +102,10 @@ public class MetaStats
     /// <summary>Les records par personnage ont été repris de l'historique des runs d'avant leur création (plan 43).</summary>
     [JsonPropertyName("kill_records_seeded")]
     public bool KillRecordsSeeded { get; set; }
+
+    /// <summary>Meilleure Série de chaque personnage (plan 52 S5).</summary>
+    [JsonPropertyName("streak_records")]
+    public Dictionary<string, int> StreakRecords { get; set; } = new();
 }
 
 /// <summary>Une meilleure run : éliminations, date et distance atteinte.</summary>
@@ -643,7 +647,16 @@ public static class MetaSaveManager
             {
                 Kills = record.TotalKills, Date = record.Date, MaxDistanceMeters = record.MaxDistanceMeters ?? 0f,
             };
+        if (characterId.Length > 0 && (record.BestStreak ?? 0) > GetStreakRecord(characterId))
+            _data.Stats.StreakRecords[characterId] = record.BestStreak.Value;
         Save();
+    }
+
+    /// <summary>Meilleure Série du personnage, 0 s'il n'en a jamais fini une.</summary>
+    public static int GetStreakRecord(string characterId)
+    {
+        Load();
+        return _data.Stats.StreakRecords.GetValueOrDefault(characterId ?? "");
     }
 
     /// <summary>Record d'éliminations du personnage, ou null s'il n'a jamais fini de run.</summary>
