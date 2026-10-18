@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**18 octobre — les retours de la Série ([plan 52 S4](52-elan.md)) :** aura au sol par rang, onde, secousse et cloche plus aiguë au rang gagné, verre et chiffre fendu au coup reçu, gerbe d'Essence à l'encaissement, tic de la jauge presque vide ; contour à la couleur du rang dès FURIE, images rémanentes à MONSTRE, musique de combat dès CARNAGE.
+
 **18 octobre — la Série au HUD ([plan 52 S3](52-elan.md)) :** gros « ×N » et nom du rang en haut au centre, jauge de la fenêtre, animations de gain, de rang, de coup reçu (÷2) et d'encaissement (+N ESSENCE) ; le compteur de tête, la fenêtre sous les pieds et « EN RAFALE » sont retirés. Capture : `tools/elan_sandbox.sh --screen 1 -- --capture <dossier> --scenario streak --enemies 0`.
 
 **18 octobre — la Série en trois règles ([plan 52 S2](52-elan.md), §192) :** six rangs de ×10 (ÉVEIL) à ×320 (MONSTRE), fenêtre de 4 s à 2 s ; un coup coupe la Série en deux ; une jauge vide l'encaisse en Essence (Série × taux du rang) ; un coup au gardien relance la fenêtre. Toujours éteinte en run normale jusqu'à S5.

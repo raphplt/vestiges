@@ -39,6 +39,9 @@ public partial class MobilityFeedback : Node2D
     private bool _dashVisible;
     private int _nextTrail;
     private float _dodgeRemaining;
+    private bool _afterimages;
+    // Images rémanentes de la Série (MONSTRE) : une silhouette laissée à cet intervalle tant que le joueur bouge.
+    private const float AfterimageInterval = 0.07f;
     private float _landingRemaining;
 
     public override void _Ready()
@@ -104,13 +107,18 @@ public partial class MobilityFeedback : Node2D
         }
 
         _trailTimer -= delta;
-        if (_dashVisible && _trailTimer <= 0f && VfxFactory.CurrentParticleLevel != ParticleLevel.Off)
+        bool trailing = _dashVisible || (_afterimages && moved);
+        if (trailing && _trailTimer <= 0f && VfxFactory.CurrentParticleLevel != ParticleLevel.Off)
         {
             PlaceTrail(position);
-            _trailTimer = TrailInterval * (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 2f : 1f);
+            float interval = _dashVisible ? TrailInterval : AfterimageInterval;
+            _trailTimer = interval * (VfxFactory.CurrentParticleLevel == ParticleLevel.Reduced ? 2f : 1f);
         }
         QueueRedraw();
     }
+
+    /// <summary>Images rémanentes continues tant que le joueur bouge (Série au rang MONSTRE).</summary>
+    public void SetAfterimages(bool enabled) => _afterimages = enabled;
 
     /// <summary>Un coup évité pendant le dash : son clair et onde au sol, lisibles au milieu de la foule.</summary>
     public void PerfectDodge(string audio)

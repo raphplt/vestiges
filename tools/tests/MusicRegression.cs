@@ -84,6 +84,15 @@ public partial class MusicRegression : Node2D
             await Simulate(4f * config.CombatSampleSeconds, 1f / 60f);
             Check(_music.CurrentIntent == MusicIntent.Exploration, "Créatures retirées au pool : retour à l'exploration");
 
+            // La Série haute force le combat (plan 52 S4) et le rend en retombant.
+            int fervent = ElanConfig.Load().Feedback.CombatMusicFromRank;
+            _bus.PublishStreakChange(new StreakChange(StreakChangeKind.Gain, 200, fervent, 199, fervent - 1, 0, Vector2.Zero));
+            await Frames(3);
+            Check(_music.CurrentIntent == MusicIntent.Combat, $"Série au rang {fervent} : combat sans foule ({_music.CurrentIntent})");
+            _bus.PublishStreakChange(new StreakChange(StreakChangeKind.CashOut, 0, 0, 200, fervent, 0, Vector2.Zero));
+            await Frames(3);
+            Check(_music.CurrentIntent == MusicIntent.Exploration, "Série encaissée : retour à l'exploration");
+
             // Annonce : rien ne la remplace avant le début réel, à 30, 60 ou 144 images/s, même en foule.
             foreach (Enemy enemy in _enemies)
                 enemy.Initialize(EnemyDataLoader.Get("rodeur"), 1f, 1f);

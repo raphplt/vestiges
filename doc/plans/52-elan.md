@@ -532,3 +532,27 @@ Le code de S2 est arrivé dans `dd9ffc0d` (commit de reprise) ; ce lot le vérif
 - build sans avertissement, smoke test vert ;
 - `tools/test_movement.sh` et `tools/test_enemy_abilities.sh` verts ;
 - captures 4K du bac à sable regardées : « ×40 FURIE » au claquement, « ×20 ÷2 » avec FURIE qui tombe, « ×20 FERVEUR +4 ESSENCE » en or. Corrigés d'après les images : les deux noms se mêlaient au coup reçu, le nom claqué paraissait terne.
+
+## 18. Compte rendu S4, les retours de la Série — 18 octobre 2026
+
+**Livré :**
+- **`StreakFeedback`**, enfant du joueur, créé au premier changement de Série :
+  - aura au sol, ellipse pleine à la couleur du rang, un peu plus large à chaque rang, qui respire ;
+  - rang gagné : onde au sol à la couleur du nouveau rang, secousse légère (0,2) et cloche (`bell_pulse`) plus aiguë de 8 % par rang ;
+  - coup reçu : verre brisé (`sfx_streak_break`), plus grave si le rang tombe ;
+  - encaissement : `sfx_streak_cashout` (chaînes), plus aigu selon le rang encaissé ;
+  - jauge sous 30 % : tic de plus en plus serré (0,32 s à 0,09 s), pressé sous 15 %.
+- **Le personnage change** : contour à la couleur du rang dès FURIE (le contour sombre d'origine revient en dessous), images rémanentes continues à MONSTRE quand il bouge (silhouettes du dash recyclées).
+- **Musique** : `MusicDirector` force l'intention « combat » dès CARNAGE, et la rend quand la Série retombe.
+- **HUD** : au coup reçu, le chiffre se fend (cassure en zigzag) ; à l'encaissement, une gerbe de 3 à 14 grains d'Essence part du bloc de la Série vers le compteur, au lieu d'un grain parti du joueur.
+- **Réglages** : section `feedback` d'`elan.json`, lue strictement (sons, pas de hauteur, tic, secousse, aura, rangs du contour, des images rémanentes et de la musique). Trois sons enregistrés dans `sounds.json`.
+- **Bac à sable** : le scénario `streak` passe par MONSTRE en courant (images rémanentes) avant le coup reçu.
+
+**Vérifié :**
+- build sans avertissement ;
+- `tools/test_movement.sh`, `tools/test_enemy_abilities.sh` et `tools/test_music.sh` verts, avec trois contrôles ajoutés : réglages des retours cohérents, rang du contour hors bornes refusé, musique de combat forcée par la Série puis rendue à l'encaissement ;
+- captures 4K du bac à sable regardées : onde et contour orange à FURIE, silhouettes et contour cyan à MONSTRE, contour violet et aura à HÉCATOMBE après le coup, fente et « ÷2 », gerbe d'Essence vers le compteur avec « +120 ESSENCE ».
+
+**À juger en jouant :** les sons (choisis parmi ceux du jeu, pas composés pour la Série), l'intensité de l'aura et de la secousse.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant. Corrigé : le contour de base est relu à chaque nouveau matériau du personnage, et le rang en cours s'y réapplique ; `StreakFeedback.Show` devient `Present` (il masquait `CanvasItem.Show`). Vérifié sans changement : à la mort, l'aura est masquée, le contour est coupé par la mort elle-même et la musique de mort passe avant le combat.

@@ -1156,5 +1156,26 @@
     "effect_id": "air_empty",
     "priority": 30,
     "max_voices": 1
+  },
+  "sfx_streak_rank": {
+    "path": "res://assets/audio/sfx/selected/bell_pulse.wav",
+    "volume_db": -6,
+    "min_interval_ms": 150,
+    "priority": 70,
+    "max_voices": 2
+  },
+  "sfx_streak_break": {
+    "path": "res://assets/audio/sfx/selected/impact_glass.wav",
+    "volume_db": -2,
+    "min_interval_ms": 150,
+    "priority": 70,
+    "max_voices": 1
+  },
+  "sfx_streak_cashout": {
+    "path": "res://assets/audio/sfx/selected/chain_jump.wav",
+    "volume_db": -5,
+    "min_interval_ms": 300,
+    "priority": 70,
+    "max_voices": 1
   }
 }

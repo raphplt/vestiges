@@ -16,6 +16,8 @@ public partial class Player
 
     private int _appliedStreakRank;
     private int _lastDodgedDash = -1;
+    private StreakFeedback _streakFeedback;
+    private Color? _baseOutline;
 
     /// <summary>Esquives parfaites de la run (affichage de réglage du bac à sable).</summary>
     public int PerfectDodges { get; private set; }
@@ -47,6 +49,7 @@ public partial class Player
         ApplyStreakRank();
         if (essence >= 0)
             PublishStreak(StreakChangeKind.CashOut, count, rank, essence);
+        _streakFeedback?.Step(delta);
     }
 
     /// <summary>
@@ -105,8 +108,20 @@ public partial class Player
         PublishStreak(StreakChangeKind.Hit, count, rank, 0);
     }
 
-    private void PublishStreak(StreakChangeKind kind, int previousCount, int previousRank, int essence) =>
-        _eventBus?.PublishStreakChange(new StreakChange(kind, Streak.Count, Streak.Rank, previousCount, previousRank, essence, GlobalPosition));
+    /// <summary>Le joueur montre d'abord le changement autour de lui (sons, aura, onde), puis le publie pour le HUD et l'Essence.</summary>
+    private void PublishStreak(StreakChangeKind kind, int previousCount, int previousRank, int essence)
+    {
+        StreakChange change = new(kind, Streak.Count, Streak.Rank, previousCount, previousRank, essence, GlobalPosition);
+        // Les retours n'existent qu'une fois la Série allumée : une run où elle est éteinte n'a aucun nœud de plus.
+        if (_streakFeedback == null && Streak.Enabled)
+        {
+            _streakFeedback = new StreakFeedback { Name = "StreakFeedback" };
+            _streakFeedback.Setup(Streak);
+            AddChild(_streakFeedback);
+        }
+        _streakFeedback?.Present(change);
+        _eventBus?.PublishStreakChange(change);
+    }
 
     /// <summary>Seul le changement de rang touche les stats, pour ne pas relancer les minuteurs d'armes à chaque élimination.</summary>
     private void ApplyStreakRank()
@@ -118,5 +133,26 @@ public partial class Player
         ApplyPerkModifier("speed", Streak.SpeedAt(_appliedStreakRank) / Streak.SpeedAt(previous), "multiplicative");
         ApplyPerkModifier("damage", Streak.DamageAt(_appliedStreakRank) / Streak.DamageAt(previous), "multiplicative");
         ApplyPerkModifier("luck", Streak.LuckAt(_appliedStreakRank) - Streak.LuckAt(previous), "additive");
+        ShowStreakRankOnBody();
+    }
+
+    /// <summary>Nouveau matériau du personnage : son contour devient la base, et le rang en cours s'y applique.</summary>
+    private void OnSpriteMaterialCreated()
+    {
+        _baseOutline = null;
+        if (Streak != null)
+            ShowStreakRankOnBody();
+    }
+
+    /// <summary>Contour à la couleur du rang dès FURIE, images rémanentes continues à MONSTRE.</summary>
+    private void ShowStreakRankOnBody()
+    {
+        StreakFeedbackSettings feedback = Streak.Config.Feedback;
+        _mobilityFeedback?.SetAfterimages(_appliedStreakRank >= feedback.AfterimagesFromRank);
+        if (!_hasSprite || _spriteMaterial == null)
+            return;
+        _baseOutline ??= _spriteMaterial.GetShaderParameter("outline_color").AsColor();
+        _spriteMaterial.SetShaderParameter("outline_color",
+            _appliedStreakRank >= feedback.OutlineFromRank ? Streak.ColorAt(_appliedStreakRank) : _baseOutline.Value);
     }
 }

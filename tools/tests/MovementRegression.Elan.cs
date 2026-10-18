@@ -61,6 +61,13 @@ public partial class MovementRegression
             $"percussion : rang minimum hors des rangs refusé ({rank})");
         Check(ElanConfig.Parse(valid.Replace("[70, 85, 100, 115, 130, 145, 160]", "[70, 100]"), out string distances) == null
             && distances.Contains("rang 0 compris"), $"percussion : une distance par rang exigée ({distances})");
+        StreakFeedbackSettings feedback = config.Feedback;
+        Check(feedback.OutlineFromRank <= feedback.AfterimagesFromRank && feedback.CombatMusicFromRank <= config.Ranks.Count
+            && feedback.TickFastSeconds < feedback.TickSlowSeconds && feedback.RankAudio.Length > 0,
+            $"retours de la Série : contour dès le rang {feedback.OutlineFromRank}, images rémanentes dès {feedback.AfterimagesFromRank}, "
+            + $"musique de combat dès {feedback.CombatMusicFromRank}, tic de plus en plus serré");
+        Check(ElanConfig.Parse(valid.Replace("\"outline_from_rank\": 3", "\"outline_from_rank\": 9"), out string outline) == null
+            && outline.Contains("outline_from_rank"), $"retours de la Série : rang du contour hors des rangs refusé ({outline})");
     }
 
     /// <summary>Les trois règles de la Série (plan 52 §15) : monter, être coupée en deux, s'encaisser.</summary>

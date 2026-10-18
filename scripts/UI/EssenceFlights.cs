@@ -56,13 +56,28 @@ public partial class EssenceFlights : Control
         // Monde → écran → repère de ce nœud (le HUD est mis à l'échelle).
         Vector2 screen = GetViewport().GetCanvasTransform() * worldPosition;
         Vector2 local = GetGlobalTransformWithCanvas().AffineInverse() * screen;
+        // Courbe : le grain s'élève d'abord, décalé au hasard, avant de filer vers le compteur.
+        Launch(local, new Vector2(_rng.RandfRange(-40f, 40f), _rng.RandfRange(-70f, -30f)));
+    }
+
+    /// <summary>
+    /// Une gerbe de grains partis d'un point du HUD (<paramref name="local"/>, repère de ce nœud) : la Série encaissée
+    /// (plan 52 S4). Ils s'écartent d'abord en éventail sous le point de départ.
+    /// </summary>
+    public void Burst(Vector2 local, int grains)
+    {
+        for (int grain = 0; grain < grains; grain++)
+            Launch(local, new Vector2(_rng.RandfRange(-70f, 70f), _rng.RandfRange(10f, 45f)));
+    }
+
+    private void Launch(Vector2 local, Vector2 bend)
+    {
         for (int i = 0; i < Capacity; i++)
         {
             if (_age[i] >= 0f)
                 continue;
             _from[i] = local;
-            // Courbe : le grain s'élève d'abord, décalé au hasard, avant de filer vers le compteur.
-            _bend[i] = local + new Vector2(_rng.RandfRange(-40f, 40f), _rng.RandfRange(-70f, -30f));
+            _bend[i] = local + bend;
             _age[i] = 0f;
             _active++;
             SetProcess(true);

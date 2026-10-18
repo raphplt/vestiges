@@ -320,6 +320,7 @@ public partial class Player : CharacterBody2D
                 _spriteMaterial.SetShaderParameter("outline_color",
                     new Color(oc.R * 0.3f + 0.05f, oc.G * 0.3f + 0.05f, oc.B * 0.3f + 0.05f, 0.9f));
                 _sprite.Material = _spriteMaterial;
+                OnSpriteMaterialCreated();
                 _statusVisual.Attach(_spriteMaterial, webbed => WebbedChanged?.Invoke(webbed));
                 _mobilityFeedback.SetSilhouette(_sprite, data.AccentColor);
 
@@ -1922,6 +1923,7 @@ public partial class Player : CharacterBody2D
         UpdateMobilityHeight();
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
+        _streakFeedback?.Hide();
         CancelPoiExplore();
         _interaction.Cancel();
         Velocity = Vector2.Zero;

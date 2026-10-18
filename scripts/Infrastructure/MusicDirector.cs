@@ -33,6 +33,7 @@ public partial class MusicDirector : Node
     private bool _warningActive;
     private bool _crisisActive;
     private bool _calmActive;
+    private bool _streakCombat;
     private bool _inCombat;
     private float _sampleTimer;
     private float _combatHold;
@@ -66,6 +67,7 @@ public partial class MusicDirector : Node
         _eventBus.CrisisStarted += OnCrisisStarted;
         _eventBus.CrisisEnded += OnCrisisEnded;
         _eventBus.CrisisCalmChanged += OnCrisisCalmChanged;
+        _eventBus.StreakChanged += OnStreakChanged;
     }
 
     public override void _ExitTree()
@@ -78,6 +80,7 @@ public partial class MusicDirector : Node
         _eventBus.CrisisStarted -= OnCrisisStarted;
         _eventBus.CrisisEnded -= OnCrisisEnded;
         _eventBus.CrisisCalmChanged -= OnCrisisCalmChanged;
+        _eventBus.StreakChanged -= OnStreakChanged;
     }
 
     /// <summary>Résout de nouveau l'intention (ouverture du Hub au démarrage, où aucun changement d'état n'est émis).</summary>
@@ -165,8 +168,22 @@ public partial class MusicDirector : Node
         RequestResolve();
     }
 
+    /// <summary>
+    /// Une Série haute force la musique de combat (plan 52 S4) : il n'y a pas de couches à ajouter par rang, c'est le
+    /// relais le plus proche. Elle retombe avec la Série.
+    /// </summary>
+    private void OnStreakChanged(StreakChange change)
+    {
+        bool fervent = change.Rank >= ElanConfig.Load().Feedback.CombatMusicFromRank;
+        if (fervent == _streakCombat)
+            return;
+        _streakCombat = fervent;
+        RequestResolve();
+    }
+
     private void ResetRunState()
     {
+        _streakCombat = false;
         _warningActive = false;
         _crisisActive = false;
         _calmActive = false;
@@ -210,7 +227,7 @@ public partial class MusicDirector : Node
             return MusicIntent.LateGame;
         if (_calmActive)
             return MusicIntent.Calm;
-        return _inCombat ? MusicIntent.Combat : MusicIntent.Exploration;
+        return _inCombat || _streakCombat ? MusicIntent.Combat : MusicIntent.Exploration;
     }
 
     /// <summary>Fondu enchaîné A/B ; deux intentions qui partagent un morceau ne le relancent pas.</summary>

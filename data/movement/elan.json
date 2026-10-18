@@ -1,5 +1,5 @@
 {
-    "_doc": "Élan (plan 52) : la maîtrise qui rend monstrueux. La Série (§15, DECISIONS §191) est un combo d'éliminations en trois règles : chaque élimination la fait monter (une chute dans le vide vaut streak.fall_weight) ; un coup reçu la coupe en deux (arrondi inférieur) ; sans élimination pendant la fenêtre de son rang, elle s'arrête et s'encaisse en Essence (Série × cashout du rang, rien au rang 0). Une esquive parfaite, un saut du vide réussi, une percussion qui touche et un coup porté à un gardien ou un mini-boss relancent la fenêtre. enabled_in_runs : actif en run normale. streak : fenêtre et couleur au rang 0. ranks : rangs dans l'ordre ; name (clé de traduction), from (Série minimale), color (RVB de 0 à 1), window_seconds (fenêtre à ce rang, de plus en plus courte), speed et damage (bonus multiplicatifs, 0,08 = +8 %), luck (Chance ajoutée, 0,05 = +5 %), cashout (Essence par élimination de la Série à l'encaissement). perfect_dodge : un coup évité pendant le dash (une fois par dash) rend cooldown_refund de la recharge du dash, avec le son audio. void_leap (E3) : au-dessus du Néant, le dash se prolonge de extension_px selon le rang (une valeur par rang, rang 0 compris ; 0 = pas de saut, le dash s'arrête au bord) ; un saut qui franchit au moins min_void_px de vide et retombe sur le sol compte ; height_px : hauteur visible en l'air ; landing_audio : son de la retombée. percussion (E4) : à partir du rang min_rank, le dash projette les créatures qu'il traverse (à reach_px de son trajet, au sol) de distance_px selon le rang (une valeur par rang, rang 0 compris), vers l'extérieur du trajet et en avant (forward_bias) ; boss et mini-boss ne bougent pas. Élan allumé, le vide est une arme : une créature ordinaire repoussée vers le Néant plus vite que fall_min_knock_speed px/s y tombe, éliminée ; en marchant, les créatures évitent le vide. audio : son de la percussion ; fall_audio : son d'une chute. Valeurs de départ, à régler en jouant.",
+    "_doc": "Élan (plan 52) : la maîtrise qui rend monstrueux. La Série (§15, DECISIONS §191) est un combo d'éliminations en trois règles : chaque élimination la fait monter (une chute dans le vide vaut streak.fall_weight) ; un coup reçu la coupe en deux (arrondi inférieur) ; sans élimination pendant la fenêtre de son rang, elle s'arrête et s'encaisse en Essence (Série × cashout du rang, rien au rang 0). Une esquive parfaite, un saut du vide réussi, une percussion qui touche et un coup porté à un gardien ou un mini-boss relancent la fenêtre. enabled_in_runs : actif en run normale. streak : fenêtre et couleur au rang 0. ranks : rangs dans l'ordre ; name (clé de traduction), from (Série minimale), color (RVB de 0 à 1), window_seconds (fenêtre à ce rang, de plus en plus courte), speed et damage (bonus multiplicatifs, 0,08 = +8 %), luck (Chance ajoutée, 0,05 = +5 %), cashout (Essence par élimination de la Série à l'encaissement). perfect_dodge : un coup évité pendant le dash (une fois par dash) rend cooldown_refund de la recharge du dash, avec le son audio. void_leap (E3) : au-dessus du Néant, le dash se prolonge de extension_px selon le rang (une valeur par rang, rang 0 compris ; 0 = pas de saut, le dash s'arrête au bord) ; un saut qui franchit au moins min_void_px de vide et retombe sur le sol compte ; height_px : hauteur visible en l'air ; landing_audio : son de la retombée. percussion (E4) : à partir du rang min_rank, le dash projette les créatures qu'il traverse (à reach_px de son trajet, au sol) de distance_px selon le rang (une valeur par rang, rang 0 compris), vers l'extérieur du trajet et en avant (forward_bias) ; boss et mini-boss ne bougent pas. Élan allumé, le vide est une arme : une créature ordinaire repoussée vers le Néant plus vite que fall_min_knock_speed px/s y tombe, éliminée ; en marchant, les créatures évitent le vide. audio : son de la percussion ; fall_audio : son d'une chute. feedback (S4) : sons du rang gagné (rank_audio, plus aigu de rank_pitch_step par rang), du coup reçu (hit_audio) et de l'encaissement (cashout_audio) ; tic sous tick_from de fenêtre, d'un intervalle de tick_slow_seconds à tick_fast_seconds, pressé sous la moitié ; secousse rank_shake au rang gagné ; aura au sol d'opacité aura_alpha ; contour à la couleur du rang dès outline_from_rank, images rémanentes dès afterimages_from_rank, musique de combat dès combat_music_from_rank. Valeurs de départ, à régler en jouant.",
     "enabled_in_runs": false,
     "streak": { "window_seconds": 4.0, "fall_weight": 3, "color": [0.62, 0.56, 0.46] },
     "ranks": [
@@ -20,5 +20,21 @@
         "fall_min_knock_speed": 40,
         "audio": "sfx_impact_blunt",
         "fall_audio": "sfx_relic_fall"
+    },
+    "feedback": {
+        "rank_audio": "sfx_streak_rank",
+        "rank_pitch_step": 0.08,
+        "hit_audio": "sfx_streak_break",
+        "cashout_audio": "sfx_streak_cashout",
+        "tick_audio": "sfx_compte_tic",
+        "tick_urgent_audio": "sfx_compte_tic_presse",
+        "tick_from": 0.3,
+        "tick_slow_seconds": 0.32,
+        "tick_fast_seconds": 0.09,
+        "rank_shake": 0.2,
+        "aura_alpha": 0.32,
+        "outline_from_rank": 3,
+        "afterimages_from_rank": 6,
+        "combat_music_from_rank": 4
     }
 }

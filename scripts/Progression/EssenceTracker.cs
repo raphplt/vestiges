@@ -72,13 +72,16 @@ public partial class EssenceTracker : Node
         _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, amount, position);
     }
 
-    /// <summary>Une Série encaissée (plan 52 §15) : son Essence vole depuis le joueur jusqu'au compteur.</summary>
+    /// <summary>
+    /// Une Série encaissée (plan 52 §15) : son Essence est publiée sans lieu dans le monde, car la gerbe de grains part
+    /// du bloc de la Série au HUD.
+    /// </summary>
     private void OnStreakChanged(StreakChange change)
     {
         if (change.Kind != StreakChangeKind.CashOut || change.Essence <= 0)
             return;
         AddEssence(change.Essence);
-        _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, change.Essence, change.Position);
+        _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, change.Essence, Vector2.Zero);
     }
 
     private void OnMultiplierChanged(float multiplier, float seconds) => _multiplier = Mathf.Max(1f, multiplier);

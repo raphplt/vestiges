@@ -46,9 +46,12 @@ public partial class StreakHud : Control
     // Sous ce reste de fenêtre, la jauge clignote en rouge, de plus en plus vite.
     private const float LowWindow = 0.3f;
 
+    private const int MaxCashGrains = 14;
     private const int CachedTexts = 1000;
     private static readonly string[] CountTexts = new string[CachedTexts];
     private const string HalfText = "÷2";
+    // Cassure en zigzag, en part de la largeur et de la hauteur du chiffre.
+    private static readonly Vector2[] CrackPoints = { new(0.62f, 0f), new(0.48f, 0.3f), new(0.58f, 0.5f), new(0.42f, 0.78f), new(0.5f, 1f) };
 
     private static readonly Color Outline = new(0.02f, 0.02f, 0.04f, 0.92f);
     private static readonly Color GaugeBack = new(0.04f, 0.05f, 0.09f, 0.82f);
@@ -102,6 +105,12 @@ public partial class StreakHud : Control
         if (_eventBus != null)
             _eventBus.StreakChanged -= OnStreakChanged;
     }
+
+    /// <summary>
+    /// Une Série encaissée : point de départ de la gerbe d'Essence (repère du parent) et nombre de grains. Le HUD la
+    /// fait voler jusqu'au compteur.
+    /// </summary>
+    public event System.Action<Vector2, int> CashedOut;
 
     /// <summary>Langue changée en pleine run (paramètres) : les noms de rang suivent.</summary>
     public override void _Notification(int what)
@@ -159,6 +168,9 @@ public partial class StreakHud : Control
                 _cashCountText = CountText(change.PreviousCount);
                 _cashCountWidth = TextWidth(_cashCountText, CountSize);
                 _cashText = change.Essence > 0 ? string.Format(Tr("UI_STREAK_CASHOUT"), change.Essence) : "";
+                if (change.Essence > 0)
+                    CashedOut?.Invoke(Position + new Vector2(Width / 2f, CountBaseline - CountSize * 0.3f),
+                        Mathf.Clamp(3 + change.Essence / 5, 3, MaxCashGrains));
                 _cashWidth = TextWidth(_cashText, SmallSize);
                 _rank = change.PreviousRank;
                 _hit = 0f;
@@ -243,6 +255,8 @@ public partial class StreakHud : Control
         {
             DrawCentered(_countText, _countWidth, CountSize, CountOutline, new Vector2(center + shake, CountBaseline), scale, countColor);
             if (_hit > 0f)
+                DrawCrack(center + shake, hit);
+            if (_hit > 0f)
                 DrawString(_font, new Vector2(center + _countWidth / 2f + 6f, CountBaseline - 8f - (1f - hit) * 6f), HalfText,
                     HorizontalAlignment.Left, -1, SmallSize, HitRed with { A = Mathf.Min(1f, hit * 2f) });
         }
@@ -266,6 +280,21 @@ public partial class StreakHud : Control
 
         if (_count >= ShowFrom)
             DrawGauge(center, rankColor);
+    }
+
+    /// <summary>La fente du coup reçu : une cassure en zigzag à travers le chiffre, qui s'efface avec le rouge.</summary>
+    private void DrawCrack(float center, float strength)
+    {
+        float half = _countWidth / 2f;
+        float top = CountBaseline - CountSize * 0.72f;
+        float height = CountSize * 0.78f;
+        Color crack = Outline with { A = Outline.A * Mathf.Min(1f, strength * 1.6f) * _alpha };
+        for (int i = 0; i < CrackPoints.Length - 1; i++)
+        {
+            Vector2 from = new(center - half + CrackPoints[i].X * _countWidth, top + CrackPoints[i].Y * height);
+            Vector2 to = new(center - half + CrackPoints[i + 1].X * _countWidth, top + CrackPoints[i + 1].Y * height);
+            DrawLine(from, to, crack, 2f);
+        }
     }
 
     private void DrawGauge(float center, Color rankColor)

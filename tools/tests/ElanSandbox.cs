@@ -237,8 +237,9 @@ public partial class ElanSandbox : Node
     }
 
     /// <summary>
-    /// La Série au HUD : ×38, puis deux éliminations qui donnent FURIE (image pendant le claquement du nom), un coup reçu
-    /// (image du « ÷2 » et du nom qui tombe), puis la fenêtre qui se vide (image de l'encaissement).
+    /// La Série au HUD et autour du joueur : ×38, puis deux éliminations qui donnent FURIE (image pendant le claquement du
+    /// nom et l'onde), MONSTRE en courant (images rémanentes), un coup reçu (image du « ÷2 » et du nom qui tombe), puis
+    /// la fenêtre qui se vide (image de l'encaissement et de la gerbe d'Essence).
     /// </summary>
     private void StepStreakCapture()
     {
@@ -260,19 +261,31 @@ public partial class ElanSandbox : Node
                 SaveFrame("serie_rang");
                 _streakStep++;
                 break;
-            case 3 when t > 1.8f:
+            case 3 when t > 1.2f:
+                _player.AddStreakKills(280, "bac à sable");
+                _streakStep++;
+                break;
+            case 4:
+                _player.AIInputOverride = Vector2.Right;
+                if (t > 1.5f)
+                {
+                    SaveFrame("serie_monstre");
+                    _streakStep++;
+                }
+                break;
+            case 5 when t > 1.8f:
                 _player.TakeDamage(1f);
                 _streakStep++;
                 break;
-            case 4 when t > 1.95f:
+            case 6 when t > 1.95f:
                 SaveFrame("serie_coup");
                 _streakStep++;
                 break;
-            case 5 when _player.Streak.Count == 0:
+            case 7 when _player.Streak.Count == 0:
                 _streakCashedAt = t;
                 _streakStep++;
                 break;
-            case 6 when t > _streakCashedAt + 0.3f:
+            case 8 when t > _streakCashedAt + 0.3f:
                 SaveCapture("serie_encaisse");
                 break;
         }

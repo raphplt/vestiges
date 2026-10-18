@@ -2331,3 +2331,4 @@ Raphaël, à la reprise : « on finit la Série de bout en bout (lots S2 à S5 d
 **Tranché par défaut, réversible :**
 - **La Série s'encaisse en Essence** quand sa jauge se vide (défaut du §191, déjà codé). « Elle perd un rang, sans récompense » reste possible d'un mot.
 - **HUD de la Série** (S3) : bloc en haut au centre, sous le temps ; le nom du biome, l'aide, la barre de boss et le bandeau de quête passent dessous. Visible dès ×2. « EN RAFALE » est retiré.
+- **Retours de la Série** (S4) : sons pris parmi ceux du jeu (cloche au rang, verre au coup, chaînes à l'encaissement, tic du compte à rebours) en attendant des sons composés (étape « clarté ») ; contour dès FURIE, images rémanentes à MONSTRE, musique de combat dès CARNAGE ; l'Essence encaissée part du HUD, pas du joueur.

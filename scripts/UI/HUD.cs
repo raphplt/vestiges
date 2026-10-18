@@ -147,6 +147,7 @@ public partial class HUD : CanvasLayer
         _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
         BuildRunClock();
         _streakHud = new StreakHud { Name = "StreakHud" };
+        _streakHud.CashedOut += (from, grains) => _essenceFlights.Burst(from, grains);
         _hudRoot.AddChild(_streakHud);
         BuildScoreArea();
         _hudRoot.AddChild(_essenceFlights);

@@ -46,6 +46,8 @@ public sealed class ElanConfig
     /// <summary>Vitesse de recul au-dessus de laquelle une créature qui entre dans le Néant y tombe au lieu de s'arrêter au bord.</summary>
     public float FallMinKnockSpeed { get; init; }
     public string PercussionAudio { get; init; } = "";
+    /// <summary>Retours de la Série : sons, tic, secousse, aura, contour, images rémanentes, musique (lot S4).</summary>
+    public StreakFeedbackSettings Feedback { get; init; } = new("", 0f, "", "", "", "", 0f, 1f, 1f, 0f, 0f, int.MaxValue, int.MaxValue, int.MaxValue);
     public string FallAudio { get; init; } = "";
 
     public float PercussionDistanceAt(int rank) =>
@@ -81,7 +83,7 @@ public sealed class ElanConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "élan", "enabled_in_runs", "streak", "ranks", "perfect_dodge", "void_leap", "percussion");
+            reader.AllowOnly(root, "élan", "enabled_in_runs", "streak", "ranks", "perfect_dodge", "void_leap", "percussion", "feedback");
             JsonElement streak = reader.Section(root, "streak");
             reader.AllowOnly(streak, "streak", "window_seconds", "fall_weight", "color");
             List<StreakRank> ranks = new();
@@ -106,6 +108,16 @@ public sealed class ElanConfig
             reader.AllowOnly(percussion, "percussion", "min_rank", "distance_px", "reach_px", "forward_bias",
                 "fall_min_knock_speed", "audio", "fall_audio");
             List<float> distances = ReadPerRank(reader, percussion, "percussion", "distance_px", ranks.Count);
+            JsonElement feedback = reader.Section(root, "feedback");
+            reader.AllowOnly(feedback, "feedback", "rank_audio", "rank_pitch_step", "hit_audio", "cashout_audio", "tick_audio",
+                "tick_urgent_audio", "tick_from", "tick_slow_seconds", "tick_fast_seconds", "rank_shake", "aura_alpha",
+                "outline_from_rank", "afterimages_from_rank", "combat_music_from_rank");
+            StreakFeedbackSettings feedbackSettings = new(reader.Text(feedback, "rank_audio"), reader.NonNegative(feedback, "rank_pitch_step"),
+                reader.Text(feedback, "hit_audio"), reader.Text(feedback, "cashout_audio"), reader.Text(feedback, "tick_audio"),
+                reader.Text(feedback, "tick_urgent_audio"), reader.Chance(feedback, "tick_from"), reader.Positive(feedback, "tick_slow_seconds"),
+                reader.Positive(feedback, "tick_fast_seconds"), reader.Chance(feedback, "rank_shake"), reader.Chance(feedback, "aura_alpha"),
+                reader.Integer(feedback, "outline_from_rank", 1, ranks.Count + 1), reader.Integer(feedback, "afterimages_from_rank", 1, ranks.Count + 1),
+                reader.Integer(feedback, "combat_music_from_rank", 1, ranks.Count + 1));
             ElanConfig config = new()
             {
                 EnabledInRuns = reader.Flag(root, "enabled_in_runs"),
@@ -126,6 +138,7 @@ public sealed class ElanConfig
                 FallMinKnockSpeed = reader.NonNegative(percussion, "fall_min_knock_speed"),
                 PercussionAudio = reader.Text(percussion, "audio"),
                 FallAudio = reader.Text(percussion, "fall_audio"),
+                Feedback = feedbackSettings,
             };
             error = reader.Error;
             return error == null ? config : null;
