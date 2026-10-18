@@ -129,6 +129,7 @@ public partial class GameBootstrap : Node
         MetaSaveManager.Load();
         RequireCatalog(SouvenirDataLoader.TryLoad(out string souvenirsError), souvenirsError);
         RequireCatalog(LootTableLoader.TryLoad(out string lootError), lootError);
+        RequireCatalog(PoiDataLoader.TryLoad(out string poisError), poisError);
         // Catalogues contrôlés en entier (plan 26 Q7) : un refus arrête le chargement sur l'écran d'erreur, avec son message.
         RequireCatalog(XpCurveConfig.TryLoad(out _, out string xpError), xpError);
         RequireCatalog(ScoreConfig.TryLoad(out _, out string scoreError), scoreError);

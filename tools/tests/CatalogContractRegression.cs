@@ -51,6 +51,7 @@ public partial class CatalogContractRegression : Node
             CheckSouvenirs();
             CheckWeaponUpgrades();
             CheckLootTables();
+            CheckPois();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1223,6 +1224,45 @@ public partial class CatalogContractRegression : Node
         withNamed[sanctuary] = (files[sanctuary].Name, named.ToJsonString());
         Check(LootTableLoader.Apply(withNamed, souvenirExists) == null && LootTableLoader.Apply(files, souvenirExists) == null
             && !ReferenceEquals(LootTableLoader.Get("poi_cache"), cache), "tables de butin : Souvenir nommé admis, dépôt republié");
+    }
+
+    /// <summary>Lieux (plan 26 Q7g-2) : fichier du dépôt accepté, références contrôlées, refus sans publication.</summary>
+    private void CheckPois()
+    {
+        Check(PoiDataLoader.TryLoad(out string loadError) && PoiDataLoader.GetAll().Count == 6
+            && PoiDataLoader.Get("sanctuary")?.EnemyGuards.Count == 3, $"lieux du dépôt acceptés {loadError}");
+        PoiData anomaly = PoiDataLoader.Get("anomaly");
+        PoiDataLoader.References references = new(LootTableLoader.Exists, EnemyDataLoader.Exists);
+        string valid = FileAccess.GetFileAsString(PoiDataLoader.DataPath);
+        JsonObject Poi(JsonArray list, string id) => list.OfType<JsonObject>().First(poi => poi["id"]!.GetValue<string>() == id);
+        (string, Func<JsonArray, JsonNode>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("racine non liste", _ => new JsonObject(), "liste de lieux attendue"),
+            ("entrée non objet", list => { list.Add(3); return list; }, "objet attendu"),
+            ("poids de tirage mort", list => { Poi(list, "anomaly")["spawn_weight"] = 10; return list; }, "clé « spawn_weight » inconnue"),
+            ("identifiant en double", list => { list.Add(Poi(list, "anomaly").DeepClone()); return list; }, "identifiant déjà déclaré"),
+            ("taille nulle", list => { Poi(list, "anomaly")["size"] = 0; return list; }, "size"),
+            ("distances inversées", list => { Poi(list, "anomaly")["min_distance_from_spawn"] = 200; return list; }, "min_distance_from_spawn ≤ max_distance_from_spawn"),
+            ("couleur invalide", list => { Poi(list, "anomaly")["color"] = "violet sombre"; return list; }, "couleur « violet sombre » invalide"),
+            ("forme inconnue", list => { Poi(list, "anomaly")["shape"] = "tower"; return list; }, "« tower » inconnu"),
+            ("interaction inconnue", list => { Poi(list, "anomaly")["interaction_type"] = "pray"; return list; }, "« pray » inconnu"),
+            ("fouille négative", list => { Poi(list, "anomaly")["search_time"] = -1; return list; }, "search_time"),
+            ("table inconnue", list => { Poi(list, "anomaly")["loot_table_id"] = "poi_temple"; return list; }, "table « poi_temple » inconnue"),
+            ("tirages fractionnaires", list => { Poi(list, "sanctuary")["loot_rolls"] = 2.5; return list; }, "loot_rolls"),
+            ("gardien inconnu", list => { Poi(list, "sanctuary")["enemy_guards"]![0] = "dragon"; return list; }, "créature « dragon » inconnue"),
+            ("biome en double", list => { Poi(list, "anomaly")["biome_blacklist"] = new JsonArray("swamp", "swamp"); return list; }, "biome « swamp » en double"),
+            ("biome non textuel", list => { Poi(list, "anomaly")["biome_whitelist"] = new JsonArray(3); return list; }, "biome_whitelist : texte non vide attendu"),
+            ("biome autorisé et exclu", list => { JsonObject poi = Poi(list, "anomaly"); poi["biome_whitelist"] = new JsonArray("swamp"); poi["biome_blacklist"] = new JsonArray("swamp"); return list; }, "à la fois autorisé et exclu"),
+        };
+        foreach ((string name, Func<JsonArray, JsonNode> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "[ { \"id\": " : mutate(JsonNode.Parse(valid)!.AsArray()).ToJsonString();
+            string error = PoiDataLoader.Apply(text, references);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && ReferenceEquals(PoiDataLoader.Get("anomaly"), anomaly),
+                $"lieux, {name} refusé sans publication ({error})");
+        }
+        Check(PoiDataLoader.Apply(valid, references) == null && !ReferenceEquals(PoiDataLoader.Get("anomaly"), anomaly), "lieux du dépôt republiés");
     }
 
     private void CheckAtmosphere()

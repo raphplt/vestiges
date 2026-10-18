@@ -277,6 +277,9 @@ public partial class CatalogValuesProbe : Node
             lines.Add(table == null ? $"loot {tableId} null"
                 : $"loot {table.Id} " + string.Join(";", table.Entries.ConvertAll(e => Invariant($"{e.Type}:{e.Item}:{e.Weight:R}:{e.MinAmount}-{e.MaxAmount}:{e.FallbackEssence}"))));
         }
+        // Q7g-2 : lieux (pois.json), dans l'ordre du fichier.
+        foreach (PoiData poi in PoiDataLoader.GetAll())
+            lines.Add(Invariant($"poi {poi.Id} [{poi.Name}] {poi.Type} size={poi.Size} dist={poi.MinDistanceFromSpawn}-{poi.MaxDistanceFromSpawn} white=[{string.Join(",", poi.BiomeWhitelist)}] black=[{string.Join(",", poi.BiomeBlacklist)}] color={poi.Color.R:R},{poi.Color.G:R},{poi.Color.B:R},{poi.Color.A:R} outline={poi.OutlineColor.R:R},{poi.OutlineColor.G:R},{poi.OutlineColor.B:R},{poi.OutlineColor.A:R} shape={poi.Shape} interaction={poi.InteractionType} search={poi.SearchTime:R} loot={poi.LootTableId}x{poi.LootRolls} guards=[{string.Join(",", poi.EnemyGuards)}]"));
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");

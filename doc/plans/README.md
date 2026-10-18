@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**17 octobre, nuit — tables de butin lues strictement ([plan 26 Q7g-1](26-qualite-et-dette-technique.md), §68) :** mêmes valeurs ; une sorte de butin inconnue ou un montant mal écrit arrêtent le chargement. **Question ajoutée au tableau de bord** : trois tirages dépassent leur borne haute d'une unité (butin des lieux, nombre de lieux, grappes de créatures).
+**17 octobre, nuit — tables de butin et lieux lus strictement ([plan 26 Q7g-1, Q7g-2](26-qualite-et-dette-technique.md), §68) :** mêmes valeurs ; un lieu à la forme, à la table ou au gardien inconnus, une sorte de butin inconnue ou un montant mal écrit arrêtent le chargement. **Question ajoutée au tableau de bord** : trois tirages dépassent leur borne haute d'une unité (butin des lieux, nombre de lieux, grappes de créatures).
 
 **17 octobre, nuit — personnages, signatures, Souvenirs et montées d'armes lus strictement ([plan 26 Q7f](26-qualite-et-dette-technique.md), §68) :** `characters.json` est contrôlé (arme, signature, mobilité, sprites) ; les « perks exclusifs » hérités du craft, jamais lus, sont retirés du fichier. Mêmes valeurs effectives. Puis `perks.json` (Q7f-2) : signatures contrôlées en entier, cinq champs hérités des anciens Dons retirés. Puis Souvenirs et montées d'armes (Q7f-3) : un Souvenir en double ou sans constellation, un pas de montée absent arrêtent le chargement au lieu de disparaître en silence.
 
