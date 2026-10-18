@@ -2251,3 +2251,24 @@ Premier essai du Lot S0 sur **Le Vagabond** et **Le Rôdeur** ([plan 54](54-spri
 - s'il reste du quota : **Zones au sol** (plan 25, suite des §164 et §172) ;
 - tour des questions du tableau de bord (§48) : **sauté cette fois**, les lignes du §2 restent telles quelles.
 
+
+## 189. Revue de direction : gel des nouveautés, tranche verticale, le vide comme arme — 18 octobre 2026
+
+Raphaël demande une revue de mentor, pas d'implémentation : « dégrossir, simplifier, acter ». Constat de départ, ses mots : le jeu « manque de dynamisme et de clarté sur le déroulement d'une partie » ; les terres, affichées une par une, « sont très linéaires, plats et vides » (« la forêt fait très vide, la ville fait hyper répétitive ») ; « l'IA a tendance à valider chaque idée que je lui soumets et à enchaîner les plans […] je m'y perds sur les priorités, le jeu ne fait que changer ». Il doute de la boucle actuelle : « est-ce que ça ne manque pas d'innovation ? ».
+
+**Diagnostic de l'agent** (détail dans [LE-JEU.md](../LE-JEU.md)) :
+- la production dépasse la validation : environ 700 commits en quatre semaines, 26 lignes « à juger en jeu » au tableau de bord, 63 cases d'`A-VERIFIER.md` ; l'Élan, dit « mécanique centrale », est éteint en run normale (`enabled_in_runs: false`) ;
+- rythme mesuré au bot (profil neuf, joueur moyen, boucle des terres, graines 7 et 42, 7 min) : 3,5 créatures à l'écran en moyenne la première minute (17 à 25 % d'images vides), premier niveau à 23 s et à 3 min 05, 130 et 48 éliminations. Cause : les ralentissements des 13 et 14 octobre (premiers niveaux plus chers, début moins chargé, aimant à 80 px, projectiles −30 %, cadence plus lente) ;
+- terres : bruit saupoudré de décors, sans repères ni pièces ; les champs tiennent parce qu'ils ont des pièces (ferme, grange, silo) ;
+- le front met 12 min à atteindre le cœur quand le bot boucle une terre en moins de 4 min 30 : la terre qui tombe est un chronomètre, pas une mécanique ;
+- plus de quinze notions à comprendre dans la première terre.
+
+**Tranché :**
+- **Structure de run : « explorer encore »**, pas de verrouillage des trois terres pour l'instant. Cadrage proposé : exploration bornée sur papier (deux formats au plus, comparés à la boucle actuelle), en parallèle du bac à sable, sans code.
+- **Signature : le vide comme arme, avec la jauge d'Élan.** Prototype d'une semaine en bac à sable, avec critère d'arrêt : percussion qui pousse la horde dans le vide (plan 52 E4), saut des trous (E3), esquive parfaite (E2, livrée), jauge à trois paliers gardée. L'agent recommandait les gestes sans jauge ; Raphaël garde la jauge.
+- **Gel des nouveautés et tranche verticale de 4 à 6 semaines** : le Vagabond, deux terres travaillées, un vrai gardien, environ 8 armes et 20 objets, coffres et Mémoriaux, départ rapide. Le reste est désactivé dans les données, pas supprimé : Ateliers, Puits, stèles, Failles, micro-événements, Résurgences, Souverains, Barrière, autres personnages, quêtes, classement.
+- **Terres : « lieux de Vaulme, biomes mieux générés également »**. Les terres deviennent des lieux du lore (le Bas-Port, la Haute-Ville…) avec 3 à 5 pièces faites main chacune et des chemins procéduraux entre elles (« on se souvient des lieux, pas des chemins », lore §1), **et** la génération gagne de la structure : clairières et fourrés, places, repères visibles de loin, alternance d'espaces ouverts et serrés.
+
+**Proposé, sans réponse explicite** : trois piliers (le vide, menace et arme ; la horde et la puissance ; Vaulme), une page [LE-JEU.md](../LE-JEU.md) qui fait autorité, la méthode de travail (une chose à la fois, rien par défaut sans séance de jeu, test extérieur toutes les deux semaines, l'IA donne deux options au plus et dit ce qu'on retire), le jalon « boucle verrouillée et fun pour cinq testeurs extérieurs » fin novembre.
+
+**Tour des questions du tableau de bord (§48)** : sauté. Les deux premières lignes du §2 (Élan, run en terres) sont traitées ici ; les autres attendent la fin du gel.
