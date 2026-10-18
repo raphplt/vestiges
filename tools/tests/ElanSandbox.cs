@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -11,9 +12,10 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Bac à sable de l'Élan (plan 52), jouable à la main : la vraie scène Main sans apparitions, Effacement ni événements,
-/// une foule entretenue autour du joueur, l'Élan allumé et un affichage de réglage. Un coup fatal remet les PV au
-/// maximum : on y essaie les gestes sans fin de partie. Lancement : tools/elan_sandbox.sh.
+/// Bac à sable de l'Élan (plan 52), jouable à la main : la vraie scène Main sans apparitions ni événements, l'Effacement
+/// figé, une foule entretenue autour du joueur, des bandes de vide de 1, 2 et 3 cellules à l'est du départ (saut du
+/// vide, E3), l'Élan allumé et un affichage de réglage. Un coup fatal remet les PV au maximum : on y essaie les gestes
+/// sans fin de partie. Lancement : tools/elan_sandbox.sh.
 /// </summary>
 public partial class ElanSandbox : Node
 {
@@ -22,6 +24,12 @@ public partial class ElanSandbox : Node
     private const float SpawnRingMax = 560f;
     private const float RefillInterval = 0.5f;
     private const float RespawnDistance = 1400f;
+    // Bandes de vide (E3) : largeurs en cellules, de l'ouest à l'est, séparées par du sol ; hauteur en cellules.
+    private static readonly int[] StripWidths = { 1, 2, 3 };
+    private const int StripGapCells = 3;
+    private const int StripHalfHeightCells = 2;
+    // Distance entre le joueur et le premier bord de vide, au moins.
+    private const float FirstStripDistance = 96f;
 
     private readonly List<Enemy> _crowd = new();
     private WorldSetup _world;
@@ -38,6 +46,8 @@ public partial class ElanSandbox : Node
     private float _captureSeconds;
     private float _elapsed;
     private int _dodgesBeforeCapture;
+    private string _scenario;
+    private int _leapFramesInAir;
 
     public override async void _Ready()
     {
@@ -50,6 +60,9 @@ public partial class ElanSandbox : Node
             // --capture <dossier> [--seconds S] : le joueur court seul en cercle, une image est gardée puis le banc se ferme.
             _captureDir = Argument(args, "--capture", null);
             _captureSeconds = float.Parse(Argument(args, "--seconds", "12"), CultureInfo.InvariantCulture);
+            // --scenario leap : le joueur, au palier II, court vers la première bande de vide et la saute ; l'image est
+            // gardée en l'air. Sans scénario : il fonce sur la foule et dashe au contact (esquive parfaite).
+            _scenario = Argument(args, "--scenario", "dodge");
             GameManager manager = GetNode<GameManager>("/root/GameManager");
             manager.RunSeed = Seed;
             manager.SelectedCharacterId = Argument(args, "--character", "traqueur");
@@ -82,6 +95,7 @@ public partial class ElanSandbox : Node
             if (_captureDir != null)
                 _player.IsAIControlled = true;
             _player.GlobalPosition = TestArena.FindOpen(_player, _world);
+            CarveVoidStrips();
             _erasure.SettleStitchForTests();
             _pool = _world.GetNode<EnemyPool>("EnemyPool");
             _container = _world.GetNode("EnemyContainer");
@@ -118,16 +132,73 @@ public partial class ElanSandbox : Node
         }
         PlayerElan elan = _player.Elan;
         _label.Text = string.Format(CultureInfo.InvariantCulture,
-            "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\nesquives parfaites {7}\ncréatures {5}  apparues {6}",
+            "ÉLAN {0:0.00}  palier {1}  ({2})\nvitesse ×{3:0.00}  dégâts ×{4:0.00}\nesquives parfaites {7}  sauts du vide {8}\n"
+            + "créatures {5}  apparues {6}\nvide à l'est : bandes de 1, 2 et 3 cellules",
             elan.Value, elan.Tier, elan.LastChange, elan.SpeedAt(elan.Tier), elan.DamageAt(elan.Tier), _crowd.Count, _spawned,
-            _player.PerfectDodges);
+            _player.PerfectDodges, _player.VoidLeaps);
+    }
+
+    /// <summary>
+    /// Bandes de Néant à l'est du départ, de la largeur de <see cref="StripWidths"/> : la mémoire de leurs cellules est
+    /// mise à zéro, l'Effacement figé ne les relève pas.
+    /// </summary>
+    private void CarveVoidStrips()
+    {
+        int cell = _erasure.CellSize;
+        Vector2 start = _player.GlobalPosition;
+        int x = Mathf.CeilToInt((start.X + FirstStripDistance) / cell);
+        int row = Mathf.FloorToInt(start.Y / cell);
+        foreach (int width in StripWidths)
+        {
+            for (int dx = 0; dx < width; dx++)
+            {
+                for (int dy = -StripHalfHeightCells; dy <= StripHalfHeightCells; dy++)
+                    _erasure.OverrideMemory(new Vector2I(x + dx, row + dy), 0f);
+            }
+            x += width + StripGapCells;
+        }
+    }
+
+    private bool IsVoidAt(Vector2 position) => _erasure.GetZonePhaseAt(position) == ErasureManager.ErasureZonePhase.Void;
+
+    private void StepCapture()
+    {
+        PickLevelUp();
+        if (_scenario == "leap")
+            StepLeapCapture();
+        else
+            StepDodgeCapture();
+    }
+
+    /// <summary>
+    /// Saut du vide (E3) : palier II donné d'office, course vers l'est, dash juste avant le bord de la première bande ;
+    /// l'image est gardée au huitième pas en l'air (milieu d'une bande d'une cellule) au-dessus du vide, ou au bout du délai.
+    /// </summary>
+    private void StepLeapCapture()
+    {
+        // Le voile de chargement s'efface pendant le délai : le joueur attend sur place.
+        if (_elapsed < _captureSeconds)
+        {
+            _player.AIInputOverride = Vector2.Zero;
+            return;
+        }
+        if (_player.Elan.Tier < 2)
+            _player.Elan.Gain(0.7f, "bac à sable");
+        _player.AIInputOverride = Vector2.Right;
+        if (!_player.Mobility.IsDashing && _player.Mobility.CooldownRemaining <= 0f
+            && IsVoidAt(_player.GlobalPosition + new Vector2(14f, 0f)) && !IsVoidAt(_player.GlobalPosition))
+            _player.Mobility.Request();
+        _leapFramesInAir = _player.IsLeaping && IsVoidAt(_player.GlobalPosition) ? _leapFramesInAir + 1 : 0;
+        if (_leapFramesInAir < 8 && _elapsed < _captureSeconds + 10f)
+            return;
+        SaveCapture("leap");
     }
 
     /// <summary>
     /// Fonce vers la créature la plus proche et dashe au contact ; passé le délai, l'image est gardée juste après une esquive
     /// parfaite (onde visible), ou au bout de dix secondes de plus.
     /// </summary>
-    private void StepCapture()
+    private void StepDodgeCapture()
     {
         Enemy nearest = NearestCrowd(out float distance);
         _player.AIInputOverride = nearest != null
@@ -142,12 +213,30 @@ public partial class ElanSandbox : Node
         }
         if (_player.PerfectDodges == _dodgesBeforeCapture && _elapsed < _captureSeconds + 10f)
             return;
+        SaveCapture($"elan_{_captureSeconds:0}s");
+    }
+
+    private void SaveCapture(string name)
+    {
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
-        string path = $"{_captureDir}/elan_{_captureSeconds:0}s.png";
+        string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ElanSandbox] Capture : {path}");
+        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Elan.Tier})");
         GetTree().Quit(0);
         _captureDir = null;
+    }
+
+    /// <summary>En capture, une montée de niveau prend la première carte aussitôt : la scène ne reste pas en pause.</summary>
+    private void PickLevelUp()
+    {
+        if (!GetTree().Paused)
+            return;
+        Node screen = _world.GetNode("LevelUpScreen");
+        if (screen.GetType().GetField("_fragmentManager", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(screen)
+                is not Vestiges.Progression.FragmentManager fragments || !fragments.IsChoiceActive || fragments.PendingChoices.Count == 0)
+            return;
+        screen.GetType().GetMethod("OnCardChosen", BindingFlags.NonPublic | BindingFlags.Instance)
+            .Invoke(screen, new object[] { fragments.PendingChoices[0] });
     }
 
     private Enemy NearestCrowd(out float distance)

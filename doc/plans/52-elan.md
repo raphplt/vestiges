@@ -190,3 +190,55 @@ Choix pris pour le prototype, à juger en jouant :
 - build sans avertissement ;
 - capture du bac à sable : terre de forêt, joueur sur le sol ;
 - banc dense court (5 s) : `valid=True`, arène en (−5008, −1064) sur une terre de carrière, sol et décors à l'image ; le mode dash demande la durée normale (15 s) pour ses cinq dashs.
+
+## 11. Compte rendu E3, le saut du vide — 18 octobre 2026
+
+**Livré :**
+- **Le dash porté** (`PlayerMobility`) : au-dessus du Néant, un dash qui arrive au bout de sa durée continue, pas à pas, tant qu'il reste de l'allonge. L'allonge est lue au départ du dash : `void_leap.extension_px`, une valeur par palier, palier 0 compris (0, 64, 128, 192 px). Au palier 0 et Élan éteint, l'allonge est nulle : le dash s'arrête au bord, comme avant.
+- **La règle du saut** (`Player.VoidLeap.cs`, nouveau fichier partiel pour ne pas faire grossir `Player.cs`) :
+  - la règle est fixée au départ du dash, pour toute sa durée ;
+  - le vide franchi est échantillonné tous les 4 px ;
+  - retomber sur le sol après au moins 32 px de vide donne +0,15 et compte un saut ;
+  - retomber dans le vide revient à y marcher (Essence, puis PV) ;
+  - le bord du monde reste bloqué par le générateur et le mur.
+- **En l'air, rien n'est pris** : l'`ErasureManager` ne publie pas la phase du joueur et ne draine pas tant que `Player.IsLeaping`.
+- **Retours** :
+  - le sprite monte de 10 px au-dessus du vide (200 px/s à la montée et à la descente), l'ombre reste au sol ;
+  - à la retombée réussie : un choc sourd (`sfx_impact_blunt`, provisoire) et une onde de poussière au sol, sur le modèle de l'esquive parfaite.
+- **Réglages** : section `void_leap` d'`elan.json`, lue strictement (une allonge par palier, croissante).
+- **Bac à sable** :
+  - trois bandes de Néant à l'est du départ (1, 2 et 3 cellules de large, 5 de haut, 3 cellules de sol entre elles) ;
+  - compteur de sauts ;
+  - `--scenario leap` : le bot, au palier II, saute la première bande et l'image est gardée en l'air.
+
+**Vérifié :**
+- build sans avertissement, smoke test vert ;
+- `tools/test_movement.sh` et `tools/test_movement.sh --run-integration` verts. Contrôles ajoutés :
+  - allonges du fichier : palier 0 sans allonge, longueurs refusées si le compte ou l'ordre est faux ;
+  - palier 0 : le dash s'arrête au bord (x = 128) ;
+  - palier II : une cellule franchie, retombée à x = 267, Élan 0,70 → 0,83 (gain moins l'érosion) ;
+  - palier I parti 40 px avant le bord : retombée dans le vide à x = 250, sans gain ;
+  - vraie carte : une mise à jour complète de l'Effacement en plein saut ne prend rien, et au palier III le dash ne passe pas le bord du monde ;
+- capture du bac à sable (`--scenario leap`), regardée : le joueur en l'air au milieu de la bande, en pose de dash, avec la barre de recharge restée au sol.
+
+**Relecture (`godot-reviewer`)** : rien de bloquant ; l'Élan éteint et le palier 0 ne changent rien. Corrigé :
+- le saut instantané (Plan de métro) passait le vide dès le palier I, sans allonge : il n'est plus porté, il s'arrête au bord ;
+- l'allonge était convertie en secondes avec la vitesse du départ, si bien qu'un ralentissement en l'air (eau) la doublait. Elle se compte maintenant en pixels ;
+- une mort en plein saut laissait le corps en l'air ;
+- **une pause ou une montée de niveau en plein saut laissait tomber le joueur dans le vide** : le saut reste suspendu en l'air et reprend ensuite (choix de l'agent, pour qu'une interruption ne coûte jamais une chute) ;
+- un dash repris à l'image même où le saut finit perdait sa retombée ;
+- l'onde de retombée continuait pendant une pause ;
+- `Land()` renommé `LandFromLeap()`, pour ne pas le confondre avec le changement de terre.
+
+Gardé tel quel et documenté :
+- un dash parti du Néant qui en ressort compte comme un saut, puisque le séjour dans le vide a été payé ;
+- la glissade continue de tourner pendant l'allonge : on peut viser sa retombée.
+
+Contrôles ajoutés après relecture : Élan éteint (cas des runs normales), saut instantané au palier I, pause en plein saut, allonge de 64 px gardée malgré une vitesse divisée par deux en l'air. La mort en l'air n'a pas de contrôle : le test demanderait un joueur jetable ; la correction tient en une ligne (`Die`).
+
+**Pas mesuré au banc** : le coût ajouté se limite au joueur (une consultation de la phase par pas, seulement pendant un dash porté). Le banc A/B est fait avec E4, dont l'évitement du vide touche toute la foule.
+
+**À juger en jouant :**
+- **la lisibilité du bord** : le Néant se dessine en dégradé tramé sur environ une demi-cellule, mais la règle bascule net à la frontière de la cellule. Savoir où sauter peut être difficile. Un bord plus net est une piste pour E6 ;
+- les longueurs (64, 128, 192 px) : au palier I, il faut partir à moins de 8 px du bord pour franchir une cellule ;
+- le son de retombée.

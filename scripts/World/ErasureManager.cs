@@ -247,8 +247,12 @@ public partial class ErasureManager : Node
             // Évaluer la montée du déclin à la date de ce pas, pas quatre fois à la fin du hitch.
             // Le pas peut précéder le premier instant de la run (images du chargement) : jamais de date négative.
             AdvanceMemory((float)(System.Math.Max(0.0, _clock.Seconds - _updateTimer) / 60.0));
-            PublishPlayerPhase();
-            HurtPlayerInVoid();
+            // Pendant un dash porté par l'Élan (saut du vide, plan 52 E3), le Néant ne prend rien et ne ralentit pas.
+            if (!_player.IsLeaping)
+            {
+                PublishPlayerPhase();
+                HurtPlayerInVoid();
+            }
             if (_player.IsDead || GetTree().Paused)
                 break;
         }

@@ -42,6 +42,15 @@ public sealed class PlayerMobility
     public bool BlinkedThisStep { get; private set; }
 
     /// <summary>
+    /// Saut du vide (plan 52 E3) : longueur que le dash peut ajouter au-dessus du Néant, lue au départ du dash. Le joueur
+    /// la règle selon son Élan avant chaque pas.
+    /// </summary>
+    public float LeapExtensionPixels { get; set; }
+
+    /// <summary>Le joueur est au-dessus du Néant à ce pas : un dash porté s'y prolonge tant qu'il lui reste de l'allonge.</summary>
+    public bool OverVoid { get; set; }
+
+    /// <summary>
     /// Dashs commencés depuis la création, sauts compris : un lecteur qui tourne en _Process voit ainsi un saut, qui
     /// ne dure jamais jusqu'à son image.
     /// </summary>
@@ -79,6 +88,8 @@ public sealed class PlayerMobility
     private float _dashElapsed;
     private float _hurtRemaining;
     private float _blinkInvulnerableRemaining;
+    // Allonge restante du saut du vide, en pixels : une vitesse qui change en l'air (eau, ralentissement) ne l'allonge pas.
+    private float _leapRemainingPixels;
     private bool _requestPending;
 
     public PlayerMobility(MobilityConfig config)
@@ -101,6 +112,13 @@ public sealed class PlayerMobility
         StartedThisStep = false;
         IsDashStep = false;
         BlinkedThisStep = false;
+        if (!allowed && State != MobilityState.Death && IsDashing && OverVoid)
+        {
+            // Hors de la run sans pause de l'arbre, un saut au-dessus du vide se fige au lieu de laisser tomber le joueur.
+            ClearBuffer();
+            StartedThisStep = false;
+            return Vector2.Zero;
+        }
         if (!allowed || State == MobilityState.Death)
         {
             Suspend();
@@ -108,6 +126,7 @@ public sealed class PlayerMobility
         }
         if (delta <= 0f)
             return Vector2.Zero;
+        float dashSpeed = speed * (mobilityTerrainFactor ?? terrainFactor) * Config.SpeedMultiplier * DistanceMultiplier;
 
         input = input.LimitLength();
         if (input != Vector2.Zero)
@@ -122,7 +141,16 @@ public sealed class PlayerMobility
         if (State == MobilityState.Hurt && _hurtRemaining == 0f)
             State = MobilityState.Locomotion;
         if (IsDashing && _dashRemaining <= 0.00001f)
-            StopDash();
+        {
+            // Au-dessus du vide, le dash porté continue au pas près, jusqu'au sol ou au bout de son allonge.
+            if (OverVoid && _leapRemainingPixels > 0.01f && dashSpeed > 0f)
+            {
+                _dashRemaining = Mathf.Min(delta, _leapRemainingPixels / dashSpeed);
+                _leapRemainingPixels -= _dashRemaining * dashSpeed;
+            }
+            else
+                StopDash();
+        }
 
         if (requestSurvivesCooldown && State == MobilityState.Locomotion && CooldownRemaining <= 0.00001f)
         {
@@ -134,6 +162,7 @@ public sealed class PlayerMobility
             ClearBuffer();
             StartedThisStep = true;
             DashesStarted++;
+            _leapRemainingPixels = BlinkDistance <= 0f ? LeapExtensionPixels : 0f;
             if (BlinkDistance > 0f)
             {
                 // Toute la longueur du dash en une image : le joueur la résout encore contre les murs et le Néant.
@@ -212,6 +241,7 @@ public sealed class PlayerMobility
         if (IsDashing)
             State = MobilityState.Locomotion;
         _dashRemaining = 0f;
+        _leapRemainingPixels = 0f;
         _locomotionVelocity = Vector2.Zero;
     }
 
@@ -225,8 +255,19 @@ public sealed class PlayerMobility
         State = MobilityState.Hurt;
     }
 
-    public void Suspend()
+    /// <param name="keepDash">
+    /// Saut du vide en cours au-dessus du Néant (pause, montée de niveau) : le dash reste suspendu en l'air et reprend
+    /// à la reprise, au lieu de laisser tomber le joueur dans le vide.
+    /// </param>
+    public void Suspend(bool keepDash = false)
     {
+        if (keepDash && IsDashing)
+        {
+            ClearBuffer();
+            StartedThisStep = false;
+            IsDashStep = false;
+            return;
+        }
         _blinkInvulnerableRemaining = 0f;
         StopDash();
         ClearBuffer();

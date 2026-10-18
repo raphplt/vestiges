@@ -30,6 +30,9 @@ public partial class MobilityFeedback : Node2D
     private const float DodgeRingSeconds = 0.3f;
     private static readonly int[] DodgeRingRadii = { 16, 21, 26, 31 };
     private static readonly Color DodgeRingColor = new(1f, 0.93f, 0.72f, 1f);
+    // Retombée d'un saut du vide (plan 52 E3) : la même onde, couleur de poussière, un peu plus lente.
+    private const float LandingRingSeconds = 0.36f;
+    private static readonly Color LandingRingColor = new(0.86f, 0.78f, 0.62f, 1f);
     private readonly Sprite2D[] _trails = new Sprite2D[TrailCount];
     private readonly float[] _remaining = new float[TrailCount];
     private readonly Vector2[] _positions = new Vector2[TrailCount];
@@ -46,6 +49,7 @@ public partial class MobilityFeedback : Node2D
     private int _elanTier;
     private IReadOnlyList<ElanTier> _elanTiers;
     private float _dodgeRemaining;
+    private float _landingRemaining;
 
     public override void _Ready()
     {
@@ -72,6 +76,7 @@ public partial class MobilityFeedback : Node2D
     {
         _charge = 1f - mobility.CooldownRemaining / mobility.CooldownSeconds;
         _dodgeRemaining = Mathf.Max(0f, _dodgeRemaining - delta);
+        _landingRemaining = Mathf.Max(0f, _landingRemaining - delta);
         _dashVisible = mobility.IsDashStep && moved;
         if (mobility.StartedThisStep)
         {
@@ -133,6 +138,14 @@ public partial class MobilityFeedback : Node2D
         QueueRedraw();
     }
 
+    /// <summary>Retombée sur le sol après un saut du vide : un choc sourd et une onde de poussière.</summary>
+    public void VoidLeapLanded(string audio)
+    {
+        Infrastructure.AudioManager.Play(audio, 0.05f, -4f, 0.8f);
+        _landingRemaining = LandingRingSeconds;
+        QueueRedraw();
+    }
+
     /// <summary>
     /// Source des silhouettes : le sprite du personnage et sa couleur d'accent ; <paramref name="source"/> null
     /// garde les formes génériques (personnage sans sprite).
@@ -183,6 +196,7 @@ public partial class MobilityFeedback : Node2D
         _wasDashing = false;
         _dashVisible = false;
         _dodgeRemaining = 0f;
+        _landingRemaining = 0f;
         for (int i = 0; i < TrailCount; i++)
         {
             _remaining[i] = 0f;
@@ -194,6 +208,13 @@ public partial class MobilityFeedback : Node2D
 
     // Anneau « dash prêt » posé au sol autour des pieds : ellipse 2:1 au pixel du monde (plan 37 M1).
     private const int ReadyRingRadius = 16;
+
+    /// <summary>Onde au sol qui s'ouvre en quatre rayons et s'efface.</summary>
+    private void DrawRing(float progress, Color tint)
+    {
+        int radius = DodgeRingRadii[Mathf.Min(DodgeRingRadii.Length - 1, (int)(progress * DodgeRingRadii.Length))];
+        DrawTexture(PixelEllipseArt.Get(radius, false), PixelEllipseArt.Offset(radius), tint with { A = 1f - progress * 0.8f });
+    }
 
     public override void _Draw()
     {
@@ -207,12 +228,9 @@ public partial class MobilityFeedback : Node2D
                 DrawRect(new Rect2(-12f + Mathf.Round(24f * _elanTiers[i].From), 23f, 1f, 2f), TierMarkColor);
         }
         if (_dodgeRemaining > 0f)
-        {
-            float progress = 1f - _dodgeRemaining / DodgeRingSeconds;
-            int radius = DodgeRingRadii[Mathf.Min(DodgeRingRadii.Length - 1, (int)(progress * DodgeRingRadii.Length))];
-            Color color = DodgeRingColor with { A = 1f - progress * 0.8f };
-            DrawTexture(PixelEllipseArt.Get(radius, false), PixelEllipseArt.Offset(radius), color);
-        }
+            DrawRing(1f - _dodgeRemaining / DodgeRingSeconds, DodgeRingColor);
+        if (_landingRemaining > 0f)
+            DrawRing(1f - _landingRemaining / LandingRingSeconds, LandingRingColor);
         if (_dashVisible)
             DrawTexture(PixelEllipseArt.Get(ReadyRingRadius, false), PixelEllipseArt.Offset(ReadyRingRadius), ReadyColor);
     }

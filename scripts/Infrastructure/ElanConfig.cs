@@ -30,6 +30,20 @@ public sealed class ElanConfig
     /// <summary>Part de la recharge du dash rendue par une esquive parfaite.</summary>
     public float PerfectDodgeCooldownRefund { get; init; }
     public string PerfectDodgeAudio { get; init; } = "";
+    /// <summary>
+    /// Saut du vide (lot E3) : longueur ajoutée au dash au-dessus du Néant, une valeur par palier, palier 0 compris.
+    /// Une allonge nulle garde l'ancienne règle : le dash s'arrête au bord du vide.
+    /// </summary>
+    public IReadOnlyList<float> VoidLeapExtension { get; init; } = Array.Empty<float>();
+    /// <summary>Vide franchi au minimum pour qu'un saut compte et nourrisse l'Élan.</summary>
+    public float VoidLeapMinVoidPixels { get; init; }
+    public float VoidLeapGain { get; init; }
+    public float VoidLeapHeightPixels { get; init; }
+    public string VoidLeapLandingAudio { get; init; } = "";
+
+    /// <summary>Allonge du saut au palier donné ; nulle si l'Élan n'a pas de réglage de saut.</summary>
+    public float VoidLeapExtensionAt(int tier) =>
+        VoidLeapExtension.Count == 0 ? 0f : VoidLeapExtension[Mathf.Clamp(tier, 0, VoidLeapExtension.Count - 1)];
 
     public static ElanConfig Load()
     {
@@ -58,7 +72,7 @@ public sealed class ElanConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
             reader.AllowOnly(root, "élan", "enabled_in_runs", "tiers", "speed", "still", "upkeep_decay_per_second", "hit_loss",
-                "perfect_dodge");
+                "perfect_dodge", "void_leap");
             List<ElanTier> tiers = new();
             float previous = 0f;
             foreach (JsonElement entry in reader.List(root, "tiers", 1))
@@ -76,6 +90,9 @@ public sealed class ElanConfig
             reader.AllowOnly(still, "still", "speed_ratio", "grace_seconds", "decay_per_second");
             JsonElement dodge = reader.Section(root, "perfect_dodge");
             reader.AllowOnly(dodge, "perfect_dodge", "gain", "cooldown_refund", "audio");
+            JsonElement leap = reader.Section(root, "void_leap");
+            reader.AllowOnly(leap, "void_leap", "extension_px", "min_void_px", "gain", "height_px", "landing_audio");
+            List<float> extensions = ReadExtensions(reader, leap, tiers.Count);
             ElanConfig config = new()
             {
                 EnabledInRuns = reader.Flag(root, "enabled_in_runs"),
@@ -91,6 +108,11 @@ public sealed class ElanConfig
                 PerfectDodgeGain = reader.Chance(dodge, "gain"),
                 PerfectDodgeCooldownRefund = reader.Chance(dodge, "cooldown_refund"),
                 PerfectDodgeAudio = reader.Text(dodge, "audio"),
+                VoidLeapExtension = extensions,
+                VoidLeapMinVoidPixels = reader.NonNegative(leap, "min_void_px"),
+                VoidLeapGain = reader.Chance(leap, "gain"),
+                VoidLeapHeightPixels = reader.NonNegative(leap, "height_px"),
+                VoidLeapLandingAudio = reader.Text(leap, "landing_audio"),
             };
             if (reader.Error == null && config.SpeedCap < tiers[0].From - 0.0001f)
                 reader.Fail("speed.cap sous le premier palier : la course n'en atteindrait aucun");
@@ -104,5 +126,27 @@ public sealed class ElanConfig
             error = $"JSON illisible : {exception.Message}";
             return null;
         }
+    }
+
+    /// <summary>Une allonge par palier, palier 0 compris, positive et croissante : un palier de plus ne raccourcit jamais le saut.</summary>
+    private static List<float> ReadExtensions(JsonConfigReader reader, JsonElement leap, int tierCount)
+    {
+        List<float> extensions = new();
+        float previous = 0f;
+        foreach (JsonElement entry in reader.List(leap, "extension_px", 1))
+        {
+            if (entry.ValueKind != JsonValueKind.Number || !entry.TryGetSingle(out float value) || value < 0f)
+            {
+                reader.Fail("void_leap.extension_px : longueurs positives ou nulles attendues");
+                return extensions;
+            }
+            if (value < previous)
+                reader.Fail("void_leap.extension_px : longueurs croissantes attendues");
+            previous = value;
+            extensions.Add(value);
+        }
+        if (reader.Error == null && extensions.Count != tierCount + 1)
+            reader.Fail($"void_leap.extension_px : {tierCount + 1} longueurs attendues (palier 0 compris), {extensions.Count} lues");
+        return extensions;
     }
 }

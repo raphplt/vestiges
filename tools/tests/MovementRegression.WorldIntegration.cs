@@ -47,6 +47,75 @@ public partial class MovementRegression
         Check(erasure.GetMemoryAt(memorial) >= 0.7f, $"Mémorial ravivé : la mémoire de sa zone remonte de 0,1 à {erasure.GetMemoryAt(memorial):0.00}");
     }
 
+    /// <summary>
+    /// Saut du vide (plan 52 E3) sur la vraie carte : en l'air au-dessus du Néant, une mise à jour complète de
+    /// l'Effacement ne prend ni PV ni Essence et ne change pas la phase du joueur ; porté au palier III, le dash ne passe
+    /// toujours pas le bord du monde.
+    /// </summary>
+    private async Task CheckVoidLeapInWorld(WorldSetup world)
+    {
+        ErasureManager erasure = world.GetNode<ErasureManager>("ErasureManager");
+        for (int y = -1; y <= 1; y++)
+            erasure.OverrideMemory(new Vector2I(1, y), 0f);
+        await ReadyMobility();
+        _player.IsGodMode = false;
+        _player.SetElanEnabled(true);
+        _player.Elan.Gain(1f, "essai");
+        float hp = _player.CurrentHp;
+        _player.Position = new Vector2(erasure.CellSize - 10f, 20f);
+        await Step(1);
+        SetActions(Vector2.Right);
+        PressMobility();
+        bool sawLeap = false, takenInAir = false;
+        for (int tick = 0; tick < 60; tick++)
+        {
+            await Step(1);
+            if (tick == 0)
+                ReleaseMobility();
+            if (_player.IsLeaping && erasure.GetZonePhaseAt(_player.GlobalPosition) == ErasureManager.ErasureZonePhase.Void)
+            {
+                sawLeap = true;
+                erasure._Process(0.5);
+                takenInAir |= _player.CurrentHp < hp || _player.ErasurePhase == ErasureManager.ErasureZonePhase.Void;
+            }
+            if (tick > 0 && !_player.Mobility.IsDashing)
+                break;
+        }
+        SetActions(Vector2.Zero);
+        Check(sawLeap && !takenInAir && _player.Position.X >= 2f * erasure.CellSize,
+            $"saut du vide réel : rien n'est pris en l'air, retombée sur le sol (x={_player.Position.X:0}, PV {hp} → {_player.CurrentHp})");
+        for (int y = -1; y <= 1; y++)
+            erasure.OverrideMemory(new Vector2I(1, y), 1f);
+
+        TileMapLayer ground = world.GetNode<TileMapLayer>("Ground");
+        int edgeX = 0;
+        while (edgeX < world.Generator.MapRadiusX + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
+            edgeX++;
+        await ReadyMobility();
+        _player.Elan.Gain(1f, "essai");
+        _player.Position = ground.MapToLocal(new Vector2I(edgeX - 2, 0));
+        await Step(1);
+        SetActions(Vector2.Right);
+        PressMobility();
+        bool leftGround = false;
+        for (int tick = 0; tick < 60; tick++)
+        {
+            await Step(1);
+            if (tick == 0)
+                ReleaseMobility();
+            Vector2I cell = ground.LocalToMap(ground.ToLocal(_player.GlobalPosition));
+            leftGround |= !world.Generator.IsWithinBounds(cell.X, cell.Y) || world.Generator.IsErased(cell.X, cell.Y);
+            if (tick > 0 && !_player.Mobility.IsDashing)
+                break;
+        }
+        SetActions(Vector2.Zero);
+        Check(!leftGround, $"saut du vide réel : porté au palier III, le dash ne passe pas le bord du monde (x={_player.Position.X:0})");
+        _player.SetElanEnabled(false);
+        _player.IsGodMode = true;
+        _player.Position = Vector2.Zero;
+        await Step(10);
+    }
+
     /// <summary>Plan 03 lot C : oubli accéléré pendant la crise ; accalmie avec coffre rare à portée et Essence doublée.</summary>
     private async Task CheckCrisisAftermath(WorldSetup world)
     {
@@ -223,6 +292,7 @@ public partial class MovementRegression
         await CheckGeneratedWater(world);
         await CheckWorldEdge(world);
         await CheckVoidDamage(world);
+        await CheckVoidLeapInWorld(world);
         await CheckCrisisAftermath(world);
         await CheckScoreClock(world);
         // Le pool historique garde ses instances préchauffées hors de l'arbre :

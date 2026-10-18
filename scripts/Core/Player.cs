@@ -570,8 +570,10 @@ public partial class Player : CharacterBody2D
             _mobilityRequiresRelease = false;
         float terrainFactor = (IsOnWater() ? Mobility.Config.WaterSpeedFactor : 1f) * _slowFactor;
         float mobilityTerrainFactor = Mobility.Config.IgnoreWaterWhileActive ? _slowFactor : terrainFactor;
+        PrepareVoidLeap();
         Velocity = Mobility.Step(dt, inputDir, Speed * _speedMultiplier * _erasurePenalty.Speed, terrainFactor, inputAllowed,
             mobilityTerrainFactor);
+        LatchVoidLeap();
         Vector2 harpoonTravel = Harpoon.Advance(dt, inputAllowed);
         bool harpoonMovement = Harpoon.PullsPlayer;
         if (harpoonMovement)
@@ -586,7 +588,7 @@ public partial class Player : CharacterBody2D
         if (dashMovement)
         {
             requested = Velocity * dt;
-            Vector2 permitted = ClampMobilityTravel(previousPosition, requested);
+            Vector2 permitted = ClampMobilityTravel(previousPosition, requested, allowVoid: _dashLeaps);
             if (!permitted.IsEqualApprox(requested))
                 Mobility.StopDash();
             Velocity = permitted / dt;
@@ -609,7 +611,7 @@ public partial class Player : CharacterBody2D
         {
             Vector2 traveled = GlobalPosition - previousPosition;
             // MoveAndSlide peut dévier le trajet : le point final reste soumis au Néant.
-            if (!ClampMobilityTravel(previousPosition, traveled).IsEqualApprox(traveled))
+            if (!ClampMobilityTravel(previousPosition, traveled, allowVoid: _dashLeaps).IsEqualApprox(traveled))
             {
                 GlobalPosition = previousPosition;
                 Velocity = Vector2.Zero;
@@ -640,6 +642,7 @@ public partial class Player : CharacterBody2D
 
         }
         Mobility.FinishMovement(movementVelocity);
+        StepVoidLeap(dt, previousPosition, dashMovement);
         UpdateMobilityHeight();
         PublishItemDash(previousPosition, dashMovement);
 
@@ -722,9 +725,12 @@ public partial class Player : CharacterBody2D
     private void SuspendMovement()
     {
         bool wasAirborne = (Mobility?.VisualHeight ?? 0f) > 0f;
+        bool keepLeap = Mobility != null && KeepsLeapThroughSuspension;
         Harpoon?.Cancel();
-        Mobility?.Suspend();
+        Mobility?.Suspend(keepLeap);
         _attackFx?.ClearLunge();
+        if (!keepLeap)
+            ResetVoidLeapHeight();
         UpdateMobilityHeight();
         _mobilityFeedback?.Suspend();
         _mobilityRequiresRelease = true;
@@ -761,9 +767,11 @@ public partial class Player : CharacterBody2D
         return delta > 0f ? kept / delta : Vector2.Zero;
     }
 
-    private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement, bool stopAtWater = false)
+    /// <param name="allowVoid">Dash porté par l'Élan (saut du vide, plan 52 E3) : il passe au-dessus du Néant.</param>
+    private Vector2 ClampMobilityTravel(Vector2 origin, Vector2 displacement, bool stopAtWater = false, bool allowVoid = false)
     {
-        // Le dash n'accorde aucun franchissement du vide, même sans collision physique.
+        // Sans Élan qui le porte, le dash n'accorde aucun franchissement du vide, même sans collision physique. Le bord
+        // du monde reste infranchissable dans tous les cas.
         // Échantillonnage borné à 512 px/tick pour conserver un coût maximal prévisible.
         Vector2 bounded = displacement.LimitLength(512f);
         int steps = Mathf.Max(1, Mathf.CeilToInt(bounded.Length() / 2f));
@@ -772,7 +780,7 @@ public partial class Player : CharacterBody2D
         {
             Vector2 offset = bounded * ((float)i / steps);
             Vector2 position = origin + offset;
-            if (_erasureManager?.GetZonePhaseAt(position) == ErasureManager.ErasureZonePhase.Void)
+            if (!allowVoid && IsVoidAt(position))
                 break;
             if (_worldSetup?.Generator != null && _groundLayer != null)
             {
@@ -1907,6 +1915,7 @@ public partial class Player : CharacterBody2D
         Harpoon.Cancel();
         Mobility.Die();
         _attackFx?.ClearLunge();
+        ResetVoidLeapHeight();
         UpdateMobilityHeight();
         _mobilityFeedback.Suspend();
         _mobilityFeedback.Visible = false;
@@ -2037,7 +2046,8 @@ public partial class Player : CharacterBody2D
     private void UpdateMobilityHeight()
     {
         if (_sprite != null)
-            _sprite.Position = _spriteRestPosition + new Vector2(0f, -(Mobility?.VisualHeight ?? 0f)) + (_attackFx?.LungeOffset ?? Vector2.Zero);
+            _sprite.Position = _spriteRestPosition + new Vector2(0f, -((Mobility?.VisualHeight ?? 0f) + _leapHeight))
+                + (_attackFx?.LungeOffset ?? Vector2.Zero);
     }
 
     private static StringName[,] BuildSpriteAnimations()
