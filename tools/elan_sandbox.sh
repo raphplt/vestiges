@@ -2,7 +2,7 @@
 # Bac à sable de l'Élan (plan 52), à jouer à la main : vraie carte, foule entretenue, Élan allumé, coups fatals sans fin de partie,
 # bandes de vide de 1, 2 et 3 cellules à l'est du départ (saut du vide, percussion dans le vide).
 # Options après -- : --enemies N (foule entretenue, 40 par défaut), --character <id> (traqueur par défaut),
-# --percussion-tier N (palier à partir duquel le dash projette ; 0 par défaut, 2 pour la version d'origine).
+# --percussion-tier N (rang à partir duquel le dash projette ; 0 par défaut).
 # Captures : --capture <dossier> --seconds S [--scenario leap|percussion].
 # Exemple : tools/elan_sandbox.sh -- --enemies 80 --character facteur --percussion-tier 2
 set -euo pipefail

@@ -1128,6 +1128,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			Player owner = _player != null && IsInstanceValid(_player) && _player.GetInstanceId() == source.OwnerId
 				? _player : InstanceFromId(source.OwnerId) as Player;
 			owner?.ResolveOpeningStrike(this, ref damage, ref isCrit, ref source);
+			// Gardien de terre (champion), mini-boss, boss et ses parties : un long combat ne casse pas la Série.
+			if (_tier is EnemyTier.Miniboss or EnemyTier.Boss || Boss != null || VariantId == "champion")
+				owner?.RefreshStreakOnBossHit();
 		}
 
 		// Débordement : le premier impact direct d'un lancement ultérieur emporte la réserve de son arme.

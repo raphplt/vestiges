@@ -6,7 +6,7 @@ using Vestiges.Infrastructure;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Percussion (plan 52 E4) : à partir d'un palier de la Série, le dash projette les créatures qu'il traverse, vers l'extérieur
+/// Percussion (plan 52 E4) : à partir d'un rang de la Série, le dash projette les créatures qu'il traverse, vers l'extérieur
 /// de son trajet et en avant. Élan allumé, le vide devient une arme : une créature ordinaire projetée dans le Néant y
 /// tombe (voir <c>Enemy.Void.cs</c>).
 /// </summary>
@@ -21,7 +21,7 @@ public partial class Player
     private bool _percussionLanded;
 
     /// <summary>Palier à partir duquel le dash projette ; réglage du fichier, que le bac à sable peut changer.</summary>
-    public int PercussionMinTier { get; set; }
+    public int PercussionMinRank { get; set; }
 
     /// <summary>Créatures projetées depuis le début de la run (affichage de réglage du bac à sable).</summary>
     public int Percussions { get; private set; }
@@ -40,7 +40,7 @@ public partial class Player
             _percussed.Clear();
             _percussionLanded = false;
         }
-        if (!dashMovement || !Streak.Enabled || Streak.Tier < PercussionMinTier)
+        if (!dashMovement || !Streak.Enabled || Streak.Rank < PercussionMinRank)
             return;
         Vector2 to = GlobalPosition;
         float length = from.DistanceTo(to);
@@ -48,7 +48,7 @@ public partial class Player
             return;
         ElanConfig config = Streak.Config;
         Vector2 direction = (to - from) / length;
-        float distance = config.PercussionDistanceAt(Streak.Tier);
+        float distance = config.PercussionDistanceAt(Streak.Rank);
         float reach = config.PercussionReachPixels;
         int hits = 0;
         using CrowdQuery crowd = CrowdIndex.Near((from + to) * 0.5f, length * 0.5f + reach * PercussionQueryMargin);

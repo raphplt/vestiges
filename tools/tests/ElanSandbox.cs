@@ -69,7 +69,7 @@ public partial class ElanSandbox : Node
             // --capture <dossier> [--seconds S] : le joueur court seul en cercle, une image est gardée puis le banc se ferme.
             _captureDir = Argument(args, "--capture", null);
             _captureSeconds = float.Parse(Argument(args, "--seconds", "12"), CultureInfo.InvariantCulture);
-            // --scenario leap : le joueur, au palier II, court vers la première bande de vide et la saute ; l'image est
+            // --scenario leap : le joueur, au rang FURIE, court vers la première bande de vide et la saute ; l'image est
             // gardée en l'air. --scenario percussion : il longe le bord de la première bande et dashe dans une colonne de
             // créatures ; l'image est gardée pendant leur chute. Sans scénario : il fonce sur la foule et dashe au contact
             // (esquive parfaite).
@@ -103,10 +103,10 @@ public partial class ElanSandbox : Node
             _player = _world.GetNode<Player>("Player");
             _player.SurviveFatalHitsForTests = true;
             _player.SetElanEnabled(true);
-            // --percussion-tier N : palier à partir duquel le dash projette (0 par défaut, 2 pour la version d'origine).
+            // --percussion-tier N : rang à partir duquel le dash projette (0 par défaut).
             string percussionTier = Argument(args, "--percussion-tier", null);
             if (percussionTier != null)
-                _player.PercussionMinTier = int.Parse(percussionTier, CultureInfo.InvariantCulture);
+                _player.PercussionMinRank = int.Parse(percussionTier, CultureInfo.InvariantCulture);
             _eventBus = GetNode<EventBus>("/root/EventBus");
             _eventBus.CreatureFellIntoVoid += OnCreatureFell;
             if (_captureDir != null)
@@ -160,13 +160,13 @@ public partial class ElanSandbox : Node
         }
         PlayerStreak streak = _player.Streak;
         _label.Text = string.Format(CultureInfo.InvariantCulture,
-            "SÉRIE ×{0}  palier {1}  ({2})  fenêtre {12:0.0} s  meilleure ×{13}\n"
+            "SÉRIE ×{0}  rang {1}  ({2})  fenêtre {12:0.0} s  meilleure ×{13}\n"
             + "vitesse ×{3:0.00}  dégâts ×{4:0.00}  Chance +{14:0}%\nesquives parfaites {7}  sauts du vide {8}\n"
-            + "percussion dès le palier {9} : {10} créatures projetées, {11} tombées\n"
+            + "percussion dès le rang {9} : {10} créatures projetées, {11} tombées\n"
             + "créatures {5}  apparues {6}\nvide à l'est : bandes de 1, 2 et 3 cellules",
-            streak.Count, streak.Tier, streak.LastChange, streak.SpeedAt(streak.Tier), streak.DamageAt(streak.Tier), _crowd.Count,
-            _spawned, _player.PerfectDodges, _player.VoidLeaps, _player.PercussionMinTier, _player.Percussions, _falls,
-            streak.WindowRemaining, streak.Best, streak.LuckAt(streak.Tier) * 100f);
+            streak.Count, streak.Rank, streak.LastChange, streak.SpeedAt(streak.Rank), streak.DamageAt(streak.Rank), _crowd.Count,
+            _spawned, _player.PerfectDodges, _player.VoidLeaps, _player.PercussionMinRank, _player.Percussions, _falls,
+            streak.WindowRemaining, streak.Best, streak.LuckAt(streak.Rank) * 100f);
     }
 
     /// <summary>
@@ -205,7 +205,7 @@ public partial class ElanSandbox : Node
     }
 
     /// <summary>
-    /// Percussion (E4) : après le délai, le joueur, au palier II, est posé au nord d'une colonne de six Ombres alignée sur
+    /// Percussion (E4) : après le délai, le joueur, au rang FURIE, est posé au nord d'une colonne de six Ombres alignée sur
     /// le bord ouest de la première bande ; il descend le long du bord et dashe dans la colonne. Une créature sur deux
     /// est poussée vers le vide. L'image est gardée cinq pas après la première chute (milieu de la chute), ou six secondes après la colonne.
     /// </summary>
@@ -216,8 +216,8 @@ public partial class ElanSandbox : Node
             _player.AIInputOverride = Vector2.Zero;
             return;
         }
-        if (_player.Streak.Tier < 2)
-            _player.Streak.Kill(_player.Streak.Config.Tiers[1].From, "bac à sable");
+        if (_player.Streak.Rank < 3)
+            _player.Streak.Kill(_player.Streak.Config.Ranks[2].From, "bac à sable");
         if (!_columnSpawned)
             SpawnEdgeColumn();
         _player.AIInputOverride = Vector2.Down;
@@ -250,7 +250,7 @@ public partial class ElanSandbox : Node
     }
 
     /// <summary>
-    /// Saut du vide (E3) : palier II donné d'office, course vers l'est, dash juste avant le bord de la première bande ;
+    /// Saut du vide (E3) : rang FURIE donné d'office, course vers l'est, dash juste avant le bord de la première bande ;
     /// l'image est gardée au huitième pas en l'air (milieu d'une bande d'une cellule) au-dessus du vide, ou au bout du délai.
     /// </summary>
     private void StepLeapCapture()
@@ -261,8 +261,8 @@ public partial class ElanSandbox : Node
             _player.AIInputOverride = Vector2.Zero;
             return;
         }
-        if (_player.Streak.Tier < 2)
-            _player.Streak.Kill(_player.Streak.Config.Tiers[1].From, "bac à sable");
+        if (_player.Streak.Rank < 3)
+            _player.Streak.Kill(_player.Streak.Config.Ranks[2].From, "bac à sable");
         _player.AIInputOverride = Vector2.Right;
         if (!_player.Mobility.IsDashing && _player.Mobility.CooldownRemaining <= 0f
             && IsVoidAt(_player.GlobalPosition + new Vector2(14f, 0f)) && !IsVoidAt(_player.GlobalPosition))
@@ -300,7 +300,7 @@ public partial class ElanSandbox : Node
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, palier {_player.Streak.Tier}, "
+        GD.Print($"[ElanSandbox] Capture : {path} (sauts du vide {_player.VoidLeaps}, rang {_player.Streak.Rank}, "
             + $"percussions {_player.Percussions}, chutes {_falls})");
         GetTree().Quit(0);
         _captureDir = null;

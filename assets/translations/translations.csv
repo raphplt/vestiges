@@ -607,3 +607,9 @@ LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · T
 LAND_OBJECTIVE_HOLD,"Dernière terre · Échos vaincus {1}","Last land · Echoes defeated {1}"
 LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last land · A guardian's echo hunts you"
 LAND_OBJECTIVE_VICTORY,"Run gagnée · La dernière terre se recoud","Run won · The last land is stitching itself"
+STREAK_RANK_1,ÉVEIL,AWAKENING
+STREAK_RANK_2,FERVEUR,FERVOR
+STREAK_RANK_3,FURIE,FURY
+STREAK_RANK_4,CARNAGE,CARNAGE
+STREAK_RANK_5,HÉCATOMBE,HECATOMB
+STREAK_RANK_6,MONSTRE,MONSTER

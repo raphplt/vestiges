@@ -60,7 +60,7 @@ public partial class MovementRegression
         await ReadyMobility();
         _player.IsGodMode = false;
         _player.SetElanEnabled(true);
-        _player.Streak.Kill(Vestiges.Infrastructure.ElanConfig.Load().Tiers[2].From, "essai");
+        _player.Streak.Kill(Vestiges.Infrastructure.ElanConfig.Load().Ranks[4].From, "essai");
         float hp = _player.CurrentHp;
         _player.Position = new Vector2(erasure.CellSize - 10f, 20f);
         await Step(1);
@@ -92,7 +92,7 @@ public partial class MovementRegression
         while (edgeX < world.Generator.MapRadiusX + 2 && world.Generator.IsWithinBounds(edgeX, 0) && !world.Generator.IsErased(edgeX, 0))
             edgeX++;
         await ReadyMobility();
-        _player.Streak.Kill(Vestiges.Infrastructure.ElanConfig.Load().Tiers[2].From, "essai");
+        _player.Streak.Kill(Vestiges.Infrastructure.ElanConfig.Load().Ranks[4].From, "essai");
         _player.Position = ground.MapToLocal(new Vector2I(edgeX - 2, 0));
         await Step(1);
         SetActions(Vector2.Right);

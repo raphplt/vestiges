@@ -24,6 +24,7 @@ public partial class EssenceTracker : Node
         _eventBus.EnemyKilled += OnEnemyKilled;
         _eventBus.LootReceived += OnLootReceived;
         _eventBus.EssenceMultiplierChanged += OnMultiplierChanged;
+        _eventBus.StreakChanged += OnStreakChanged;
         EmitChanged();
     }
 
@@ -34,6 +35,7 @@ public partial class EssenceTracker : Node
             _eventBus.EnemyKilled -= OnEnemyKilled;
             _eventBus.LootReceived -= OnLootReceived;
             _eventBus.EssenceMultiplierChanged -= OnMultiplierChanged;
+            _eventBus.StreakChanged -= OnStreakChanged;
         }
     }
 
@@ -68,6 +70,15 @@ public partial class EssenceTracker : Node
         amount = Mathf.CeilToInt(amount * _multiplier);
         AddEssence(amount);
         _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, amount, position);
+    }
+
+    /// <summary>Une Série encaissée (plan 52 §15) : son Essence vole depuis le joueur jusqu'au compteur.</summary>
+    private void OnStreakChanged(StreakChange change)
+    {
+        if (change.Kind != StreakChangeKind.CashOut || change.Essence <= 0)
+            return;
+        AddEssence(change.Essence);
+        _eventBus.EmitSignal(EventBus.SignalName.EssenceGained, change.Essence, change.Position);
     }
 
     private void OnMultiplierChanged(float multiplier, float seconds) => _multiplier = Mathf.Max(1f, multiplier);

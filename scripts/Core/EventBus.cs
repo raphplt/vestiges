@@ -50,6 +50,10 @@ public partial class EventBus : Node
     public event System.Action<Vector2> CreatureFellIntoVoid;
     public void PublishCreatureFellIntoVoid(Vector2 edge) => CreatureFellIntoVoid?.Invoke(edge);
 
+    /// <summary>La Série monte, se coupe, s'encaisse ou s'éteint (plan 52 §15).</summary>
+    public event System.Action<StreakChange> StreakChanged;
+    public void PublishStreakChange(StreakChange change) => StreakChanged?.Invoke(change);
+
 
     public void PublishEnemyDamage(Combat.DamageResult result) => EnemyDamageResolved?.Invoke(result);
     public void PublishEnemyKill(Combat.EnemyKillResult result) => EnemyKillResolved?.Invoke(result);

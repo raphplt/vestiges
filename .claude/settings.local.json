@@ -9,5 +9,9 @@
       "Bash(rtk read \"C:\\\\Users\\\\rapha\\\\Documents\\\\Travail\\\\Projets\\\\vestiges\\\\data\\\\weapons\\\\weapons.json\")",
       "Bash(python3 -c \":*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "godot",
+    "wick"
+  ]
 }

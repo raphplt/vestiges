@@ -140,14 +140,33 @@ public partial class EnemyAbilityRegression
             bus.PublishEnemyKill(KillBy(_player.GetInstanceId(), EnemyGrammar.BossPartId));
             Check(_player.Streak.Count == before + 1, "série : une explosion de créature et une partie de boss ne comptent pas");
 
-            _player.PercussionMinTier = 2;
+            Enemy guardian = await SpawnReady("shade", new Vector2(160f, 0f));
+            guardian.ApplyVariant(EnemyVariantDataLoader.GetVariant("champion"), Array.Empty<EnemyAffixData>());
+            await Step(30);
+            float window = _player.Streak.WindowRemaining;
+            AttackContext strike = new(_player.GetInstanceId(), new WeaponInstance(WeaponDataLoader.Get("makeshift_bow")), 1, DamageKind.DirectWeapon);
+            guardian.TakeDamage(1f, false, false, strike);
+            Check(_player.Streak.WindowRemaining > window,
+                $"série : un coup porté à un gardien relance la fenêtre ({window:F2} → {_player.Streak.WindowRemaining:F2} s)");
+            Despawn(guardian);
+
+            StreakChange cashOut = default;
+            void OnStreak(StreakChange change) => cashOut = change.Kind == StreakChangeKind.CashOut ? change : cashOut;
+            bus.StreakChanged += OnStreak;
+            _player.Streak.Kill(100 - _player.Streak.Count, "essai");
+            await Step(Mathf.CeilToInt(_player.Streak.WindowAt(_player.Streak.Rank) * 60f) + 2);
+            bus.StreakChanged -= OnStreak;
+            Check(cashOut.Kind == StreakChangeKind.CashOut && cashOut.PreviousCount == 100 && cashOut.Essence == _player.Streak.CashOutFor(100, 4)
+                && _player.Streak.Count == 0, $"série : ×100 sans élimination s'encaisse en {cashOut.Essence} Essence, publiée sur l'EventBus");
+
+            _player.PercussionMinRank = 2;
             await WaitDashReady();
             target = await SpawnReady("shade", new Vector2(-40f, 0f));
             percussions = _player.Percussions;
             await DashNow(Vector2.Left);
-            Check(_player.Percussions == percussions, "percussion : sous le palier minimum réglé, le dash ne projette rien");
+            Check(_player.Percussions == percussions, "percussion : sous le rang minimum réglé, le dash ne projette rien");
             Despawn(target);
-            _player.PercussionMinTier = _player.Streak.Config.PercussionMinTier;
+            _player.PercussionMinRank = _player.Streak.Config.PercussionMinRank;
         }
         finally
         {

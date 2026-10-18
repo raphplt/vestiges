@@ -4,10 +4,10 @@ using Vestiges.World;
 namespace Vestiges.Core;
 
 /// <summary>
-/// Saut du vide (plan 52 E3) : dès que le palier de la Série donne une allonge, le dash est porté au-dessus du Néant et
+/// Saut du vide (plan 52 E3) : dès que le rang de la Série donne une allonge, le dash est porté au-dessus du Néant et
 /// s'y prolonge. Retomber sur le sol après avoir franchi assez de vide relance la Série ; retomber dans le vide revient à
 /// y marcher.
-/// Sans allonge (palier 0, Élan éteint), le dash s'arrête au bord comme avant.
+/// Sans allonge (rang 0, Élan éteint), le dash s'arrête au bord comme avant.
 /// </summary>
 public partial class Player
 {
@@ -16,7 +16,7 @@ public partial class Player
     // Pas d'échantillonnage du vide franchi sur un trajet de dash.
     private const float VoidSampleStep = 4f;
 
-    // Le dash en cours est porté au-dessus du vide : décidé au départ, selon le palier d'alors.
+    // Le dash en cours est porté au-dessus du vide : décidé au départ, selon le rang d'alors.
     private bool _dashLeaps;
     private float _leapVoidPixels;
     private float _leapHeight;
@@ -30,10 +30,10 @@ public partial class Player
     /// </summary>
     public bool IsLeaping => _dashLeaps && Mobility.IsDashing;
 
-    /// <summary>Avant le pas de mobilité : allonge du palier actuel, et le joueur est-il au-dessus du vide.</summary>
+    /// <summary>Avant le pas de mobilité : allonge du rang actuel, et le joueur est-il au-dessus du vide.</summary>
     private void PrepareVoidLeap()
     {
-        Mobility.LeapExtensionPixels = Streak.Enabled ? Streak.Config.VoidLeapExtensionAt(Streak.Tier) : 0f;
+        Mobility.LeapExtensionPixels = Streak.Enabled ? Streak.Config.VoidLeapExtensionAt(Streak.Rank) : 0f;
         Mobility.OverVoid = _dashLeaps && IsVoidAt(GlobalPosition);
     }
 
