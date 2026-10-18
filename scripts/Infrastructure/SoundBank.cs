@@ -60,7 +60,7 @@ public static class SoundBank
     private static SoundBankEntry Parse(JsonConfigReader reader, string key, JsonElement entry, Func<string, bool> resourceExists,
         Func<string, bool> busExists, string defaultBus)
     {
-        reader.AllowOnly(entry, key, "path", "volume_db", "min_interval_ms", "priority", "max_voices", "bus",
+        reader.AllowOnly(entry, "réglages", "path", "volume_db", "min_interval_ms", "priority", "max_voices", "bus",
             "volume_variance_db", "duck_music_db", "duck_sec", "variants", "effect_id");
         string path = ExistingFile(reader, entry, "path", resourceExists);
         float volume = reader.Number(entry, "volume_db");
