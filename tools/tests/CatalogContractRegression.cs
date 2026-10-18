@@ -54,6 +54,7 @@ public partial class CatalogContractRegression : Node
             CheckPois();
             CheckCombatSettings();
             CheckInterfaceSettings();
+            CheckMusicStatsMobility();
             CheckAtmosphere();
             CheckWeather();
             CheckFauna();
@@ -1404,6 +1405,58 @@ public partial class CatalogContractRegression : Node
             bool refused = !WeaponVisualConfig.TryParse(Mutated(visuals, mutate), out WeaponVisualConfig config, out string error);
             Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"visuels d'armes, {name} refusé ({error})");
         }
+    }
+
+    /// <summary>Musique, catalogue des stats et mobilité (plan 26 Q7g-4b) : fichiers du dépôt acceptés, règles refusées.</summary>
+    private void CheckMusicStatsMobility()
+    {
+        bool musicLoaded = MusicConfig.TryLoad(MusicConfig.DefaultPath, out _, out string musicError);
+        bool statsLoaded = StatCatalog.TryLoad(out string statsError);
+        bool mobilityLoaded = MobilityConfig.TryLoad(out string mobilityError);
+        Check(musicLoaded && statsLoaded && mobilityLoaded, $"musique, stats et mobilité du dépôt acceptées {musicError}{statsError}{mobilityError}");
+
+        string music = FileAccess.GetFileAsString(MusicConfig.DefaultPath);
+        Func<string, bool> soundExists = DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains;
+        Func<string, bool> variantExists = id => Array.IndexOf(EnemyVariantDataLoader.VariantIds, id) >= 0;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("section inconnue", root => root["mix"] = new JsonObject(), "clé « mix » inconnue"),
+            ("intention inconnue", root => root["intents"]!["boss"] = new JsonObject { ["music"] = "mus_mort" }, "intention « boss » inconnue"),
+            ("morceau absent", root => root["intents"]!["hub"]!["music"] = "mus_accueil", "« mus_accueil » absent de la banque de sons"),
+            ("morceau manquant", root => root["intents"]!["hub"]!.AsObject().Remove("music"), "music"),
+            ("fondu nul", root => root["intents"]!["combat"]!["fade_sec"] = 0, "fade_sec"),
+            ("départ négatif", root => root["intents"]!["warning"]!["start_sec"] = -1, "start_sec"),
+            ("boucle non booléenne", root => root["intents"]!["death"]!["loop"] = "non", "loop"),
+            ("échantillonnage trop serré", root => root["combat"]!["sample_sec"] = 0.01, "sample_sec"),
+            ("variante inconnue", root => root["combat"]!["peak_variants"]![0] = "boss", "variante « boss » inconnue"),
+            ("sortie au-dessus de l'entrée", root => root["combat"]!["exit_enemies"] = 90, "exit_enemies ≤ enter_enemies"),
+            ("seuil fractionnaire", root => root["combat"]!["enter_enemies"] = 85.5, "enter_enemies"),
+        })
+        {
+            bool refused = !MusicConfig.TryParse(Mutated(music, mutate), soundExists, variantExists, out MusicConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"musique, {name} refusé ({error})");
+        }
+        Check(MusicConfig.TryParse("{ \"intents\": {} }", soundExists, variantExists, out MusicConfig quiet, out _) && quiet.Cues.Count == 0
+            && quiet.CombatEnterEnemies == 4 && quiet.CombatPeakVariants.Contains("champion"), "musique : sans morceau ni combat, secours d'avant gardés");
+
+        string damageName = StatCatalog.Name("damage");
+        string stats = FileAccess.GetFileAsString(StatCatalog.FilePath);
+        Func<string, bool> translated = key => TranslationServer.Translate(key) != key;
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("champ inconnu", root => root["stats"]![0]!["icon"] = "x", "clé « icon » inconnue"),
+            ("stat en double", root => root["stats"]!.AsArray().Add(root["stats"]![0]!.DeepClone()), "déjà déclarée"),
+            ("affichage inconnu", root => root["stats"]![0]!["display"] = "stars", "« stars » inconnu"),
+            ("libellé sans traduction", root => root["stats"]![0]!["name_key"] = "STAT_INCONNUE", "sans traduction"),
+            ("propriété inconnue", root => root["stats"]![0]!["property"] = "luck", "propriété « luck » inconnue"),
+            ("unité vide", root => root["stats"]![0]!["unit"] = "", "unit"),
+        })
+        {
+            string error = StatCatalog.Apply(Mutated(stats, mutate), translated);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && StatCatalog.Name("damage") == damageName,
+                $"stats, {name} refusé sans publication ({error})");
+        }
+        Check(StatCatalog.Apply(stats, translated) == null && StatCatalog.Name("damage") == damageName, "stats du dépôt republiées");
     }
 
     private void CheckAtmosphere()

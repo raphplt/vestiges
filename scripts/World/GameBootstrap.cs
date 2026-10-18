@@ -160,6 +160,9 @@ public partial class GameBootstrap : Node
         RequireCatalog(RunSummaryConfig.TryLoad(out _, out string summaryError), summaryError);
         RequireCatalog(RarityPalette.TryLoad(out string paletteError), paletteError);
         RequireCatalog(WeaponVisualConfig.TryLoad(out _, out string weaponVisualsError), weaponVisualsError);
+        RequireCatalog(StatCatalog.TryLoad(out string statsError), statsError);
+        RequireCatalog(MusicConfig.TryLoad(MusicConfig.DefaultPath, out _, out string musicError), musicError);
+        RequireCatalog(MobilityConfig.TryLoad(out string mobilityError), mobilityError);
         RequireCatalog(EnemyVariantDataLoader.TryLoad(out string variantsError), variantsError);
         RequireCatalog(SitePlan.TryLoad(WorldSetup.QuarrySitesPath, "collapsed_quarry", WorldSetup.QuarryFolder, "chantiers",
             out _, out string quarryError), quarryError);

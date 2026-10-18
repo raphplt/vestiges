@@ -307,6 +307,25 @@ public partial class CatalogValuesProbe : Node
         }
         WeaponVisualConfig visuals = WeaponVisualConfig.Load();
         lines.Add(Invariant($"weapon_visuals {visuals.SizeResponse:R} {visuals.MaxScale:R} {visuals.ShotCooldownShare:R} {visuals.ChainedShotVolumeDb:R} {visuals.ChainedShotPitchVariance:R} {visuals.WaveInterval:R} {visuals.ConeMaxFronts}"));
+        // Q7g-4b : musique, catalogue des stats, mobilité.
+        MusicConfig music = MusicConfig.Load();
+        foreach (KeyValuePair<MusicIntent, MusicConfig.Cue> cue in music.Cues.OrderBy(entry => entry.Key))
+            lines.Add(Invariant($"music {cue.Key} {cue.Value.Key} fade={cue.Value.FadeSeconds:R} loop={cue.Value.Loop} start={cue.Value.StartSeconds:R}"));
+        lines.Add(Invariant($"music combat {music.CombatRadiusPx:R} {music.CombatSampleSeconds:R} {music.CombatEnterEnemies} {music.CombatEnterHoldSeconds:R} {music.CombatExitEnemies} {music.CombatExitHoldSeconds:R} [{string.Join(",", music.CombatPeakVariants.OrderBy(id => id, StringComparer.Ordinal))}]"));
+        using (System.Text.Json.JsonDocument stats = System.Text.Json.JsonDocument.Parse(FileAccess.GetFileAsString("res://data/ui/stats.json")))
+        {
+            foreach (System.Text.Json.JsonElement stat in stats.RootElement.GetProperty("stats").EnumerateArray())
+            {
+                string id = stat.GetProperty("id").GetString();
+                lines.Add($"stat {id} {StatCatalog.Name(id)} {StatCatalog.Display(id)} {StatCatalog.Property(id) ?? "-"} {StatCatalog.Format(id, 1.5f)} {StatCatalog.FormatBonus(id, 0.25f, false)}");
+            }
+        }
+        lines.Add($"stat inconnue {StatCatalog.Name("inconnue")} {StatCatalog.Display("inconnue")} {StatCatalog.Format("inconnue", 1.5f)}");
+        foreach (string profile in new[] { null, "phase", "glide", "float_jump" })
+        {
+            MobilityConfig m = MobilityConfig.Load(profile);
+            lines.Add(Invariant($"mobility {profile ?? "-"} [{m.Name}|{m.Description}] {m.DurationSeconds:R} {m.SpeedMultiplier:R} {m.CooldownSeconds:R} {m.InputBufferSeconds:R} {m.BriefResponse} {m.AccelerationSeconds:R} {m.BrakingSeconds:R} {m.HurtRecoverySeconds:R} {m.InvulnerabilitySeconds:R} {m.TrialInvulnerabilitySeconds:R} {m.WaterSpeedFactor:R} {m.TurnRateDegrees:R} {m.SlidesAlongWalls} {m.VisualHeightPixels:R} {m.IgnoreWaterWhileActive} {m.StartAudio} {m.EndAudio}"));
+        }
         foreach (string line in lines)
             GD.Print($"[CatalogValuesProbe] {line}");
         GD.Print($"[CatalogValuesProbe] RESULT lines={lines.Count}");
