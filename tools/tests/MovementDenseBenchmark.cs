@@ -152,8 +152,10 @@ public partial class MovementDenseBenchmark : Node
             _player = _world.GetNode<Player>("Player");
             _player.IsGodMode = true;
             _player.IsAIControlled = true;
-            _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : TestArena.FindOpen(_player);
+            _arena = Argument(args, "--arena", "open") == "origin" ? Vector2.Zero : TestArena.FindOpen(_player, _world);
             _player.GlobalPosition = _arena;
+            // L'Effacement est coupé avant la fin de la recousure d'une terre : sans cela, le sol resterait en Néant.
+            _world.GetNode<ErasureManager>("ErasureManager").SettleStitchForTests();
             // Expérience d'attribution : décors masqués (rendu seul, la physique des décors reste en place).
             if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--hide-props") >= 0)
             {

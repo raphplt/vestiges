@@ -158,3 +158,35 @@ Documenté : un dash compte comme de la course, et courir freiné (eau, ralentis
 **Pas encore vérifié** : la capture de l'onde. La dernière capture du bac à sable a gardé l'écran de chargement au lieu du jeu, à comprendre avant de conclure sur le rendu.
 
 **Suite : E3, le saut du vide.** Proposé : l'Élan « porte » le dash au-dessus du vide. Un dash fait environ 70 px et une cellule de Néant 128 px, donc un dash seul ne franchit jamais un trou. Au-dessus du vide, le dash se prolonge d'une distance qui grandit avec le palier (par exemple 0, 64, 128 puis 192 px). Franchir un trou et retomber sur le sol donne +0,15. Atterrir dans le vide, c'est y marcher, et payer (plan 51 §11).
+
+## 9. Découpage de E3 et E4 — 18 octobre 2026
+
+Revue de direction du 18 octobre ([registre §189](DECISIONS.md), [LE-JEU.md](../LE-JEU.md)) : **le vide comme arme, jauge gardée**, une semaine de bac à sable avec critère d'arrêt. L'Élan reste éteint en run normale ; rien de ce qui suit ne change une run normale.
+
+| Lot | Contenu | Vérification |
+|---|---|---|
+| **E0 Outillage sur la terre** (préalable) | Depuis que les terres sont la règle (17 octobre), le bac à sable et le banc dense posent l'arène hors de la terre et coupent l'Effacement avant la fin de la recousure : sol noir, joueur bloqué, **banc dense invalide**. L'arène est cherchée sur le sol de la terre ; la recousure est terminée d'office ; le bac à sable garde l'Effacement actif mais figé (le Néant draine, rien ne tombe) | Capture du bac à sable, banc dense valide |
+| **E3 Le saut du vide** | Dès le palier I, le dash est porté au-dessus du Néant et s'y prolonge de 64, 128 puis 192 px selon le palier (`void_leap` dans `elan.json`). Au palier 0 et Élan éteint, rien ne change : le dash s'arrête au bord. Atterrir dans le vide revient à y marcher (Essence, puis PV). En l'air, le Néant ne prend rien. Un saut qui franchit au moins 32 px de vide et retombe sur le sol donne +0,15. Le bord du monde reste infranchissable. Hauteur visible en l'air, son et poussière à la retombée. Bac à sable : bandes de vide de 1, 2 et 3 cellules près du départ, compteur de sauts | Suite de mouvement (franchir, retomber dans le vide, palier 0 arrêté au bord, bord du monde, pas de drain en l'air, gain une fois), capture d'un saut |
+| **E4 La percussion** | Le dash projette les créatures qu'il traverse (`percussion` dans `elan.json`) : recul selon le palier, en avant et vers l'extérieur du trajet, +0,03 par créature, 0,15 au plus par dash. **Palier minimum réglable** : 0 par défaut (recommandation de l'agent), 2 pour la version d'origine, basculable au lancement du bac à sable (`--percussion-tier`). Boss et mini-boss immunisés. Le vide comme arme allumé (Élan allumé) : une créature ordinaire projetée dans le Néant y tombe, éliminée (XP au bord, score) ; en marchant, toutes évitent le vide ; élites et Souverains ne tombent pas | Suite de l'Élan (projection, gain plafonné, chute comptée, boss immunisé, évitement en marchant, rien quand l'Élan est éteint), banc dense A/B (Élan éteint : aucun coût ; allumé : coût de l'évitement), capture d'une chute |
+
+Choix pris pour le prototype, à juger en jouant :
+- **Le saut demande le palier I** : un débutant à l'arrêt ne tombe pas par mégarde, et le premier palier vient en 10 s de course.
+- **Les armes qui repoussent font aussi tomber** : tout recul vers le vide compte, pas seulement la percussion. C'est le vide comme arme pour tous les builds de recul.
+- **L'XP d'une chute tombe au bord** d'où la créature est partie, pas dans le vide.
+
+## 10. Compte rendu E0, outillage sur la terre — 18 octobre 2026
+
+**Constat** : depuis le 17 octobre, les terres sont la règle et l'arène des bancs tombait hors de la terre.
+- `TestArena.FindOpen` cherchait seulement un cercle sans décor. Le premier cercle libre était dans le vide autour de la terre : arène en (−268, −4087) au banc dense.
+- Le joueur ne peut pas marcher hors du sol : il restait bloqué, et `_distance > 100` échouait. **Le banc dense rendait `valid=False` depuis le 17 octobre.**
+- Le banc et le bac à sable coupaient l'Effacement avant la fin de la recousure : sol noir à l'écran.
+
+**Corrigé :**
+- `TestArena.FindOpen(probe, world)` exige du sol sous le centre et sous huit points du cercle. Sur une terre dense, le rayon se réduit à 75 % puis à 50 %.
+- `ErasureManager.SettleStitchForTests` (outils seulement) termine la recousure et publie le sol.
+- Le bac à sable garde l'Effacement actif sur une terre, mais figé (`FrontFrozen`) : rien ne tombe, le Néant draine, le sol suit le joueur.
+
+**Vérifié :**
+- build sans avertissement ;
+- capture du bac à sable : terre de forêt, joueur sur le sol ;
+- banc dense court (5 s) : `valid=True`, arène en (−5008, −1064) sur une terre de carrière, sol et décors à l'image ; le mode dash demande la durée normale (15 s) pour ses cinq dashs.

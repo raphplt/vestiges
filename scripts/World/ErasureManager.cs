@@ -508,6 +508,19 @@ public partial class ErasureManager : Node
         SetMemory(cell, Mathf.Clamp(memory, 0f, 1f), true);
     }
 
+    /// <summary>
+    /// Termine la recousure d'office et publie le sol autour du joueur (bancs). Un banc qui fige ou coupe l'Effacement
+    /// avant la fin de la recousure garderait sinon le sol en Néant à l'écran.
+    /// </summary>
+    internal void SettleStitchForTests()
+    {
+        DevelopmentMode.RequireTestAccess();
+        _stitchElapsed = -1f;
+        _stitchHeldFor = -1f;
+        CachePlayer();
+        PublishGroundMemory();
+    }
+
     /// <summary>Republie la mémoire et la phase du joueur sans faire avancer l'Effacement (captures).</summary>
     internal void RefreshGroundMemory()
     {

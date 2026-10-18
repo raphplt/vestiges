@@ -25,6 +25,7 @@ public partial class ElanSandbox : Node
 
     private readonly List<Enemy> _crowd = new();
     private WorldSetup _world;
+    private ErasureManager _erasure;
     private Player _player;
     private EnemyPool _pool;
     private Node _container;
@@ -58,13 +59,20 @@ public partial class ElanSandbox : Node
             GetTree().CurrentScene = _world;
             while (!_world.IsWorldReady || GetTree().Paused || manager.CurrentState != GameManager.GameState.Run)
                 await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            foreach (string director in new[] { "SpawnManager", "ErasureManager", "CrisisManager", "RunEventDirector",
-                "EndgameManager", "BarrierDirector" })
+            foreach (string director in new[] { "SpawnManager", "CrisisManager", "RunEventDirector", "EndgameManager",
+                "BarrierDirector" })
             {
                 Node node = _world.GetNodeOrNull(director);
                 if (node != null)
                     node.ProcessMode = ProcessModeEnum.Disabled;
             }
+            // Sur une terre, l'Effacement reste actif mais figé : rien ne tombe, le Néant draine toujours et le sol suit
+            // le joueur à l'écran. Sur la grande carte (--no-lands), il est coupé comme avant.
+            _erasure = _world.GetNode<ErasureManager>("ErasureManager");
+            if (_erasure.Front != null)
+                _erasure.FrontFrozen = true;
+            else
+                _erasure.ProcessMode = ProcessModeEnum.Disabled;
             foreach (Node node in GetTree().GetNodesInGroup("enemies"))
                 node.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
@@ -73,7 +81,8 @@ public partial class ElanSandbox : Node
             _player.SetElanEnabled(true);
             if (_captureDir != null)
                 _player.IsAIControlled = true;
-            _player.GlobalPosition = TestArena.FindOpen(_player);
+            _player.GlobalPosition = TestArena.FindOpen(_player, _world);
+            _erasure.SettleStitchForTests();
             _pool = _world.GetNode<EnemyPool>("EnemyPool");
             _container = _world.GetNode("EnemyContainer");
             CanvasLayer layer = new() { Layer = 100 };
