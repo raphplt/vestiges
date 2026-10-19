@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**19 octobre — le rythme du départ mesuré ([plan 55](55-rythme-du-depart.md), §193) :** l'ouverture remplit l'écran dès 3 s (12 créatures visibles la première minute au lieu de 3) ; le premier niveau tombe à la première élimination, niveau 10 vers 5 min ; aimant à 100 px. Au bot, ×10 vers 30 à 55 s au lieu de 2 à 4 min. Aucun cran de réglage. À jouer.
+
 **18 octobre — la Série finie et allumée en run ([plan 52 S5](52-elan.md), §192) :** la Série et le vide sont actifs en run normale ; fenêtre de 5 s au rang 0 ; meilleure Série au bilan et record par personnage ; mesure au bot (premier rang après 3 min, la densité du départ freine). À jouer.
 
 **18 octobre — les retours de la Série ([plan 52 S4](52-elan.md)) :** aura au sol par rang, onde, secousse et cloche plus aiguë au rang gagné, verre et chiffre fendu au coup reçu, gerbe d'Essence à l'encaissement, tic de la jauge presque vide ; contour à la couleur du rang dès FURIE, images rémanentes à MONSTRE, musique de combat dès CARNAGE.

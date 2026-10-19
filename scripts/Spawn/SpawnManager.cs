@@ -437,7 +437,8 @@ public partial class SpawnManager : Node2D
 			_ => 1f
 		};
 		float fullTarget = _dayLocalEnemyTargetBase + _dayLocalEnemyTargetGrowthPerMinute * elapsedMinutes;
-		float openingTarget = Mathf.Lerp(Mathf.Min(_openingLocalTargetStart, fullTarget), fullTarget, OpeningProgress);
+		// L'ouverture peut partir au-dessus de la courbe normale : l'écran se remplit dès le départ (LE-JEU, étape 3).
+		float openingTarget = Mathf.Lerp(_openingLocalTargetStart, fullTarget, OpeningProgress);
 		int target = Mathf.RoundToInt(openingTarget * EarlyDensity(elapsedMinutes) * PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * zoneMemoryMult);
 		target = Mathf.RoundToInt(target * phaseMult * EncounterDensityMultiplier * Difficulty.EnemyCount);
 

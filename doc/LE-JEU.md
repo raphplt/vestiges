@@ -36,7 +36,7 @@ Pas de durées, qui sont impossibles à estimer honnêtement. Chaque étape comm
 |---|---|---|
 | 1 | **La Série, version finie** : S1 à S5 livrés le 18 octobre ([plan 52 §16 à §19](plans/52-elan.md)), allumée en run normale avec le vide ; reste la séance de Raphaël en vraie run | Ton temps |
 | 2 | **Revue de la boucle de run** (terres 1 à 3, finale, fin sans fin), aussi appuyée que celle de la Série ; la forme ci-dessus peut y changer ([§191](plans/DECISIONS.md)) | Moyen |
-| 3 | **Le rythme du départ** : premier niveau vite, écran plein tôt, aimant d'XP revu ; mesuré au bot. La Série en dépend : le bot ne fait jamais ×10 en 7 minutes aujourd'hui | Faible |
+| 3 | **Le rythme du départ** : premier niveau vite, écran plein tôt, aimant d'XP revu ; mesuré au bot. La Série en dépend : le bot ne fait jamais ×10 en 7 minutes aujourd'hui. Réglages posés le 18 octobre et mesurés le 19 ([plan 55](plans/55-rythme-du-depart.md)) : écran plein dès la première minute, ×10 en moins d'une minute au bot ; reste ta séance | Faible |
 | 4 | **Ton essai du vide** : la Série est essayée, le vide pas encore ; critère d'arrêt ci-dessous | Ton temps |
 | 5 | **Les terres complètes** : cinq lieux de Vaulme, pièces faites main, génération structurée ; à découper dans un plan dédié | Élevé, le gros chantier |
 | 6 | **La Montée et l'Indicible en finale**, un fragment de lore par gardien, la fin sans fin | Moyen |

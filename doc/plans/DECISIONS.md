@@ -2335,3 +2335,16 @@ Raphaël, à la reprise : « on finit la Série de bout en bout (lots S2 à S5 d
 - **La Série et le vide sont allumés en run normale** (S5), pour la séance de Raphaël. Fenêtre du rang 0 portée à 5 s. Meilleure Série au bilan et record par personnage.
 - **Le premier rang tarde (après 3 min au bot)** : ce n'est pas un réglage de la Série mais le rythme du départ, étape 3 du [LE-JEU.md](../LE-JEU.md).
 
+
+## 193. Le rythme du départ : écran plein tôt, premier niveau à la première élimination, aimant à 100 px — 18 octobre 2026
+
+Raphaël : « traite le sujet : Le rythme du départ. fait juste les modifs ne teste pas pour l'instant. » Étape 3 du [LE-JEU.md](../LE-JEU.md), lot R1 du [plan 55](55-rythme-du-depart.md).
+
+**Constat** (§189, plan 52 S5) : 3,5 créatures à l'écran la première minute, premier niveau entre 23 s et 3 min 05, premier rang de la Série après 2 min 36. L'ouverture du §154 (cible de départ 4, rampe de 5 min) se cumulait à la densité du début du §171 (×0,57) : 4 créatures proches à 1 min au lieu de 20.
+
+**Tranché par défaut, réversible :**
+- **Écran plein tôt** : l'ouverture part au-dessus de la courbe normale (cible 26, répit 3 s, rampe 3 min, plus d'intervalle doublé), soit environ 15 créatures proches dès le départ. La densité du début (×0,57, §171 et §184) et tout ce qui suit 3 min ne changent pas : la plainte « spammé d'ennemis » portait sur les minutes 1 à 10, où le nombre ne bouge pas.
+- **Premier niveau à la première élimination** : facteur des dix premiers niveaux de 0,4 à 1,15 (au lieu de 1,8 à 1,0). 6 XP pour le premier niveau, 149 cumulés pour le niveau 5 (410 avant). La courbe rejoint l'ancienne vers le niveau 9 : la visée du §154, niveau 10 vers 4–5 min, est gardée.
+- **Aimant à 100 px** au lieu de 80, toujours sans dérive. Le §172 avait réglé 80 px sans mesure ; à 150 px, on ramassait plus loin que la portée des armes de mêlée.
+
+**Mesuré le 19 octobre** (R2 et R3, [plan 55 §4 et §5](55-rythme-du-depart.md)) : environ 12 créatures visibles la première minute au lieu de 3 ; niveau 10 entre 4 min 43 et 5 min 30 ; ×10 entre 32 et 54 s à la graine 7, au lieu de 126 à 250 s. Le premier niveau au bot (29 à 83 s) ne juge pas la visée, car le bot ne va pas chercher les orbes. **Aucun cran de réglage.** Reste la séance de Raphaël (R4).
