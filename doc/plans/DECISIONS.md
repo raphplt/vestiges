@@ -2348,3 +2348,22 @@ Raphaël : « traite le sujet : Le rythme du départ. fait juste les modifs ne t
 - **Aimant à 100 px** au lieu de 80, toujours sans dérive. Le §172 avait réglé 80 px sans mesure ; à 150 px, on ramassait plus loin que la portée des armes de mêlée.
 
 **Mesuré le 19 octobre** (R2 et R3, [plan 55 §4 et §5](55-rythme-du-depart.md)) : environ 12 créatures visibles la première minute au lieu de 3 ; niveau 10 entre 4 min 43 et 5 min 30 ; ×10 entre 32 et 54 s à la graine 7, au lieu de 126 à 250 s. Le premier niveau au bot (29 à 83 s) ne juge pas la visée, car le bot ne va pas chercher les orbes. **Aucun cran de réglage.** Reste la séance de Raphaël (R4).
+
+## 194. Revue de la boucle de run : le 2e gardien est un mur, une seule horloge, l'arène fermée — 20 octobre 2026
+
+Raphaël, après la livraison du rythme du départ : « ok continue avec ca stp » (étape 2 du [LE-JEU.md](../LE-JEU.md), revue demandée au §191). Détail au [plan 56](56-boucle-de-run.md).
+
+**Constat mesuré** (bot des terres, profil neuf, Vagabond 45 min, Traqueur et Forgeuse 30 min, graines 7 et 42) :
+- le combat de gardien dure 2 min 30 à 6 min à la 1re terre, puis 6 à 30 min ou ne finit pas à la 2e, ou contre un gardien enragé. Aucune des huit runs n'est gagnée. Pendant le combat, la foule passe d'environ 60 à plus de 500 créatures, et les Résurgences tombent en plein combat ;
+- ce n'est pas une régression : le commit du plan 51 donne le même mur. Ses 110 à 138 s venaient du profil dev ;
+- Résurgences, chasses de Souverains, micro-événements, Ateliers, Puits et stèles tournent toujours en run, malgré la réserve du §189 ;
+- la Montée n'existe pas dans le code, et l'Indicible n'apparaît pas sur les terres.
+
+**Proposé par l'agent, défauts réversibles** :
+- **la forme du §190 est gardée** : trois terres, la Montée, l'Indicible. Les Mémoriaux restent les clés du gardien (option A du plan 56 §5, contre « le gardien quand tu veux ») ;
+- **le combat de gardien devient une arène fermée** : l'horloge de difficulté s'arrête, rien d'autre ne se déclenche, la foule est plafonnée. Visée : 1 à 2 min au profil neuf ;
+- **une seule horloge, celle de la terre** : les systèmes en réserve sont éteints en run ;
+- **la run se lit** : un lieu de Vaulme par terre, un carton d'arrivée, une piste de run sous le chrono ;
+- **la Montée est définie** : chemin en lacets bordé de vide, barrière à mi-pente tenue comme un Mémorial, l'Indicible en haut. L'Indicible vaincu, on choisit de redescendre (victoire) ou de rester dans la nuit (fin sans fin au sommet, échos des gardiens). La 4e terre disparaît ;
+- **les lots B1 à B3** (arène, une seule horloge, lisibilité) passent avant la séance de Raphaël. B4, la Montée, garde sa place à l'étape 6.
+- **Les mesures de durée se font en `MEASURE_PROFILE=normal`.**

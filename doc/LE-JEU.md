@@ -35,7 +35,7 @@ Pas de durées, qui sont impossibles à estimer honnêtement. Chaque étape comm
 | Ordre | Étape | Effort |
 |---|---|---|
 | 1 | **La Série, version finie** : S1 à S5 livrés le 18 octobre ([plan 52 §16 à §19](plans/52-elan.md)), allumée en run normale avec le vide ; reste la séance de Raphaël en vraie run | Ton temps |
-| 2 | **Revue de la boucle de run** (terres 1 à 3, finale, fin sans fin), aussi appuyée que celle de la Série ; la forme ci-dessus peut y changer ([§191](plans/DECISIONS.md)) | Moyen |
+| 2 | **Revue de la boucle de run**, faite le 20 octobre ([plan 56](plans/56-boucle-de-run.md), [§194](plans/DECISIONS.md)) : forme gardée ; le 2e gardien est un mur au profil neuf. Lots B1 à B3 avant ta séance : combat en arène fermée, une seule horloge (réserve éteinte en run), run lisible | Faible à moyen |
 | 3 | **Le rythme du départ** : premier niveau vite, écran plein tôt, aimant d'XP revu ; mesuré au bot. La Série en dépend : le bot ne fait jamais ×10 en 7 minutes aujourd'hui. Réglages posés le 18 octobre et mesurés le 19 ([plan 55](plans/55-rythme-du-depart.md)) : écran plein dès la première minute, ×10 en moins d'une minute au bot ; reste ta séance | Faible |
 | 4 | **Ton essai du vide** : la Série est essayée, le vide pas encore ; critère d'arrêt ci-dessous | Ton temps |
 | 5 | **Les terres complètes** : cinq lieux de Vaulme, pièces faites main, génération structurée ; à découper dans un plan dédié | Élevé, le gros chantier |
