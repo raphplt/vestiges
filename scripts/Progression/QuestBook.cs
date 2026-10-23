@@ -38,11 +38,14 @@ public static class QuestBook
     }
 
     /// <summary>
-    /// Quête en attente : elle ne débloque que des Réminiscences dont l'effet n'est pas encore codé. Elle reste prête
-    /// dans le catalogue, mais n'est ni affichée ni suivie : le joueur ne peut pas l'accomplir pour rien (§117).
+    /// Quête en attente : elle ne débloque que des Réminiscences dont l'effet n'est pas encore codé (§117), ou elle est
+    /// en réserve avec le système qu'elle exerce (plan 56 B2). Elle reste prête dans le catalogue et garde sa pièce,
+    /// mais n'est ni affichée ni suivie : le joueur ne peut pas l'accomplir pour rien, ni s'y heurter.
     /// </summary>
     public static bool IsDormant(QuestDefinition quest)
     {
+        if (quest.Reserve && !ReserveSwitch.Revived)
+            return true;
         foreach (QuestUnlock unlock in quest.Unlocks)
         {
             if (unlock.Kind != UnlockKind.Reminiscence)
@@ -100,7 +103,10 @@ public static class QuestBook
     public static string LockText(UnlockKind kind, string id)
     {
         QuestDefinition quest = QuestDataLoader.FindUnlocking(kind, id);
-        return quest == null ? "" : $"Quête « {quest.Name} » : {quest.Description}";
+        if (quest == null)
+            return "";
+        // Quête en réserve : son système est éteint, sa condition ne se remplit pas en run (plan 56 B2).
+        return quest.Reserve && IsDormant(quest) ? "En réserve pour l'instant." : $"Quête « {quest.Name} » : {quest.Description}";
     }
 
     private static string FormatDuration(float seconds)

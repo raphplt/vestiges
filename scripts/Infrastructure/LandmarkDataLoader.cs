@@ -43,6 +43,8 @@ public class MemorialConfig
 /// <summary>Réglages des Ateliers (section <c>workshop</c> de data/world/landmarks.json, plan 22 C2).</summary>
 public class WorkshopConfig
 {
+    /// <summary>Posés en run ; en réserve sinon (plan 56 B2, <see cref="ReserveSwitch"/>).</summary>
+    public bool Enabled;
     public string Sprite;
     public List<LandmarkBand> Placement = new();
     public float MinSpacingPx;
@@ -79,6 +81,8 @@ public class RiftConfig
 /// </summary>
 public class WellConfig
 {
+    /// <summary>Posés en run ; en réserve sinon (plan 56 B2, <see cref="ReserveSwitch"/>).</summary>
+    public bool Enabled;
     public string Sprite;
     public List<LandmarkBand> Placement = new();
     public float MinSpacingPx;
@@ -90,6 +94,8 @@ public class WellConfig
 /// <summary>Réglages des stèles du Péril (section <c>peril_stele</c> de data/world/landmarks.json, plan 28 P2).</summary>
 public class PerilSteleConfig
 {
+    /// <summary>Posées en run ; en réserve sinon (plan 56 B2, <see cref="ReserveSwitch"/>).</summary>
+    public bool Enabled;
     public string SpriteLit;
     public string SpriteSpent;
     public List<LandmarkBand> Placement = new();
@@ -262,12 +268,13 @@ public static class LandmarkDataLoader
             };
 
             JsonElement w = reader.Section("workshop");
-            reader.AllowOnly(w, "workshop", "sprite", "placement", "min_spacing_px", "services");
+            reader.AllowOnly(w, "workshop", "enabled", "sprite", "placement", "min_spacing_px", "services");
             JsonElement ws = reader.Section(w, "services");
             reader.AllowOnly(ws, "workshop.services", "weapon_cost", "weapon_min_rarity", "retemper_cost", "item_cost", "temper_upgrades",
                 "cost_growth");
             WorkshopConfig workshop = new()
             {
+                Enabled = reader.Flag(w, "enabled"),
                 Sprite = reader.Resource(w, "sprite", exists),
                 Placement = Bands(reader, w),
                 MinSpacingPx = reader.Positive(w, "min_spacing_px"),
@@ -279,11 +286,12 @@ public static class LandmarkDataLoader
                 CostGrowth = reader.NonNegative(ws, "cost_growth"),
             };
             JsonElement wl = reader.Section("well");
-            reader.AllowOnly(wl, "well", "sprite", "placement", "min_spacing_px", "forget");
+            reader.AllowOnly(wl, "well", "enabled", "sprite", "placement", "min_spacing_px", "forget");
             JsonElement forget = reader.Section(wl, "forget");
             reader.AllowOnly(forget, "well.forget", "cost", "cost_growth", "trace_ratio");
             WellConfig well = new()
             {
+                Enabled = reader.Flag(wl, "enabled"),
                 Sprite = reader.Resource(wl, "sprite", exists),
                 Placement = Bands(reader, wl),
                 MinSpacingPx = reader.Positive(wl, "min_spacing_px"),
@@ -292,9 +300,10 @@ public static class LandmarkDataLoader
                 ForgetTraceRatio = reader.Ratio(forget, "trace_ratio"),
             };
             JsonElement st = reader.Section("peril_stele");
-            reader.AllowOnly(st, "peril_stele", "sprite_lit", "sprite_spent", "placement", "min_spacing_px", "hold_time", "peril");
+            reader.AllowOnly(st, "peril_stele", "enabled", "sprite_lit", "sprite_spent", "placement", "min_spacing_px", "hold_time", "peril");
             PerilSteleConfig perilStele = new()
             {
+                Enabled = reader.Flag(st, "enabled"),
                 SpriteLit = reader.Resource(st, "sprite_lit", exists),
                 SpriteSpent = reader.Resource(st, "sprite_spent", exists),
                 Placement = Bands(reader, st),

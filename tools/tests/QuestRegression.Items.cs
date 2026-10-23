@@ -37,6 +37,8 @@ public partial class QuestRegression
             {
                 ResetItemProfile(dataField);
                 QuestDefinition quest = QuestDataLoader.Get(id);
+                // Une quête en réserve (plan 56 B2) n'est ni affichée ni suivie : son scénario la rallume.
+                ReviveReserve(quest.Reserve);
                 string item = quest.Unlocks[0].Id;
                 Check(!QuestBook.IsDormant(quest) && QuestBook.UnlockName(quest.Unlocks[0]) == PassiveSouvenirDataLoader.Get(item).Name
                     && QuestBook.UnlockIcon(quest.Unlocks[0]) == PassiveSouvenirDataLoader.Get(item).Icon
@@ -58,6 +60,7 @@ public partial class QuestRegression
                 Check(Count(id) == 1, $"{id} : un nouveau fait ne notifie pas une deuxième fois");
                 EndRun();
             }
+            ReviveReserve(false);
             ResetItemProfile(dataField);
             CheckRunItemSeparation();
             ResetItemProfile(dataField);
@@ -75,6 +78,7 @@ public partial class QuestRegression
         }
         finally
         {
+            ReviveReserve(false);
             dataField.SetValue(null, previous);
             MetaSaveManager.Save();
         }
@@ -277,6 +281,10 @@ public partial class QuestRegression
             "Peigne : 179 éliminations puis une dans une autre run ne font pas 180");
         EndRun();
     }
+
+    private static void ReviveReserve(bool revived) =>
+        typeof(ReserveSwitch).GetField("_revived", BindingFlags.Static | BindingFlags.NonPublic)!
+            .SetValue(null, revived ? true : null);
 
     private void CheckItemToasts()
     {

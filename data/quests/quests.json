@@ -183,6 +183,7 @@
         },
         {
             "id": "develop",
+            "reserve": true,
             "name": "Développer",
             "description": "Réussir trois micro-événements dans la même run.",
             "difficulty": 1,
@@ -240,6 +241,7 @@
         },
         {
             "id": "count_resurgences",
+            "reserve": true,
             "name": "Compter les Résurgences",
             "description": "Survivre à 15 Résurgences, toutes runs confondues.",
             "difficulty": 2,
@@ -355,6 +357,7 @@
         },
         {
             "id": "last_broadcast",
+            "reserve": true,
             "name": "Dernière émission",
             "description": "Porter quatre Oublis à la fois et survivre ainsi à une Résurgence.",
             "difficulty": 3,
@@ -857,6 +860,7 @@
         },
         {
             "id": "known_gestures",
+            "reserve": true,
             "name": "Les gestes connus",
             "description": "Réussir 20 micro-événements, toutes runs confondues.",
             "difficulty": 2,
@@ -1272,6 +1276,7 @@
         },
         {
             "id": "item_one_less_trace",
+            "reserve": true,
             "name": "Une trace de moins",
             "description": "Pendant une même partie, parcourir 4 000 mètres, atteindre le Péril 3 et traverser deux Résurgences en perdant moins de 25 % des PV max à chacune.",
             "difficulty": 3,

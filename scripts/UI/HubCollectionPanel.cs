@@ -377,7 +377,7 @@ public partial class HubCollectionPanel : MarginContainer
         _examined[_tab] = entry.Id;
         QuestDefinition quest = entry.Preview ? null : QuestDataLoader.FindUnlocking(TabUnlockKind(), entry.Id);
         _questId = quest?.Id;
-        _questLink.Visible = !entry.Unlocked && quest != null;
+        _questLink.Visible = !entry.Unlocked && quest != null && !QuestBook.IsDormant(quest);
         _detailStats.Visible = entry.Stats.Length > 0;
         _detailIcon.Texture = !string.IsNullOrEmpty(entry.Icon) && ResourceLoader.Exists(entry.Icon) ? GD.Load<Texture2D>(entry.Icon) : null;
         _detailIcon.SelfModulate = entry.Unlocked || entry.Preview ? Colors.White : LockedTint;

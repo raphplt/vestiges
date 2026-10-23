@@ -1,5 +1,6 @@
 using Godot;
 using Vestiges.Core;
+using Vestiges.Infrastructure;
 using Vestiges.World;
 
 namespace Vestiges.Events;
@@ -29,6 +30,8 @@ public partial class CrisisManager : Node
     private int _crisisNumber;
     private int _currentIntensity = 1;
     private bool _endgameMode;
+    // Résurgences en réserve (plan 56 B2) : aucune ne part d'elle-même ; un banc peut encore en lancer une.
+    private bool _enabled;
 
     public bool IsCrisisActive => _isCrisisActive;
     public bool IsWarningActive => !_isCrisisActive && _warningIssued && TimeUntilNextCrisis > 0f;
@@ -100,6 +103,8 @@ public partial class CrisisManager : Node
                 EndCrisis();
             return;
         }
+        if (!_enabled)
+            return;
 
         float timeUntilCrisis = TimeUntilNextCrisis;
         if (!_warningIssued && timeUntilCrisis <= _warningDurationSec)
@@ -152,6 +157,7 @@ public partial class CrisisManager : Node
     private void LoadConfig()
     {
         CrisisConfig config = CrisisConfig.Load();
+        _enabled = ReserveSwitch.IsOn(config.Enabled);
         _firstCrisisDelaySec = config.FirstCrisisDelaySec;
         _intervalSec = config.IntervalSec;
         _intervalVarianceSec = config.IntervalVarianceSec;

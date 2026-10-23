@@ -504,7 +504,9 @@ public partial class GameOverScreen : CanvasLayer
         if (record?.BestStreak is > 0)
             facts.Add((Tr("UI_END_BEST_STREAK"), StreakText(record.BestStreak.Value, record.BestStreakRank ?? 0)));
         facts.Add((Tr("UI_END_TRAVELLED"), FormatMeters(record?.TravelledMeters ?? 0f)));
-        facts.Add((Tr("UI_END_CRISES"), (record?.CrisesSurvived ?? 0).ToString()));
+        // Résurgences en réserve (plan 56 B2) : la ligne ne parle que d'une run qui en a traversé.
+        if (record?.CrisesSurvived is > 0)
+            facts.Add((Tr("UI_END_CRISES"), record.CrisesSurvived.ToString()));
         facts.Add((Tr("UI_END_CHESTS"), (record?.ChestsOpened ?? 0).ToString("N0")));
         facts.Add((Tr("UI_END_DAMAGE_TAKEN"), Mathf.RoundToInt(record?.TotalDamageTaken ?? 0f).ToString("N0")));
         return facts;

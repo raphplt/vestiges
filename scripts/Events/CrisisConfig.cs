@@ -14,6 +14,8 @@ public sealed class CrisisConfig
 {
     public const string FilePath = "res://data/scaling/crises.json";
 
+    /// <summary>Résurgences en run ; en réserve sinon (plan 56 B2, <see cref="ReserveSwitch"/>). Absent : allumées.</summary>
+    public bool Enabled { get; private init; } = true;
     public float FirstCrisisDelaySec { get; private init; } = 240f;
     public float IntervalSec { get; private init; } = 240f;
     public float IntervalVarianceSec { get; private init; } = 45f;
@@ -75,7 +77,7 @@ public sealed class CrisisConfig
             using JsonDocument document = JsonDocument.Parse(text);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "crises", "first_crisis_delay_sec", "interval_sec", "interval_variance_sec",
+            reader.AllowOnly(root, "crises", "enabled", "first_crisis_delay_sec", "interval_sec", "interval_variance_sec",
                 "warning_duration_sec", "crisis_duration_sec", "late_game_erasure_threshold", "late_game_crisis_threshold",
                 "boss_crisis_threshold", "boss_time_threshold_sec", "boss_hp_scale", "boss_dmg_scale",
                 "endgame_interval_multiplier", "endgame_duration_multiplier", "calm_essence_multiplier",
@@ -93,6 +95,7 @@ public sealed class CrisisConfig
             }
             CrisisConfig parsed = new()
             {
+                Enabled = !JsonConfigReader.Has(root, "enabled") || reader.Flag(root, "enabled"),
                 FirstCrisisDelaySec = Positive(reader, root, "first_crisis_delay_sec", defaults.FirstCrisisDelaySec),
                 IntervalSec = intervalSec,
                 IntervalVarianceSec = NonNegative(reader, root, "interval_variance_sec", defaults.IntervalVarianceSec),

@@ -36,6 +36,7 @@ public partial class RunEventDirector : Node
     private int _nextToken = 1;
     private int _nextFixed;
     private float _fixedRetryAt;
+    private bool _enabled;
 
     public bool IsEventActive => _active != null;
 
@@ -50,6 +51,7 @@ public partial class RunEventDirector : Node
     {
         RunEventDataLoader.Load();
         _schedule = RunEventDataLoader.Schedule;
+        _enabled = ReserveSwitch.IsOn(_schedule.Enabled);
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _clock = GetNode<RunClock>("../RunClock");
@@ -100,7 +102,8 @@ public partial class RunEventDirector : Node
             return;
         }
 
-        if (TryStartFixedEvent())
+        // En réserve (plan 56 B2) : rien ne part de lui-même ; un événement lancé par un banc va à son terme.
+        if (!_enabled || TryStartFixedEvent())
             return;
 
         if (_clock.DifficultySeconds < _nextEventAt)

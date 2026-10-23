@@ -51,6 +51,8 @@ public partial class QuestRegression
                 enRoute.Add(quest.Id);
                 continue;
             }
+            // Une quête en réserve (plan 56 B2) n'est pas suivie en run : son contrôle la rallume.
+            ReviveReserve(quest.Reserve);
             if (QuestBook.IsDormant(quest))
             {
                 // Quête prête mais en attente de l'effet de sa Réminiscence : ni suivie, ni accomplie (plan 37 H4).
@@ -75,6 +77,7 @@ public partial class QuestRegression
             EndRun();
             tested++;
         }
+        ReviveReserve(false);
         // Accomplies avant leur tour, et c'est voulu : Toutes les portes et Grandir (contrôles du cumul et du délai),
         // Porte-bonheur (25 coffres dans une run, au cumul de coffres), Bien au chaud (10 minutes à PV pleins dans le
         // contrôle du délai), Retenir (150 ralentis, en chemin vers les 300 de Sonner la récré), Se relever (200

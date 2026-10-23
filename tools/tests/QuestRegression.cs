@@ -81,6 +81,8 @@ public partial class QuestRegression : Node
             [UnlockKind.Reminiscence] = 0,
         };
         int dormant = 0;
+        int reserved = 0;
+        int reservedHidden = 0;
         foreach (QuestDefinition quest in quests)
         {
             difficulties[quest.Difficulty]++;
@@ -88,15 +90,25 @@ public partial class QuestRegression : Node
                 cumulative++;
             foreach (QuestUnlock unlock in quest.Unlocks)
                 unlocks[unlock.Kind]++;
-            if (QuestBook.IsDormant(quest))
+            if (quest.Reserve)
+            {
+                reserved++;
+                if (QuestBook.IsDormant(quest))
+                    reservedHidden++;
+            }
+            else if (QuestBook.IsDormant(quest))
                 dormant++;
         }
         Check(quests.Count == 64, $"64 quêtes ({quests.Count})");
         Check(difficulties[1] == 20 && difficulties[2] == 34 && difficulties[3] == 10,
             $"20 ★, 34 ★★, 10 ★★★ ({difficulties[1]}, {difficulties[2]}, {difficulties[3]})");
         Check(cumulative == 18, $"dix-huit quêtes de cumul ({cumulative})");
-        Check(unlocks[UnlockKind.Reminiscence] == 11 && dormant == 7,
-            $"11 Réminiscences par quête, dont 7 en attente de leur effet ({unlocks[UnlockKind.Reminiscence]}, {dormant})");
+        // La 7e Réminiscence en attente de son effet (known_gestures) est aussi en réserve, comptée plus bas.
+        Check(unlocks[UnlockKind.Reminiscence] == 11 && dormant == 6,
+            $"11 Réminiscences par quête, dont 6 hors réserve en attente de leur effet ({unlocks[UnlockKind.Reminiscence]}, {dormant})");
+        // Plan 56 B2 : les quêtes des micro-événements et des Résurgences suivent leur système en réserve.
+        Check(reserved == 5 && reservedHidden == 5,
+            $"5 quêtes en réserve, ni affichées ni suivies ({reserved})");
         Check(unlocks[UnlockKind.Character] == 5 && unlocks[UnlockKind.Weapon] == 18 && unlocks[UnlockKind.Object] == 29
             && unlocks[UnlockKind.Badge] == 6,
             $"5 personnages, 18 armes (13 + 5 de départ de personnage), 29 objets, 6 Écussons ({unlocks[UnlockKind.Character]}, {unlocks[UnlockKind.Weapon]}, {unlocks[UnlockKind.Object]}, {unlocks[UnlockKind.Badge]})");

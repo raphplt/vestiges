@@ -185,3 +185,41 @@ Pas de capture : rien de visible ne change à l'écran, hors la foule. Pas de ba
 - le bot ne contourne pas les obstacles pour rejoindre un Mémorial : la run gagnée ne se mesure qu'aux graines où les Mémoriaux sont dégagés ;
 - un gardien enragé de 3e terre sur le seul cœur reste long au bot ;
 - les deux se jugent à la séance de Raphaël, après B2 et B3.
+
+## 11. Compte rendu B2, une seule horloge — 23 octobre 2026
+
+**Ce qui est éteint en run**, par un champ `enabled` de leurs données, sans suppression :
+- **Résurgences** : `data/scaling/crises.json`. `CrisisManager` ne programme plus rien, et une crise lancée par le mode dev va à son terme ;
+- **micro-événements et chasses de Souverains** : `schedule.enabled` de `data/events/run_events.json`, ni rendez-vous fixes ni tirage. Un événement forcé (mode dev, banc) va à son terme ;
+- **Ateliers, Puits et stèles de Péril** : `enabled` de chaque section de `data/world/landmarks.json`. `LandmarkSpawner` ne les place plus.
+
+Les clés absentes valent « allumé » pour les crises et les événements, « éteint » pour les trois lieux. Seule la terre donne le temps : Mémoriaux, gardien, Effacement.
+
+**`--reserve`** (outils seulement, comme `--no-lands`) rallume le tout pour un banc ou une régression (`ReserveSwitch`). Une version exportée l'ignore.
+
+**Quêtes** : cinq dépendent des systèmes éteints. Elles passent en réserve (`"reserve": true`) : cachées du carnet, non suivies, avec « En réserve pour l'instant. » sur leur pièce.
+- Développer : arme Instantané ;
+- Compter les Résurgences : arme Lampe à pétrole ;
+- Dernière émission : arme Transistor ;
+- Les gestes connus : Réminiscence Habitude, déjà en attente de son effet ;
+- Une trace de moins : objet Portrait effacé.
+
+Leurs pièces restent verrouillées : trois armes, une Réminiscence et un objet sortent des tirages tant que la réserve dure. C'est le choix le plus réversible. L'autre choix, libérer les pièces, les donnerait sans quête, et rallumer la réserve les reprendrait.
+
+Les quêtes de Souverains restent ouvertes : un gardien est un champion, et son élimination compte.
+
+**Bilan** : la ligne « Résurgences » ne s'affiche plus quand elle vaut 0.
+
+**Effet de bord** : sans Résurgence, la phase de fin de partie (`EndgameManager`) ne vient plus que de l'Effacement global ou du dernier gardien vaincu. Avant, elle venait aussi de la n-ième Résurgence. En terres, l'Indicible n'est pas forcé au temps : rien d'autre ne change.
+
+**Régressions** : la suite `quests` rallume la réserve, par réflexion, le temps du contrôle d'une quête en réserve. Elle ajoute un contrôle : 5 quêtes en réserve, toutes cachées sans `--reserve`. Les autres suites (Résurgences, micro-événements, lieux, terres) restent vertes sans changement.
+
+**Vérifications** :
+- `dotnet build` : 0 avertissement ;
+- smoke test vert ;
+- `tools/validate.sh` : 39 suites sur 40 vertes au premier passage, puis `quests` verte après correction de son décompte (325 contrôles, 0 échec). Après la relecture, `run_phase`, `run_trace`, `indicible`, `lands`, `quests` et `dev_mode` : 6 suites sur 6 ;
+- relecture `godot-reviewer` : aucun bug bloquant. L'effet de bord sur la fin de partie est documenté ci-dessus, et l'état initial de l'interrupteur des crises est harmonisé (éteint jusqu'à la lecture des données).
+
+Pas de capture ni de banc : il n'y a rien de neuf à l'écran, et le coût baisse (moins de systèmes en run).
+
+**Point ouvert** : les Failles restent en run. Ce sont un pari, pas une horloge.

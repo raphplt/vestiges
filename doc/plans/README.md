@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**23 octobre — une seule horloge ([plan 56 B2](56-boucle-de-run.md), §196) :** Résurgences, micro-événements, chasses de Souverains, Ateliers, Puits et stèles éteints en run par interrupteur de données (`--reserve` les rallume dans les outils) ; cinq quêtes qui en dépendaient passent en réserve, leurs pièces restent verrouillées. Suite : B3, la run se lit.
+
 **23 octobre — l'arène du gardien ([plan 56 B1](56-boucle-de-run.md), §195) :** pendant le combat d'un gardien, la difficulté s'arrête, rien d'autre ne se déclenche, la foule est plafonnée à 40 et le gardien passe devant elle dans le choix des cibles ; PV revus, sans affixe. Au bot en profil neuf, 7 combats sur 10 en 73 à 112 s (6 à 30 min avant), deux runs gagnées vers 19 min. Suite : B2, une seule horloge.
 
 **20 octobre — revue de la boucle de run ([plan 56](56-boucle-de-run.md), §194) :** au bot en profil neuf, le 2e gardien est un mur (6 à 30 min de combat, ou jamais vaincu) : la foule grossit pendant le combat et les Résurgences s'y ajoutent. Proposé : forme gardée, combat en arène fermée, une seule horloge (systèmes en réserve éteints), run lisible (lieux de Vaulme, piste de run), la Montée définie avec la fin au choix. Lots B1 à B3 avant la séance de jeu.

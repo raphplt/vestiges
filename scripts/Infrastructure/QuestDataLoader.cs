@@ -39,6 +39,11 @@ public sealed class QuestDefinition
     public QuestScope Scope { get; init; }
     public List<QuestCondition> Conditions { get; init; } = new();
     public List<QuestUnlock> Unlocks { get; init; } = new();
+    /// <summary>
+    /// En réserve avec le système qu'elle exerce (plan 56 B2) : ni affichée ni suivie, mais sa pièce reste gardée,
+    /// pour qu'elle ne s'ouvre pas d'office.
+    /// </summary>
+    public bool Reserve { get; init; }
 }
 
 /// <summary>
@@ -130,7 +135,7 @@ public static class QuestDataLoader
                 if (entry.ValueKind != JsonValueKind.Object)
                     return "chaque quête doit être un objet";
                 JsonConfigReader item = new(entry);
-                item.AllowOnly(entry, "clés", "id", "name", "description", "difficulty", "scope", "conditions", "unlocks");
+                item.AllowOnly(entry, "clés", "id", "name", "description", "difficulty", "scope", "conditions", "unlocks", "reserve");
                 string id = item.Text(entry, "id");
                 QuestScope scope = item.OneOf(entry, "scope", new[] { "run", "cumulative" }) == "cumulative"
                     ? QuestScope.Cumulative : QuestScope.Run;
@@ -141,6 +146,7 @@ public static class QuestDataLoader
                     Description = item.Text(entry, "description"),
                     Difficulty = item.Integer(entry, "difficulty", 1, 3),
                     Scope = scope,
+                    Reserve = item.Flag(entry, "reserve"),
                 };
                 foreach (JsonElement condition in item.List(entry, "conditions", 1))
                     quest.Conditions.Add(ReadCondition(item, condition, scope, weaponExists));

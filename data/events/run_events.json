@@ -1,5 +1,7 @@
 {
     "schedule": {
+        "_doc_enabled": "enabled : faux, micro-événements et chasses de Souverains sont en réserve (plan 56 B2, LE-JEU). Rien ne part de lui-même ; un événement lancé par le mode dev ou un banc va à son terme ; --reserve les rallume dans les outils. Absent : allumés.",
+        "enabled": false,
         "first_event_min_sec": 70,
         "first_event_max_sec": 95,
         "gap_min_sec": 60,

@@ -8,6 +8,11 @@ namespace Vestiges.Infrastructure;
 /// <summary>Cadence des micro-événements autour des Résurgences.</summary>
 public class RunEventSchedule
 {
+    /// <summary>
+    /// Micro-événements et chasses de Souverains en run ; en réserve sinon (plan 56 B2, <see cref="ReserveSwitch"/>).
+    /// Absent : allumés.
+    /// </summary>
+    public bool Enabled = true;
     public float FirstEventMinSec = 70f;
     public float FirstEventMaxSec = 95f;
     public float GapMinSec = 75f;
@@ -177,12 +182,13 @@ public static class RunEventDataLoader
 
     private static RunEventSchedule ReadSchedule(JsonConfigReader reader, JsonElement section, Func<string, bool> eventExists)
     {
-        reader.AllowOnly(section, "schedule", "first_event_min_sec", "first_event_max_sec", "gap_min_sec", "gap_max_sec",
+        reader.AllowOnly(section, "schedule", "enabled", "first_event_min_sec", "first_event_max_sec", "gap_min_sec", "gap_max_sec",
             "crisis_margin_sec", "after_crisis_calm_sec", "recent_memory", "recent_weight_factor", "progress_emit_interval_sec",
             "fixed_events");
         RunEventSchedule d = new();
         RunEventSchedule schedule = new()
         {
+            Enabled = !JsonConfigReader.Has(section, "enabled") || reader.Flag(section, "enabled"),
             FirstEventMinSec = NonNegative(reader, section, "first_event_min_sec", d.FirstEventMinSec),
             FirstEventMaxSec = NonNegative(reader, section, "first_event_max_sec", d.FirstEventMaxSec),
             GapMinSec = NonNegative(reader, section, "gap_min_sec", d.GapMinSec),

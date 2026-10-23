@@ -2380,3 +2380,15 @@ Raphaël : « Allez go B1 » (lot B1 du [plan 56](56-boucle-de-run.md), étape 2
 - **Plafond de l'arène à 40 plutôt qu'à 25** : à 25, la médiane n'est pas meilleure, les combats enragés s'allongent, et le combat serait plus calme.
 
 **Mesuré** (profil neuf, trois personnages, graines 7 et 42) : 7 combats sur 10 en 73 à 112 s hors gardien enragé, contre 6 à 30 min avant. Deux runs gagnées vers 19 min, contre aucune avant. Les autres butent sur une terre où le bot ne rejoint pas les Mémoriaux, faute de contourner l'eau et les immeubles. Reste la séance de Raphaël, après B2 et B3.
+
+## 196. Une seule horloge : la réserve éteinte en run — 23 octobre 2026
+
+Raphaël : « go b2 » (lot B2 du [plan 56](56-boucle-de-run.md)). Détail au plan 56 §11.
+
+**Tranché par défaut, réversible :**
+- **Interrupteurs de données** : `enabled` dans `crises.json`, `run_events.json` (schedule) et chaque section de `landmarks.json`. Remettre `true` rallume un système.
+- **`--reserve`**, outils seulement, rallume tout pour les bancs et régressions.
+- **Cinq quêtes en réserve** : Développer, Compter les Résurgences, Dernière émission, Les gestes connus et Une trace de moins. Elles sont cachées et non suivies, et **leurs pièces restent verrouillées** : pas de pièce gratuite qu'une réserve rallumée reprendrait.
+- **Quêtes de Souverains ouvertes** : un gardien compte comme Souverain.
+- **Failles gardées** en run : un pari, pas une horloge.
+- **Bilan** : ligne des Résurgences masquée quand elle vaut 0.

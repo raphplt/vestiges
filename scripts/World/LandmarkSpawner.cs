@@ -9,6 +9,10 @@ namespace Vestiges.World;
 /// </summary>
 public static class LandmarkSpawner
 {
+    // Ateliers, stèles et Puits en réserve (plan 56 B2) : aucun posé. Placés après les autres lieux, les sauter ne
+    // déplace ni coffre, ni Mémorial, ni Faille.
+    private static readonly System.Collections.Generic.List<LandmarkBand> NoBands = new();
+
     public static void SpawnLandmarks(SitePlacer placer, Node2D container)
     {
         MemorialConfig memorial = LandmarkDataLoader.Memorial;
@@ -53,7 +57,7 @@ public static class LandmarkSpawner
         // Ateliers (plan 22 C2) : placés en dernier, pour que les tirages des lieux plus anciens ne bougent pas.
         WorkshopConfig workshop = LandmarkDataLoader.Workshop;
         int workshops = 0;
-        foreach (LandmarkBand band in workshop.Placement)
+        foreach (LandmarkBand band in ReserveSwitch.IsOn(workshop.Enabled) ? workshop.Placement : NoBands)
         {
             int count = placer.Scaled("workshop", band.Count);
             for (int i = 0; i < count; i++)
@@ -73,7 +77,7 @@ public static class LandmarkSpawner
         // Stèles du Péril (plan 28 P2) : après les Ateliers, pour la même raison.
         PerilSteleConfig stele = LandmarkDataLoader.PerilStele;
         int steles = 0;
-        foreach (LandmarkBand band in stele.Placement)
+        foreach (LandmarkBand band in ReserveSwitch.IsOn(stele.Enabled) ? stele.Placement : NoBands)
         {
             int count = placer.Scaled("peril_stele", band.Count);
             for (int i = 0; i < count; i++)
@@ -93,7 +97,7 @@ public static class LandmarkSpawner
         // Puits de l'oubli (plan 44) : placés en dernier, pour la même raison.
         WellConfig well = LandmarkDataLoader.Well;
         int wells = 0;
-        foreach (LandmarkBand band in well.Placement)
+        foreach (LandmarkBand band in ReserveSwitch.IsOn(well.Enabled) ? well.Placement : NoBands)
         {
             int count = placer.Scaled("well", band.Count);
             for (int i = 0; i < count; i++)
