@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**23 octobre — l'arène du gardien ([plan 56 B1](56-boucle-de-run.md), §195) :** pendant le combat d'un gardien, la difficulté s'arrête, rien d'autre ne se déclenche, la foule est plafonnée à 40 et le gardien passe devant elle dans le choix des cibles ; PV revus, sans affixe. Au bot en profil neuf, 7 combats sur 10 en 73 à 112 s (6 à 30 min avant), deux runs gagnées vers 19 min. Suite : B2, une seule horloge.
+
 **20 octobre — revue de la boucle de run ([plan 56](56-boucle-de-run.md), §194) :** au bot en profil neuf, le 2e gardien est un mur (6 à 30 min de combat, ou jamais vaincu) : la foule grossit pendant le combat et les Résurgences s'y ajoutent. Proposé : forme gardée, combat en arène fermée, une seule horloge (systèmes en réserve éteints), run lisible (lieux de Vaulme, piste de run), la Montée définie avec la fin au choix. Lots B1 à B3 avant la séance de jeu.
 
 **19 octobre — le rythme du départ mesuré ([plan 55](55-rythme-du-depart.md), §193) :** l'ouverture remplit l'écran dès 3 s (12 créatures visibles la première minute au lieu de 3) ; le premier niveau tombe à la première élimination, niveau 10 vers 5 min ; aimant à 100 px. Au bot, ×10 vers 30 à 55 s au lieu de 2 à 4 min. Aucun cran de réglage. À jouer.

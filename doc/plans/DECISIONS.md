@@ -2367,3 +2367,16 @@ Raphaël, après la livraison du rythme du départ : « ok continue avec ca stp 
 - **la Montée est définie** : chemin en lacets bordé de vide, barrière à mi-pente tenue comme un Mémorial, l'Indicible en haut. L'Indicible vaincu, on choisit de redescendre (victoire) ou de rester dans la nuit (fin sans fin au sommet, échos des gardiens). La 4e terre disparaît ;
 - **les lots B1 à B3** (arène, une seule horloge, lisibilité) passent avant la séance de Raphaël. B4, la Montée, garde sa place à l'étape 6.
 - **Les mesures de durée se font en `MEASURE_PROFILE=normal`.**
+
+## 195. L'arène du gardien : difficulté arrêtée, foule plafonnée, gardien visé en premier — 23 octobre 2026
+
+Raphaël : « Allez go B1 » (lot B1 du [plan 56](56-boucle-de-run.md), étape 2 du [LE-JEU.md](../LE-JEU.md)). Détail et mesures au plan 56 §10.
+
+**Tranché par défaut, réversible :**
+- **Arène fermée** : du réveil d'un gardien ou d'un écho jusqu'à sa mort, le temps de difficulté s'arrête. La Résurgence et le micro-événement en cours s'arrêtent, et la foule est plafonnée à 40 créatures. Le chrono affiché, le bilan et les quêtes gardent le temps joué.
+- **Les renforts d'une créature (cri du Hurleur) tiennent le plafond de créatures actives**, en run comme en arène. Avant, ils n'en avaient aucun.
+- **Le gardien passe devant la foule dans le choix des cibles** (100 px, comme les parties de boss) et naît sans affixe tiré au sort.
+- **PV du gardien** : plancher 1 500 (au lieu de 2 500), ×1,35 par terre (au lieu de ×1,8), plafond 1,3 fois le plancher (au lieu de 1,6), enragé ×1,25 (au lieu de ×1,5).
+- **Plafond de l'arène à 40 plutôt qu'à 25** : à 25, la médiane n'est pas meilleure, les combats enragés s'allongent, et le combat serait plus calme.
+
+**Mesuré** (profil neuf, trois personnages, graines 7 et 42) : 7 combats sur 10 en 73 à 112 s hors gardien enragé, contre 6 à 30 min avant. Deux runs gagnées vers 19 min, contre aucune avant. Les autres butent sur une terre où le bot ne rejoint pas les Mémoriaux, faute de contourner l'eau et les immeubles. Reste la séance de Raphaël, après B2 et B3.

@@ -32,7 +32,7 @@ public partial class CrisisManager : Node
 
     public bool IsCrisisActive => _isCrisisActive;
     public bool IsWarningActive => !_isCrisisActive && _warningIssued && TimeUntilNextCrisis > 0f;
-    public float TimeUntilNextCrisis => Mathf.Max(0f, _nextCrisisAtSec - _clock.Seconds);
+    public float TimeUntilNextCrisis => Mathf.Max(0f, _nextCrisisAtSec - _clock.DifficultySeconds);
     public float CrisisTimeRemaining => Mathf.Max(0f, _crisisTimeRemaining);
     public int CrisisNumber => _crisisNumber;
     public int CurrentIntensity => _currentIntensity;
@@ -54,12 +54,25 @@ public partial class CrisisManager : Node
         _rng.Seed = RunRandom.SeedFor("crises");
         ScheduleNextCrisis(_firstCrisisDelaySec);
         _eventBus.OubliEffectChanged += OnOubliEffectChanged;
+        _eventBus.GuardianArenaChanged += OnGuardianArenaChanged;
     }
 
     public override void _ExitTree()
     {
-        if (_eventBus != null)
-            _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+        if (_eventBus == null)
+            return;
+        _eventBus.OubliEffectChanged -= OnOubliEffectChanged;
+        _eventBus.GuardianArenaChanged -= OnGuardianArenaChanged;
+    }
+
+    /// <summary>
+    /// Arène d'un gardien fermée (plan 56 B1) : la Résurgence en cours s'arrête ; la suivante attend, son compte à
+    /// rebours étant sur le temps de difficulté, arrêté jusqu'à la mort du gardien.
+    /// </summary>
+    private void OnGuardianArenaChanged(bool closed)
+    {
+        if (closed && _isCrisisActive)
+            EndCrisis();
     }
 
     /// <summary>Oubli du répit (plan 17 lot 3D) : les Résurgences reviennent plus tôt, compte à rebours en cours compris.</summary>
@@ -70,7 +83,7 @@ public partial class CrisisManager : Node
         float previous = _intervalFactor;
         _intervalFactor = Mathf.Max(MinIntervalFactor, 1f - total);
         if (!_isCrisisActive && previous > 0f)
-            _nextCrisisAtSec = _clock.Seconds + TimeUntilNextCrisis * (_intervalFactor / previous);
+            _nextCrisisAtSec = _clock.DifficultySeconds + TimeUntilNextCrisis * (_intervalFactor / previous);
     }
 
     public override void _Process(double delta)
@@ -95,7 +108,7 @@ public partial class CrisisManager : Node
             _eventBus.EmitSignal(EventBus.SignalName.CrisisWarning, _crisisNumber + 1, timeUntilCrisis);
         }
 
-        if (_clock.Seconds >= _nextCrisisAtSec)
+        if (_clock.DifficultySeconds >= _nextCrisisAtSec)
             StartCrisis();
     }
 
@@ -132,7 +145,7 @@ public partial class CrisisManager : Node
 
     private void ScheduleNextCrisis(float delaySec)
     {
-        _nextCrisisAtSec = _clock.Seconds + Mathf.Max(20f, delaySec);
+        _nextCrisisAtSec = _clock.DifficultySeconds + Mathf.Max(20f, delaySec);
     }
 
     /// <summary>Réglages contrôlés par <see cref="CrisisConfig"/> (plan 26 Q7d-1) ; le bootstrap a déjà refusé un fichier invalide.</summary>

@@ -42,6 +42,7 @@ public partial class GuardianDirector : Node
     private float _passageIn;
     private float _echoIn;
     private int _echoes;
+    private bool _arenaClosed;
     private RandomNumberGenerator _echoRng;
     private (int Land, int Lights, int Stage) _published = (-1, -1, -1);
 
@@ -237,7 +238,9 @@ public partial class GuardianDirector : Node
     {
         _spawned = (rank, strength, damage);
         string enemyId = _spawner.PickLocalEnemyId(position);
-        _guardian = enemyId != null ? _spawner.SpawnEventEnemy(enemyId, position, "champion") : null;
+        // Sans affixe tiré au sort (plan 56 B1) : un gardien Cuirassé encaissait 1,7 fois ses PV, et sa durée de combat
+        // dépendait d'un tirage.
+        _guardian = enemyId != null ? _spawner.SpawnEventEnemy(enemyId, position, "champion", rollAffixes: false) : null;
         if (_guardian == null)
             return false;
         float hpMultiplier = _config.HpMultiplier * strength;
@@ -247,6 +250,7 @@ public partial class GuardianDirector : Node
         hpMultiplier = Mathf.Clamp(_guardian.MaxHp * hpMultiplier, floor, floor * _config.HpCapFloorRatio) / Mathf.Max(1f, _guardian.MaxHp);
         _guardian.Empower(hpMultiplier, damage);
         _guardian.Modifiers.IsEventBound = true;
+        _guardian.SetTargetBias(_config.TargetBias);
         _moves = new GuardianMoves(_guardian, _config.Moves, _world, _erasure.BreakGround);
         _guardian.AddAbility(_moves);
         for (int i = 0; i < escorts; i++)
@@ -255,8 +259,7 @@ public partial class GuardianDirector : Node
             if (_spawner.IsSpawnablePosition(escort))
                 _spawner.SpawnEventEnemy(enemyId, escort);
         }
-        // Foule allégée pendant le combat : les armes automatiques visent le plus proche (comme pour la Barrière).
-        _spawner.EncounterDensityMultiplier = _config.FightCrowdDensity;
+        CloseArena();
         _bar = new BossBarFeed(_eventBus, _guardian.DisplayName, _guardian.MaxHp);
         return true;
     }
@@ -273,7 +276,7 @@ public partial class GuardianDirector : Node
             GD.PushError("[GuardianDirector] Gardien perdu et impossible à reposer : passage sans victoire ni butin");
             _phase = Phase.Defeated;
             _passageIn = _config.PassageDelaySeconds;
-            _spawner.EncounterDensityMultiplier = 1f;
+            OpenArena();
             return;
         }
         _bar.Update(_guardian.CurrentHp, _guardian.MaxHp);
@@ -297,7 +300,7 @@ public partial class GuardianDirector : Node
     {
         _phase = Phase.Defeated;
         EndMoves();
-        _spawner.EncounterDensityMultiplier = 1f;
+        OpenArena();
         _bar?.End(true);
         _bar = null;
         _guardian = null;
@@ -359,7 +362,7 @@ public partial class GuardianDirector : Node
         {
             GD.PushError("[GuardianDirector] Écho perdu et impossible à reposer : le suivant viendra à l'heure");
             _guardian = null;
-            _spawner.EncounterDensityMultiplier = 1f;
+            OpenArena();
             StartHolding(_config.EchoIntervalSeconds);
             return;
         }
@@ -367,7 +370,7 @@ public partial class GuardianDirector : Node
         {
             Vector2 position = _guardian.GlobalPosition;
             EndMoves();
-            _spawner.EncounterDensityMultiplier = 1f;
+            OpenArena();
             _bar?.End(true);
             _bar = null;
             _guardian = null;
@@ -392,6 +395,31 @@ public partial class GuardianDirector : Node
         chest.Initialize(data);
     }
 
+    /// <summary>
+    /// Arène fermée (plan 56 B1) : jusqu'à la mort du gardien, le temps de difficulté s'arrête, rien d'autre ne se
+    /// déclenche et la foule est allégée et plafonnée ; les armes automatiques visent le plus proche, une foule qui
+    /// grossirait protégerait le gardien sans fin.
+    /// </summary>
+    private void CloseArena()
+    {
+        _spawner.EncounterDensityMultiplier = _config.FightCrowdDensity;
+        _spawner.EncounterCrowdCap = _config.FightCrowdCap;
+        if (_arenaClosed)
+            return;
+        _arenaClosed = true;
+        _eventBus.EmitSignal(EventBus.SignalName.GuardianArenaChanged, true);
+    }
+
+    private void OpenArena()
+    {
+        _spawner.EncounterDensityMultiplier = 1f;
+        _spawner.EncounterCrowdCap = 0;
+        if (!_arenaClosed)
+            return;
+        _arenaClosed = false;
+        _eventBus.EmitSignal(EventBus.SignalName.GuardianArenaChanged, false);
+    }
+
     /// <summary>Les coups s'arrêtent avec le combat ; leurs annonces au sol disparaissent.</summary>
     private void EndMoves()
     {
@@ -402,7 +430,7 @@ public partial class GuardianDirector : Node
     private void OnLandChanging(int toIndex)
     {
         EndMoves();
-        _spawner.EncounterDensityMultiplier = 1f;
+        OpenArena();
         _bar?.End(false);
         _bar = null;
         _guardian = null;

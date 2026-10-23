@@ -68,6 +68,7 @@ public partial class RunEventDirector : Node
         _eventBus.BossEncounterStarted += OnBossEncounterStarted;
         _eventBus.BossEncounterEnded += OnBossEncounterEnded;
         _eventBus.LandChanging += OnLandChanging;
+        _eventBus.GuardianArenaChanged += OnGuardianArenaChanged;
     }
 
     public override void _ExitTree()
@@ -77,6 +78,7 @@ public partial class RunEventDirector : Node
         _eventBus.BossEncounterStarted -= OnBossEncounterStarted;
         _eventBus.BossEncounterEnded -= OnBossEncounterEnded;
         _eventBus.LandChanging -= OnLandChanging;
+        _eventBus.GuardianArenaChanged -= OnGuardianArenaChanged;
         _active?.Cleanup();
         _active = null;
     }
@@ -101,13 +103,13 @@ public partial class RunEventDirector : Node
         if (TryStartFixedEvent())
             return;
 
-        if (_clock.Seconds < _nextEventAt)
+        if (_clock.DifficultySeconds < _nextEventAt)
             return;
 
         RunEventData next = IsBlockedByCrisis() ? null : PickEvent();
         if (next == null)
         {
-            _nextEventAt = _clock.Seconds + BlockedRetrySec;
+            _nextEventAt = _clock.DifficultySeconds + BlockedRetrySec;
             return;
         }
         StartEvent(next);
@@ -135,7 +137,7 @@ public partial class RunEventDirector : Node
         // Un boss (la Barrière) est lui aussi le temps fort du moment : aucun événement ne s'y ajoute.
         if (_bossEncounters.Count > 0)
             return true;
-        if (_clock.Seconds < _calmUntil)
+        if (_clock.DifficultySeconds < _calmUntil)
             return true;
         return _crisisManager != null && (_crisisManager.IsCrisisActive || _crisisManager.IsWarningActive);
     }
@@ -143,10 +145,10 @@ public partial class RunEventDirector : Node
     /// <summary>Rendez-vous fixe échu : il part dès que ni une Résurgence ni son accalmie ne l'en empêchent.</summary>
     private bool TryStartFixedEvent()
     {
-        if (_nextFixed >= _schedule.FixedEvents.Count || _clock.Seconds < _fixedRetryAt)
+        if (_nextFixed >= _schedule.FixedEvents.Count || _clock.DifficultySeconds < _fixedRetryAt)
             return false;
         FixedRunEvent next = _schedule.FixedEvents[_nextFixed];
-        if (_clock.Seconds < next.AtSec || IsBlockedByCrisis())
+        if (_clock.DifficultySeconds < next.AtSec || IsBlockedByCrisis())
             return false;
         RunEventData data = RunEventDataLoader.Find(next.EventId);
         if (data == null)
@@ -161,7 +163,7 @@ public partial class RunEventDirector : Node
         if (_active == null)
         {
             // Mise en place impossible ici : le rendez-vous reste dû, nouvel essai un peu plus loin.
-            _fixedRetryAt = _clock.Seconds + BlockedRetrySec;
+            _fixedRetryAt = _clock.DifficultySeconds + BlockedRetrySec;
             return false;
         }
         _nextFixed++;
@@ -176,8 +178,8 @@ public partial class RunEventDirector : Node
     {
         float window = CrisisWindow();
         // Seul un rendez-vous à venir réserve sa place : échu mais retenu (ou impossible à poser), il n'empêche pas le tirage.
-        if (_nextFixed < _schedule.FixedEvents.Count && _schedule.FixedEvents[_nextFixed].AtSec > _clock.Seconds)
-            window = Mathf.Min(window, _schedule.FixedEvents[_nextFixed].AtSec - _clock.Seconds - _schedule.CrisisMarginSec);
+        if (_nextFixed < _schedule.FixedEvents.Count && _schedule.FixedEvents[_nextFixed].AtSec > _clock.DifficultySeconds)
+            window = Mathf.Min(window, _schedule.FixedEvents[_nextFixed].AtSec - _clock.DifficultySeconds - _schedule.CrisisMarginSec);
         return window;
     }
 
@@ -193,7 +195,7 @@ public partial class RunEventDirector : Node
         float total = 0f;
         foreach (RunEventData data in RunEventDataLoader.Events)
         {
-            if (data.Weight <= 0f || _clock.Seconds < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
+            if (data.Weight <= 0f || _clock.DifficultySeconds < data.MinSec || data.DurationSec > window || (_recent.Count > 0 && _recent[^1] == data.Id))
                 continue;
             _candidates.Add(data);
             total += Weight(data);
@@ -220,7 +222,7 @@ public partial class RunEventDirector : Node
         if (_active == null)
         {
             GD.PushWarning($"[RunEventDirector] Unknown event kind: {data.Kind}");
-            _nextEventAt = _clock.Seconds + BlockedRetrySec;
+            _nextEventAt = _clock.DifficultySeconds + BlockedRetrySec;
             return;
         }
 
@@ -233,7 +235,7 @@ public partial class RunEventDirector : Node
             _active.Cleanup();
             _active = null;
             _activeData = null;
-            _nextEventAt = _clock.Seconds + BlockedRetrySec;
+            _nextEventAt = _clock.DifficultySeconds + BlockedRetrySec;
             return;
         }
 
@@ -275,7 +277,7 @@ public partial class RunEventDirector : Node
         GD.Print($"[RunEventDirector] {_activeData.Id} {(ended.Succeeded ? "réussi" : "échoué")} à {_clock.Seconds:F0} s");
         _eventBus.EmitSignal(EventBus.SignalName.RunEventEnded, _activeData.Id, ended.Succeeded, ended.Summary);
         _eventBus.EmitSignal(EventBus.SignalName.RandomEventEnded, _activeData.Id);
-        _nextEventAt = _clock.Seconds + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
+        _nextEventAt = _clock.DifficultySeconds + _context.Rng.RandfRange(_schedule.GapMinSec, _schedule.GapMaxSec);
         _activeData = null;
     }
 
@@ -286,13 +288,23 @@ public partial class RunEventDirector : Node
             EndActive();
     }
 
+    /// <summary>
+    /// Arène d'un gardien fermée (plan 56 B1) : le micro-événement en cours finit échoué, rien d'autre ne s'ajoute au
+    /// combat ; le calendrier, sur le temps de difficulté, reprend à sa mort.
+    /// </summary>
+    private void OnGuardianArenaChanged(bool closed)
+    {
+        if (closed && _active != null)
+            EndActive();
+    }
+
     private void OnBossEncounterStarted(int encounterId, string bossName, float maxHp, int notches) => _bossEncounters.Add(encounterId);
 
     private void OnBossEncounterEnded(int encounterId, bool defeated) => _bossEncounters.Remove(encounterId);
 
     private void OnCrisisEnded(int crisisNumber)
     {
-        _calmUntil = _clock.Seconds + _schedule.AfterCrisisCalmSec;
+        _calmUntil = _clock.DifficultySeconds + _schedule.AfterCrisisCalmSec;
         _nextEventAt = Mathf.Max(_nextEventAt, _calmUntil);
     }
 

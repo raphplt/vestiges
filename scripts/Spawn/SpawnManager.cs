@@ -214,11 +214,13 @@ public partial class SpawnManager : Node2D
 			CullFarDayEnemies();
 		}
 
+		float elapsedMinutes = ElapsedSeconds / 60f;
+		_pool.ActiveCeiling = GetCurrentMaxEnemies(elapsedMinutes);
+
 		// Répit d'ouverture : rien n'apparaît, et le minuteur n'accumule pas de rafale à rattraper.
 		if (ElapsedSeconds < _openingGraceSec)
 			return;
 
-		float elapsedMinutes = ElapsedSeconds / 60f;
 		_spawnTimer += dt;
 		int safety = 0;
 		while (safety < 8)
@@ -312,8 +314,11 @@ public partial class SpawnManager : Node2D
 	// Variantes et API des micro-événements
 	// =========================================================
 
-	/// <summary>Transforme une créature en variante avec des affixes tirés sans doublon.</summary>
-	public void MakeVariant(Enemy enemy, string variantId, int extraAffixes = 0)
+	/// <summary>
+	/// Fait de <paramref name="enemy"/> une variante, avec ses affixes tirés au sort sans doublon (et
+	/// <paramref name="extraAffixes"/> de plus) ; sans <paramref name="rollAffixes"/>, aucun : un gardien se lit par ses coups, pas par un tirage.
+	/// </summary>
+	public void MakeVariant(Enemy enemy, string variantId, int extraAffixes = 0, bool rollAffixes = true)
 	{
 		EnemyVariantData variant = EnemyVariantDataLoader.GetVariant(variantId);
 		if (variant == null)
@@ -322,7 +327,8 @@ public partial class SpawnManager : Node2D
 		_affixScratch.Clear();
 		_affixScratch.AddRange(variant.AffixPool.Count > 0 ? variant.AffixPool : EnemyVariantDataLoader.NaturalElites.AffixPool);
 		_affixPick.Clear();
-		for (int i = 0; i < variant.AffixCount + extraAffixes && _affixScratch.Count > 0; i++)
+		int affixCount = rollAffixes ? variant.AffixCount + extraAffixes : 0;
+		for (int i = 0; i < affixCount && _affixScratch.Count > 0; i++)
 		{
 			int index = (int)(RunRandom.Spawn.Randi() % _affixScratch.Count);
 			EnemyAffixData affix = EnemyVariantDataLoader.GetAffix(_affixScratch[index]);
@@ -369,15 +375,18 @@ public partial class SpawnManager : Node2D
 		return pool[0];
 	}
 
-	/// <summary>Apparition hors du flux naturel (événements, débogage), sans plafond de population.</summary>
-	public Enemy SpawnEventEnemy(string enemyId, Vector2 spawnPos, string variantId = null)
+	/// <summary>
+	/// Apparition hors du flux naturel (événements, débogage), sans plafond de population ; une variante tire ses
+	/// affixes, sauf sans <paramref name="rollAffixes"/>.
+	/// </summary>
+	public Enemy SpawnEventEnemy(string enemyId, Vector2 spawnPos, string variantId = null, bool rollAffixes = true)
 	{
 		EnemyData data = EnemyDataLoader.Get(enemyId);
 		if (data == null)
 			return null;
 		Enemy enemy = SpawnAt(data, spawnPos, ElapsedSeconds / 60f);
 		if (!string.IsNullOrEmpty(variantId))
-			MakeVariant(enemy, variantId);
+			MakeVariant(enemy, variantId, rollAffixes: rollAffixes);
 		return enemy;
 	}
 
@@ -385,11 +394,20 @@ public partial class SpawnManager : Node2D
 
 	public Vector2 ViewHalfExtents => _player != null ? GetViewHalfExtents() : FallbackViewHalfExtents;
 
-	/// <summary>Temps de la run qui règle les tables et courbes de spawn (horloge de la run, plus le décalage de dev).</summary>
-	public float ElapsedSeconds => _clock.Seconds + _developmentTimeOffset;
+	/// <summary>
+	/// Temps qui règle les tables et courbes de spawn : le temps de difficulté de la run, arrêté pendant un combat de
+	/// gardien (plan 56 B1), plus le décalage de dev.
+	/// </summary>
+	public float ElapsedSeconds => _clock.DifficultySeconds + _developmentTimeOffset;
 
 	/// <summary>Part de la foule locale visée pendant un combat de boss (la Barrière la réduit), 1 hors combat.</summary>
 	public float EncounterDensityMultiplier { get; set; } = 1f;
+
+	/// <summary>
+	/// Plafond de créatures actives pendant un combat de gardien (plan 56 B1) ; 0 hors combat. Il retient les apparitions
+	/// du flux, pas celles d'un événement : la foule déjà là au-delà du plafond s'use d'elle-même.
+	/// </summary>
+	public int EncounterCrowdCap { get; set; }
 
 	private void TrySpawnNaturalElite(float elapsedMinutes)
 	{
@@ -617,7 +635,7 @@ public partial class SpawnManager : Node2D
 		DevelopmentMode.RequireTestAccess();
 		if (!float.IsFinite(seconds) || seconds < 0f || seconds > 86400f)
 			throw new System.ArgumentOutOfRangeException(nameof(seconds));
-		_developmentTimeOffset = seconds - _clock.Seconds;
+		_developmentTimeOffset = seconds - _clock.DifficultySeconds;
 		_spawnTimer = 0f;
 		_localDensityTimer = 0f;
 		_nextEliteAtSec = seconds + EnemyVariantDataLoader.NaturalElites.IntervalMinSec;
@@ -651,7 +669,8 @@ public partial class SpawnManager : Node2D
 
 	/// <summary>
 	/// Plafond de créatures actives : celui de la run, relevé par le Péril et pendant une Résurgence, jamais au-delà du
-	/// plafond de coût fixé au banc (data/scaling/peril.json, plan 29). À la fin de la crise il redescend sans retirer
+	/// plafond de coût fixé au banc (data/scaling/peril.json, plan 29), ni de celui d'un combat de gardien (plan 56 B1).
+	/// À la fin de la crise il redescend sans retirer
 	/// personne : la foule en trop s'use d'elle-même (DECISIONS §84).
 	/// </summary>
 	private int GetCurrentMaxEnemies(float elapsedMinutes)
@@ -659,7 +678,10 @@ public partial class SpawnManager : Node2D
 		float crisisCap = _currentRunPhase == GameManager.RunPhase.Crisis ? _crisisCapMultiplier : 1f;
 		float scaled = (_maxEnemies + _maxEnemiesGrowthPerMinute * elapsedMinutes)
 			* PerilDataLoader.EnemyCountMultiplier(PerilPoints(elapsedMinutes)) * crisisCap * Difficulty.EnemyCount;
-		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, _activeEnemiesCeilingOverride > 0 ? _activeEnemiesCeilingOverride : PerilDataLoader.ActiveEnemiesCeiling);
+		int ceiling = _activeEnemiesCeilingOverride > 0 ? _activeEnemiesCeilingOverride : PerilDataLoader.ActiveEnemiesCeiling;
+		if (EncounterCrowdCap > 0)
+			ceiling = Mathf.Min(ceiling, EncounterCrowdCap);
+		return Mathf.Clamp(Mathf.RoundToInt(scaled), 1, ceiling);
 	}
 
 	/// <summary>

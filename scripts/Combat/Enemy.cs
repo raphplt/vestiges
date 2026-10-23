@@ -242,10 +242,13 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// </summary>
 	public float StrikeMargin => _boss != null ? _bodyRadius : 0f;
 	/// <summary>
-	/// Avance prise par une partie de boss dans le choix des cibles (px) : les armes qui visent la frappent avant la
-	/// foule qui l'entoure. Nulle pour une créature.
+	/// Avance prise par une partie de boss ou un gardien de terre dans le choix des cibles (px) : les armes qui visent le
+	/// frappent avant la foule qui l'entoure. Nulle pour une créature.
 	/// </summary>
-	public float TargetBias => _boss != null ? _targetBias : 0f;
+	public float TargetBias => _targetBias;
+
+	/// <summary>Gardien de terre (plan 56 B1) : il passe devant la foule dans le choix des cibles, comme une partie de boss.</summary>
+	public void SetTargetBias(float bias) => _targetBias = bias;
 	public float HpRatio => _maxHp > 0 ? _currentHp / _maxHp : 0f;
 	public float MaxHp => _maxHp;
 	public EnemyModifiers Modifiers => _mods;
@@ -566,6 +569,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_boss?.Detach(this);
 		_boss = null;
 		_bossShared = false;
+		_targetBias = 0f;
 		_tracking.Reset();
 		_isBurrowed = false;
 		_tier = EnemyTier.Normal;

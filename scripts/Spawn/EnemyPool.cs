@@ -19,6 +19,14 @@ public partial class EnemyPool : Node
 
 	public int ActiveCount => _totalCreated - _available.Count;
 
+	/// <summary>
+	/// Plafond de créatures actives du moment, tenu par le <see cref="SpawnManager"/> (run, Péril, Résurgence, combat de
+	/// gardien) : les renforts appelés par une créature s'y arrêtent aussi.
+	/// </summary>
+	public int ActiveCeiling { get; set; } = int.MaxValue;
+
+	public bool IsFull => ActiveCount >= ActiveCeiling;
+
 	public override void _EnterTree()
 	{
 		Instance = this;

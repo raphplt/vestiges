@@ -6,6 +6,7 @@ using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Progression;
 using Vestiges.Score;
+using Vestiges.Spawn;
 using Vestiges.UI;
 using Vestiges.Infrastructure;
 using Vestiges.World;
@@ -249,15 +250,27 @@ public partial class LandChangeRegression : Node
             $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.MaxHp:F0} PV)");
         Check(erasure.FrontFrozen && erasure.Front.StandingShare() < standingBefore,
             $"gardien : le sol non ancré s'effondre, le front se fige ({standingBefore:P0} → {erasure.Front.StandingShare():P0})");
+        // Plan 56 B1 : l'arène se ferme, le temps de difficulté s'arrête et la foule est allégée et plafonnée.
+        RunClock clock = _world.GetNode<RunClock>("RunClock");
+        SpawnManager spawner = _world.GetNode<SpawnManager>("SpawnManager");
+        Check(clock.DifficultyHeld && spawner.EncounterCrowdCap == config.FightCrowdCap
+            && Mathf.IsEqualApprox(spawner.EncounterDensityMultiplier, config.FightCrowdDensity),
+            $"gardien : arène fermée (foule ×{spawner.EncounterDensityMultiplier}, plafond {spawner.EncounterCrowdCap})");
 
         // Plan 51 §16 G1 : ses coups, ses phases, et la brèche qui s'ouvre au cœur puis se referme.
-        guardian.TakeDamage(guardian.MaxHp * 0.5f);
+        // Ses défenses rognent chaque coup : on frappe jusqu'à mi-PV.
+        for (int hit = 0; hit < 20 && guardian.CurrentHp > guardian.MaxHp * 0.5f; hit++)
+            guardian.TakeDamage(guardian.MaxHp * 0.1f);
         await Frames(3);
         Check(director.Moves != null && director.Moves.Phase == 1, $"gardien : à mi-PV, deuxième phase ({director.Moves?.Phase + 1})");
         Vector2 strike = new(0f, -120f);
         erasure.BreakGround(strike, 110f, 2f);
         Check(erasure.GetZonePhaseAt(strike) == ErasureManager.ErasureZonePhase.Void, "gardien : sa frappe ouvre le vide, même au cœur");
-        _world.GetNode<RunClock>("RunClock").Advance(3.0);
+        float played = clock.Seconds;
+        float difficulty = clock.DifficultySeconds;
+        clock.Advance(3.0);
+        Check(clock.Seconds >= played + 3f && clock.DifficultySeconds == difficulty,
+            $"gardien : le chrono avance, pas la difficulté ({clock.Seconds - played:F1} s contre {clock.DifficultySeconds - difficulty:F1} s)");
         await Frames(45);
         Check(erasure.GetMemoryAt(strike) == 1f, $"gardien : la brèche se referme ({erasure.GetMemoryAt(strike):F2})");
 
@@ -269,6 +282,8 @@ public partial class LandChangeRegression : Node
         // Son coffre, un de plus pour la lumière en trop, et celui que tout Souverain lâche à sa mort.
         Check(director.IsDefeated && Chest.Closed.Count >= chestsBefore + 2,
             $"gardien vaincu : son coffre et un de plus pour la lumière en trop ({Chest.Closed.Count - chestsBefore} coffres)");
+        Check(!clock.DifficultyHeld && spawner.EncounterCrowdCap == 0 && spawner.EncounterDensityMultiplier == 1f,
+            "gardien vaincu : l'arène se rouvre, la difficulté reprend");
         int landBefore = transition.LandIndex;
         for (int frame = 0; frame < 600 && transition.LandIndex == landBefore; frame++)
         {

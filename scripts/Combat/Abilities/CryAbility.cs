@@ -108,6 +108,9 @@ public class CryAbility : IEnemyAbility
         float startAngle = RunRandom.Spawn.RandfRange(0f, Mathf.Pi);
         for (int i = 0; i < _reinforcements; i++)
         {
+            // Les renforts tiennent le plafond de créatures actives : un Hurleur hors d'atteinte gonflait la foule sans fin.
+            if (pool.IsFull)
+                break;
             float angle = startAngle + Mathf.Tau * i / _reinforcements;
             Enemy reinforcement = pool.Get();
             reinforcement.GlobalPosition = owner.GlobalPosition + Iso.ToScreen(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _spawnRadius);

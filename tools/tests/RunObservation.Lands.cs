@@ -16,6 +16,14 @@ public partial class RunObservation
     private bool _landsBot;
     private const float CircleOrbitPx = 110f;
     private const float ReachPx = 60f;
+    private const float FightStancePx = 70f;
+    private const int FightStanceTries = 12;
+    // Un Mémorial visé plus longtemps sans être atteint (eau, immeubles) est laissé pour la terre (plan 56 B1).
+    private const double MemorialGiveUpSeconds = 60.0;
+    private readonly System.Collections.Generic.HashSet<Memorial> _unreachableMemorials = new();
+    private Memorial _memorialTarget;
+    private double _memorialTargetSince;
+    private int _memorialLand = -1;
 
     /// <summary>
     /// Cible du bot sur une terre, par priorité : le gardien levé, le repaire prêt, le cercle d'un Mémorial en cours (il
@@ -29,7 +37,7 @@ public partial class RunObservation
         Vector2 position = _player.GlobalPosition;
         if (guardian.IsFighting && guardian.Guardian is { IsActive: true } boss)
         {
-            waypoint = boss.GlobalPosition + (position - boss.GlobalPosition).Normalized() * 70f;
+            waypoint = FightStance(boss.GlobalPosition, position);
             return true;
         }
         GuardianLair lair = GuardianLair.Current;
@@ -48,17 +56,36 @@ public partial class RunObservation
             return true;
         }
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        int land = _world.GetNode<LandTransition>("LandTransition").LandIndex;
+        if (land != _memorialLand)
+        {
+            _memorialLand = land;
+            _unreachableMemorials.Clear();
+            _memorialTarget = null;
+        }
         Memorial target = null;
         float nearest = float.MaxValue;
         for (int i = 0; i < Memorial.All.Count; i++)
         {
             Memorial memorial = Memorial.All[i];
             float distance = position.DistanceTo(memorial.GlobalPosition);
-            if (memorial.State == Memorial.MemorialState.Dormant && erasure.GetMemoryAt(memorial.GlobalPosition) > 0.3f && distance < nearest)
+            if (memorial.State == Memorial.MemorialState.Dormant && !_unreachableMemorials.Contains(memorial)
+                && erasure.GetMemoryAt(memorial.GlobalPosition) > 0.3f && distance < nearest)
             {
                 nearest = distance;
                 target = memorial;
             }
+        }
+        if (target != _memorialTarget)
+        {
+            _memorialTarget = target;
+            _memorialTargetSince = time;
+        }
+        else if (target != null && time - _memorialTargetSince > MemorialGiveUpSeconds)
+        {
+            GD.Print($"[RunObservation] Mémorial {target.GlobalPosition} hors d'atteinte du bot : laissé pour la terre {land}");
+            _unreachableMemorials.Add(target);
+            _memorialTarget = null;
         }
         if (target != null)
         {
@@ -77,6 +104,23 @@ public partial class RunObservation
         }
         waypoint = lair.GlobalPosition;
         return true;
+    }
+
+    /// <summary>
+    /// Place de combat : à portée du gardien, du côté du bot, sur le sol. Ses frappes ouvrent le vide sous le joueur ;
+    /// les créatures n'y entrent pas et le bot, invincible, n'y toucherait plus rien (plan 56 B1). À défaut, le cœur.
+    /// </summary>
+    private Vector2 FightStance(Vector2 boss, Vector2 position)
+    {
+        float start = (position - boss).Angle();
+        for (int i = 0; i < FightStanceTries; i++)
+        {
+            float offset = (i + 1) / 2 * (Mathf.Tau / FightStanceTries) * (i % 2 == 0 ? 1f : -1f);
+            Vector2 candidate = boss + Vector2.FromAngle(start + offset) * FightStancePx;
+            if (!_player.IsVoidAt(candidate))
+                return candidate;
+        }
+        return Vector2.Zero;
     }
 
     private async Task CaptureLands()

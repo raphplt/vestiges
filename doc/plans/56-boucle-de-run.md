@@ -135,3 +135,53 @@ B1 à B3 viennent avant la séance de Raphaël : une vraie run ne se juge pas av
 - **Mesure** : `--lands-bot --nomad` ; `tools/summarize_run_measurements.py` ne lit pas les lignes `LAND`. Toujours mesurer en `MEASURE_PROFILE=normal` : le profil dev par défaut fausse les durées de combat.
 
 Sources (recherche du 19 octobre) : [Megabonk, minuteur et étapes](https://megabonk.org/guides/mechanics/timer/), [Megabonk, boss appelé tôt ou tard](https://gamerblurb.com/articles/megabonk-difficulty-and-duration-guide), [Brotato, vagues et mode sans fin](https://brotato.wiki.spellsandguns.com/Waves), [Brotato, abandon après la vague 20 compté comme victoire](https://brotato.wiki.spellsandguns.com/Patch_1.1.*.*), [Deep Rock Galactic: Survivor, étapes et élites](https://deeprockgalactic.wiki.gg/wiki/Survivor:Elimination), [Hades, salles et gardiens](https://hades.fandom.com/wiki/Chambers_and_Encounters), [Halls of Torment, runs jugées longues](https://www.pushsquare.com/reviews/ps5/halls-of-torment), [Death Must Die, boss « dps check »](https://steamcommunity.com/app/2334730/discussions/0/4515507392492350728).
+
+## 10. Compte rendu B1, l'arène du gardien — 23 octobre 2026
+
+**Ce qui change :**
+- **L'horloge de difficulté s'arrête pendant le combat.** `RunClock` porte deux dates : le temps joué (chrono, bilan, quêtes, Effacement) et le temps de difficulté (foule, Péril du temps, élites, Résurgences, micro-événements). Le second s'arrête du réveil du gardien, ou d'un écho, jusqu'à sa mort ou au changement de terre (signal `GuardianArenaChanged`).
+- **Rien d'autre ne se déclenche.** Une Résurgence en cours au réveil s'arrête. Un micro-événement en cours finit échoué. Le calendrier des suivants reprend à la mort du gardien.
+- **La foule est plafonnée** à 40 créatures actives (`fight_crowd_cap`), et toujours deux fois moins dense. Les renforts appelés par un Hurleur tiennent désormais le plafond de la run, et celui de l'arène : un Hurleur hors d'atteinte appelait 2 Ombres toutes les 8 s, sans limite (1 208 Ombres en un combat, foule de 935).
+- **Le gardien passe devant la foule dans le choix des cibles** (`target_bias` 100 px), comme les parties de boss depuis le 10 octobre. Sans ce biais, les armes visaient toujours la créature la plus proche : 420 dégâts par seconde infligés, presque aucun au gardien.
+- **Le gardien naît sans affixe tiré au sort.** Un gardien Cuirassé encaissait 1,7 fois ses PV.
+- **PV du gardien revus** : plancher 1 500 au lieu de 2 500, ×1,35 par terre au lieu de ×1,8, plafond à 1,3 fois le plancher au lieu de 1,6. Enragé, ×1,25 au lieu de ×1,5. En profil neuf, le bot met 15 à 30 dégâts par seconde sur le gardien, et ne gagne que 4 à 5 niveaux entre deux terres. Avec ×1,8 par terre (2 500, 4 500, 8 100), le gardien grandissait plus vite que le joueur.
+- **Bot des terres** : il se bat sur le sol, à portée du gardien. Avant, la frappe du gardien ouvrait le vide sous lui. Invincible, il y restait, et ses armes de mêlée ne touchaient plus rien, puisque les créatures n'entrent pas dans le vide. Il laisse aussi un Mémorial hors d'atteinte au bout de 60 s, au lieu de s'y coincer toute la terre.
+
+**Mesure** : bot des terres, profil neuf (`MEASURE_PROFILE=normal`), 30 min, graines 7 et 42, Traqueur, Vagabond et Forgeuse. Durée du combat, du réveil à la mort du gardien :
+
+| Cas | Terre 1 | Terre 2 | Terre 3 | Avant B1 (terre 1 / terre 2) |
+|---|---|---|---|---|
+| Traqueur, graine 7 | 73 s | 105 s | enragé, non vaincu après 12 min | 202 s / non vaincu après 23 min |
+| Traqueur, graine 42 | enragé, 90 s | 409 s | — | enragé, non vaincu |
+| Vagabond, graine 7 | 110 s | 264 s | 324 s, **run gagnée à 18:54** | 317 s / 1 777 s |
+| Vagabond, graine 42 | enragé, 139 s | 87 s | enragé à 28:27 | enragé, 1 429 s / 183 s |
+| Forgeuse, graine 7 | 82 s | 112 s | enragé, 60 s, **run gagnée à 19:22** | 378 s / 385 s |
+| Forgeuse, graine 42 | enragé, 212 s | 91 s | enragé à 29:48 | enragé, non vaincu |
+
+Lecture :
+- **Visée de 1 à 2 min, atteinte dans 7 combats sur 10** hors gardien enragé. Les écarts : 264, 324 et 409 s. Avant B1, aucun combat de 2e terre ne finissait en moins de 6 min.
+- **Deux runs gagnées sur six, vers 19 min.** Avant B1, aucune ne l'était en 30 à 45 min.
+- **Les quatre autres runs butent sur la 3e terre (ou la 2e), sans être perdues au combat.** Le bot n'y rallume qu'un ou deux Mémoriaux : il laisse trois à cinq Mémoriaux hors d'atteinte par run, faute de contourner l'eau et les immeubles. Le gardien finit par se lever enragé, au cœur seul (2 % de la terre), avec 4 442 PV. Le Traqueur graine 7 ne l'abat pas en 12 min. C'est le pathfinding du bot qui bloque, pas le combat : un joueur trouve son chemin.
+- **Étapes intermédiaires** (même outil, même protocole) :
+  - arène seule, foule à 60 : le Vagabond graine 42 restait figé dans le vide ;
+  - bot corrigé : 87 à 586 s ;
+  - sans affixe : 133 à 955 s ;
+  - nouveaux PV : 81 à 474 s, mais foule de 935 par le Hurleur ;
+  - renforts plafonnés et biais de visée : le tableau ci-dessus.
+- **Plafond à 25 essayé**, puis écarté. Les combats enragés s'allongent : 230 à 302 s contre 90 à 212 s, et la médiane n'est pas meilleure. Un combat à 25 créatures serait aussi plus calme (avocat du diable, §7).
+
+**Vérifications** :
+- `dotnet build` : 0 avertissement ;
+- smoke test vert ;
+- `tools/test_lands.sh` : 0 échec. Il vérifie que l'arène se ferme au réveil, que le chrono avance sans la difficulté, et que l'arène se rouvre à la mort du gardien ;
+- `tools/test_enemy_abilities.sh` et `tools/test_movement.sh` : 0 échec ; `tools/test_dev_mode.sh` vert ;
+- relecture `godot-reviewer` : aucun chemin où l'arène resterait fermée. Un double commentaire de documentation a été corrigé.
+
+La vérification « à mi-PV, deuxième phase » échouait déjà sur `main`, parce que les 50 % de PV infligés ne passaient pas l'armure d'un gardien Cuirassé. Elle frappe désormais jusqu'à mi-PV.
+
+Pas de capture : rien de visible ne change à l'écran, hors la foule. Pas de banc de performance : le coût ajouté est un calcul de plafond par image.
+
+**Points ouverts** :
+- le bot ne contourne pas les obstacles pour rejoindre un Mémorial : la run gagnée ne se mesure qu'aux graines où les Mémoriaux sont dégagés ;
+- un gardien enragé de 3e terre sur le seul cœur reste long au bot ;
+- les deux se jugent à la séance de Raphaël, après B2 et B3.

@@ -17,6 +17,8 @@ public sealed class GuardianConfig
     public float MinHpRankGrowth { get; init; }
     public float HpCapFloorRatio { get; init; }
     public float FightCrowdDensity { get; init; }
+    public int FightCrowdCap { get; init; }
+    public float TargetBias { get; init; }
     public float ExtraLightHp { get; init; }
     public string ExtraLightChest { get; init; }
     public string Chest { get; init; }
@@ -57,7 +59,7 @@ public sealed class GuardianConfig
             using JsonDocument document = JsonDocument.Parse(json);
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
-            reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_multiplier", "min_hp", "min_hp_rank_growth", "hp_cap_floor_ratio", "fight_crowd_density", "extra_light_hp",
+            reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_multiplier", "min_hp", "min_hp_rank_growth", "hp_cap_floor_ratio", "fight_crowd_density", "fight_crowd_cap", "target_bias", "extra_light_hp",
                 "extra_light_chest", "chest", "rage_hp", "rage_damage", "escorts", "passage_delay_seconds", "rank_peril", "lands_to_win", "rise_audio", "victory_audio", "late_game", "moves");
             JsonElement lateGame = reader.Section(root, "late_game");
             reader.AllowOnly(lateGame, "late_game", "_doc", "echo_first_seconds", "echo_interval_seconds", "echo_hp_multiplier", "echo_peril",
@@ -75,6 +77,8 @@ public sealed class GuardianConfig
                 MinHpRankGrowth = reader.Positive(root, "min_hp_rank_growth"),
                 HpCapFloorRatio = reader.Number(root, "hp_cap_floor_ratio"),
                 FightCrowdDensity = reader.Positive(root, "fight_crowd_density"),
+                FightCrowdCap = reader.Integer(root, "fight_crowd_cap", 1, 500),
+                TargetBias = reader.NonNegative(root, "target_bias"),
                 ExtraLightHp = reader.NonNegative(root, "extra_light_hp"),
                 ExtraLightChest = reader.OneOf(root, "extra_light_chest", chests),
                 Chest = reader.OneOf(root, "chest", chests),

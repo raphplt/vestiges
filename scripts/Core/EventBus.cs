@@ -31,6 +31,11 @@ public partial class EventBus : Node
     /// <paramref name="victory"/> : c'était le dernier gardien à vaincre, la run est gagnée.
     /// </summary>
     [Signal] public delegate void GuardianDefeatedEventHandler(int land, bool victory);
+    /// <summary>
+    /// Arène d'un gardien ou d'un écho (plan 56 B1) : <paramref name="closed"/> au réveil, rouverte à sa mort ou au
+    /// changement de terre. Fermée, le temps de difficulté s'arrête et rien d'autre ne se déclenche.
+    /// </summary>
+    [Signal] public delegate void GuardianArenaChangedEventHandler(bool closed);
     /// <summary>Météo de la run (plan 39 A5) : identifiant de data/world/weather.json, vide quand le ciel se dégage.</summary>
     [Signal] public delegate void WeatherChangedEventHandler(string weatherId);
 
