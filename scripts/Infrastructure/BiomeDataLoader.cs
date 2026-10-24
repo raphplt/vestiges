@@ -11,6 +11,8 @@ public sealed class BiomeData
 {
     public string Id { get; init; }
     public string Name { get; init; }
+    /// <summary>Clé de traduction du lieu de Vaulme que le biome figure (plan 56 B3) ; vide sans lieu.</summary>
+    public string PlaceKey { get; init; }
     public string FootstepAudio { get; init; }
     public IReadOnlyDictionary<string, float> TerrainWeights { get; init; }
     // Les répétitions sont des poids : ne pas les dédupliquer.
@@ -156,11 +158,12 @@ public static class BiomeDataLoader
             using JsonDocument document = JsonDocument.Parse(text);
             JsonElement root = document.RootElement;
             JsonConfigReader reader = new(root);
-            reader.AllowOnly(root, "biome", "id", "name", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
+            reader.AllowOnly(root, "biome", "id", "name", "place_key", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
                 "resurgence_enemy_pool", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "map_weight",
                 "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience", "motes");
             string id = reader.Text(root, "id");
             string name = OptionalText(reader, root, "name", "");
+            string placeKey = OptionalText(reader, root, "place_key", "");
             string audio = OptionalText(reader, root, "footstep_audio", null);
             if (audio != null && !audioExists(audio))
                 reader.Fail($"footstep_audio : son « {audio} » inconnu");
@@ -220,7 +223,7 @@ public static class BiomeDataLoader
             }
             biome = new BiomeData
             {
-                Id = id, Name = name, FootstepAudio = audio, TerrainWeights = new ReadOnlyDictionary<string, float>(weights),
+                Id = id, Name = name, PlaceKey = placeKey, FootstepAudio = audio, TerrainWeights = new ReadOnlyDictionary<string, float>(weights),
                 ExplorationEnemyPool = exploration.AsReadOnly(), ResurgenceEnemyPool = resurgence.AsReadOnly(),
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),

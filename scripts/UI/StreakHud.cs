@@ -4,7 +4,7 @@ using Vestiges.Core;
 namespace Vestiges.UI;
 
 /// <summary>
-/// La Série au HUD, en haut au centre sous le temps (plan 52 §15) : un gros « ×N » et le nom du rang à sa couleur, puis
+/// La Série au HUD, en haut au centre sous le temps et la piste de run (plan 52 §15) : un gros « ×N » et le nom du rang à sa couleur, puis
 /// la jauge de la fenêtre. Visible dès ×2. Une élimination fait rebondir le chiffre ; un rang gagné fait claquer son
 /// nom ; la jauge presque vide clignote en rouge ; un coup reçu fait virer le chiffre au rouge, affiche « ÷2 » et fait
 /// tomber le nom du rang perdu ; l'encaissement fige le chiffre en or et affiche l'Essence gagnée.
@@ -13,7 +13,7 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class StreakHud : Control
 {
-    public const float Top = 30f;
+    public const float Top = RunTrack.Bottom + 1f;
     /// <summary>Bas du bloc : ce qui se range en haut au centre (nom du biome, aide, barre de boss) passe dessous.</summary>
     public const float Bottom = Top + GaugeTop + GaugeHeight + 3f;
 

@@ -146,6 +146,7 @@ public partial class HUD : CanvasLayer
         _essenceFlights.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _essenceFlights.Setup(EssenceTarget, () => _essencePulse = 1f);
         BuildRunClock();
+        _hudRoot.AddChild(new RunTrack { Name = "RunTrack" });
         _streakHud = new StreakHud { Name = "StreakHud" };
         _streakHud.CashedOut += (from, grains) => _essenceFlights.Burst(from, grains);
         _hudRoot.AddChild(_streakHud);
@@ -160,6 +161,7 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(new DashHint { Name = "DashHint" });
         _hudRoot.AddChild(new Minimap { Name = "Minimap" });
         _hudRoot.AddChild(new LandObjective { Name = "LandObjective" });
+        _hudRoot.AddChild(new LandArrivalCard { Name = "LandArrivalCard" });
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
         _hudRoot.AddChild(new BossHealthBar { Name = "BossHealthBar" });
@@ -328,8 +330,8 @@ public partial class HUD : CanvasLayer
     }
 
     /// <summary>
-    /// Le temps en haut au centre, la Série dessous (<see cref="StreakHud"/>), puis le nom du biome qui passe quand on y
-    /// entre.
+    /// Le temps en haut au centre, la piste de run dessous (<see cref="RunTrack"/>), puis la Série (<see cref="StreakHud"/>)
+    /// et le nom du biome qui passe quand on y entre (grande carte seulement : sur les terres, le carton d'arrivée le dit).
     /// </summary>
     private void BuildRunClock()
     {
@@ -658,7 +660,7 @@ public partial class HUD : CanvasLayer
         if (_worldSetup == null || !IsInstanceValid(_worldSetup))
             _worldSetup = GetNodeOrNull<WorldSetup>("/root/Main");
         Player player = ResolvePlayer();
-        if (_worldSetup == null || player == null)
+        if (_worldSetup == null || player == null || _worldSetup.Land?.IsLand == true)
             return;
 
         string biomeName = _worldSetup.GetBiomeAt(player.GlobalPosition)?.Name ?? "";

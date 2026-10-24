@@ -7,7 +7,8 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// --capture-lands (plan 51) : une terre de bout en bout, en images. Le cercle d'un Mémorial en cours, le front qui ronge
-/// les bords, le repaire aux lumières allumées, l'effondrement au réveil du gardien, la terre suivante. Joueur
+/// les bords, le repaire aux lumières allumées, l'effondrement au réveil du gardien, la terre suivante ; les cartons
+/// d'arrivée et la piste de run (plan 56 B3). Joueur
 /// invincible, apparitions normales.
 /// </summary>
 public partial class RunObservation
@@ -126,7 +127,10 @@ public partial class RunObservation
     private async Task CaptureLands()
     {
         _player.IsGodMode = true;
-        await Seconds(3.0);
+        // Le carton d'arrivée de la première terre et la piste de run (plan 56 B3).
+        await Seconds(2.2);
+        Save("lands-0-arrival.png");
+        await Seconds(0.8);
         ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         GuardianDirector guardian = _world.GetNodeOrNull<GuardianDirector>("GuardianDirector");
         if (erasure.Front == null || guardian == null || Memorial.All.Count == 0)
@@ -205,7 +209,9 @@ public partial class RunObservation
 
         // La terre du late game (§16 L2) et son premier écho de gardien.
         await transition.GoToLandAsync(GuardianConfig.Load(out _).LandsToWin);
-        await Seconds(3.0);
+        await Seconds(2.5);
+        Save("lands-6b-last-arrival.png");
+        await Seconds(0.5);
         typeof(GuardianDirector).GetField("_echoIn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             .SetValue(guardian, 0f);
         await Seconds(2.5);

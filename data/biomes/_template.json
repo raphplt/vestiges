@@ -1,6 +1,7 @@
 {
     "id": "biome_id",
     "name": "Nom du biome",
+    "_place_key": "Facultatif (plan 56 B3). Clé de traduction du lieu de Vaulme que le biome figure, annoncé par le carton d'arrivée d'une terre (ex. LAND_PLACE_SWAMP : le Bas-Port). Sans clé : le carton ne dit que le rang de la terre.",
     "danger_level": 1,
     "_atmosphere": "Facultatif (plan 39 A1). Étalonnage du biome où se trouve le joueur : teinte ramenée à luminance 1 et dosée par tint_strength, exposure 0,6–1,4, saturation 0–1,6, contrast 0,6–1,4 ; brume flottante fog_density 0–1 et fog_color ; ombres de nuages (A2) : part du ciel couverte cloud_cover 0–1 et noirceur de l'ombre cloud_opacity 0–0,6 (0 : aucun nuage) ; ombres portées des grands décors (A3) : shadow_opacity 0–0,7. Sans bloc : neutre, sans brume. Fondu et part reçue par les entités : data/world/atmosphere.json.",
     "atmosphere": {

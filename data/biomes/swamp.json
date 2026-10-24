@@ -1,6 +1,7 @@
 {
     "id": "swamp",
     "name": "Marécages",
+    "place_key": "LAND_PLACE_SWAMP",
     "terrain_weights": {
         "grass": 0.25,
         "concrete": 0.05,

@@ -606,6 +606,13 @@ LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · T
 LAND_OBJECTIVE_HOLD,"Dernière terre · Échos vaincus {1}","Last land · Echoes defeated {1}"
 LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last land · A guardian's echo hunts you"
 LAND_OBJECTIVE_VICTORY,"Run gagnée · La dernière terre se recoud","Run won · The last land is stitching itself"
+LAND_ARRIVAL_RANK,"Terre {0}","Land {0}"
+LAND_ARRIVAL_LAST,Dernière terre,Last land
+LAND_PLACE_FOREST,Les bois de la colline,The Hill Woods
+LAND_PLACE_FIELDS,Les fermes du plateau,The Plateau Farms
+LAND_PLACE_URBAN,La Haute-Ville,Haute-Ville
+LAND_PLACE_SWAMP,Le Bas-Port,Bas-Port
+LAND_PLACE_QUARRY,La carrière des Aubiers,The Aubiers Quarry
 STREAK_RANK_1,ÉVEIL,AWAKENING
 STREAK_RANK_2,FERVEUR,FERVOR
 STREAK_RANK_3,FURIE,FURY

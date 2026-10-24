@@ -1,6 +1,7 @@
 {
     "id": "wild_fields",
     "name": "Champs Sauvages",
+    "place_key": "LAND_PLACE_FIELDS",
     "terrain_weights": {
         "grass": 0.65,
         "concrete": 0.05,

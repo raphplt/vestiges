@@ -2392,3 +2392,14 @@ Raphaël : « go b2 » (lot B2 du [plan 56](56-boucle-de-run.md)). Détail au pl
 - **Quêtes de Souverains ouvertes** : un gardien compte comme Souverain.
 - **Failles gardées** en run : un pari, pas une horloge.
 - **Bilan** : ligne des Résurgences masquée quand elle vaut 0.
+
+## 197. La run se lit : un lieu par terre, un carton d'arrivée, une piste de run — 24 octobre 2026
+
+Raphaël : « allez go » (lot B3 du [plan 56](56-boucle-de-run.md)). Détail au plan 56 §12 et §13.
+
+**Tranché par défaut, réversible :**
+- **Le lieu vient du biome** (`place_key`), selon la table du lore : bois de la colline, fermes du plateau, Haute-Ville, Bas-Port, carrière des Aubiers.
+- **En anglais**, Haute-Ville et Bas-Port restent des noms propres. Les trois autres se traduisent : The Hill Woods, The Plateau Farms, The Aubiers Quarry.
+- **Le carton** paraît à chaque terre, départ compris, entre la Série et les bandeaux de quête. Le son est celui du réveil d'un Mémorial, joué plus grave : un lieu dont on se souvient.
+- **Tant que la Montée n'existe pas** (B4), la terre du late game allume le sommet de la piste, en orange, et son carton dit « Dernière terre ».
+- **Sur les terres, le nom du biome ne passe plus sous la Série** : le carton le remplace.

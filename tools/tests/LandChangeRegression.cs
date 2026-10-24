@@ -46,6 +46,7 @@ public partial class LandChangeRegression : Node
             _player.SurviveFatalHitsForTests = true;
             CheckFrontRules();
             CheckFrontOnLand();
+            CheckLandReading();
             // Comptes de la terre 0 avant que le cercle n'y fasse tomber le reste : chaque terre doit en avoir autant.
             _memorials = Memorial.All.Count;
             _chests = Chest.Closed.Count;
@@ -61,6 +62,29 @@ public partial class LandChangeRegression : Node
             GD.PushError($"[LandChangeRegression] {exception}");
             GetTree().Quit(2);
         }
+    }
+
+    /// <summary>
+    /// Plan 56 B3 : chaque biome porte un lieu de Vaulme traduit en français et en anglais, et la piste de run paraît
+    /// dès la première terre.
+    /// </summary>
+    private void CheckLandReading()
+    {
+        string locale = TranslationServer.GetLocale();
+        foreach (BiomeData biome in BiomeDataLoader.GetAll())
+        {
+            string key = biome.PlaceKey;
+            bool translated = !string.IsNullOrEmpty(key);
+            foreach (string language in new[] { "fr", "en" })
+            {
+                TranslationServer.SetLocale(language);
+                translated &= TranslationServer.Translate(key).ToString() != key;
+            }
+            Check(translated, $"lieux : « {biome.Id} » nommé et traduit ({key})");
+        }
+        TranslationServer.SetLocale(locale);
+        Control track = _world.FindChild("RunTrack", true, false) as Control;
+        Check(track != null && track.Visible, "lieux : piste de run visible sur la première terre");
     }
 
     /// <summary>Lot P2a, règles du front seul : ordre et heure des états, cœur intact, présence, stabilisation, ancre.</summary>

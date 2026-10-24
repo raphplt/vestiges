@@ -223,3 +223,50 @@ Les quêtes de Souverains restent ouvertes : un gardien est un champion, et son 
 Pas de capture ni de banc : il n'y a rien de neuf à l'écran, et le coût baisse (moins de systèmes en run).
 
 **Point ouvert** : les Failles restent en run. Ce sont un pari, pas une horloge.
+
+## 12. Découpage B3, la run se lit — 24 octobre 2026
+
+Une terre n'a qu'un biome (plan 51) : le lieu de Vaulme se lit dans le biome, comme le dit le [lore](../VESTIGES-LORE.md) (« Les lieux »).
+
+| Sous-lot | Contenu |
+|---|---|
+| B3a | **Un lieu par biome** : clé `place_key` dans chaque `data/biomes/*.json`, noms traduits. Forêt : les bois de la colline ; champs : les fermes du plateau ; ruines urbaines : la Haute-Ville ; marais : le Bas-Port ; carrière : la carrière des Aubiers |
+| B3b | **Carton d'arrivée** au centre haut de l'écran, à chaque terre, départ compris : « Terre 2 » en petit, le lieu en grand, un son discret. Il attend la fin du fondu de chargement et se fige sous un écran de choix. Sur les terres, il remplace le nom du biome qui passait sous la Série |
+| B3c | **Piste de run** entre le chrono et la Série : trois losanges (les terres) puis un sommet (la Montée). Terres passées en or, terre en cours allumée, à venir en gris. La Série descend d'autant |
+| B3d | Captures en vraie run (départ, passage de terre), textes en français et en anglais |
+
+Décisions par défaut ([§197](DECISIONS.md)) :
+- en anglais, Haute-Ville et Bas-Port restent des noms propres ; les trois autres se traduisent (« The Hill Woods », « The Plateau Farms », « The Aubiers Quarry ») ;
+- tant que la Montée n'existe pas (B4), la terre du late game allume la 4e marque, en orange comme le chrono, et son carton dit « Dernière terre » ;
+- le nombre de marques suit `lands_to_win` de `data/world/guardian.json`.
+
+## 13. Compte rendu B3, la run se lit — 24 octobre 2026
+
+**Ce qui change :**
+- **Un lieu de Vaulme par terre.** Chaque biome porte une clé `place_key` (`data/biomes/*.json`) et le carton dit le lieu de la terre :
+  - forêt : les bois de la colline ;
+  - champs : les fermes du plateau ;
+  - ruines urbaines : la Haute-Ville ;
+  - marais : le Bas-Port ;
+  - carrière : la carrière des Aubiers.
+- **Le carton d'arrivée** (`LandArrivalCard`) : « Terre 2 » en petit, le lieu en grand, un trait d'or qui s'ouvre du centre, et le son du réveil d'un Mémorial joué plus grave (`arrival_audio` de `guardian.json`). Il vient à chaque terre, départ compris, 1,2 s après la reprise, quand le noir du chargement s'éclaircit. Il reste 2,6 s puis s'efface. Sur la terre du late game, il dit « Dernière terre ». Il est placé entre la Série et les bandeaux de quête, qui tombent souvent au même moment (une quête accomplie à la mort du gardien). Son temps suit la run : il se fige sous un écran de choix.
+- **La piste de run** (`RunTrack`), entre le chrono et la Série : un losange par terre, puis un sommet pour la Montée.
+  - Terres passées en or, terre en cours en blanc, à venir en creux gris.
+  - Le losange passe à l'or dès la mort du gardien, avec un éclat.
+  - Sur la terre du late game, le sommet s'allume en orange, comme le chrono.
+  - Le nombre de marques suit `lands_to_win`.
+- **La Série descend de 10 unités** sous la piste. Ce qui se range sous elle suit (barre de boss, bandeaux, aide).
+- **Le nom du biome** qui passait sous la Série ne s'affiche plus sur les terres : le carton le dit. Il reste sur la grande carte (`--no-lands`).
+
+**Vérifications :**
+- `dotnet build` : 0 avertissement ;
+- smoke test vert ;
+- `tools/test_lands.sh` : 0 échec, avec un contrôle neuf : les cinq lieux sont traduits en français et en anglais, et la piste paraît sur la première terre ;
+- `tools/test_dev_mode.sh` et `tools/test_choice_screen.sh` (41 contrôles) : verts ;
+- captures `--capture-lands`, graine 7 (deux images ajoutées au mode : `lands-0-arrival`, `lands-6b-last-arrival`). Cartons « Terre 1 · Les fermes du plateau », « Terre 2 · Le Bas-Port » et « Dernière terre · La Haute-Ville ». La première capture a montré le bandeau de quête par-dessus le carton du Bas-Port : le carton a été remonté sous la Série.
+
+- relecture `godot-reviewer` : aucun bug bloquant. Un carton dont le délai court encore à la mort du joueur ne s'affiche plus sur l'écran de fin. L'écran de montée de niveau (couche 20) passe bien au-dessus du carton (HUD, couche 10).
+
+Pas de banc : deux contrôles dessinés le temps d'une animation, rien par image au repos.
+
+**Reste à juger à la séance** : la taille du carton, sa durée et le son.

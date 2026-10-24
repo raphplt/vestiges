@@ -1,6 +1,7 @@
 {
     "id": "forest_reclaimed",
     "name": "Forêt Reconquise",
+    "place_key": "LAND_PLACE_FOREST",
     "terrain_weights": {
         "grass": 0.30,
         "concrete": 0.05,
