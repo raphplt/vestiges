@@ -113,6 +113,13 @@ public partial class EnemyAbilityRegression
             ("famille de meute non texte", "charognard", e => e["pack_family"] = 3, "pack_family : texte attendu"),
             ("projectile non objet", "tisseuse", e => e["visual"]["projectile"] = "web", "visual.projectile : objet attendu"),
             ("projectile inconnu", "tisseuse", e => e["visual"]["projectile"]["speed"] = 2, "visual.projectile : champ « speed » inconnu"),
+            ("gardien sans bloc", "grand_cerf", e => e.Remove("guardian"), "bloc guardian obligatoire"),
+            ("bloc de gardien hors rang", "rodeur", e => e["guardian"] = new JsonObject(), "guardian : réservé au rang guardian"),
+            ("gardien sans coup", "grand_cerf", e => e["guardian"]["moves"] = new JsonArray(), "guardian.moves : liste non vide"),
+            ("coup de gardien inconnu", "grand_cerf", e => e["guardian"]["moves"][0] = "roar", "coup « roar » inconnu"),
+            ("coup de gardien en double", "grand_cerf", e => e["guardian"]["moves"][1] = "charge", "coup « charge » en double"),
+            ("gardien sans échelle", "grand_cerf", e => e["guardian"].AsObject().Remove("body_scale"), "guardian.body_scale : obligatoire"),
+            ("échelle de gardien nulle", "grand_cerf", e => e["guardian"]["body_scale"] = 0, "guardian.body_scale"),
         };
 
         foreach ((string label, string file, Action<JsonObject> mutate, string expected) in cases)

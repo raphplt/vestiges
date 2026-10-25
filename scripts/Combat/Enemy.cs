@@ -35,9 +35,16 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private ControlState _nativeDisorientation;
 	private float _propagatedDisorientationRemaining;
 	public EnemyLife Life => new(GetInstanceId(), _lifeGeneration);
-	public bool IsPriorityTarget => _mods.IsVariant && _mods.Variant.Id is "elite" or "champion";
+	/// <summary>Élite, Souverain ou gardien de terre : visés en priorité, et l'onde d'un bonus ne leur ôte qu'un quart.</summary>
+	public bool IsPriorityTarget => _mods.IsVariant && _mods.Variant.Id is "elite" or "champion" || _tier == EnemyTier.Guardian;
 	/// <summary>Identifiant de la variante (elite, champion pour les Souverains, aberration), vide sans variante.</summary>
 	public string VariantId => _mods.IsVariant ? _mods.Variant.Id : "";
+
+	/// <summary>
+	/// Souverain ou gardien de terre : la mort compte pour les quêtes de Souverains et lâche leurs objets. Le gardien en
+	/// prend la suite (plan 57 G0) : il était un Souverain, et les Souverains sont en réserve.
+	/// </summary>
+	private bool IsSovereignKill => VariantId == "champion" || _tier == EnemyTier.Guardian;
 	public EnemyTier Tier => _tier;
 	/// <summary>Contribution native transmissible, sinon provenance du contrôle actif non transmissible.</summary>
 	public ControlState SlowControl => _nativeSlow.Remaining > 0f ? _nativeSlow
@@ -530,6 +537,15 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// <summary>Renforce une créature déjà lancée (élites de fin de run, plan 47) : PV pleins au nouveau maximum.</summary>
 	public void Empower(float hpMult, float damageMult) => ScaleStats(hpMult, damageMult, 1f);
 
+	/// <summary>Corps à cette échelle, ombre et rayon de touche compris (gardien de terre, plan 57 G0).</summary>
+	public void SetBodyScale(float scale)
+	{
+		Scale = Vector2.One * scale;
+		_shadow.Scale = scale;
+		_bodyRadius = BaseBodyRadius * scale;
+		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
+	}
+
 	private void ScaleStats(float hpMult, float damageMult, float speedMult)
 	{
 		_maxHp *= hpMult;
@@ -680,7 +696,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		ProcessDisorient(dt, fullProcessing);
 		ProcessFragility(dt);
 		StatusMarks marks = CurrentStatusMarks;
-		_statusVisual.Update(marks, MoveFactor, _tier is EnemyTier.Miniboss or EnemyTier.Boss);
+		_statusVisual.Update(marks, MoveFactor, EnemyGrammar.IsHeavy(_tier));
 		// Hors de la portée complète (au-delà de l'écran), les marques ne se redessinent pas.
 		if (fullProcessing && _hasSprite)
 			_statusMarks?.Tick(dt, marks, _igniteDps / Mathf.Max(_maxHp, 1f));
@@ -743,7 +759,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Figée (Berceuse, Arrêt sur image, Glaçon) : ni pas, ni attaque, ni capacité, et l'annonce en cours tombe ; le
 		// recul la pousse encore. Mini-boss et boss, que le recul ne pousse pas, gardent leurs coups : sinon une arme
 		// qui fige en continu les tiendrait sans fin.
-		if (_freezeTimer > 0f && _tier is not (EnemyTier.Miniboss or EnemyTier.Boss))
+		if (_freezeTimer > 0f && !EnemyGrammar.IsHeavy(_tier))
 		{
 			CancelAbilities();
 			Velocity = Vector2.Zero;
@@ -811,7 +827,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 
     internal bool ProcessRememberedTarget(float delta)
     {
-        if (IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss
+        if (IsPriorityTarget || _tier == EnemyTier.Elite || EnemyGrammar.IsHeavy(_tier)
             || _boss != null || _disorientTimer > 0f || _player.ObjectCombatEffects == null
             || !_player.ObjectCombatEffects.TryGetDecoyTarget(GlobalPosition, out Vector2 target)) return false;
         foreach (IEnemyAbility ability in _abilities)
@@ -839,7 +855,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	{
 		// Séparation (plan 29 F2) : la créature s'écarte de ses voisines au lieu de s'empiler. Mini-boss et boss
 		// poussent sans être poussés ; une créature figée ne fait pas de pas.
-		if (separate && _speed > 0f && _tier is not (EnemyTier.Miniboss or EnemyTier.Boss))
+		if (separate && _speed > 0f && !EnemyGrammar.IsHeavy(_tier))
 		{
 			Vector2 push = CrowdSeparation.PushFor(this, CrowdDataLoader.SeparationRadius)
 				.LimitLength(CrowdDataLoader.SeparationMaxPush);
@@ -1132,8 +1148,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			Player owner = _player != null && IsInstanceValid(_player) && _player.GetInstanceId() == source.OwnerId
 				? _player : InstanceFromId(source.OwnerId) as Player;
 			owner?.ResolveOpeningStrike(this, ref damage, ref isCrit, ref source);
-			// Gardien de terre (champion), mini-boss, boss et ses parties : un long combat ne casse pas la Série.
-			if (_tier is EnemyTier.Miniboss or EnemyTier.Boss || Boss != null || VariantId == "champion")
+			// Gardien de terre, Souverain, mini-boss, boss et ses parties : un long combat ne casse pas la Série.
+			if (EnemyGrammar.IsHeavy(_tier) || Boss != null || VariantId == "champion")
 				owner?.RefreshStreakOnBossHit();
 		}
 
@@ -1302,7 +1318,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// </summary>
 	public void ApplyKnockback(Vector2 direction, float distance)
 	{
-		if (_isDying || _tier is EnemyTier.Miniboss or EnemyTier.Boss || direction == Vector2.Zero)
+		if (_isDying || EnemyGrammar.IsHeavy(_tier) || direction == Vector2.Zero)
 			return;
 		// Une projection de percussion (plan 52 E4), au-delà du plafond, n'est jamais raccourcie par le recul d'une arme.
 		float cap = Mathf.Max(MaxKnockbackDistance * KnockbackDecay, _knockVelocity.Length());
@@ -1548,7 +1564,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		// Capturer les contrôles avant leur nettoyage et avant les explosions de mort en cascade.
 		_eventBus.PublishEnemyKill(new EnemyKillResult(Life, _enemyId, GlobalPosition, damage, SlowControl, DisorientationControl,
 			new ControlState(_igniteDps, Mathf.Max(0f, _igniteTimer), _igniteSource, ControlOrigin.Unknown),
-			IsPriorityTarget || _tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss, VariantId == "champion"));
+			IsPriorityTarget || _tier == EnemyTier.Elite || EnemyGrammar.IsHeavy(_tier), IsSovereignKill));
 		_killed = true;
 		_killedFrame = Engine.GetProcessFrames();
 		// Le corps se dissout : son contact avec le sol disparaît avec lui.
@@ -1559,8 +1575,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_igniteTimer = 0f;
 		Velocity = Vector2.Zero;
 
-		// Screen shake à la mort (plus fort pour les mini-boss/aberrations)
-		if (_tier == EnemyTier.Miniboss)
+		// Screen shake à la mort (plus fort pour les mini-boss et les gardiens)
+		if (_tier is EnemyTier.Miniboss or EnemyTier.Guardian)
 		{
 			ScreenShake.Instance?.ShakeHeavy();
 			ScreenShake.Instance?.Hitstop(0.07f);
@@ -1649,6 +1665,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				SpawnRewardChest("chest_epic");
 			if (_mods.IsVariant)
 				GrantVariantRewards();
+			// Le gardien prend la suite du Souverain qu'il était (plan 57 G0) : bonus au sol, compte du bilan.
+			else if (_tier == EnemyTier.Guardian)
+				_eventBus.EmitSignal(EventBus.SignalName.VariantEnemyKilled, _displayName, "champion", GlobalPosition);
 		}
 
 		if (_fallingIntoVoid)
@@ -1658,7 +1677,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		}
 
 		// Retour au néant : éclats sombres, nuage de dissolution et flaque irisée, recyclés (plan 02 J0).
-		bool miniboss = _tier == EnemyTier.Miniboss;
+		bool miniboss = _tier is EnemyTier.Miniboss or EnemyTier.Guardian;
 		CombatPools.Instance?.ShowDeath(GlobalPosition, miniboss ? 20 : (_mods.IsVariant ? 14 : 8), Mathf.Tau,
 			miniboss ? 2.5f : (_mods.IsVariant ? 1.5f : 1.0f), miniboss || _mods.IsVariant, _lastHitDirection);
 

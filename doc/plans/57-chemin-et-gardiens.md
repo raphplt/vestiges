@@ -85,3 +85,46 @@ La Barrière (mi-pente de la Montée) et l'Indicible (au sommet) restent hors de
 - carton de la terre 2 dégagé.
 
 Trace headless sur deux terres : la flèche trouve sa cible sur chaque terre et se tait pendant les cercles. Le chevron à l'écran n'a pas été vu en capture, parce que le bot entre aussitôt dans le cercle : à regarder en jouant.
+
+## 7. Compte rendu G0, le gardien devient une entité — 25 octobre 2026
+
+- **Un rang à part** : `tier: guardian` dans `data/enemies/`, avec un bloc `guardian` obligatoire pour ce rang et refusé ailleurs. Le bloc contient `moves` (les coups de référence qu'il prend) et `body_scale`.
+- **Chaque biome nomme son gardien** (champ `guardian`, obligatoire). Une créature de rang guardian est refusée dans les listes de créatures d'un biome : seul son repaire la fait naître.
+- **`GuardianDirector` pose le gardien du biome du repaire**, sans variante ni affixe. Son escorte vient des créatures de la terre.
+  - **PV** : ceux de sa fiche × `hp_rank_growth` par terre franchie, puis × la force (lumières en plus, rage, écho). Le plancher et le plafond du Souverain disparaissent (`hp_multiplier`, `min_hp`, `hp_cap_floor_ratio`) : le plafond jouait à chaque réveil mesuré, donc les PV restent les mêmes (1 950, 2 632, 4 442 enragé à la 3e terre).
+  - **Coffres** : une liste (`chests`). L'épique du gardien, plus le rare que lâchait le Souverain.
+- **Les coups se filtrent selon la fiche** (`GuardianMoves`). L'onde n'arrive qu'à la deuxième phase, et seulement si le gardien la prend.
+- **Rang lourd** (`EnemyGrammar.IsHeavy`), comme les mini-boss et les boss. Le gardien ne subit ni recul, ni percussion, ni poussée de la foule, ni leurre, et un gel ne coupe pas ses coups. Sa mort secoue l'écran comme celle d'un mini-boss.
+- **Il prend la suite du Souverain**. Sa mort :
+  - compte pour les quêtes de Souverains (§196) ;
+  - lâche un objet et un bonus au sol ;
+  - compte au bilan.
+
+  Il reste une cible prioritaire : l'onde d'un bonus ne lui ôte qu'un quart.
+- **Les échos du late game reprennent les gardiens vaincus**, chacun son tour.
+- **Le Grand Cerf** (`grand_cerf.json`) sert à toutes les terres jusqu'aux lots G2 à G5. Il prend la charge et la frappe. Son corps est provisoire : celui du Tréant, à l'échelle 2, en attendant G1.
+
+**Vérifié** :
+- build sans avertissement ;
+- suites `smoke`, `catalogs`, `enemy_abilities`, `lands`, `quests`, `item_loot`, `field_bonuses` et `music` vertes ;
+- nouveaux cas de refus : gardien sans bloc ou hors rang, coup inconnu ou en double, échelle absente, gardien dans une foule, gardien de biome absent, ordinaire ou inconnu ;
+- capture en vraie run (graine 7) : barre de boss « Le Grand Cerf », corps à l'échelle 2, frappes au sol.
+
+**Mesure** : bot des terres, profil neuf, 30 min, graines 7 et 42, même protocole que B1 (plan 56 §10). Durée du combat, du réveil à la mort :
+
+| Cas | Terre 1 | Terre 2 | Terre 3 | B1 (Souverain), terres 1 / 2 / 3 |
+|---|---|---|---|---|
+| Traqueur, graine 7 | 72 s | 125 s | enragé, non vaincu après 11 min | 73 / 105 / enragé, non vaincu |
+| Traqueur, graine 42 | enragé, 190 s | 346 s | — | enragé 90 / 409 / — |
+| Forgeuse, graine 7 | 83 s | 121 s | enragé, 572 s, **run gagnée vers 29:20** | 82 / 112 / enragé 60, gagnée à 19:22 |
+| Forgeuse, graine 42 | enragé, 79 s | 150 s | — | enragé 212 / 91 / enragé à 29:48 |
+| Vagabond, graine 7 | 94 s | 130 s | enragé, non vaincu après 10 min | 110 / 264 / 324, gagnée à 18:54 |
+| Vagabond, graine 42 | enragé, 132 s | 83 s | enragé à 29:46 | enragé 139 / 87 / enragé à 28:27 |
+
+Lecture :
+- **Terres 1 et 2** : 10 combats sur 12 entre 72 et 150 s, comme au B1. Les deux plus longs (190 et 346 s) font écho à ceux du B1 (212 et 409 s).
+- **La 3e terre reste le point faible du bot**, comme au B1 : il n'atteint pas le repaire à temps et le gardien se lève enragé, à 4 442 PV, au milieu de 200 à 400 créatures. Une seule run gagnée, contre deux au B1. Les PV et l'arène sont les mêmes. Ce qui a changé :
+  - le gardien ne recule plus et le gel ne coupe plus ses coups ;
+  - sa charge l'emporte à 440 px du bot.
+
+  G1 règle le combat du Cerf sur son vrai corps et ses charges en chaîne (« 1 à 2 min au bot », §3), et le revérifie sur la 3e terre.

@@ -28,6 +28,18 @@ public enum EnemyTier
 	Elite,
 	Miniboss,
 	Boss,
+	/// <summary>Gardien d'une terre (plan 57 G0) : entité à part, que seul son repaire fait naître.</summary>
+	Guardian,
+}
+
+/// <summary>Coups de référence qu'un gardien de terre prend dans sa fiche (plan 57 G0) ; leurs réglages sont communs.</summary>
+[System.Flags]
+public enum GuardianMoveSet
+{
+	None = 0,
+	Charge = 1,
+	Slam = 2,
+	Wave = 4,
 }
 
 /// <summary>Capacités composées du bloc « abilities » ; chacune a sa classe dans <c>Combat/Abilities</c>.</summary>
@@ -70,6 +82,12 @@ public static class EnemyGrammar
 	private static readonly (string Key, EnemyTier Value)[] Tiers =
 	{
 		("normal", EnemyTier.Normal), ("elite", EnemyTier.Elite), ("miniboss", EnemyTier.Miniboss), ("boss", EnemyTier.Boss),
+		("guardian", EnemyTier.Guardian),
+	};
+
+	private static readonly (string Key, GuardianMoveSet Value)[] GuardianMoves =
+	{
+		("charge", GuardianMoveSet.Charge), ("slam", GuardianMoveSet.Slam), ("wave", GuardianMoveSet.Wave),
 	};
 
 	private static readonly (string Key, EnemyAbilityKind Value)[] Abilities =
@@ -83,11 +101,16 @@ public static class EnemyGrammar
 	public static bool TryParseBehavior(string key, out EnemyBehavior value) => TryParse(Behaviors, key, out value);
 	public static bool TryParseTier(string key, out EnemyTier value) => TryParse(Tiers, key, out value);
 	public static bool TryParseAbility(string key, out EnemyAbilityKind value) => TryParse(Abilities, key, out value);
+	public static bool TryParseGuardianMove(string key, out GuardianMoveSet value) => TryParse(GuardianMoves, key, out value);
 
 	public static string CombatTypeKeys => Keys(CombatTypes);
 	public static string BehaviorKeys => Keys(Behaviors);
 	public static string TierKeys => Keys(Tiers);
 	public static string AbilityKeys => Keys(Abilities);
+	public static string GuardianMoveKeys => Keys(GuardianMoves);
+
+	/// <summary>Rangs lourds (mini-boss, boss, gardien) : ni recul, ni gel des coups, ni séparation, ni leurre.</summary>
+	public static bool IsHeavy(EnemyTier tier) => tier is EnemyTier.Miniboss or EnemyTier.Boss or EnemyTier.Guardian;
 
 	public static IEnumerable<string> AllAbilityKeys => Abilities.Select(entry => entry.Key);
 

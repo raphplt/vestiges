@@ -27,7 +27,7 @@ public partial class Enemy
     /// </summary>
     public bool Percuss(Vector2 direction, float distance)
     {
-        if (_isDying || !IsActive || _isBurrowed || _boss != null || _tier is EnemyTier.Miniboss or EnemyTier.Boss
+        if (_isDying || !IsActive || _isBurrowed || _boss != null || EnemyGrammar.IsHeavy(_tier)
             || direction == Vector2.Zero)
             return false;
         Vector2 push = direction.Normalized();

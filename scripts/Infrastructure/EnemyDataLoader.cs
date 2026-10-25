@@ -78,6 +78,17 @@ public class EnemyData
     public Dictionary<EnemyAbilityKind, EnemyAbilityData> Abilities { get; set; } = new();
     /// <summary>Clé AudioManager jouée quand un coup porte ou qu'un projectile part (null : muet).</summary>
     public string AttackAudio { get; set; }
+    /// <summary>Ce qui fait d'elle un gardien de terre ; null hors du rang guardian.</summary>
+    public GuardianTraits Guardian { get; set; }
+}
+
+/// <summary>Bloc « guardian » d'une fiche de gardien de terre (plan 57 G0).</summary>
+public sealed class GuardianTraits
+{
+    /// <summary>Coups de référence qu'il prend ; leurs réglages sont communs (data/world/guardian.json).</summary>
+    public GuardianMoveSet Moves { get; init; }
+    /// <summary>Échelle de son corps, ombre et rayon de touche compris.</summary>
+    public float BodyScale { get; init; }
 }
 
 /// <summary>
@@ -331,6 +342,17 @@ public static class EnemyDataLoader
         {
             if (!CoreStats.Contains(stat.Name))
                 data.ExtraStats[stat.Name] = stat.Value.GetSingle();
+        }
+
+        if (root.TryGetProperty("guardian", out JsonElement guardian))
+        {
+            GuardianMoveSet moves = GuardianMoveSet.None;
+            foreach (JsonElement move in guardian.GetProperty("moves").EnumerateArray())
+            {
+                EnemyGrammar.TryParseGuardianMove(move.GetString(), out GuardianMoveSet parsed);
+                moves |= parsed;
+            }
+            data.Guardian = new GuardianTraits { Moves = moves, BodyScale = guardian.GetProperty("body_scale").GetSingle() };
         }
 
         if (root.TryGetProperty("abilities", out JsonElement abilities))

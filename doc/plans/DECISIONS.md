@@ -2417,3 +2417,16 @@ Raphaël, après une run : « les boss à la fin de chaque niveau ont été fait
 - **le Grand Cerf d'abord**, gardien de référence, qui sert à toutes les terres tant que les autres manquent ;
 - **corps procéduraux d'abord**, que l'ami artiste reprendra ;
 - **la flèche montre les Mémoriaux même dans le brouillard** ; une seule flèche d'objectif, aucune pendant le combat.
+
+## 199. Le gardien devient une créature à part — 25 octobre 2026
+
+Raphaël : « go g0 » (lot G0 du [plan 57](57-chemin-et-gardiens.md)). Détail au plan 57 §7.
+
+**Tranché par défaut, réversible :**
+- **Le gardien est une fiche de créature de rang `guardian`**, nommée par le champ `guardian` de chaque biome, refusée dans toute liste de créatures : rien d'autre ne le fait naître. Il naît sans variante ni affixe.
+- **Ses coups de référence se choisissent dans sa fiche** (`moves`) ; leurs réglages restent communs (`data/world/guardian.json`). Le Grand Cerf prend la charge et la frappe, sans onde ; son coup à lui vient avec G1.
+- **Ses PV sont ceux de sa fiche** (1 950 sur la première terre), × 1,35 par terre franchie, sans le temps, le Péril ni la difficulté. Ce sont les PV que tous les gardiens mesurés atteignaient déjà : le plafond du plan 56 B1 jouait à chaque fois.
+- **Un rang lourd**, comme les boss : ni recul, ni percussion, ni gel qui coupe ses coups, ni poussée de la foule. Le Souverain qui servait de gardien les subissait.
+- **Il prend la suite du Souverain qu'il était** : son coffre rare s'ajoute à l'épique (`chests`), sa mort compte pour les quêtes de Souverains (§196), lâche un objet et un bonus au sol, et compte au bilan.
+- **Les échos du late game reprennent les gardiens vaincus**, chacun son tour.
+- **Jusqu'à G1, toutes les terres prennent le Grand Cerf**, avec un corps provisoire : celui du Tréant, à l'échelle 2. Le nom, la barre de boss et les coups sont les siens ; le corps vient avec G1.

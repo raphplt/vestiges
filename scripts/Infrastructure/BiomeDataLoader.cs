@@ -13,6 +13,8 @@ public sealed class BiomeData
     public string Name { get; init; }
     /// <summary>Clé de traduction du lieu de Vaulme que le biome figure (plan 56 B3) ; vide sans lieu.</summary>
     public string PlaceKey { get; init; }
+    /// <summary>Gardien de la terre que le biome figure (plan 57 G0) : une créature de rang guardian.</summary>
+    public string Guardian { get; init; }
     public string FootstepAudio { get; init; }
     public IReadOnlyDictionary<string, float> TerrainWeights { get; init; }
     // Les répétitions sont des poids : ne pas les dédupliquer.
@@ -103,7 +105,7 @@ public static class BiomeDataLoader
         HashSet<string> pois = new();
         foreach (PoiData poi in PoiDataLoader.GetAll())
             pois.Add(poi.Id);
-        error = _loadError = Apply(files, EnemyDataLoader.Exists, pois.Contains,
+        error = _loadError = Apply(files, id => EnemyDataLoader.Exists(id) ? EnemyDataLoader.Get(id).Tier : null, pois.Contains,
             DataKeySets.TopLevelKeys(AudioManager.SoundBankPath).Contains, path => ResourceLoader.Exists(path));
         if (error == null)
             GD.Print($"[BiomeDataLoader] Loaded {_allBiomes.Count} biomes");
@@ -126,7 +128,7 @@ public static class BiomeDataLoader
     }
 
     /// <summary>Publie ensemble des fiches déjà lues ; tout refus préserve intégralement le catalogue précédent.</summary>
-    public static string Apply(IReadOnlyDictionary<string, string> files, Func<string, bool> enemyExists,
+    public static string Apply(IReadOnlyDictionary<string, string> files, Func<string, EnemyTier?> enemyTier,
         Func<string, bool> poiExists, Func<string, bool> audioExists, Func<string, bool> resourceExists)
     {
         if (files.Count == 0)
@@ -135,7 +137,7 @@ public static class BiomeDataLoader
         Dictionary<string, BiomeData> byId = new();
         foreach ((string path, string text) in files)
         {
-            if (!TryParse(text, enemyExists, poiExists, audioExists, resourceExists, out BiomeData biome, out string error))
+            if (!TryParse(text, enemyTier, poiExists, audioExists, resourceExists, out BiomeData biome, out string error))
                 return $"{path} : {error}";
             if (!byId.TryAdd(biome.Id, biome))
                 return $"{path} : biome « {biome.Id} », id en double";
@@ -148,7 +150,7 @@ public static class BiomeDataLoader
         return null;
     }
 
-    public static bool TryParse(string text, Func<string, bool> enemyExists, Func<string, bool> poiExists,
+    public static bool TryParse(string text, Func<string, EnemyTier?> enemyTier, Func<string, bool> poiExists,
         Func<string, bool> audioExists, Func<string, bool> resourceExists, out BiomeData biome, out string error)
     {
         biome = null;
@@ -160,7 +162,7 @@ public static class BiomeDataLoader
             JsonConfigReader reader = new(root);
             reader.AllowOnly(root, "biome", "id", "name", "place_key", "footstep_audio", "terrain_weights", "exploration_enemy_pool",
                 "resurgence_enemy_pool", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "map_weight",
-                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience", "motes");
+                "tile_sources", "wang_tile_groups", "blend_terrains", "path_style", "atmosphere", "ambience", "motes", "guardian");
             string id = reader.Text(root, "id");
             string name = OptionalText(reader, root, "name", "");
             string placeKey = OptionalText(reader, root, "place_key", "");
@@ -168,8 +170,13 @@ public static class BiomeDataLoader
             if (audio != null && !audioExists(audio))
                 reader.Fail($"footstep_audio : son « {audio} » inconnu");
             Dictionary<string, float> weights = Weights(reader, reader.Section("terrain_weights"), "terrain_weights", key => Array.IndexOf(Terrains, key) >= 0);
-            List<string> exploration = TextList(reader, root, "exploration_enemy_pool", enemyExists, "créature", 1);
-            List<string> resurgence = TextList(reader, root, "resurgence_enemy_pool", enemyExists, "créature", 1);
+            // Un gardien ne naît que de son repaire (plan 57 G0) : jamais dans une foule.
+            Func<string, bool> crowd = id => enemyTier(id) is EnemyTier tier && tier != EnemyTier.Guardian;
+            List<string> exploration = TextList(reader, root, "exploration_enemy_pool", crowd, "créature hors gardien", 1);
+            List<string> resurgence = TextList(reader, root, "resurgence_enemy_pool", crowd, "créature hors gardien", 1);
+            string guardian = reader.Text(root, "guardian");
+            if (guardian != null && enemyTier(guardian) != EnemyTier.Guardian)
+                reader.Fail($"guardian : « {guardian} » n'est pas une créature de rang guardian");
             int danger = OptionalInteger(reader, root, "danger_level", 1);
             Dictionary<string, float> pois = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("poi_pool", out _)
                 ? Weights(reader, reader.Section("poi_pool"), "poi_pool", poiExists) : new();
@@ -223,7 +230,7 @@ public static class BiomeDataLoader
             }
             biome = new BiomeData
             {
-                Id = id, Name = name, PlaceKey = placeKey, FootstepAudio = audio, TerrainWeights = new ReadOnlyDictionary<string, float>(weights),
+                Id = id, Name = name, PlaceKey = placeKey, Guardian = guardian, FootstepAudio = audio, TerrainWeights = new ReadOnlyDictionary<string, float>(weights),
                 ExplorationEnemyPool = exploration.AsReadOnly(), ResurgenceEnemyPool = resurgence.AsReadOnly(),
                 DangerLevel = danger, PoiPool = new ReadOnlyDictionary<string, float>(pois), PoiCountMin = poiMin, PoiCountMax = poiMax,
                 MapWeight = mapWeight, TileSources = new ReadOnlyDictionary<string, IReadOnlyList<string>>(tiles),

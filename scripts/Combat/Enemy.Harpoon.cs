@@ -8,7 +8,7 @@ public partial class Enemy
 {
     internal ulong HarpoonOwner { get; set; }
     public bool IsHarpoonHeavy { get; private set; }
-    public bool IsHarpoonAnchored => Tier is EnemyTier.Miniboss or EnemyTier.Boss || Boss != null || VariantId == "champion";
+    public bool IsHarpoonAnchored => EnemyGrammar.IsHeavy(Tier) || Boss != null || VariantId == "champion";
 
     /// <summary>La traction balaie le trajet par petits pas ; la marche normale conserve sa résolution actuelle.</summary>
     internal Vector2 MoveByHarpoon(Vector2 displacement)

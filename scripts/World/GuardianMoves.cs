@@ -8,10 +8,11 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Coups du gardien de terre (plan 51 §16 G1, charte §11.4), greffés sur le Souverain qui le porte. Trois coups annoncés :
-/// une charge sur une ligne au sol, à esquiver de côté ; une frappe qui ouvre le vide sous un disque annoncé ; une onde
-/// qui part de lui, à traverser d'un dash. Trois phases selon ses PV, chacune plus rapide ; à la dernière, la frappe
-/// tombe en trois disques. Un coup à la fois, pour que chaque annonce reste lisible.
+/// Coups du gardien de terre (plan 51 §16 G1, charte §11.4). Trois coups de référence annoncés, dont chaque gardien
+/// prend ceux de sa fiche (plan 57 G0) : une charge sur une ligne au sol, à esquiver de côté ; une frappe qui ouvre le
+/// vide sous un disque annoncé ; une onde qui part de lui, à traverser d'un dash. Trois phases selon ses PV, chacune plus
+/// rapide ; l'onde n'arrive qu'à la deuxième, et à la dernière la frappe tombe en trois disques. Un coup à la fois, pour
+/// que chaque annonce reste lisible.
 /// </summary>
 public sealed class GuardianMoves : IEnemyAbility
 {
@@ -19,6 +20,7 @@ public sealed class GuardianMoves : IEnemyAbility
 
     private readonly Enemy _owner;
     private readonly GuardianMovesConfig _config;
+    private readonly GuardianMoveSet _set;
     private readonly Action<Vector2, float, float> _breakGround;
     private readonly GroundTelegraph _chargeMark;
     private readonly GroundTelegraph[] _slamMarks;
@@ -51,10 +53,11 @@ public sealed class GuardianMoves : IEnemyAbility
     /// <param name="marks">
     /// Parent des annonces au sol. Pas la créature : elle retourne au pool et resservira à une autre espèce.
     /// </param>
-    public GuardianMoves(Enemy owner, GuardianMovesConfig config, Node marks, Action<Vector2, float, float> breakGround)
+    public GuardianMoves(Enemy owner, GuardianMovesConfig config, GuardianMoveSet set, Node marks, Action<Vector2, float, float> breakGround)
     {
         _owner = owner;
         _config = config;
+        _set = set;
         _breakGround = breakGround;
         _chargeMark = AddMark(marks, "GuardianChargeMarker");
         _slamMarks = new GroundTelegraph[config.FinalSlamCount];
@@ -137,19 +140,19 @@ public sealed class GuardianMoves : IEnemyAbility
         if (owner.IsAnotherAbilityActive(this) || owner.IsDisoriented)
             return false;
         // L'onde n'arrive qu'à partir de la deuxième phase.
-        if (_phase >= 1 && _waveCooldown <= 0f && distToPlayer <= _config.WaveRadius)
+        if (Has(GuardianMoveSet.Wave) && _phase >= 1 && _waveCooldown <= 0f && distToPlayer <= _config.WaveRadius)
         {
             StartWaveWindup();
             _waveCooldown = _config.WaveCooldown * pace;
             return true;
         }
-        if (_slamCooldown <= 0f && distToPlayer <= _config.SlamCastRange)
+        if (Has(GuardianMoveSet.Slam) && _slamCooldown <= 0f && distToPlayer <= _config.SlamCastRange)
         {
             StartSlam(player);
             _slamCooldown = _config.SlamCooldown * pace;
             return true;
         }
-        if (_chargeCooldown <= 0f && distToPlayer <= _config.ChargeTriggerRange && distToPlayer >= _config.ChargeMinRange)
+        if (Has(GuardianMoveSet.Charge) && _chargeCooldown <= 0f && distToPlayer <= _config.ChargeTriggerRange && distToPlayer >= _config.ChargeMinRange)
         {
             StartChargeWindup(player);
             _chargeCooldown = _config.ChargeCooldown * pace;
@@ -157,6 +160,8 @@ public sealed class GuardianMoves : IEnemyAbility
         }
         return false;
     }
+
+    private bool Has(GuardianMoveSet move) => (_set & move) != 0;
 
     public void Cancel()
     {

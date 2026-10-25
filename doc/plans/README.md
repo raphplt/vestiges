@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**25 octobre — le gardien devient une créature à part ([plan 57 G0](57-chemin-et-gardiens.md), §199) :** rang `guardian`, nommé par chaque biome, refusé dans les foules ; coups choisis dans sa fiche, PV de sa fiche par rang, plus de Souverain grossi. Le Grand Cerf garde toutes les terres, sur un corps provisoire (le Tréant ×2) jusqu'à G1. Au bot, combats des terres 1 et 2 de 72 à 150 s, comme au B1. Suite : G1, le corps et les charges en chaîne du Cerf.
+
 **25 octobre — le chemin du gardien et un gardien par terre ([plan 57](57-chemin-et-gardiens.md), §198) :** Raphaël n'a pas vu les gardiens : le chemin (trois Mémoriaux, le repaire) n'était dit que par une petite ligne près de la minimap. Lots C1 et C2 : objectif en haut au centre, flèche d'objectif, cartons, minimap. Lots G0 à G5 : un gardien à part par terre (le Grand Cerf, l'Épouvantail, le Tocsin, le Pilleur, le Carrier), plus de Souverain grossi.
 
 **23 octobre — une seule horloge ([plan 56 B2](56-boucle-de-run.md), §196) :** Résurgences, micro-événements, chasses de Souverains, Ateliers, Puits et stèles éteints en run par interrupteur de données (`--reserve` les rallume dans les outils) ; cinq quêtes qui en dépendaient passent en réserve, leurs pièces restent verrouillées. Suite : B3, la run se lit.

@@ -2,6 +2,7 @@
     "id": "urban_ruins",
     "name": "Ruines Urbaines",
     "place_key": "LAND_PLACE_URBAN",
+    "guardian": "grand_cerf",
     "terrain_weights": {
         "grass": 0.15,
         "concrete": 0.55,

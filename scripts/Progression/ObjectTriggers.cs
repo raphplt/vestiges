@@ -309,7 +309,7 @@ public partial class ObjectTriggers : Node
             _player.ObjectProcs?.Show(BurnChanceStat);
         }
 
-        bool elite = enemy.IsPriorityTarget || enemy.Tier is EnemyTier.Elite or EnemyTier.Miniboss or EnemyTier.Boss;
+        bool elite = enemy.IsPriorityTarget || enemy.Tier == EnemyTier.Elite || EnemyGrammar.IsHeavy(enemy.Tier);
         if (_chillCopies > 0f && (!_chillReady.TryGetValue(enemy.Life, out float chillReady) || chillReady <= _clock) && Roll(_chillChance * coefficient)
             && _chillBudget.Take(_clock, 1f, _chillRate * _chillCopies, 1f) >= 1f)
         {

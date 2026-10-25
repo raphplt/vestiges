@@ -15,7 +15,10 @@ public static class EnemyDataValidator
 	private static readonly HashSet<string> EnemyKeys = new()
 	{
 		"id", "name", "type", "behavior", "tier", "grammatical_gender", "attack_audio", "stats", "visual", "abilities", "pack_family",
+		"guardian",
 	};
+
+	private static readonly HashSet<string> GuardianKeys = new() { "_doc", "moves", "body_scale" };
 
 	private static readonly HashSet<string> VisualKeys = new()
 	{
@@ -37,6 +40,7 @@ public static class EnemyDataValidator
 			?? CheckIdentity(enemy, id, where)
 			?? CheckStats(enemy, where)
 			?? CheckVisual(enemy, where)
+			?? CheckGuardian(enemy, where)
 			?? CheckAbilities(enemy, where, enemyReferences);
 	}
 
@@ -157,6 +161,40 @@ public static class EnemyDataValidator
 		if (family != null && !EnemyContract.IsFamily(family))
 			return $"{where}.projectile.family : famille « {family} » inconnue du contrat";
 		return null;
+	}
+
+	/// <summary>
+	/// Bloc « guardian » (plan 57 G0) : obligatoire pour le rang guardian, refusé ailleurs. Coups de référence distincts,
+	/// au moins un, et échelle du corps.
+	/// </summary>
+	private static string CheckGuardian(JsonElement enemy, string where)
+	{
+		bool guardianTier = Text(enemy, "tier") == "guardian";
+		if (!enemy.TryGetProperty("guardian", out JsonElement guardian))
+			return guardianTier ? $"{where} : bloc guardian obligatoire pour le rang guardian" : null;
+		if (!guardianTier)
+			return $"{where}, guardian : réservé au rang guardian";
+		if (guardian.ValueKind != JsonValueKind.Object)
+			return $"{where}, guardian : objet attendu";
+		where += ", guardian";
+		string error = UnknownKey(guardian, GuardianKeys, where);
+		if (error != null)
+			return error;
+		if (!guardian.TryGetProperty("moves", out JsonElement moves) || moves.ValueKind != JsonValueKind.Array || moves.GetArrayLength() == 0)
+			return $"{where}.moves : liste non vide attendue ({EnemyGrammar.GuardianMoveKeys})";
+		GuardianMoveSet seen = GuardianMoveSet.None;
+		foreach (JsonElement move in moves.EnumerateArray())
+		{
+			string key = move.ValueKind == JsonValueKind.String ? move.GetString() : null;
+			if (!EnemyGrammar.TryParseGuardianMove(key, out GuardianMoveSet parsed))
+				return $"{where}.moves : coup « {key} » inconnu ({EnemyGrammar.GuardianMoveKeys})";
+			if ((seen & parsed) != 0)
+				return $"{where}.moves : coup « {key} » en double";
+			seen |= parsed;
+		}
+		if (!guardian.TryGetProperty("body_scale", out JsonElement scale))
+			return $"{where}.body_scale : obligatoire";
+		return CheckNumber(scale, DataValueRule.Positive, $"{where}.body_scale");
 	}
 
 	private static string CheckAbilities(JsonElement enemy, string where, List<string> enemyReferences)

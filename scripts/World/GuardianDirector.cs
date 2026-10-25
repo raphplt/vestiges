@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
 using Vestiges.Core;
@@ -14,7 +15,8 @@ namespace Vestiges.World;
 /// Vaincu, il laisse son butin, puis la terre suivante se recoud ; chaque terre franchie ajoute du Péril.
 /// Le dernier gardien à vaincre gagne la run (§16 L1). La terre suivante est celle du late game (§16 L2) : ni repaire ni
 /// passage, mais un écho de gardien qui se lève près du joueur à intervalles, plus fort à chaque fois, jusqu'à la mort.
-/// Prototype : le gardien est un Souverain de la terre, renforcé.
+/// Chaque terre a son gardien, une créature à part que nomme son biome (plan 57 G0) ; les échos reprennent ceux que le
+/// joueur a vaincus.
 /// </summary>
 public partial class GuardianDirector : Node
 {
@@ -34,8 +36,10 @@ public partial class GuardianDirector : Node
     private GuardianLair _lair;
     private Enemy _guardian;
     private GuardianMoves _moves;
-    // Rang et forces du dernier gardien posé, pour le reposer à l'identique s'il est retiré sans mourir.
-    private (int Rank, float Strength, float Damage) _spawned;
+    // Gardien, rang et forces du dernier posé, pour le reposer à l'identique s'il est retiré sans mourir.
+    private (string Id, int Rank, float Strength, float Damage) _spawned;
+    // Gardiens vaincus dans la run, dans l'ordre : les échos du late game les reprennent chacun son tour.
+    private readonly List<string> _beaten = new();
     private BossBarFeed _bar;
     private Phase _phase;
     private int _lights;
@@ -201,7 +205,7 @@ public partial class GuardianDirector : Node
         Vector2 position = _lair.GlobalPosition;
         float extra = Mathf.Max(0, _lights - _config.WakeLights) * _config.ExtraLightHp;
         float strength = (1f + extra) * (enraged ? _config.RageHp : 1f);
-        if (!SpawnGuardian(position, _transition.LandIndex, strength, enraged ? _config.RageDamage : 1f, _config.Escorts))
+        if (!SpawnGuardian(LandGuardian(position), position, _transition.LandIndex, strength, enraged ? _config.RageDamage : 1f, _config.Escorts))
         {
             GD.PushError("[GuardianDirector] Gardien impossible à poser : passage direct à la terre suivante");
             Defeat(position);
@@ -230,34 +234,35 @@ public partial class GuardianDirector : Node
         return swallowed;
     }
 
+    /// <summary>Le gardien que nomme le biome de cette place, celui de la terre.</summary>
+    private string LandGuardian(Vector2 position) => _world.GetBiomeAt(position)?.Guardian;
+
     /// <summary>
-    /// Pose un gardien (ou un écho) : un Souverain de la terre aux PV ×<see cref="GuardianConfig.HpMultiplier"/> et
-    /// <paramref name="strength"/>, jamais sous le plancher de son rang, avec son escorte et sa barre de boss.
+    /// Pose un gardien (ou un écho) : la créature <paramref name="guardianId"/>, sans variante ni affixe, aux PV de sa
+    /// fiche × <see cref="GuardianConfig.HpRankGrowth"/> par rang × <paramref name="strength"/>, avec son escorte de
+    /// créatures de la terre et sa barre de boss.
     /// </summary>
-    private bool SpawnGuardian(Vector2 position, int rank, float strength, float damage, int escorts)
+    private bool SpawnGuardian(string guardianId, Vector2 position, int rank, float strength, float damage, int escorts)
     {
-        _spawned = (rank, strength, damage);
-        string enemyId = _spawner.PickLocalEnemyId(position);
-        // Sans affixe tiré au sort (plan 56 B1) : un gardien Cuirassé encaissait 1,7 fois ses PV, et sa durée de combat
-        // dépendait d'un tirage.
-        _guardian = enemyId != null ? _spawner.SpawnEventEnemy(enemyId, position, "champion", rollAffixes: false) : null;
+        _spawned = (guardianId, rank, strength, damage);
+        EnemyData data = EnemyDataLoader.Get(guardianId);
+        _guardian = data?.Guardian != null ? _spawner.SpawnEventEnemy(guardianId, position) : null;
         if (_guardian == null)
             return false;
-        float hpMultiplier = _config.HpMultiplier * strength;
-        // Plancher par rang : un Souverain calé sur un niveau encore bas ne tiendrait pas le combat d'un gardien.
-        float floor = _config.MinHp * Mathf.Pow(_config.MinHpRankGrowth, rank) * strength;
-        // Plafond : calés sur le niveau du joueur, ses PV dépasseraient vite un combat de une à deux minutes.
-        hpMultiplier = Mathf.Clamp(_guardian.MaxHp * hpMultiplier, floor, floor * _config.HpCapFloorRatio) / Mathf.Max(1f, _guardian.MaxHp);
-        _guardian.Empower(hpMultiplier, damage);
+        // Ni le temps, ni le Péril, ni la difficulté : un combat de une à deux minutes quel que soit le moment du réveil.
+        float hp = data.Stats.Hp * Mathf.Pow(_config.HpRankGrowth, rank) * strength;
+        _guardian.Empower(hp / Mathf.Max(1f, _guardian.MaxHp), damage);
+        _guardian.SetBodyScale(data.Guardian.BodyScale);
         _guardian.Modifiers.IsEventBound = true;
         _guardian.SetTargetBias(_config.TargetBias);
-        _moves = new GuardianMoves(_guardian, _config.Moves, _world, _erasure.BreakGround);
+        _moves = new GuardianMoves(_guardian, _config.Moves, data.Guardian.Moves, _world, _erasure.BreakGround);
         _guardian.AddAbility(_moves);
         for (int i = 0; i < escorts; i++)
         {
             Vector2 escort = position + Vector2.FromAngle(Mathf.Tau * i / Mathf.Max(1, escorts)) * 90f;
-            if (_spawner.IsSpawnablePosition(escort))
-                _spawner.SpawnEventEnemy(enemyId, escort);
+            string escortId = _spawner.PickLocalEnemyId(escort);
+            if (escortId != null && _spawner.IsSpawnablePosition(escort))
+                _spawner.SpawnEventEnemy(escortId, escort);
         }
         CloseArena();
         _bar = new BossBarFeed(_eventBus, _guardian.DisplayName, _guardian.MaxHp);
@@ -292,19 +297,22 @@ public partial class GuardianDirector : Node
         _bar?.End(false);
         _bar = null;
         GD.PushWarning("[GuardianDirector] Gardien retiré sans mourir : il revient");
-        return SpawnGuardian(position, _spawned.Rank, _spawned.Strength, _spawned.Damage, 0);
+        return SpawnGuardian(_spawned.Id, position, _spawned.Rank, _spawned.Strength, _spawned.Damage, 0);
     }
 
-    /// <summary>Le gardien tombe : son coffre, un de plus par lumière au-delà du compte, puis le passage.</summary>
+    /// <summary>Le gardien tombe : ses coffres, un de plus par lumière au-delà du compte, puis le passage.</summary>
     private void Defeat(Vector2 position)
     {
+        if (_guardian != null && !_beaten.Contains(_spawned.Id))
+            _beaten.Add(_spawned.Id);
         _phase = Phase.Defeated;
         EndMoves();
         OpenArena();
         _bar?.End(true);
         _bar = null;
         _guardian = null;
-        DropChest(_config.Chest, position);
+        for (int i = 0; i < _config.Chests.Count; i++)
+            DropChest(_config.Chests[i], position + new Vector2(36f * i, 0f));
         int extra = Mathf.Max(0, _lights - _config.WakeLights);
         for (int i = 0; i < extra; i++)
             DropChest(_config.ExtraLightChest, position + Vector2.FromAngle(Mathf.Tau * (i + 1) / (extra + 1)) * 48f);
@@ -323,12 +331,16 @@ public partial class GuardianDirector : Node
         _echoIn = delay;
     }
 
-    /// <summary>Un écho de gardien se lève près du joueur, au rang suivant le dernier, et la run se durcit.</summary>
+    /// <summary>
+    /// Un écho de gardien se lève près du joueur, au rang suivant le dernier, et la run se durcit : l'un des gardiens
+    /// vaincus, chacun son tour ; à défaut (terre atteinte sans victoire, en test), celui de la terre.
+    /// </summary>
     private void RaiseEcho()
     {
         Vector2 position = EchoPosition();
         int rank = _config.LandsToWin + _echoes;
-        if (!SpawnGuardian(position, rank, _config.EchoHpMultiplier, 1f, _config.EchoEscorts))
+        string echoId = _beaten.Count > 0 ? _beaten[_echoes % _beaten.Count] : LandGuardian(position);
+        if (!SpawnGuardian(echoId, position, rank, _config.EchoHpMultiplier, 1f, _config.EchoEscorts))
         {
             GD.PushError("[GuardianDirector] Écho de gardien impossible à poser : nouvel essai au prochain intervalle");
             StartHolding(_config.EchoIntervalSeconds);

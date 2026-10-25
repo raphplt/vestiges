@@ -119,7 +119,7 @@ public partial class MusicDirector : Node
             if (node is not Enemy { IsActive: true, IsDying: false } enemy || enemy.GlobalPosition.DistanceSquaredTo(center) > radiusSq)
                 continue;
             near++;
-            if (enemy.Tier is EnemyTier.Miniboss or EnemyTier.Boss || _config.CombatPeakVariants.Contains(enemy.VariantId))
+            if (EnemyGrammar.IsHeavy(enemy.Tier) || _config.CombatPeakVariants.Contains(enemy.VariantId))
                 peaks++;
         }
 

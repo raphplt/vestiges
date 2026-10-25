@@ -270,8 +270,11 @@ public partial class LandChangeRegression : Node
         int chestsBefore = Chest.Closed.Count;
         lair.Interact(_player);
         Enemy guardian = director.Guardian;
-        Check(director.IsFighting && !director.Enraged && guardian is { IsActive: true } && guardian.VariantId == "champion",
-            $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.MaxHp:F0} PV)");
+        // Plan 57 G0 : le gardien de la terre est une créature à part, celle que nomme son biome, sans variante.
+        string landGuardian = _world.GetBiomeAt(lair.GlobalPosition)?.Guardian;
+        Check(director.IsFighting && !director.Enraged && guardian is { IsActive: true, Tier: EnemyTier.Guardian, VariantId: "" }
+            && guardian.EnemyId == landGuardian && guardian.Scale.X > 1f,
+            $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.EnemyId} pour {landGuardian}, {guardian?.MaxHp:F0} PV, échelle {guardian?.Scale.X})");
         Check(erasure.FrontFrozen && erasure.Front.StandingShare() < standingBefore,
             $"gardien : le sol non ancré s'effondre, le front se fige ({standingBefore:P0} → {erasure.Front.StandingShare():P0})");
         // Plan 56 B1 : l'arène se ferme, le temps de difficulté s'arrête et la foule est allégée et plafonnée.
@@ -303,9 +306,9 @@ public partial class LandChangeRegression : Node
         for (int frame = 0; frame < 30 && !director.IsDefeated; frame++)
             await Frame();
         await Frame();
-        // Son coffre, un de plus pour la lumière en trop, et celui que tout Souverain lâche à sa mort.
-        Check(director.IsDefeated && Chest.Closed.Count >= chestsBefore + 2,
-            $"gardien vaincu : son coffre et un de plus pour la lumière en trop ({Chest.Closed.Count - chestsBefore} coffres)");
+        // Ses coffres, et un de plus pour la lumière en trop.
+        Check(director.IsDefeated && Chest.Closed.Count >= chestsBefore + config.Chests.Count + 1,
+            $"gardien vaincu : ses {config.Chests.Count} coffres et un de plus pour la lumière en trop ({Chest.Closed.Count - chestsBefore} coffres)");
         Check(!clock.DifficultyHeld && spawner.EncounterCrowdCap == 0 && spawner.EncounterDensityMultiplier == 1f,
             "gardien vaincu : l'arène se rouvre, la difficulté reprend");
         int landBefore = transition.LandIndex;
@@ -458,6 +461,7 @@ public partial class LandChangeRegression : Node
         GuardianLair lair = _world.GetNode("PoiContainer").GetNodeOrNull<GuardianLair>("GuardianLair");
         lair?.Interact(_player);
         Enemy guardian = director.Guardian;
+        string guardianId = guardian?.EnemyId;
         Check(guardian != null && !director.IsLateGame, $"terre {transition.LandIndex} : le dernier gardien est réveillé ({guardian?.DisplayName})");
         guardian?.TakeDamage(guardian.MaxHp * 10f);
         for (int frame = 0; frame < 30 && !director.IsDefeated; frame++)
@@ -493,7 +497,8 @@ public partial class LandChangeRegression : Node
         await Frame();
         await Frame();
         Enemy echo = director.Guardian;
-        Check(director.IsFighting && echo is { IsActive: true } && peril.Peril == perilBefore + config.EchoPeril && objective?.Text != holding,
+        Check(director.IsFighting && echo is { IsActive: true, Tier: EnemyTier.Guardian } && echo.EnemyId == guardianId
+            && peril.Peril == perilBefore + config.EchoPeril && objective?.Text != holding,
             $"écho de gardien levé : {echo?.DisplayName}, {echo?.MaxHp:F0} PV, Péril {perilBefore} → {peril.Peril}, « {objective?.Text} »");
         echo?.TakeDamage(echo.MaxHp * 10f);
         for (int frame = 0; frame < 30 && director.IsFighting; frame++)

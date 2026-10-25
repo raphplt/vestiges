@@ -1,0 +1,28 @@
+{
+    "id": "grand_cerf",
+    "name": "Le Grand Cerf",
+    "grammatical_gender": "m",
+    "type": "melee",
+    "tier": "guardian",
+    "stats": {
+        "hp": 1950,
+        "speed": 55,
+        "damage": 12,
+        "xp_reward": 150,
+        "essence": 8,
+        "perception": 900,
+        "leash": 2000
+    },
+    "guardian": {
+        "_doc": "Gardien des bois de la colline (plan 57). hp : PV sur la première terre, × hp_rank_growth de data/world/guardian.json par terre franchie. moves : coups de référence qu'il prend, réglés en commun dans guardian.json. Corps provisoire jusqu'au lot G1 : celui du Tréant, à l'échelle body_scale.",
+        "moves": ["charge", "slam"],
+        "body_scale": 2
+    },
+    "visual": {
+        "color": "#5A4632",
+        "shape": "square",
+        "size": 26,
+        "sprite_folder": "treant_corrompu",
+        "sprite_feet_offset": 31
+    }
+}

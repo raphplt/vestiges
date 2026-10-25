@@ -3,6 +3,7 @@
     "footstep_audio": "sfx_pas_gravier",
     "name": "Carrière Effondrée",
     "place_key": "LAND_PLACE_QUARRY",
+    "guardian": "grand_cerf",
     "terrain_weights": {
         "grass": 0.05,
         "concrete": 0.40,

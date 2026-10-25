@@ -450,7 +450,7 @@ public partial class CatalogContractRegression : Node
 
     private void CheckBiomes()
     {
-        Func<string, bool> enemyExists = EnemyDataLoader.Exists;
+        Func<string, EnemyTier?> enemyTier = id => EnemyDataLoader.Exists(id) ? EnemyDataLoader.Get(id).Tier : null;
         HashSet<string> pois = new();
         foreach (PoiData poi in PoiDataLoader.GetAll())
             pois.Add(poi.Id);
@@ -479,6 +479,10 @@ public partial class CatalogContractRegression : Node
             ("pool non liste", root => root["exploration_enemy_pool"] = "rodeur", "exploration_enemy_pool"),
             ("créature inconnue", root => root["exploration_enemy_pool"]![0] = "rodeurr", "exploration_enemy_pool[0]"),
             ("créature non textuelle", root => root["resurgence_enemy_pool"]![0] = 1, "resurgence_enemy_pool[0]"),
+            ("gardien dans la foule", root => root["exploration_enemy_pool"]![0] = "grand_cerf", "exploration_enemy_pool[0]"),
+            ("gardien absent", root => root.Remove("guardian"), "guardian"),
+            ("gardien ordinaire", root => root["guardian"] = "rodeur", "rang guardian"),
+            ("gardien inconnu", root => root["guardian"] = "cerf", "rang guardian"),
             ("danger fractionnaire", root => root["danger_level"] = 1.5, "danger_level"),
             ("compte négatif", root => root["poi_count_min"] = -1, "poi_count_min"),
             ("compte au-delà d'int32", root => root["poi_count_max"] = 2147483648L, "poi_count_max"),
@@ -530,7 +534,7 @@ public partial class CatalogContractRegression : Node
                 ["res://data/biomes/candidat.json"] = first,
                 ["res://data/biomes/invalide.json"] = Mutated(valid, mutate)
             };
-            string message = BiomeDataLoader.Apply(candidates, enemyExists, pois.Contains, audioExists, resourceExists);
+            string message = BiomeDataLoader.Apply(candidates, enemyTier, pois.Contains, audioExists, resourceExists);
             Check(message != null && message.Contains("invalide.json", StringComparison.Ordinal)
                 && message.Contains(expected, StringComparison.Ordinal) && BiomeDataLoader.Get("biome_candidat") == null
                 && ReferenceEquals(BiomeDataLoader.Get("forest_reclaimed"), forest) && BiomeDataLoader.GetAll().Count == original.Count,
@@ -543,20 +547,20 @@ public partial class CatalogContractRegression : Node
             (valid.Replace("\"grass\": 0.30", "\"grass\": 0.30, \"grass\": 1", StringComparison.Ordinal), "clé « grass » en double")
         })
         {
-            bool refused = !BiomeDataLoader.TryParse(text, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData biome, out string error);
+            bool refused = !BiomeDataLoader.TryParse(text, enemyTier, pois.Contains, audioExists, resourceExists, out BiomeData biome, out string error);
             Check(refused && biome == null && error.Contains(expected, StringComparison.Ordinal), $"fiche de biome refusée ({expected}) : {error}");
         }
         Dictionary<string, string> duplicate = new() { ["a.json"] = valid, ["b.json"] = valid };
-        Check(BiomeDataLoader.Apply(duplicate, enemyExists, pois.Contains, audioExists, resourceExists)?.Contains("id en double", StringComparison.Ordinal) == true
+        Check(BiomeDataLoader.Apply(duplicate, enemyTier, pois.Contains, audioExists, resourceExists)?.Contains("id en double", StringComparison.Ordinal) == true
             && ReferenceEquals(BiomeDataLoader.Get("forest_reclaimed"), forest), "identifiant de biome en double refusé sans publication");
-        Check(BiomeDataLoader.Apply(new Dictionary<string, string>(), enemyExists, pois.Contains, audioExists, resourceExists) != null,
+        Check(BiomeDataLoader.Apply(new Dictionary<string, string>(), enemyTier, pois.Contains, audioExists, resourceExists) != null,
             "catalogue de biomes vide refusé");
         string optional = Mutated(valid, root =>
         {
             foreach (string key in new[] { "name", "danger_level", "poi_pool", "poi_count_min", "poi_count_max", "path_style", "wang_tile_groups", "blend_terrains", "atmosphere", "ambience", "motes" })
                 root.Remove(key);
         });
-        Check(BiomeDataLoader.TryParse(optional, enemyExists, pois.Contains, audioExists, resourceExists, out BiomeData defaults, out _)
+        Check(BiomeDataLoader.TryParse(optional, enemyTier, pois.Contains, audioExists, resourceExists, out BiomeData defaults, out _)
             && defaults.Name == "" && defaults.DangerLevel == 1 && defaults.MapWeight == 1f && defaults.PoiCountMin == 3
             && defaults.PoiCountMax == 5 && defaults.PoiPool.Count == 0 && defaults.PathStyle == null
             && defaults.WangTileGroups.Count == 0 && !defaults.BlendTerrains && defaults.Atmosphere == BiomeAtmosphereStyle.Neutral,
@@ -569,7 +573,7 @@ public partial class CatalogContractRegression : Node
             "feuilles en forêt, aucune particule sans liste");
         Check(defaults.Ambience == BiomeAmbience.Silent, "biome sans bloc d'ambiance : silence et son sec");
         Check(BiomeAtmosphereStyle.Neutral.GradeMultiplier().IsEqualApprox(Vector3.One), "atmosphère neutre sans effet sur la couleur");
-        Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyExists, pois.Contains, audioExists, resourceExists,
+        Check(BiomeDataLoader.TryParse(Mutated(valid, root => root["path_style"] = new JsonObject()), enemyTier, pois.Contains, audioExists, resourceExists,
             out BiomeData styleDefaults, out _) && styleDefaults.PathStyle?.WidthPx == PathStyle.Default.WidthPx,
             "style de chemin facultatif : secours conservés");
         Check(forest.ExplorationEnemyPool.Count == 6 && forest.ExplorationEnemyPool[1] == forest.ExplorationEnemyPool[2]
