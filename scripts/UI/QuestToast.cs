@@ -14,7 +14,7 @@ namespace Vestiges.UI;
 /// </summary>
 public partial class QuestToast : Control
 {
-    private const float Top = StreakHud.Bottom + 68f;
+    private const float Top = StreakHud.Bottom + 100f;
     private const float Width = 340f;
     private const float FadeSec = 0.3f;
     private const float HoldSec = 3.2f;

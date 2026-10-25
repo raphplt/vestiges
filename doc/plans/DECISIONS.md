@@ -2403,3 +2403,17 @@ Raphaël : « allez go » (lot B3 du [plan 56](56-boucle-de-run.md)). Détail au
 - **Le carton** paraît à chaque terre, départ compris, entre la Série et les bandeaux de quête. Le son est celui du réveil d'un Mémorial, joué plus grave : un lieu dont on se souvient.
 - **Tant que la Montée n'existe pas** (B4), la terre du late game allume le sommet de la piste, en orange, et son carton dit « Dernière terre ».
 - **Sur les terres, le nom du biome ne passe plus sous la Série** : le carton le remplace.
+
+## 198. Le chemin du gardien doit se lire, et chaque terre a son gardien — 25 octobre 2026
+
+Raphaël, après une run : « les boss à la fin de chaque niveau ont été faits ? je ne les ai pas vus ». Le chemin (trois Mémoriaux, le repaire, le gardien) n'était dit que par une ligne de 10 px au-dessus de la minimap. Raphaël : « ça c'est un problème majeur […] il faut vraiment corriger ça », et « il faut que les boss soient des entités à part, pas des versions grossies de mobs existants ». Détail au [plan 57](57-chemin-et-gardiens.md).
+
+**Acté :**
+- **le chemin du gardien passe avant la suite** : l'objectif en haut au centre, une flèche d'objectif, des cartons à l'arrivée, à la 3e lumière et au gardien qui se lève seul (lot C1), puis la minimap et l'alerte de rage (C2) ;
+- **un gardien par terre, entité à part**, que rien d'autre ne fait naître : son nom, son corps, deux coups de référence et un coup à lui. Les Souverains ne servent plus de gardiens. Ce chantier remonte avant les terres complètes.
+
+**Tranché par défaut, réversible :**
+- **les cinq gardiens** : le Grand Cerf (bois de la colline), l'Épouvantail (fermes du plateau), le Tocsin (Haute-Ville), le Pilleur (Bas-Port), le Carrier (carrière des Aubiers), chacun avec son coup (plan 57 §3) ;
+- **le Grand Cerf d'abord**, gardien de référence, qui sert à toutes les terres tant que les autres manquent ;
+- **corps procéduraux d'abord**, que l'ami artiste reprendra ;
+- **la flèche montre les Mémoriaux même dans le brouillard** ; une seule flèche d'objectif, aucune pendant le combat.

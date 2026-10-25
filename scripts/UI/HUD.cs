@@ -158,10 +158,14 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(_xpBar);
 
         _hudRoot.AddChild(new ChestPointers { Name = "ChestPointers" });
+        _hudRoot.AddChild(new ObjectivePointer { Name = "ObjectivePointer" });
         _hudRoot.AddChild(new DashHint { Name = "DashHint" });
         _hudRoot.AddChild(new Minimap { Name = "Minimap" });
-        _hudRoot.AddChild(new LandObjective { Name = "LandObjective" });
-        _hudRoot.AddChild(new LandArrivalCard { Name = "LandArrivalCard" });
+        LandObjective landObjective = new() { Name = "LandObjective" };
+        _hudRoot.AddChild(landObjective);
+        LandArrivalCard arrivalCard = new() { Name = "LandArrivalCard" };
+        arrivalCard.ShowingChanged += landObjective.SetMasked;
+        _hudRoot.AddChild(arrivalCard);
         RunEventHud eventHud = new() { Name = "RunEventHud" };
         _hudRoot.AddChild(eventHud);
         _hudRoot.AddChild(new BossHealthBar { Name = "BossHealthBar" });

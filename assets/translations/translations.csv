@@ -608,6 +608,11 @@ LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last lan
 LAND_OBJECTIVE_VICTORY,"Run gagnée · La dernière terre se recoud","Run won · The last land is stitching itself"
 LAND_ARRIVAL_RANK,"Terre {0}","Land {0}"
 LAND_ARRIVAL_LAST,Dernière terre,Last land
+LAND_ARRIVAL_GOAL,"Ravive {0} Mémoriaux, puis réveille le gardien","Rekindle {0} Memorials, then wake the guardian"
+LAND_ARRIVAL_GOAL_LAST,Les échos des gardiens te traquent : tiens bon,The guardians' echoes hunt you: hold on
+LAND_READY_LIGHTS,{0} Mémoriaux ravivés,{0} Memorials rekindled
+LAND_READY_TITLE,Le gardien t'attend,The guardian awaits
+LAND_READY_GOAL,"Rejoins le cœur, et réveille-le","Return to the heart, and wake it"
 LAND_PLACE_FOREST,Les bois de la colline,The Hill Woods
 LAND_PLACE_FIELDS,Les fermes du plateau,The Plateau Farms
 LAND_PLACE_URBAN,La Haute-Ville,Haute-Ville

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**25 octobre — le chemin du gardien et un gardien par terre ([plan 57](57-chemin-et-gardiens.md), §198) :** Raphaël n'a pas vu les gardiens : le chemin (trois Mémoriaux, le repaire) n'était dit que par une petite ligne près de la minimap. Lots C1 et C2 : objectif en haut au centre, flèche d'objectif, cartons, minimap. Lots G0 à G5 : un gardien à part par terre (le Grand Cerf, l'Épouvantail, le Tocsin, le Pilleur, le Carrier), plus de Souverain grossi.
+
 **23 octobre — une seule horloge ([plan 56 B2](56-boucle-de-run.md), §196) :** Résurgences, micro-événements, chasses de Souverains, Ateliers, Puits et stèles éteints en run par interrupteur de données (`--reserve` les rallume dans les outils) ; cinq quêtes qui en dépendaient passent en réserve, leurs pièces restent verrouillées. Suite : B3, la run se lit.
 
 **23 octobre — l'arène du gardien ([plan 56 B1](56-boucle-de-run.md), §195) :** pendant le combat d'un gardien, la difficulté s'arrête, rien d'autre ne se déclenche, la foule est plafonnée à 40 et le gardien passe devant elle dans le choix des cibles ; PV revus, sans affixe. Au bot en profil neuf, 7 combats sur 10 en 73 à 112 s (6 à 30 min avant), deux runs gagnées vers 19 min. Suite : B2, une seule horloge.

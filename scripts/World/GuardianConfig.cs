@@ -42,6 +42,9 @@ public sealed class GuardianConfig
 
     /// <summary>Son du carton d'arrivée d'une terre (plan 56 B3).</summary>
     public string ArrivalAudio { get; init; }
+
+    /// <summary>Son du carton qui annonce le gardien prêt, à la dernière lumière (plan 57 C1).</summary>
+    public string ReadyAudio { get; init; }
     public GuardianMovesConfig Moves { get; init; }
 
     public static GuardianConfig Load(out string error)
@@ -63,7 +66,7 @@ public sealed class GuardianConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
             reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_multiplier", "min_hp", "min_hp_rank_growth", "hp_cap_floor_ratio", "fight_crowd_density", "fight_crowd_cap", "target_bias", "extra_light_hp",
-                "extra_light_chest", "chest", "rage_hp", "rage_damage", "escorts", "passage_delay_seconds", "rank_peril", "lands_to_win", "rise_audio", "victory_audio", "arrival_audio", "late_game", "moves");
+                "extra_light_chest", "chest", "rage_hp", "rage_damage", "escorts", "passage_delay_seconds", "rank_peril", "lands_to_win", "rise_audio", "victory_audio", "arrival_audio", "ready_audio", "late_game", "moves");
             JsonElement lateGame = reader.Section(root, "late_game");
             reader.AllowOnly(lateGame, "late_game", "_doc", "echo_first_seconds", "echo_interval_seconds", "echo_hp_multiplier", "echo_peril",
                 "echo_escorts", "echo_chest", "echo_distance");
@@ -101,6 +104,7 @@ public sealed class GuardianConfig
                 RiseAudio = reader.Text(root, "rise_audio"),
                 VictoryAudio = reader.Text(root, "victory_audio"),
                 ArrivalAudio = reader.Text(root, "arrival_audio"),
+                ReadyAudio = reader.Text(root, "ready_audio"),
                 Moves = GuardianMovesConfig.Parse(reader, root),
             };
             if (reader.Error == null && config.HpCapFloorRatio < 1f)

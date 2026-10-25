@@ -7,10 +7,11 @@ namespace Vestiges.UI;
 
 /// <summary>
 /// Carton d'arrivée d'une terre (plan 56 B3) : « Terre 2 » en petit, le lieu de Vaulme en grand, un trait qui s'ouvre
-/// dessous et un son. Il vient à chaque terre, départ compris, quand le fondu du chargement s'éclaircit, puis s'efface.
-/// Écoute <see cref="EventBus.LandObjectiveChanged"/> : une terre nouvelle l'annonce. Le lieu vient du biome de la terre
-/// (<c>place_key</c>). Le temps du carton suit la run : il se fige sous un écran de choix. Au repos, ni dessin ni rappel.
-/// Coordonnées en unités de référence 960×540, comme le reste du HUD.
+/// dessous, ce qu'il faut y faire (plan 57 C1) et un son. Il vient à chaque terre, départ compris, quand le fondu du
+/// chargement s'éclaircit, puis s'efface. Le même carton annonce le gardien prêt, à la dernière lumière : sans lui, le
+/// joueur ne savait pas qu'il fallait revenir au cœur. Écoute <see cref="EventBus.LandObjectiveChanged"/>. Le lieu vient
+/// du biome de la terre (<c>place_key</c>). Le temps du carton suit la run : il se fige sous un écran de choix. Au repos,
+/// ni dessin ni rappel. Coordonnées en unités de référence 960×540, comme le reste du HUD.
 /// </summary>
 public partial class LandArrivalCard : Control
 {
@@ -18,10 +19,12 @@ public partial class LandArrivalCard : Control
     private const float RankBaseline = StreakHud.Bottom + 22f;
     private const float PlaceGap = 30f;
     private const float RuleGap = 11f;
+    private const float GoalGap = 20f;
     private const int RankSize = 16;
     private const int PlaceSize = 32;
     private const int RankOutline = 4;
     private const int PlaceOutline = 6;
+    private const int GoalSize = 16;
     private const float RuleHalfWidth = 72f;
     private const float RuleDiamond = 3f;
 
@@ -33,26 +36,42 @@ public partial class LandArrivalCard : Control
     private const float RisePixels = 6f;
     private const float ArrivalPitch = 0.8f;
     private const float ArrivalVolumeDb = -4f;
+    private const float ReadyPitch = 0.9f;
+    private const float ReadyVolumeDb = -6f;
 
     private static readonly Color Outline = new(0.02f, 0.02f, 0.04f, 0.92f);
     private static readonly Color RankColor = new(0x9E / 255f, 0x94 / 255f, 0x94 / 255f);
     private static readonly Color PlaceColor = new(0xE8 / 255f, 0xE0 / 255f, 0xD4 / 255f);
     private static readonly Color RuleColor = new(0xD4 / 255f, 0xA8 / 255f, 0x43 / 255f);
+    private static readonly Color GoalColor = new(0xF2 / 255f, 0xD1 / 255f, 0x73 / 255f);
+
+    private enum Kind { Arrival, Ready }
 
     private EventBus _eventBus;
     private GameManager _gameManager;
     private Font _font;
     private int _landsToWin;
     private string _arrivalAudio;
+    private string _readyAudio;
     private int _announcedLand = -1;
+    private int _readyLand = -1;
+    private Kind _kind;
+    private int _needed;
     private string _rankText = "";
     private string _placeText = "";
+    private string _goalText = "";
     private float _rankWidth;
     private float _placeWidth;
+    private float _goalWidth;
     // Temps depuis l'annonce, délai compris ; négatif au repos.
     private float _age = -1f;
+    // Le carton est à l'écran : la ligne d'objectif lui a cédé la place.
+    private bool _shown;
     private readonly Vector2[] _diamondOutline = new Vector2[4];
     private readonly Vector2[] _diamondFill = new Vector2[4];
+
+    /// <summary>Le carton paraît (vrai) ou s'efface (faux) : la ligne d'objectif, à la même place, lui cède.</summary>
+    public event System.Action<bool> ShowingChanged;
 
     public override void _Ready()
     {
@@ -68,6 +87,7 @@ public partial class LandArrivalCard : Control
         }
         _landsToWin = config.LandsToWin;
         _arrivalAudio = config.ArrivalAudio;
+        _readyAudio = config.ReadyAudio;
         _gameManager = GetNode<GameManager>("/root/GameManager");
         _eventBus = GetNode<EventBus>("/root/EventBus");
         _eventBus.LandObjectiveChanged += OnObjective;
@@ -82,11 +102,52 @@ public partial class LandArrivalCard : Control
 
     private void OnObjective(int land, int lights, int needed, int stage)
     {
-        if (land == _announcedLand)
-            return;
-        _announcedLand = land;
+        _needed = needed;
+        if (land != _announcedLand)
+        {
+            _announcedLand = land;
+            Start(Kind.Arrival);
+        }
+        else if (stage == 1 && _readyLand != land)
+        {
+            _readyLand = land;
+            Start(Kind.Ready);
+        }
+        else if (stage is 2 or 3 && _kind == Kind.Ready)
+            CutShort();
+    }
+
+    private void Start(Kind kind)
+    {
+        SetShown(false);
+        _kind = kind;
         _age = 0f;
         SetProcess(true);
+    }
+
+    /// <summary>Le combat commence sous le carton du gardien prêt : il s'efface aussitôt, la barre de boss prend la place.</summary>
+    private void CutShort()
+    {
+        float fadeOut = DelaySeconds + FadeInSeconds + HoldSeconds;
+        if (_age < 0f || _age >= fadeOut)
+            return;
+        if (_age < DelaySeconds)
+        {
+            _age = -1f;
+            SetProcess(false);
+            QueueRedraw();
+            return;
+        }
+        _age = fadeOut;
+        SetShown(false);
+    }
+
+    private void SetShown(bool shown)
+    {
+        if (shown == _shown)
+            return;
+        _shown = shown;
+        ShowingChanged?.Invoke(shown);
     }
 
     public override void _Process(double delta)
@@ -99,10 +160,14 @@ public partial class LandArrivalCard : Control
             if (_gameManager.CurrentState != GameManager.GameState.Run)
                 _age = float.MaxValue;
             else
+            {
                 Announce(_announcedLand);
+                SetShown(true);
+            }
         }
         if (_age >= DelaySeconds + FadeInSeconds + HoldSeconds + FadeOutSeconds)
         {
+            SetShown(false);
             _age = -1f;
             SetProcess(false);
         }
@@ -112,12 +177,25 @@ public partial class LandArrivalCard : Control
     /// <summary>Textes du carton, lus au moment où il paraît : la terre est construite, son biome connu.</summary>
     private void Announce(int land)
     {
-        _rankText = land >= _landsToWin ? Tr("LAND_ARRIVAL_LAST") : string.Format(Tr("LAND_ARRIVAL_RANK"), land + 1);
-        _placeText = PlaceOf(GetNodeOrNull<WorldSetup>("/root/Main")?.Land);
+        bool last = land >= _landsToWin;
+        if (_kind == Kind.Ready)
+        {
+            _rankText = string.Format(Tr("LAND_READY_LIGHTS"), _needed);
+            _placeText = Tr("LAND_READY_TITLE");
+            _goalText = Tr("LAND_READY_GOAL");
+            AudioManager.Play(_readyAudio, 0f, ReadyVolumeDb, ReadyPitch);
+        }
+        else
+        {
+            _rankText = last ? Tr("LAND_ARRIVAL_LAST") : string.Format(Tr("LAND_ARRIVAL_RANK"), land + 1);
+            _placeText = PlaceOf(GetNodeOrNull<WorldSetup>("/root/Main")?.Land);
+            _goalText = last ? Tr("LAND_ARRIVAL_GOAL_LAST") : string.Format(Tr("LAND_ARRIVAL_GOAL"), _needed);
+            AudioManager.Play(_arrivalAudio, 0f, ArrivalVolumeDb, ArrivalPitch);
+        }
         _rankWidth = TextWidth(_rankText, RankSize);
         _placeWidth = TextWidth(_placeText, PlaceSize);
-        AudioManager.Play(_arrivalAudio, 0f, ArrivalVolumeDb, ArrivalPitch);
-        GD.Print($"[LandArrivalCard] {_rankText} · {_placeText}");
+        _goalWidth = TextWidth(_goalText, GoalSize);
+        GD.Print($"[LandArrivalCard] {_rankText} · {_placeText} · {_goalText}");
     }
 
     private string PlaceOf(LandSpec land)
@@ -153,6 +231,8 @@ public partial class LandArrivalCard : Control
         DrawRect(new Rect2(center - half, y, half * 2f, 1f), rule);
         DrawDiamond(new Vector2(center - half, y + 0.5f), rule, alpha);
         DrawDiamond(new Vector2(center + half, y + 0.5f), rule, alpha);
+
+        DrawText(_goalText, _goalWidth, GoalSize, RankOutline, new Vector2(center, y + GoalGap + rise), GoalColor with { A = alpha });
     }
 
     private void DrawDiamond(Vector2 at, Color color, float alpha)
