@@ -17,7 +17,9 @@
         "ground_decal_max_height": 12,
         "occluder_min_height": 24,
         "trample_max_height": 40,
-        "trample_prefixes": ["prop_tall_grass", "prop_poppies", "prop_flowers", "prop_fern", "prop_reeds", "prop_bush"]
+        "trample_prefixes": ["prop_tall_grass", "prop_poppies", "prop_flowers", "prop_fern", "prop_reeds", "prop_bush"],
+        "remarkable_spacing_cells": 18,
+        "remarkable_clearance_cells": 2
     },
     "ground_blend": {
         "enabled": true,

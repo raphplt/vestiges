@@ -229,5 +229,6 @@
             "blocking": true,
             "min_distance": 10
         }
-    ]
+    ],
+    "remarkables": ["sunken_shrine", "collapsed_pontoon", "bound_tree", "drowned_cart"]
 }

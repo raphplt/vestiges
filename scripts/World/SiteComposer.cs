@@ -51,16 +51,10 @@ public static class SiteComposer
                 if (!Fits(generator, biomeIndex, paths, usedCells, anchor, plan.HalfExtentPx))
                     continue;
                 bool mirrored = CellHash.Of(candidate.X, candidate.Y, seed ^ 0xFA4AUL) % 2 == 1;
-                // L'embranchement sort du lieu vers le sud, puis rejoint le chemin le plus proche de cette sortie :
-                // au sud de préférence, sinon sur ses côtés, jamais au nord (il traverserait les bâtiments).
-                Vector2 spurStart = anchor + Mirror(plan.SpurStart, mirrored);
-                Vector2 exit = new(spurStart.X, anchor.Y + plan.HalfExtentPx.Y + 24f);
-                if (!PathNetworkGenerator.TryNearestPoint(paths, exit, plan.PathReachPx, exit.Y, out Vector2 junction)
-                    && !PathNetworkGenerator.TryNearestPoint(paths, exit, plan.PathReachPx, anchor.Y, out junction))
+                if (!TryConnect(paths, plan, anchor, mirrored, style))
                     continue;
 
                 Reserve(usedCells, anchor, plan.HalfExtentPx);
-                PathNetworkGenerator.AddSpur(paths, spurStart, exit, junction, style, plan.SpurWidthFactor);
                 sites.Add(new CompositionSite(anchor, mirrored));
                 break;
             }
@@ -69,16 +63,35 @@ public static class SiteComposer
         return sites;
     }
 
+    /// <summary>
+    /// L'embranchement sort du lieu vers le sud, puis rejoint le chemin le plus proche de cette sortie : au sud de
+    /// préférence, sinon sur ses côtés, jamais au nord (il traverserait les bâtiments). Faux sans chemin à portée.
+    /// </summary>
+    public static bool TryConnect(PathNetwork paths, SitePlan plan, Vector2 anchor, bool mirrored, PathStyle style)
+    {
+        Vector2 spurStart = anchor + Mirror(plan.SpurStart, mirrored);
+        Vector2 exit = new(spurStart.X, anchor.Y + plan.HalfExtentPx.Y + 24f);
+        if (!PathNetworkGenerator.TryNearestPoint(paths, exit, plan.PathReachPx, exit.Y, out Vector2 junction)
+            && !PathNetworkGenerator.TryNearestPoint(paths, exit, plan.PathReachPx, anchor.Y, out junction))
+            return false;
+        PathNetworkGenerator.AddSpur(paths, spurStart, exit, junction, style, plan.SpurWidthFactor);
+        return true;
+    }
+
     public static int Place(List<CompositionSite> sites, SitePlan plan, Node2D container, ulong seed)
     {
         Dictionary<string, Texture2D> cache = new();
+        Dictionary<string, int> groupPicks = new();
         int placed = 0;
         foreach (CompositionSite site in sites)
         {
             ulong salt = seed ^ CellHash.Of(Mathf.RoundToInt(site.Anchor.X), Mathf.RoundToInt(site.Anchor.Y), 0xFA4BUL);
+            PickGroups(plan, salt, groupPicks);
             for (int index = 0; index < plan.Elements.Count; index++)
             {
                 SitePlan.Element element = plan.Elements[index];
+                if (element.Group != null && groupPicks[element.Group] != index)
+                    continue;
                 if (element.Chance < 1f && CellHash.Of(index, 17, salt) % 1000 >= (uint)(element.Chance * 1000f))
                     continue;
 
@@ -93,13 +106,14 @@ public static class SiteComposer
                 for (int k = 0; k < count; k++)
                 {
                     uint pick = CellHash.Of(index, k, salt);
-                    Texture2D texture = Load(plan.Folder, element.Sprites[(int)(pick % (uint)element.Sprites.Length)], cache);
+                    string stem = element.Sprites[(int)(pick % (uint)element.Sprites.Length)];
+                    Texture2D texture = Load(plan.Folder, stem, cache);
                     if (texture == null)
                         continue;
                     EnvironmentProp prop = new();
                     prop.GlobalPosition = site.Anchor + Mirror(element.At + step * k, site.Mirrored);
                     container.AddChild(prop);
-                    prop.Initialize(texture, null, 0f, element.Blocking);
+                    prop.Initialize(texture, CanopyOf(plan.Folder, stem, cache), 0f, element.Blocking);
                     placed++;
                 }
             }
@@ -107,9 +121,42 @@ public static class SiteComposer
         return placed;
     }
 
-    private static Vector2 Mirror(Vector2 offset, bool mirrored) => mirrored ? new Vector2(-offset.X, offset.Y) : offset;
+    /// <summary>Un élément tiré par groupe de variantes, d'après le lieu : les autres du groupe ne sont pas posés.</summary>
+    private static void PickGroups(SitePlan plan, ulong salt, Dictionary<string, int> picks)
+    {
+        picks.Clear();
+        Dictionary<string, int> seen = new();
+        for (int index = 0; index < plan.Elements.Count; index++)
+        {
+            string group = plan.Elements[index].Group;
+            if (group == null)
+                continue;
+            // Tirage au fil de l'eau : le n-ième membre remplace l'élu une fois sur n, chacun a la même chance.
+            int count = seen.GetValueOrDefault(group) + 1;
+            seen[group] = count;
+            if (count == 1 || CellHash.Of(index, count, salt ^ 0x6A0BUL) % (uint)count == 0)
+                picks[group] = index;
+        }
+    }
 
-    private static bool Fits(WorldGenerator generator, int biomeIndex, PathNetwork paths, HashSet<Vector2I> usedCells,
+    /// <summary>Canopée d'un tronc nommé « …_base » quand le dossier en a une (« …_canopy ») : arbres et vergers.</summary>
+    private static Texture2D CanopyOf(string folder, string stem, Dictionary<string, Texture2D> cache)
+    {
+        if (!stem.EndsWith("_base", System.StringComparison.Ordinal))
+            return null;
+        string canopy = $"{stem[..^5]}_canopy";
+        // Une absence se retient aussi : le test de fichier ne se refait pas à chaque décor.
+        if (cache.TryGetValue(canopy, out Texture2D known))
+            return known;
+        if (ResourceLoader.Exists($"{folder}{canopy}.png"))
+            return Load(folder, canopy, cache);
+        cache[canopy] = null;
+        return null;
+    }
+
+    public static Vector2 Mirror(Vector2 offset, bool mirrored) => mirrored ? new Vector2(-offset.X, offset.Y) : offset;
+
+    public static bool Fits(WorldGenerator generator, int biomeIndex, PathNetwork paths, HashSet<Vector2I> usedCells,
                              Vector2 anchor, Vector2 half)
     {
         Vector2I min = PathNetworkGenerator.CellAt(anchor - half);
@@ -130,7 +177,7 @@ public static class SiteComposer
         return true;
     }
 
-    private static void Reserve(HashSet<Vector2I> usedCells, Vector2 anchor, Vector2 half)
+    public static void Reserve(HashSet<Vector2I> usedCells, Vector2 anchor, Vector2 half)
     {
         Vector2I min = PathNetworkGenerator.CellAt(anchor - half);
         Vector2I max = PathNetworkGenerator.CellAt(anchor + half);

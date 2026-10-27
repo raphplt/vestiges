@@ -227,5 +227,6 @@
             "blocking": false,
             "min_distance": 2
         }
-    ]
+    ],
+    "remarkables": ["car_overgrown", "sign_rusty", "tree_strangled"]
 }

@@ -7,9 +7,9 @@ using Vestiges.Infrastructure;
 namespace Vestiges.World;
 
 /// <summary>
-/// Plan d'un lieu composé (ferme des champs, chantier de la carrière) : où le chercher et quoi y poser. Positions en
-/// pixels écran depuis le centre du lieu (y vers le bas, le nord en haut) ; un lieu par région du biome au plus,
-/// retourné d'est en ouest une fois sur deux. Lu dans un JSON de data/world/ (plan 08 P4b et composition de la carrière).
+/// Plan d'un lieu composé (ferme des champs, chantier de la carrière, pièce d'une terre) : où le chercher et quoi y
+/// poser. Positions en pixels écran depuis le centre du lieu (y vers le bas, le nord en haut), retourné d'est en ouest
+/// une fois sur deux. Lu dans un JSON de data/world/ (plan 08 P4b, composition de la carrière, plan 58).
 /// </summary>
 public sealed class SitePlan
 {
@@ -22,6 +22,8 @@ public sealed class SitePlan
         public float Step;
         public bool Blocking;
         public float Chance = 1f;
+        /// <summary>Variantes d'une même place : de tous les éléments d'un groupe, un seul est posé par lieu.</summary>
+        public string Group;
     }
 
     public string BiomeId = "";
@@ -115,7 +117,7 @@ public sealed class SitePlan
             return plan;
         foreach (JsonElement item in reader.List(owner, "elements", 0))
         {
-            reader.AllowOnly(item, "elements", "sprites", "at", "to", "step", "blocking", "chance");
+            reader.AllowOnly(item, "elements", "sprites", "at", "to", "step", "blocking", "chance", "group");
             Element element = new()
             {
                 Sprites = Sprites(reader, item, "sprites", 1, spriteExists).ToArray(),
@@ -133,6 +135,8 @@ public sealed class SitePlan
             }
             if (JsonConfigReader.Has(item, "chance"))
                 element.Chance = reader.Chance(item, "chance");
+            if (JsonConfigReader.Has(item, "group"))
+                element.Group = reader.Text(item, "group");
             plan.Elements.Add(element);
         }
         return plan;

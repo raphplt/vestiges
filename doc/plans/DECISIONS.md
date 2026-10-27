@@ -2500,3 +2500,19 @@ Raphaël, après G2 : « Ok continue stp d'abord le chantier des terres. Mes pr�
 - **Des décors remarquables garantis sur chaque terre**, comme les cinq grands décors des champs.
 - **Ordre des lots** : la grammaire des pièces (T0), puis les bois, le Bas-Port, la Haute-Ville, la carrière, et les champs en dernier.
 - **Les éléments de lore et les anciens POI restent éteints** ; une pièce peut reprendre leurs idées en décor.
+
+## 206. La grammaire des pièces — 27 octobre 2026
+
+Lot T0 du [plan 58](58-terres-completes.md), dans l'ordre du §205. Détail au plan 58 §7.
+
+**Tranché par défaut, réversible :**
+- **Une pièce est un lieu composé** (`data/world/land_pieces.json`), au format des fermes et des chantiers, avec en plus :
+  - une place de Mémorial ;
+  - un sol imposé dans l'ellipse de son emprise : une clairière, une place, jamais un rectangle ;
+  - des groupes de variantes.
+- **Le cœur entoure le repaire**, à sa place d'aujourd'hui, et impose toujours son sol pour que le repaire ne tombe jamais dans l'eau. Le côté ouest, d'où arrive le joueur, reste ouvert.
+- **Trois ou quatre pièces par terre** en plus du cœur, à 1 400 px les unes des autres au moins, dans la bande des Mémoriaux. Elles se posent avant tout autre lieu.
+- **Les Mémoriaux se logent d'abord dans les pièces**, les autres se posent comme avant : deux sur cinq dans une pièce aujourd'hui.
+- **Décors remarquables garantis** sur les bois, le marais et la carrière, un exemplaire chacun, à 18 colonnes les uns des autres. Les champs gardent leurs cinq grands décors ; la Haute-Ville attend T3.
+- **La Haute-Ville n'a ni pièce ni remarquable en T0** : sa grille d'immeubles remplit la terre, T3 la refait.
+- **Les pièces de démonstration n'emploient que des décors existants** : elles prouvent la grammaire, pas le « vraiment particulier », qui viendra des décors neufs de T1 à T5.

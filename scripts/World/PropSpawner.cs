@@ -32,6 +32,8 @@ public class BiomePropConfig
 	public string BiomeId;
 	public float Density;
 	public List<PropDefinition> Props = new();
+	/// <summary>Décors remarquables posés une fois chacun sur une terre de ce biome, loin les uns des autres (plan 58).</summary>
+	public List<string> Remarkables = new();
 }
 
 /// <summary>
@@ -174,6 +176,12 @@ public partial class PropSpawner : Node2D
 		await yieldSlice();
 		if (wildFieldsLayout != null && configs.TryGetValue("wild_fields", out BiomePropConfig wildFieldsConfig))
 			totalSpawned += await PlaceWildFieldsHeroPropsAsync(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache, wildFieldsConfig, wildFieldsLayout, seed, yieldSlice);
+		foreach (BiomeData active in generator.ActiveBiomes)
+		{
+			if (configs.TryGetValue(active.Id, out BiomePropConfig activeConfig) && activeConfig.Remarkables.Count > 0)
+				totalSpawned += await PlaceRemarkablesAsync(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache,
+					activeConfig, seed, yieldSlice);
+		}
 
 		GD.Print($"[PropSpawner] === SPAWN REPORT ===");
 		GD.Print($"[PropSpawner] Cells evaluated: {cellsEvaluated}");
@@ -256,6 +264,103 @@ public partial class PropSpawner : Node2D
 			GD.Print($"[PropSpawner] Wild fields hero props placed: {placed}");
 
 		return placed;
+	}
+
+	/// <summary>
+	/// Décors remarquables du biome (plan 58), un chacun : cellules du biome mêlées une fois par la graine, parcourues
+	/// depuis un point tiré pour chaque décor, à <see cref="PropRules.RemarkableSpacingCells"/> colonnes les uns des
+	/// autres au moins pour qu'ils se trouvent en marchant.
+	/// </summary>
+	private async Task<int> PlaceRemarkablesAsync(
+		WorldGenerator generator,
+		TerrainType[,] terrainGrid,
+		TileMapLayer ground,
+		Node2D container,
+		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> blockedCells,
+		Dictionary<string, Texture2D> textureCache,
+		BiomePropConfig config,
+		ulong seed,
+		Func<Task> yieldSlice)
+	{
+		Dictionary<string, PropDefinition> propsById = new();
+		foreach (PropDefinition prop in config.Props)
+			propsById[prop.Id] = prop;
+		List<Vector2I> cells = new();
+		for (int x = -generator.MapRadiusX; x <= generator.MapRadiusX; x++)
+		{
+			for (int y = -generator.MapRadiusY; y <= generator.MapRadiusY; y++)
+			{
+				if (generator.IsWithinBounds(x, y) && generator.GetBiomeId(x, y) == config.BiomeId)
+					cells.Add(new Vector2I(x, y));
+			}
+		}
+		RandomNumberGenerator rng = new() { Seed = seed ^ 0x8E3A0UL };
+		for (int i = cells.Count - 1; i > 0; i--)
+		{
+			int j = rng.RandiRange(0, i);
+			(cells[i], cells[j]) = (cells[j], cells[i]);
+		}
+		await yieldSlice();
+		List<Vector2I> placedCells = new();
+		int placed = 0;
+		foreach (string id in config.Remarkables)
+		{
+			int start = cells.Count > 0 ? rng.RandiRange(0, cells.Count - 1) : 0;
+			if (TryPlaceRemarkable(propsById[id], cells, start, placedCells, generator, terrainGrid, ground, container,
+					usedCells, blockedCells, textureCache))
+				placed++;
+			else
+				GD.PushWarning($"[PropSpawner] {config.BiomeId} : pas de place pour le décor remarquable {id}");
+			await yieldSlice();
+		}
+		GD.Print($"[PropSpawner] {config.BiomeId} : {placed}/{config.Remarkables.Count} décors remarquables");
+		return placed;
+	}
+
+	private bool TryPlaceRemarkable(
+		PropDefinition prop,
+		List<Vector2I> cells,
+		int start,
+		List<Vector2I> placedCells,
+		WorldGenerator generator,
+		TerrainType[,] terrainGrid,
+		TileMapLayer ground,
+		Node2D container,
+		HashSet<Vector2I> usedCells,
+		HashSet<Vector2I> blockedCells,
+		Dictionary<string, Texture2D> textureCache)
+	{
+		PropRules rules = PropRules.Current;
+		int spacing = rules.RemarkableSpacingCells;
+		int spawnExclusion = generator.SpawnClearance + 2;
+		for (int step = 0; step < cells.Count; step++)
+		{
+			Vector2I cell = cells[(start + step) % cells.Count];
+			if (generator.IsErased(cell.X, cell.Y) || (Mathf.Abs(cell.X) <= spawnExclusion && Mathf.Abs(cell.Y) <= spawnExclusion))
+				continue;
+			if (usedCells.Contains(cell) || (blockedCells != null && blockedCells.Contains(cell)))
+				continue;
+			string terrainName = GetTerrainAtCell(generator, terrainGrid, cell.X, cell.Y).ToString().ToLowerInvariant();
+			if (!prop.Terrain.Contains(terrainName) || IsTooCloseToUsed(cell, usedCells, rules.RemarkableClearanceCells))
+				continue;
+			bool crowded = false;
+			foreach (Vector2I other in placedCells)
+			{
+				// Rangs d'un demi-pas : une colonne vaut deux rangs au sol.
+				Vector2I delta = cell - other;
+				if (delta.X * delta.X * 4 + delta.Y * delta.Y < spacing * spacing * 4)
+				{
+					crowded = true;
+					break;
+				}
+			}
+			if (crowded || !TrySpawnPropInstance(prop, cell, ground, container, usedCells, textureCache))
+				continue;
+			placedCells.Add(cell);
+			return true;
+		}
+		return false;
 	}
 
 	private bool TryPlaceWildFieldsHeroProp(
@@ -430,6 +535,7 @@ public partial class PropSpawner : Node2D
 	// =========================================================================
 
 	public const string PropsDirectory = "res://data/props";
+	// Écart minimal entre deux décors remarquables, en colonnes de cellules.
 	private static readonly string[] TerrainNames = Array.ConvertAll(Enum.GetNames<TerrainType>(), name => name.ToLowerInvariant());
 	private static Dictionary<string, BiomePropConfig> _configs;
 	private static string _configsError;
@@ -511,7 +617,7 @@ public partial class PropSpawner : Node2D
 	private static BiomePropConfig ParseConfig(JsonConfigReader reader, JsonElement root, Func<string, bool> biomeExists,
 		Func<string, bool> spriteExists)
 	{
-		reader.AllowOnly(root, "décors", "biome_id", "density", "props");
+		reader.AllowOnly(root, "décors", "biome_id", "density", "props", "remarkables");
 		BiomePropConfig config = new() { BiomeId = reader.Text(root, "biome_id"), Density = reader.Chance(root, "density") };
 		if (reader.Error == null && !biomeExists(config.BiomeId))
 			reader.Fail($"biome_id « {config.BiomeId} » inconnu");
@@ -552,6 +658,19 @@ public partial class PropSpawner : Node2D
 			if (reader.Error != null)
 				break;
 			config.Props.Add(prop);
+		}
+		if (JsonConfigReader.Has(root, "remarkables"))
+		{
+			foreach (JsonElement item in reader.List(root, "remarkables", 0))
+			{
+				string id = item.ValueKind == JsonValueKind.String ? item.GetString() : null;
+				if (id == null || !ids.Contains(id))
+					reader.Fail($"remarkables : décor « {id} » absent de props");
+				else if (config.Remarkables.Contains(id))
+					reader.Fail($"remarkables : décor « {id} » en double");
+				else
+					config.Remarkables.Add(id);
+			}
 		}
 		return config;
 	}

@@ -81,6 +81,16 @@ public sealed class SitePlacer
         return true;
     }
 
+    /// <summary>
+    /// Lieu dont la place est déjà choisie (Mémorial d'une pièce de la terre, plan 58) : les autres lieux s'en écartent
+    /// comme d'un lieu tiré, et son dégagement est réservé.
+    /// </summary>
+    public void Claim(Vector2 position)
+    {
+        ForEachCellInClearance(_ground.LocalToMap(position), _rules.Clearance, c => _usedCells.Add(c));
+        _placed.Add(position);
+    }
+
     /// <summary>Plusieurs candidats valides ; garde celui qui est sur un chemin et loin des autres lieux.</summary>
     private bool TryPickCell(float bandMin, float bandMax, float minSpacingPx, bool nearBuildings, out Vector2I best)
     {

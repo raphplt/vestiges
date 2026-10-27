@@ -17,6 +17,10 @@ public struct PropRules
     public float TrampleMaxHeight;
     /// <summary>Débuts de noms de fichiers des décors qui plient : la végétation, jamais un caillou ou des gravats.</summary>
     public string[] TramplePrefixes;
+    /// <summary>Écart minimal entre deux décors remarquables d'une terre, en colonnes (plan 58), pour qu'ils se trouvent en marchant.</summary>
+    public int RemarkableSpacingCells;
+    /// <summary>Cellules libres autour d'un décor remarquable : il se glisse dans le semis, que sa distance de semis bouderait.</summary>
+    public int RemarkableClearanceCells;
 
     /// <summary>Le décor de cette texture est-il une plante basse qui plie au passage ?</summary>
     public readonly bool Tramples(string texturePath)
@@ -39,6 +43,8 @@ public struct PropRules
         OccluderMinHeight = 24f,
         TrampleMaxHeight = 40f,
         TramplePrefixes = System.Array.Empty<string>(),
+        RemarkableSpacingCells = 18,
+        RemarkableClearanceCells = 2,
     };
 
     public static PropRules Current { get; set; } = Default;

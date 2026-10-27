@@ -187,7 +187,8 @@ public class WorldGenConfig
     private static PropRules ReadProps(JsonConfigReader reader, JsonElement section)
     {
         reader.AllowOnly(section, "props", "min_blocking_height", "min_blocking_pixels", "footprint_scale",
-            "ground_decal_max_height", "occluder_min_height", "trample_max_height", "trample_prefixes");
+            "ground_decal_max_height", "occluder_min_height", "trample_max_height", "trample_prefixes", "remarkable_spacing_cells",
+            "remarkable_clearance_cells");
         PropRules rules = PropRules.Default;
         if (JsonConfigReader.Has(section, "min_blocking_height"))
             rules.MinBlockingHeight = reader.NonNegative(section, "min_blocking_height");
@@ -201,6 +202,10 @@ public class WorldGenConfig
             rules.OccluderMinHeight = reader.NonNegative(section, "occluder_min_height");
         if (JsonConfigReader.Has(section, "trample_max_height"))
             rules.TrampleMaxHeight = reader.NonNegative(section, "trample_max_height");
+        if (JsonConfigReader.Has(section, "remarkable_spacing_cells"))
+            rules.RemarkableSpacingCells = reader.Integer(section, "remarkable_spacing_cells", 0, 200);
+        if (JsonConfigReader.Has(section, "remarkable_clearance_cells"))
+            rules.RemarkableClearanceCells = reader.Integer(section, "remarkable_clearance_cells", 1, 20);
         if (JsonConfigReader.Has(section, "trample_prefixes"))
         {
             List<string> prefixes = new();

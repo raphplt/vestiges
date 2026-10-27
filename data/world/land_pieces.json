@@ -1,0 +1,267 @@
+{
+  "_doc": "Pièces maîtresses des terres (plan 58). Une terre pose sa pièce du cœur autour du repaire (lair_offset_px de data/world/guardian.json), puis pieces_per_land pièces tirées parmi celles de son biome, à min_spacing_px les unes des autres au moins, dans la bande des Mémoriaux (lands.memorial_band de world_gen.json) ; attempts emplacements tirés par pièce, dont les candidates_per_piece premiers valides sont comparés (le plus écarté gagne) ; une pièce sans sol imposé refuse un emplacement à plus de max_water_share d'eau. Une pièce est un plan de lieu (mêmes clés que data/world/quarry_sites.json : half_extent_px, path_reach_px, spur_start, spur_width_factor, elements) avec id, unique dans son biome ; memorial : place de son Mémorial, en pixels écran depuis son centre, dans l'ellipse inscrite dans l'emprise (les Mémoriaux se posent dans les pièces d'abord) ; ground : sol imposé sous toute l'emprise (grass, concrete ou forest, dans l'ellipse inscrite dans l'emprise ; l'eau y sèche). Un élément peut porter group : de tous les éléments d'un même groupe, un seul est posé par pièce. Un décor « …_base » prend la canopée « …_canopy » de son dossier. Le cœur exige un ground et ne prend pas de Mémorial : il garde la place du gardien et de son combat ; le joueur arrive à l'ouest de son centre, laisser ce côté ouvert. Démonstration de T0 : des pièces faites de décors existants, refaites par les lots de chaque terre.",
+  "pieces_per_land": [3, 4],
+  "min_spacing_px": 1400,
+  "attempts": 240,
+  "candidates_per_piece": 12,
+  "max_water_share": 0.15,
+  "biomes": {
+    "forest_reclaimed": {
+      "folder": "res://assets/props/forest/",
+      "heart": {
+        "id": "clairiere_du_cerf",
+        "half_extent_px": [520, 260],
+        "ground": "grass",
+        "elements": [
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [461, 46], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [375, 139], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [214, 205], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [11, 230], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-194, 210], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-360, 148], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-375, -139], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-214, -205], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-11, -230], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [194, -210], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [360, -148], "blocking": true },
+          { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [456, -57], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [299, 15], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [224, 100], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [64, 147], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [-121, 137], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [-64, -147], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [121, -137], "blocking": true },
+          { "sprites": ["prop_stump", "prop_rock_mossy", "prop_rock_mossy_v2"], "at": [259, -76], "blocking": true },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [203, 43], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [100, 98], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [-49, 107], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [-27, -109], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [120, -92], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_mushrooms", "prop_fern", "prop_flowers", "prop_flowers_v2"], "at": [210, -32], "blocking": false, "chance": 0.8 },
+          { "sprites": ["prop_fallen_log"], "at": [120, -170], "blocking": true },
+          { "sprites": ["prop_tree_strangled"], "at": [330, -60], "blocking": true }
+        ]
+      },
+      "pieces": [
+        {
+          "id": "vieille_route",
+          "half_extent_px": [440, 120],
+          "memorial": [0, 20],
+          "elements": [
+            { "sprites": ["prop_lamppost"], "at": [-380, -80], "to": [380, -80], "step": 190, "blocking": true, "chance": 0.85 },
+            { "sprites": ["prop_ruin_wall"], "at": [-260, -95], "blocking": true },
+            { "sprites": ["prop_ruin_wall"], "at": [300, -100], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_car_overgrown"], "at": [330, 70], "blocking": true, "group": "voiture" },
+            { "sprites": ["prop_car_overgrown"], "at": [-330, 75], "blocking": true, "group": "voiture" },
+            { "sprites": ["prop_sign_rusty"], "at": [-400, 30], "blocking": false },
+            { "sprites": ["prop_bush", "prop_bush_v2"], "at": [-180, 100], "to": [180, 100], "step": 120, "blocking": false, "chance": 0.6 },
+            { "sprites": ["prop_tree_birch_base", "prop_tree_medium_base"], "at": [420, -30], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_birch_base"], "at": [-430, -20], "blocking": true }
+          ]
+        },
+        {
+          "id": "cercle_de_pierres",
+          "half_extent_px": [400, 200],
+          "ground": "grass",
+          "memorial": [0, 0],
+          "elements": [
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [290, 0], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [251, 72], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [145, 126], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [0, 145], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [-145, 126], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [-251, 72], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [-290, 0], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [-251, -72], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [-145, -126], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [0, -145], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [145, -126], "blocking": true },
+            { "sprites": ["prop_rock_mossy_v2", "prop_rock_mossy"], "at": [251, -73], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [357, 65], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [160, 172], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-130, 178], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-345, 80], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-357, -65], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [-160, -172], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [130, -178], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base", "prop_tree_medium_base", "prop_tree_birch_base"], "at": [345, -80], "blocking": true },
+            { "sprites": ["prop_tree_strangled"], "at": [0, -175], "blocking": true },
+            { "sprites": ["prop_mushrooms"], "at": [-120, 60], "blocking": false },
+            { "sprites": ["prop_mushrooms"], "at": [140, -50], "blocking": false }
+          ]
+        }
+      ]
+    },
+    "wild_fields": {
+      "folder": "res://assets/props/wild_fields/",
+      "heart": {
+        "id": "champ_de_l_epouvantail",
+        "half_extent_px": [520, 260],
+        "ground": "grass",
+        "elements": [
+          { "sprites": ["prop_low_stone_wall_h", "prop_low_stone_wall_broken"], "at": [-420, -220], "to": [460, -220], "step": 56, "blocking": true, "chance": 0.85 },
+          { "sprites": ["prop_wooden_fence", "prop_wooden_fence_broken"], "at": [480, -180], "to": [480, 200], "step": 40, "blocking": true, "chance": 0.8 },
+          { "sprites": ["prop_scene_crow_scarecrow"], "at": [260, -120], "blocking": false },
+          { "sprites": ["prop_scarecrow_broken"], "at": [-260, -140], "blocking": false },
+          { "sprites": ["prop_scarecrow_broken"], "at": [300, 150], "blocking": false },
+          { "sprites": ["prop_hay_bale", "prop_hay_bale_rotten"], "at": [380, -60], "to": [380, 80], "step": 34, "blocking": true },
+          { "sprites": ["prop_rusted_plow"], "at": [-200, 170], "blocking": true },
+          { "sprites": ["prop_tall_grass", "prop_tall_grass_v2", "prop_tall_grass_v3"], "at": [-380, 200], "to": [200, 200], "step": 60, "blocking": false },
+          { "sprites": ["prop_poppies_red", "prop_poppies_mixed"], "at": [-120, -180], "to": [200, -180], "step": 50, "blocking": false, "chance": 0.7 },
+          { "sprites": ["prop_solitary_tree_base"], "at": [-400, -120], "blocking": true }
+        ]
+      },
+      "pieces": [
+        {
+          "id": "vieux_moulin",
+          "half_extent_px": [420, 220],
+          "memorial": [0, 80],
+          "elements": [
+            { "sprites": ["prop_windmill_ruin"], "at": [0, -150], "blocking": true },
+            { "sprites": ["prop_abandoned_well"], "at": [-250, -40], "blocking": true },
+            { "sprites": ["prop_farm_trough"], "at": [230, -60], "blocking": true },
+            { "sprites": ["prop_standing_stone"], "at": [-330, 120], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_low_stone_wall", "prop_low_stone_wall_broken"], "at": [-380, -200], "to": [-380, 180], "step": 38, "blocking": true, "chance": 0.8 },
+            { "sprites": ["prop_hay_bale"], "at": [290, 90], "to": [350, 110], "step": 30, "blocking": true },
+            { "sprites": ["prop_farm_gate_h"], "at": [360, -180], "blocking": true },
+            { "sprites": ["prop_scene_picnic", "prop_scene_clothesline"], "at": [180, -170], "blocking": false, "group": "vie" },
+            { "sprites": ["prop_scene_campfire"], "at": [-160, -170], "blocking": false, "group": "vie" },
+            { "sprites": ["prop_poppies_blue", "prop_poppies_red"], "at": [-200, 190], "to": [200, 190], "step": 70, "blocking": false, "chance": 0.7 }
+          ]
+        }
+      ]
+    },
+    "swamp": {
+      "folder": "res://assets/props/swamp/",
+      "heart": {
+        "id": "ile_du_gardien",
+        "half_extent_px": [520, 260],
+        "ground": "grass",
+        "elements": [
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [451, 45], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [367, 136], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [210, 200], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [11, 225], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [-189, 205], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [-353, 145], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [-367, -136], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [-210, -200], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [-11, -225], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [189, -205], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [353, -145], "blocking": true },
+          { "sprites": ["prop_dead_tree_large_base", "prop_dead_tree_mossy_large", "prop_dead_tree_small", "prop_aerial_roots", "prop_aerial_roots_twisted"], "at": [446, -55], "blocking": true },
+          { "sprites": ["prop_swamp_lantern"], "at": [263, 72], "blocking": false },
+          { "sprites": ["prop_swamp_lantern"], "at": [7, 150], "blocking": false },
+          { "sprites": ["prop_swamp_lantern"], "at": [-7, -150], "blocking": false },
+          { "sprites": ["prop_swamp_lantern"], "at": [256, -78], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [360, 0], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [291, 106], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [111, 171], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [-111, 171], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [-111, -171], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [111, -171], "blocking": false },
+          { "sprites": ["prop_reeds", "prop_bone_pile", "prop_rotten_stump"], "at": [291, -106], "blocking": false },
+          { "sprites": ["prop_bound_tree"], "at": [300, -150], "blocking": true }
+        ]
+      },
+      "pieces": [
+        {
+          "id": "ponton_des_pecheurs",
+          "half_extent_px": [440, 200],
+          "memorial": [-40, 30],
+          "elements": [
+            { "sprites": ["prop_collapsed_pontoon"], "at": [260, -110], "blocking": false },
+            { "sprites": ["prop_broken_walkway"], "at": [340, -60], "blocking": false },
+            { "sprites": ["prop_old_post"], "at": [180, -170], "to": [400, -170], "step": 55, "blocking": true, "chance": 0.8 },
+            { "sprites": ["prop_sunken_boat"], "at": [330, 60], "blocking": false, "group": "barque" },
+            { "sprites": ["prop_sunken_boat"], "at": [-340, -120], "blocking": false, "group": "barque" },
+            { "sprites": ["prop_rusted_barrel"], "at": [-300, 60], "to": [-240, 90], "step": 30, "blocking": true },
+            { "sprites": ["prop_swamp_lantern"], "at": [-260, -60], "blocking": false },
+            { "sprites": ["prop_swamp_lantern"], "at": [200, 150], "blocking": false, "chance": 0.6 },
+            { "sprites": ["prop_drowned_cart"], "at": [-360, 150], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_reeds", "prop_lily_pads"], "at": [-420, -180], "to": [-100, -190], "step": 64, "blocking": false },
+            { "sprites": ["prop_reeds"], "at": [100, 180], "to": [420, 180], "step": 64, "blocking": false }
+          ]
+        },
+        {
+          "id": "autel_noye",
+          "half_extent_px": [380, 200],
+          "ground": "grass",
+          "memorial": [0, 50],
+          "elements": [
+            { "sprites": ["prop_sunken_shrine"], "at": [0, -150], "blocking": true },
+            { "sprites": ["prop_bound_tree"], "at": [-260, -120], "blocking": true },
+            { "sprites": ["prop_vine_curtain", "prop_hanging_moss"], "at": [250, -130], "blocking": true },
+            { "sprites": ["prop_swamp_lantern"], "at": [-120, -170], "blocking": false },
+            { "sprites": ["prop_swamp_lantern"], "at": [120, -170], "blocking": false },
+            { "sprites": ["prop_bone_pile"], "at": [-300, 90], "blocking": false },
+            { "sprites": ["prop_bone_pile"], "at": [290, 120], "blocking": false, "chance": 0.6 },
+            { "sprites": ["prop_toxic_mushrooms", "prop_spore_patch"], "at": [-330, 170], "to": [330, 170], "step": 110, "blocking": false, "chance": 0.7 },
+            { "sprites": ["prop_dead_tree_large_base", "prop_root_mass_large"], "at": [350, 40], "blocking": true },
+            { "sprites": ["prop_dead_tree_mossy_large", "prop_aerial_roots"], "at": [-350, 20], "blocking": true }
+          ]
+        }
+      ]
+    },
+    "collapsed_quarry": {
+      "folder": "res://assets/props/collapsed_quarry/",
+      "heart": {
+        "id": "front_de_taille",
+        "half_extent_px": [520, 260],
+        "ground": "concrete",
+        "elements": [
+          { "sprites": ["prop_rock_outcrop_v2", "prop_rock_outcrop"], "at": [-460, -230], "to": [460, -230], "step": 62, "blocking": true },
+          { "sprites": ["prop_rock_outcrop", "prop_boulder"], "at": [-420, -185], "to": [420, -185], "step": 84, "blocking": true, "chance": 0.7 },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [378, 18], "blocking": true },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [284, 120], "blocking": true },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [81, 176], "blocking": true },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [-153, 165], "blocking": true },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [-284, -120], "blocking": true },
+          { "sprites": ["prop_boulder", "prop_gravel_pile", "prop_ore_pile"], "at": [328, -91], "blocking": true },
+          { "sprites": ["prop_danger_sign"], "at": [-200, -140], "blocking": false },
+          { "sprites": ["prop_pickaxe_rock"], "at": [230, -130], "blocking": true },
+          { "sprites": ["prop_safety_lamp"], "at": [-80, -160], "to": [120, -160], "step": 100, "blocking": false },
+          { "sprites": ["prop_explosives_crate"], "at": [360, 60], "blocking": true, "chance": 0.7 }
+        ]
+      },
+      "pieces": [
+        {
+          "id": "baraque_des_mineurs",
+          "half_extent_px": [440, 200],
+          "ground": "concrete",
+          "memorial": [0, 40],
+          "elements": [
+            { "sprites": ["prop_quarry_hut_a", "prop_quarry_hut_b"], "at": [-250, -120], "blocking": true },
+            { "sprites": ["prop_quarry_hut_b", "prop_quarry_hut_a"], "at": [260, -120], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_worker_locker"], "at": [-110, -160], "to": [-20, -160], "step": 40, "blocking": true },
+            { "sprites": ["prop_cable_drum"], "at": [340, 60], "blocking": true },
+            { "sprites": ["prop_explosives_crate"], "at": [-330, 70], "to": [-290, 90], "step": 34, "blocking": true, "chance": 0.8 },
+            { "sprites": ["prop_safety_lamp"], "at": [-180, -50], "blocking": false },
+            { "sprites": ["prop_safety_lamp"], "at": [180, -50], "blocking": false },
+            { "sprites": ["prop_danger_sign"], "at": [60, -170], "blocking": false },
+            { "sprites": ["prop_mine_cart"], "at": [-380, -10], "blocking": true, "group": "wagon" },
+            { "sprites": ["prop_mine_cart"], "at": [390, -20], "blocking": true, "group": "wagon" },
+            { "sprites": ["prop_gravel_pile", "prop_ore_pile"], "at": [-200, 170], "to": [200, 170], "step": 100, "blocking": false, "chance": 0.7 }
+          ]
+        },
+        {
+          "id": "le_godet",
+          "half_extent_px": [420, 220],
+          "memorial": [-60, 60],
+          "elements": [
+            { "sprites": ["prop_excavator_bucket"], "at": [220, -120], "blocking": true },
+            { "sprites": ["prop_conveyor"], "at": [-180, -150], "blocking": true },
+            { "sprites": ["prop_conveyor"], "at": [-90, -170], "blocking": true, "chance": 0.6 },
+            { "sprites": ["prop_ore_pile"], "at": [-300, -80], "to": [-300, 0], "step": 40, "blocking": false },
+            { "sprites": ["prop_rails"], "at": [-380, 120], "to": [380, 140], "step": 64, "blocking": false, "chance": 0.85 },
+            { "sprites": ["prop_quarry_wagon_ore", "prop_quarry_wagon_crystal"], "at": [250, 130], "blocking": true },
+            { "sprites": ["prop_mine_supports"], "at": [350, -40], "blocking": true },
+            { "sprites": ["prop_crystal_vein", "prop_crystal_cluster"], "at": [360, -170], "blocking": true },
+            { "sprites": ["prop_rock_outcrop_v2"], "at": [-380, -170], "blocking": true },
+            { "sprites": ["prop_boulder"], "at": [380, 180], "blocking": true, "chance": 0.6 }
+          ]
+        }
+      ]
+    }
+  }
+}

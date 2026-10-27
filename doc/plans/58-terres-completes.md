@@ -51,7 +51,7 @@ Les pièces se dessinent par le pipeline procédural des décors (`tools/generat
 
 ## 4. Les pièces, terre par terre
 
-Proposition de l'agent, réversible. Chaque lot de terre la précise avant de coder.
+Proposition de l'agent, réversible. Chaque lot de terre la précise avant de coder. La grammaire est livrée (T0, §7).
 
 | Terre | Cœur (repaire) | Pièces | Terrain entre elles |
 |---|---|---|---|
@@ -86,3 +86,53 @@ Ensuite, les gardiens G3 à G5 du [plan 57](57-chemin-et-gardiens.md) (Tocsin, P
 - **Des pièces faites main se répètent d'une run à l'autre.** Quatre terres par run, pour quatre à six pièces par terre. On revoit le belvédère à chaque run qui passe par les bois : c'est voulu, on se souvient des lieux. Les variantes internes et le tirage des pièces (toutes ne sortent pas à chaque fois) évitent la copie exacte.
 - **Le coût en sprites est élevé**, vingt à trente décors neufs par terre. Le pipeline procédural les tient, mais chaque lot de terre est un gros lot. C'est le prix du « vraiment particulier » que demande Raphaël.
 - **Des pièces trop grandes bouchent la terre** quand le front l'avale. Elles restent dans la bande des Mémoriaux, laissent passer (pas de mur continu) et ne bloquent jamais le cœur.
+
+## 7. T0, la grammaire des pièces — livré le 27 octobre
+
+**Ce qui est fait :**
+- **`data/world/land_pieces.json`** : par biome, une pièce du cœur et des pièces uniques au format des lieux composés (`SitePlan`). Chaque pièce a :
+  - `id` ;
+  - `memorial` : la place de son Mémorial, dans l'ellipse de son emprise ;
+  - `ground` : un sol imposé dans l'ellipse inscrite dans l'emprise, jamais un rectangle ; l'eau y sèche ;
+  - des éléments à `group`, dont un seul est posé par pièce (la barque ici ou là, la voiture, le wagon) ;
+  - des éléments à `chance`.
+  - Un décor `…_base` prend sa canopée `…_canopy`.
+  - Le cœur exige un sol : le repaire ne tombe jamais dans l'eau.
+- **La terre pose son cœur autour du repaire, puis trois ou quatre pièces** (`pieces_per_land`) dans la bande des Mémoriaux (`LandPieceComposer`, sur le thread de génération).
+  - Les pièces sont écartées de 1 400 px au moins. Parmi les douze premiers emplacements valides, le plus éloigné des pièces déjà posées gagne.
+  - Chaque pièce réserve son emprise, est reliée au chemin le plus proche s'il passe à portée, et peut être retournée.
+  - Elle se pose avant tout autre lieu ; fermes, chantiers, semis et placeurs l'évitent.
+- **Les Mémoriaux se logent d'abord dans les pièces** : leurs places sont réservées avant les coffres. Les Mémoriaux en trop se posent comme avant.
+- **Décors remarquables garantis** (`remarkables` dans `data/props/<biome>.json`) :
+  - un exemplaire de chacun par terre, à 18 colonnes les uns des autres, glissés dans le semis (`world_gen.json`, `props.remarkable_*`) ;
+  - bois : voiture envahie, panneau rouillé, arbre étranglé ;
+  - marais : autel englouti, ponton effondré, arbre lié, charrette noyée ;
+  - carrière : godet, casier, convoyeur.
+- **Démonstration, des décors existants seulement** : refaite par les lots de chaque terre.
+  - Bois : la clairière du Cerf, la vieille route, le cercle de pierres.
+  - Champs : le champ de l'Épouvantail, le vieux moulin.
+  - Marais : l'île du gardien, le ponton des pêcheurs, l'autel noyé.
+  - Carrière : le front de taille, la baraque des mineurs, le godet.
+  - La Haute-Ville n'a pas de pièce : sa grille remplit la terre, T3 la casse.
+- **Outil** : `CAPTURE_EXTRA_ARGS="--capture-pieces --land-order <biome>,…"` cadre chaque pièce de la première terre, sans créatures, puis la terre à 0,25.
+
+**Vérifié :**
+- `tools/validate.sh` : smoke, catalogues (797 contrôles, dont treize refus du fichier des pièces et deux des remarquables), terres (cœur au repaire, assez de pièces, chaque place de Mémorial occupée, sur chaque terre traversée), quêtes, capacités ennemies. Build sans avertissement.
+- Captures des quatre terres, graine 7 : trois pièces par terre (deux aux champs, qui n'ont qu'une pièce hors du cœur), deux Mémoriaux sur cinq dans les pièces, tous les remarquables posés. La génération des pièces coûte 6 à 8 ms.
+
+**Mesure** (`measure_run`, profil neuf, bot des terres, Traqueur, bois puis marais puis carrière, 900 s, graines 7 et 42, avant et après au même commit de base) :
+
+| | Avant (7 / 42) | Après (7 / 42) |
+|---|---|---|
+| Créatures visibles, 0-60 s | 13,7 / 28,4 | 23,4 / 22,7 |
+| Créatures visibles, 180-300 s | 14,1 / 24,4 | 22,7 / 19,8 |
+| Éliminations | 540 / 401 | 487 / 446 |
+| Lieux vus | 24 / 20 | 22 / 27 |
+| Mémoriaux vus | 9 / 8 | 8 / 9 |
+| Gardiens vaincus | 2 / 2 | 2 / 2 |
+
+La densité ne bouge pas au-delà du bruit d'une graine à l'autre, et les gardiens tombent pareil. Les pièces ne se comptent pas encore à part dans la mesure : un lot de terre ajoutera « pièces vues ».
+
+Les pièces, graine 7 : [planches/plan58_t0_pieces.png](planches/plan58_t0_pieces.png) (la clairière du Cerf et la vieille route dans les bois, le champ de l'Épouvantail, l'autel noyé, le front de taille et la baraque des mineurs).
+
+**Ce qui reste faible, à reprendre par terre :** les pièces de démonstration sont maigres. Ce sont des décors épars sur un sol à peine distinct, et on ne les lit bien qu'en y étant. Le « vraiment particulier » viendra des décors neufs de T1 à T5.

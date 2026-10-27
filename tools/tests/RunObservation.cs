@@ -48,6 +48,7 @@ namespace Vestiges.Tests;
 /// --measure-props [--measure-seconds 8] : coût de rendu des décors par biome (RunObservation.PropCost.cs).
 /// --capture-weapons [--weapons a,b] [--lethal] [--objects id:niveau,…] [--weapon-frames a,b,…] [--dash-before-attack] : galerie des attaques du joueur, cibles qui meurent au premier coup avec --lethal, objets portés avec --objects ; --dash-before-attack arme la rémanence avant l’émission manuelle (RunObservation.Weapons.cs).
 /// --capture-chests : chaque coffre cadré, avec et sans décors (RunObservation.Chests.cs).
+/// --capture-pieces : chaque pièce maîtresse de la terre cadrée, puis la terre vue de haut (RunObservation.Pieces.cs).
 /// --capture-loot : écran de butin du coffre le plus proche, objets du sac uniquement (RunObservation.Chests.cs).
 /// --capture-light-columns [secondes] : arrêt devant un coffre de chaque rareté, pour juger l'animation des colonnes (RunObservation.Chests.cs).
 /// --capture-biome-tour [secondes] : arrêt immobile au cœur des décors de chaque biome, pour un tournage (RunObservation.Map.cs).
@@ -228,6 +229,8 @@ public partial class RunObservation : Node
                 await CapturePlaces();
             else if (Array.IndexOf(args, "--capture-chests") >= 0)
                 await CaptureChests();
+            else if (Array.IndexOf(args, "--capture-pieces") >= 0)
+                await CapturePieces();
             else if (Array.IndexOf(args, "--capture-item-stacks") >= 0)
                 await CaptureItemStacks();
             else if (Array.IndexOf(args, "--capture-loot") >= 0)

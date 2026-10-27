@@ -40,6 +40,7 @@ public partial class CatalogContractRegression : Node
             CheckBiomes();
             CheckWorldGen();
             CheckSites();
+            CheckLandPieces();
             CheckCrises();
             CheckErasure();
             CheckRunEvents();
@@ -643,6 +644,7 @@ public partial class CatalogContractRegression : Node
             ("décor bloquant négatif", root => root["props"]!["min_blocking_height"] = -1, "min_blocking_height"),
             ("emprise nulle", root => root["props"]!["footprint_scale"] = 0, "footprint_scale"),
             ("préfixe vide", root => root["props"]!["trample_prefixes"]![0] = "", "trample_prefixes"),
+            ("remarquables collés", root => root["props"]!["remarkable_clearance_cells"] = 0, "remarkable_clearance_cells"),
             ("règle de décor inconnue", root => root["props"]!["min_height"] = 18, "clé « min_height » inconnue"),
             ("zones absentes", root => root.Remove("zones"), "zones"),
             ("zones vides", root => root["zones"] = new JsonArray(), "zones"),
@@ -755,6 +757,46 @@ public partial class CatalogContractRegression : Node
             $"chantiers : champs facultatifs absents, secours d'avant gardés {bareError}");
         Check(FarmConfig.TryParse("{ \"enabled\": false }", farmSprite, out FarmConfig emptyFarm, out _) && !emptyFarm.Site.Enabled
             && emptyFarm.Scenes.Length == 0 && emptyFarm.SceneChancePerRegion == 0.5f, "fermes : fichier minimal, secours d'avant gardés");
+    }
+
+    /// <summary>Pièces maîtresses des terres (plan 58 T0) : fichier du dépôt accepté, règles refusées.</summary>
+    private void CheckLandPieces()
+    {
+        Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
+        Func<string, string, bool> spriteExists = (folder, stem) => ResourceLoader.Exists($"{folder}{stem}.png");
+        Check(LandPieceConfig.TryLoad(out LandPieceConfig loaded, out string loadError) && loaded.Biomes.Count == 4
+            && loaded.Biomes["swamp"].Heart != null && loaded.Biomes["swamp"].Pieces.Count == 2
+            && loaded.Biomes["swamp"].Pieces[0].Memorial is Vector2 && loaded.Biomes["swamp"].Pieces[1].Ground == TerrainType.Grass
+            && loaded.Biomes["swamp"].Pieces[0].Plan.Elements.Exists(element => element.Group == "barque"),
+            $"pièces du dépôt acceptées {loadError}");
+        string valid = FileAccess.GetFileAsString(LandPieceConfig.FilePath);
+        JsonNode Piece(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![0]!;
+        (string, Action<JsonObject>, string)[] cases =
+        {
+            ("JSON invalide", null, "JSON invalide"),
+            ("champ inconnu", root => root["pieces"] = 3, "clé « pieces » inconnue"),
+            ("nombre non entier", root => root["pieces_per_land"] = new JsonArray(2.5, 4), "deux entiers"),
+            ("nombre hors borne", root => root["pieces_per_land"] = new JsonArray(3, 12), "pieces_per_land"),
+            ("écart nul", root => root["min_spacing_px"] = 0, "min_spacing_px"),
+            ("biome inconnu", root => root["biomes"]!["desert"] = root["biomes"]!["swamp"]!.DeepClone(), "biome « desert » inconnu"),
+            ("dossier hors res", root => root["biomes"]!["swamp"]!["folder"] = "assets/props/swamp/", "folder"),
+            ("champ de pièce inconnu", root => Piece(root)["memoriel"] = new JsonArray(0, 0), "clé « memoriel » inconnue"),
+            ("pièce en double", root => Piece(root)["id"] = "ile_du_gardien", "déjà déclarée"),
+            ("Mémorial hors emprise", root => Piece(root)["memorial"] = new JsonArray(0, 400), "memorial hors de l'ellipse"),
+            ("Mémorial dans un coin de l'emprise", root => Piece(root)["memorial"] = new JsonArray(400, 180), "memorial hors de l'ellipse"),
+            ("cœur sans sol", root => root["biomes"]!["swamp"]!["heart"]!.AsObject().Remove("ground"), "ground exigé"),
+            ("part d'eau hors borne", root => root["max_water_share"] = 1.5, "max_water_share"),
+            ("candidats nuls", root => root["candidates_per_piece"] = 0, "candidates_per_piece"),
+            ("sol d'eau", root => Piece(root)["ground"] = "water", "ground"),
+            ("décor introuvable", root => Piece(root)["elements"]![0]!["sprites"]![0] = "prop_inconnu", "décor « prop_inconnu »"),
+            ("groupe non texte", root => Piece(root)["elements"]![3]!["group"] = 2, "group"),
+        };
+        foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
+        {
+            string text = mutate == null ? "{ \"biomes\": " : Mutated(valid, mutate);
+            bool refused = !LandPieceConfig.TryParse(text, biomeExists, spriteExists, out LandPieceConfig config, out string error);
+            Check(refused && config == null && error?.Contains(expected, StringComparison.Ordinal) == true, $"pièces, {name} refusé ({error})");
+        }
     }
 
     /// <summary>Résurgences, late game et accalmie (plan 26 Q7d-1) : fichier du dépôt accepté, règles refusées.</summary>
@@ -1505,7 +1547,8 @@ public partial class CatalogContractRegression : Node
         Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
         Func<string, bool> spriteExists = path => ResourceLoader.Exists($"res://{path}");
         Check(PropSpawner.TryParseConfigs(files, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> configs) == null
-            && configs.Count == 5 && configs["swamp"].Props.Count > 20, "décors : cinq biomes publiés");
+            && configs.Count == 5 && configs["swamp"].Props.Count > 20 && configs["swamp"].Remarkables.Count == 4
+            && configs["urban_ruins"].Remarkables.Count == 0, "décors : cinq biomes publiés, remarquables du marais lus");
         foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
         {
             ("champ inconnu", root => root["seed"] = 3, "clé « seed » inconnue"),
@@ -1522,6 +1565,8 @@ public partial class CatalogContractRegression : Node
             ("distance nulle", root => root["props"]![0]!["min_distance"] = 0, "min_distance"),
             ("emprise nulle", root => root["props"]![0]!["footprint_scale"] = 0, "footprint_scale"),
             ("décor en double", root => root["props"]!.AsArray().Add(root["props"]![0]!.DeepClone()), "déjà déclaré"),
+            ("remarquable inconnu", root => root["remarkables"]![0] = "prop_absent", "remarkables : décor « prop_absent » absent de props"),
+            ("remarquable en double", root => root["remarkables"]!.AsArray().Add(root["remarkables"]![0]!.GetValue<string>()), "en double"),
         })
         {
             List<(string, string)> candidate = new(files);

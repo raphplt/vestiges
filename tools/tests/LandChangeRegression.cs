@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
@@ -498,6 +499,37 @@ public partial class LandChangeRegression : Node
         : memory <= 0.25f ? ErasureManager.ErasureZonePhase.Erased : memory <= 0.5f ? ErasureManager.ErasureZonePhase.Frayed
         : memory <= 0.75f ? ErasureManager.ErasureZonePhase.Fragile : ErasureManager.ErasureZonePhase.Anchored;
 
+    /// <summary>
+    /// Plan 58 T0 : une terre dont le biome a des pièces pose son cœur au repaire et assez de pièces ; chaque place de
+    /// Mémorial d'une pièce porte un Mémorial.
+    /// </summary>
+    private void CheckPieces(int land)
+    {
+        string biome = _world.Land.BiomeIds[0];
+        LandPieceConfig config = LandPieceConfig.Load();
+        if (!config.Biomes.TryGetValue(biome, out LandPieceConfig.BiomePieces pool))
+        {
+            Check(_world.Pieces.Count == 0, $"terre {land} : pas de pièce pour {biome} ({_world.Pieces.Count})");
+            return;
+        }
+        Vector2 lair = GuardianConfig.Load(out _).LairOffset;
+        int wanted = Mathf.Min(config.MinPieces, pool.Pieces.Count);
+        int placed = _world.Pieces.Count(piece => !piece.IsHeart);
+        Check(_world.Pieces.Count(piece => piece.IsHeart && piece.Anchor == lair) == (pool.Heart != null ? 1 : 0) && placed >= wanted,
+            $"terre {land} ({biome}) : cœur au repaire, {placed} pièce(s) sur {wanted} au moins");
+        int slots = 0;
+        int filled = 0;
+        foreach (PlacedPiece piece in _world.Pieces)
+        {
+            if (piece.MemorialPosition is not Vector2 slot)
+                continue;
+            slots++;
+            if (Memorial.All.Any(memorial => memorial.GlobalPosition.DistanceTo(slot) < 1f))
+                filled++;
+        }
+        Check(filled == slots, $"terre {land} ({biome}) : {filled}/{slots} places de Mémorial occupées");
+    }
+
     private async Task CheckLands()
     {
         LandTransition transition = _world.GetNode<LandTransition>("LandTransition");
@@ -510,6 +542,7 @@ public partial class LandChangeRegression : Node
         Check(GroundHoles() == 0, $"terre {start} : sol sans trou ({GroundHoles()})");
         Check(memorials > 0 && chests > 0 && ObstacleField.Count > 0,
             $"terre {start} peuplée : {memorials} Mémoriaux, {chests} coffres, {ObstacleField.Count} obstacles");
+        CheckPieces(start);
 
         // Jusqu'à la terre du dernier gardien ; la victoire et la terre du late game se vérifient à part.
         int lastGuardianLand = GuardianConfig.Load(out _).LandsToWin - 1;
@@ -545,6 +578,7 @@ public partial class LandChangeRegression : Node
             // Les coffres peuvent naître en jeu (élites, Résurgences) : au moins ceux de la terre, aucun Mémorial de trop.
             Check(Memorial.All.Count == memorials && Chest.Closed.Count >= chests && ObstacleField.Count > 0,
                 $"terre {land} : seuls ses lieux comptent ({Memorial.All.Count} Mémoriaux, {Chest.Closed.Count} coffres, {ObstacleField.Count} obstacles)");
+            CheckPieces(land);
             Check(CountActive(enemies) == 0, $"terre {land} : aucune créature de la terre quittée ({CountActive(enemies)})");
             // L'orbe posée, plus celles des créatures tuées juste avant le passage.
             Check(gained >= OrbXp, $"terre {land} : les orbes restées au sol sont revenues ({gained} XP)");

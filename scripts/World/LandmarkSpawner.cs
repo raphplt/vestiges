@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using Vestiges.Infrastructure;
 
@@ -11,19 +12,24 @@ public static class LandmarkSpawner
 {
     // Ateliers, stèles et Puits en réserve (plan 56 B2) : aucun posé. Placés après les autres lieux, les sauter ne
     // déplace ni coffre, ni Mémorial, ni Faille.
-    private static readonly System.Collections.Generic.List<LandmarkBand> NoBands = new();
+    private static readonly List<LandmarkBand> NoBands = new();
 
-    public static void SpawnLandmarks(SitePlacer placer, Node2D container)
+    /// <param name="memorialSlots">Places déjà réservées aux Mémoriaux des pièces de la terre (plan 58) : prises d'abord.</param>
+    public static void SpawnLandmarks(SitePlacer placer, Node2D container, IReadOnlyList<Vector2> memorialSlots)
     {
         MemorialConfig memorial = LandmarkDataLoader.Memorial;
         int spawned = 0;
+        int slotted = 0;
         foreach (LandmarkBand band in memorial.Placement)
         {
             int count = placer.Scaled("memorial", band.Count);
             for (int i = 0; i < count; i++)
             {
                 Vector2 ring = placer.MemorialBand ?? new Vector2(band.Min, band.Max);
-                if (!placer.TryPlace(ring.X, ring.Y, memorial.MinSpacingPx, out Vector2 position))
+                Vector2 position;
+                if (slotted < memorialSlots.Count)
+                    position = memorialSlots[slotted++];
+                else if (!placer.TryPlace(ring.X, ring.Y, memorial.MinSpacingPx, out position))
                 {
                     GD.PushWarning($"[LandmarkSpawner] No room for a memorial in band {band.Min}-{band.Max}");
                     continue;
@@ -33,7 +39,10 @@ public static class LandmarkSpawner
                 container.AddChild(node);
             }
         }
-        GD.Print($"[LandmarkSpawner] Spawned {spawned} memorials");
+        // Une place de pièce sans Mémorial reste réservée et vide : la terre en pose moins que ses pièces n'en prévoient.
+        if (slotted < memorialSlots.Count)
+            GD.PushWarning($"[LandmarkSpawner] {memorialSlots.Count - slotted} memorial slot(s) of land pieces left empty");
+        GD.Print($"[LandmarkSpawner] Spawned {spawned} memorials, {slotted} in land pieces");
 
         RiftConfig rift = LandmarkDataLoader.Rift;
         int rifts = 0;

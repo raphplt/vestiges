@@ -85,6 +85,10 @@ public partial class WorldSetup : Node2D
     private List<CompositionSite> _quarrySites = new();
     private List<Vector2> _storyScenes = new();
     private List<ExodusScenePlacer.Scene> _exodusScenes = new();
+    private List<PlacedPiece> _pieces = new();
+
+    /// <summary>Pièces maîtresses de la terre en cours, cœur compris (plan 58) ; aucune sur la grande carte.</summary>
+    public IReadOnlyList<PlacedPiece> Pieces => _pieces;
 
     /// <summary>Positions des scènes-récits des champs (plan 08 P4b-4).</summary>
     public IReadOnlyList<Vector2> StoryScenes => _storyScenes;
@@ -249,6 +253,12 @@ public partial class WorldSetup : Node2D
         _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
         LoadProfiler.Span("chemins (thread)", ref step);
 
+        // Pièces maîtresses de la terre (plan 58) : avant les fermes et les chantiers, qui s'écartent de leur emprise.
+        _pieces = _land.IsLand && _land.MemorialBand is Vector2 band
+            ? LandPieceComposer.Plan(generator, _terrain, _pathNetwork, _usedCells, LandPieceConfig.Load(), band,
+                GuardianConfig.Load(out _)?.LairOffset ?? Vector2.Zero, LandSeed)
+            : new List<PlacedPiece>();
+        LoadProfiler.Span("pièces de la terre (thread)", ref step);
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
         _farms = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _farmConfig.Site, LandSeed);
@@ -615,8 +625,17 @@ public partial class WorldSetup : Node2D
             CountScale = _land.CountScale,
             MemorialBand = _land.MemorialBand,
         };
+        // Les Mémoriaux des pièces d'abord : coffres et Failles s'en écartent comme des autres lieux.
+        List<Vector2> memorialSlots = new();
+        foreach (PlacedPiece piece in _pieces)
+        {
+            if (piece.MemorialPosition is not Vector2 slot)
+                continue;
+            placer.Claim(slot);
+            memorialSlots.Add(slot);
+        }
         ChestSpawner.SpawnChests(placer, _poiContainer);
-        LandmarkSpawner.SpawnLandmarks(placer, _poiContainer);
+        LandmarkSpawner.SpawnLandmarks(placer, _poiContainer, memorialSlots);
     }
 
     private async Task BuildPropOcclusionAsync()
@@ -692,6 +711,9 @@ public partial class WorldSetup : Node2D
         _propSpawner = new PropSpawner { Name = "PropSpawner" };
         AddChild(_propSpawner);
         _landNodes.Add(_propSpawner);
+        LandPieceComposer.Place(_pieces, propContainer, LandSeed);
+        LoadProfiler.Mark("décors des pièces");
+        await YieldFrame();
         SiteComposer.Place(_farms, _farmConfig.Site, propContainer, LandSeed);
         LoadProfiler.Mark("décors des fermes");
         await YieldFrame();
