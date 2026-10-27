@@ -599,14 +599,12 @@ UI_CREDITS_LICENSES,Licences,Licenses
 UI_CREDITS_LICENSE,Licence,License
 UI_CREDITS_ENGINE_NOTICE,"Ce jeu utilise Godot Engine, distribué sous la licence MIT ci-dessous.","This game uses Godot Engine, available under the MIT license below."
 UI_CREDITS_COMPONENTS,Composants tiers de Godot Engine,Godot Engine third-party components
-LAND_OBJECTIVE_LIGHTS,"Terre {0} · Mémoriaux ravivés {1}/{2}","Land {0} · Memorials rekindled {1}/{2}"
-LAND_OBJECTIVE_READY,"Terre {0} · Réveille le gardien, au cœur","Land {0} · Wake the guardian, at the heart"
-LAND_OBJECTIVE_FIGHT,"Terre {0} · Bats le gardien","Land {0} · Defeat the guardian"
-LAND_OBJECTIVE_RAGE,"Terre {0} · Le gardien s'est levé seul","Land {0} · The guardian rose on its own"
-LAND_OBJECTIVE_RAGE_SOON,"Terre {0} · Le gardien se lève seul dans {1}","Land {0} · The guardian rises on its own in {1}"
-LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · The next land is stitching itself"
-LAND_OBJECTIVE_HOLD,"Dernière terre · Échos vaincus {1}","Last land · Echoes defeated {1}"
-LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last land · A guardian's echo hunts you"
+LAND_OBJECTIVE_LIGHTS,"Mémorial ravivé · {0}/{1}","Memorial rekindled · {0}/{1}"
+LAND_OBJECTIVE_RAGE,Le gardien s'est levé seul,The guardian rose on its own
+LAND_OBJECTIVE_RAGE_SOON,"Le gardien se lève seul dans {0}","The guardian rises on its own in {0}"
+LAND_OBJECTIVE_PASSAGE,La terre suivante se recoud,The next land is stitching itself
+LAND_OBJECTIVE_HOLD,"Échos vaincus : {0}","Echoes defeated: {0}"
+LAND_OBJECTIVE_ECHO,Un écho de gardien te traque,A guardian's echo hunts you
 LAND_OBJECTIVE_VICTORY,"Run gagnée · La dernière terre se recoud","Run won · The last land is stitching itself"
 LAND_ARRIVAL_RANK,"Terre {0}","Land {0}"
 LAND_ARRIVAL_LAST,Dernière terre,Last land

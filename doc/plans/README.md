@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**27 octobre — le HUD se tait ([plan 57 C3](57-chemin-et-gardiens.md), §203) :** plus de ligne « Terre 1 · Mémoriaux ravivés 0/3 » en permanence ni de flèche d'objectif ; le compteur tient en quatre icônes sur la minimap, le haut de l'écran ne parle qu'aux changements et dans la dernière minute avant la rage. Suite : C4, raviver un Mémorial qui tient en haleine.
+
 **27 octobre — visiter les cinq terres ([DEV-MODE](../DEV-MODE.md), §202) :** `tools/play_lands.sh` ouvre une run dont les terres se suivent dans un ordre fixe (bois, fermes, Haute-Ville, Bas-Port, carrière) ; F4 › Terres passe à la suivante ou refait celle-ci dans un autre biome. Pour que Raphaël voie ce qui existe avant le découpage de l'étape 5.
 
 **27 octobre — ce qui restait flou sur le chemin du gardien ([plan 57 C2](57-chemin-et-gardiens.md), §201) :** Mémoriaux et repaire sur la minimap dès l'arrivée, épinglés au bord du radar ; dans la dernière minute avant la rage, l'objectif rouge compte à rebours ; au réveil, l'arène s'ouvre au plus à 40 créatures. Au bot, la 3e terre est enfin vaincue (trois fois sur cinq à la graine 7, de 40 à 256 s). Suite : G2 à G5, puis l'étape 5, les terres complètes.

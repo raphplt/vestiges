@@ -97,6 +97,10 @@ public partial class Minimap : Control
     private static Texture2D _fogDisc;
     private static Texture2D _ring;
 
+    /// <summary>Place du radar dans le HUD (unités de référence) : le compteur des Mémoriaux s'y accroche.</summary>
+    public static Rect2 RadarRect(Vector2 hudSize) =>
+        new(hudSize.X - RadarSize - Margin, hudSize.Y - RadarSize - BottomMargin, RadarSize, RadarSize);
+
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
@@ -286,8 +290,9 @@ public partial class Minimap : Control
         }
         else
         {
-            Size = new Vector2(RadarSize, RadarSize);
-            Position = new Vector2(parent.Size.X - Size.X - Margin, parent.Size.Y - Size.Y - BottomMargin);
+            Rect2 radar = RadarRect(parent.Size);
+            Size = radar.Size;
+            Position = radar.Position;
             _legend.Visible = false;
         }
         _playerPosition = player.GlobalPosition;

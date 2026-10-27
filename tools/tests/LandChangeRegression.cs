@@ -287,9 +287,13 @@ public partial class LandChangeRegression : Node
         Label objective = (Label)_world.FindChild("LandObjective", true, false);
         string collecting = objective?.Text;
         Check(objective is { Visible: true } && !string.IsNullOrEmpty(collecting), $"objectif de la terre affiché : « {collecting} »");
+        // Plan 57 C3 : le suivi permanent tient sur la minimap ; la flèche d'objectif n'existe plus.
+        Control landPips = (Control)_world.FindChild("LandMemorialPips", true, false);
+        Check(landPips is { Visible: true } && _world.FindChild("ObjectivePointer", true, false) == null,
+            "compteur des Mémoriaux sur la minimap, sans flèche d'objectif");
         // Plan 57 C2 : le contrôle du cercle a mené la terre à 30 s du cœur, dans la dernière minute : l'objectif compte
         // à rebours jusqu'au lever du gardien, lumières allumées ou non.
-        string rageSoon = string.Format(TranslationServer.Translate("LAND_OBJECTIVE_RAGE_SOON"), transition.LandIndex + 1, string.Empty);
+        string rageSoon = string.Format(TranslationServer.Translate("LAND_OBJECTIVE_RAGE_SOON"), string.Empty);
         Check(collecting?.StartsWith(rageSoon, System.StringComparison.Ordinal) == true,
             $"objectif : la dernière minute avant que le gardien se lève seul se compte (« {collecting} »)");
         memorials.SetLitForTests(config.WakeLights + 1);
@@ -312,7 +316,7 @@ public partial class LandChangeRegression : Node
         }
         lair.Interact(_player);
         await Frame();
-        Check(objective?.Text.StartsWith(rageSoon, System.StringComparison.Ordinal) == false,
+        Check(objective is not { Visible: true } || !objective.Text.StartsWith(rageSoon, System.StringComparison.Ordinal),
             $"objectif : réveillé, le compte à rebours cesse (« {objective?.Text} »)");
         Enemy guardian = director.Guardian;
         int arena = 0;
@@ -566,8 +570,9 @@ public partial class LandChangeRegression : Node
         Check(director.IsLateGame && _world.GetNode("PoiContainer").GetNodeOrNull("GuardianLair") == null && biomes.Add(_world.Land.BiomeIds[0])
             && peril.Peril == perilBefore + config.RankPeril,
             $"terre {transition.LandIndex}, celle du late game : biome neuf ({_world.Land.BiomeIds[0]}), pas de repaire, Péril {perilBefore} → {peril.Peril}");
-        string holding = objective?.Text;
-        Check(!string.IsNullOrEmpty(holding) && holding != won, $"terre du late game : objectif « {holding} »");
+        // Plan 57 C3 : le late game n'a pas de Mémoriaux à compter ; son carton d'arrivée dit la règle.
+        Control pips = (Control)_world.FindChild("LandMemorialPips", true, false);
+        Check(pips is { Visible: false }, "terre du late game : pas de compteur de Mémoriaux");
 
         int chestsBefore = Chest.Closed.Count;
         perilBefore = peril.Peril;
@@ -577,13 +582,15 @@ public partial class LandChangeRegression : Node
         await Frame();
         Enemy echo = director.Guardian;
         Check(director.IsFighting && echo is { IsActive: true, Tier: EnemyTier.Guardian } && echo.EnemyId == guardianId
-            && peril.Peril == perilBefore + config.EchoPeril && objective?.Text != holding,
+            && peril.Peril == perilBefore + config.EchoPeril && objective is { Visible: true }
+            && objective.Text == TranslationServer.Translate("LAND_OBJECTIVE_ECHO"),
             $"écho de gardien levé : {echo?.DisplayName}, {echo?.MaxHp:F0} PV, Péril {perilBefore} → {peril.Peril}, « {objective?.Text} »");
         echo?.TakeDamage(echo.MaxHp * 10f);
         for (int frame = 0; frame < 30 && director.IsFighting; frame++)
             await Frame();
         await Frame();
-        Check(!director.IsFighting && director.EchoesDefeated == 1 && Chest.Closed.Count > chestsBefore && victories == 1,
+        Check(!director.IsFighting && director.EchoesDefeated == 1 && Chest.Closed.Count > chestsBefore && victories == 1
+            && objective?.Text == string.Format(TranslationServer.Translate("LAND_OBJECTIVE_HOLD"), 1),
             $"écho vaincu : {director.EchoesDefeated} écho, {Chest.Closed.Count - chestsBefore} coffre(s), « {objective?.Text} »");
 
         LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;

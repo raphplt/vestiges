@@ -223,3 +223,12 @@ C1 avait mis l'objectif en haut au centre et une flèche au bord de l'écran. Le
 | **C4** | **Raviver tient en haleine.** Lisible : l'anneau se remplit comme une horloge autour du Mémorial, les secondes restantes au-dessus ; hors du cercle, l'anneau rougit et se vide, avec un son. Du suspense, en trois temps : à un tiers puis à deux tiers, une vague monte du bord du cercle, annoncée au sol ; au dernier tiers, le cercle se resserre de moitié et le son monte ; au bout, une onde de lumière repousse et blesse la foule autour, le Mémorial s'allume. Réglages dans `landmarks.json`, mesure au bot (durée réelle, coups reçus) | Moyen |
 
 Les cartes « vides et linéaires » vont à l'étape 5 (terres complètes), qui part de ce retour.
+
+## 11. Compte rendu C3, le HUD se tait — 27 octobre 2026
+
+- **Plus de ligne d'objectif permanente.** La ligne en haut au centre ne parle plus qu'aux changements, 3,5 s puis elle s'efface : « Mémorial ravivé · 2/3 », « Le gardien s'est levé seul », « La terre suivante se recoud », et au late game « Un écho de gardien te traque », « Échos vaincus : 1 ». Le carton d'arrivée donne déjà le lieu et la règle, celui du gardien prêt l'annonce, et la barre de boss nomme le combat : pas de ligne pour eux. « Terre 1 · » disparaît des textes.
+- **Seule l'alerte de rage reste**, en rouge, la dernière minute (« Le gardien se lève seul dans 0:44 »).
+- **Le compteur passe sur la minimap** (`LandMemorialPips`) : une icône par Mémorial à raviver, pâle puis dorée, avec un petit saut quand elle s'allume ; à droite, le repaire en violet éteint, qui s'allume et bat quand le gardien attend. Caché au passage et au late game.
+- **La flèche d'objectif est retirée** (`ObjectivePointer` supprimé). Les flèches des coffres restent.
+
+**Vérifié** : build sans avertissement ; suites `smoke`, `lands` et `development_tools` vertes, avec de nouveaux contrôles (compteur affiché et plus de flèche ; compte à rebours seul en haut ; au late game, pas de compteur, puis l'écho et les échos vaincus annoncés) ; capture en vraie run (graine 7, `--capture-lands`) : le haut de l'écran est libre pendant le cercle ; l'alerte rouge seule pendant la dernière minute ; les quatre icônes se lisent sur le bord de la minimap sans la couvrir.
