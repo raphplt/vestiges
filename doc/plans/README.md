@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**27 octobre — l'Épouvantail garde les champs ([plan 57 G2](57-chemin-et-gardiens.md), §204) :** deuxième gardien à part. Un épouvantail planté sur son pieu, faux rouillée et corbeaux. Son fauchage couvre un disque autour de lui, sauf une brèche à 120° du joueur, d'un côté puis de l'autre. Au bot, ses combats durent 90 et 130 s. Suite : G3, le Tocsin.
+
 **27 octobre — raviver tient en haleine ([plan 57 C4](57-chemin-et-gardiens.md), §203) :** le cercle d'un Mémorial a son horloge (anneau qui se remplit, « Tiens le cercle · 12 s », rouge hors du cercle), deux vagues annoncées au sol, un resserrement au dernier tiers et une onde qui balaie la foule quand il se rallume. Au bot, le ravivage n'est pas plus lent mais trois fois plus disputé à la graine 7. Suite : G2, l'Épouvantail.
 
 **27 octobre — le HUD se tait ([plan 57 C3](57-chemin-et-gardiens.md), §203) :** plus de ligne « Terre 1 · Mémoriaux ravivés 0/3 » en permanence ni de flèche d'objectif ; le compteur tient en quatre icônes sur la minimap, le haut de l'écran ne parle qu'aux changements et dans la dernière minute avant la rage. Suite : C4, raviver un Mémorial qui tient en haleine.

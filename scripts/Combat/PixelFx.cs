@@ -15,6 +15,7 @@ public partial class PixelFx : Sprite2D
     private static readonly StringName RadiusParam = "radius";
     private static readonly StringName ThicknessParam = "thickness";
     private static readonly StringName ArcHalfParam = "arc_half";
+    private static readonly StringName GapHalfParam = "gap_half";
     private static readonly StringName SquashParam = "squash";
     private static readonly StringName ProgressParam = "progress";
     private static readonly StringName FadeParam = "fade";
@@ -89,6 +90,7 @@ public partial class PixelFx : Sprite2D
         _material.SetShaderParameter(RadiusParam, spec.Radius);
         _material.SetShaderParameter(ThicknessParam, spec.Thickness);
         _material.SetShaderParameter(ArcHalfParam, spec.ArcHalf);
+        _material.SetShaderParameter(GapHalfParam, spec.GapHalf);
         _material.SetShaderParameter(SquashParam, spec.Squash);
         _material.SetShaderParameter(FillParam, spec.FillDensity);
         _material.SetShaderParameter(ProgressFillParam, spec.ProgressFill);

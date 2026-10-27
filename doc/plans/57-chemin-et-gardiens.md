@@ -266,3 +266,60 @@ Les cartes « vides et linéaires » vont à l'étape 5 (terres complètes), qui
   - le signal de sortie se répétait à chaque image ;
   - les marques de vague étaient créées à chaque tentative, elles le sont maintenant à la première vague.
 - non corrigé : un niveau gagné pendant la tenue ouvre son écran, comme avant C4, car l'XP des vagues tombe en orbes.
+
+## 13. Compte rendu G2, l'Épouvantail — 27 octobre 2026
+
+- **Son corps** (`tools/sprites/creatures/epouvantail.py`), procédural par le pipeline des créatures :
+  - grand épouvantail planté sur un pieu, dans un cadre de 208 × 176 ;
+  - traverse pour épaules, manteau de laine bleu délavé rapiécé de rouge, paille qui sort des manches et du col ;
+  - tête en sac de toile cousu où deux fentes brûlent de violet, chapeau de paille écrasé, faux rouillée ;
+  - deux corbeaux, l'un sur la traverse, l'autre sur le chapeau.
+
+  Quatre animations en 8 directions (136 images) :
+  - l'attente, où il oscille sur son pieu ;
+  - la marche, par bonds ;
+  - la frappe, où il arme la faux d'un tour de buste ;
+  - la mort.
+
+  À la mort, il s'affaisse le long de son pieu en penchant, son chapeau tombe et les corbeaux s'envolent. Une première chute sur le côté sortait du cadre vers la caméra : elle a été remplacée par l'affaissement.
+- **Ses coups** : la frappe et l'onde de référence, plus **le fauchage** (`moves.sweep` dans `data/world/guardian.json`) :
+  - dès la première phase, 4 s après le réveil puis toutes les 9 s, si le joueur est à moins de 280 px ;
+  - il s'arrête et annonce en 1,3 s un disque de 230 px autour de lui, ouvert d'une brèche de 90° ;
+  - la brèche est à 120° du joueur, d'un côté puis de l'autre : il faut tourner autour de lui pour s'y glisser, ou traverser en dash ;
+  - la faux balaie tout le disque sauf la brèche (1,8 × ses dégâts), puis il récupère 1,2 s.
+- **L'annonce en secteur** : `GroundTelegraph.ShowSector`, avec un paramètre `gap_half` du shader `pixel_fx`. La brèche dessinée et la zone épargnée se mesurent au même angle au sol.
+- **Les champs le prennent** (`data/biomes/wild_fields.json`). Les autres terres gardent le Grand Cerf jusqu'à leur lot.
+- **Sons de la banque** : la chaîne de la Barrière annonce et frappe le fauchage, la défaite de la Barrière fait sa chute.
+- **Le bot de mesure se bat mieux** (reste du §201) :
+  - arrivé à sa place, il marche vers le gardien jusqu'au contact, pour que l'arc et la lame visent ;
+  - immobile plus de 3 s sans toucher, il fait un détour de l'autre côté du gardien.
+
+**Vérifié :**
+- build sans avertissement ;
+- suites `smoke`, `catalogs`, `lands`, `enemy_abilities` et `quests` vertes. Nouveaux contrôles :
+  - le fauchage est annoncé, touche le joueur dans la faux, épargne la brèche et le dehors ;
+  - la brèche suivante s'ouvre de l'autre côté ;
+  - les échos du late game reprennent les gardiens vaincus dans l'ordre (premier écho : le gardien de la première terre) ;
+- capture en vraie run (graine 7, `--capture-lands --land-order wild_fields,...`) :
+  - l'Épouvantail couché au repaire, puis debout dans la foule avec sa barre de boss ;
+  - l'annonce du fauchage, disque pâle ouvert de sa brèche ;
+  - la frappe en violet plein, brèche nette ;
+  - la capture gagne les images `lands-4d-sweep.png` et `lands-4e-sweep-strike.png`, et choisit les bénédictions au passage.
+
+**Mesuré au bot** (Forgeuse, graines 7 et 42, `--lands-bot --nomad`, champs en première terre ; durées à 10 s près) :
+
+| | Champs (Épouvantail) | Terre 2 (Cerf) | Terre 3 (Cerf, enragé) |
+|---|---|---|---|
+| Graine 7 | 90 s | 50 s | non vaincu après 610 s |
+| Graine 42 | 130 s | 150 s | 300 s, run gagnée |
+
+Lecture :
+- les deux combats de l'Épouvantail tiennent dans la cible du Cerf (1 à 2 min) ;
+- la 3e terre reste hors de portée du bot à la graine 7, comme au G1 ;
+- au late game, le premier écho est l'Épouvantail.
+
+**Relecture :** rien de bloquant. Restent quatre finitions, laissées en l'état :
+- la marque du fauchage est créée pour tout gardien, comme les autres marques ;
+- deux animations d'attaque s'enchaînent quand la faux touche ;
+- le côté de la première brèche n'est pas remis à zéro d'un combat à l'autre ;
+- le test lit des champs privés par réflexion.

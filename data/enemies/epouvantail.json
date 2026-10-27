@@ -1,0 +1,29 @@
+{
+    "id": "epouvantail",
+    "name": "L'Épouvantail",
+    "grammatical_gender": "m",
+    "type": "melee",
+    "tier": "guardian",
+    "stats": {
+        "hp": 1950,
+        "speed": 50,
+        "damage": 12,
+        "xp_reward": 150,
+        "essence": 8,
+        "perception": 900,
+        "leash": 2000
+    },
+    "guardian": {
+        "_doc": "Gardien des fermes du plateau (plan 57 G2). hp : PV sur la première terre, × hp_rank_growth de data/world/guardian.json par terre franchie. moves : coups de référence qu'il prend, réglés en commun dans guardian.json ; sweep, son coup à lui, fauche tout autour de lui sauf une brèche où se glisser. body_radius : rayon de son corps (collision et frappe), son sprite est à sa taille. death_audio : son de sa chute.",
+        "moves": ["slam", "wave", "sweep"],
+        "body_radius": 24,
+        "death_audio": "sfx_barrier_defeated"
+    },
+    "visual": {
+        "color": "#46536A",
+        "shape": "square",
+        "size": 36,
+        "sprite_folder": "epouvantail",
+        "sprite_feet_offset": 72
+    }
+}

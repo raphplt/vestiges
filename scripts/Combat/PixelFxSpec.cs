@@ -11,6 +11,8 @@ public struct PixelFxSpec
     public float Radius;
     public float Thickness;
     public float ArcHalf;
+    /// <summary>Zone : demi-ouverture (radians) d'une brèche centrée sur <see cref="Angle"/>, au sol ; 0 pour un disque plein.</summary>
+    public float GapHalf;
     public float Squash;
     public float Duration;
     public int Steps;

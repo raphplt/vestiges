@@ -14,6 +14,9 @@ uniform float angle = 0.0;
 uniform float radius = 24.0;
 uniform float thickness = 6.0;
 uniform float arc_half = 1.0;
+// Zone au sol (forme 3) : demi-ouverture d'une brèche centrée sur angle, au sol ; 0 pour un disque plein (fauchage
+// de l'Épouvantail, plan 57 G2).
+uniform float gap_half = 0.0;
 // Compression verticale : 2 pour une forme posée au sol en vue iso.
 uniform float squash = 1.0;
 uniform float progress = 0.0;
@@ -226,6 +229,8 @@ float rim_radius(vec2 q, float scale, float rough) {
 
 bool in_zone(vec2 p, float scale, float rough) {
 	vec2 q = ground(p);
+	if (gap_half > 0.0 && abs(mod(atan(q.y, q.x) - angle + PI, TAU) - PI) < gap_half)
+		return false;
 	return length(q) <= rim_radius(q, scale, rough);
 }
 
@@ -266,7 +271,8 @@ int edge_class(vec2 p, float scale, float amp) {
 		float l = length(ground(p));
 		if (l - squash > radius * scale + amp)
 			return 3;
-		if (l + squash < radius * scale - amp)
+		// Une brèche coupe l'intérieur : seul le dehors se conclut sans tester les voisins.
+		if (l + squash < radius * scale - amp && gap_half <= 0.0)
 			return 0;
 	}
 	bool r = in_area(p + vec2(1.0, 0.0), scale, amp);

@@ -57,6 +57,21 @@ public partial class GroundTelegraph : Node2D
         Begin(center, spec);
     }
 
+    /// <summary>
+    /// Disque au sol ouvert d'une brèche (plan 57 G2) : la brèche, large de 2 × <paramref name="gapHalf"/> radians, est
+    /// centrée sur <paramref name="gapAngle"/>, un angle au sol. Le coup frappe partout ailleurs dans le disque.
+    /// </summary>
+    public void ShowSector(Vector2 center, float radius, float gapAngle, float gapHalf, FxFamily family)
+    {
+        IsLane = false;
+        GroundSize = radius;
+        PixelFxSpec spec = PixelFxSpec.Of(PixelFxShape.Zone, family, radius, 1f, 1f);
+        spec.Squash = Iso.GroundSquash;
+        spec.Angle = gapAngle;
+        spec.GapHalf = gapHalf;
+        Begin(center, spec);
+    }
+
     /// <summary>Contour seul d'un disque au sol : une limite à connaître (portée), pas un coup qui arrive.</summary>
     public void ShowRing(Vector2 center, float radius, FxFamily family)
     {

@@ -63,11 +63,27 @@ public sealed class GuardianMovesConfig
     public string ChainWarningAudio { get; init; }
     public string ChainImpactAudio { get; init; }
 
+    /// <summary>Fauchage de l'Épouvantail (plan 57 G2), à partir de cette phase (0 à 2).</summary>
+    public int SweepFromPhase { get; init; }
+    public float SweepFirstDelay { get; init; }
+    public float SweepCooldown { get; init; }
+    public float SweepTriggerRange { get; init; }
+    public float SweepWindup { get; init; }
+    public float SweepRadius { get; init; }
+    /// <summary>Demi-ouverture de la brèche, en radians (la donnée est la brèche entière, en degrés).</summary>
+    public float SweepGapHalf { get; init; }
+    /// <summary>Écart de la brèche au joueur, en radians : elle ne s'ouvre jamais sous ses pieds.</summary>
+    public float SweepGapOffset { get; init; }
+    public float SweepRecovery { get; init; }
+    public float SweepDamage { get; init; }
+    public string SweepWarningAudio { get; init; }
+    public string SweepImpactAudio { get; init; }
+
     public static GuardianMovesConfig Parse(JsonConfigReader reader, JsonElement root)
     {
         JsonElement moves = reader.Section(root, "moves");
         reader.AllowOnly(moves, "moves", "_doc", "phase_thresholds", "phase_cooldown_scale", "warning_audio", "phase_audio", "player_hit_margin",
-            "impact_flash_seconds", "charge", "slam", "wave", "chain_charge");
+            "impact_flash_seconds", "charge", "slam", "wave", "chain_charge", "sweep");
         JsonElement charge = reader.Section(moves, "charge");
         reader.AllowOnly(charge, "charge", "first_delay", "cooldown_seconds", "trigger_range", "min_range", "windup_seconds", "distance",
             "charge_seconds", "recovery_seconds", "hit_range", "marker_width", "damage_multiplier");
@@ -81,6 +97,14 @@ public sealed class GuardianMovesConfig
         reader.AllowOnly(chain, "chain_charge", "from_phase", "first_delay", "cooldown_seconds", "count", "trigger_range",
             "windup_seconds", "rewindup_seconds", "distance", "charge_seconds", "recovery_seconds", "breach_radius",
             "breach_seconds", "impact_damage_multiplier", "warning_audio", "impact_audio");
+        JsonElement sweep = reader.Section(moves, "sweep");
+        reader.AllowOnly(sweep, "sweep", "from_phase", "first_delay", "cooldown_seconds", "trigger_range", "windup_seconds",
+            "radius", "gap_degrees", "gap_offset_degrees", "recovery_seconds", "damage_multiplier", "warning_audio", "impact_audio");
+        float gapDegrees = reader.Positive(sweep, "gap_degrees");
+        float gapOffsetDegrees = reader.Positive(sweep, "gap_offset_degrees");
+        // La brèche reste une brèche, et ne touche jamais le joueur au moment de l'annonce.
+        if (reader.Error == null && (gapDegrees >= 180f || gapOffsetDegrees - gapDegrees / 2f < 15f || gapOffsetDegrees > 180f))
+            reader.Fail("moves.sweep : brèche de moins de 180°, décalée du joueur d'au moins sa moitié et 15°, au plus 180°");
         float[] thresholds = Numbers(reader, moves, "phase_thresholds");
         float[] scales = Numbers(reader, moves, "phase_cooldown_scale");
         // Trois phases : l'onde arrive à la deuxième, la frappe multiple à la troisième.
@@ -148,6 +172,18 @@ public sealed class GuardianMovesConfig
             ChainImpactDamage = reader.Positive(chain, "impact_damage_multiplier"),
             ChainWarningAudio = Audio(reader, chain, "warning_audio"),
             ChainImpactAudio = Audio(reader, chain, "impact_audio"),
+            SweepFromPhase = reader.Integer(sweep, "from_phase", 0, 2),
+            SweepFirstDelay = reader.NonNegative(sweep, "first_delay"),
+            SweepCooldown = reader.Positive(sweep, "cooldown_seconds"),
+            SweepTriggerRange = reader.Positive(sweep, "trigger_range"),
+            SweepWindup = reader.Positive(sweep, "windup_seconds"),
+            SweepRadius = reader.Positive(sweep, "radius"),
+            SweepGapHalf = Godot.Mathf.DegToRad(gapDegrees) / 2f,
+            SweepGapOffset = Godot.Mathf.DegToRad(gapOffsetDegrees),
+            SweepRecovery = reader.NonNegative(sweep, "recovery_seconds"),
+            SweepDamage = reader.Positive(sweep, "damage_multiplier"),
+            SweepWarningAudio = Audio(reader, sweep, "warning_audio"),
+            SweepImpactAudio = Audio(reader, sweep, "impact_audio"),
         };
     }
 

@@ -13,11 +13,12 @@ namespace Vestiges.World;
 /// vide sous un disque annoncé ; une onde qui part de lui, à traverser d'un dash. Trois phases selon ses PV, chacune plus
 /// rapide ; l'onde n'arrive qu'à la deuxième, et à la dernière la frappe tombe en trois disques. Un gardien ajoute son
 /// coup à lui : pour le Grand Cerf (plan 57 G1), des charges en chaîne, chacune annoncée et visée sur le joueur, dont la
-/// dernière finit par une frappe qui ouvre le vide. Un coup à la fois, pour que chaque annonce reste lisible.
+/// dernière finit par une frappe qui ouvre le vide ; pour l'Épouvantail (plan 57 G2), un fauchage annoncé tout autour de
+/// lui, sauf une brèche où se glisser. Un coup à la fois, pour que chaque annonce reste lisible.
 /// </summary>
 public sealed class GuardianMoves : IEnemyAbility
 {
-    private enum Move { None, ChargeWindup, Charge, Recovery, Slam, WaveWindup, Wave }
+    private enum Move { None, ChargeWindup, Charge, Recovery, Slam, WaveWindup, Wave, SweepWindup }
 
     private readonly Enemy _owner;
     private readonly GuardianMovesConfig _config;
@@ -26,6 +27,7 @@ public sealed class GuardianMoves : IEnemyAbility
     private readonly GroundTelegraph _chargeMark;
     private readonly GroundTelegraph[] _slamMarks;
     private readonly GroundTelegraph _waveMark;
+    private readonly GroundTelegraph _sweepMark;
     private readonly Vector2[] _slamCenters;
 
     private Move _move;
@@ -36,6 +38,12 @@ public sealed class GuardianMoves : IEnemyAbility
     private float _slamCooldown;
     private float _waveCooldown;
     private float _chainCooldown;
+    private float _sweepCooldown;
+    // Brèche du fauchage en cours (angle au sol), et le côté du joueur où s'ouvrira la suivante.
+    private float _sweepGap;
+    private float _sweepSide = 1f;
+    private Vector2 _sweepCenter;
+    private float _sweepFlash;
     // Charges qui restent après celle en cours ; la chaîne finit par la frappe.
     private int _chainLeft;
     private bool _inChain;
@@ -74,10 +82,12 @@ public sealed class GuardianMoves : IEnemyAbility
         for (int i = 0; i < _slamMarks.Length; i++)
             _slamMarks[i] = AddMark(marks, $"GuardianSlamMarker{i}");
         _waveMark = AddMark(marks, "GuardianWaveMarker");
+        _sweepMark = AddMark(marks, "GuardianSweepMarker");
         _chargeCooldown = config.ChargeFirstDelay;
         _slamCooldown = config.SlamFirstDelay;
         _waveCooldown = config.WaveCooldown;
         _chainCooldown = config.ChainFirstDelay;
+        _sweepCooldown = config.SweepFirstDelay;
     }
 
     private static GroundTelegraph AddMark(Node parent, string name)
@@ -98,6 +108,7 @@ public sealed class GuardianMoves : IEnemyAbility
         foreach (GroundTelegraph mark in _slamMarks)
             mark.QueueFree();
         _waveMark.QueueFree();
+        _sweepMark.QueueFree();
     }
 
     public void Configure(EnemyAbilityData data)
@@ -144,6 +155,13 @@ public sealed class GuardianMoves : IEnemyAbility
             case Move.Wave:
                 ProcessWave(player, delta);
                 return true;
+            case Move.SweepWindup:
+                _timer -= delta;
+                _sweepMark.SetProgress(1f - _timer / _config.SweepWindup);
+                owner.Velocity = Vector2.Zero;
+                if (_timer <= 0f)
+                    ReleaseSweep(player);
+                return true;
         }
 
         _chargeCooldown -= delta;
@@ -153,6 +171,9 @@ public sealed class GuardianMoves : IEnemyAbility
         bool chainReady = Has(GuardianMoveSet.ChainCharge) && _phase >= _config.ChainFromPhase;
         if (chainReady)
             _chainCooldown -= delta;
+        bool sweepReady = Has(GuardianMoveSet.Sweep) && _phase >= _config.SweepFromPhase;
+        if (sweepReady)
+            _sweepCooldown -= delta;
         if (owner.IsAnotherAbilityActive(this) || owner.IsDisoriented)
             return false;
         // L'onde n'arrive qu'à partir de la deuxième phase.
@@ -166,6 +187,12 @@ public sealed class GuardianMoves : IEnemyAbility
         {
             StartChain(player);
             _chainCooldown = _config.ChainCooldown * pace;
+            return true;
+        }
+        if (sweepReady && _sweepCooldown <= 0f && distToPlayer <= _config.SweepTriggerRange)
+        {
+            StartSweep(player);
+            _sweepCooldown = _config.SweepCooldown * pace;
             return true;
         }
         if (Has(GuardianMoveSet.Slam) && _slamCooldown <= 0f && distToPlayer <= _config.SlamCastRange)
@@ -190,16 +217,18 @@ public sealed class GuardianMoves : IEnemyAbility
     {
         if (_detached)
             return;
-        if (_move is Move.WaveWindup or Move.ChargeWindup)
+        if (_move is Move.WaveWindup or Move.ChargeWindup or Move.SweepWindup)
             _owner.SetWindupPose(false);
         _owner.SetChargePose(false);
         _inChain = false;
         _move = Move.None;
         _flashTimer = 0f;
+        _sweepFlash = 0f;
         _chargeMark.HideMarker();
         foreach (GroundTelegraph mark in _slamMarks)
             mark.HideMarker();
         _waveMark.HideMarker();
+        _sweepMark.HideMarker();
     }
 
     private void UpdatePhase()
@@ -413,8 +442,60 @@ public sealed class GuardianMoves : IEnemyAbility
         _waveMark.HideMarker();
     }
 
+    /// <summary>
+    /// Fauchage : il s'arrête et arme sa faux ; le disque annoncé autour de lui garde une brèche, à l'écart du joueur,
+    /// d'un côté puis de l'autre d'un fauchage au suivant. Se glisser dans la brèche, sortir du disque ou le traverser
+    /// d'un dash : trois façons d'y échapper.
+    /// </summary>
+    private void StartSweep(Player player)
+    {
+        _move = Move.SweepWindup;
+        _timer = _config.SweepWindup;
+        _sweepCenter = _owner.GlobalPosition;
+        float toPlayer = Iso.ToGround(player.GlobalPosition - _sweepCenter).Angle();
+        _sweepGap = toPlayer + _config.SweepGapOffset * _sweepSide;
+        _sweepSide = -_sweepSide;
+        _owner.Velocity = Vector2.Zero;
+        _owner.SetWindupPose(true);
+        _owner.FlashWarning(PixelPalette.Ramp(FxFamily.Void).Light, _config.SweepWindup);
+        _sweepMark.ShowSector(_sweepCenter, _config.SweepRadius, _sweepGap, _config.SweepGapHalf, FxFamily.Void);
+        AudioManager.PlayAt(_config.SweepWarningAudio, _owner.GlobalPosition, 0.1f, -6f);
+    }
+
+    private void ReleaseSweep(Player player)
+    {
+        _owner.ReleaseWindup();
+        _owner.PlayAttackAnim();
+        _sweepMark.SetFlash(1f);
+        _sweepFlash = _config.ImpactFlashSeconds;
+        if (GodotObject.IsInstanceValid(player) && InSweep(player.GlobalPosition))
+            _owner.HitPlayer(player, _owner.Damage * _config.SweepDamage);
+        ScreenShake.Instance?.ShakeMedium();
+        AudioManager.PlayAt(_config.SweepImpactAudio, _sweepCenter, 0.08f, -3f);
+        _move = Move.Recovery;
+        _timer = _config.SweepRecovery;
+    }
+
+    /// <summary>Le joueur est-il dans le disque fauché, hors de la brèche ?</summary>
+    internal bool InSweep(Vector2 position)
+    {
+        Vector2 ground = Iso.ToGround(position - _sweepCenter);
+        float reach = _config.SweepRadius + _config.PlayerHitMargin;
+        if (ground.LengthSquared() > reach * reach)
+            return false;
+        return Mathf.Abs(Mathf.AngleDifference(_sweepGap, ground.Angle())) >= _config.SweepGapHalf;
+    }
+
     private void UpdateFlash(float delta)
     {
+        if (_sweepFlash > 0f)
+        {
+            _sweepFlash -= delta;
+            if (_sweepFlash <= 0f)
+                _sweepMark.HideMarker();
+            else
+                _sweepMark.SetFlash(_sweepFlash / _config.ImpactFlashSeconds);
+        }
         if (_flashTimer <= 0f)
             return;
         _flashTimer -= delta;

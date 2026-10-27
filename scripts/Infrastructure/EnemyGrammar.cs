@@ -45,6 +45,8 @@ public enum GuardianMoveSet
 	Wave = 4,
 	/// <summary>Coup à lui du Grand Cerf (plan 57 G1) : charges en chaîne, la dernière ouvre le vide.</summary>
 	ChainCharge = 8,
+	/// <summary>Coup à lui de l'Épouvantail (plan 57 G2) : un fauchage annoncé tout autour, sauf une brèche où se glisser.</summary>
+	Sweep = 16,
 }
 
 /// <summary>Capacités composées du bloc « abilities » ; chacune a sa classe dans <c>Combat/Abilities</c>.</summary>
@@ -93,7 +95,7 @@ public static class EnemyGrammar
 	private static readonly (string Key, GuardianMoveSet Value)[] GuardianMoves =
 	{
 		("charge", GuardianMoveSet.Charge), ("slam", GuardianMoveSet.Slam), ("wave", GuardianMoveSet.Wave),
-		("chain_charge", GuardianMoveSet.ChainCharge),
+		("chain_charge", GuardianMoveSet.ChainCharge), ("sweep", GuardianMoveSet.Sweep),
 	};
 
 	private static readonly (string Key, EnemyAbilityKind Value)[] Abilities =

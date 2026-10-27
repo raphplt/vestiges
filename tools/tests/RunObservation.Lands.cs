@@ -21,6 +21,11 @@ public partial class RunObservation
     private const float MemorialOrbitPx = 90f;
     private const float ReachPx = 60f;
     private const float FightStancePx = 70f;
+    private const float FacingReachPx = 24f;
+    private const float FightStuckPx = 8f;
+    private const double FightStuckSeconds = 3.0;
+    private const float FightDetourPx = 160f;
+    private const double FightDetourSeconds = 2.5;
     private const int FightStanceTries = 12;
     // Un Mémorial visé plus longtemps sans être atteint (eau, immeubles) est laissé pour la terre (plan 56 B1).
     private const double MemorialGiveUpSeconds = 60.0;
@@ -32,6 +37,11 @@ public partial class RunObservation
     private GuardianConfig _guardianConfig;
     // Relevé du combat du gardien toutes les 10 s (plan 57 C2) : distance, PV, sol sous le bot, foule, dernier coup reçu.
     private double _nextFightLog;
+    private bool _facingGuardian;
+    private Vector2 _fightAnchor;
+    private double _fightStillSince;
+    private Vector2 _fightDetour;
+    private double _fightDetourUntil;
 
     /// <summary>
     /// Cible du bot sur une terre, par priorité : le gardien levé, le repaire prêt, le cœur quand l'alerte annonce que le
@@ -48,6 +58,30 @@ public partial class RunObservation
         if (guardian.IsFighting && guardian.Guardian is { IsActive: true } boss)
         {
             waypoint = FightStance(boss.GlobalPosition, position);
+            // Arrivé à sa place, le bot marche vers le gardien jusqu'à son contact, puis y retourne : les armes qui tirent
+            // droit devant (arc, lame) visent le sens de la marche, et immobile il garderait le dos tourné (plan 57 C2).
+            float toBoss = position.DistanceTo(boss.GlobalPosition);
+            if (position.DistanceTo(waypoint) < FacingReachPx)
+                _facingGuardian = true;
+            else if (toBoss < boss.BodyRadius + FacingReachPx)
+                _facingGuardian = false;
+            if (_facingGuardian)
+                waypoint = boss.GlobalPosition;
+            // Immobile au contact, sans toucher (mur, décor entre eux), il passe de l'autre côté du gardien.
+            if (position.DistanceSquaredTo(_fightAnchor) > FightStuckPx * FightStuckPx)
+            {
+                _fightAnchor = position;
+                _fightStillSince = time;
+            }
+            else if (time - _fightStillSince > FightStuckSeconds)
+            {
+                _fightDetour = boss.GlobalPosition + (boss.GlobalPosition - position).Normalized().Rotated(
+                    (float)(time % 1.0 - 0.5)) * FightDetourPx;
+                _fightDetourUntil = time + FightDetourSeconds;
+                _fightStillSince = time;
+            }
+            if (time < _fightDetourUntil)
+                waypoint = _fightDetour;
             if (time >= _nextFightLog)
             {
                 _nextFightLog = time + 10.0;
@@ -164,6 +198,19 @@ public partial class RunObservation
         _player.GlobalPosition = held;
     }
 
+    /// <summary>Attendre en jeu : la bénédiction du Mémorial ravivé et les niveaux sont choisis au passage.</summary>
+    private async Task Settled(double seconds)
+    {
+        ulong until = Time.GetTicksMsec() + (ulong)(seconds * 1000.0);
+        do
+        {
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (GetTree().Paused)
+                AutoPickLevelUp();
+        }
+        while (Time.GetTicksMsec() < until);
+    }
+
     private async Task CaptureLands()
     {
         _player.IsGodMode = true;
@@ -220,32 +267,46 @@ public partial class RunObservation
             }
         }
         _player.GlobalPosition = erasure.CellCenterToWorld(fraying);
-        await Seconds(2.0);
+        await Settled(2.0);
         Save("lands-2-front.png");
 
         // Plan 57 C2 : la dernière minute avant que le gardien se lève seul, l'objectif rouge qui compte à rebours.
         front.Advance(front.Config.HeartReachedSeconds - 45f * erasure.FrontRate - front.Time);
-        await Seconds(1.5);
+        await Settled(1.5);
         Save("lands-2b-rage-soon.png");
 
         _world.GetNode<MemorialDirector>("MemorialDirector").SetLitForTests(3);
         GuardianLair lair = GuardianLair.Current;
         _player.GlobalPosition = lair.GlobalPosition + new Vector2(-70f, 30f);
-        await Seconds(2.0);
+        await Settled(2.0);
         Save("lands-3-lair.png");
 
         lair.Interact(_player);
-        await Seconds(2.0);
+        await Settled(2.0);
         Save("lands-4-guardian.png");
 
         // Ses coups (§16 G1) : une frappe annoncée au sol, puis la brèche de vide qu'elle laisse.
         ulong strikeDeadline = Time.GetTicksMsec() + 15_000;
-        while (!SlamShown() && Time.GetTicksMsec() < strikeDeadline)
-            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        await Seconds(0.6);
+        while (!MarkShown("GuardianSlamMarker") && Time.GetTicksMsec() < strikeDeadline)
+            await Settled(0.0);
+        await Settled(0.6);
         Save("lands-4b-strike.png");
-        await Seconds(1.2);
+        await Settled(1.2);
         Save("lands-4c-breach.png");
+        // Le coup propre au gardien de la terre, s'il en a un : la faux de l'Épouvantail et sa brèche (plan 57 G2).
+        ulong sweepDeadline = Time.GetTicksMsec() + 20_000;
+        while (!MarkShown("GuardianSweepMarker") && Time.GetTicksMsec() < sweepDeadline)
+            await Settled(0.0);
+        if (MarkShown("GuardianSweepMarker"))
+        {
+            await Settled(0.5);
+            Save("lands-4d-sweep.png");
+            ulong releaseDeadline = Time.GetTicksMsec() + 5_000;
+            while (MarkShown("GuardianSweepMarker") && Time.GetTicksMsec() < releaseDeadline)
+                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            await Settled(0.1);
+            Save("lands-4e-sweep-strike.png");
+        }
 
         // Un Rampant enfoui ne prend aucun dégât : le coup est rejoué jusqu'à ce qu'il tombe.
         for (int frame = 0; frame < 600 && guardian.IsFighting; frame++)
@@ -285,11 +346,11 @@ public partial class RunObservation
         GD.Print($"[RunObservation] RESULT lands terre {land} → {next} → {transition.LandIndex}, écho {guardian.Guardian?.DisplayName}");
     }
 
-    private static bool SlamShown()
+    private static bool MarkShown(string prefix)
     {
         foreach (Combat.Abilities.GroundTelegraph mark in Combat.Abilities.GroundTelegraph.Shown)
         {
-            if (mark.Name.ToString().StartsWith("GuardianSlamMarker", System.StringComparison.Ordinal))
+            if (mark.Name.ToString().StartsWith(prefix, System.StringComparison.Ordinal))
                 return true;
         }
         return false;

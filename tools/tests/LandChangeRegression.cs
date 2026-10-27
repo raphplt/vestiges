@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
+using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Progression;
 using Vestiges.Score;
@@ -175,6 +176,40 @@ public partial class LandChangeRegression : Node
         Vector2 end = (Vector2)chargeEnd.GetValue(moves);
         Check(started && !(bool)inChain.GetValue(moves) && erasure.GetZonePhaseAt(end) == ErasureManager.ErasureZonePhase.Void,
             $"gardien : la chaîne finit par une frappe qui ouvre le vide ({end})");
+    }
+
+    /// <summary>
+    /// Plan 57 G2 : le fauchage de l'Épouvantail, joué à part sur le gardien en place. Annoncé tout autour de lui, il
+    /// garde une brèche à l'écart du joueur, qui n'y échappe qu'en s'y glissant ou en sortant du disque.
+    /// </summary>
+    private void CheckSweep(Enemy guardian, GuardianConfig config, ErasureManager erasure, GuardianMoves own)
+    {
+        // Un coup du gardien en cours retiendrait le fauchage : un coup à la fois.
+        own?.Cancel();
+        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        GuardianMoves sweep = new(guardian, config.Moves, GuardianMoveSet.Sweep, _world, erasure.BreakGround);
+        typeof(GuardianMoves).GetField("_sweepCooldown", Private).SetValue(sweep, 0f);
+        _player.GlobalPosition = guardian.GlobalPosition + new Vector2(80f, 0f);
+        bool started = sweep.Process(guardian, _player, 80f, 0.016f);
+        // Par son champ : le nom « GuardianSweepMarker » est déjà pris par la marque des coups du gardien lui-même.
+        GroundTelegraph mark = (GroundTelegraph)typeof(GuardianMoves).GetField("_sweepMark", Private).GetValue(sweep);
+        float gap = (float)typeof(GuardianMoves).GetField("_sweepGap", Private).GetValue(sweep);
+        Vector2 inGap = guardian.GlobalPosition + Iso.ToScreen(Vector2.FromAngle(gap) * 100f);
+        Vector2 outside = guardian.GlobalPosition + new Vector2(config.Moves.SweepRadius * 2f, 0f);
+        Check(started && sweep.IsActive && GroundTelegraph.Shown.Contains(mark) && sweep.InSweep(_player.GlobalPosition) && !sweep.InSweep(inGap)
+            && !sweep.InSweep(outside),
+            $"fauchage : annoncé autour du gardien, le joueur dans la faux, la brèche ({Mathf.RadToDeg(gap):F0}°) et le dehors épargnés"
+            + $" (parti {started}, actif {sweep.IsActive}, marque {GroundTelegraph.Shown.Contains(mark)}, joueur {sweep.InSweep(_player.GlobalPosition)}, brèche {sweep.InSweep(inGap)}, dehors {sweep.InSweep(outside)})");
+        sweep.Process(guardian, _player, 80f, config.Moves.SweepWindup + 0.01f);
+        typeof(GuardianMoves).GetField("_sweepCooldown", Private).SetValue(sweep, 0f);
+        sweep.Process(guardian, _player, 80f, config.Moves.SweepRecovery + 0.01f);
+        own?.Cancel();
+        sweep.Process(guardian, _player, 80f, 0.016f);
+        float nextGap = (float)typeof(GuardianMoves).GetField("_sweepGap", Private).GetValue(sweep);
+        Check(Mathf.Abs(Mathf.AngleDifference(gap, nextGap)) > config.Moves.SweepGapHalf,
+            $"fauchage : la brèche suivante s'ouvre de l'autre côté ({Mathf.RadToDeg(gap):F0}° puis {Mathf.RadToDeg(nextGap):F0}°)");
+        sweep.Detach();
+        guardian.SetWindupPose(false);
     }
 
     private async Task CheckMemorialCircle()
@@ -413,6 +448,7 @@ public partial class LandChangeRegression : Node
         // Plan 57 G1 : en deuxième phase, le Grand Cerf enchaîne ses charges, et la dernière ouvre le vide où elle finit.
         if (EnemyDataLoader.Get(guardian.EnemyId).Guardian.Moves.HasFlag(GuardianMoveSet.ChainCharge))
             await CheckChainCharge(director.Moves, erasure);
+        CheckSweep(guardian, config, erasure, director.Moves);
 
         int perilBefore = peril.Peril;
         guardian.TakeDamage(guardian.MaxHp * 10f);
@@ -625,7 +661,11 @@ public partial class LandChangeRegression : Node
         await Frame();
         await Frame();
         Enemy echo = director.Guardian;
-        Check(director.IsFighting && echo is { IsActive: true, Tier: EnemyTier.Guardian } && echo.EnemyId == guardianId
+        // Les échos reprennent les gardiens vaincus dans l'ordre : le premier est celui de la première terre (plan 57 G2).
+        List<string> beaten = (List<string>)typeof(GuardianDirector).GetField("_beaten",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(director);
+        Check(director.IsFighting && echo is { IsActive: true, Tier: EnemyTier.Guardian } && beaten.Count > 0
+            && beaten.Contains(guardianId) && echo.EnemyId == beaten[0]
             && peril.Peril == perilBefore + config.EchoPeril && objective is { Visible: true }
             && objective.Text == TranslationServer.Translate("LAND_OBJECTIVE_ECHO"),
             $"écho de gardien levé : {echo?.DisplayName}, {echo?.MaxHp:F0} PV, Péril {perilBefore} → {peril.Peril}, « {objective?.Text} »");

@@ -2474,3 +2474,17 @@ Retour de Raphaël après la visite des cinq terres (cité au plan 57 §10) : l'
 - **Lot C3, le HUD se tait** : le nom du lieu remplace « Terre 1 », au carton d'arrivée seulement. Le compteur passe en trois icônes collées à la minimap. Le haut de l'écran ne parle plus qu'aux changements et pendant l'alerte de rage. **La flèche d'objectif est retirée** (elle remplace le choix de C1, §198) : la minimap suffit.
 - **Lot C4, raviver tient en haleine** : anneau-horloge et secondes restantes, deux vagues annoncées, cercle qui se resserre au dernier tiers, onde de lumière qui repousse la foule au bout. La durée de 20 s reste, à remesurer.
 - **Ordre** : G2 (l'Épouvantail, presque fini) se termine, puis C3 et C4, puis G3 à G5. Les cartes vides et linéaires ouvrent l'étape 5.
+
+## 204. L'Épouvantail, gardien des champs — 27 octobre 2026
+
+Lot G2 du [plan 57](57-chemin-et-gardiens.md), dans l'ordre fixé au §203. Détail au plan 57 §13.
+
+**Tranché par défaut, réversible :**
+- **Son corps** : épouvantail sur un pieu, manteau bleu délavé rapiécé de rouge, tête en sac où brûlent deux fentes violettes, faux rouillée et deux corbeaux. Procédural ; l'ami artiste le reprend.
+- **Sa mort est un affaissement** le long du pieu : le chapeau tombe et les corbeaux s'envolent. La chute sur le côté sortait du cadre.
+- **Le fauchage dès la première phase** : c'est son coup à lui, il doit se voir tôt.
+  - Disque de 230 px, brèche de 90° (les trois quarts du tour fauchés, comme prévu au §3) ;
+  - la brèche s'ouvre à 120° du joueur, d'un côté puis de l'autre, pour le faire tourner autour du gardien plutôt que reculer ;
+  - un dash traverse la faux.
+- **Sons de la banque** (chaîne et défaite de la Barrière), en attendant l'audio des gardiens.
+- **Les autres terres gardent le Cerf** jusqu'à leur lot (G3 à G5).
