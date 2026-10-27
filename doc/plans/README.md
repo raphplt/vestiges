@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**27 octobre — le chantier des terres ([plan 58](58-terres-completes.md), §205) :** les cinq terres vues d'en haut, une par une : la forêt est un semis uniforme, les champs répètent une ferme, la ville est une grille, le Bas-Port est presque vide, la carrière un bruit de cailloux. Chaque terre aura un cœur, trois à cinq pièces faites main où se logent les Mémoriaux, et un terrain rythmé. Premier lot : T0, la grammaire des pièces.
+
 **27 octobre — l'Épouvantail garde les champs ([plan 57 G2](57-chemin-et-gardiens.md), §204) :** deuxième gardien à part. Un épouvantail planté sur son pieu, faux rouillée et corbeaux. Son fauchage couvre un disque autour de lui, sauf une brèche à 120° du joueur, d'un côté puis de l'autre. Au bot, ses combats durent 90 et 130 s. Suite : G3, le Tocsin.
 
 **27 octobre — raviver tient en haleine ([plan 57 C4](57-chemin-et-gardiens.md), §203) :** le cercle d'un Mémorial a son horloge (anneau qui se remplit, « Tiens le cercle · 12 s », rouge hors du cercle), deux vagues annoncées au sol, un resserrement au dernier tiers et une onde qui balaie la foule quand il se rallume. Au bot, le ravivage n'est pas plus lent mais trois fois plus disputé à la graine 7. Suite : G2, l'Épouvantail.

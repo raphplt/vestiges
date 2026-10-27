@@ -2488,3 +2488,15 @@ Lot G2 du [plan 57](57-chemin-et-gardiens.md), dans l'ordre fixé au §203. Dét
   - un dash traverse la faux.
 - **Sons de la banque** (chaîne et défaite de la Barrière), en attendant l'audio des gardiens.
 - **Les autres terres gardent le Cerf** jusqu'à leur lot (G3 à G5).
+
+## 205. Les terres complètes avant les derniers gardiens — 27 octobre 2026
+
+Raphaël, après G2 : « Ok continue stp d'abord le chantier des terres. Mes précisions sont (mais ça dépend de chaque terre) : au global ça manque de variations / POI, ou props vraiment particulières (ça se remarquait pas trop quand les biomes étaient mixés mais là ça ressort plus) ». Détail au [plan 58](58-terres-completes.md).
+
+**Tranché par défaut, réversible :**
+- **L'étape 5 passe avant G3 à G5.** Les gardiens restants prendront ensuite la pièce du cœur de leur terre.
+- **Une terre, c'est un cœur, trois à cinq pièces maîtresses et un terrain rythmé entre elles** (forme du §189). Chaque pièce est unique sur sa terre, faite main en JSON, avec des variantes internes, un sol à elle et une place de Mémorial. La pièce du cœur porte le repaire.
+- **Les Mémoriaux se posent dans les pièces d'abord** : on ravive le Mémorial du belvédère, pas un Mémorial quelconque.
+- **Des décors remarquables garantis sur chaque terre**, comme les cinq grands décors des champs.
+- **Ordre des lots** : la grammaire des pièces (T0), puis les bois, le Bas-Port, la Haute-Ville, la carrière, et les champs en dernier.
+- **Les éléments de lore et les anciens POI restent éteints** ; une pièce peut reprendre leurs idées en décor.
