@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**27 octobre — ce qui restait flou sur le chemin du gardien ([plan 57 C2](57-chemin-et-gardiens.md), §201) :** Mémoriaux et repaire sur la minimap dès l'arrivée, épinglés au bord du radar ; dans la dernière minute avant la rage, l'objectif rouge compte à rebours ; au réveil, l'arène s'ouvre au plus à 40 créatures. Au bot, la 3e terre est enfin vaincue (trois fois sur cinq à la graine 7, de 40 à 256 s). Suite : G2 à G5, puis l'étape 5, les terres complètes.
+
 **27 octobre — le Grand Cerf fini ([plan 57 G1](57-chemin-et-gardiens.md), §200) :** corps procédural à sa taille (écorce, crâne blanc, ramure morte), cinq animations dont l'élan, charges en chaîne en deuxième phase (trois charges annoncées, la dernière ouvre le vide), mort mise en scène, et le Cerf couché au repaire au lieu de la stèle. Au bot, combats des terres 1 et 2 de 74 à 233 s ; la 3e terre reste hors de portée du bot, à revoir avec C2. Suite : C2.
 
 **25 octobre — le gardien devient une créature à part ([plan 57 G0](57-chemin-et-gardiens.md), §199) :** rang `guardian`, nommé par chaque biome, refusé dans les foules ; coups choisis dans sa fiche, PV de sa fiche par rang, plus de Souverain grossi. Le Grand Cerf garde toutes les terres, sur un corps provisoire (le Tréant ×2) jusqu'à G1. Au bot, combats des terres 1 et 2 de 72 à 150 s, comme au B1. Suite : G1, le corps et les charges en chaîne du Cerf.

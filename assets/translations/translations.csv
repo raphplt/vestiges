@@ -398,7 +398,8 @@ QUEST_DONE_TOAST,Quête accomplie : {0},Quest complete: {0}
 UI_SHOW_MAP,Carte,Map
 MAP_LEGEND_YOU,Toi,You
 MAP_LEGEND_CHEST,Coffre (couleur de sa rareté),Chest (rarity colour)
-MAP_LEGEND_MEMORIAL,Mémorial,Memorial
+MAP_LEGEND_MEMORIAL_DORMANT,Mémorial à raviver,Memorial to rekindle
+MAP_LEGEND_MEMORIAL,Mémorial ravivé,Rekindled memorial
 MAP_LEGEND_GUARDIAN,Gardien,Guardian
 MAP_LEGEND_RIFT,Faille,Rift
 MAP_LEGEND_PERIL_STELE,Stèle du Péril,Peril stele
@@ -602,6 +603,7 @@ LAND_OBJECTIVE_LIGHTS,"Terre {0} · Mémoriaux ravivés {1}/{2}","Land {0} · Me
 LAND_OBJECTIVE_READY,"Terre {0} · Réveille le gardien, au cœur","Land {0} · Wake the guardian, at the heart"
 LAND_OBJECTIVE_FIGHT,"Terre {0} · Bats le gardien","Land {0} · Defeat the guardian"
 LAND_OBJECTIVE_RAGE,"Terre {0} · Le gardien s'est levé seul","Land {0} · The guardian rose on its own"
+LAND_OBJECTIVE_RAGE_SOON,"Terre {0} · Le gardien se lève seul dans {1}","Land {0} · The guardian rises on its own in {1}"
 LAND_OBJECTIVE_PASSAGE,"Terre {0} · La terre suivante se recoud","Land {0} · The next land is stitching itself"
 LAND_OBJECTIVE_HOLD,"Dernière terre · Échos vaincus {1}","Last land · Echoes defeated {1}"
 LAND_OBJECTIVE_ECHO,"Dernière terre · Un écho de gardien te traque","Last land · A guardian's echo hunts you"

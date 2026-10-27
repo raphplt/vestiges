@@ -26,6 +26,11 @@ public partial class Minimap : Control
     private const float Margin = 10f;
     private const float BottomMargin = 64f;
     private const int LegendFontSize = 8;
+    /// <summary>Retrait du bord du disque où s'épinglent les buts lointains de la terre (plan 57 C2).</summary>
+    private const float EdgeInset = 5f;
+    /// <summary>Battement du repaire prêt : une onde qui s'élargit de LairPulseRadius pixels par période.</summary>
+    private const float LairPulseSeconds = 1f;
+    private const float LairPulseRadius = 5f;
     /// <summary>
     /// Rayon de découverte, un peu en deçà du bord du radar (8,5 cellules) : le front du brouillard s'y voit avancer.
     /// Sans lien avec la quête « Dessiner la carte », qui compte le brouillard du monde.
@@ -39,6 +44,8 @@ public partial class Minimap : Control
     private static readonly Color Unknown = new(0.08f, 0.08f, 0.12f, 0.85f);
     private static readonly Color PlayerColor = new(1f, 0.97f, 0.88f);
     private static readonly Color MemorialColor = new(0.95f, 0.82f, 0.45f);
+    // Mémorial encore endormi (plan 57 C2) : pierre pâle, l'or est pour ceux qu'on a ravivés.
+    private static readonly Color DormantMemorialColor = new(0.72f, 0.7f, 0.8f);
     private static readonly Color RiftColor = new(0.7f, 0.35f, 0.85f);
     private static readonly Color WorkshopColor = new(0.91f, 0.52f, 0.24f);
     private static readonly Color WellColor = new(0.55f, 0.72f, 0.83f);
@@ -217,6 +224,7 @@ public partial class Minimap : Control
         {
             (_playerIcon, PlayerColor, "MAP_LEGEND_YOU"),
             (_chestIcon, RarityPalette.Main("rare"), "MAP_LEGEND_CHEST"),
+            (_memorialIcon, DormantMemorialColor, "MAP_LEGEND_MEMORIAL_DORMANT"),
             (_memorialIcon, MemorialColor, "MAP_LEGEND_MEMORIAL"),
             (_memorialIcon, GuardianColor, "MAP_LEGEND_GUARDIAN"),
             (_riftIcon, RiftColor, "MAP_LEGEND_RIFT"),
@@ -414,9 +422,17 @@ public partial class Minimap : Control
                     DrawIcon(layer, chest.GlobalPosition, _chestIcon, RarityPalette.Main(chest.Rarity));
             }
         }
+        // Sur une terre, les Mémoriaux sont les clés du gardien (plan 57 C2) : visibles dès l'arrivée, même dans le
+        // brouillard ; les endormis lointains s'épinglent au bord du radar, du côté où les chercher.
+        bool land = GuardianLair.Current != null;
         for (int i = 0; i < Memorial.All.Count; i++)
-            if (InView(Memorial.All[i].GlobalPosition) && Known(Memorial.All[i].GlobalPosition))
-                DrawIcon(layer, Memorial.All[i].GlobalPosition, _memorialIcon, MemorialColor);
+        {
+            Memorial memorial = Memorial.All[i];
+            if (memorial.State == Memorial.MemorialState.Lost || !land && !Known(memorial.GlobalPosition))
+                continue;
+            bool dormant = memorial.State is Memorial.MemorialState.Dormant or Memorial.MemorialState.Gathering;
+            DrawMarker(layer, memorial.GlobalPosition, _memorialIcon, dormant ? DormantMemorialColor : MemorialColor, land && dormant);
+        }
         for (int i = 0; i < Rift.All.Count; i++)
             if (InView(Rift.All[i].GlobalPosition) && Known(Rift.All[i].GlobalPosition))
                 DrawIcon(layer, Rift.All[i].GlobalPosition, _riftIcon, RiftColor);
@@ -432,15 +448,47 @@ public partial class Minimap : Control
         for (int i = 0; i < Well.All.Count; i++)
             if (!Well.All[i].IsLost && InView(Well.All[i].GlobalPosition) && Known(Well.All[i].GlobalPosition))
                 DrawIcon(layer, Well.All[i].GlobalPosition, _wellIcon, WellColor);
-        // Le repaire du gardien se voit dès l'arrivée : c'est le but de la terre.
-        if (GuardianLair.Current is { Visible: true } lair && InView(lair.GlobalPosition))
-            DrawIcon(layer, lair.GlobalPosition, _memorialIcon, GuardianColor);
+        // Le repaire du gardien se voit dès l'arrivée, épinglé au bord s'il est loin : c'est le but de la terre. Prêt à
+        // réveiller, il bat.
+        if (GuardianLair.Current is { Visible: true } lair && MarkerPosition(lair.GlobalPosition, true) is Vector2 lairAt)
+        {
+            if (lair.CanInteract)
+            {
+                float pulse = (float)(Time.GetTicksMsec() / 1000.0 % LairPulseSeconds) / LairPulseSeconds;
+                layer.DrawArc(lairAt + Vector2.One * 0.5f, 3f + LairPulseRadius * pulse, 0f, Mathf.Tau, 16,
+                    GuardianColor with { A = 1f - pulse }, 1f);
+            }
+            DrawIconAt(layer, lairAt, _memorialIcon, lair.CanInteract ? GuardianColor.Lightened(0.25f) : GuardianColor);
+        }
         DrawIcon(layer, _playerPosition, _playerIcon, PlayerColor);
     }
 
-    private void DrawIcon(MinimapLayer layer, Vector2 world, Texture2D icon, Color color)
+    private void DrawIcon(MinimapLayer layer, Vector2 world, Texture2D icon, Color color) =>
+        DrawIconAt(layer, ToMap(world).Floor(), icon, color);
+
+    /// <summary>Un but de la terre : à sa place s'il tient dans le radar, sinon épinglé au bord si <paramref name="pin"/>.</summary>
+    private void DrawMarker(MinimapLayer layer, Vector2 world, Texture2D icon, Color color, bool pin)
     {
-        Vector2 position = ToMap(world).Floor() - new Vector2(2, 2);
+        if (MarkerPosition(world, pin) is Vector2 at)
+            DrawIconAt(layer, at, icon, color);
+    }
+
+    private Vector2? MarkerPosition(Vector2 world, bool pin)
+    {
+        Vector2 at = ToMap(world);
+        if (_full)
+            return InView(world) ? at.Floor() : null;
+        Vector2 center = Vector2.One * RadarSize / 2f;
+        float reach = RadarSize / 2f - EdgeInset;
+        Vector2 offset = at - center;
+        if (offset.LengthSquared() <= reach * reach)
+            return at.Floor();
+        return pin ? (center + offset.Normalized() * reach).Floor() : null;
+    }
+
+    private void DrawIconAt(MinimapLayer layer, Vector2 map, Texture2D icon, Color color)
+    {
+        Vector2 position = map - new Vector2(2, 2);
         // Un liseré sépare les petits repères du terrain, notamment les coffres des rues claires.
         layer.DrawTexture(icon, position + Vector2.Left, Frame);
         layer.DrawTexture(icon, position + Vector2.Right, Frame);

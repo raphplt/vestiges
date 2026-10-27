@@ -24,6 +24,10 @@ public sealed class GuardianConfig
     public IReadOnlyList<string> Chests { get; init; }
     public float RageHp { get; init; }
     public float RageDamage { get; init; }
+
+    /// <summary>Secondes d'alerte avant que le gardien se lève seul, et son son (plan 57 C2).</summary>
+    public float RageWarningSeconds { get; init; }
+    public string RageWarningAudio { get; init; }
     public int Escorts { get; init; }
     public float PassageDelaySeconds { get; init; }
     public int RankPeril { get; init; }
@@ -80,7 +84,7 @@ public sealed class GuardianConfig
             JsonConfigReader reader = new(document.RootElement);
             JsonElement root = reader.Root;
             reader.AllowOnly(root, "gardien", "_doc", "wake_lights", "lair_offset_px", "hp_rank_growth", "fight_crowd_density", "fight_crowd_cap", "target_bias", "extra_light_hp",
-                "extra_light_chest", "chests", "rage_hp", "rage_damage", "escorts", "passage_delay_seconds", "rank_peril", "lands_to_win", "rise_audio", "victory_audio", "arrival_audio", "ready_audio", "late_game", "moves");
+                "extra_light_chest", "chests", "rage_hp", "rage_damage", "rage_warning_seconds", "rage_warning_audio", "escorts", "passage_delay_seconds", "rank_peril", "lands_to_win", "rise_audio", "victory_audio", "arrival_audio", "ready_audio", "late_game", "moves");
             JsonElement lateGame = reader.Section(root, "late_game");
             reader.AllowOnly(lateGame, "late_game", "_doc", "echo_first_seconds", "echo_interval_seconds", "echo_hp_multiplier", "echo_peril",
                 "echo_escorts", "echo_chest", "echo_distance");
@@ -101,6 +105,8 @@ public sealed class GuardianConfig
                 Chests = ChestList(reader, root, chests),
                 RageHp = reader.Positive(root, "rage_hp"),
                 RageDamage = reader.Positive(root, "rage_damage"),
+                RageWarningSeconds = reader.Positive(root, "rage_warning_seconds"),
+                RageWarningAudio = reader.Text(root, "rage_warning_audio"),
                 Escorts = reader.Integer(root, "escorts", 0, 50),
                 PassageDelaySeconds = reader.NonNegative(root, "passage_delay_seconds"),
                 RankPeril = reader.Integer(root, "rank_peril", 0, 50),

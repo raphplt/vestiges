@@ -175,3 +175,38 @@ Lecture :
 - **La 3e terre ne se mesure pas avec ce bot.** Il n'atteint pas sa 3e lumière avant la rage, et la terre se réduit à son cœur. Dans les trois runs de la graine 7, le bot reste ensuite sur place : 7 m parcourus en cinq minutes. Le gardien ne passe même pas en deuxième phase : le bot ne l'atteint pas. C'est un défaut de l'outil, déjà présent au G0 : invincible, le bot survit hors du cœur au lieu d'y revenir. Le corriger rejoint le lot C2, qui traite la rage, pour revoir la 3e terre.
 
 **Avocat du diable (§5) :** la méthode procédurale tient à trois fois la taille d'une créature, capture à l'appui. Le corps reste simple de près ; l'ami artiste le reprend à l'étape 7.
+
+## 9. Compte rendu C2, ce qui restait flou — 27 octobre 2026
+
+- **Les Mémoriaux sur la minimap dès l'arrivée**, même dans le brouillard : ceux à raviver en pierre pâle, ceux ravivés en or. Loin, un Mémorial à raviver s'épingle au bord du radar, du côté où le chercher. La légende de la carte entière distingue les deux. Hors des terres, rien ne change.
+- **Le repaire** s'épingle aussi au bord du radar. Prêt à réveiller, il s'éclaircit et bat : une onde violette qui s'élargit chaque seconde.
+- **L'alerte d'une minute.** Dans la dernière minute avant que le gardien se lève seul, l'objectif passe au rouge et compte à rebours : « Terre 1 · Le gardien se lève seul dans 0:44 ». Le temps suit le rythme de l'oubli du moment (`ErasureManager.FrontRate`). Un son marque l'entrée dans l'alerte, une fois par terre ; chaque seconde fait battre la ligne. Réglages : `rage_warning_seconds` (60) et `rage_warning_audio` dans `data/world/guardian.json`. Nouveau signal `GuardianRageCountdown`.
+- **L'arène s'ouvre au plus à 40 créatures.** Averti, le joueur rejoint le cœur, et sa horde avec lui : au bot, 150 à 450 créatures. Elles faisaient au gardien un rempart que les armes ne traversaient pas. Au réveil, celles en trop, les plus loin du joueur, s'en vont sans butin, comme celles du sol qui s'effondre. Le plafond `fight_crowd_cap` ne valait jusque-là que pour les renforts.
+- **Le bot des terres** rejoint le cœur pendant l'alerte, et relève son combat toutes les 10 s (`[GuardianFight]` : distance, PV, sol sous lui, foule, dernier coup reçu).
+
+**Vérifié** :
+- build sans avertissement ; suites `smoke`, `catalogs`, `lands`, `enemy_abilities` et `quests` vertes. Nouveaux contrôles : l'objectif compte à rebours dans la dernière minute et cesse au réveil ; 60 créatures amenées au cœur, l'arène s'ouvre à 44 (40 et l'escorte) ;
+- capture en vraie run (graine 7, `--capture-lands`) : l'objectif rouge sous la Série, lisible ; la minimap montre quatre Mémoriaux pâles et le repaire épinglés au bord. Le battement du repaire prêt n'est pas vu en image (un écran de niveau couvrait la capture) ;
+- relecture `godot-reviewer` : rien de bloquant ; le son d'alerte pouvait se rejouer si l'oubli ralentissait, corrigé (une fois par terre, l'alerte ne s'éteint plus avant le réveil) ; les Mémoriaux s'affichaient aussi hors des terres, corrigé.
+
+**Mesure** : même protocole qu'au G0 et au G1, profil neuf, 30 min. Durée du combat, du réveil à la mort :
+
+| Cas | Terre 1 | Terre 2 | Terre 3 |
+|---|---|---|---|
+| Traqueur, graine 7 | 60 s | 153 s | enragé, non vaincu (bot figé, ci-dessous) |
+| Traqueur, graine 42 | enragé, 681 s dont 350 figé | 266 s | — |
+| Forgeuse, graine 7 | 103 s | 62 s | **enragé, 40 s, run gagnée à 19 min 44** |
+| Forgeuse, graine 42 | enragé, 221 s | 101 s | — |
+| Vagabond, graine 7 | 97 s | 169 s | enragé, non vaincu (bot figé) |
+| Vagabond, graine 42 | enragé, 182 s | 94 s | — |
+
+Deux runs de mise au point, avant le plafond de l'arène, ont aussi vaincu la 3e terre : Vagabond graine 7, enragé, 194 s ; Traqueur graine 7, trois lumières, 256 s, run gagnée à 13 min 45.
+
+Lecture :
+- **La 3e terre se mesure enfin** : trois fois vaincue sur cinq essais à la graine 7, de 40 à 256 s. Au G1, jamais.
+- **Terres 1 et 2** : 12 combats, de 60 à 266 s hors le cas figé. Les plus longs suivent toujours un réveil enragé.
+- **Deux limites du bot, pas du jeu** :
+  - l'arc du Traqueur tire droit devant, dans le sens de la marche ; le bot, qui tourne autour du gardien pour garder sa place, tire souvent à côté ;
+  - trois fois, le bot reste figé sur une case de vide au bord du cœur, le gardien figé à côté de lui, 5 à 10 min. **À comprendre en premier au lot G2** : un vrai joueur peut-il s'y coincer ?
+- **Graine 42** : le bot n'a pas ses trois lumières avant la rage sur la 1re terre (premier Mémorial à 2 min 40), comme au G0 et au G1.
+

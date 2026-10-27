@@ -287,18 +287,47 @@ public partial class LandChangeRegression : Node
         Label objective = (Label)_world.FindChild("LandObjective", true, false);
         string collecting = objective?.Text;
         Check(objective is { Visible: true } && !string.IsNullOrEmpty(collecting), $"objectif de la terre affiché : « {collecting} »");
+        // Plan 57 C2 : le contrôle du cercle a mené la terre à 30 s du cœur, dans la dernière minute : l'objectif compte
+        // à rebours jusqu'au lever du gardien, lumières allumées ou non.
+        string rageSoon = string.Format(TranslationServer.Translate("LAND_OBJECTIVE_RAGE_SOON"), transition.LandIndex + 1, string.Empty);
+        Check(collecting?.StartsWith(rageSoon, System.StringComparison.Ordinal) == true,
+            $"objectif : la dernière minute avant que le gardien se lève seul se compte (« {collecting} »)");
         memorials.SetLitForTests(config.WakeLights + 1);
         await Frame();
         await Frame();
         Check(lair.CanInteract, "gardien : toutes les lumières allumées, le repaire s'ouvre");
-        Check(objective != null && objective.Text != collecting, $"objectif : « {objective?.Text} »");
+        Check(objective?.Text.StartsWith(rageSoon, System.StringComparison.Ordinal) == true, $"objectif : « {objective?.Text} »");
         float standingBefore = erasure.Front.StandingShare();
         int chestsBefore = Chest.Closed.Count;
         // Plan 57 G1 : le repaire montre le gardien couché, pas la stèle.
         string sleeping = lair.GetNode<Sprite2D>("Sprite").Texture?.ResourcePath ?? string.Empty;
         Check(sleeping.Contains("_W_death_"), $"repaire : le gardien y dort ({sleeping})");
+        // Plan 57 C2 : averti, le joueur arrive au cœur avec sa horde ; l'arène s'ouvre au plus à fight_crowd_cap créatures.
+        SpawnManager horde = _world.GetNode<SpawnManager>("SpawnManager");
+        List<Enemy> brought = new();
+        for (int i = 0; i < config.FightCrowdCap + 20; i++)
+        {
+            if (horde.SpawnEventEnemy("rodeur", lair.GlobalPosition + Vector2.FromAngle(i * 0.7f) * (60f + i * 3f)) is Enemy enemy)
+                brought.Add(enemy);
+        }
         lair.Interact(_player);
+        await Frame();
+        Check(objective?.Text.StartsWith(rageSoon, System.StringComparison.Ordinal) == false,
+            $"objectif : réveillé, le compte à rebours cesse (« {objective?.Text} »)");
         Enemy guardian = director.Guardian;
+        int arena = 0;
+        foreach (Node child in _world.GetNode("EnemyContainer").GetChildren())
+        {
+            if (child is Enemy { IsActive: true, IsDying: false } enemy && enemy != guardian && !enemy.Modifiers.IsEventBound)
+                arena++;
+        }
+        Check(brought.Count == config.FightCrowdCap + 20 && arena <= config.FightCrowdCap + config.Escorts,
+            $"gardien : l'arène s'ouvre à {arena} créatures au plus ({brought.Count} amenées, plafond {config.FightCrowdCap} + {config.Escorts} d'escorte)");
+        foreach (Enemy enemy in brought)
+        {
+            if (enemy.IsActive && !enemy.IsDying)
+                enemy.Withdraw();
+        }
         // Plan 57 G0 : le gardien de la terre est une créature à part, celle que nomme son biome, sans variante ; G1 :
         // dessiné à sa taille, il touche par le rayon de sa fiche.
         string landGuardian = _world.GetBiomeAt(lair.GlobalPosition)?.Guardian;

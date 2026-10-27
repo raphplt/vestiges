@@ -2444,3 +2444,14 @@ Raphaël : « ok go » (lot G1 du [plan 57](57-chemin-et-gardiens.md)). Détail 
 - **Le repaire montre le gardien couché**, vu de profil, à la place de la stèle violette.
 - **La 3e terre se mesurera après C2** : le bot, invincible, reste bloqué hors du cœur réduit et n'atteint pas le gardien. Le corriger rejoint C2, qui traite la rage.
 
+## 201. Ce qui restait flou sur le chemin du gardien, et l'étape 5 ensuite — 27 octobre 2026
+
+Raphaël : « Ok go 3 et après on fera un gros focus sur le 5 c'est très important ». L'étape 3 (le rythme du départ) n'attend que sa séance : « go 3 » est lu comme la fin de l'étape 3 bis, C2 puis G2 à G5. **Ensuite, l'étape 5, les terres complètes, est le prochain gros chantier.** Détail de C2 au plan 57 §9.
+
+**Tranché par défaut, réversible :**
+- **Les Mémoriaux d'une terre se voient sur la minimap dès l'arrivée**, à raviver en pierre pâle, ravivés en or ; les lointains et le repaire s'épinglent au bord du radar. Hors des terres, rien ne change.
+- **Le repaire prêt bat** au rythme de la minimap (quatre images par seconde), sans repeinte par image.
+- **L'alerte compte la dernière minute** au rythme de l'oubli du moment, en rouge à la place de l'objectif ; un son à son entrée, une fois par terre. Le compte n'est pas lissé : une crise qui accélère l'oubli le fait sauter.
+- **L'arène s'ouvre au plus à `fight_crowd_cap` créatures** : au réveil, les plus loin du joueur s'en vont sans butin. Remplace « la foule déjà là au-delà du plafond s'use d'elle-même » (plan 56 B1) : avec l'alerte, le joueur amène sa horde au cœur, et elle protégeait le gardien.
+- **Le bot qui reste figé au bord du vide** est le premier sujet du lot G2.
+

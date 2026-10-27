@@ -93,6 +93,9 @@ public partial class ErasureManager : Node
     /// <summary>Front figé (combat du gardien, P3) : plus rien ne tombe, ni ne remonte.</summary>
     public bool FrontFrozen { get; set; }
 
+    /// <summary>Secondes d'horloge du front par seconde de jeu : le rythme de l'oubli (Oublis, difficulté, crise).</summary>
+    public float FrontRate => FrontFrozen ? 0f : _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
+
     // Recousure à l'arrivée sur une terre (§16 R1), rendu seul : temps écoulé (négatif hors recousure) et point de départ.
     private float _stitchElapsed = -1f;
     private Vector2I _stitchOrigin;
@@ -449,7 +452,7 @@ public partial class ErasureManager : Node
     /// </summary>
     private void AdvanceFront()
     {
-        float step = FrontFrozen ? 0f : _updateIntervalSec * _decayMultiplier * _difficultySpeed * (_crisisActive ? _crisisDecayMultiplier : 1f);
+        float step = _updateIntervalSec * FrontRate;
         _front.Advance(step);
         MendBreaches();
         Vector2I playerCell = WorldToCell(_player.GlobalPosition);

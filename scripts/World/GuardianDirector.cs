@@ -49,6 +49,8 @@ public partial class GuardianDirector : Node
     private bool _arenaClosed;
     private RandomNumberGenerator _echoRng;
     private (int Land, int Lights, int Stage) _published = (-1, -1, -1);
+    // Secondes avant que le gardien se lève seul, publiées pendant l'alerte ; −1 hors alerte.
+    private int _rageCountdown = -1;
 
     /// <summary>Le gardien de la terre en cours s'est-il levé de lui-même (terre réduite à son cœur) ?</summary>
     public bool Enraged { get; private set; }
@@ -113,6 +115,8 @@ public partial class GuardianDirector : Node
                 LandFront front = _erasure.Front;
                 if (front != null && front.Time >= front.Config.HeartReachedSeconds)
                     Wake(true);
+                else
+                    UpdateRageCountdown(front);
                 break;
             case Phase.Fighting:
                 UpdateFight();
@@ -131,6 +135,40 @@ public partial class GuardianDirector : Node
                 UpdateEcho();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Dernière minute avant que le gardien se lève seul (plan 57 C2) : le temps qui reste au rythme de l'oubli du
+    /// moment, en secondes de jeu, publié à chaque seconde ; le son marque l'entrée dans l'alerte, une fois par terre.
+    /// Entrée, l'alerte ne s'éteint plus avant le réveil : un oubli qui ralentit le front la borne à sa durée, un front
+    /// arrêté la fige.
+    /// </summary>
+    private void UpdateRageCountdown(LandFront front)
+    {
+        if (front == null)
+            return;
+        float rate = _erasure.FrontRate;
+        if (rate <= 0f)
+            return;
+        int seconds = Mathf.Max(0, Mathf.CeilToInt((front.Config.HeartReachedSeconds - front.Time) / rate));
+        int warning = Mathf.CeilToInt(_config.RageWarningSeconds);
+        if (seconds > warning)
+        {
+            if (_rageCountdown < 0)
+                return;
+            seconds = warning;
+        }
+        if (_rageCountdown < 0)
+            AudioManager.PlayUI(_config.RageWarningAudio);
+        SetRageCountdown(seconds);
+    }
+
+    private void SetRageCountdown(int seconds)
+    {
+        if (seconds == _rageCountdown)
+            return;
+        _rageCountdown = seconds;
+        _eventBus.EmitSignal(EventBus.SignalName.GuardianRageCountdown, seconds);
     }
 
     /// <summary>L'objectif de la terre, publié seulement quand il change.</summary>
@@ -192,6 +230,7 @@ public partial class GuardianDirector : Node
 
     private void Wake(bool enraged)
     {
+        SetRageCountdown(-1);
         _phase = Phase.Fighting;
         Enraged = enraged;
         _lights = _memorials.LitThisLand;
@@ -234,6 +273,28 @@ public partial class GuardianDirector : Node
         return swallowed;
     }
 
+    /// <summary>
+    /// L'arène s'ouvre au plus à fight_crowd_cap créatures (plan 57 C2) : averti, le joueur rejoint le cœur avec sa horde,
+    /// qui ferait au gardien un rempart que ses armes ne traversent pas. Les plus éloignées du joueur s'en vont, sans
+    /// butin, comme celles du sol qui s'effondre ; le gardien et les créatures d'un événement restent.
+    /// </summary>
+    private int ThinArena()
+    {
+        Vector2 center = GetNode<GroupCache>("/root/GroupCache").GetPlayer() is Node2D player ? player.GlobalPosition : _guardian.GlobalPosition;
+        List<(float Distance, Enemy Enemy)> crowd = new();
+        foreach (Node child in _world.GetNode("EnemyContainer").GetChildren())
+        {
+            if (child is Enemy { IsActive: true, IsDying: false } enemy && enemy != _guardian && !enemy.Modifiers.IsEventBound)
+                crowd.Add((enemy.GlobalPosition.DistanceSquaredTo(center), enemy));
+        }
+        if (crowd.Count <= _config.FightCrowdCap)
+            return 0;
+        crowd.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+        for (int i = _config.FightCrowdCap; i < crowd.Count; i++)
+            crowd[i].Enemy.Withdraw();
+        return crowd.Count - _config.FightCrowdCap;
+    }
+
     /// <summary>Le gardien que nomme le biome de cette place, celui de la terre.</summary>
     private string LandGuardian(Vector2 position) => _world.GetBiomeAt(position)?.Guardian;
 
@@ -257,6 +318,9 @@ public partial class GuardianDirector : Node
         _guardian.SetTargetBias(_config.TargetBias);
         _moves = new GuardianMoves(_guardian, _config.Moves, data.Guardian.Moves, _world, _erasure.BreakGround);
         _guardian.AddAbility(_moves);
+        int thinned = ThinArena();
+        if (thinned > 0)
+            GD.Print($"[GuardianDirector] Arène ramenée à {_config.FightCrowdCap} créatures : {thinned} emportées");
         for (int i = 0; i < escorts; i++)
         {
             Vector2 escort = position + Vector2.FromAngle(Mathf.Tau * i / Mathf.Max(1, escorts)) * 90f;
@@ -447,6 +511,7 @@ public partial class GuardianDirector : Node
 
     private void OnLandChanging(int toIndex)
     {
+        SetRageCountdown(-1);
         EndMoves();
         OpenArena();
         _bar?.End(false);

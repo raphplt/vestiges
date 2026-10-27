@@ -27,6 +27,11 @@ public partial class EventBus : Node
     /// </summary>
     [Signal] public delegate void LandObjectiveChangedEventHandler(int land, int lights, int needed, int stage);
     /// <summary>
+    /// Le gardien endormi se lèvera seul dans <paramref name="seconds"/> secondes de jeu (plan 57 C2), publié à chaque
+    /// seconde de la dernière minute ; −1 quand l'alerte cesse (réveil, changement de terre).
+    /// </summary>
+    [Signal] public delegate void GuardianRageCountdownEventHandler(int seconds);
+    /// <summary>
     /// Un gardien de terre tombe (plan 51 §16), ou un écho de gardien sur la terre du late game.
     /// <paramref name="victory"/> : c'était le dernier gardien à vaincre, la run est gagnée.
     /// </summary>

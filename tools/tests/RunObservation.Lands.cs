@@ -8,7 +8,7 @@ namespace Vestiges.Tests;
 /// <summary>
 /// --capture-lands (plan 51) : une terre de bout en bout, en images. Le cercle d'un Mémorial en cours, le front qui ronge
 /// les bords, le repaire aux lumières allumées, l'effondrement au réveil du gardien, la terre suivante ; les cartons
-/// d'arrivée et la piste de run (plan 56 B3). Joueur
+/// d'arrivée et la piste de run (plan 56 B3), l'alerte avant que le gardien se lève seul (plan 57 C2). Joueur
 /// invincible, apparitions normales.
 /// </summary>
 public partial class RunObservation
@@ -26,9 +26,15 @@ public partial class RunObservation
     private double _memorialTargetSince;
     private int _memorialLand = -1;
 
+    private GuardianConfig _guardianConfig;
+    // Relevé du combat du gardien toutes les 10 s (plan 57 C2) : distance, PV, sol sous le bot, foule, dernier coup reçu.
+    private double _nextFightLog;
+
     /// <summary>
-    /// Cible du bot sur une terre, par priorité : le gardien levé, le repaire prêt, le cercle d'un Mémorial en cours (il
-    /// y tourne), le Mémorial endormi le plus proche dont le sol tient encore, sinon le cœur. Rend vrai s'il a une cible.
+    /// Cible du bot sur une terre, par priorité : le gardien levé, le repaire prêt, le cœur quand l'alerte annonce que le
+    /// gardien va se lever seul (plan 57 C2 : sinon la terre s'effondre sous lui et il reste échoué hors du cœur), le
+    /// cercle d'un Mémorial en cours (il y tourne), le Mémorial endormi le plus proche dont le sol tient encore, sinon le
+    /// cœur. Rend vrai s'il a une cible.
     /// </summary>
     private bool TrySteerLand(double time, ref Vector2 waypoint)
     {
@@ -39,6 +45,13 @@ public partial class RunObservation
         if (guardian.IsFighting && guardian.Guardian is { IsActive: true } boss)
         {
             waypoint = FightStance(boss.GlobalPosition, position);
+            if (time >= _nextFightLog)
+            {
+                _nextFightLog = time + 10.0;
+                using CrowdQuery near = CrowdIndex.Near(position, 400f);
+                GD.Print(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"[GuardianFight] t={time:F0} distance={position.DistanceTo(boss.GlobalPosition):F0} pv={boss.CurrentHp:F0}/{boss.MaxHp:F0} bot={position.X:F0},{position.Y:F0} gardien={boss.GlobalPosition.X:F0},{boss.GlobalPosition.Y:F0} vide_bot={_player.IsVoidAt(position)} place={waypoint.X:F0},{waypoint.Y:F0} foule400={near.Targets.Count} dernier_coup={boss.LastImpactDamage:F1}"));
+            }
             return true;
         }
         GuardianLair lair = GuardianLair.Current;
@@ -49,6 +62,12 @@ public partial class RunObservation
                 lair.Interact(_player);
             return true;
         }
+        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
+        if (lair != null && RageImminent(erasure))
+        {
+            waypoint = lair.GlobalPosition;
+            return true;
+        }
         for (int i = 0; i < Memorial.All.Count; i++)
         {
             if (Memorial.All[i].State != Memorial.MemorialState.Gathering)
@@ -56,7 +75,6 @@ public partial class RunObservation
             waypoint = Memorial.All[i].GlobalPosition + Vector2.FromAngle((float)time * 1.3f) * CircleOrbitPx;
             return true;
         }
-        ErasureManager erasure = _world.GetNode<ErasureManager>("ErasureManager");
         int land = _world.GetNode<LandTransition>("LandTransition").LandIndex;
         if (land != _memorialLand)
         {
@@ -105,6 +123,16 @@ public partial class RunObservation
         }
         waypoint = lair.GlobalPosition;
         return true;
+    }
+
+    /// <summary>Le gardien se lèvera seul avant la fin de l'alerte, au rythme de l'oubli du moment (même calcul que l'objectif).</summary>
+    private bool RageImminent(ErasureManager erasure)
+    {
+        _guardianConfig ??= GuardianConfig.Load(out _);
+        LandFront front = erasure.Front;
+        float rate = erasure.FrontRate;
+        return front != null && rate > 0f && _guardianConfig != null
+            && (front.Config.HeartReachedSeconds - front.Time) / rate <= _guardianConfig.RageWarningSeconds;
     }
 
     /// <summary>
@@ -161,6 +189,11 @@ public partial class RunObservation
         _player.GlobalPosition = erasure.CellCenterToWorld(fraying);
         await Seconds(2.0);
         Save("lands-2-front.png");
+
+        // Plan 57 C2 : la dernière minute avant que le gardien se lève seul, l'objectif rouge qui compte à rebours.
+        front.Advance(front.Config.HeartReachedSeconds - 45f * erasure.FrontRate - front.Time);
+        await Seconds(1.5);
+        Save("lands-2b-rage-soon.png");
 
         _world.GetNode<MemorialDirector>("MemorialDirector").SetLitForTests(3);
         GuardianLair lair = GuardianLair.Current;
