@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**27 octobre — raviver tient en haleine ([plan 57 C4](57-chemin-et-gardiens.md), §203) :** le cercle d'un Mémorial a son horloge (anneau qui se remplit, « Tiens le cercle · 12 s », rouge hors du cercle), deux vagues annoncées au sol, un resserrement au dernier tiers et une onde qui balaie la foule quand il se rallume. Au bot, le ravivage n'est pas plus lent mais trois fois plus disputé à la graine 7. Suite : G2, l'Épouvantail.
+
 **27 octobre — le HUD se tait ([plan 57 C3](57-chemin-et-gardiens.md), §203) :** plus de ligne « Terre 1 · Mémoriaux ravivés 0/3 » en permanence ni de flèche d'objectif ; le compteur tient en quatre icônes sur la minimap, le haut de l'écran ne parle qu'aux changements et dans la dernière minute avant la rage. Suite : C4, raviver un Mémorial qui tient en haleine.
 
 **27 octobre — visiter les cinq terres ([DEV-MODE](../DEV-MODE.md), §202) :** `tools/play_lands.sh` ouvre une run dont les terres se suivent dans un ordre fixe (bois, fermes, Haute-Ville, Bas-Port, carrière) ; F4 › Terres passe à la suivante ou refait celle-ci dans un autre biome. Pour que Raphaël voie ce qui existe avant le découpage de l'étape 5.

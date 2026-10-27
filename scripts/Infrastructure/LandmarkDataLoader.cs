@@ -30,6 +30,21 @@ public class MemorialConfig
     public float CircleLeaveDecay;
     public float CircleAbandonPx;
     public float CircleCrowdDensity;
+    /// <summary>Vagues du cercle (plan 57 C4) : parts tenues où elles montent du bord, créatures par vague, annonce au sol.</summary>
+    public float[] CircleWaveAt;
+    public int CircleWaveCount;
+    public float CircleWaveWarning;
+    public string CircleWaveAudio;
+    /// <summary>Dès cette part tenue, le cercle se resserre jusqu'à cette part de son rayon.</summary>
+    public float CircleCloseFrom;
+    public float CircleCloseShare;
+    /// <summary>Onde du Mémorial ravivé : portée, part des PV ôtée à chaque créature, poussée, son.</summary>
+    public float CircleBurstRadiusPx;
+    public float CircleBurstDamageShare;
+    public float CircleBurstPushPx;
+    public string CircleBurstAudio;
+    /// <summary>Le joueur sort du cercle : l'anneau rougit et ce son l'avertit.</summary>
+    public string CircleLeaveAudio;
     public int BlessingChoices;
     public string BlessingMinRarity;
     public int HealCost;
@@ -208,7 +223,14 @@ public static class LandmarkDataLoader
                 "hold_time", "shards", "shard_distance_px", "shard_time", "shard_urgent_time", "shard_pickup_px", "blessing_choices",
                 "blessing_min_rarity", "services", "circle");
             JsonElement mc = reader.Section(m, "circle");
-            reader.AllowOnly(mc, "memorial.circle", "seconds", "radius_px", "leave_decay", "abandon_px", "crowd_density");
+            reader.AllowOnly(mc, "memorial.circle", "seconds", "radius_px", "leave_decay", "abandon_px", "crowd_density", "waves",
+                "closing", "burst", "leave_audio");
+            JsonElement waves = reader.Section(mc, "waves");
+            reader.AllowOnly(waves, "memorial.circle.waves", "at", "count", "warning_seconds", "audio");
+            JsonElement closing = reader.Section(mc, "closing");
+            reader.AllowOnly(closing, "memorial.circle.closing", "from", "radius_share");
+            JsonElement burst = reader.Section(mc, "burst");
+            reader.AllowOnly(burst, "memorial.circle.burst", "radius_px", "damage_share", "push_px", "audio");
             JsonElement ms = reader.Section(m, "services");
             reader.AllowOnly(ms, "memorial.services", "heal_cost", "heal_percent", "cost_growth", "lift_oubli_cost", "blessing_reroll_cost");
             (float shardMin, float shardMax) = reader.Range(m, "shard_distance_px", 0f);
@@ -231,6 +253,17 @@ public static class LandmarkDataLoader
                 CircleLeaveDecay = reader.NonNegative(mc, "leave_decay"),
                 CircleAbandonPx = reader.Positive(mc, "abandon_px"),
                 CircleCrowdDensity = reader.Positive(mc, "crowd_density"),
+                CircleWaveAt = WaveShares(reader, waves),
+                CircleWaveCount = reader.Count(waves, "count", 40),
+                CircleWaveWarning = reader.Positive(waves, "warning_seconds"),
+                CircleWaveAudio = reader.Text(waves, "audio"),
+                CircleCloseFrom = reader.Ratio(closing, "from"),
+                CircleCloseShare = reader.Ratio(closing, "radius_share"),
+                CircleBurstRadiusPx = reader.Positive(burst, "radius_px"),
+                CircleBurstDamageShare = reader.Chance(burst, "damage_share"),
+                CircleBurstPushPx = reader.NonNegative(burst, "push_px"),
+                CircleBurstAudio = reader.Text(burst, "audio"),
+                CircleLeaveAudio = reader.Text(mc, "leave_audio"),
                 BlessingChoices = reader.Count(m, "blessing_choices", 6),
                 BlessingMinRarity = reader.OneOf(m, "blessing_min_rarity", rarityIds),
                 HealCost = reader.Integer(ms, "heal_cost", 0, 100_000),
@@ -241,6 +274,8 @@ public static class LandmarkDataLoader
             };
             if (reader.Error == null && memorial.CircleAbandonPx <= memorial.CircleRadiusPx)
                 reader.Fail("memorial.circle.abandon_px : doit dépasser radius_px");
+            if (memorial.CircleCloseFrom >= 1f)
+                reader.Fail("memorial.circle.closing.from : doit rester sous 1 (le cercle se resserre avant la fin)");
             if (memorial.ShardUrgentTime >= memorial.ShardTime)
                 reader.Fail("memorial.shard_urgent_time : doit rester sous shard_time");
 
@@ -325,6 +360,20 @@ public static class LandmarkDataLoader
         {
             return $"JSON illisible : {ex.Message}";
         }
+    }
+
+    /// <summary>Parts tenues où montent les vagues du cercle : dans ]0 ; 1[, croissantes.</summary>
+    private static float[] WaveShares(JsonConfigReader reader, JsonElement waves)
+    {
+        List<JsonElement> list = reader.List(waves, "at", 0);
+        float[] shares = new float[list.Count];
+        for (int i = 0; i < list.Count; i++)
+        {
+            shares[i] = list[i].ValueKind == JsonValueKind.Number ? list[i].GetSingle() : float.NaN;
+            if (!(shares[i] > 0f && shares[i] < 1f) || (i > 0 && shares[i] <= shares[i - 1]))
+                reader.Fail($"memorial.circle.waves.at : parts croissantes dans ]0 ; 1[ attendues (« {list[i]} »)");
+        }
+        return shares;
     }
 
     /// <summary>Groupes de placement : combien, et dans quelle couronne (fraction du rayon de carte, de 0 à 1).</summary>

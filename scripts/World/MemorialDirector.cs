@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using Vestiges.Combat;
+using Vestiges.Combat.Abilities;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 using Vestiges.Progression;
@@ -21,6 +22,11 @@ public partial class MemorialDirector : Node
     private const string ServiceLift = "lift";
     private const string ServiceReroll = "reroll";
     private const float RevivalSec = 0.8f;
+    // Les créatures d'une vague montent juste derrière le bord du cercle ; leur annonce au sol est un petit disque.
+    private const float WaveEdgePx = 26f;
+    private const float WaveMarkPx = 20f;
+    // Longer le bord ne fait pas grincer l'alerte de sortie à chaque pas.
+    private const float LeaveAudioCooldown = 1.5f;
     // Point de la stèle où se fond la lumière, au-dessus de son pied.
     private static readonly Vector2 RevivalFocus = new(0f, -24f);
 
@@ -45,6 +51,13 @@ public partial class MemorialDirector : Node
     private Memorial _holding;
     private MemorialCircle _circle;
     private float _held;
+    private bool _inside;
+    private float _leaveAudioIn;
+    // Vagues du cercle (plan 57 C4) : la prochaine à monter, ses points au bord, le temps d'annonce qui reste (négatif au repos).
+    private int _nextWave;
+    private float _waveIn = -1f;
+    private Vector2[] _wavePoints;
+    private GroundTelegraph[] _waveMarks;
     private Spawn.SpawnManager _spawner;
 
     /// <summary>Mémoriaux ravivés sur la terre en cours : les lumières du gardien (P3).</summary>
@@ -135,6 +148,7 @@ public partial class MemorialDirector : Node
             _spawner.EncounterDensityMultiplier = 1f;
         _holding = null;
         _circle = null;
+        FreeWaveMarks();
         LitThisLand = 0;
     }
 
@@ -142,7 +156,10 @@ public partial class MemorialDirector : Node
     // Cercle à tenir (terres, plan 51 P2b)
     // ==============================
 
-    /// <summary>Le cercle apparaît autour du Mémorial ; la foule se resserre tant qu'on le tient.</summary>
+    /// <summary>
+    /// Le cercle apparaît autour du Mémorial ; la foule se resserre tant qu'on le tient. Les marques au sol des vagues
+    /// naissent à la première, sur le monde et non sur les lieux : la terre qui part les emporte aussi (<see cref="FreeWaveMarks"/>).
+    /// </summary>
     private void StartHolding(Memorial memorial)
     {
         if (_gathering != null)
@@ -151,30 +168,104 @@ public partial class MemorialDirector : Node
             EndHolding(false);
         _holding = memorial;
         _held = 0f;
+        _inside = true;
+        _leaveAudioIn = 0f;
+        _nextWave = 0;
+        _waveIn = -1f;
         memorial.SetState(Memorial.MemorialState.Gathering);
         _circle = new MemorialCircle { Name = "MemorialCircle", GlobalPosition = memorial.GlobalPosition };
-        _circle.Setup(_config.CircleRadiusPx, RarityPalette.Colors("memorial").Light);
+        _circle.Setup(_config.CircleRadiusPx, _config.CircleCloseShare, RarityPalette.Colors("memorial").Light);
         _world.GetNode<Node2D>("PoiContainer").AddChild(_circle);
         _spawner ??= _world.GetNode<Spawn.SpawnManager>("SpawnManager");
         _spawner.EncounterDensityMultiplier = _config.CircleCrowdDensity;
         AudioManager.PlayUI("sfx_chest_opening");
     }
 
-    /// <summary>Dans le cercle, le temps tenu monte ; dehors, il redescend ; trop loin, la tentative s'arrête.</summary>
+    /// <summary>
+    /// Dans le cercle, le temps tenu monte ; dehors, il redescend et l'anneau rougit ; trop loin, la tentative s'arrête.
+    /// Aux parts tenues réglées, une vague monte du bord ; au dernier tiers, le cercle se resserre (plan 57 C4).
+    /// </summary>
     private void UpdateHolding(float dt)
     {
-        float distance = _player.GlobalPosition.DistanceTo(_holding.GlobalPosition);
+        float distance = Iso.ToGround(_player.GlobalPosition - _holding.GlobalPosition).Length();
         if (distance > _config.CircleAbandonPx)
         {
             EndHolding(false);
             return;
         }
-        _held = distance <= _config.CircleRadiusPx
-            ? _held + dt
-            : Mathf.Max(0f, _held - dt * _config.CircleLeaveDecay);
-        _circle.SetProgress(_held / _config.CircleSeconds);
+        float radius = CircleRadius(_held / _config.CircleSeconds);
+        bool inside = distance <= radius;
+        _leaveAudioIn -= dt;
+        if (_inside && !inside && _leaveAudioIn <= 0f)
+        {
+            AudioManager.PlayUI(_config.CircleLeaveAudio);
+            _leaveAudioIn = LeaveAudioCooldown;
+        }
+        _inside = inside;
+        _held = inside ? _held + dt : Mathf.Max(0f, _held - dt * _config.CircleLeaveDecay);
+        float progress = _held / _config.CircleSeconds;
+        UpdateWave(dt, progress, radius);
+        _circle.SetState(progress, radius, inside, Mathf.CeilToInt(_config.CircleSeconds - _held));
         if (_held >= _config.CircleSeconds)
             EndHolding(true);
+    }
+
+    /// <summary>Rayon du cercle : entier jusqu'au resserrement, puis il se referme jusqu'à sa part finale.</summary>
+    private float CircleRadius(float progress)
+    {
+        float closing = Mathf.Clamp((progress - _config.CircleCloseFrom) / (1f - _config.CircleCloseFrom), 0f, 1f);
+        return _config.CircleRadiusPx * Mathf.Lerp(1f, _config.CircleCloseShare, closing);
+    }
+
+    /// <summary>Une vague s'annonce au sol tout autour du bord, puis ses créatures, celles du biome, y montent.</summary>
+    private void UpdateWave(float dt, float progress, float radius)
+    {
+        if (_waveIn >= 0f)
+        {
+            _waveIn -= dt;
+            if (_waveIn < 0f)
+                RaiseWave();
+            return;
+        }
+        if (_nextWave >= _config.CircleWaveAt.Length || progress < _config.CircleWaveAt[_nextWave])
+            return;
+        _nextWave++;
+        _waveIn = _config.CircleWaveWarning;
+        if (_waveMarks == null)
+        {
+            _wavePoints = new Vector2[_config.CircleWaveCount];
+            _waveMarks = new GroundTelegraph[_config.CircleWaveCount];
+            for (int i = 0; i < _waveMarks.Length; i++)
+            {
+                _waveMarks[i] = new GroundTelegraph { Name = $"MemorialWaveMarker{i}" };
+                _world.AddChild(_waveMarks[i]);
+            }
+        }
+        float turn = _rng.Randf() * Mathf.Tau;
+        for (int i = 0; i < _wavePoints.Length; i++)
+        {
+            Vector2 ground = Vector2.FromAngle(turn + Mathf.Tau * i / _wavePoints.Length) * (radius + WaveEdgePx);
+            _wavePoints[i] = _holding.GlobalPosition + Iso.ToScreen(ground);
+            _waveMarks[i].ShowCircle(_wavePoints[i], WaveMarkPx, FxFamily.Hostile);
+        }
+        AudioManager.PlayAt(_config.CircleWaveAudio, _holding.GlobalPosition, 0.05f, -4f);
+    }
+
+    private void RaiseWave()
+    {
+        _waveIn = -1f;
+        int raised = 0;
+        for (int i = 0; i < _wavePoints.Length; i++)
+        {
+            _waveMarks[i].HideMarker();
+            Vector2 point = _wavePoints[i];
+            if (!_spawner.IsSpawnablePosition(point) || _player.IsVoidAt(point))
+                continue;
+            string id = _spawner.PickLocalEnemyId(point);
+            if (id != null && _spawner.SpawnEventEnemy(id, point) != null)
+                raised++;
+        }
+        GD.Print($"[MemorialDirector] Vague du cercle n°{_nextWave} : {raised} créature(s)");
     }
 
     private void EndHolding(bool success)
@@ -183,13 +274,61 @@ public partial class MemorialDirector : Node
         _holding = null;
         _circle?.QueueFree();
         _circle = null;
+        FreeWaveMarks();
         _spawner.EncounterDensityMultiplier = 1f;
         if (!success)
         {
             memorial.SetState(Memorial.MemorialState.Dormant);
             return;
         }
+        Burst(memorial.GlobalPosition);
         Revive(memorial, _config.Shards);
+    }
+
+    /// <summary>
+    /// Le Mémorial ravivé lâche une onde : les créatures à portée perdent une part de leurs PV et sont repoussées, comme par
+    /// la percussion, jusque dans le vide s'il est là. Les gardiens, mini-boss et lourds ne bougent pas.
+    /// </summary>
+    private void Burst(Vector2 center)
+    {
+        float reach = _config.CircleBurstRadiusPx;
+        int hit = 0;
+        using (CrowdQuery crowd = CrowdIndex.Near(center, reach))
+        {
+            foreach (Node node in crowd.Targets)
+            {
+                if (node is not Enemy { IsActive: true, IsDying: false } enemy || !IsInstanceValid(enemy)
+                    || enemy.Tier == EnemyTier.Guardian || Iso.GroundDistanceSquared(center, enemy.GlobalPosition) > reach * reach)
+                    continue;
+                Vector2 away = Iso.ToGround(enemy.GlobalPosition - center);
+                enemy.Percuss(Iso.ToScreen(away == Vector2.Zero ? Vector2.Right : away.Normalized()), _config.CircleBurstPushPx);
+                enemy.TakeDamage(enemy.MaxHp * _config.CircleBurstDamageShare);
+                hit++;
+            }
+        }
+        PixelFxSpec wave = PixelFxSpec.Of(PixelFxShape.Zone, FxFamily.Brass, reach, 1f, 0.35f);
+        wave.Matter = ZoneMatter.Burst;
+        wave.Squash = Iso.GroundSquash;
+        wave.Steps = 5;
+        wave.FadeTail = 0.5f;
+        wave.ZIndex = -1;
+        CombatPools.Instance?.PlayFx(center, wave, FxOwner.Player);
+        ScreenShake.Instance?.ShakeMedium();
+        AudioManager.PlayAt(_config.CircleBurstAudio, center, 0.05f, -2f);
+        GD.Print($"[MemorialDirector] Onde du Mémorial ravivé : {hit} créature(s) touchée(s)");
+    }
+
+    private void FreeWaveMarks()
+    {
+        if (_waveMarks == null)
+            return;
+        foreach (GroundTelegraph mark in _waveMarks)
+        {
+            if (IsInstanceValid(mark))
+                mark.QueueFree();
+        }
+        _waveMarks = null;
+        _waveIn = -1f;
     }
 
     private void StartGathering(Memorial memorial)

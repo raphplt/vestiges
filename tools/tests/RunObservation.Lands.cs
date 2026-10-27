@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Godot;
 using Vestiges.Combat;
+using Vestiges.Infrastructure;
 using Vestiges.World;
 
 namespace Vestiges.Tests;
@@ -16,6 +17,8 @@ public partial class RunObservation
     // --lands-bot (plan 51) : le bot joue la boucle des terres au lieu d'errer.
     private bool _landsBot;
     private const float CircleOrbitPx = 110f;
+    // Orbite au sol autour d'un Mémorial tenu : dans le cercle même resserré (plan 57 C4, 55 % de 220 px).
+    private const float MemorialOrbitPx = 90f;
     private const float ReachPx = 60f;
     private const float FightStancePx = 70f;
     private const int FightStanceTries = 12;
@@ -72,7 +75,7 @@ public partial class RunObservation
         {
             if (Memorial.All[i].State != Memorial.MemorialState.Gathering)
                 continue;
-            waypoint = Memorial.All[i].GlobalPosition + Vector2.FromAngle((float)time * 1.3f) * CircleOrbitPx;
+            waypoint = Memorial.All[i].GlobalPosition + Core.Iso.ToScreen(Vector2.FromAngle((float)time * 1.3f) * MemorialOrbitPx);
             return true;
         }
         int land = _world.GetNode<LandTransition>("LandTransition").LandIndex;
@@ -152,6 +155,15 @@ public partial class RunObservation
         return Vector2.Zero;
     }
 
+    /// <summary>Une image du cercle tenu : les vagues donnent de l'XP, l'écran de niveau est réglé au passage.</summary>
+    private async Task CircleFrame(Vector2 held)
+    {
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        if (GetTree().Paused)
+            AutoPickLevelUp();
+        _player.GlobalPosition = held;
+    }
+
     private async Task CaptureLands()
     {
         _player.IsGodMode = true;
@@ -172,6 +184,27 @@ public partial class RunObservation
         GetNode<Core.EventBus>("/root/EventBus").EmitSignal(Core.EventBus.SignalName.MemorialInteracted, memorial);
         await Seconds(8.0);
         Save("lands-1-circle.png");
+        // Plan 57 C4 : hors du cercle, l'anneau rougit ; au dernier tiers, il se resserre et la 2e vague s'annonce ; au bout,
+        // l'onde du Mémorial ravivé.
+        Vector2 held = _player.GlobalPosition;
+        _player.GlobalPosition = memorial.GlobalPosition + new Vector2(LandmarkDataLoader.Memorial.CircleRadiusPx + 40f, 0f);
+        await Seconds(0.6);
+        Save("lands-1b-circle-outside.png");
+        _player.GlobalPosition = held;
+        // La 2e vague s'annonce au moment où le cercle commence à se resserrer.
+        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        MemorialDirector memorials = _world.GetNode<MemorialDirector>("MemorialDirector");
+        System.Reflection.FieldInfo nextWave = typeof(MemorialDirector).GetField("_nextWave", Private);
+        System.Reflection.FieldInfo waveIn = typeof(MemorialDirector).GetField("_waveIn", Private);
+        while (_world.GetNodeOrNull("PoiContainer/MemorialCircle") is not null
+               && ((int)nextWave.GetValue(memorials) < 2 || (float)waveIn.GetValue(memorials) > 0.6f))
+            await CircleFrame(held);
+        Save("lands-1c-circle-wave.png");
+        // Le cercle disparaît à l'instant de l'onde.
+        while (_world.GetNodeOrNull("PoiContainer/MemorialCircle") is not null)
+            await CircleFrame(held);
+        await Seconds(0.1);
+        Save("lands-1d-burst.png");
 
         // Le front à mi-terre : le joueur posé sur une cellule qui s'effiloche.
         LandFront front = erasure.Front;

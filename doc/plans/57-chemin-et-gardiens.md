@@ -232,3 +232,37 @@ Les cartes « vides et linéaires » vont à l'étape 5 (terres complètes), qui
 - **La flèche d'objectif est retirée** (`ObjectivePointer` supprimé). Les flèches des coffres restent.
 
 **Vérifié** : build sans avertissement ; suites `smoke`, `lands` et `development_tools` vertes, avec de nouveaux contrôles (compteur affiché et plus de flèche ; compte à rebours seul en haut ; au late game, pas de compteur, puis l'écho et les échos vaincus annoncés) ; capture en vraie run (graine 7, `--capture-lands`) : le haut de l'écran est libre pendant le cercle ; l'alerte rouge seule pendant la dernière minute ; les quatre icônes se lisent sur le bord de la minimap sans la couvrir.
+
+## 12. Compte rendu C4, raviver tient en haleine — 27 octobre 2026
+
+- **On sait combien de temps il reste.** Un anneau-horloge de perles fait le tour du cercle : il part du haut et se remplit dans le sens des aiguilles. Au-dessus du Mémorial, « Tiens le cercle · 12 s ». Hors du cercle, le bord et l'anneau rougissent, le texte devient « Reviens dans le cercle » et un signal sonore retentit (au plus toutes les 1,5 s).
+- **Deux vagues.** Au tiers et aux deux tiers, des marques au sol s'annoncent sur le bord pendant 1,2 s, puis 8 créatures du lieu en sortent.
+- **Le cercle se resserre** au dernier tiers, jusqu'à 55 % de son rayon.
+- **L'onde.** Au bout, le Mémorial ravivé repousse les créatures à 380 px et leur ôte 60 % de leurs PV, avec un grand éclat doré ; les gardiens n'y sont pas sensibles.
+- Tout se règle dans `memorial.circle` (`data/world/landmarks.json` : `waves`, `closing`, `burst`, `leave_audio`), avec 20 s de tenue.
+
+**Vérifié :**
+- build sans avertissement ;
+- suite `lands` verte, avec de nouveaux contrôles : texte du temps restant et du retour, deux vagues sur deux, témoin blessé ou repoussé par l'onde, puis Mémorial ravivé et bénédiction choisie ;
+- capture en vraie run (graine 7, `--capture-lands`) : l'horloge et le texte se lisent ; l'anneau rougit hors du cercle ; la deuxième vague s'annonce par des marques pleines de 20 px (les anneaux étaient trop pâles) ; l'onde éclate en or.
+
+**Mesuré au bot** (Traqueur, graines 7 et 42, `--lands-bot --nomad`, comparé à C2) :
+
+| | avant C4 | après C4 |
+|---|---|---|
+| Mémoriaux ravivés, graine 7 | 29, 54, 97 s | 29, 54, 97 s |
+| Mémoriaux ravivés, graine 42 | 162, 200 s | 162, 200 s |
+| Coups reçus par minute (4 premières minutes), graine 7 | 1 080 | 3 240 |
+| Coups reçus par minute (4 premières minutes), graine 42 | 4 192 | 4 895 |
+| Éliminations, graines 7 et 42 | 394, 411 | 525, 498 |
+
+- Chaque vague fait sortir 7 à 8 créatures, et l'onde en touche de 31 à 195.
+- Le ravivage n'est pas plus lent, mais il est plus disputé.
+- Le dosage est à régler à la séance de jeu de Raphaël.
+
+**Relecture :**
+- corrigé :
+  - `closing.from` à 1 donnait une division par zéro, il est maintenant refusé au chargement ;
+  - le signal de sortie se répétait à chaque image ;
+  - les marques de vague étaient créées à chaque tentative, elles le sont maintenant à la première vague.
+- non corrigé : un niveau gagné pendant la tenue ouvre son écran, comme avant C4, car l'XP des vagues tombe en orbes.

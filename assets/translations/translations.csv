@@ -66,6 +66,8 @@ GUARDIAN_WAKE_PROMPT,Réveiller le gardien,Wake the guardian
 MEMORIAL_SERVICES_PROMPT,Honorer,Honor
 LANDMARK_MEMORIAL,Mémorial,Memorial
 MEMORIAL_GATHER_STATUS,Éclats {0}/{1} · {2} s,Shards {0}/{1} · {2} s
+MEMORIAL_CIRCLE_HOLD,"Tiens le cercle · {0} s","Hold the circle · {0} s"
+MEMORIAL_CIRCLE_RETURN,Reviens dans le cercle,Get back in the circle
 MEMORIAL_AWAKE_TITLE,MÉMORIAL RAVIVÉ,MEMORIAL REKINDLED
 MEMORIAL_AWAKE_SUBTITLE,Choisis une bénédiction.,Choose a blessing.
 MEMORIAL_SERVICES_TITLE,MÉMORIAL,MEMORIAL

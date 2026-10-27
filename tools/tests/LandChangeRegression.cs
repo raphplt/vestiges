@@ -206,19 +206,63 @@ public partial class LandChangeRegression : Node
 
         _player.GlobalPosition = memorial.GlobalPosition;
         bus.EmitSignal(EventBus.SignalName.MemorialInteracted, memorial);
-        await Frames(Mathf.CeilToInt(config.CircleSeconds * Engine.PhysicsTicksPerSecond) + 10);
+        await Frames(2);
+        // Plan 57 C4 : l'anneau dit le temps qui reste ; hors du cercle, il rappelle d'y revenir.
+        Label hold = _world.GetNode("PoiContainer/MemorialCircle").GetChild<Label>(0);
+        string holdPrefix = TranslationServer.Translate("MEMORIAL_CIRCLE_HOLD").ToString().Split("{0}")[0];
+        string holding = hold.Text;
+        _player.GlobalPosition = memorial.GlobalPosition + new Vector2(config.CircleRadiusPx + 40f, 0f);
+        await Frames(2);
+        string outside = hold.Text;
+        _player.GlobalPosition = memorial.GlobalPosition;
+        await Frames(2);
+        Check(holding.StartsWith(holdPrefix, System.StringComparison.Ordinal)
+            && outside == TranslationServer.Translate("MEMORIAL_CIRCLE_RETURN") && memorial.State == Memorial.MemorialState.Gathering,
+            $"cercle : le temps qui reste se lit (« {holding} »), et hors du cercle « {outside} »");
+
+        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        System.Reflection.FieldInfo nextWave = typeof(MemorialDirector).GetField("_nextWave", Private);
+        System.Reflection.FieldInfo held = typeof(MemorialDirector).GetField("_held", Private);
         ChoiceScreen choices = _world.GetNode<ChoiceScreen>("ChoiceScreen");
-        // Le réveil animé se déroule en temps réel, même quand le banc accélère le jeu : l'attendre à l'horloge.
-        ulong deadline = Time.GetTicksMsec() + 15_000;
-        while (!choices.IsOpen && Time.GetTicksMsec() < deadline)
-            await Frame();
-        for (int attempt = 0; attempt < 10 && choices.IsOpen; attempt++)
+        Enemy witness = null;
+        float witnessHp = 0f;
+        float witnessDistance = 0f;
+        int crowdSeen = 0;
+        // Le réveil animé se déroule en temps réel, même quand le banc accélère le jeu : l'attendre à l'horloge. Les vagues
+        // donnent de l'XP : un écran de niveau peut figer le maintien, il est réglé au passage.
+        ulong deadline = Time.GetTicksMsec() + 90_000;
+        while (memorial.State != Memorial.MemorialState.Awake && Time.GetTicksMsec() < deadline)
         {
-            choices.Activate(choices.FirstEnabled());
             await Frame();
+            if (GetTree().Paused)
+                await SettleChoices();
+            _player.GlobalPosition = memorial.GlobalPosition;
+            crowdSeen = Mathf.Max(crowdSeen, EnemiesNear(memorial.GlobalPosition, config.CircleRadiusPx + 80f));
+            // Un témoin posé près du Mémorial juste avant la fin : l'onde doit le blesser et le repousser.
+            if (witness == null && (float)held.GetValue(director) > config.CircleSeconds - 0.5f)
+            {
+                witness = spawner.SpawnEventEnemy("rodeur", memorial.GlobalPosition + new Vector2(90f, 0f));
+                witnessHp = witness?.CurrentHp ?? 0f;
+                witnessDistance = 90f;
+            }
         }
+        Check((int)nextWave.GetValue(director) == config.CircleWaveAt.Length && crowdSeen >= config.CircleWaveCount / 2,
+            $"cercle : {nextWave.GetValue(director)} vague(s) sur {config.CircleWaveAt.Length}, jusqu'à {crowdSeen} créatures autour");
+        Check(witness != null && (!witness.IsActive || witness.CurrentHp < witnessHp
+                || witness.GlobalPosition.DistanceTo(memorial.GlobalPosition) > witnessDistance + 20f),
+            $"onde du Mémorial ravivé : le témoin blessé ou repoussé (PV {witnessHp:F0} → {witness?.CurrentHp:F0})");
+        // Le réveil animé finit sur les bénédictions : les attendre à l'horloge, puis en choisir une.
+        ulong revealDeadline = Time.GetTicksMsec() + 15_000;
+        while (!choices.IsOpen && Time.GetTicksMsec() < revealDeadline)
+            await Frame();
+        await SettleChoices();
         Check(memorial.State == Memorial.MemorialState.Awake && director.LitThisLand == 1 && !GetTree().Paused,
             $"cercle tenu {config.CircleSeconds} s : Mémorial ravivé, {director.LitThisLand} lumière, bénédiction choisie");
+        foreach (Node child in _world.GetNode("EnemyContainer").GetChildren())
+        {
+            if (child is Enemy enemy)
+                enemy.Withdraw();
+        }
 
         LandFront front = _world.GetNode<ErasureManager>("ErasureManager").Front;
         // Avant que la terre ne soit réduite à son cœur, avec la marge des contrôles suivants : au-delà, le gardien se
@@ -677,6 +721,17 @@ public partial class LandChangeRegression : Node
     }
 
     private SignalAwaiter Frame() => ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+
+    private int EnemiesNear(Vector2 center, float radius)
+    {
+        int count = 0;
+        foreach (Node child in _world.GetNode("EnemyContainer").GetChildren())
+        {
+            if (child is Enemy { IsActive: true, IsDying: false } enemy && enemy.GlobalPosition.DistanceTo(center) < radius)
+                count++;
+        }
+        return count;
+    }
 
     private void Check(bool passed, string message)
     {
