@@ -501,6 +501,20 @@ public partial class LandChangeRegression : Node
             levelUpShown = GetTree().Paused && _world.GetNode<CanvasLayer>("LevelUpScreen").Visible;
         }
         Check(levelUpShown, $"terre {transition.LandIndex} : la montée de niveau des orbes ramassées garde la pause sous son écran");
+        await SettleChoices();
+
+        // Visite des terres (tools/play_lands.sh) : la terre en cours refaite dans un autre biome, au même rang, sans Péril.
+        PerilManager peril = _world.GetNode<PerilManager>("PerilManager");
+        int rank = transition.LandIndex;
+        int perilBefore = peril.Peril;
+        string other = _world.Land.BiomeIds[0] == "swamp" ? "wild_fields" : "swamp";
+        command = _world.GetNode<Vestiges.Development.DevelopmentRunTools>("DevelopmentRunTools").Execute("land " + other);
+        Check(command.Success && transition.IsChanging, $"commande « land {other} » : {command.Message}");
+        while (transition.IsChanging)
+            await Frame();
+        Check(transition.LandIndex == rank && _world.Land.BiomeIds[0] == other,
+            $"commande « land {other} » : terre {transition.LandIndex} en {string.Join(",", _world.Land.BiomeIds)}, attendu {rank} en {other}");
+        Check(peril.Peril == perilBefore, $"terre refaite au même rang : Péril {perilBefore} → {peril.Peril}");
     }
 
     /// <summary>

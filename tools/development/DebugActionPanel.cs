@@ -27,6 +27,7 @@ public partial class DebugActionPanel : CanvasLayer
     private OptionButton _slot;
     private OptionButton _rarity;
     private OptionButton _enemy;
+    private OptionButton _biome;
     private OptionButton _speed;
     private LineEdit _console;
     private bool _previousPause;
@@ -207,7 +208,14 @@ public partial class DebugActionPanel : CanvasLayer
 
         Section("Terres (plan 51)");
         Button(_content, "Terre suivante", () => Run("land next"));
-        Label(_content, "Vide la carte et construit la suivante, joueur et build intacts. Petites terres d'un biome avec --lands.");
+        HBoxContainer biomes = Row(_content); _biome = Options(biomes, "BiomeCatalog");
+        foreach (BiomeData biome in BiomeDataLoader.GetAll())
+        {
+            _biome.AddItem((string.IsNullOrEmpty(biome.PlaceKey) ? biome.Name : Tr(biome.PlaceKey)) + " · " + biome.Id);
+            _biome.SetItemMetadata(_biome.ItemCount - 1, biome.Id);
+        }
+        Button(biomes, "Refaire la terre ici", () => Run("land " + Selected(_biome)));
+        Label(_content, "Vide la carte et construit la suivante, ou refait celle-ci dans le biome choisi, au même rang ; joueur et build intacts.");
 
         Section("Console · commandes communes aux agents");
         HBoxContainer console = Row(_content);

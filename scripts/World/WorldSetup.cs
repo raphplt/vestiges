@@ -299,11 +299,11 @@ public partial class WorldSetup : Node2D
     /// Construit la terre de rang <paramref name="index"/> à la place de la carte vidée par <see cref="ClearWorldAsync"/>
     /// (plan 51) : mêmes étapes que le premier chargement, génération sur un thread pendant que le jeu attend.
     /// </summary>
-    public async Task BuildLandAsync(int index, Action<string> onProgress = null)
+    public async Task BuildLandAsync(int index, Action<string> onProgress = null, string biomeId = null)
     {
         LoadProfiler.Begin();
         _config = WorldGenConfig.Load();
-        _land = LandSpec.For(index, _config, Seed);
+        _land = LandSpec.For(index, _config, Seed, biomeId);
         _land.ApplyTo(_config);
         _generation = Task.Run(GenerateWorld);
         await BuildCurrentLandAsync(onProgress);

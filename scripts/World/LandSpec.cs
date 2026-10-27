@@ -26,7 +26,8 @@ public sealed class LandSpec
     /// <summary>Couronne imposée aux Mémoriaux d'une terre ; nulle sur la grande carte (couronnes de landmarks.json).</summary>
     public Vector2? MemorialBand { get; private init; }
 
-    public static LandSpec For(int index, WorldGenConfig config, ulong runSeed)
+    /// <param name="biomeId">Biome imposé à cette terre (runs de dev) ; sinon <c>--land-order</c>, puis le tirage.</param>
+    public static LandSpec For(int index, WorldGenConfig config, ulong runSeed, string biomeId = null)
     {
         LandsConfig lands = config.Lands;
         ulong seed = index == 0 ? runSeed : RunRandom.SeedFor($"land/{index}");
@@ -42,7 +43,8 @@ public sealed class LandSpec
         return new LandSpec
         {
             Index = index, IsLand = true, Seed = seed, MapRadius = lands.MapRadius, MapRadiusY = lands.MapRadiusY,
-            BiomeIds = new[] { BiomeOf(index, config.AvailableBiomes) }, BiomeCount = 1,
+            BiomeIds = new[] { biomeId ?? DevelopmentBiome(index, config.AvailableBiomes) ?? BiomeOf(index, config.AvailableBiomes) },
+            BiomeCount = 1,
             CountScales = lands.CountScales,
             MemorialBand = lands.MemorialBand,
         };
@@ -62,6 +64,30 @@ public sealed class LandSpec
             (order[i], order[j]) = (order[j], order[i]);
         }
         return order[index % order.Count];
+    }
+
+    /// <summary>
+    /// Runs de dev : <c>--land-order forest_reclaimed,swamp</c> impose le biome des premières terres, pour visiter une carte
+    /// précise ; les terres suivantes reprennent le tirage. Un biome hors de <c>available_biomes</c> est refusé.
+    /// </summary>
+    private static string DevelopmentBiome(int index, IReadOnlyList<string> available)
+    {
+#if TOOLS
+        string[] args = OS.GetCmdlineUserArgs();
+        int at = System.Array.IndexOf(args, "--land-order");
+        if (at < 0 || at + 1 >= args.Length)
+            return null;
+        string[] order = args[at + 1].Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries);
+        if (index >= order.Length)
+            return null;
+        foreach (string id in available)
+        {
+            if (id == order[index])
+                return id;
+        }
+        GD.PushError($"[LandSpec] --land-order : biome « {order[index]} » hors de available_biomes ({string.Join(", ", available)})");
+#endif
+        return null;
     }
 
     /// <summary>Part gardée d'une sorte de lieu (1 sans réglage, donc terres éteintes).</summary>

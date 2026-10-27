@@ -2455,3 +2455,13 @@ Raphaël : « Ok go 3 et après on fera un gros focus sur le 5 c'est très impor
 - **L'arène s'ouvre au plus à `fight_crowd_cap` créatures** : au réveil, les plus loin du joueur s'en vont sans butin. Remplace « la foule déjà là au-delà du plafond s'use d'elle-même » (plan 56 B1) : avec l'alerte, le joueur amène sa horde au cœur, et elle protégeait le gardien.
 - **Le bot qui reste figé au bord du vide** est le premier sujet du lot G2.
 
+
+## 202. Visiter les cinq terres avant le chantier des terres — 27 octobre 2026
+
+Raphaël : « le truc c'est qu'il y a déjà bcp de props et d'assets. je te propose avant de faire quoi que ce soit de me créer un outil pour que je puisse tester toutes les maps existantes car pour l'instant je n'ai fait que la zone urbaine ». Avant de découper l'étape 5, il visite ce qui existe.
+
+**Tranché par défaut, réversible :**
+- **`tools/play_lands.sh`** lance le profil dev avec les cinq terres dans un ordre fixe : bois, fermes, Haute-Ville, Bas-Port, carrière. La run part du Hub comme d'habitude. `--god` rend invincible, et une liste de biomes choisit l'ordre. L'argument de jeu `--land-order` n'existe qu'en compilation locale.
+- **F4 › Terres** refait la terre en cours dans le biome choisi, au même rang (commande `land <biome>`).
+- **Une terre refaite au même rang ne durcit pas la run** : le Péril de rang ne s'ajoute qu'en allant plus loin qu'avant. Hors outils de dev, rien ne change : on n'y revient jamais en arrière.
+- Le lot G2 (l'Épouvantail) continue en parallèle ; l'étape 5 se découpe après la visite et ses retours.

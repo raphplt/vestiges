@@ -158,7 +158,10 @@ public partial class DevelopmentRunTools : Node
         catch (ArgumentException exception) { return new(false, exception.Message); }
     }
 
-    /// <summary>Plan 51 : « land next » passe à la terre suivante, « land N » à la terre de rang N.</summary>
+    /// <summary>
+    /// Plan 51 : « land next » passe à la terre suivante, « land N » à la terre de rang N, « land &lt;biome&gt; » refait la
+    /// terre en cours dans ce biome, au même rang.
+    /// </summary>
     private string ChangeLand(string[] parts)
     {
         Count(parts, 2);
@@ -166,6 +169,16 @@ public partial class DevelopmentRunTools : Node
             ?? throw new ArgumentException("Aucun passage de terre dans cette scène.");
         if (transition.IsChanging)
             throw new ArgumentException("Un passage est déjà en cours.");
+        if (BiomeDataLoader.Get(parts[1]) != null)
+        {
+            WorldGenConfig config = WorldGenConfig.Load();
+            if (!config.Lands.Enabled)
+                throw new ArgumentException("Terres éteintes (--no-lands) : la carte mélange les biomes.");
+            if (!config.AvailableBiomes.Contains(parts[1]))
+                throw new ArgumentException($"Biome hors de available_biomes ({string.Join(", ", config.AvailableBiomes)}).");
+            _ = transition.GoToLandAsync(transition.LandIndex, parts[1]);
+            return $"Terre {transition.LandIndex} refaite dans le biome {parts[1]}.";
+        }
         int index = parts[1] == "next" ? transition.LandIndex + 1 : Integer(parts[1], 0, 999);
         _ = transition.GoToLandAsync(index);
         return $"Passage vers la terre {index} lancé.";

@@ -82,6 +82,9 @@ tools/run_dev.sh res://scenes/Main.tscn -- \
 | `move 100 -50` | Position du joueur dans le monde |
 | `spawn shadow_crawler 100 -50` | ID de créature et position dans le monde |
 | `land next` / `land 2` | Terre suivante, ou terre de rang donné (plan 51) : la carte se vide et la suivante se construit, joueur et build intacts. Les terres sont la règle par défaut ; `--no-lands` (`tools/run_dev.sh -- --no-lands`) rend la grande carte en mosaïque, pour les mesures et comparaisons |
+| `land swamp` | Refait la terre en cours dans ce biome, au même rang et sans Péril de plus (liste déroulante de F4 › Terres) |
+
+**Visiter les terres** : `tools/play_lands.sh` lance le profil dev avec les cinq terres dans un ordre fixe (bois, fermes, Haute-Ville, Bas-Port, carrière). La run part du Hub comme d'habitude ; sa première terre est la première de la liste, et F4 › Terres › « Terre suivante » passe à la suivante. `tools/play_lands.sh swamp,wild_fields` choisit l'ordre (le tirage reprend après), `--god` rend invincible dès l'arrivée, `--list` donne les biomes. L'ordre passe au jeu par `--land-order <biome,biome,...>`, utilisable aussi avec `tools/run_dev.sh -- --land-order swamp` ou dans `CAPTURE_EXTRA_ARGS`.
 
 Pour capturer l’atelier avec le banc existant : `CAPTURE_EXTRA_ARGS=--capture-dev-tools tools/capture_run.sh /tmp/vestiges-atelier`. Il produit une vue joueur/armes et une vue temps/console.
 

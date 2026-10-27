@@ -51,6 +51,8 @@ public partial class GuardianDirector : Node
     private (int Land, int Lights, int Stage) _published = (-1, -1, -1);
     // Secondes avant que le gardien se lève seul, publiées pendant l'alerte ; −1 hors alerte.
     private int _rageCountdown = -1;
+    // Rang le plus loin atteint : une terre refaite au même rang (runs de dev) ne durcit pas la run.
+    private int _deepestLand;
 
     /// <summary>Le gardien de la terre en cours s'est-il levé de lui-même (terre réduite à son cœur) ?</summary>
     public bool Enraged { get; private set; }
@@ -523,8 +525,11 @@ public partial class GuardianDirector : Node
     /// <summary>Terre suivante : un gardien neuf l'attend (ou les échos du late game), et la run se durcit d'un rang.</summary>
     private void OnLandChanged(int index)
     {
-        if (index > 0)
+        if (index > _deepestLand)
+        {
             _peril.AddPeril(_config.RankPeril);
+            _deepestLand = index;
+        }
         Enraged = false;
         if (IsLateGame)
         {

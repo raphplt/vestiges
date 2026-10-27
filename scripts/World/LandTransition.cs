@@ -58,8 +58,11 @@ public partial class LandTransition : Node
         _world.AddChild(_falseLights);
     }
 
-    /// <summary>Quitte la terre en cours pour celle de rang <paramref name="index"/>.</summary>
-    public async Task GoToLandAsync(int index)
+    /// <summary>
+    /// Quitte la terre en cours pour celle de rang <paramref name="index"/>, dans <paramref name="biomeId"/> s'il est donné
+    /// (runs de dev : refaire la terre courante dans un autre biome).
+    /// </summary>
+    public async Task GoToLandAsync(int index, string biomeId = null)
     {
         if (IsChanging)
             return;
@@ -78,7 +81,7 @@ public partial class LandTransition : Node
             _voices?.Free();
             _falseLights?.Free();
             await _world.ClearWorldAsync();
-            await _world.BuildLandAsync(index, overlay.SetProgress);
+            await _world.BuildLandAsync(index, overlay.SetProgress, biomeId);
             _smallPlaces.ResetLand(_world.LandSeed);
             PlaceLandDetails();
             _player.ArriveOnLand(Vector2.Zero);
