@@ -46,11 +46,28 @@ public sealed class GuardianMovesConfig
     public float WaveDamage { get; init; }
     public string WaveAudio { get; init; }
 
+    /// <summary>Charges en chaîne du Grand Cerf (plan 57 G1), à partir de cette phase (0 à 2).</summary>
+    public int ChainFromPhase { get; init; }
+    public float ChainFirstDelay { get; init; }
+    public float ChainCooldown { get; init; }
+    public int ChainCount { get; init; }
+    public float ChainTriggerRange { get; init; }
+    public float ChainWindup { get; init; }
+    public float ChainRewindup { get; init; }
+    public float ChainDistance { get; init; }
+    public float ChainSeconds { get; init; }
+    public float ChainRecovery { get; init; }
+    public float ChainBreachRadius { get; init; }
+    public float ChainBreachSeconds { get; init; }
+    public float ChainImpactDamage { get; init; }
+    public string ChainWarningAudio { get; init; }
+    public string ChainImpactAudio { get; init; }
+
     public static GuardianMovesConfig Parse(JsonConfigReader reader, JsonElement root)
     {
         JsonElement moves = reader.Section(root, "moves");
         reader.AllowOnly(moves, "moves", "_doc", "phase_thresholds", "phase_cooldown_scale", "warning_audio", "phase_audio", "player_hit_margin",
-            "impact_flash_seconds", "charge", "slam", "wave");
+            "impact_flash_seconds", "charge", "slam", "wave", "chain_charge");
         JsonElement charge = reader.Section(moves, "charge");
         reader.AllowOnly(charge, "charge", "first_delay", "cooldown_seconds", "trigger_range", "min_range", "windup_seconds", "distance",
             "charge_seconds", "recovery_seconds", "hit_range", "marker_width", "damage_multiplier");
@@ -60,6 +77,10 @@ public sealed class GuardianMovesConfig
         JsonElement wave = reader.Section(moves, "wave");
         reader.AllowOnly(wave, "wave", "cooldown_seconds", "windup_seconds", "radius", "expand_seconds", "thickness", "damage_multiplier",
             "impact_audio");
+        JsonElement chain = reader.Section(moves, "chain_charge");
+        reader.AllowOnly(chain, "chain_charge", "from_phase", "first_delay", "cooldown_seconds", "count", "trigger_range",
+            "windup_seconds", "rewindup_seconds", "distance", "charge_seconds", "recovery_seconds", "breach_radius",
+            "breach_seconds", "impact_damage_multiplier", "warning_audio", "impact_audio");
         float[] thresholds = Numbers(reader, moves, "phase_thresholds");
         float[] scales = Numbers(reader, moves, "phase_cooldown_scale");
         // Trois phases : l'onde arrive à la deuxième, la frappe multiple à la troisième.
@@ -112,6 +133,21 @@ public sealed class GuardianMovesConfig
             WaveThickness = reader.Positive(wave, "thickness"),
             WaveDamage = reader.Positive(wave, "damage_multiplier"),
             WaveAudio = Audio(reader, wave, "impact_audio"),
+            ChainFromPhase = reader.Integer(chain, "from_phase", 0, 2),
+            ChainFirstDelay = reader.NonNegative(chain, "first_delay"),
+            ChainCooldown = reader.Positive(chain, "cooldown_seconds"),
+            ChainCount = reader.Integer(chain, "count", 2, 6),
+            ChainTriggerRange = reader.Positive(chain, "trigger_range"),
+            ChainWindup = reader.Positive(chain, "windup_seconds"),
+            ChainRewindup = reader.Positive(chain, "rewindup_seconds"),
+            ChainDistance = reader.Positive(chain, "distance"),
+            ChainSeconds = reader.Positive(chain, "charge_seconds"),
+            ChainRecovery = reader.NonNegative(chain, "recovery_seconds"),
+            ChainBreachRadius = reader.Positive(chain, "breach_radius"),
+            ChainBreachSeconds = reader.Positive(chain, "breach_seconds"),
+            ChainImpactDamage = reader.Positive(chain, "impact_damage_multiplier"),
+            ChainWarningAudio = Audio(reader, chain, "warning_audio"),
+            ChainImpactAudio = Audio(reader, chain, "impact_audio"),
         };
     }
 

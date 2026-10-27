@@ -32,7 +32,10 @@ public enum EnemyTier
 	Guardian,
 }
 
-/// <summary>Coups de référence qu'un gardien de terre prend dans sa fiche (plan 57 G0) ; leurs réglages sont communs.</summary>
+/// <summary>
+/// Coups qu'un gardien de terre prend dans sa fiche (plan 57) : les coups de référence et son coup à lui ; leurs
+/// réglages sont communs (data/world/guardian.json).
+/// </summary>
 [System.Flags]
 public enum GuardianMoveSet
 {
@@ -40,6 +43,8 @@ public enum GuardianMoveSet
 	Charge = 1,
 	Slam = 2,
 	Wave = 4,
+	/// <summary>Coup à lui du Grand Cerf (plan 57 G1) : charges en chaîne, la dernière ouvre le vide.</summary>
+	ChainCharge = 8,
 }
 
 /// <summary>Capacités composées du bloc « abilities » ; chacune a sa classe dans <c>Combat/Abilities</c>.</summary>
@@ -88,6 +93,7 @@ public static class EnemyGrammar
 	private static readonly (string Key, GuardianMoveSet Value)[] GuardianMoves =
 	{
 		("charge", GuardianMoveSet.Charge), ("slam", GuardianMoveSet.Slam), ("wave", GuardianMoveSet.Wave),
+		("chain_charge", GuardianMoveSet.ChainCharge),
 	};
 
 	private static readonly (string Key, EnemyAbilityKind Value)[] Abilities =

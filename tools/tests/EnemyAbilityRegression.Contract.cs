@@ -118,8 +118,10 @@ public partial class EnemyAbilityRegression
             ("gardien sans coup", "grand_cerf", e => e["guardian"]["moves"] = new JsonArray(), "guardian.moves : liste non vide"),
             ("coup de gardien inconnu", "grand_cerf", e => e["guardian"]["moves"][0] = "roar", "coup « roar » inconnu"),
             ("coup de gardien en double", "grand_cerf", e => e["guardian"]["moves"][1] = "charge", "coup « charge » en double"),
-            ("gardien sans échelle", "grand_cerf", e => e["guardian"].AsObject().Remove("body_scale"), "guardian.body_scale : obligatoire"),
-            ("échelle de gardien nulle", "grand_cerf", e => e["guardian"]["body_scale"] = 0, "guardian.body_scale"),
+            ("gardien sans rayon", "grand_cerf", e => e["guardian"].AsObject().Remove("body_radius"), "guardian.body_radius : obligatoire"),
+            ("rayon de gardien nul", "grand_cerf", e => e["guardian"]["body_radius"] = 0, "guardian.body_radius"),
+            ("chute de gardien muette", "grand_cerf", e => e["guardian"]["death_audio"] = "sfx_inexistant", "death_audio : son « sfx_inexistant » absent"),
+            ("coup à lui inconnu", "grand_cerf", e => e["guardian"]["moves"][2] = "roar", "coup « roar » inconnu"),
         };
 
         foreach ((string label, string file, Action<JsonObject> mutate, string expected) in cases)

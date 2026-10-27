@@ -11,8 +11,9 @@ namespace Vestiges.World;
 /// Coups du gardien de terre (plan 51 §16 G1, charte §11.4). Trois coups de référence annoncés, dont chaque gardien
 /// prend ceux de sa fiche (plan 57 G0) : une charge sur une ligne au sol, à esquiver de côté ; une frappe qui ouvre le
 /// vide sous un disque annoncé ; une onde qui part de lui, à traverser d'un dash. Trois phases selon ses PV, chacune plus
-/// rapide ; l'onde n'arrive qu'à la deuxième, et à la dernière la frappe tombe en trois disques. Un coup à la fois, pour
-/// que chaque annonce reste lisible.
+/// rapide ; l'onde n'arrive qu'à la deuxième, et à la dernière la frappe tombe en trois disques. Un gardien ajoute son
+/// coup à lui : pour le Grand Cerf (plan 57 G1), des charges en chaîne, chacune annoncée et visée sur le joueur, dont la
+/// dernière finit par une frappe qui ouvre le vide. Un coup à la fois, pour que chaque annonce reste lisible.
 /// </summary>
 public sealed class GuardianMoves : IEnemyAbility
 {
@@ -34,6 +35,14 @@ public sealed class GuardianMoves : IEnemyAbility
     private float _chargeCooldown;
     private float _slamCooldown;
     private float _waveCooldown;
+    private float _chainCooldown;
+    // Charges qui restent après celle en cours ; la chaîne finit par la frappe.
+    private int _chainLeft;
+    private bool _inChain;
+    private float _windup;
+    private float _chargeDistance;
+    private float _chargeSeconds;
+    private Vector2 _chargeEnd;
     private float _flashTimer;
     private Vector2 _waveCenter;
     private bool _waveHit;
@@ -68,6 +77,7 @@ public sealed class GuardianMoves : IEnemyAbility
         _chargeCooldown = config.ChargeFirstDelay;
         _slamCooldown = config.SlamFirstDelay;
         _waveCooldown = config.WaveCooldown;
+        _chainCooldown = config.ChainFirstDelay;
     }
 
     private static GroundTelegraph AddMark(Node parent, string name)
@@ -105,7 +115,9 @@ public sealed class GuardianMoves : IEnemyAbility
         {
             case Move.ChargeWindup:
                 _timer -= delta;
-                _chargeMark.SetProgress(1f - _timer / _config.ChargeWindup);
+                _chargeMark.SetProgress(1f - _timer / _windup);
+                if (_inChain && _chainLeft == 0)
+                    _slamMarks[0].SetProgress(1f - _timer / _windup);
                 owner.Velocity = Vector2.Zero;
                 if (_timer <= 0f)
                     StartCharge();
@@ -137,6 +149,10 @@ public sealed class GuardianMoves : IEnemyAbility
         _chargeCooldown -= delta;
         _slamCooldown -= delta;
         _waveCooldown -= delta;
+        // La chaîne ne compte son délai qu'à partir de sa phase : la première arrive peu après qu'il l'atteint.
+        bool chainReady = Has(GuardianMoveSet.ChainCharge) && _phase >= _config.ChainFromPhase;
+        if (chainReady)
+            _chainCooldown -= delta;
         if (owner.IsAnotherAbilityActive(this) || owner.IsDisoriented)
             return false;
         // L'onde n'arrive qu'à partir de la deuxième phase.
@@ -144,6 +160,12 @@ public sealed class GuardianMoves : IEnemyAbility
         {
             StartWaveWindup();
             _waveCooldown = _config.WaveCooldown * pace;
+            return true;
+        }
+        if (chainReady && _chainCooldown <= 0f && distToPlayer <= _config.ChainTriggerRange)
+        {
+            StartChain(player);
+            _chainCooldown = _config.ChainCooldown * pace;
             return true;
         }
         if (Has(GuardianMoveSet.Slam) && _slamCooldown <= 0f && distToPlayer <= _config.SlamCastRange)
@@ -154,7 +176,8 @@ public sealed class GuardianMoves : IEnemyAbility
         }
         if (Has(GuardianMoveSet.Charge) && _chargeCooldown <= 0f && distToPlayer <= _config.ChargeTriggerRange && distToPlayer >= _config.ChargeMinRange)
         {
-            StartChargeWindup(player);
+            _inChain = false;
+            StartChargeWindup(player, _config.ChargeWindup, _config.ChargeDistance, _config.ChargeSeconds);
             _chargeCooldown = _config.ChargeCooldown * pace;
             return true;
         }
@@ -169,6 +192,8 @@ public sealed class GuardianMoves : IEnemyAbility
             return;
         if (_move is Move.WaveWindup or Move.ChargeWindup)
             _owner.SetWindupPose(false);
+        _owner.SetChargePose(false);
+        _inChain = false;
         _move = Move.None;
         _flashTimer = 0f;
         _chargeMark.HideMarker();
@@ -194,33 +219,57 @@ public sealed class GuardianMoves : IEnemyAbility
         GD.Print($"[GuardianMoves] {_owner.DisplayName} passe en phase {_phase + 1}");
     }
 
-    /// <summary>Il s'accroupit en montrant sa ligne, verrouillée au début de l'annonce : un pas de côté l'évite.</summary>
-    private void StartChargeWindup(Player player)
+    /// <summary>Charges en chaîne : la première s'annonce comme une charge, les suivantes plus vite.</summary>
+    private void StartChain(Player player)
+    {
+        _inChain = true;
+        _chainLeft = _config.ChainCount - 1;
+        // Le disque de sa fin reprend la première marque de la frappe : un éclat d'impact qui traîne ne doit pas l'éteindre.
+        _flashTimer = 0f;
+        foreach (GroundTelegraph mark in _slamMarks)
+            mark.HideMarker();
+        StartChargeWindup(player, _config.ChainWindup, _config.ChainDistance, _config.ChainSeconds);
+    }
+
+    /// <summary>
+    /// Il s'accroupit en montrant sa ligne, verrouillée au début de l'annonce : un pas de côté l'évite. La dernière
+    /// charge d'une chaîne montre aussi le disque où sa frappe ouvrira le vide.
+    /// </summary>
+    private void StartChargeWindup(Player player, float windup, float distance, float seconds)
     {
         _move = Move.ChargeWindup;
-        _timer = _config.ChargeWindup;
+        _timer = windup;
+        _windup = windup;
+        _chargeDistance = distance;
+        _chargeSeconds = seconds;
         _chargeDirection = (player.GlobalPosition - _owner.GlobalPosition).Normalized();
+        _chargeEnd = _owner.GlobalPosition + _chargeDirection * distance;
         _owner.Velocity = Vector2.Zero;
         _owner.SetWindupPose(true);
-        _owner.FlashWarning(PixelPalette.Ramp(FxFamily.Void).Light, _config.ChargeWindup);
-        _chargeMark.ShowLine(_owner.GlobalPosition, _owner.GlobalPosition + _chargeDirection * _config.ChargeDistance, _config.ChargeWidth, FxFamily.Void);
-        AudioManager.PlayAt(_config.WarningAudio, _owner.GlobalPosition, 0.1f, -6f);
+        _owner.SetChargePose(true);
+        _owner.FlashWarning(PixelPalette.Ramp(FxFamily.Void).Light, windup);
+        _chargeMark.ShowLine(_owner.GlobalPosition, _chargeEnd, _config.ChargeWidth, FxFamily.Void);
+        if (_inChain && _chainLeft == 0)
+            _slamMarks[0].ShowCircle(_chargeEnd, _config.ChainBreachRadius, FxFamily.Void);
+        string audio = _inChain ? _config.ChainWarningAudio : _config.WarningAudio;
+        AudioManager.PlayAt(audio, _owner.GlobalPosition, 0.1f, -6f);
     }
 
     private void StartCharge()
     {
         _move = Move.Charge;
-        _timer = _config.ChargeSeconds;
+        _timer = _chargeSeconds;
         _chargeHit = false;
         _owner.ReleaseWindup();
-        _owner.PlayAttackAnim();
+        if (!_owner.HasChargeAnim)
+            _owner.PlayAttackAnim();
         _chargeMark.HideMarker();
     }
 
     private void ProcessCharge(Player player, float delta)
     {
         _timer -= delta;
-        _owner.Velocity = _chargeDirection * (_config.ChargeDistance / _config.ChargeSeconds) * _owner.SlowFactor;
+        _owner.Velocity = _chargeDirection * (_chargeDistance / _chargeSeconds) * _owner.SlowFactor;
         if (!_chargeHit && GodotObject.IsInstanceValid(player)
             && _owner.GlobalPosition.DistanceSquaredTo(player.GlobalPosition) <= _config.ChargeHitRange * _config.ChargeHitRange)
         {
@@ -230,9 +279,38 @@ public sealed class GuardianMoves : IEnemyAbility
         }
         if (_timer > 0f)
             return;
+        // Sans joueur à viser, la chaîne finit tout de suite par sa frappe.
+        if (_inChain && _chainLeft > 0 && GodotObject.IsInstanceValid(player))
+        {
+            _chainLeft--;
+            StartChargeWindup(player, _config.ChainRewindup, _config.ChainDistance, _config.ChainSeconds);
+            return;
+        }
+        _owner.SetChargePose(false);
         // La récupération qui suit laisse une fenêtre pour riposter.
         _move = Move.Recovery;
         _timer = _config.ChargeRecovery;
+        if (!_inChain)
+            return;
+        _inChain = false;
+        _timer = _config.ChainRecovery;
+        ChainImpact(player);
+    }
+
+    /// <summary>Fin de la chaîne : sa frappe ouvre le vide là où sa dernière charge s'achève, et touche qui s'y trouve.</summary>
+    private void ChainImpact(Player player)
+    {
+        _owner.PlayAttackAnim();
+        _slamCount = 1;
+        _slamCenters[0] = _chargeEnd;
+        _slamMarks[0].SetFlash(1f);
+        _flashTimer = _config.ImpactFlashSeconds;
+        _breakGround(_chargeEnd, _config.ChainBreachRadius, _config.ChainBreachSeconds);
+        float reach = _config.ChainBreachRadius + _config.PlayerHitMargin;
+        if (GodotObject.IsInstanceValid(player) && Iso.GroundDistanceSquared(player.GlobalPosition, _chargeEnd) <= reach * reach)
+            _owner.HitPlayer(player, _owner.Damage * _config.ChainImpactDamage);
+        ScreenShake.Instance?.ShakeHeavy();
+        AudioManager.PlayAt(_config.ChainImpactAudio, _chargeEnd, 0.08f, -3f);
     }
 
     private void StartSlam(Player player)

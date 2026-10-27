@@ -7,7 +7,8 @@ namespace Vestiges.Combat;
 /// Charge et met en cache les SpriteFrames d'ennemis depuis les fichiers PNG individuels.
 /// Convention directionnelle : enemy_{folder}_{DIR}_{ACTION}_{FRAME:D2}.png
 /// Convention non-directionnelle : enemy_{folder}_{ACTION}_{FRAME:D2}.png (dupliqué sur 4 dirs)
-/// Directions : E, SE, S, SW, W, NW, N, NE (les quatre diagonales seules restent acceptées). Actions : idle, walk, attack, death.
+/// Directions : E, SE, S, SW, W, NW, N, NE (les quatre diagonales seules restent acceptées). Actions : idle, walk, attack, death,
+/// et charge, l'élan facultatif d'un gardien (plan 57 G1).
 /// </summary>
 public static class EnemySpriteLoader
 {
@@ -17,7 +18,7 @@ public static class EnemySpriteLoader
 	private static readonly StringName[] CardinalIdle = { "E_idle", "S_idle", "W_idle", "N_idle" };
 
 	/// <summary>Ordre des actions, partagé avec la table d'animations d'Enemy.</summary>
-	public static readonly string[] Actions = { "idle", "walk", "attack", "death" };
+	public static readonly string[] Actions = { "idle", "walk", "attack", "death", "charge" };
 
 	// Certains sprites utilisent "move" au lieu de "walk"
 	private static readonly Dictionary<string, string> ActionAliases = new()
@@ -37,10 +38,11 @@ public static class EnemySpriteLoader
 		{ "idle", 5f },
 		{ "walk", 8f },
 		{ "attack", 10f },
-		{ "death", 8f }
+		{ "death", 8f },
+		{ "charge", 12f }
 	};
 
-	private static readonly HashSet<string> LoopingAnims = new() { "idle", "walk" };
+	private static readonly HashSet<string> LoopingAnims = new() { "idle", "walk", "charge" };
 
 	public static SpriteFrames LoadOrGet(string enemyId, string folder)
 	{

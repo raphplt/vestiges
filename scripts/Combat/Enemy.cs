@@ -20,6 +20,9 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private const float NearbyAudioFalloffDb = -14f;
 	private const float DeathTweenDuration = 0.3f;
 	private const float DissolveDuration = 0.6f;
+	private const float GuardianDeathHitstop = 0.2f;
+	private const float GuardianDeathHold = 1.1f;
+	private const float GuardianDissolveDuration = 1.6f;
 	private const float PlayerProximityRange = 80f;
 	// V2: StructureDetectRange retire
 	private const float GuardPatrolRadius = 150f;
@@ -126,6 +129,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private float _targetBias;
 	// Créature de mêlée arrêtée contre le joueur : elle reste tournée vers lui et garde son pas (plan 29 F2).
 	private bool _pressingPlayer;
+	private bool _chargePose;
+	private bool _hasChargeAnim;
 
 	// V2: structures retirees — FindNearestStructure retourne toujours null
 
@@ -194,7 +199,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	private bool _killCredited;
 	private readonly CharacterFacing _facing = new();
 	private StringName _currentAnimName;
-	private enum SpriteAction { Idle, Walk, Attack, Death }
+	private enum SpriteAction { Idle, Walk, Attack, Death, Charge }
 	// Noms d'animation précalculés [direction, action] : aucune chaîne allouée par frame.
 	private static readonly StringName[,] SpriteAnimations = BuildSpriteAnimations();
 	// Pieds légèrement sous le centre de collision, comme les anciens sprites centrés.
@@ -369,6 +374,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_disorientTimer = 0f;
 		_knockVelocity = Vector2.Zero;
 		_isBurrowed = false;
+		_chargePose = false;
+		_hasChargeAnim = false;
 		_packBonusSpeed = data.GetStat("pack_bonus_speed");
 		_packRadius = data.GetStat("pack_radius");
 		_webSlowMultiplier = data.GetStat("web_slow_multiplier");
@@ -537,14 +544,20 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 	/// <summary>Renforce une créature déjà lancée (élites de fin de run, plan 47) : PV pleins au nouveau maximum.</summary>
 	public void Empower(float hpMult, float damageMult) => ScaleStats(hpMult, damageMult, 1f);
 
-	/// <summary>Corps à cette échelle, ombre et rayon de touche compris (gardien de terre, plan 57 G0).</summary>
-	public void SetBodyScale(float scale)
+	/// <summary>Rayon de touche d'un grand corps dessiné à sa taille (gardien de terre, plan 57 G1).</summary>
+	public void SetBodyRadius(float radius)
 	{
-		Scale = Vector2.One * scale;
-		_shadow.Scale = scale;
-		_bodyRadius = BaseBodyRadius * scale;
+		_bodyRadius = radius;
 		LargestBodyRadius = Mathf.Max(LargestBodyRadius, _bodyRadius);
 	}
+
+	/// <summary>
+	/// Élan d'un gardien (plan 57 G1) : son animation de charge, tête basse, tant qu'il fonce ou s'y prépare. Sans
+	/// animation d'élan, il garde sa marche.
+	/// </summary>
+	internal void SetChargePose(bool active) => _chargePose = active;
+
+	internal bool HasChargeAnim => _hasChargeAnim;
 
 	private void ScaleStats(float hpMult, float damageMult, float speedMult)
 	{
@@ -588,6 +601,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		_targetBias = 0f;
 		_tracking.Reset();
 		_isBurrowed = false;
+		_chargePose = false;
+		_hasChargeAnim = false;
 		_tier = EnemyTier.Normal;
 		_behavior = EnemyBehavior.Default;
 		_packFamily = null;
@@ -1579,7 +1594,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		if (_tier is EnemyTier.Miniboss or EnemyTier.Guardian)
 		{
 			ScreenShake.Instance?.ShakeHeavy();
-			ScreenShake.Instance?.Hitstop(0.07f);
+			ScreenShake.Instance?.Hitstop(_tier == EnemyTier.Guardian ? GuardianDeathHitstop : 0.07f);
 		}
 		else if (_mods.IsVariant)
 		{
@@ -1688,9 +1703,13 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 			_spriteMaterial.SetShaderParameter("dissolve_direction", _lastHitDirection);
 
 			Tween tween = CreateTween();
+			// Un gardien s'effondre d'abord, reste un instant couché, puis s'en va lentement (plan 57 G1).
+			bool guardian = _tier == EnemyTier.Guardian;
+			if (guardian)
+				tween.TweenInterval(GuardianDeathHold);
 			tween.TweenMethod(
 				Callable.From((float v) => _spriteMaterial.SetShaderParameter("dissolve_amount", v)),
-				0.0f, 1.0f, DissolveDuration
+				0.0f, 1.0f, guardian ? GuardianDissolveDuration : DissolveDuration
 			);
 			tween.TweenCallback(Callable.From(OnDeathComplete));
 		}
@@ -1819,6 +1838,7 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 				_facing.Reset(EnemySpriteLoader.HasEightDirections(frames));
 				_currentAnimName = null;
 				_attackAnimTimer = 0f;
+				_hasChargeAnim = frames.HasAnimation(SpriteAnimations[(int)CharacterFacing.Direction.SE, (int)SpriteAction.Charge]);
 
 				// Shader unifié : outline + hit flash + dissolve
 				_spriteMaterial = new ShaderMaterial { Shader = _entityShader };
@@ -1864,6 +1884,8 @@ public partial class Enemy : Node2D, ICrowdMember, ITicked
 		SpriteAction action;
 		if (_isDying)
 			action = SpriteAction.Death;
+		else if (_chargePose && _hasChargeAnim)
+			action = SpriteAction.Charge;
 		else if (_attackAnimTimer > 0f)
 			action = SpriteAction.Attack;
 		else if (moving || _pressingPlayer)

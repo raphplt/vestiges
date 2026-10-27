@@ -11,8 +11,8 @@ from typing import Any, Callable, Sequence
 from PIL import Image
 
 from .palette import Material
-from .render import (CHARACTER_FRAME_PIVOT, CHARACTER_FRAME_SIZE, CHARACTER_MODEL_SCALE, MODEL_SCALE, Part, render,
-                     render_layers)
+from .render import (CHARACTER_FRAME_PIVOT, CHARACTER_FRAME_SIZE, CHARACTER_MODEL_SCALE, MODEL_SCALE, RAY_RANGE, Part,
+                     render, render_layers)
 from .rig import build_skeleton
 
 
@@ -25,12 +25,17 @@ class SpriteModel:
     materials: Sequence[Material]
     animations: dict[str, list[Any]]
     parts: Callable[[Any], list[Part]]
+    # Un grand modèle (gardien) allonge les rayons et les borne à sa boîte, pour rester rapide.
+    ray_range: float = RAY_RANGE
+    bounds: tuple[Sequence[float], Sequence[float]] | None = None
 
     def render(self, state: Any, yaw: float) -> Image.Image:
-        return render(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale)
+        return render(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale,
+                      ray_range=self.ray_range, bounds=self.bounds)
 
     def render_layers(self, state: Any, yaw: float) -> list[Image.Image]:
-        return render_layers(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale)
+        return render_layers(self.parts(state), self.materials, yaw, self.frame_size, self.pivot, self.scale,
+                             ray_range=self.ray_range, bounds=self.bounds)
 
 
 def character(character_id: str) -> SpriteModel:
@@ -46,4 +51,5 @@ def character(character_id: str) -> SpriteModel:
 def creature(enemy_id: str) -> SpriteModel:
     module = importlib.import_module(f"tools.sprites.creatures.{enemy_id}")
     return SpriteModel(enemy_id, module.FRAME_SIZE, module.FRAME_PIVOT, MODEL_SCALE, module.MATERIALS,
-                       module.ANIMATIONS, module.parts)
+                       module.ANIMATIONS, module.parts, getattr(module, "RAY_RANGE", RAY_RANGE),
+                       getattr(module, "BOUNDS", None))

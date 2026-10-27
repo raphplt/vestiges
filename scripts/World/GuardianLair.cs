@@ -1,23 +1,26 @@
 using Godot;
+using Vestiges.Combat;
 using Vestiges.Core;
 using Vestiges.Infrastructure;
 
 namespace Vestiges.World;
 
 /// <summary>
-/// Repaire du gardien au cœur d'une terre (plan 51 P3) : une masse endormie sous une colonne de lumière, et une rangée
-/// de lumières qui s'allument une à une avec les Mémoriaux ravivés. Une fois toutes allumées, on le touche pour
-/// réveiller le gardien. Visuel provisoire, en attendant les gardiens dessinés.
+/// Repaire du gardien au cœur d'une terre (plan 51 P3) : le gardien couché sous une colonne de lumière (plan 57 G1), et
+/// une rangée de lumières qui s'allument une à une avec les Mémoriaux ravivés. Une fois toutes allumées, on le touche
+/// pour réveiller le gardien.
 /// </summary>
 public partial class GuardianLair : Node2D, IInteractable
 {
-    private const string SpritePath = "res://assets/landmarks/memorial_dormant.png";
+    // Stèle de repli d'un gardien encore sans sprite.
+    private const string FallbackSpritePath = "res://assets/landmarks/memorial_dormant.png";
+    // Vu de profil, couché : le crâne et les bois se lisent mieux que de trois quarts.
+    private const string SleepAnimation = "W_death";
     private const float PipSpacing = 10f;
     private static readonly RarityColors LairColors = RarityPalette.Colors("legendary");
-    // Toujours violet, pour ne jamais le confondre avec un Mémorial (même stèle, en attendant les gardiens dessinés) ;
-    // plus clair quand toutes ses lumières sont allumées.
-    private static readonly Color SleepTint = new(0.45f, 0.35f, 0.55f);
-    private static readonly Color ReadyTint = new(1.25f, 0.85f, 1.45f);
+    // Assombri et violacé tant qu'il dort profondément ; ses couleurs reviennent quand toutes ses lumières sont allumées.
+    private static readonly Color SleepTint = new(0.6f, 0.52f, 0.72f);
+    private static readonly Color ReadyTint = new(1.1f, 0.95f, 1.2f);
     private static readonly Color DarkPip = new(0.15f, 0.12f, 0.2f, 0.9f);
 
     private GuardianDirector _director;
@@ -34,20 +37,40 @@ public partial class GuardianLair : Node2D, IInteractable
     public float HoldTime => 0.6f;
     public Color GaugeColor => LairColors.Main;
 
-    public void Setup(GuardianDirector director, int needed)
+    /// <summary>Le corps montré est la dernière image de la chute de <paramref name="guardian"/>, couché.</summary>
+    public void Setup(GuardianDirector director, int needed, EnemyData guardian)
     {
         _director = director;
         _needed = needed;
         _column = new LightColumn { Name = "LightColumn" };
         AddChild(_column);
         _column.Configure(LairColors, 220f, 3f, 16f);
-        Texture2D texture = GD.Load<Texture2D>(SpritePath);
-        _sprite = new Sprite2D
-        {
-            Name = "Sprite", Texture = texture, TextureFilter = TextureFilterEnum.Nearest, Centered = false,
-            Offset = new Vector2(-texture.GetWidth() / 2f, -texture.GetHeight()), Scale = Vector2.One * 1.6f, Modulate = SleepTint,
-        };
+        _sprite = SleepingBody(guardian) ?? FallbackStele();
+        _sprite.Name = "Sprite";
+        _sprite.TextureFilter = TextureFilterEnum.Nearest;
+        _sprite.Centered = false;
+        _sprite.Modulate = SleepTint;
         AddChild(_sprite);
+    }
+
+    private static Sprite2D SleepingBody(EnemyData guardian)
+    {
+        SpriteFrames frames = guardian?.Visual.SpriteFolder != null ? EnemySpriteLoader.LoadOrGet(guardian.Id, guardian.Visual.SpriteFolder) : null;
+        if (frames == null || !frames.HasAnimation(SleepAnimation))
+            return null;
+        Texture2D texture = frames.GetFrameTexture(SleepAnimation, frames.GetFrameCount(SleepAnimation) - 1);
+        // Mêmes pieds que la créature debout : le corps se lève là où il dormait.
+        float feet = texture.GetHeight() / 2f + guardian.Visual.SpriteFeetOffset;
+        return new Sprite2D { Texture = texture, Offset = new Vector2(-texture.GetWidth() / 2f, -feet) };
+    }
+
+    private static Sprite2D FallbackStele()
+    {
+        Texture2D texture = GD.Load<Texture2D>(FallbackSpritePath);
+        return new Sprite2D
+        {
+            Texture = texture, Offset = new Vector2(-texture.GetWidth() / 2f, -texture.GetHeight()), Scale = Vector2.One * 1.6f,
+        };
     }
 
     /// <summary>Repaire de la terre en cours, montré par la minimap dès l'arrivée ; nul hors des terres.</summary>

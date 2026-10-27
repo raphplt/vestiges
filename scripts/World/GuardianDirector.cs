@@ -186,7 +186,7 @@ public partial class GuardianDirector : Node
         Enraged = false;
         _guardian = null;
         _lair = new GuardianLair { Name = "GuardianLair", GlobalPosition = _config.LairOffset };
-        _lair.Setup(this, _config.WakeLights);
+        _lair.Setup(this, _config.WakeLights, EnemyDataLoader.Get(LandGuardian(_config.LairOffset) ?? string.Empty));
         _world.GetNode<Node2D>("PoiContainer").AddChild(_lair);
     }
 
@@ -252,7 +252,7 @@ public partial class GuardianDirector : Node
         // Ni le temps, ni le Péril, ni la difficulté : un combat de une à deux minutes quel que soit le moment du réveil.
         float hp = data.Stats.Hp * Mathf.Pow(_config.HpRankGrowth, rank) * strength;
         _guardian.Empower(hp / Mathf.Max(1f, _guardian.MaxHp), damage);
-        _guardian.SetBodyScale(data.Guardian.BodyScale);
+        _guardian.SetBodyRadius(data.Guardian.BodyRadius);
         _guardian.Modifiers.IsEventBound = true;
         _guardian.SetTargetBias(_config.TargetBias);
         _moves = new GuardianMoves(_guardian, _config.Moves, data.Guardian.Moves, _world, _erasure.BreakGround);
@@ -305,6 +305,8 @@ public partial class GuardianDirector : Node
     {
         if (_guardian != null && !_beaten.Contains(_spawned.Id))
             _beaten.Add(_spawned.Id);
+        if (_guardian != null)
+            PlayDeathCry(position);
         _phase = Phase.Defeated;
         EndMoves();
         OpenArena();
@@ -387,6 +389,7 @@ public partial class GuardianDirector : Node
             _bar = null;
             _guardian = null;
             _echoes++;
+            PlayDeathCry(position);
             DropChest(_config.EchoChest, position);
             _eventBus.EmitSignal(EventBus.SignalName.GuardianDefeated, _transition.LandIndex, false);
             GD.Print($"[GuardianDirector] Écho de gardien n°{_echoes} vaincu");
@@ -395,6 +398,9 @@ public partial class GuardianDirector : Node
         }
         _bar.Update(_guardian.CurrentHp, _guardian.MaxHp);
     }
+
+    private void PlayDeathCry(Vector2 position) =>
+        AudioManager.PlayAt(EnemyDataLoader.Get(_spawned.Id).Guardian.DeathAudio, position, 0.05f, 0f);
 
     private void DropChest(string chestId, Vector2 position)
     {

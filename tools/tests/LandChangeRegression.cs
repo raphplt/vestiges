@@ -151,6 +151,32 @@ public partial class LandChangeRegression : Node
     /// Lot P2b : sur une terre, raviver un Mémorial, c'est tenir son cercle. S'éloigner l'abandonne ; le tenir jusqu'au
     /// bout le ravive, allume une lumière et ancre sa zone, qui ne tombe plus même quand tout le reste est tombé.
     /// </summary>
+    private async Task CheckChainCharge(GuardianMoves moves, ErasureManager erasure)
+    {
+        const System.Reflection.BindingFlags Private = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        System.Reflection.FieldInfo inChain = typeof(GuardianMoves).GetField("_inChain", Private);
+        System.Reflection.FieldInfo chargeEnd = typeof(GuardianMoves).GetField("_chargeEnd", Private);
+        bool started = false;
+        for (int frame = 0; frame < 600 && !started; frame++)
+        {
+            await Frame();
+            if (GetTree().Paused)
+                await SettleChoices();
+            started = (bool)inChain.GetValue(moves);
+        }
+        Check(started, "gardien : en deuxième phase, il lance ses charges en chaîne");
+        // Une montée de niveau (créatures tuées par la charge) met en pause : la chaîne attend l'écran réglé.
+        for (int frame = 0; frame < 600 && (bool)inChain.GetValue(moves); frame++)
+        {
+            await Frame();
+            if (GetTree().Paused)
+                await SettleChoices();
+        }
+        Vector2 end = (Vector2)chargeEnd.GetValue(moves);
+        Check(started && !(bool)inChain.GetValue(moves) && erasure.GetZonePhaseAt(end) == ErasureManager.ErasureZonePhase.Void,
+            $"gardien : la chaîne finit par une frappe qui ouvre le vide ({end})");
+    }
+
     private async Task CheckMemorialCircle()
     {
         MemorialConfig config = Vestiges.Infrastructure.LandmarkDataLoader.Memorial;
@@ -268,13 +294,19 @@ public partial class LandChangeRegression : Node
         Check(objective != null && objective.Text != collecting, $"objectif : « {objective?.Text} »");
         float standingBefore = erasure.Front.StandingShare();
         int chestsBefore = Chest.Closed.Count;
+        // Plan 57 G1 : le repaire montre le gardien couché, pas la stèle.
+        string sleeping = lair.GetNode<Sprite2D>("Sprite").Texture?.ResourcePath ?? string.Empty;
+        Check(sleeping.Contains("_W_death_"), $"repaire : le gardien y dort ({sleeping})");
         lair.Interact(_player);
         Enemy guardian = director.Guardian;
-        // Plan 57 G0 : le gardien de la terre est une créature à part, celle que nomme son biome, sans variante.
+        // Plan 57 G0 : le gardien de la terre est une créature à part, celle que nomme son biome, sans variante ; G1 :
+        // dessiné à sa taille, il touche par le rayon de sa fiche.
         string landGuardian = _world.GetBiomeAt(lair.GlobalPosition)?.Guardian;
+        float bodyRadius = EnemyDataLoader.Get(landGuardian ?? string.Empty)?.Guardian?.BodyRadius ?? 0f;
         Check(director.IsFighting && !director.Enraged && guardian is { IsActive: true, Tier: EnemyTier.Guardian, VariantId: "" }
-            && guardian.EnemyId == landGuardian && guardian.Scale.X > 1f,
-            $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.EnemyId} pour {landGuardian}, {guardian?.MaxHp:F0} PV, échelle {guardian?.Scale.X})");
+            && guardian.EnemyId == landGuardian && guardian.Scale == Vector2.One && bodyRadius > 0f
+            && Mathf.IsEqualApprox(guardian.BodyRadius, bodyRadius),
+            $"gardien : réveillé ({guardian?.DisplayName}, {guardian?.EnemyId} pour {landGuardian}, {guardian?.MaxHp:F0} PV, rayon {guardian?.BodyRadius} pour {bodyRadius})");
         Check(erasure.FrontFrozen && erasure.Front.StandingShare() < standingBefore,
             $"gardien : le sol non ancré s'effondre, le front se fige ({standingBefore:P0} → {erasure.Front.StandingShare():P0})");
         // Plan 56 B1 : l'arène se ferme, le temps de difficulté s'arrête et la foule est allégée et plafonnée.
@@ -300,6 +332,10 @@ public partial class LandChangeRegression : Node
             $"gardien : le chrono avance, pas la difficulté ({clock.Seconds - played:F1} s contre {clock.DifficultySeconds - difficulty:F1} s)");
         await Frames(45);
         Check(erasure.GetMemoryAt(strike) == 1f, $"gardien : la brèche se referme ({erasure.GetMemoryAt(strike):F2})");
+
+        // Plan 57 G1 : en deuxième phase, le Grand Cerf enchaîne ses charges, et la dernière ouvre le vide où elle finit.
+        if (EnemyDataLoader.Get(guardian.EnemyId).Guardian.Moves.HasFlag(GuardianMoveSet.ChainCharge))
+            await CheckChainCharge(director.Moves, erasure);
 
         int perilBefore = peril.Peril;
         guardian.TakeDamage(guardian.MaxHp * 10f);

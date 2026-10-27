@@ -18,7 +18,7 @@ public static class EnemyDataValidator
 		"guardian",
 	};
 
-	private static readonly HashSet<string> GuardianKeys = new() { "_doc", "moves", "body_scale" };
+	private static readonly HashSet<string> GuardianKeys = new() { "_doc", "moves", "body_radius", "death_audio" };
 
 	private static readonly HashSet<string> VisualKeys = new()
 	{
@@ -165,7 +165,7 @@ public static class EnemyDataValidator
 
 	/// <summary>
 	/// Bloc « guardian » (plan 57 G0) : obligatoire pour le rang guardian, refusé ailleurs. Coups de référence distincts,
-	/// au moins un, et échelle du corps.
+	/// au moins un, rayon de touche de son grand corps et son de sa chute.
 	/// </summary>
 	private static string CheckGuardian(JsonElement enemy, string where)
 	{
@@ -192,9 +192,15 @@ public static class EnemyDataValidator
 				return $"{where}.moves : coup « {key} » en double";
 			seen |= parsed;
 		}
-		if (!guardian.TryGetProperty("body_scale", out JsonElement scale))
-			return $"{where}.body_scale : obligatoire";
-		return CheckNumber(scale, DataValueRule.Positive, $"{where}.body_scale");
+		if (!guardian.TryGetProperty("body_radius", out JsonElement radius))
+			return $"{where}.body_radius : obligatoire";
+		error = CheckNumber(radius, DataValueRule.Positive, $"{where}.body_radius");
+		if (error != null)
+			return error;
+		string sound = Text(guardian, "death_audio");
+		if (sound == null)
+			return $"{where}.death_audio : son obligatoire";
+		return IsSound(sound) ? null : $"{where}.death_audio : son « {sound} » absent de la banque";
 	}
 
 	private static string CheckAbilities(JsonElement enemy, string where, List<string> enemyReferences)

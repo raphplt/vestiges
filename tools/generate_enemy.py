@@ -26,15 +26,18 @@ from tools.sprites.render import flatten, screen_direction_to_yaw  # noqa: E402
 from tools.sprites.retouch import create_source, is_locked, save_unless_locked  # noqa: E402
 
 ACTIONS = ("idle", "walk", "attack", "death")
+# Actions facultatives : seul le modèle qui les définit les produit (élan d'un gardien, plan 57 G1).
+OPTIONAL_ACTIONS = ("charge",)
 
 
 def generate(enemy_id: str, output: Path | None, sheet: Path | None, scale: int, editable: bool = False) -> None:
     model = creature(enemy_id)
     written: set[Path] = set()
     frames: dict[tuple[str, str], list[Image.Image]] = {}
+    actions = ACTIONS + tuple(action for action in OPTIONAL_ACTIONS if action in model.animations)
     for direction, (dx, dy) in DIRECTIONS.items():
         yaw = screen_direction_to_yaw(dx, dy)
-        for action in ACTIONS:
+        for action in actions:
             layered = [model.render_layers(state, yaw) for state in model.animations[action]]
             images = [flatten(layers) for layers in layered]
             frames[(direction, action)] = images
@@ -53,7 +56,7 @@ def generate(enemy_id: str, output: Path | None, sheet: Path | None, scale: int,
     if output is not None:
         _remove_orphans(output, written)
     if sheet is not None:
-        write_sheet(frames, sheet, scale, ACTIONS, model.frame_size, model.pivot)
+        write_sheet(frames, sheet, scale, actions, model.frame_size, model.pivot)
 
 
 def _remove_orphans(folder: Path, written: set[Path]) -> None:

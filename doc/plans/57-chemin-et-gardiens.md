@@ -20,7 +20,7 @@ Le chemin d'une terre tient en trois gestes : raviver trois Mémoriaux, revenir 
 | Lot | Contenu | Effort |
 |---|---|---|
 | **C1** | **Le bon endroit et le bon moment.** L'objectif passe en haut au centre, sous la Série, plus gros, toujours là. Une flèche d'objectif dorée au bord de l'écran mène au Mémorial endormi le plus proche, puis au repaire ; à l'écran, un chevron flotte au-dessus. Le carton d'arrivée dit la règle (« Ravive 3 Mémoriaux, puis réveille le gardien »). À la 3e lumière, un carton annonce « Le gardien t'attend », avec un son ; si le gardien se lève seul, un carton le dit aussi | Moyen |
-| **C2** | **Ce qui reste flou.** Sur la minimap, les Mémoriaux de la terre se voient dès l'arrivée, ravivés en or. Le repaire bat quand il est prêt. Une minute avant que le gardien se lève seul, l'objectif passe au rouge (« Le gardien se lève dans 1:00 ») | Faible |
+| **C2** | **Ce qui reste flou.** Sur la minimap, les Mémoriaux de la terre se voient dès l'arrivée, ravivés en or. Le repaire bat quand il est prêt. Une minute avant que le gardien se lève seul, l'objectif passe au rouge (« Le gardien se lève dans 1:00 »). Le bot des terres rejoint le cœur avant la rage, pour mesurer enfin la 3e terre (§8) | Faible |
 
 **Tranché par défaut, réversible :**
 - **La flèche montre les Mémoriaux même dans le brouillard.** La découverte y perd un peu, la clarté y gagne beaucoup. Leurs colonnes se voient déjà de loin.
@@ -128,3 +128,50 @@ Lecture :
   - sa charge l'emporte à 440 px du bot.
 
   G1 règle le combat du Cerf sur son vrai corps et ses charges en chaîne (« 1 à 2 min au bot », §3), et le revérifie sur la 3e terre.
+
+## 8. Compte rendu G1, le Grand Cerf fini — 27 octobre 2026
+
+- **Son corps** (`tools/sprites/creatures/grand_cerf.py`) est procédural, par le pipeline des créatures :
+  - cadre de 176 × 160, environ trois fois une créature ;
+  - masse d'écorce sombre, crâne blanc, ramure de bois mort avec un andouiller cassé, chiffon rouge noué à un bois, yeux violets ;
+  - cinq animations en 8 directions : attente, marche, élan tête basse, frappe cabrée puis retombée, chute sur le flanc.
+
+  Le pipeline gagne deux réglages par modèle : la portée des rayons et la boîte qui les borne (`RAY_RANGE`, `BOUNDS`). L'élan est une action facultative du générateur et du chargeur (`charge`), que seul un modèle qui la définit produit.
+- **Dessiné à sa taille** : `body_scale` disparaît au profit de `body_radius`, rayon de son corps pour les collisions et les coups. Le gardien n'est plus agrandi.
+- **Son coup à lui, `chain_charge`** (réglages dans `data/world/guardian.json`) :
+  - dès sa deuxième phase, il enchaîne trois charges ;
+  - chaque charge est annoncée par sa ligne et visée sur le joueur au début de l'annonce. La première s'annonce en 1 s, les suivantes en 0,6 s ;
+  - la dernière montre aussi le disque où elle finit. Il y frappe, et le vide s'y ouvre 12 s. Le joueur qui s'y trouve est touché ;
+  - puis 1,8 s de récupération pour riposter.
+
+  Prête, la chaîne passe avant la frappe et la charge simple. Sans joueur à viser, elle finit tout de suite par sa frappe.
+- **Une mort mise en scène** : un arrêt sur image plus long, le corps couché qui reste 1,1 s, puis une dissolution lente. Le son de chute vient de sa fiche (`death_audio`, obligatoire), à sa mort comme à celle de ses échos.
+- **Sons** : ceux de la banque, sans nouveau fichier. La charge de créature annonce la chaîne, le poing de la Barrière frappe, et la défaite de la Barrière fait sa chute.
+- **Le repaire montre le gardien qui dort** : son corps couché, vu de profil (dernière image de sa chute vers l'ouest), teinté de violet sous la colonne de lumière, à la place de la stèle. La stèle reste en repli pour un gardien sans sprite.
+
+**Vérifié** :
+- build sans avertissement ;
+- suites `smoke`, `catalogs`, `enemy_abilities`, `lands`, `quests`, `item_loot`, `field_bonuses` et `music` vertes. Nouveaux contrôles :
+  - le repaire montre le gardien couché ;
+  - le gardien a le rayon de sa fiche et n'est plus agrandi ;
+  - en deuxième phase, la chaîne part et finit en ouvrant le vide ;
+  - cas de refus : rayon absent ou nul, son de chute inconnu, coup inconnu ;
+- planche des 168 images regardée ;
+- capture en vraie run (graine 7) : le Cerf couché au repaire sous sa colonne, puis debout en combat, avec sa barre de boss, ses frappes et l'élan de ses charges. Sa silhouette se lit au milieu de la foule.
+
+**Mesure** : même protocole qu'au G0 (§7). Durée du combat, du réveil à la mort :
+
+| Cas | Terre 1 | Terre 2 | Terre 3 | G0, terres 1 / 2 / 3 |
+|---|---|---|---|---|
+| Traqueur, graine 7 | 74 s | 106 s | enragé, non vaincu après 676 s | 72 / 125 / non vaincu |
+| Traqueur, graine 42 | enragé, 182 s | 233 s | — | enragé 190 / 346 / — |
+| Forgeuse, graine 7 | 92 s | 142 s | enragé, non vaincu après 586 s | 83 / 121 / 572, gagnée |
+| Forgeuse, graine 42 | enragé, 145 s | 124 s | — | enragé 79 / 150 / — |
+| Vagabond, graine 7 | 98 s | 177 s | enragé, non vaincu après 558 s | 94 / 130 / non vaincu |
+| Vagabond, graine 42 | enragé, 228 s | 130 s | — | enragé 132 / 83 / — |
+
+Lecture :
+- **Terres 1 et 2** : 9 combats sur 12 entre 74 et 177 s, en moyenne 144 s contre 134 au G0. Les trois plus longs (182 à 233 s) suivent un réveil enragé, ou la chaîne qui emporte le Cerf loin du bot.
+- **La 3e terre ne se mesure pas avec ce bot.** Il n'atteint pas sa 3e lumière avant la rage, et la terre se réduit à son cœur. Dans les trois runs de la graine 7, le bot reste ensuite sur place : 7 m parcourus en cinq minutes. Le gardien ne passe même pas en deuxième phase : le bot ne l'atteint pas. C'est un défaut de l'outil, déjà présent au G0 : invincible, le bot survit hors du cœur au lieu d'y revenir. Le corriger rejoint le lot C2, qui traite la rage, pour revoir la 3e terre.
+
+**Avocat du diable (§5) :** la méthode procédurale tient à trois fois la taille d'une créature, capture à l'appui. Le corps reste simple de près ; l'ami artiste le reprend à l'étape 7.

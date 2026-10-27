@@ -2430,3 +2430,17 @@ Raphaël : « go g0 » (lot G0 du [plan 57](57-chemin-et-gardiens.md)). Détail 
 - **Il prend la suite du Souverain qu'il était** : son coffre rare s'ajoute à l'épique (`chests`), sa mort compte pour les quêtes de Souverains (§196), lâche un objet et un bonus au sol, et compte au bilan.
 - **Les échos du late game reprennent les gardiens vaincus**, chacun son tour.
 - **Jusqu'à G1, toutes les terres prennent le Grand Cerf**, avec un corps provisoire : celui du Tréant, à l'échelle 2. Le nom, la barre de boss et les coups sont les siens ; le corps vient avec G1.
+
+## 200. Le Grand Cerf, gardien de référence fini — 27 octobre 2026
+
+Raphaël : « ok go » (lot G1 du [plan 57](57-chemin-et-gardiens.md)). Détail au plan 57 §8.
+
+**Tranché par défaut, réversible :**
+- **Le gardien est dessiné à sa taille**, plus jamais agrandi : sa fiche donne le rayon de son corps (`body_radius`).
+- **Son corps** : cerf d'écorce sombre au crâne blanc, ramure de bois mort, un chiffon rouge noué à un bois, yeux violets. Procédural, l'ami artiste le reprend.
+- **Ses charges en chaîne** viennent à sa deuxième phase : trois charges, chacune annoncée et visée sur le joueur. La dernière montre son disque et y ouvre le vide 12 s. La chaîne passe avant ses autres coups quand elle est prête.
+- **Sa mort se voit** : arrêt sur image, corps couché 1,1 s, dissolution lente, et un son de chute propre à chaque gardien (`death_audio`). Les durées de cette mise en scène restent dans le code (présentation, pas équilibrage).
+- **Sons de la banque**, sans nouveau fichier : la charge de créature annonce la chaîne, le poing de la Barrière frappe, la défaite de la Barrière fait sa chute. Un son propre au Cerf viendra avec l'audio des gardiens.
+- **Le repaire montre le gardien couché**, vu de profil, à la place de la stèle violette.
+- **La 3e terre se mesurera après C2** : le bot, invincible, reste bloqué hors du cœur réduit et n'atteint pas le gardien. Le corriger rejoint C2, qui traite la rage.
+

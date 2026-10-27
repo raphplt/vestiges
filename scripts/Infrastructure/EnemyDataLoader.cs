@@ -87,8 +87,10 @@ public sealed class GuardianTraits
 {
     /// <summary>Coups de référence qu'il prend ; leurs réglages sont communs (data/world/guardian.json).</summary>
     public GuardianMoveSet Moves { get; init; }
-    /// <summary>Échelle de son corps, ombre et rayon de touche compris.</summary>
-    public float BodyScale { get; init; }
+    /// <summary>Rayon de touche de son grand corps, dessiné à sa taille.</summary>
+    public float BodyRadius { get; init; }
+    /// <summary>Son de sa chute, à sa mort.</summary>
+    public string DeathAudio { get; init; }
 }
 
 /// <summary>
@@ -352,7 +354,12 @@ public static class EnemyDataLoader
                 EnemyGrammar.TryParseGuardianMove(move.GetString(), out GuardianMoveSet parsed);
                 moves |= parsed;
             }
-            data.Guardian = new GuardianTraits { Moves = moves, BodyScale = guardian.GetProperty("body_scale").GetSingle() };
+            data.Guardian = new GuardianTraits
+            {
+                Moves = moves,
+                BodyRadius = guardian.GetProperty("body_radius").GetSingle(),
+                DeathAudio = guardian.GetProperty("death_audio").GetString(),
+            };
         }
 
         if (root.TryGetProperty("abilities", out JsonElement abilities))

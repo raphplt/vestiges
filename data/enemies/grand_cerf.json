@@ -14,15 +14,16 @@
         "leash": 2000
     },
     "guardian": {
-        "_doc": "Gardien des bois de la colline (plan 57). hp : PV sur la première terre, × hp_rank_growth de data/world/guardian.json par terre franchie. moves : coups de référence qu'il prend, réglés en commun dans guardian.json. Corps provisoire jusqu'au lot G1 : celui du Tréant, à l'échelle body_scale.",
-        "moves": ["charge", "slam"],
-        "body_scale": 2
+        "_doc": "Gardien des bois de la colline (plan 57 G1). hp : PV sur la première terre, × hp_rank_growth de data/world/guardian.json par terre franchie. moves : coups de référence qu'il prend, réglés en commun dans guardian.json ; chain_charge, son coup à lui, enchaîne les charges dès sa deuxième phase et finit par une frappe qui ouvre le vide. body_radius : rayon de son corps (collision et frappe), son sprite est à sa taille. death_audio : son de sa chute.",
+        "moves": ["charge", "slam", "chain_charge"],
+        "body_radius": 26,
+        "death_audio": "sfx_barrier_defeated"
     },
     "visual": {
         "color": "#5A4632",
         "shape": "square",
-        "size": 26,
-        "sprite_folder": "treant_corrompu",
-        "sprite_feet_offset": 31
+        "size": 36,
+        "sprite_folder": "grand_cerf",
+        "sprite_feet_offset": 66
     }
 }
