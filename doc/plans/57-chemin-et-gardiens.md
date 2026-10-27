@@ -210,3 +210,16 @@ Lecture :
   - trois fois, le bot reste figé sur une case de vide au bord du cœur, le gardien figé à côté de lui, 5 à 10 min. **À comprendre en premier au lot G2** : un vrai joueur peut-il s'y coincer ?
 - **Graine 42** : le bot n'a pas ses trois lumières avant la rage sur la 1re terre (premier Mémorial à 2 min 40), comme au G0 et au G1.
 
+
+## 10. Retours de Raphaël après la visite des cinq terres — 27 octobre 2026
+
+> « Il ne faut pas afficher en permanence "terre 1 - mémoriaux ravivés 0/3" sur l'écran […] ça bouffe trop de place. Le "terre 1" déjà il faut afficher le nom de la terre, et le mettre qu'au tout début, et ensuite le compteur de mémoriaux, mets-le dans un coin ou un autre endroit plus discret. Ensuite la grosse flèche moche, elle sert à quoi ? Pour moi elle n'a pas lieu d'être (j'ai compris qu'elle affiche les mémoriaux). Autre truc : raviver les mémoriaux, y'a aucun suspense, et on comprend rien (combien de temps il faut rester, etc.). Ensuite, en effet, les cartes font très vides / linéaires pour la plupart, même s'il y a de bonnes bases (j'ai regardé les 5 existantes). »
+
+C1 avait mis l'objectif en haut au centre et une flèche au bord de l'écran. Les deux sont de trop une fois le chemin compris : la minimap (C2) suffit à trouver les Mémoriaux et le repaire.
+
+| Lot | Contenu | Effort |
+|---|---|---|
+| **C3** | **Le HUD se tait.** Plus de ligne d'objectif permanente. Le carton d'arrivée donne le nom du lieu (« Les bois de la colline ») et la règle, puis s'efface. Le compteur devient trois petites icônes de Mémorial collées à la minimap, éteintes puis dorées ; à trois, l'icône du repaire s'y allume et bat. Le haut de l'écran ne parle qu'aux changements (Mémorial ravivé, gardien prêt, gardien levé seul) et dans la dernière minute avant la rage, qui reste en rouge. **La flèche d'objectif disparaît** ; les flèches des coffres restent | Faible |
+| **C4** | **Raviver tient en haleine.** Lisible : l'anneau se remplit comme une horloge autour du Mémorial, les secondes restantes au-dessus ; hors du cercle, l'anneau rougit et se vide, avec un son. Du suspense, en trois temps : à un tiers puis à deux tiers, une vague monte du bord du cercle, annoncée au sol ; au dernier tiers, le cercle se resserre de moitié et le son monte ; au bout, une onde de lumière repousse et blesse la foule autour, le Mémorial s'allume. Réglages dans `landmarks.json`, mesure au bot (durée réelle, coups reçus) | Moyen |
+
+Les cartes « vides et linéaires » vont à l'étape 5 (terres complètes), qui part de ce retour.

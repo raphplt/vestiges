@@ -2465,3 +2465,12 @@ Raphaël : « le truc c'est qu'il y a déjà bcp de props et d'assets. je te pro
 - **F4 › Terres** refait la terre en cours dans le biome choisi, au même rang (commande `land <biome>`).
 - **Une terre refaite au même rang ne durcit pas la run** : le Péril de rang ne s'ajoute qu'en allant plus loin qu'avant. Hors outils de dev, rien ne change : on n'y revient jamais en arrière.
 - Le lot G2 (l'Épouvantail) continue en parallèle ; l'étape 5 se découpe après la visite et ses retours.
+
+## 203. Le HUD se tait, la flèche part, raviver tient en haleine — 27 octobre 2026
+
+Retour de Raphaël après la visite des cinq terres (cité au plan 57 §10) : l'objectif permanent prend trop de place, la flèche est moche et inutile, raviver un Mémorial n'a ni suspense ni règle lisible, les cartes sont vides et linéaires.
+
+**Tranché par défaut, réversible :**
+- **Lot C3, le HUD se tait** : le nom du lieu remplace « Terre 1 », au carton d'arrivée seulement. Le compteur passe en trois icônes collées à la minimap. Le haut de l'écran ne parle plus qu'aux changements et pendant l'alerte de rage. **La flèche d'objectif est retirée** (elle remplace le choix de C1, §198) : la minimap suffit.
+- **Lot C4, raviver tient en haleine** : anneau-horloge et secondes restantes, deux vagues annoncées, cercle qui se resserre au dernier tiers, onde de lumière qui repousse la foule au bout. La durée de 20 s reste, à remesurer.
+- **Ordre** : G2 (l'Épouvantail, presque fini) se termine, puis C3 et C4, puis G3 à G5. Les cartes vides et linéaires ouvrent l'étape 5.
