@@ -36,8 +36,11 @@ public sealed class LandFront
     public int CellCount => _fallAt.Count;
 
     /// <summary>Part du cœur dans la terre : ce qui reste debout quand tout le reste est tombé.</summary>
-    public float HeartShare => _fallAt.Count == 0 ? 1f : (float)_heartCells / _fallAt.Count;
+    public float HeartShare => GroundCells == 0 ? 1f : (float)_heartCells / GroundCells;
     private int _heartCells;
+    // Cellules creusées par les pans de vide des pièces : jamais debout, elles ne comptent pas dans la terre à perdre.
+    private int _holes;
+    private int GroundCells => _fallAt.Count - _holes;
 
     public IEnumerable<Vector2I> Cells => _fallAt.Keys;
 
@@ -109,6 +112,20 @@ public sealed class LandFront
             _fallAt[cell] = float.PositiveInfinity;
     }
 
+    /// <summary>
+    /// Creuse un vide dans une cellule de la terre (pan de vide d'une pièce, plan 58 T1b) : tombée dès l'arrivée, elle ne se
+    /// relève jamais, ni par un coffre ni par un Mémorial.
+    /// </summary>
+    public void Hole(Vector2I cell)
+    {
+        if (!_fallAt.TryGetValue(cell, out float fall) || float.IsNegativeInfinity(fall))
+            return;
+        if (float.IsPositiveInfinity(fall))
+            _heartCells--;
+        _fallAt[cell] = float.NegativeInfinity;
+        _holes++;
+    }
+
     /// <summary>Ouvre une brèche dans une cellule de la terre, même au cœur ; faux si elle l'est déjà ou hors de la terre.</summary>
     public bool Breach(Vector2I cell) => _fallAt.ContainsKey(cell) && _breaches.Add(cell);
 
@@ -132,7 +149,7 @@ public sealed class LandFront
     /// <summary>Part du sol de la terre encore debout, de 1 à l'arrivée à la part du cœur quand tout le reste est tombé.</summary>
     public float StandingShare()
     {
-        if (_fallAt.Count == 0)
+        if (GroundCells == 0)
             return 1f;
         int standing = 0;
         foreach (float fall in _fallAt.Values)
@@ -140,6 +157,6 @@ public sealed class LandFront
             if (fall > Time)
                 standing++;
         }
-        return (float)standing / _fallAt.Count;
+        return (float)standing / GroundCells;
     }
 }

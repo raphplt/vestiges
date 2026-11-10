@@ -439,10 +439,38 @@ public partial class ErasureManager : Node
                 front.AddCell(cell, generator.EllipseDistance(tile.X, tile.Y) / generator.MapRadiusX);
             }
         }
+        CarvePieceVoids(front);
         _front = front;
         foreach (Vector2I cell in front.Cells)
             StoreMemory(cell, front.MemoryAt(cell), true);
         GD.Print($"[ErasureManager] Front de la terre {land.Index} : {front.CellCount} cellules");
+    }
+
+    /// <summary>Pans de vide des pièces (plan 58 T1b) : chaque cellule dont le centre tombe dans l'ellipse est creusée.</summary>
+    private void CarvePieceVoids(LandFront front)
+    {
+        int carved = 0;
+        foreach (PlacedPiece piece in _world.Pieces)
+        {
+            if (piece.VoidCenter is not Vector2 center)
+                continue;
+            Vector2 radii = piece.Piece.VoidRadii;
+            Vector2I min = WorldToCell(center - radii);
+            Vector2I max = WorldToCell(center + radii);
+            for (int x = min.X; x <= max.X; x++)
+            {
+                for (int y = min.Y; y <= max.Y; y++)
+                {
+                    Vector2I cell = new(x, y);
+                    if (!front.Contains(cell) || !LandPieceConfig.InEllipse(CellCenterToWorld(cell), center, radii))
+                        continue;
+                    front.Hole(cell);
+                    carved++;
+                }
+            }
+        }
+        if (carved > 0)
+            GD.Print($"[ErasureManager] Pans de vide des pièces : {carved} cellule(s)");
     }
 
     /// <summary>

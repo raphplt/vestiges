@@ -21,6 +21,13 @@ public sealed class LandPieceConfig
         public Vector2? Memorial;
         /// <summary>Sol imposé dans l'ellipse de l'emprise (l'eau y sèche) ; nul, le sol de la terre reste. Exigé du cœur.</summary>
         public TerrainType? Ground;
+        /// <summary>
+        /// Pan de vide creusé dans la pièce (plan 58 T1b) : centre en pixels écran depuis le centre de la pièce, nul sans
+        /// vide. Ses cellules d'Effacement sont tombées dès l'arrivée et ne se relèvent jamais.
+        /// </summary>
+        public Vector2? VoidCenter;
+        /// <summary>Demi-axes de l'ellipse du vide, en pixels écran.</summary>
+        public Vector2 VoidRadii;
     }
 
     /// <summary>Pièces d'un biome, décors tirés de son dossier.</summary>
@@ -48,6 +55,10 @@ public sealed class LandPieceConfig
     private static readonly string[] PieceKeys = BuildPieceKeys();
     // Sols qu'une pièce peut imposer : pas l'eau, une pièce est un lieu où l'on marche.
     private static readonly string[] GroundNames = { "grass", "concrete", "forest" };
+    // Un vide plus petit qu'une cellule d'Effacement (128 px) n'en creuserait aucune.
+    private const float VoidMinRadiusPx = 128f;
+    // Le cercle d'un Mémorial (radius_px de landmarks.json, 220 px) reste sur le sol et frôle le bord du vide.
+    private const float VoidMemorialMarginPx = 240f;
 
     /// <summary>Réglages valides, ou une exception qui nomme le champ fautif (génération, bancs).</summary>
     public static LandPieceConfig Load()
@@ -130,6 +141,8 @@ public sealed class LandPieceConfig
             biome.Heart = ReadPiece(reader, reader.Section(entry, "heart"), biomeId, biome.Folder, ids, spriteExists);
         if (reader.Error == null && biome.Heart != null && biome.Heart.Ground == null)
             reader.Fail($"{biomeId}, cœur « {biome.Heart.Id} » : ground exigé, le repaire ne tombe jamais dans l'eau");
+        if (reader.Error == null && biome.Heart?.VoidCenter != null)
+            reader.Fail($"{biomeId}, cœur « {biome.Heart.Id} » : pas de void, le combat du gardien garde son sol");
         if (JsonConfigReader.Has(entry, "pieces"))
         {
             foreach (JsonElement item in reader.List(entry, "pieces", 0))
@@ -161,12 +174,40 @@ public sealed class LandPieceConfig
         if (reader.Error == null && piece.Memorial is Vector2 slot
             && (slot.X * slot.X) / (half.X * half.X) + (slot.Y * slot.Y) / (half.Y * half.Y) > 1f)
             reader.Fail($"{biomeId}, pièce « {piece.Id} » : memorial hors de l'ellipse de half_extent_px");
+        if (JsonConfigReader.Has(item, "void"))
+            ReadVoid(reader, reader.Section(item, "void"), biomeId, piece);
         return piece;
+    }
+
+    /// <summary>Le vide tient dans l'emprise et laisse la place du Mémorial sur le sol.</summary>
+    private static void ReadVoid(JsonConfigReader reader, JsonElement element, string biomeId, Piece piece)
+    {
+        reader.AllowOnly(element, $"{biomeId}, pièce « {piece.Id} », void", "at", "radii");
+        Vector2 center = SitePlan.Vector(reader, element, "at");
+        Vector2 radii = SitePlan.Vector(reader, element, "radii");
+        if (reader.Error != null)
+            return;
+        Vector2 half = piece.Plan.HalfExtentPx;
+        if (radii.X < VoidMinRadiusPx || radii.Y < VoidMinRadiusPx)
+            reader.Fail($"{biomeId}, pièce « {piece.Id} » : void.radii d'au moins {VoidMinRadiusPx} px, une cellule d'Effacement");
+        else if (Mathf.Abs(center.X) + radii.X > half.X || Mathf.Abs(center.Y) + radii.Y > half.Y)
+            reader.Fail($"{biomeId}, pièce « {piece.Id} » : void déborde de half_extent_px");
+        else if (piece.Memorial is Vector2 slot && InEllipse(slot, center, radii + Vector2.One * VoidMemorialMarginPx))
+            reader.Fail($"{biomeId}, pièce « {piece.Id} » : memorial dans le void ou à moins de {VoidMemorialMarginPx} px de son bord");
+        piece.VoidCenter = center;
+        piece.VoidRadii = radii;
+    }
+
+    /// <summary>Le point tombe-t-il dans l'ellipse alignée sur les axes (bord compris) ?</summary>
+    public static bool InEllipse(Vector2 point, Vector2 center, Vector2 radii)
+    {
+        Vector2 offset = point - center;
+        return (offset.X * offset.X) / (radii.X * radii.X) + (offset.Y * offset.Y) / (radii.Y * radii.Y) <= 1f;
     }
 
     private static string[] BuildPieceKeys()
     {
-        List<string> keys = new(SitePlan.CommonKeys) { "id", "memorial", "ground" };
+        List<string> keys = new(SitePlan.CommonKeys) { "id", "memorial", "ground", "void" };
         return keys.ToArray();
     }
 }

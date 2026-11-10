@@ -9,4 +9,7 @@ public readonly record struct PlacedPiece(LandPieceConfig.Piece Piece, Vector2 A
 
     /// <summary>Place du Mémorial de la pièce, en coordonnées du monde ; nulle si elle n'en a pas.</summary>
     public Vector2? MemorialPosition => Piece.Memorial is Vector2 slot ? Anchor + SiteComposer.Mirror(slot, Mirrored) : null;
+
+    /// <summary>Centre du pan de vide de la pièce, en coordonnées du monde ; nul si elle n'en a pas.</summary>
+    public Vector2? VoidCenter => Piece.VoidCenter is Vector2 center ? Anchor + SiteComposer.Mirror(center, Mirrored) : null;
 }

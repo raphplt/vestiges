@@ -189,3 +189,45 @@ Ensuite, quatre pièces sur quatre sont neuves et la terre en pose trois ou quat
 La densité de créatures reste dans le bruit d'une graine à l'autre. Les fourrés n'arrêtent pas le bot : il vainc le Cerf aux deux graines.
 
 **Ce qui reste faible :** les clairières sont des pelouses presque nues. Elles attendent les pièces de T1b à T1d, qui s'y logeront volontiers ; le compte des « pièces vues » arrive avec T1d.
+
+## 10. T1b, la clairière du Cerf et le belvédère — livré le 10 novembre
+
+**Ce qui est fait :**
+- **Dix décors neufs** (`tools/sprites/props/forest.py`) :
+  - deux pierres dressées moussues ;
+  - un lit de mousse où dort le Cerf ;
+  - une table d'orientation en bronze, inclinée vers la caméra pour se lire ;
+  - deux bancs de jardin public (deux orientations) ;
+  - trois segments de rambarde en fonte, dont un cassé ;
+  - une longue-vue à pièces.
+- **La clairière du Cerf**, cœur des bois : le lit de mousse sous le Cerf, sept pierres dressées en anneau ouvert à l'ouest (d'où arrive le joueur), six souches plus loin, puis l'anneau d'arbres d'avant.
+- **Le belvédère**, nouvelle pièce des bois. Il borde un **pan de vide** en ellipse de 720 × 420 px au nord de son emprise. Une rambarde à trouées longe le bord, avec devant elle une table d'orientation, des longues-vues, des bancs, et le Mémorial au sud-ouest.
+- **Une clé `void` dans une pièce** (`land_pieces.json`, `{at, radii}`). À l'arrivée sur la terre, `ErasureManager` creuse les cellules du front dont le centre tombe dans l'ellipse : elles sont dans le Néant dès le départ, comme le bord de l'Effacement. Le vide se dessine comme le Néant du front, en blanc qui grésille, et la minimap le hachure. Les créatures le longent et y tombent, le joueur s'y brûle et le saute au dash, comme partout ailleurs.
+- **Le lecteur refuse** :
+  - un vide de moins d'une cellule d'Effacement (128 px) ;
+  - un vide qui déborde de l'emprise ;
+  - un Mémorial à moins de 240 px de son bord ;
+  - un vide au cœur, dont le combat du gardien garde son sol.
+- **Aucun chemin ne mène au vide** : une pièce à vide refuse un emplacement où le réseau de chemins traverse l'ellipse élargie de 96 px, retournée ou non. Le raccord de la pièce part au sud, loin du vide.
+- **La terre restante ne compte pas les cellules creusées** (`LandFront`) : la part debout et la part du cœur restent à 1 à l'arrivée, et la minimap aussi.
+
+**Vérifié :**
+- `tools/validate.sh` smoke, catalogues, terres, mouvement : 4/4, et terres seules après la règle des chemins. Un passage des terres pendant une mesure a donné trois échecs de minutage sur la carrière, sans pièce à vide ; relancée machine moins chargée, la suite passe. Build sans avertissement. Le contrôle du catalogue exige le belvédère avec son vide et refuse cinq vides mal écrits.
+- **Placement** (`--capture-pieces`, bois en première terre, dix graines : 1, 2, 3, 5, 7, 11, 13, 17, 42, 99) : quatre pièces posées dix fois sur dix, belvédère compris, de 14 à 16 cellules creusées, pièces posées en 14 à 21 ms.
+- Captures : [planches/plan58_t1b_belvedere.png](planches/plan58_t1b_belvedere.png). Le Cerf dort au milieu des pierres dressées. Au belvédère, le Néant s'ouvre au nord, la rambarde le borde, et le vide est hachuré sur la minimap.
+- Relecture `godot-reviewer` : cinq remarques, toutes traitées (terre restante sans les cellules creusées, chemins hors du vide, deux commentaires).
+
+**Mesure** (`measure_run`, profil dev, bot des terres, Forgeuse, bois puis marais puis carrière, 600 s, graines 7 et 42, avant au commit de T1a, après au code final) :
+
+| | Avant (7 / 42) | Après (7 / 42) |
+|---|---|---|
+| Créatures visibles, 0-60 s | 13,7 / 12,2 | 12,0 / 15,1 |
+| Créatures visibles, 180-300 s | 17,7 / 17,6 | 18,8 / 26,0 |
+| Éliminations | 751 / 850 | 1 028 / 864 |
+| Distance parcourue (m) | 1 735 / 6 744 | 5 738 / 6 056 |
+| Gardiens vaincus | 0 / 2 | 2 / 2 |
+| Morts | 0 / 0 | 0 / 0 |
+
+Une première mesure, avant la règle des chemins, laissait le bot coincé 380 s à la graine 42 : il avait abandonné un Mémorial, n'en avait que deux sur trois et attendait au départ. Le bot va en ligne droite, sans contourner le vide ni la rambarde. Avec le code final, il n'y a plus de blocage. Aucune créature n'est comptée tombée dans le vide : le bot ne pousse pas la horde, seul un joueur le fera.
+
+**Ce qui reste :** la rambarde déborde parfois d'une demi-cellule sur le Néant, qui se creuse par cellules de 128 px (visuel seulement). Les deux pièces de démonstration attendent T1c et T1d.

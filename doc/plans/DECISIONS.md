@@ -2536,3 +2536,17 @@ Lot T1a du [plan 58](58-terres-completes.md), dans le découpage du §207. Déta
 - **Trois zones aux bois** : clairières (environ un cinquième de la terre), sous-bois, fourrés (un autre cinquième). Réglage dans `data/props/forest_reclaimed.json`.
 - **Les clairières restent presque nues** en attendant les pièces : des fleurs, une souche, un bouleau seul.
 - **Les fourrés sont plus pleins, pas infranchissables** : densité ×1,8 et des trouées sans décor bloquant. Le nombre de décors de la terre monte de 11 %.
+
+## 209. La clairière du Cerf et le belvédère — 10 novembre 2026
+
+Lot T1b du [plan 58](58-terres-completes.md), dans le découpage du §207. Détail au plan 58 §10.
+
+Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1b ».
+
+**Tranché par défaut, réversible :**
+- **Le pan de vide est du Néant du front**, creusé à l'arrivée sur la terre : même rendu (blanc qui grésille), mêmes règles (les créatures y tombent, le joueur s'y brûle et le saute). Pas de second système de vide.
+- **Le vide du belvédère est au nord de la pièce**, la rambarde et le Mémorial au sud : on arrive par le raccord sud, on voit le vide devant soi.
+- **Garde-fous du lecteur** : le vide fait au moins une cellule d'Effacement, reste dans l'emprise, laisse 240 px au Mémorial, et n'existe jamais au cœur. Aucun chemin du réseau ne le traverse.
+- **Les cellules creusées sortent de la terre à perdre** : la part debout reste à 1 à l'arrivée.
+- **Les deux pièces de démonstration restent** (vieille route, cercle de pierres) jusqu'à ce que T1c et T1d les remplacent.
+- **Le belvédère part avec le vide** si l'essai du vide (étape 4) le retire : il garde alors sa rambarde au bord d'une pente.

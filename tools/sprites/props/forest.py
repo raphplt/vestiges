@@ -813,6 +813,244 @@ def overgrown_car(stem: str, seed: int, yaw: float) -> PropModel:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# La clairière du Cerf et le belvédère (plan 58 T1b)
+# ---------------------------------------------------------------------------------------------------------------------
+
+BRONZE = "#7E6A3E"
+VERDIGRIS = "#5E8C7A"
+CAST_IRON = "#3B3A36"
+PAINT_GREEN = "#3F5E46"
+
+
+def standing_stone(stem: str, seed: int, height: float, lean: float) -> PropModel:
+    """
+    Pierre dressée de la clairière : un bloc plus haut que large, taillé grossièrement, penché, bosselé et fendu ;
+    lichen pâle sur la face au jour, mousse qui monte du pied côté ombre, une cupule creusée près du sommet.
+    """
+    STONE, STONE_DAMP, CRACK, LICHEN_M, MOSS_M, MOSS_LIT, CUP, GRASS = range(8)
+    materials = [make_material("stone", "#8A887E"), make_material("stone_damp", STONE_DARK, contrast=0.8),
+                 make_material("crack", "#3E3E3A", contrast=0.5), make_material("lichen", LICHEN, contrast=0.6),
+                 make_material("moss", MOSS), make_material("moss_light", LEAF_LIGHT, contrast=0.8),
+                 make_material("cup", "#4A4943", contrast=0.5), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    tilt = rotation_z(lean) @ rotation_x(w.uniform(-0.06, 0.06))
+    h = height * M
+    tufts = [(x * M, z * M) for x, z in ((-0.45, 0.2), (0.4, 0.3), (0.1, -0.4), (0.5, -0.15))]
+
+    def parts() -> list[Part]:
+        def stone(p: np.ndarray) -> np.ndarray:
+            q = p @ tilt
+            taper = 1.0 - 0.3 * np.clip(q[:, 1] / h, 0.0, 1.0)
+            d = rounded_box(q * np.stack([1.0 / taper, np.ones(len(q)), 1.0 / taper], axis=1), (0.0, h * 0.5, 0.0),
+                            (0.46 * M, h * 0.5, 0.32 * M), 0.14 * M)
+            near = d < 0.2 * M
+            if near.any():
+                r = q[near]
+                d[near] = d[near] + (value_noise(r, 0.35 * M, seed + 1) - 0.5) * 0.16 * M + (value_noise(r, 0.12 * M, seed + 2) - 0.5) * 0.04 * M
+            return np.maximum(d * 0.7, -p[:, 1] - 0.02 * M)
+
+        damp = lambda p: p[:, 1] - 0.25 * M - (value_noise(p, 0.25 * M, seed + 3) - 0.5) * 0.2 * M
+        moss = both(lambda p: p[:, 1] - h * 0.55 + (value_noise(p, 0.3 * M, seed + 4) - 0.5) * 0.4 * M,
+                    lambda p: p[:, 0] + 0.05 * M, noise_mask(0.25 * M, seed + 5, 0.7))
+        cup = np.array([0.08 * M, h * 0.86, 0.22 * M]) @ tilt.T
+        return [
+            Part(stone, STONE),
+            Part(painted(stone, damp), STONE_DAMP, relief=False),
+            Part(painted(stone, cracks(0.5 * M, seed + 6, 0.03 * M, reach=0.4)), CRACK, relief=False),
+            Part(painted(stone, both(noise_mask(0.09 * M, seed + 7, 0.25), lambda p: -p[:, 0] + 0.1 * M)), LICHEN_M, relief=False),
+            Part(painted(stone, moss, 0.03 * M), MOSS_M),
+            Part(painted(stone, both(moss, noise_mask(0.1 * M, seed + 8, 0.3)), 0.04 * M), MOSS_LIT, relief=False),
+            Part(painted(stone, lambda p: np.linalg.norm(p - cup, axis=1) - 0.07 * M), CUP, relief=False),
+            Part(_grass(w, tufts, 6, 0.32 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(72, int(height * 17) + 44), footprint=box_footprint(0.48 * M, 0.34 * M))
+
+
+def moss_bed(stem: str, seed: int) -> PropModel:
+    """
+    Lit de mousse où dort le Cerf : une couche épaisse et bombée, creusée au milieu par le poids d'une bête, bordée de
+    fougères couchées vers l'extérieur et de quelques brins ; plus clair là où la mousse est fraîche.
+    """
+    MOSS_DARK, MOSS_M, MOSS_LIT, FROND, FROND_LIT = range(5)
+    materials = [make_material("moss_shade", CANOPY_DARK, contrast=0.8), make_material("moss", MOSS),
+                 make_material("moss_light", LEAF_LIGHT, contrast=0.6), make_material("frond", CANOPY_DARK, contrast=0.9),
+                 make_material("frond_light", MOSS, contrast=0.7)]
+    w = Weathering(seed)
+    fronds = []
+    for k in range(14):
+        angle = k * 2 * np.pi / 14 + w.uniform(-0.12, 0.12)
+        base = np.array([np.sin(angle) * 1.05 * M, 0.08 * M, np.cos(angle) * 0.75 * M])
+        tip = base + np.array([np.sin(angle) * 0.55 * M, w.uniform(0.04, 0.12) * M, np.cos(angle) * 0.4 * M])
+        fronds.append((base, tip, k % 3 == 0))
+
+    def parts() -> list[Part]:
+        def bed(p: np.ndarray) -> np.ndarray:
+            mound = ellipsoid(p, (0.0, -0.05 * M, 0.0), (1.25 * M, 0.26 * M, 0.9 * M))
+            hollow = ellipsoid(p, (0.05 * M, 0.2 * M, 0.0), (0.75 * M, 0.2 * M, 0.5 * M))
+            d = np.maximum(mound, -hollow)
+            near = d < 0.15 * M
+            if near.any():
+                d[near] = d[near] + (value_noise(p[near], 0.18 * M, seed + 1) - 0.5) * 0.08 * M
+            return np.maximum(d, -p[:, 1] - 0.01 * M)
+
+        rim = lambda p: 0.06 * M - p[:, 1] + (value_noise(p, 0.2 * M, seed + 2) - 0.5) * 0.1 * M
+        frond = lambda chosen: (lambda p: _union(*(capsule(p, a, b, 0.07 * M, 0.02 * M) for a, b, lit in fronds if lit == chosen)))
+        return [
+            Part(bed, MOSS_M),
+            Part(painted(bed, rim), MOSS_DARK, relief=False),
+            Part(painted(bed, both(noise_mask(0.14 * M, seed + 3, 0.35), lambda p: 0.05 * M - p[:, 1])), MOSS_LIT, relief=False),
+            Part(frond(False), FROND),
+            Part(frond(True), FROND_LIT),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(84, 44))
+
+
+def orientation_table(stem: str, seed: int) -> PropModel:
+    """
+    Table d'orientation du belvédère : un pilier de moellons jointoyés, un plateau de pierre incliné vers le vide qui
+    porte un disque de bronze vert-de-gris gravé de rayons ; mousse au pied, une coulure de rouille sous le disque.
+    """
+    MASONRY, JOINT, SLAB, BRONZE_M, PATINA, ENGRAVE, MOSS_M, GRASS = range(8)
+    materials = [make_material("masonry", "#8C8676"), make_material("joint", "#5B574D", contrast=0.6),
+                 make_material("slab", "#9A958A", contrast=0.8), make_material("bronze", BRONZE),
+                 make_material("patina", VERDIGRIS, contrast=0.7), make_material("engrave", "#3C3424", contrast=0.5),
+                 make_material("moss", MOSS), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    slope = rotation_x(0.5)
+    top = np.array([0.0, 1.0 * M, 0.0])
+
+    def parts() -> list[Part]:
+        pillar = lambda p: rounded_box(p, (0.0, 0.47 * M, 0.0), (0.32 * M, 0.47 * M, 0.32 * M), 0.04 * M)
+        slab = lambda p: rounded_box((p - top) @ slope, (0.0, 0.0, 0.0), (0.52 * M, 0.06 * M, 0.5 * M), 0.03 * M)
+        stand = lambda p: np.minimum(pillar(p), slab(p))
+        disc_frame = lambda p: (p - top) @ slope
+        disc = lambda p: cylinder(disc_frame(p), (0.0, 0.075 * M, 0.0), 0.44 * M, 0.02 * M, 0.008 * M)
+        rays = lambda p: np.minimum(*(np.abs(disc_frame(p) @ np.array([np.cos(a), 0.0, np.sin(a)])) - 0.012 * M for a in (0.0, np.pi / 2)))
+        ring = lambda p: np.abs(np.hypot(disc_frame(p)[:, 0], disc_frame(p)[:, 2]) - 0.28 * M) - 0.015 * M
+        return [
+            Part(stand, MASONRY),
+            Part(painted(pillar, bricks(0.16 * M, 0.3 * M, 0.025 * M)), JOINT, relief=False),
+            Part(painted(stand, lambda p: (p - top)[:, 1] + 0.12 * M), SLAB, relief=False),
+            Part(disc, BRONZE_M),
+            Part(painted(disc, noise_mask(0.12 * M, seed + 1, 0.7)), PATINA, relief=False),
+            Part(painted(disc, both(lambda p: disc_frame(p)[:, 1] - 0.09 * M, lambda p: -disc_frame(p)[:, 1] + 0.11 * M,
+                                    lambda p: np.minimum(rays(p), ring(p)))), ENGRAVE, relief=False),
+            Part(painted(pillar, both(lambda p: p[:, 1] - 0.3 * M, noise_mask(0.2 * M, seed + 2, 0.6))), MOSS_M),
+            Part(_grass(w, [(-0.38 * M, 0.25 * M), (0.36 * M, 0.3 * M), (0.3 * M, -0.36 * M)], 6, 0.3 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(30.0)), canvas=(64, 70), footprint=box_footprint(0.34 * M, 0.34 * M))
+
+
+def park_bench(stem: str, seed: int, yaw: float) -> PropModel:
+    """
+    Banc du dimanche, long selon z : pieds de fonte, lattes de bois grisées dont une manque et une autre casse, dossier
+    à trois lattes ; mousse dans les jours entre les lattes, herbes hautes qui mangent les pieds.
+    """
+    IRON, WOOD, WOOD_DARK, MOSS_M, RUST_M, GRASS = range(6)
+    materials = [make_material("iron", CAST_IRON), make_material("wood", "#8E7F68"),
+                 make_material("wood_dark", "#5C5143", contrast=0.6), make_material("moss", MOSS),
+                 make_material("rust", RUST, contrast=0.7), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    length = 0.9 * M
+    missing = int(w.uniform(0, 3.99))
+
+    def parts() -> list[Part]:
+        legs = lambda p: _union(*(np.minimum(
+            rounded_box(p, (0.0, 0.22 * M, z), (0.24 * M, 0.22 * M, 0.035 * M), 0.02 * M),
+            rounded_box(p, (-0.22 * M, 0.55 * M, z), (0.035 * M, 0.3 * M, 0.035 * M), 0.02 * M)) for z in (-length * 0.85, length * 0.85)))
+        seat = lambda p: _union(*(rounded_box(p, (x * M, 0.44 * M, 0.0), (0.045 * M, 0.025 * M, length), 0.012 * M)
+                                  for k, x in enumerate((0.15, 0.04, -0.07, -0.18)) if k != missing))
+        back = lambda p: _union(*(rounded_box(p @ rotation_z(-0.2), (-0.24 * M + y * 0.2, y, 0.0), (0.02 * M, 0.04 * M, length), 0.012 * M)
+                                  for y in (0.62 * M, 0.74 * M, 0.86 * M)))
+        wood = lambda p: np.minimum(seat(p), back(p))
+        return [
+            Part(legs, IRON),
+            Part(painted(legs, noise_mask(0.1 * M, seed + 1, 0.4)), RUST_M, relief=False),
+            Part(wood, WOOD),
+            Part(painted(wood, both(bands(2, 0.18 * M, 0.02 * M), noise_mask(0.15 * M, seed + 2, 0.5))), WOOD_DARK, relief=False),
+            Part(painted(wood, both(noise_mask(0.12 * M, seed + 3, 0.3), lambda p: 0.46 * M - p[:, 1] + 0.02 * M)), MOSS_M),
+            Part(_grass(w, [(0.0, z * length * 0.85) for z in (-1, 1)] + [(0.1 * M, 0.0)], 7, 0.36 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, yaw, canvas=(64, 56), footprint=box_footprint(0.26 * M, length))
+
+
+def railing(stem: str, seed: int, yaw: float, broken: bool) -> PropModel:
+    """
+    Rambarde du belvédère, longue selon z : poteaux de bois plantés, deux lisses de tube peint en vert passé, écaillé
+    sur la rouille ; la version cassée a perdu sa lisse haute d'un côté, qui pend jusqu'au sol, et un poteau penche.
+    """
+    POST, POST_DARK, TUBE, RUST_M, RUST_LIT, GRASS = range(6)
+    materials = [make_material("post", "#7A6A54"), make_material("post_dark", "#4E4336", contrast=0.6),
+                 make_material("tube", PAINT_GREEN), make_material("rust", RUST, contrast=0.7),
+                 make_material("rust_light", RUST_ORANGE, contrast=0.7), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    half = 1.3 * M
+    posts = [np.array([0.0, 0.0, z * half]) for z in (-1.0, 0.0, 1.0)]
+    leans = [rotation_x(0.25) if broken and k == 2 else np.eye(3) for k in range(3)]
+    top = [p + l.T @ np.array([0.0, 1.0 * M, 0.0]) for p, l in zip(posts, leans)]
+    mid = [p + l.T @ np.array([0.0, 0.55 * M, 0.0]) for p, l in zip(posts, leans)]
+
+    def parts() -> list[Part]:
+        wood = lambda p: _union(*(capsule(p, a, b, 0.07 * M, 0.06 * M) for a, b in zip(posts, top)))
+        rails = [(mid[0], mid[1]), (mid[1], mid[2]), (top[0], top[1])]
+        if broken:
+            rails.append((top[1], top[1] + np.array([0.12 * M, -0.92 * M, 0.5 * M])))
+        else:
+            rails.append((top[1], top[2]))
+        tube = lambda p: _union(*(capsule(p, a, b, 0.035 * M) for a, b in rails))
+        rust = noise_mask(0.1 * M, seed + 1, 0.45 if broken else 0.3)
+        return [
+            Part(wood, POST),
+            Part(painted(wood, _grooves(wood, seed + 2, period=0.06 * M)), POST_DARK, relief=False),
+            Part(tube, TUBE),
+            Part(painted(tube, rust), RUST_M, relief=False),
+            Part(painted(tube, both(rust, noise_mask(0.05 * M, seed + 3, 0.3))), RUST_LIT, relief=False),
+            Part(_grass(w, [(0.0, z * half) for z in (-1.0, 0.0, 1.0)], 6, 0.34 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, yaw, canvas=(80, 72), footprint=box_footprint(0.1 * M, half))
+
+
+def spyglass(stem: str, seed: int) -> PropModel:
+    """
+    Longue-vue à pièces du belvédère : un fût de fonte sur socle, la tête à deux oculaires braquée vers le vide, une
+    fente à monnaie sur le flanc ; peinture écaillée, rouille dans les creux, lierre qui monte au fût.
+    """
+    IRON, PAINT, RUST_M, LENS, IVY_M, GRASS = range(6)
+    materials = [make_material("iron", CAST_IRON), make_material("paint", PAINT_GREEN),
+                 make_material("rust", RUST, contrast=0.7), make_material("lens", "#2A3A44", contrast=0.5),
+                 make_material("ivy", IVY_LEAF), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    aim = rotation_x(0.22)
+    head_c = np.array([0.0, 1.32 * M, 0.0])
+    ivy = [np.array([np.sin(a) * 0.09 * M, h * M, np.cos(a) * 0.09 * M]) for a, h in ((0.4, 0.2), (1.2, 0.35), (2.0, 0.5), (2.6, 0.62), (3.3, 0.78))]
+
+    def parts() -> list[Part]:
+        base = lambda p: np.minimum(cylinder(p, (0.0, 0.06 * M, 0.0), 0.24 * M, 0.06 * M, 0.02 * M),
+                                    cylinder(p, (0.0, 0.62 * M, 0.0), 0.08 * M, 0.56 * M, 0.02 * M))
+        head = lambda p: np.minimum(rounded_box((p - head_c) @ aim, (0.0, 0.0, 0.0), (0.2 * M, 0.13 * M, 0.26 * M), 0.08 * M),
+                                    _union(*(capsule((p - head_c) @ aim, (x, 0.02 * M, 0.2 * M), (x, 0.02 * M, 0.42 * M), 0.07 * M)
+                                             for x in (-0.09 * M, 0.09 * M))))
+        body = lambda p: np.minimum(base(p), head(p))
+        lenses = lambda p: _union(*(sphere((p - head_c) @ aim, (x, 0.02 * M, 0.43 * M), 0.05 * M) for x in (-0.09 * M, 0.09 * M)))
+        return [
+            Part(body, IRON),
+            Part(painted(body, either(lambda p: p[:, 1] - 1.0 * M + (value_noise(p, 0.2 * M, seed + 1) - 0.5) * 0.3 * M,
+                                      noise_mask(0.12 * M, seed + 2, 0.15))), PAINT, relief=False),
+            Part(painted(body, noise_mask(0.08 * M, seed + 3, 0.3)), RUST_M, relief=False),
+            Part(lenses, LENS),
+            Part(_leaf_cluster(ivy, [np.array([np.sin(a), 0.2, np.cos(a)]) for a in (0.4, 1.2, 2.0, 2.6, 3.3)], [0.07 * M] * len(ivy)), IVY_M),
+            Part(_grass(w, [(-0.22 * M, 0.15 * M), (0.2 * M, 0.2 * M)], 6, 0.3 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(200.0)), canvas=(48, 72), footprint=box_footprint(0.24 * M, 0.24 * M))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -843,5 +1081,15 @@ def catalog() -> list[PropModel]:
         ivy_lamppost("prop_lamppost", 421),
         rusty_sign("prop_sign_rusty", 431),
         overgrown_car("prop_car_overgrown", 441, AXIS_Y_YAW),
+        standing_stone("prop_standing_stone", 451, 3.0, 0.06),
+        standing_stone("prop_standing_stone_v2", 452, 2.3, -0.14),
+        moss_bed("prop_moss_bed", 461),
+        orientation_table("prop_orientation_table", 471),
+        park_bench("prop_bench_x", 481, AXIS_X_YAW),
+        park_bench("prop_bench_y", 482, AXIS_Y_YAW),
+        railing("prop_railing_x", 491, AXIS_X_YAW, False),
+        railing("prop_railing_y", 492, AXIS_Y_YAW, False),
+        railing("prop_railing_broken", 493, AXIS_X_YAW, True),
+        spyglass("prop_spyglass", 501),
     ]
     return models

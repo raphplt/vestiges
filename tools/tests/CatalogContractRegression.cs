@@ -767,10 +767,12 @@ public partial class CatalogContractRegression : Node
         Check(LandPieceConfig.TryLoad(out LandPieceConfig loaded, out string loadError) && loaded.Biomes.Count == 4
             && loaded.Biomes["swamp"].Heart != null && loaded.Biomes["swamp"].Pieces.Count == 2
             && loaded.Biomes["swamp"].Pieces[0].Memorial is Vector2 && loaded.Biomes["swamp"].Pieces[1].Ground == TerrainType.Grass
-            && loaded.Biomes["swamp"].Pieces[0].Plan.Elements.Exists(element => element.Group == "barque"),
-            $"pièces du dépôt acceptées {loadError}");
+            && loaded.Biomes["swamp"].Pieces[0].Plan.Elements.Exists(element => element.Group == "barque")
+            && loaded.Biomes["forest_reclaimed"].Pieces.Exists(piece => piece.Id == "belvedere" && piece.VoidCenter is Vector2),
+            $"pièces du dépôt acceptées, vide du belvédère lu {loadError}");
         string valid = FileAccess.GetFileAsString(LandPieceConfig.FilePath);
         JsonNode Piece(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![0]!;
+        JsonNode Belvedere(JsonObject root) => root["biomes"]!["forest_reclaimed"]!["pieces"]![0]!;
         (string, Action<JsonObject>, string)[] cases =
         {
             ("JSON invalide", null, "JSON invalide"),
@@ -790,6 +792,14 @@ public partial class CatalogContractRegression : Node
             ("sol d'eau", root => Piece(root)["ground"] = "water", "ground"),
             ("décor introuvable", root => Piece(root)["elements"]![0]!["sprites"]![0] = "prop_inconnu", "décor « prop_inconnu »"),
             ("groupe non texte", root => Piece(root)["elements"]![3]!["group"] = 2, "group"),
+            ("vide à clé inconnue", root => Belvedere(root)["void"]!["depth"] = 1, "clé « depth » inconnue"),
+            ("vide plus petit qu'une cellule", root => Belvedere(root)["void"]!["radii"] = new JsonArray(100, 170), "void.radii"),
+            ("vide hors emprise", root => Belvedere(root)["void"]!["at"] = new JsonArray(300, -140), "void déborde"),
+            ("Mémorial au bord du vide", root => Belvedere(root)["memorial"] = new JsonArray(0, 200), "memorial dans le void"),
+            ("vide au cœur", root => root["biomes"]!["forest_reclaimed"]!["heart"]!["void"] = new JsonObject
+            {
+                ["at"] = new JsonArray(0, 0), ["radii"] = new JsonArray(200, 150),
+            }, "pas de void"),
         };
         foreach ((string name, Action<JsonObject> mutate, string expected) in cases)
         {

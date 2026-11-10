@@ -13,6 +13,9 @@ namespace Vestiges.World;
 /// </summary>
 public static class LandPieceComposer
 {
+    // Un pan de vide se creuse par cellules d'Effacement de 128 px, qui débordent l'ellipse jusqu'à une demi-diagonale.
+    private const float VoidPathMarginPx = 96f;
+
     public static List<PlacedPiece> Plan(WorldGenerator generator, TerrainType[,] terrain, PathNetwork paths,
         HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band, Vector2 heartAnchor, ulong seed)
     {
@@ -27,7 +30,7 @@ public static class LandPieceComposer
         // (exigé par LandPieceConfig) assèche l'eau qu'il couvrirait.
         if (biome.Heart != null)
         {
-            if (!Fits(generator, usedCells, config, biome.Heart, heartAnchor))
+            if (!Fits(generator, paths, usedCells, config, biome.Heart, heartAnchor))
                 GD.PushWarning($"[LandPieceComposer] Le cœur « {biome.Heart.Id} » déborde de la terre ou d'un lieu déjà posé");
             Settle(generator, terrain, paths, usedCells, biome.Heart, heartAnchor, false, style);
             placed.Add(new PlacedPiece(biome.Heart, heartAnchor, false, true));
@@ -45,7 +48,7 @@ public static class LandPieceComposer
         {
             if (taken >= wanted)
                 break;
-            if (!TryPick(generator, usedCells, config, band, piece, placed, rng, out Vector2 anchor))
+            if (!TryPick(generator, paths, usedCells, config, band, piece, placed, rng, out Vector2 anchor))
             {
                 GD.PushWarning($"[LandPieceComposer] Pas de place pour la pièce « {piece.Id} »");
                 continue;
@@ -99,7 +102,7 @@ public static class LandPieceComposer
     }
 
     /// <summary>Emplacements tirés dans la bande : garde le plus éloigné des pièces posées parmi les premiers valides.</summary>
-    private static bool TryPick(WorldGenerator generator, HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band,
+    private static bool TryPick(WorldGenerator generator, PathNetwork paths, HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band,
         LandPieceConfig.Piece piece, List<PlacedPiece> placed, RandomNumberGenerator rng, out Vector2 best)
     {
         best = default;
@@ -117,7 +120,7 @@ public static class LandPieceComposer
             float nearest = float.MaxValue;
             foreach (PlacedPiece other in placed)
                 nearest = Mathf.Min(nearest, anchor.DistanceTo(other.Anchor));
-            if (nearest < config.MinSpacingPx || !Fits(generator, usedCells, config, piece, anchor))
+            if (nearest < config.MinSpacingPx || !Fits(generator, paths, usedCells, config, piece, anchor))
                 continue;
             valid++;
             float score = Mathf.Min(nearest, config.MinSpacingPx * 2f) + rng.Randf();
@@ -132,10 +135,10 @@ public static class LandPieceComposer
 
     /// <summary>
     /// Toute l'emprise dans la terre, non effacée, libre, dans le biome ; un peu d'eau tolérée sauf sous un sol imposé
-    /// qui l'assèche. Les chemins peuvent la traverser. La place du Mémorial n'est jamais dans l'eau.
+    /// qui l'assèche. Les chemins peuvent la traverser, jamais son pan de vide. La place du Mémorial n'est jamais dans l'eau.
     /// </summary>
-    private static bool Fits(WorldGenerator generator, HashSet<Vector2I> usedCells, LandPieceConfig config, LandPieceConfig.Piece piece,
-        Vector2 anchor)
+    private static bool Fits(WorldGenerator generator, PathNetwork paths, HashSet<Vector2I> usedCells, LandPieceConfig config,
+        LandPieceConfig.Piece piece, Vector2 anchor)
     {
         int cells = 0;
         int water = 0;
@@ -154,7 +157,7 @@ public static class LandPieceComposer
             if (generator.GetTerrain(cell.X, cell.Y) == TerrainType.Water)
                 water++;
         });
-        if (blocked || cells == 0)
+        if (blocked || cells == 0 || CrossesVoid(paths, piece, anchor))
             return false;
         if (piece.Ground == null && water > cells * config.MaxWaterShare)
             return false;
@@ -169,6 +172,28 @@ public static class LandPieceComposer
             }
         }
         return true;
+    }
+
+    /// <summary>Un chemin du réseau passe-t-il dans le pan de vide, retourné ou non ? Un chemin ne mène pas au Néant.</summary>
+    private static bool CrossesVoid(PathNetwork paths, LandPieceConfig.Piece piece, Vector2 anchor)
+    {
+        if (paths == null || piece.VoidCenter is not Vector2 center)
+            return false;
+        Vector2 radii = piece.VoidRadii + Vector2.One * VoidPathMarginPx;
+        foreach (bool mirrored in new[] { false, true })
+        {
+            Vector2 at = anchor + SiteComposer.Mirror(center, mirrored);
+            bool crossed = false;
+            ForEachCell(at, radii, cell =>
+            {
+                if (!crossed && paths.Cells.Contains(cell)
+                    && LandPieceConfig.InEllipse(PathNetworkGenerator.CellCenter(cell), at, radii))
+                    crossed = true;
+            });
+            if (crossed)
+                return true;
+        }
+        return false;
     }
 
     private static void ForEachCell(Vector2 anchor, Vector2 half, Action<Vector2I> visit)
