@@ -10,6 +10,7 @@
   "prop_fern": {"pivot": [17.0, 11.2]},
   "prop_flowers": {"pivot": [10.0, 11.68]},
   "prop_flowers_v2": {"pivot": [12.0, 10.68]},
+  "prop_highway_sign": {"pivot": [33.0, 32.0], "footprint": [[-25.35, 0.08], [19.51, -8.09], [25.35, -0.08], [-19.51, 8.09]]},
   "prop_lamppost": {"pivot": [10.0, 52.4], "footprint": [[-3.41, -1.7], [3.41, -1.7], [3.41, 1.7], [-3.41, 1.7]]},
   "prop_mailbox_rural": {"pivot": [10.0, 27.08], "footprint": [[1.9, 0.17], [-0.33, 0.95], [-1.9, -0.17], [0.33, -0.95]]},
   "prop_moss_bed": {"pivot": [28.0, 12.68]},
@@ -40,5 +41,9 @@
   "prop_tree_large_v2_canopy": {"pivot": [52.0, 103.8]},
   "prop_tree_medium_base": {"pivot": [19.0, 69.0], "footprint": [[-4.43, -2.22], [4.43, -2.22], [4.43, 2.22], [-4.43, 2.22]]},
   "prop_tree_medium_canopy": {"pivot": [33.0, 79.0]},
-  "prop_tree_strangled": {"pivot": [20.0, 63.0], "footprint": [[-5.97, -2.98], [5.97, -2.98], [5.97, 2.98], [-5.97, 2.98]]}
+  "prop_tree_strangled": {"pivot": [20.0, 63.0], "footprint": [[-5.97, -2.98], [5.97, -2.98], [5.97, 2.98], [-5.97, 2.98]]},
+  "prop_viaduct_deck_car": {"pivot": [84.0, 51.2], "footprint": [[-81.64, 0.5], [-44.82, -34.12], [81.64, -0.5], [44.82, 34.12]]},
+  "prop_viaduct_deck_split": {"pivot": [90.0, 64.2], "footprint": [[-81.64, 0.5], [-44.82, -34.12], [81.64, -0.5], [44.82, 34.12]]},
+  "prop_viaduct_pier": {"pivot": [43.0, 131.0], "footprint": [[-12.33, 2.52], [-2.72, -6.52], [12.33, -2.52], [2.72, 6.52]]},
+  "prop_viaduct_pier_broken": {"pivot": [29.0, 60.0], "footprint": [[-12.33, 2.52], [-2.72, -6.52], [12.33, -2.52], [2.72, 6.52]]}
 }

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**10 novembre — le viaduc effondré, les bois sont faits ([plan 58 T1d](58-terres-completes.md), §211) :** cinq décors neufs (piles, tronçons de tablier tombés, panneau d'autoroute) composent la quatrième pièce des bois, qui en pose trois ou quatre par run. La mesure compte les pièces vues : le bot en voit une à trois aux bois, contre une avant T1. Le bot des terres contourne enfin un obstacle près de sa cible. Suite : T2, le Bas-Port.
+
 **10 novembre — l'aire de pique-nique et la maison engloutie ([plan 58 T1c](58-terres-completes.md), §210) :** neuf décors neufs aux bois (tables, balançoire, barbecue, poubelle, boîte aux lettres, maison mangée de lierre, voiture-jardinière). Deux pièces les composent et remplacent les démonstrations de T0 : les bois posent trois pièces faites main par run. Suite : T1d, le viaduc effondré et la mesure des pièces vues.
 
 **10 novembre — la clairière du Cerf et le belvédère ([plan 58 T1b](58-terres-completes.md), §209) :** dix décors neufs aux bois (pierres dressées, lit de mousse, table d'orientation, bancs, rambarde, longue-vue). Le Cerf dort dans un cercle de pierres ouvert à l'ouest. Le belvédère borde un pan de vide creusé dans la terre (clé `void` d'une pièce), où pousser la horde ; aucun chemin n'y mène. Suite : T1c, l'aire de pique-nique et la maison engloutie.

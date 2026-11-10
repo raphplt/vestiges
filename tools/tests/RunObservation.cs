@@ -854,8 +854,10 @@ public partial class RunObservation : Node
             }
 
             // Déplacement nomade déterministe : nouveau point de passage à 500–900 px dès l'arrivée,
-            // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes.
-            if (t - lastProgressTime > 2.0)
+            // ou si le joueur est bloqué (obstacle, Néant) depuis deux secondes. Le constat est gardé pour la boucle des
+            // terres, que cette remise à zéro empêcherait sinon de jamais contourner.
+            bool stalled = t - lastProgressTime > 2.0;
+            if (stalled)
             {
                 // Bloqué loin de la cible d'un événement (bord du monde, Néant, eau) : un joueur contourne ; le bot
                 // fait un détour de quelques secondes avant de reprendre la cible (plan 30 T2). Rester dans le cercle
@@ -909,7 +911,7 @@ public partial class RunObservation : Node
                 // Près de sa cible (combat, cercle), rester sur place n'est pas un blocage.
                 if (_player.GlobalPosition.DistanceTo(waypoint) < 140f)
                     lastProgressTime = t;
-                else if (t - lastProgressTime > 2.0)
+                else if (stalled)
                 {
                     landDetourUntil = t + LandDetourSeconds;
                     Vector2 toward = (waypoint - _player.GlobalPosition).Normalized();
@@ -986,6 +988,7 @@ public partial class RunObservation : Node
                 Rect2 chestView = VisibleWorldRect();
                 Godot.Collections.Array<Node> chestNodes = GetTree().GetNodesInGroup("chests");
                 places.Sample(t, chestView, chestNodes, _world.GetNodeOrNull<SmallPlaceDirector>("SmallPlaceDirector"));
+                places.SamplePieces(chestView, _world.Pieces);
                 foreach (Node node in chestNodes)
                 {
                     if (node is not Chest chest)

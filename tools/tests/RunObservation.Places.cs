@@ -64,6 +64,10 @@ public partial class RunObservation
         private readonly Dictionary<string, int> _seenByKind = new();
         private readonly Dictionary<string, int> _visitedByKind = new();
         private readonly List<(Node2D Node, string Kind)> _places = new();
+        // Pièces des terres (plan 58 T1d), cœurs exclus : on y va toujours pour le gardien.
+        private readonly HashSet<(string Id, Vector2 Anchor)> _piecesPlaced = new();
+        private readonly HashSet<(string Id, Vector2 Anchor)> _piecesSeen = new();
+        private readonly List<string> _piecesSeenOrder = new();
         private double _firstSeen = -1;
         private Node2D _target;
         private string _targetKind;
@@ -153,6 +157,24 @@ public partial class RunObservation
                     if (_firstSeen < 0)
                         _firstSeen = t;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Pièce vue : le cadre recouvre la moitié centrale de son emprise. Les pièces des terres traversées comptent
+        /// comme posées, vues ou non.
+        /// </summary>
+        public void SamplePieces(Rect2 view, IReadOnlyList<PlacedPiece> pieces)
+        {
+            foreach (PlacedPiece piece in pieces)
+            {
+                if (piece.IsHeart)
+                    continue;
+                (string, Vector2) key = (piece.Piece.Id, piece.Anchor);
+                _piecesPlaced.Add(key);
+                Vector2 half = piece.Piece.Plan.HalfExtentPx * 0.5f;
+                if (view.Intersects(new Rect2(piece.Anchor - half, half * 2f)) && _piecesSeen.Add(key))
+                    _piecesSeenOrder.Add(piece.Piece.Id);
             }
         }
 
@@ -265,6 +287,8 @@ public partial class RunObservation
                     small += count;
             summary.Append(CultureInfo.InvariantCulture,
                 $" small_places_seen={small} small_place_every_s={(small > 0 ? seconds / small : 0):F0}");
+            summary.Append(CultureInfo.InvariantCulture,
+                $" pieces_seen={_piecesSeen.Count} pieces_placed={_piecesPlaced.Count} pieces_seen_ids={(_piecesSeenOrder.Count > 0 ? string.Join(',', _piecesSeenOrder) : "-")}");
             summary.Append(CultureInfo.InvariantCulture,
                 $" events={Events} events_per_min={Events / minutes:F2} essence_gained={EssenceGained} essence_spent={EssenceSpent} essence_gained_per_min={EssenceGained / minutes:F1}");
         }

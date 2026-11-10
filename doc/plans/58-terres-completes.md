@@ -266,3 +266,44 @@ Une première mesure, avant la règle des chemins, laissait le bot coincé 380 s
 Le bot ne se coince pas dans les nouvelles pièces : il vainc au moins les deux premiers gardiens aux deux graines, et le troisième à la graine 42, où la run va plus loin (distance doublée) avec moins d'éliminations. La densité de créatures reste dans le bruit.
 
 **Ce qui reste :** le mur de clôture se lit encore comme une suite de pans isolés, faute d'un décor de mur long. Le compte des pièces vues arrive avec T1d.
+
+## 12. T1d, le viaduc effondré et la mesure — livré le 10 novembre
+
+**Ce qui est fait :**
+- **Cinq décors neufs** (`tools/sprites/props/forest.py`) :
+  - deux piles de béton, l'une entière sous son chevêtre, l'autre cassée à mi-hauteur, fers à nu ;
+  - deux tronçons de tablier tombés, inclinés, l'asphalte et ses lignes blanches, la glissière tordue : l'un porte une voiture rouge écrasée, l'autre est fendu avec un jeune arbre dans la fente ;
+  - un panneau d'autoroute bleu tombé au sol.
+- **Le viaduc effondré**, quatrième pièce des bois : quatre piles en ligne, les deux tronçons de tablier tombés entre elles, une voiture-jardinière dessous, le panneau au sud, une seconde voiture une fois sur deux, des rochers, des arbres et des fougères qui reprennent le béton. Le Mémorial se tient au sud, entre les tronçons.
+- **Les bois posent trois ou quatre pièces parmi quatre** : on ne voit plus tout à chaque run.
+- **La mesure compte les pièces vues** (`RunObservation`) : `pieces_seen`, `pieces_placed` et `pieces_seen_ids` au résultat. Une pièce est vue quand le cadre de la caméra recouvre la moitié centrale de son emprise. Le cœur ne compte pas. La terre d'après la victoire recompose la carrière : ses pièces comptent deux fois.
+- **Le bot des terres contourne enfin** : son détour, quand il reste bloqué loin de sa cible, ne se déclenchait jamais. Le contrôle général du blocage remettait le chrono à zéro juste avant lui. À la graine 42, le bot restait coincé 450 s entre deux arbres de la clairière du Cerf, à 320 px du repaire. Le constat de blocage est désormais partagé entre les deux.
+
+**Vérifié :**
+- `tools/validate.sh` démarrage, catalogues, terres et mouvement : 3/4, puis le mouvement seul, relancé : 1/1. L'échec (« dash défaut : invulnérable pendant tout le dash ») est un minutage sous charge : ce lot ne touche ni au joueur ni au dash. Build sans avertissement.
+- **Placement** (`--capture-pieces`, bois en première terre) : graines 1 et 42, le viaduc posé et lisible.
+- **Captures** : [planches/plan58_t1d_viaduc_bois.png](planches/plan58_t1d_viaduc_bois.png), qui montre :
+  - la vue d'ensemble des bois avant T1 (T0, graine 7) : un semis uniforme ;
+  - la même vue après T1 : clairières et fourrés, quatre pièces neuves ;
+  - le viaduc de près (graine 42).
+- Pas de relecture `godot-reviewer` : le C# touché est l'outil de mesure (une quarantaine de lignes).
+
+**Mesure** (`measure_run`, profil dev, bot des terres corrigé des deux côtés, Éveillée, bois puis marais puis carrière, 600 s, graines 7, 42 et 11, avant au commit de T0, après au code final) :
+
+| | Avant, T0 (7 / 42 / 11) | Après, T1 (7 / 42 / 11) |
+|---|---|---|
+| Pièces des bois posées (hors cœur) | 2 / 2 / 2 | 4 / 4 / 3 |
+| Pièces des bois vues | 1 / 1 / 1 | 3 / 2 / 1 |
+| Pièces vues, trois terres | 4 / 5 / 3 | 6 / 6 / 3 |
+| Créatures visibles, 0-60 s | 13,8 / 20,2 / 19,9 | 12,4 / 25,1 / 19,9 |
+| Créatures visibles, 180-300 s | 19,6 / 24,4 / 23,1 | 23,9 / 20,7 / 24,5 |
+| Éliminations | 1 682 / 1 064 / 1 048 | 1 299 / 1 576 / 871 |
+| Distance parcourue (m) | 8 136 / 8 683 / 8 920 | 8 593 / 9 204 / 8 950 |
+| Gardiens vaincus | 3 / 3 / 3 | 3 / 3 / 3 |
+| Morts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Le bot voit une à trois pièces des bois sur trois ou quatre. Il va droit aux Mémoriaux, puis au cœur ; un joueur qui flâne en verra plus. Le belvédère n'est vu à aucune graine : son vide le pose loin des chemins. La densité de créatures reste dans le bruit, et les trois gardiens tombent à chaque graine, avant comme après.
+
+**Bilan de T1** : les bois ont un terrain rythmé (clairières, sous-bois, fourrés), un cœur fait main (la clairière du Cerf) et quatre pièces neuves, faites de vingt-quatre décors neufs. Trois ou quatre de ces pièces sont posées à chaque run.
+
+**Ce qui reste :** un tablier debout, sous lequel on passe, est en réserve ([§211](DECISIONS.md)). Le mur long de la maison engloutie manque toujours. Le Bas-Port (T2) suit, dans l'ordre du §5.

@@ -155,6 +155,34 @@
             { "sprites": ["prop_mushrooms"], "at": [240, -90], "blocking": false, "chance": 0.7 },
             { "sprites": ["prop_fallen_log"], "at": [340, 60], "blocking": true, "chance": 0.5 }
           ]
+        },
+        {
+          "_doc": "Le viaduc effondré (plan 58 T1d) : l'autoroute passait au-dessus des bois. Une ligne de piles d'est en ouest, debout ou cassées, et entre elles les tronçons du tablier tombés, l'un avec sa voiture, l'autre fendu où pousse un frêne ; une voiture écrasée dessous, le panneau de sortie couché. Le Mémorial se tient au sud, devant la ligne.",
+          "id": "viaduc_effondre",
+          "half_extent_px": [580, 320],
+          "memorial": [-40, 190],
+          "spur_start": [220, 290],
+          "elements": [
+            { "sprites": ["prop_viaduct_pier"], "at": [-470, -50], "blocking": true },
+            { "sprites": ["prop_viaduct_pier_broken"], "at": [-150, -50], "blocking": true },
+            { "sprites": ["prop_viaduct_pier_broken", "prop_viaduct_pier"], "at": [160, -50], "blocking": true },
+            { "sprites": ["prop_viaduct_pier"], "at": [480, -50], "blocking": true },
+            { "sprites": ["prop_viaduct_deck_car"], "at": [-310, 0], "blocking": true },
+            { "sprites": ["prop_viaduct_deck_split"], "at": [320, 10], "blocking": true },
+            { "sprites": ["prop_car_overgrown", "prop_car_overgrown_x"], "at": [10, -10], "blocking": true },
+            { "sprites": ["prop_highway_sign"], "at": [170, 170], "blocking": true },
+            { "sprites": ["prop_car_overgrown_x"], "at": [-330, 190], "blocking": true, "chance": 0.5 },
+            { "sprites": ["prop_rock_mossy", "prop_rock_mossy_v2"], "at": [-60, -90], "to": [80, -110], "step": 70, "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_tree_strangled"], "at": [-520, 120], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_tree_birch_base", "prop_tree_medium_base"], "at": [-260, -200], "blocking": true },
+            { "sprites": ["prop_tree_large_base", "prop_tree_large_v2_base"], "at": [300, -220], "blocking": true },
+            { "sprites": ["prop_tree_birch_base"], "at": [520, 170], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_tree_medium_base", "prop_tree_birch_base"], "at": [40, -230], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_bush", "prop_bush_v2"], "at": [-470, 40], "blocking": false },
+            { "sprites": ["prop_bush", "prop_bush_v2"], "at": [480, 40], "blocking": false, "chance": 0.7 },
+            { "sprites": ["prop_fern"], "at": [-200, 110], "to": [100, 110], "step": 100, "blocking": false, "chance": 0.6 },
+            { "sprites": ["prop_flowers", "prop_flowers_v2"], "at": [-160, 260], "to": [120, 270], "step": 90, "blocking": false, "chance": 0.5 }
+          ]
         }
       ]
     },

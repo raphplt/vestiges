@@ -1318,6 +1318,234 @@ def sunken_house(stem: str, seed: int, mirrored: bool) -> PropModel:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# Le viaduc effondré (plan 58 T1d)
+# ---------------------------------------------------------------------------------------------------------------------
+
+VIADUCT_CONCRETE = "#8E8C82"
+ASPHALT = "#615E58"
+LANE_WHITE = "#C9C4B4"
+GUARDRAIL = "#9A9C98"
+TAG_PINK = "#8A4E6E"
+SIGN_BLUE = "#33507E"
+
+
+def viaduct_pier(stem: str, seed: int, broken: bool) -> PropModel:
+    """
+    Pile du viaduc de l'autoroute, la route filant selon z : semelle, fût rectangulaire, chevêtre en marteau. Debout,
+    elle porte encore un moignon de tablier cassé net aux deux bouts, fers à béton pendants, glissières tordues ;
+    cassée, le fût s'arrête en dents à mi-hauteur, fers dressés, gravats au pied. Coulures, tag passé, mousse sur les
+    arêtes, lierre qui monte du pied.
+    """
+    (CONCRETE_M, STAIN, CRACK, REBAR, ASPHALT_M, LINE, RAIL, MOSS_M, MOSS_LIT, IVY_M, IVY_LIT, TAG, RUBBLE, GRASS) = range(14)
+    materials = [make_material("concrete", VIADUCT_CONCRETE), make_material("stain", "#66645C", contrast=0.8),
+                 make_material("crack", "#4A4842", contrast=0.5), make_material("rebar", RUST, contrast=0.6),
+                 make_material("asphalt", ASPHALT), make_material("lane", LANE_WHITE, contrast=0.6),
+                 make_material("guardrail", GUARDRAIL), make_material("moss", MOSS), make_material("moss_light", LEAF_LIGHT, contrast=0.8),
+                 make_material("ivy", IVY_LEAF), make_material("ivy_light", MOSS, contrast=0.8),
+                 make_material("tag", TAG_PINK, contrast=0.7), make_material("rubble", "#7E7C74"),
+                 make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    height = 5.4 * M
+    snap = (3.0 + w.uniform(0.0, 0.6)) * M if broken else height
+    deck_y = height + 1.15 * M
+    ends = (1.15 + w.uniform(0.0, 0.3), 1.0 + w.uniform(0.0, 0.3))
+    hanging = [(np.array([x * M, deck_y - 0.2 * M, side * e * M]), np.array([x * M + w.uniform(-0.2, 0.2) * M, deck_y - w.uniform(0.6, 1.2) * M,
+                side * (e + w.uniform(0.1, 0.35)) * M])) for side, e in ((1.0, ends[0]), (-1.0, ends[1])) for x in np.linspace(-2.0, 2.0, 6)]
+    standing = [(np.array([x * M, snap - 0.2 * M, z * M]), np.array([x * M + w.uniform(-0.15, 0.15) * M, snap + w.uniform(0.3, 0.8) * M, z * M]))
+                for x in (-0.35, 0.0, 0.35) for z in (-0.25, 0.25)]
+    chunks = [(np.array([w.uniform(-1.6, 1.6) * M, 0.1 * M, w.uniform(-1.2, 1.4) * M]), rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.4, 0.4)))
+              for _ in range(9 if broken else 4)]
+
+    def column(p: np.ndarray) -> np.ndarray:
+        d = np.minimum(rounded_box(p, (0.0, snap / 2, 0.0), (0.55 * M, snap / 2, 0.45 * M), 0.05 * M),
+                       rounded_box(p, (0.0, 0.15 * M, 0.0), (1.0 * M, 0.15 * M, 0.8 * M), 0.03 * M))
+        if broken:
+            return np.maximum(d, p[:, 1] - snap + (value_noise(p, 0.3 * M, seed + 1) - 0.5) * 0.9 * M)
+        cap = rounded_box(p, (0.0, height + 0.42 * M, 0.0), (2.3 * M, 0.42 * M, 0.6 * M), 0.05 * M)
+        deck = np.maximum(rounded_box(p, (0.0, deck_y, 0.0), (2.6 * M, 0.25 * M, 1.6 * M), 0.03 * M),
+                          np.where(p[:, 2] > 0, p[:, 2] - ends[0] * M, -p[:, 2] - ends[1] * M) + (value_noise(p, 0.25 * M, seed + 2) - 0.5) * 0.4 * M)
+        return np.minimum(np.minimum(d, cap), deck)
+
+    def rails(p: np.ndarray) -> np.ndarray:
+        if broken:
+            return np.full(len(p), np.inf)
+        posts = _union(*(capsule(p, (x * M, deck_y + 0.25 * M, z * M), (x * M, deck_y + 0.75 * M, z * M), 0.05 * M)
+                         for x in (-2.45, 2.45) for z in (-0.7, 0.5)))
+        bars = _union(capsule(p, (2.45 * M, deck_y + 0.65 * M, -ends[1] * M), (2.45 * M, deck_y + 0.7 * M, ends[0] * M), 0.06 * M),
+                      capsule(p, (-2.45 * M, deck_y + 0.65 * M, -ends[1] * M), (-2.6 * M, deck_y + 0.2 * M, ends[0] * M + 0.4 * M), 0.06 * M))
+        return np.minimum(posts, bars)
+
+    top = lambda p: p[:, 1] - (deck_y + 0.15 * M)
+    # Coulures sous le chevêtre et le long du fût, humidité au pied.
+    stains = either(noise_mask(0.18 * M, seed + 3, 0.35, (1.0, 7.0, 1.0)), lambda p: p[:, 1] - (0.6 + value_noise(p, 0.5 * M, seed + 4) * 0.8) * M)
+    tag = both(lambda p: np.abs(p[:, 1] - 1.4 * M) - 0.35 * M, lambda p: np.abs(p[:, 0] + 0.05 * M) - 0.4 * M,
+               noise_mask(0.09 * M, seed + 5, 0.55), lambda p: 0.3 * M - p[:, 2])
+    ivy = both(lambda p: p[:, 1] - (0.5 + 1.4 * value_noise(p, 0.7 * M, seed + 6)) * M, noise_mask(0.35 * M, seed + 7, 0.45))
+    moss = both(_top_skin(column, 0.06 * M), noise_mask(0.3 * M, seed + 8, 0.3))
+
+    def parts() -> list[Part]:
+        result = [
+            Part(column, CONCRETE_M),
+            Part(painted(column, stains), STAIN, relief=False),
+            Part(painted(column, cracks(0.7 * M, seed + 9, 0.025 * M, reach=0.35 if broken else 0.2)), CRACK, relief=False),
+            Part(painted(column, tag), TAG, relief=False),
+            Part(painted(column, moss, 0.03 * M), MOSS_M),
+            Part(painted(column, both(moss, noise_mask(0.1 * M, seed + 10, 0.3)), 0.035 * M), MOSS_LIT, relief=False),
+            Part(painted(column, ivy, 0.05 * M), IVY_M),
+            Part(painted(column, both(ivy, noise_mask(0.14 * M, seed + 11, 0.35)), 0.06 * M), IVY_LIT, relief=False),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.035 * M) for a, b in (standing if broken else hanging))), REBAR),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.28 * M, 0.14 * M, 0.2 * M), 0.03 * M, r) for c, r in chunks)), RUBBLE),
+            Part(_grass(w, [(x * M, z * M) for x, z in ((-1.0, 0.9), (0.9, 0.8), (1.1, -0.6), (-0.8, -0.7))], 7, 0.45 * M), GRASS),
+        ]
+        if not broken:
+            result += [
+                Part(painted(column, top, 0.025 * M), ASPHALT_M, relief=False),
+                Part(painted(column, both(top, lambda p: np.abs(p[:, 0]) - 0.07 * M, lambda p: np.mod(p[:, 2], 1.6 * M) - 0.8 * M), 0.03 * M),
+                     LINE, relief=False),
+                Part(rails, RAIL),
+            ]
+        return result
+
+    top_y = (deck_y + 1.2 * M) if not broken else snap + 1.2 * M
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=float(2.5 * top_y), canvas=(180, 200),
+                     footprint=box_footprint(0.6 * M, 0.5 * M), bounds=((-3.0 * M, 0.0, -2.6 * M), (3.0 * M, top_y, 2.6 * M)))
+
+
+def fallen_deck(stem: str, seed: int, with_car: bool) -> PropModel:
+    """
+    Tronçon de tablier tombé, la route filant selon z : une dalle d'enrobé cassée net aux deux bouts, un bout au sol,
+    l'autre levé sur un moignon de pile et ses gravats. Ligne blanche en tirets, glissière tordue sur un bord, fers
+    pendants, mousse dans l'enrobé. L'un porte encore une voiture, l'autre est fendu et un frêne y pousse.
+    """
+    (CONCRETE_M, ASPHALT_M, LINE, CRACK, REBAR, RAIL, MOSS_M, MOSS_LIT, RUBBLE, SAPLING, LEAF, LEAF_TOP, IVY_M, GRASS) = range(14)
+    materials = [make_material("concrete", VIADUCT_CONCRETE), make_material("asphalt", ASPHALT),
+                 make_material("lane", LANE_WHITE, contrast=0.6), make_material("crack", "#2E2C2A", contrast=0.5),
+                 make_material("rebar", RUST, contrast=0.6), make_material("guardrail", GUARDRAIL),
+                 make_material("moss", MOSS), make_material("moss_light", LEAF_LIGHT, contrast=0.8),
+                 make_material("rubble", "#7E7C74"), make_material("sapling", TRUNK), make_material("leaf", MOSS),
+                 make_material("leaf_top", LEAF_LIGHT, contrast=0.9), make_material("ivy", IVY_LEAF),
+                 make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    half_len = 4.2 * M
+    lift = (2.2 if with_car else 1.1) * M
+    angle = -float(np.arcsin(lift / (2.0 * half_len)))
+    tilt = rotation_x(angle)
+    center = np.array([0.0, lift / 2 + 0.3 * M, 0.0])
+    frame = lambda p: (p - center) @ tilt
+    raised = center + tilt @ np.array([0.0, -0.3 * M, half_len])
+    stub_top = raised[1]
+    chunks = [(np.array([w.uniform(-2.2, 2.2) * M, 0.1 * M, raised[2] + w.uniform(-0.8, 1.4) * M]),
+               rotation_y(w.uniform(0, np.pi)) @ rotation_z(w.uniform(-0.4, 0.4))) for _ in range(10)]
+    hanging = [(np.array([x * M, -0.2 * M, half_len - 0.1 * M]), np.array([x * M + w.uniform(-0.2, 0.2) * M, -w.uniform(0.6, 1.1) * M, half_len + 0.3 * M]))
+               for x in np.linspace(-1.8, 1.8, 5)]
+    crack_z = w.uniform(-0.8, 0.8) * M
+    trunk = _gnarled(w, np.array([0.4 * M, 0.25 * M, crack_z]), np.array([0.1, 1.0, 0.0]), 2.4 * M, 3, wobble=0.15)
+    crown = [trunk[-1] + np.array([w.uniform(-0.7, 0.7) * M, w.uniform(-0.2, 0.6) * M, w.uniform(-0.6, 0.6) * M]) for _ in range(6)]
+    vehicle = car(f"{stem}_car", "red", AXIS_X_YAW, seed + 40) if with_car else None
+    car_turn = rotation_y(w.uniform(0.1, 0.25))
+    car_at = np.array([-0.85 * M, 0.3 * M, 0.6 * M])
+
+    def slab(p: np.ndarray) -> np.ndarray:
+        q = frame(p)
+        d = rounded_box(q, (0.0, 0.0, 0.0), (2.2 * M, 0.3 * M, half_len), 0.03 * M)
+        d = np.maximum(d, np.abs(q[:, 2]) - half_len + 0.2 * M + (value_noise(q, 0.3 * M, seed + 1) - 0.5) * 0.5 * M)
+        if not with_car:
+            d = np.maximum(d, 0.12 * M - np.abs(q[:, 2] - crack_z + (value_noise(q, 0.2 * M, seed + 2) - 0.5) * 0.4 * M))
+        return d
+
+    def stub(p: np.ndarray) -> np.ndarray:
+        if not with_car:
+            return np.full(len(p), np.inf)
+        return np.maximum(rounded_box(p, (0.0, stub_top / 2, raised[2] - 0.3 * M), (0.55 * M, stub_top / 2, 0.45 * M), 0.05 * M),
+                          p[:, 1] - stub_top + 0.1 * M + (value_noise(p, 0.3 * M, seed + 3) - 0.5) * 0.4 * M)
+
+    concrete = lambda p: np.minimum(slab(p), stub(p))
+    top = lambda p: 0.22 * M - frame(p)[:, 1]
+    dashes = both(top, lambda p: np.abs(frame(p)[:, 0]) - 0.07 * M, lambda p: np.mod(frame(p)[:, 2], 2.4 * M) - 1.0 * M)
+    moss = both(top, noise_mask(0.35 * M, seed + 4, 0.22))
+
+    def rails(p: np.ndarray) -> np.ndarray:
+        q = frame(p)
+        bend = 0.0 if with_car else 0.6 * M
+        posts = _union(*(capsule(q, (2.05 * M, 0.3 * M, z * M), (2.05 * M + (bend if z > 1.5 else 0.0), 0.85 * M, z * M), 0.05 * M)
+                         for z in (-3.4, -2.0, -0.6, 0.8, 2.2)))
+        bar = _union(capsule(q, (2.05 * M, 0.75 * M, -3.8 * M), (2.05 * M, 0.75 * M, 1.4 * M), 0.07 * M),
+                     capsule(q, (2.05 * M, 0.75 * M, 1.4 * M), (2.4 * M + bend, 0.4 * M, 3.3 * M), 0.07 * M))
+        return np.minimum(posts, bar)
+
+    def parts() -> list[Part]:
+        result = [
+            Part(concrete, CONCRETE_M),
+            Part(painted(slab, top, 0.025 * M), ASPHALT_M, relief=False),
+            Part(painted(slab, dashes, 0.03 * M), LINE, relief=False),
+            Part(painted(concrete, cracks(0.8 * M, seed + 5, 0.03 * M, reach=0.3)), CRACK, relief=False),
+            Part(painted(slab, moss, 0.035 * M), MOSS_M),
+            Part(painted(slab, both(moss, noise_mask(0.12 * M, seed + 6, 0.3)), 0.04 * M), MOSS_LIT, relief=False),
+            Part(lambda p: _union(*(capsule(frame(p), a, b, 0.035 * M) for a, b in hanging)), REBAR),
+            Part(rails, RAIL),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.3 * M, 0.16 * M, 0.22 * M), 0.03 * M, r) for c, r in chunks)), RUBBLE),
+            Part(_grass(w, [(x * M, z * M) for x, z in ((-2.3, -3.6), (2.3, -3.2), (-2.4, 1.0), (2.2, 3.4), (0.0, -4.4))], 7, 0.45 * M), GRASS),
+        ]
+        if vehicle is not None:
+            offset = len(materials)
+            for part in vehicle.parts():
+                result.append(Part(lambda p, d=part.distance: d((frame(p) - car_at) @ car_turn), part.material + offset, part.relief))
+        else:
+            leaves = _leaf_mass(crown, [np.array([0.5, 0.4, 0.45]) * M] * len(crown), seed + 7, per=6, ratio=0.5)
+            result += [
+                Part(_branch_chain(trunk, 0.09 * M, 0.04 * M), SAPLING),
+                Part(leaves, LEAF),
+                Part(painted(leaves, lambda p: trunk[-1][1] + 0.2 * M - p[:, 1] + (value_noise(p, 0.2 * M, seed + 8) - 0.5) * 0.3 * M), LEAF_TOP, relief=False),
+                Part(_leaf_cluster([np.array([x * M, 0.1 * M, -half_len + 0.3 * M]) for x in (-1.5, -0.4, 0.9)],
+                                   [np.array([0.0, 0.3, -1.0])] * 3, [0.16 * M] * 3), IVY_M),
+            ]
+        return result
+
+    all_materials = materials + (list(vehicle.materials) if vehicle is not None else [])
+    top_y = lift + (2.4 if with_car else 3.4) * M
+    return PropModel(stem, parts, all_materials, AXIS_X_YAW, ray_range=float(2.5 * max(top_y, half_len + 1.5 * M)), canvas=(270, 210),
+                     footprint=box_footprint(2.3 * M, half_len), bounds=((-3.2 * M, -0.5 * M, -half_len - 1.5 * M), (3.2 * M, top_y, half_len + 1.8 * M)))
+
+
+def highway_sign(stem: str, seed: int) -> PropModel:
+    """
+    Panneau de direction de l'autoroute tombé du portique : un grand panneau bleu bordé de blanc, couché en biais
+    contre ses deux poteaux tordus ; lignes de lettres illisibles, une flèche, rouille aux coins, herbe qui le gagne.
+    """
+    PANEL, BORDER, LETTERS, POST, RUST_M, GRASS = range(6)
+    materials = [make_material("panel", SIGN_BLUE), make_material("border", SIGN_WHITE, contrast=0.6),
+                 make_material("letters", SIGN_WHITE, contrast=0.6), make_material("post", GUARDRAIL),
+                 make_material("rust", RUST, contrast=0.7), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    lean = rotation_x(-1.05) @ rotation_z(w.uniform(-0.12, 0.12))
+    origin = np.array([0.0, 0.25 * M, -0.2 * M])
+    local = lambda p: (p - origin) @ lean
+
+    def panel(p: np.ndarray) -> np.ndarray:
+        return rounded_box(local(p), (0.0, 0.7 * M, 0.0), (1.4 * M, 0.7 * M, 0.04 * M), 0.02 * M)
+
+    face = lambda p: -local(p)[:, 2]
+    border = both(face, lambda p: -np.maximum(np.abs(local(p)[:, 0]) - 1.28 * M, np.abs(local(p)[:, 1] - 0.7 * M) - 0.58 * M))
+    rows = both(face, lambda p: np.abs(np.mod(local(p)[:, 1] - 0.35 * M, 0.38 * M) - 0.19 * M) - 0.07 * M,
+                lambda p: np.abs(local(p)[:, 0] + 0.25 * M) - 0.85 * M, lambda p: np.abs(local(p)[:, 1] - 0.7 * M) - 0.45 * M,
+                noise_mask(0.07 * M, seed + 1, 0.8, (1.0, 4.0, 1.0)))
+    arrow = both(face, lambda p: np.maximum(np.abs(local(p)[:, 0] - 0.95 * M) - 0.12 * M, np.abs(local(p)[:, 1] - 0.7 * M) - 0.35 * M))
+
+    def parts() -> list[Part]:
+        posts = lambda p: _union(*(capsule(p, (x * M, 0.0, 0.3 * M), (x * M + w.uniform(-0.1, 0.1) * M, 0.6 * M, -0.1 * M), 0.07 * M) for x in (-0.9, 0.9)))
+        return [
+            Part(panel, PANEL),
+            Part(painted(panel, border, 0.015 * M), BORDER, relief=False),
+            Part(painted(panel, either(rows, arrow), 0.02 * M), LETTERS, relief=False),
+            Part(painted(panel, both(noise_mask(0.12 * M, seed + 2, 0.25), lambda p: 1.1 * M - np.abs(local(p)[:, 0]) - 0.0 * M)), RUST_M, relief=False),
+            Part(posts, POST),
+            Part(_grass(w, [(x * M, z * M) for x, z in ((-1.4, 0.4), (1.3, 0.2), (0.2, 0.9), (-0.6, -0.8))], 7, 0.45 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(20.0)), canvas=(120, 100), footprint=box_footprint(1.4 * M, 0.5 * M))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -1367,5 +1595,10 @@ def catalog() -> list[PropModel]:
         sunken_house("prop_sunken_house_a", 561, False),
         sunken_house("prop_sunken_house_b", 562, True),
         overgrown_car("prop_car_overgrown_x", 571, AXIS_X_YAW),
+        viaduct_pier("prop_viaduct_pier", 581, False),
+        viaduct_pier("prop_viaduct_pier_broken", 582, True),
+        fallen_deck("prop_viaduct_deck_car", 591, True),
+        fallen_deck("prop_viaduct_deck_split", 592, False),
+        highway_sign("prop_highway_sign", 601),
     ]
     return models

@@ -2562,3 +2562,14 @@ Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1c ».
 - **« Engloutie » veut dire mangée par la forêt**, pas enfoncée dans le sol : lierre, mousse, un frêne contre le pignon, le jardin en sous-bois.
 - **La voiture-jardinière reste la voiture envahie** existante, déclinée dans l'autre orientation ; la balançoire n'a pas d'interaction (l'idée de la balançoire fantôme reste en réserve).
 - **Les pièces de démonstration des bois partent** : la vieille route et le cercle de pierres. Leurs décors restent au semis.
+
+## 211. Le viaduc effondré et la mesure des pièces vues — 10 novembre 2026
+
+Lot T1d du [plan 58](58-terres-completes.md), dans le découpage du §207. Détail au plan 58 §12.
+
+Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1d ».
+
+**Tranché par défaut, réversible :**
+- **Le viaduc est tombé, pas debout** : des piles, des tronçons de tablier au sol, rien sous quoi passer. Un tablier debout demanderait une canopée qui ne se balance pas au vent, et un passage dessous ; c'est en réserve si Raphaël le veut.
+- **Les bois posent trois ou quatre pièces parmi quatre**, comme le réglage commun : on ne voit pas tout à chaque run.
+- **Une pièce est « vue »** quand le cadre de la caméra recouvre la moitié centrale de son emprise ; le cœur ne compte pas, on y va toujours.
