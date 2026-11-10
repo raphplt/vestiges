@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**10 novembre — l'aire de pique-nique et la maison engloutie ([plan 58 T1c](58-terres-completes.md), §210) :** neuf décors neufs aux bois (tables, balançoire, barbecue, poubelle, boîte aux lettres, maison mangée de lierre, voiture-jardinière). Deux pièces les composent et remplacent les démonstrations de T0 : les bois posent trois pièces faites main par run. Suite : T1d, le viaduc effondré et la mesure des pièces vues.
+
 **10 novembre — la clairière du Cerf et le belvédère ([plan 58 T1b](58-terres-completes.md), §209) :** dix décors neufs aux bois (pierres dressées, lit de mousse, table d'orientation, bancs, rambarde, longue-vue). Le Cerf dort dans un cercle de pierres ouvert à l'ouest. Le belvédère borde un pan de vide creusé dans la terre (clé `void` d'une pièce), où pousser la horde ; aucun chemin n'y mène. Suite : T1c, l'aire de pique-nique et la maison engloutie.
 
 **10 novembre — les bois prennent du rythme ([plan 58 T1a](58-terres-completes.md), §207, §208) :** un bruit lent découpe la terre des bois en clairières, sous-bois et fourrés, réglés en JSON (`rhythm` dans le fichier de décors du biome) et réutilisables par les autres terres. Les clairières ouvrent le bois, les fourrés le serrent avec des trouées. Les décors augmentent de 11 %, la densité de créatures ne bouge pas, et le bot vainc le Cerf aux deux graines. Suite : T1b, la clairière du Cerf et le belvédère.

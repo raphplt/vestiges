@@ -368,8 +368,9 @@ def building(spec: BuildingSpec) -> PropModel:
     def floors(p: np.ndarray) -> np.ndarray:
         # Planchers visibles dans les brèches, un peu moins rongés que les murs ; dans l'effondrement, un pan de
         # plancher cassé pend encore à son bord, incliné vers la rue.
-        slabs = _union(*(_box(p, (0, k * STOREY, 0), (half_w - 0.05 * M, 0.12 * M, half_d - 0.05 * M))
-                         for k in range(1, spec.storeys)))
+        # Un plain-pied n'a pas de plancher intermédiaire.
+        slabs = _union(np.full(len(p), np.inf), *(_box(p, (0, k * STOREY, 0), (half_w - 0.05 * M, 0.12 * M, half_d - 0.05 * M))
+                                                   for k in range(1, spec.storeys)))
         result = np.maximum(slabs, -collapse_cut(p, 0.85))
         if hanging:
             result = np.minimum(result, _union(*(rounded_box(p, c, h, 0.02 * M, r) for c, h, r in hanging)))

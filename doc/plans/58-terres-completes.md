@@ -231,3 +231,38 @@ La densité de créatures reste dans le bruit d'une graine à l'autre. Les fourr
 Une première mesure, avant la règle des chemins, laissait le bot coincé 380 s à la graine 42 : il avait abandonné un Mémorial, n'en avait que deux sur trois et attendait au départ. Le bot va en ligne droite, sans contourner le vide ni la rambarde. Avec le code final, il n'y a plus de blocage. Aucune créature n'est comptée tombée dans le vide : le bot ne pousse pas la horde, seul un joueur le fera.
 
 **Ce qui reste :** la rambarde déborde parfois d'une demi-cellule sur le Néant, qui se creuse par cellules de 128 px (visuel seulement). Les deux pièces de démonstration attendent T1c et T1d.
+
+## 11. T1c, l'aire de pique-nique et la maison engloutie — livré le 10 novembre
+
+**Ce qui est fait :**
+- **Neuf décors neufs** (`tools/sprites/props/forest.py`) :
+  - deux tables de pique-nique à bancs pris dans les pieds (deux orientations), l'un des bancs tombé ;
+  - une balançoire rouillée dont une planchette traîne au sol ;
+  - un barbecue maçonné, une poubelle de tôle sur poteau ;
+  - une boîte aux lettres à porte pendante ;
+  - deux maisons englouties (deux sens) ;
+  - une seconde voiture-jardinière, de l'autre orientation.
+- **La maison engloutie** reprend le pavillon de la ferme (`building`), de plain-pied. Le lierre couvre les murs presque jusqu'au toit et coule de l'égout, la mousse prend le versant, un frêne monte contre le pignon et des buissons atteignent les appuis de fenêtre. Le générateur de bâtiments accepte désormais un seul niveau ; les bâtiments existants ne changent pas.
+- **L'aire de pique-nique**, pièce des bois : deux rangées de tables sur une pelouse, des barbecues au fond, des poubelles entre les tables, une balançoire et un banc à l'écart, un panneau à l'entrée. Le Mémorial se tient à l'ouest de la pelouse.
+- **La maison engloutie**, pièce des bois : le pavillon au milieu d'un jardin redevenu sous-bois, la voiture dans l'allée (deux places possibles), la boîte aux lettres au portail, des pans du mur de clôture au sud, des haies folles sur les côtés. Le Mémorial se tient dans le jardin, au sud-est.
+- **Les deux pièces de démonstration des bois sont retirées** : la vieille route et le cercle de pierres. Les bois ont trois pièces neuves (belvédère, pique-nique, maison), toutes posées à chaque run jusqu'au viaduc de T1d.
+
+**Vérifié :**
+- `tools/validate.sh` : démarrage et catalogues, puis catalogues, terres et mouvement (3/3) avec le JSON définitif. Pas de C# touché, donc pas de relecture `godot-reviewer`.
+- **Placement** (`--capture-pieces`, bois en première terre, graines 1, 2, 3, 5, 7, 11, 13, 17, 42, 99) : le cœur et les trois pièces sont posés dix fois sur dix, en 15 à 30 ms.
+- Captures : [planches/plan58_t1c_pique_nique_maison.png](planches/plan58_t1c_pique_nique_maison.png). Une première version éparpillait quatre tables sur une grande pelouse et alignait le mur en moignons ; les tables sont passées en deux rangées et le mur en quelques pans espacés.
+
+**Mesure** (`measure_run`, profil dev, bot des terres, Facteur, bois puis marais puis carrière, 600 s, graines 7 et 42, avant au commit de T1b, après au code final) :
+
+| | Avant (7 / 42) | Après (7 / 42) |
+|---|---|---|
+| Créatures visibles, 0-60 s | 13,9 / 31,6 | 13,9 / 17,7 |
+| Créatures visibles, 180-300 s | 18,2 / 21,7 | 19,1 / 24,4 |
+| Éliminations | 2 071 / 1 310 | 1 762 / 689 |
+| Distance parcourue (m) | 5 729 / 5 549 | 5 416 / 10 168 |
+| Gardiens vaincus | 2 / 2 | 2 / 3 |
+| Morts | 0 / 0 | 0 / 0 |
+
+Le bot ne se coince pas dans les nouvelles pièces : il vainc au moins les deux premiers gardiens aux deux graines, et le troisième à la graine 42, où la run va plus loin (distance doublée) avec moins d'éliminations. La densité de créatures reste dans le bruit.
+
+**Ce qui reste :** le mur de clôture se lit encore comme une suite de pans isolés, faute d'un décor de mur long. Le compte des pièces vues arrive avec T1d.

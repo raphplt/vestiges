@@ -2550,3 +2550,15 @@ Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1b ».
 - **Les cellules creusées sortent de la terre à perdre** : la part debout reste à 1 à l'arrivée.
 - **Les deux pièces de démonstration restent** (vieille route, cercle de pierres) jusqu'à ce que T1c et T1d les remplacent.
 - **Le belvédère part avec le vide** si l'essai du vide (étape 4) le retire : il garde alors sa rambarde au bord d'une pente.
+
+## 210. L'aire de pique-nique et la maison engloutie — 10 novembre 2026
+
+Lot T1c du [plan 58](58-terres-completes.md), dans le découpage du §207. Détail au plan 58 §11.
+
+Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1c ».
+
+**Tranché par défaut, réversible :**
+- **La maison est un pavillon de plain-pied** tiré de la ferme : il se voit de loin sans masquer ce qu'il y a derrière lui.
+- **« Engloutie » veut dire mangée par la forêt**, pas enfoncée dans le sol : lierre, mousse, un frêne contre le pignon, le jardin en sous-bois.
+- **La voiture-jardinière reste la voiture envahie** existante, déclinée dans l'autre orientation ; la balançoire n'a pas d'interaction (l'idée de la balançoire fantôme reste en réserve).
+- **Les pièces de démonstration des bois partent** : la vieille route et le cercle de pierres. Leurs décors restent au semis.

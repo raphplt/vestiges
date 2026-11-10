@@ -22,6 +22,7 @@ from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation
 from ._flora import _align_y, _bounded, _branch_chain, _gnarled, _grass, _grooves, _leaf_mass, _shelves, _top_skin, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from ._surface import bands, both, bricks, cracks, either, noise_mask, painted, value_noise
+from .buildings import CELL_WIDTH, ROW_DEPTH, STOREY, BuildingSpec, building
 from .urban import car
 
 # Palette forêt (charte §3).
@@ -1051,6 +1052,272 @@ def spyglass(stem: str, seed: int) -> PropModel:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+# L'aire de pique-nique et la maison engloutie (plan 58 T1c)
+# ---------------------------------------------------------------------------------------------------------------------
+
+WOOD_GREY = "#A39276"
+WOOD_GREY_DARK = "#5C5143"
+SWING_RED = "#8A4A3C"
+BIN_GREEN = "#5E8452"
+POST_YELLOW = "#B8973E"
+SOOT = "#2C2826"
+HOUSE_PLASTER = "#A99B84"
+
+
+def picnic_table(stem: str, seed: int, yaw: float) -> PropModel:
+    """
+    Table de pique-nique des dimanches, longue selon z : plateau de planches grisées, deux bancs pris dans les mêmes
+    pieds en A, une planche du plateau fendue et une du banc tombée ; mousse dans les jours, herbes hautes aux pieds.
+    """
+    WOOD, WOOD_DARK, MOSS_M, MOSS_LIT, GRASS = range(5)
+    materials = [make_material("wood", WOOD_GREY), make_material("wood_dark", WOOD_GREY_DARK, contrast=0.6),
+                 make_material("moss", MOSS), make_material("moss_light", LEAF_LIGHT, contrast=0.8),
+                 make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    length = 0.95 * M
+    fallen = w.choice([-1.0, 1.0])
+    ends = (-length * 0.72, length * 0.72)
+
+    def parts() -> list[Part]:
+        top = lambda p: _union(*(rounded_box(p, (x * M, 0.76 * M, 0.0), (0.085 * M, 0.03 * M, length), 0.012 * M)
+                                 for x in (-0.27, -0.09, 0.09, 0.27)))
+        benches = lambda p: _union(*(rounded_box(p, (side * 0.62 * M, 0.45 * M, 0.0), (0.13 * M, 0.028 * M, length), 0.012 * M)
+                                     for side in (-1.0, 1.0) if side != fallen),
+                                   rounded_box(p, (fallen * 0.98 * M, 0.035 * M, 0.12 * M), (0.13 * M, 0.028 * M, length * 0.9),
+                                               0.012 * M, rotation_y(0.18)))
+        legs = lambda p: _union(*(np.minimum(np.minimum(capsule(p, (-0.72 * M, 0.0, z), (-0.12 * M, 0.74 * M, z), 0.045 * M),
+                                                        capsule(p, (0.72 * M, 0.0, z), (0.12 * M, 0.74 * M, z), 0.045 * M)),
+                                             capsule(p, (-0.78 * M, 0.42 * M, z), (0.78 * M, 0.42 * M, z), 0.035 * M)) for z in ends))
+        wood = lambda p: np.minimum(np.minimum(top(p), benches(p)), legs(p))
+        moss = both(_top_skin(wood, 0.05 * M), noise_mask(0.25 * M, seed + 2, 0.12))
+        return [
+            Part(wood, WOOD),
+            Part(painted(wood, bands(0, 0.18 * M, 0.025 * M, offset=0.09 * M)), WOOD_DARK, relief=False),
+            Part(painted(wood, moss, 0.02 * M), MOSS_M),
+            Part(painted(wood, both(moss, noise_mask(0.08 * M, seed + 3, 0.3)), 0.025 * M), MOSS_LIT, relief=False),
+            Part(_grass(w, [(x * 0.72 * M, z) for x in (-1, 1) for z in ends] + [(0.0, 0.0)], 6, 0.38 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, yaw, canvas=(80, 64), footprint=box_footprint(0.75 * M, length))
+
+
+def swing_set(stem: str, seed: int) -> PropModel:
+    """
+    Portique de balançoire rouillé, long selon z : deux pieds en A de tube peint d'un rouge passé, une traverse ; une
+    planchette pend encore à ses deux chaînes, l'autre n'en a plus qu'une et traîne dans l'herbe. Le lierre a pris un
+    pied, l'herbe monte sous les planchettes.
+    """
+    TUBE, RUST_M, RUST_LIT, CHAIN, SEAT, STEM_M, LEAF, GRASS = range(8)
+    materials = [make_material("tube", SWING_RED), make_material("rust", RUST, contrast=0.7),
+                 make_material("rust_light", RUST_ORANGE, contrast=0.7), make_material("chain", "#4A4440", contrast=0.5),
+                 make_material("seat", WOOD_GREY), make_material("ivy_stem", "#4A3A2C", contrast=0.6),
+                 make_material("ivy", IVY_LEAF), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    span = 1.15 * M
+    beam = 2.2 * M
+    tilt = rotation_x(w.uniform(0.05, 0.12))
+    hung = -0.45 * M
+    loose = 0.45 * M
+    ivy_points = [np.array([-0.7 * M + 0.7 * M * t, beam * t, -span]) for t in (0.08, 0.2, 0.33, 0.45, 0.58)]
+
+    def parts() -> list[Part]:
+        frame = lambda p: _union(capsule(p, (0.0, beam, -span), (0.0, beam, span), 0.06 * M),
+                                 *(capsule(p, (x * 0.75 * M, 0.0, z), (0.0, beam, z), 0.05 * M) for x in (-1, 1) for z in (-span, span)))
+        chains = lambda p: _union(*(capsule(p @ tilt, (0.0, beam, hung + dz), (0.0, 0.58 * M, hung + dz), 0.03 * M) for dz in (-0.2 * M, 0.2 * M)),
+                                  capsule(p, (0.0, beam, loose - 0.2 * M), (0.12 * M, 0.12 * M, loose + 0.05 * M), 0.03 * M))
+        seats = lambda p: np.minimum(rounded_box(p @ tilt, (0.0, 0.55 * M, hung), (0.13 * M, 0.03 * M, 0.26 * M), 0.015 * M),
+                                     rounded_box(p @ rotation_x(0.45), (0.12 * M, 0.12 * M, loose), (0.13 * M, 0.03 * M, 0.26 * M), 0.015 * M))
+        rust = noise_mask(0.14 * M, seed + 1, 0.4)
+        return [
+            Part(frame, TUBE),
+            Part(painted(frame, rust), RUST_M, relief=False),
+            Part(painted(frame, both(rust, noise_mask(0.06 * M, seed + 2, 0.35))), RUST_LIT, relief=False),
+            Part(chains, CHAIN),
+            Part(seats, SEAT),
+            Part(_branch_chain(ivy_points, 0.03 * M, 0.02 * M), STEM_M),
+            Part(_leaf_cluster(ivy_points[1:], [np.array([-1.0, 0.3, 0.4])] * 4, [0.12 * M] * 4), LEAF),
+            Part(_grass(w, [(x * 0.75 * M, z) for x in (-1, 1) for z in (-span, span)] + [(0.0, hung), (0.05 * M, loose)], 6, 0.4 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(96, 100), footprint=box_footprint(0.8 * M, span))
+
+
+def barbecue(stem: str, seed: int) -> PropModel:
+    """
+    Barbecue maçonné de l'aire de pique-nique : un foyer de briques ouvert devant, une grille rouillée affaissée, un
+    dosseret et une courte cheminée ; suie autour de la bouche, mousse sur les arêtes, cendres froides au pied.
+    """
+    BRICK_M, JOINT, SOOT_M, GRILL, MOSS_M, ASH, GRASS = range(7)
+    materials = [make_material("brick", BRICK), make_material("mortar", MORTAR, contrast=0.6),
+                 make_material("soot", SOOT, contrast=0.5), make_material("grill", RUST),
+                 make_material("moss", MOSS), make_material("ash", "#8A8580", contrast=0.6),
+                 make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    sag = rotation_x(w.uniform(0.08, 0.16))
+
+    def parts() -> list[Part]:
+        hearth = lambda p: np.maximum(rounded_box(p, (0.0, 0.42 * M, 0.0), (0.55 * M, 0.42 * M, 0.38 * M), 0.03 * M),
+                                      -rounded_box(p, (0.0, 0.42 * M, 0.2 * M), (0.36 * M, 0.26 * M, 0.3 * M), 0.02 * M))
+        back = lambda p: np.minimum(rounded_box(p, (0.0, 1.05 * M, -0.28 * M), (0.55 * M, 0.25 * M, 0.1 * M), 0.03 * M),
+                                    rounded_box(p, (0.25 * M, 1.45 * M, -0.28 * M), (0.14 * M, 0.25 * M, 0.12 * M), 0.02 * M))
+        masonry = lambda p: np.minimum(hearth(p), back(p))
+        grill = lambda p: _union(*(capsule(p @ sag, (x * M, 0.86 * M, -0.2 * M), (x * M, 0.86 * M, 0.32 * M), 0.018 * M)
+                                   for x in np.linspace(-0.4, 0.4, 7)))
+        soot = lambda p: np.maximum(np.abs(p[:, 0]) - 0.42 * M, np.abs(p[:, 1] - 0.5 * M) - 0.38 * M) \
+            + (value_noise(p, 0.12 * M, seed + 1) - 0.5) * 0.2 * M
+        return [
+            Part(masonry, BRICK_M),
+            Part(painted(masonry, bricks(0.16 * M, 0.36 * M, 0.04 * M)), JOINT, relief=False),
+            Part(painted(masonry, both(soot, lambda p: 0.0 - p[:, 2])), SOOT_M, relief=False),
+            Part(grill, GRILL),
+            Part(painted(masonry, both(_top_skin(masonry, 0.06 * M), noise_mask(0.15 * M, seed + 2, 0.4)), 0.02 * M), MOSS_M),
+            Part(lambda p: ellipsoid(p, (0.05 * M, 0.02 * M, 0.55 * M), (0.35 * M, 0.06 * M, 0.2 * M)), ASH),
+            Part(_grass(w, [(-0.6 * M, 0.3 * M), (0.62 * M, 0.2 * M), (0.5 * M, -0.4 * M)], 6, 0.34 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(25.0)), canvas=(64, 72), footprint=box_footprint(0.55 * M, 0.38 * M))
+
+
+def trash_bin(stem: str, seed: int) -> PropModel:
+    """
+    Poubelle de l'aire, un panier de tôle vert sur un poteau de bois : le panier a basculé sur sa vis, la tôle est
+    cabossée et rouillée au fond ; des sacs crevés et des canettes traînent dans l'herbe au pied.
+    """
+    POST, TIN, RUST_M, BAG, CAN, GRASS = range(6)
+    materials = [make_material("post", "#7A6A54"), make_material("tin", BIN_GREEN), make_material("rust", RUST, contrast=0.7),
+                 make_material("bag", "#3A3C3A", contrast=0.6), make_material("can", "#A6A49C", contrast=0.6),
+                 make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    swing = rotation_x(-w.uniform(0.2, 0.3))
+    pivot = np.array([0.0, 0.8 * M, 0.08 * M])
+    litter = [(np.array([w.uniform(-0.45, 0.45) * M, 0.07 * M, w.uniform(0.25, 0.6) * M]), w.uniform(0, np.pi)) for _ in range(4)]
+
+    def parts() -> list[Part]:
+        post = lambda p: rounded_box(p, (0.0, 0.6 * M, -0.12 * M), (0.07 * M, 0.6 * M, 0.07 * M), 0.015 * M)
+        basket = lambda p: np.maximum(cylinder((p - pivot) @ swing, (0.0, 0.0, 0.22 * M), 0.3 * M, 0.38 * M, 0.02 * M),
+                                      -cylinder((p - pivot) @ swing, (0.0, 0.1 * M, 0.22 * M), 0.26 * M, 0.38 * M, 0.0))
+        bags = lambda p: _union(*(ellipsoid(p, c, (0.16 * M, 0.1 * M, 0.12 * M), rotation_y(a)) for c, a in litter[:2]))
+        cans = lambda p: _union(*(capsule(p, c, c + rotation_y(a) @ np.array([0.12 * M, 0.0, 0.0]), 0.04 * M) for c, a in litter[2:]))
+        return [
+            Part(post, POST),
+            Part(basket, TIN),
+            Part(painted(basket, either(noise_mask(0.1 * M, seed + 1, 0.15), lambda p: (p - pivot)[:, 1] + 0.3 * M)), RUST_M, relief=False),
+            Part(bags, BAG), Part(cans, CAN),
+            Part(_grass(w, [(0.0, -0.12 * M), (-0.3 * M, 0.3 * M), (0.35 * M, 0.45 * M)], 7, 0.36 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(205.0)), canvas=(48, 64), footprint=box_footprint(0.1 * M, 0.1 * M))
+
+
+def rural_mailbox(stem: str, seed: int) -> PropModel:
+    """
+    Boîte aux lettres de la maison engloutie : une boîte de tôle jaune passé sous un petit toit, sur un poteau qui
+    penche ; la porte pend ouverte sur sa charnière, la rouille a mangé le bas, le lierre monte au poteau.
+    """
+    POST, BOX, RUST_M, ROOF_M, STEM_M, LEAF, GRASS = range(7)
+    materials = [make_material("post", "#6E5E4A"), make_material("box", POST_YELLOW), make_material("rust", RUST, contrast=0.7),
+                 make_material("roof", "#55524C"), make_material("ivy_stem", "#4A3A2C", contrast=0.6),
+                 make_material("ivy", IVY_LEAF), make_material("grass", MOSS, contrast=0.8)]
+    w = Weathering(seed)
+    lean = rotation_z(w.uniform(0.08, 0.14))
+    ivy_points = [np.array([0.06 * M * np.sin(t * 6.0), t * 1.0 * M, 0.06 * M * np.cos(t * 6.0)]) for t in (0.05, 0.25, 0.45, 0.65, 0.8)]
+
+    def parts() -> list[Part]:
+        post = lambda p: rounded_box(p @ lean, (0.0, 0.55 * M, 0.0), (0.055 * M, 0.55 * M, 0.055 * M), 0.012 * M)
+        body = lambda p: np.maximum(rounded_box(p @ lean, (0.0, 1.24 * M, 0.04 * M), (0.22 * M, 0.2 * M, 0.3 * M), 0.02 * M),
+                                    -rounded_box(p @ lean, (0.0, 1.24 * M, 0.36 * M), (0.18 * M, 0.16 * M, 0.08 * M), 0.0))
+        door = lambda p: rounded_box((p @ lean - np.array([0.0, 1.06 * M, 0.35 * M])) @ rotation_x(1.3), (0.0, 0.0, 0.1 * M),
+                                     (0.19 * M, 0.015 * M, 0.1 * M), 0.008 * M)
+        cap = lambda p: rounded_box(p @ lean, (0.0, 1.47 * M, 0.04 * M), (0.26 * M, 0.035 * M, 0.34 * M), 0.015 * M)
+        tin = lambda p: np.minimum(body(p), door(p))
+        return [
+            Part(post, POST),
+            Part(tin, BOX),
+            Part(painted(tin, either(noise_mask(0.08 * M, seed + 1, 0.12), lambda p: (p @ lean)[:, 1] - 1.08 * M)), RUST_M, relief=False),
+            Part(cap, ROOF_M),
+            Part(_branch_chain(ivy_points, 0.025 * M, 0.018 * M), STEM_M),
+            Part(_leaf_cluster(ivy_points[1:], [np.array([np.sin(t * 6.0), 0.3, np.cos(t * 6.0)]) for t in (0.25, 0.45, 0.65, 0.8)],
+                               [0.09 * M] * 4), LEAF),
+            Part(_grass(w, [(0.0, 0.0), (0.2 * M, 0.15 * M)], 7, 0.4 * M), GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(215.0)), canvas=(48, 64), footprint=box_footprint(0.08 * M, 0.08 * M))
+
+
+def sunken_house(stem: str, seed: int, mirrored: bool) -> PropModel:
+    """
+    Maison engloutie : un pavillon de plain-pied repris de la ferme (`building`), que la forêt a mangé. Le lierre
+    couvre les murs presque jusqu'au toit et coule sur les tuiles en masses, la mousse prend le versant, un frêne a
+    poussé contre le pignon et passe au-dessus du faîtage, des buissons montent jusqu'aux appuis de fenêtre.
+    """
+    spec = BuildingSpec(stem, 2, 3, 1, "house", HOUSE_PLASTER, 0.45, seed, mirrored, window_spacing=2.2 * M)
+    base = building(spec)
+    offset = len(base.materials)
+    materials = list(base.materials) + [make_material("ivy_carpet", IVY_LEAF), make_material("ivy_light", MOSS, contrast=0.8),
+                                        make_material("moss_thick", MOSS), make_material("moss_top", LEAF_LIGHT, contrast=0.8),
+                                        make_material("ash_bark", TRUNK), make_material("crown", MOSS),
+                                        make_material("crown_top", LEAF_LIGHT, contrast=0.9), make_material("bush", CANOPY_DARK),
+                                        make_material("grass", MOSS, contrast=0.8)]
+    IVY_M, IVY_LIT, MOSS_M, MOSS_TOP, BARK_M, CROWN, CROWN_TOP, BUSH, GRASS = range(offset, offset + 9)
+    w = Weathering(seed + 900)
+    half_w = spec.width_cells * CELL_WIDTH * 0.46
+    half_d = spec.depth_rows * ROW_DEPTH * 0.46
+    height = spec.storeys * STOREY
+    roof_y = height + 0.09 * M
+    side = 1.0 if w.uniform(0, 1) < 0.5 else -1.0
+    root = np.array([side * (half_w + 0.6 * M), 0.0, half_d * 0.2])
+    trunk = _gnarled(w, root, np.array([-side * 0.18, 1.0, 0.05]), 5.2 * M, 5, wobble=0.1)
+    crown = [trunk[-1] + np.array([w.uniform(-1.3, 1.3) * M, w.uniform(-0.6, 0.7) * M, w.uniform(-0.9, 0.9) * M]) for _ in range(9)]
+    limbs = [_gnarled(w, trunk[-2 - (k % 2)], c - trunk[-2 - (k % 2)], np.linalg.norm(c - trunk[-2 - (k % 2)]) * 0.75, 3, wobble=0.2)
+             for k, c in enumerate(crown[:4])]
+    # Masses de lierre qui coulent du toit sur la façade : en chapelet le long de l'égout du toit, plus grosses aux angles.
+    drapes = [np.array([x * half_w, height + w.uniform(-0.25, 0.15) * M, half_d + 0.2 * M]) for x in np.linspace(-0.95, 0.95, 7)
+              if w.uniform(0, 1) < 0.75]
+    mounds = [np.array([w.uniform(-0.8, 0.8) * half_w, roof_y + w.uniform(0.3, 1.2) * M, w.uniform(-0.2, 0.6) * half_d]) for _ in range(4)]
+    bushes = [np.array([x * half_w + w.uniform(-0.3, 0.3) * M, 0.45 * M, half_d + w.uniform(0.3, 0.8) * M]) for x in (-0.75, -0.2, 0.45, 0.9)]
+
+    def walls(p: np.ndarray) -> np.ndarray:
+        return rounded_box(p, (0.0, height / 2, 0.0), (half_w, height / 2, half_d), 0.0)
+
+    def roof_plane(p: np.ndarray) -> np.ndarray:
+        local = p - np.array([0.0, roof_y, 0.0])
+        ridge = 1.8 * M
+        slope = (np.abs(local[:, 2]) * ridge / (half_d + 0.3 * M) + local[:, 1] - ridge) / np.sqrt(1 + (ridge / half_d) ** 2)
+        return np.maximum(np.maximum(slope, -local[:, 1]), np.abs(local[:, 0]) - (half_w + 0.25 * M))
+
+    # Le lierre monte en langues : plein en bas, rongé par le bruit en montant, jusqu'à l'égout aux angles.
+    climb = lambda p: p[:, 1] - (0.55 + 0.45 * value_noise(p, 1.2 * M, seed + 11)) * height - 0.15 * M * np.abs(p[:, 0]) / half_w
+    carpet = both(climb, noise_mask(0.5 * M, seed + 12, 0.75))
+    roof_moss = noise_mask(0.6 * M, seed + 13, 0.45)
+
+    def parts() -> list[Part]:
+        leaves = _leaf_mass(drapes + mounds, [np.array([0.55, 0.35, 0.3]) * M] * len(drapes) + [np.array([0.6, 0.3, 0.5]) * M] * len(mounds),
+                            seed + 14, per=5, ratio=0.5)
+        top = _leaf_mass(crown, [np.array([0.85, 0.6, 0.75]) * M] * len(crown), seed + 15, per=7, ratio=0.5, cluster=0.45 * M)
+        shrubs = _leaf_mass(bushes, [np.array([0.55, 0.45, 0.4]) * M] * len(bushes), seed + 16, per=6, ratio=0.5)
+        return base.parts() + [
+            Part(painted(walls, carpet, 0.05 * M), IVY_M),
+            Part(painted(walls, both(carpet, noise_mask(0.16 * M, seed + 17, 0.35)), 0.06 * M), IVY_LIT, relief=False),
+            Part(painted(roof_plane, roof_moss, 0.05 * M), MOSS_M),
+            Part(painted(roof_plane, both(roof_moss, noise_mask(0.18 * M, seed + 18, 0.2)), 0.06 * M), MOSS_TOP, relief=False),
+            Part(leaves, IVY_M),
+            Part(painted(leaves, noise_mask(0.2 * M, seed + 19, 0.4), 0.02 * M), IVY_LIT, relief=False),
+            Part(lambda p: np.minimum(_branch_chain(trunk, 0.2 * M, 0.08 * M)(p), _union(*(_branch_chain(l, 0.08 * M, 0.03 * M)(p) for l in limbs))), BARK_M),
+            Part(top, CROWN),
+            Part(painted(top, lambda p: trunk[-1][1] + 0.5 * M - p[:, 1] + (value_noise(p, 0.3 * M, seed + 20) - 0.5) * 0.5 * M), CROWN_TOP, relief=False),
+            Part(shrubs, BUSH),
+            Part(_grass(w, [(x * half_w, half_d + 0.4 * M) for x in (-1.0, -0.5, 0.0, 0.6)] + [(root[0], root[2] + 0.5 * M)], 7, 0.45 * M), GRASS),
+        ]
+
+    lo, hi = base.bounds
+    extent = max(abs(lo[0]), hi[0]) + 2.0 * M
+    top_y = trunk[-1][1] + 1.6 * M
+    return PropModel(stem, parts, materials, base.yaw, ray_range=float(2.5 * max(extent, top_y)),
+                     canvas=(base.canvas[0] + 60, base.canvas[1] + 50), footprint=base.footprint,
+                     bounds=((-extent, 0.0, lo[2]), (extent, top_y, hi[2] + 0.6 * M)), supersample=3, smooth_slopes=True)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -1091,5 +1358,14 @@ def catalog() -> list[PropModel]:
         railing("prop_railing_y", 492, AXIS_Y_YAW, False),
         railing("prop_railing_broken", 493, AXIS_X_YAW, True),
         spyglass("prop_spyglass", 501),
+        picnic_table("prop_picnic_table_x", 511, AXIS_X_YAW),
+        picnic_table("prop_picnic_table_y", 512, AXIS_Y_YAW),
+        swing_set("prop_swing_set", 521),
+        barbecue("prop_barbecue", 531),
+        trash_bin("prop_trash_bin", 541),
+        rural_mailbox("prop_mailbox_rural", 551),
+        sunken_house("prop_sunken_house_a", 561, False),
+        sunken_house("prop_sunken_house_b", 562, True),
+        overgrown_car("prop_car_overgrown_x", 571, AXIS_X_YAW),
     ]
     return models
