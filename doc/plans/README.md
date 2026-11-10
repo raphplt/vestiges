@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**10 novembre — les bois prennent du rythme ([plan 58 T1a](58-terres-completes.md), §207, §208) :** un bruit lent découpe la terre des bois en clairières, sous-bois et fourrés, réglés en JSON (`rhythm` dans le fichier de décors du biome) et réutilisables par les autres terres. Les clairières ouvrent le bois, les fourrés le serrent avec des trouées. Les décors augmentent de 11 %, la densité de créatures ne bouge pas, et le bot vainc le Cerf aux deux graines. Suite : T1b, la clairière du Cerf et le belvédère.
+
 **27 octobre — la grammaire des pièces ([plan 58 T0](58-terres-completes.md), §206) :** chaque terre pose désormais un cœur autour du repaire et trois ou quatre pièces faites main (`data/world/land_pieces.json`). Chaque pièce a ses variantes, son sol et la place d'un Mémorial ; deux Mémoriaux sur cinq s'y logent. Des décors remarquables sont garantis sur les bois, le marais et la carrière. Les pièces de démonstration reprennent des décors existants et restent maigres ; la densité de créatures ne bouge pas. Suite : T1, les bois de la colline.
 
 **27 octobre — le chantier des terres ([plan 58](58-terres-completes.md), §205) :** les cinq terres vues d'en haut, une par une : la forêt est un semis uniforme, les champs répètent une ferme, la ville est une grille, le Bas-Port est presque vide, la carrière un bruit de cailloux. Chaque terre aura un cœur, trois à cinq pièces faites main où se logent les Mémoriaux, et un terrain rythmé. Premier lot : T0, la grammaire des pièces.

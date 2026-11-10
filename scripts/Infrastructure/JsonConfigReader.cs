@@ -43,6 +43,10 @@ public sealed class JsonConfigReader
     /// <summary>Une chance : de 0 (jamais) à 1 (toujours).</summary>
     public float Chance(JsonElement owner, string key) => Number(owner, key, value => value >= 0f && value <= 1f, "chance dans [0 ; 1] attendue");
 
+    /// <summary>Un nombre dans [<paramref name="min"/> ; <paramref name="max"/>].</summary>
+    public float Between(JsonElement owner, string key, float min, float max) =>
+        Number(owner, key, value => value >= min && value <= max, FormattableString.Invariant($"nombre dans [{min} ; {max}] attendu"));
+
     public float Ratio(JsonElement owner, string key) => Number(owner, key, value => value > 0f && value <= 1f, "part dans ]0 ; 1] attendue");
 
     /// <summary>Un compte : entier de 1 à <paramref name="max"/>.</summary>

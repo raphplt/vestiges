@@ -136,3 +136,56 @@ La densité ne bouge pas au-delà du bruit d'une graine à l'autre, et les gardi
 Les pièces, graine 7 : [planches/plan58_t0_pieces.png](planches/plan58_t0_pieces.png) (la clairière du Cerf et la vieille route dans les bois, le champ de l'Épouvantail, l'autel noyé, le front de taille et la baraque des mineurs).
 
 **Ce qui reste faible, à reprendre par terre :** les pièces de démonstration sont maigres. Ce sont des décors épars sur un sol à peine distinct, et on ne les lit bien qu'en y étant. Le « vraiment particulier » viendra des décors neufs de T1 à T5.
+
+## 8. T1, les bois de la colline — découpage proposé le 10 novembre
+
+Proposition de l'agent, réversible ([§207](DECISIONS.md)). Le lot est élevé : il se coupe en quatre, chacun livré, capturé et mesuré avant le suivant.
+
+**Ce qui ne va pas aujourd'hui** (vue d'ensemble, graine 7) : un semis de Perlin à densité presque constante (`PropSpawner`, fréquence 0,08, chance de 0,5 à 1,5 fois la densité), dix-neuf décors dont trois remarquables, et trois pièces de démonstration faites d'arbres, de souches et de pierres. Rien ne se voit de loin, rien ne raconte « où l'on montait le dimanche ».
+
+| Sous-lot | Contenu | Effort |
+|---|---|---|
+| **T1a** | **Le terrain rythmé.** Une clé `rhythm` dans `data/props/<biome>.json` : un second bruit, basse fréquence, découpe la terre en zones, chacune avec son multiplicateur de densité, ses décors permis et son sol. Aux bois : **clairières** (herbe, fleurs et fougères, presque rien qui bloque), **fourrés** (buissons et jeunes arbres serrés, avec des trouées), **sous-bois** (le semis d'aujourd'hui). Les pièces, les chemins et le départ gardent la priorité. Réutilisé par T2 à T5 (chenaux, places, paliers) | Moyen |
+| **T1b** | **La clairière du Cerf et le belvédère.** Décors neufs : pierres dressées moussues, cercle de souches, lit de mousse où dort le Cerf ; table d'orientation, bancs, rambarde, longue-vue. **Le belvédère borde un pan de vide** creusé dans la terre, comme les bandes du bac à sable : un lieu où pousser la horde (pilier 1). La rambarde a des trouées | Moyen à élevé |
+| **T1c** | **L'aire de pique-nique et la maison engloutie.** Tables, balançoire rouillée (l'idée de la balançoire fantôme, sans son interaction), barbecue, poubelle ; maison mangée de lierre, voiture devenue jardinière, boîte aux lettres. Variantes par groupe | Moyen à élevé |
+| **T1d** | **Le viaduc effondré et la mesure.** Piles, tronçon d'autoroute tombé, voitures dessus et dessous. La mesure compte « pièces vues » (`RunObservation`). Vue d'ensemble avant/après, captures de chaque pièce, `measure_run` avant/après au même commit de base | Moyen |
+
+Ensuite, quatre pièces sur quatre sont neuves et la terre en pose trois ou quatre par run : on ne voit pas tout à chaque fois.
+
+**Tranché par défaut, réversible :**
+- **Le rythme est une couche de données commune** : chaque terre la règle dans son fichier de décors ; le code ne connaît pas « clairière » ni « fourré », seulement des zones pondérées.
+- **Les fourrés ne font jamais de mur** : une trouée tous les quelques mètres, pour que le nomade et la horde passent. Vérifié au bot (pas de blocage) et par la densité de créatures, qui ne doit pas bouger.
+- **Un pan de vide au belvédère** : le vide n'existe aujourd'hui qu'au bord de l'Effacement et dans le bac à sable. Le belvédère en ouvre un petit, borné, loin du cœur et du départ. Si l'essai du vide (étape 4) le retire, le belvédère garde sa rambarde au bord d'une pente.
+- **Corps procéduraux** (`tools/sprites/props/forest.py`), repris ensuite par l'ami artiste.
+
+## 9. T1a, le terrain rythmé — livré le 10 novembre
+
+**Ce qui est fait :**
+- **Une clé `rhythm` dans `data/props/<biome>.json`** (`TerrainRhythm`) : un bruit de valeur lent, de pas `scale_px` à l'écran, rangé dans [0 ; 1], choisit la zone de chaque cellule. Chaque zone a :
+  - `up_to` : sa borne haute dans le bruit ;
+  - `density` : le multiplicateur de la chance de semis ;
+  - `weights` et `others` : les poids des décors nommés et des autres ;
+  - `ground` : un sol imposé (herbe ou sous-bois), l'eau et le béton restent ;
+  - `lanes` : des trouées sinueuses (isoligne d'un second bruit) où aucun décor bloquant ne se pose.
+- **La carte des zones se calcule sur le thread de génération**, juste après le terrain : les chemins, les pièces et leurs sols passent ensuite, et gardent la priorité. Le semis la relit pour sa densité et ses poids.
+- **Les bois** : clairières (herbe, fleurs, souches et pierres, un bouleau isolé, densité ×0,3), sous-bois (le semis d'avant) et fourrés (sous-bois imposé, grands arbres, buissons, fougères et troncs couchés, densité ×1,8, trouées tous les quelques mètres). Graine 7 : 21 % de clairières, 56 % de sous-bois, 21 % de fourrés.
+- Les autres biomes n'ont pas de rythme : leur semis est le même tirage qu'avant.
+
+**Vérifié :**
+- `tools/validate.sh` smoke, catalogues, terres : 3/3. Le contrôle du catalogue refuse douze fichiers de rythme mal écrits (clé inconnue, pas hors borne, zone seule ou en double, bornes décroissantes, dernière zone courte, sol inconnu, décor absent, poids négatif, trouées mal réglées). `tools/test_movement.sh` : aucun échec. Build sans avertissement. Relecture `godot-reviewer` : rien de bloquant, trois retouches faites.
+- Vues d'ensemble et vues à hauteur du joueur : [planches/plan58_t1a_rythme.png](planches/plan58_t1a_rythme.png). De haut, les clairières se lisent comme de grandes ouvertures ; au sol, le fourré est serré mais se traverse.
+- Coût : 6 266 décors sur la terre des bois à la graine 7 au lieu de 5 666 (+11 %) ; le calcul des zones prend 43 ms sur le thread de génération. Pas de banc de FPS : la machine était chargée, et le banc dense ne se joue pas dans les bois.
+
+**Mesure** (`measure_run`, profil neuf, bot des terres, Vagabond, bois puis marais puis carrière, 600 s, graines 7 et 42, avant et après au même commit de base) :
+
+| | Avant (7 / 42) | Après (7 / 42) |
+|---|---|---|
+| Créatures visibles, 0-60 s | 15,6 / 14,1 | 17,3 / 14,7 |
+| Créatures visibles, 180-300 s | 19,1 / 23,0 | 16,8 / 21,4 |
+| Éliminations | 408 / 535 | 546 / 546 |
+| Mémoriaux vus | 4 / 9 | 7 / 6 |
+| Gardien des bois vaincu | non / oui | oui / oui |
+
+La densité de créatures reste dans le bruit d'une graine à l'autre. Les fourrés n'arrêtent pas le bot : il vainc le Cerf aux deux graines.
+
+**Ce qui reste faible :** les clairières sont des pelouses presque nues. Elles attendent les pièces de T1b à T1d, qui s'y logeront volontiers ; le compte des « pièces vues » arrive avec T1d.

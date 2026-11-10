@@ -2516,3 +2516,23 @@ Lot T0 du [plan 58](58-terres-completes.md), dans l'ordre du §205. Détail au p
 - **Décors remarquables garantis** sur les bois, le marais et la carrière, un exemplaire chacun, à 18 colonnes les uns des autres. Les champs gardent leurs cinq grands décors ; la Haute-Ville attend T3.
 - **La Haute-Ville n'a ni pièce ni remarquable en T0** : sa grille d'immeubles remplit la terre, T3 la refait.
 - **Les pièces de démonstration n'emploient que des décors existants** : elles prouvent la grammaire, pas le « vraiment particulier », qui viendra des décors neufs de T1 à T5.
+
+## 207. Le découpage des bois de la colline — 10 novembre 2026
+
+Lot T1 du [plan 58](58-terres-completes.md), dans l'ordre du §205. Détail au plan 58 §8.
+
+**Tranché par défaut, réversible :**
+- **Quatre sous-lots** : le terrain rythmé (T1a), la clairière du Cerf et le belvédère (T1b), l'aire de pique-nique et la maison engloutie (T1c), le viaduc effondré et la mesure (T1d).
+- **Le terrain rythmé est une couche de données** (`rhythm` dans le fichier de décors du biome), réutilisée par les autres terres ; les fourrés laissent toujours des trouées.
+- **Le belvédère borde un petit pan de vide** creusé dans la terre, où pousser la horde. Il part si l'essai du vide (étape 4) retire le vide.
+
+Raphaël, le 10 novembre, sur ce découpage : « Oui, lance T1a ».
+
+## 208. Le terrain rythmé des bois — 10 novembre 2026
+
+Lot T1a du [plan 58](58-terres-completes.md), dans le découpage du §207. Détail au plan 58 §9.
+
+**Tranché par défaut, réversible :**
+- **Trois zones aux bois** : clairières (environ un cinquième de la terre), sous-bois, fourrés (un autre cinquième). Réglage dans `data/props/forest_reclaimed.json`.
+- **Les clairières restent presque nues** en attendant les pièces : des fleurs, une souche, un bouleau seul.
+- **Les fourrés sont plus pleins, pas infranchissables** : densité ×1,8 et des trouées sans décor bloquant. Le nombre de décors de la terre monte de 11 %.

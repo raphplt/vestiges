@@ -1,6 +1,33 @@
 {
     "biome_id": "forest_reclaimed",
     "density": 0.2,
+    "rhythm": {
+        "_doc": "Terrain rythmé (plan 58 T1a) : un bruit lent, de pas scale_px à l'écran, rangé dans [0 ; 1], choisit la zone de chaque cellule (la première dont up_to dépasse le bruit). density multiplie la chance de semis, weights repondère les décors nommés, others les autres ; ground impose l'herbe ou le sous-bois (l'eau et le béton restent) ; lanes trace des trouées sinueuses de demi-largeur width où rien ne bloque.",
+        "scale_px": 1100,
+        "zones": [
+            {
+                "id": "clairiere",
+                "up_to": 0.38,
+                "density": 0.3,
+                "ground": "grass",
+                "others": 0,
+                "weights": { "flowers": 3, "flowers_v2": 3, "bush": 0.6, "stump": 1, "rock_mossy": 1, "rock_mossy_v2": 1, "tree_birch": 0.15 }
+            },
+            {
+                "id": "sous_bois",
+                "up_to": 0.62
+            },
+            {
+                "id": "fourre",
+                "up_to": 1,
+                "density": 1.8,
+                "ground": "forest",
+                "others": 0.3,
+                "weights": { "bush": 2.5, "bush_v2": 2.5, "fern": 1.5, "tree_large": 2.5, "tree_large_v2": 2.5, "tree_medium": 2, "tree_birch": 1, "fallen_log": 1.5, "mushroom_cluster": 1 },
+                "lanes": { "scale_px": 520, "width": 0.05 }
+            }
+        ]
+    },
     "props": [
         {
             "id": "tree_large",

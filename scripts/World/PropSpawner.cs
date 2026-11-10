@@ -34,6 +34,8 @@ public class BiomePropConfig
 	public List<PropDefinition> Props = new();
 	/// <summary>Décors remarquables posés une fois chacun sur une terre de ce biome, loin les uns des autres (plan 58).</summary>
 	public List<string> Remarkables = new();
+	/// <summary>Terrain rythmé du biome (plan 58 T1a), nul si le semis reste uniforme.</summary>
+	public TerrainRhythm Rhythm;
 }
 
 /// <summary>
@@ -60,7 +62,8 @@ public partial class PropSpawner : Node2D
 		Func<bool> sliceSpent,
 		Func<Task> yieldSlice,
 		HashSet<Vector2I> blockedCells = null,
-		WildFieldsLayout wildFieldsLayout = null)
+		WildFieldsLayout wildFieldsLayout = null,
+		byte[,] rhythmZones = null)
 	{
 		// Charger les configs de props par biome
 		Dictionary<string, BiomePropConfig> configs = LoadPropConfigs();
@@ -141,6 +144,12 @@ public partial class PropSpawner : Node2D
 				// spawnChance = density modulée par le bruit (zones de clustering naturel)
 				float noiseVal = (noise.GetNoise2D(x, y) + 1f) * 0.5f; // 0..1
 				float spawnChance = config.Density * (0.5f + noiseVal); // 0..density*1.5
+				byte packedZone = rhythmZones != null && config.Rhythm != null
+					? rhythmZones[x + generator.MapRadiusX, y + generator.MapRadiusY]
+					: TerrainRhythm.NoZone;
+				TerrainRhythm.Zone zone = packedZone == TerrainRhythm.NoZone ? null : config.Rhythm.Zones[TerrainRhythm.ZoneIndex(packedZone)];
+				if (zone != null)
+					spawnChance *= zone.DensityScale;
 				float roll = CellHash.Unit(x, y, 0x5EED);
 				if (roll > spawnChance)
 				{
@@ -149,7 +158,7 @@ public partial class PropSpawner : Node2D
 				}
 
 				string terrainName = terrain.ToString().ToLowerInvariant();
-				PropDefinition prop = PickProp(config, terrainName, x, y);
+				PropDefinition prop = PickProp(config, terrainName, x, y, zone, TerrainRhythm.IsLane(packedZone));
 				if (prop == null)
 				{
 					skipTerrain++;
@@ -193,34 +202,46 @@ public partial class PropSpawner : Node2D
 		GD.Print($"[PropSpawner] TOTAL SPAWNED: {totalSpawned}");
 	}
 
-	private PropDefinition PickProp(BiomePropConfig config, string terrainName, int x, int y)
+	/// <summary>Décor tiré au poids parmi ceux du terrain ; la zone du rythme repondère, une trouée refuse ce qui bloque.</summary>
+	private PropDefinition PickProp(BiomePropConfig config, string terrainName, int x, int y, TerrainRhythm.Zone zone, bool lane)
 	{
 		float totalWeight = 0f;
-		List<PropDefinition> candidates = new();
-
 		foreach (PropDefinition prop in config.Props)
 		{
 			if (prop.Terrain.Contains(terrainName))
-			{
-				candidates.Add(prop);
-				totalWeight += prop.Weight;
-			}
+				totalWeight += WeightIn(prop, zone, lane);
 		}
 
-		if (candidates.Count == 0 || totalWeight <= 0f)
+		if (totalWeight <= 0f)
 			return null;
 
 		float roll = CellHash.Unit(x, y, 0x9C0F) * totalWeight;
 
 		float cumulative = 0f;
-		foreach (PropDefinition prop in candidates)
+		PropDefinition last = null;
+		foreach (PropDefinition prop in config.Props)
 		{
-			cumulative += prop.Weight;
+			if (!prop.Terrain.Contains(terrainName))
+				continue;
+			float weight = WeightIn(prop, zone, lane);
+			if (weight <= 0f)
+				continue;
+			last = prop;
+			cumulative += weight;
 			if (roll < cumulative)
 				return prop;
 		}
 
-		return candidates[candidates.Count - 1];
+		return last;
+	}
+
+	private static float WeightIn(PropDefinition prop, TerrainRhythm.Zone zone, bool lane)
+	{
+		if (zone == null)
+			return prop.Weight;
+		if (lane && prop.Blocking)
+			return 0f;
+		return prop.Weight * (zone.Weights.TryGetValue(prop.Id, out float scale) ? scale : zone.OtherWeightScale);
 	}
 
 	/// <summary>Cinq grands décors des champs, un par image : chacun cherche sa place dans de longues listes de cellules.</summary>
@@ -548,6 +569,18 @@ public partial class PropSpawner : Node2D
 		return error == null;
 	}
 
+	/// <summary>Terrains rythmés par biome, pour la génération (plan 58 T1a) ; vide si le catalogue est refusé.</summary>
+	public static Dictionary<string, TerrainRhythm> LoadRhythms()
+	{
+		Dictionary<string, TerrainRhythm> rhythms = new();
+		foreach (KeyValuePair<string, BiomePropConfig> entry in LoadPropConfigs())
+		{
+			if (entry.Value.Rhythm != null)
+				rhythms[entry.Key] = entry.Value.Rhythm;
+		}
+		return rhythms;
+	}
+
 	/// <summary>Les décors acceptés ; un catalogue refusé n'en rend aucun (la génération s'arrête sur l'erreur journalisée).</summary>
 	private static Dictionary<string, BiomePropConfig> LoadPropConfigs()
 	{
@@ -617,7 +650,7 @@ public partial class PropSpawner : Node2D
 	private static BiomePropConfig ParseConfig(JsonConfigReader reader, JsonElement root, Func<string, bool> biomeExists,
 		Func<string, bool> spriteExists)
 	{
-		reader.AllowOnly(root, "décors", "biome_id", "density", "props", "remarkables");
+		reader.AllowOnly(root, "décors", "biome_id", "density", "props", "remarkables", "rhythm");
 		BiomePropConfig config = new() { BiomeId = reader.Text(root, "biome_id"), Density = reader.Chance(root, "density") };
 		if (reader.Error == null && !biomeExists(config.BiomeId))
 			reader.Fail($"biome_id « {config.BiomeId} » inconnu");
@@ -672,6 +705,8 @@ public partial class PropSpawner : Node2D
 					config.Remarkables.Add(id);
 			}
 		}
+		if (JsonConfigReader.Has(root, "rhythm"))
+			config.Rhythm = TerrainRhythm.Parse(reader, reader.Section(root, "rhythm"), ids);
 		return config;
 	}
 

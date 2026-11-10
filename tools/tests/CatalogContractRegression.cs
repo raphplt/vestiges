@@ -1574,6 +1574,30 @@ public partial class CatalogContractRegression : Node
             string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
             Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
         }
+        int forest = files.FindIndex(file => file.Name == "forest_reclaimed.json");
+        Check(configs?["forest_reclaimed"].Rhythm?.Zones.Count == 3 && configs["swamp"].Rhythm == null,
+            "décors : terrain rythmé des bois lu (trois zones), absent du marais");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("rythme, clé inconnue", root => root["rhythm"]!["octaves"] = 3, "clé « octaves » inconnue"),
+            ("rythme, pas trop petit", root => root["rhythm"]!["scale_px"] = 10, "scale_px"),
+            ("rythme, une seule zone", root => root["rhythm"]!["zones"] = new JsonArray(root["rhythm"]!["zones"]![2]!.DeepClone()), "zones"),
+            ("rythme, zone en double", root => root["rhythm"]!["zones"]![1]!["id"] = "clairiere", "zone « clairiere » en double"),
+            ("rythme, bornes décroissantes", root => root["rhythm"]!["zones"]![1]!["up_to"] = 0.2, "up_to doit croître"),
+            ("rythme, dernière zone courte", root => root["rhythm"]!["zones"]![2]!["up_to"] = 0.9, "doit aller jusqu'à 1"),
+            ("rythme, sol inconnu", root => root["rhythm"]!["zones"]![0]!["ground"] = "water", "sol « water » inconnu"),
+            ("rythme, décor absent", root => root["rhythm"]!["zones"]![0]!["weights"]!["prop_absent"] = 1, "décor « prop_absent » absent de props"),
+            ("rythme, poids négatif", root => root["rhythm"]!["zones"]![0]!["weights"]!["flowers"] = -1, "flowers"),
+            ("rythme, trouée trop large", root => root["rhythm"]!["zones"]![2]!["lanes"]!["width"] = 0.5, "width"),
+            ("rythme, trouées trop serrées", root => root["rhythm"]!["zones"]![2]!["lanes"]!["scale_px"] = 10, "scale_px"),
+            ("rythme, trouée à clé inconnue", root => root["rhythm"]!["zones"]![2]!["lanes"]!["depth"] = 1, "clé « depth » inconnue"),
+        })
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[forest] = (files[forest].Name, Mutated(files[forest].Text, mutate));
+            string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
+        }
         List<(string, string)> unknown = new(files) { ("desert.json", "{ \"biome_id\": \"desert\", \"density\": 0.1, \"props\": [] }") };
         string unknownError = PropSpawner.TryParseConfigs(unknown, biomeExists, spriteExists, out _);
         Check(unknownError?.Contains("biome_id « desert » inconnu", StringComparison.Ordinal) == true, $"décors, biome inconnu refusé ({unknownError})");

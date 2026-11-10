@@ -76,6 +76,8 @@ public partial class WorldSetup : Node2D
     private UrbanLayout _urbanLayout;
     private SwampPropLayout _swampLayout;
     private WildFieldsLayout _wildFieldsLayout;
+    // Zones du terrain rythmé par cellule (plan 58 T1a), nul si aucun biome actif n'a de rythme.
+    private byte[,] _rhythmZones;
     private PathNetwork _pathNetwork;
     // Gardée après la construction : la cartographie n'échantillonne une cellule qu'à sa découverte, bien plus tard.
     private IReadOnlySet<Vector2I> _pathCells;
@@ -230,6 +232,9 @@ public partial class WorldSetup : Node2D
         else
             _terrain = generator.Generate();
         LoadProfiler.Span("terrain et biomes (thread)", ref step);
+        // Clairières, fourrés… : le sol des zones se pose avant les chemins et les pièces, qui imposent ensuite le leur.
+        _rhythmZones = TerrainRhythm.Apply(generator, _terrain, PropSpawner.LoadRhythms(), LandSeed);
+        LoadProfiler.Span("terrain rythmé (thread)", ref step);
 
         // Layouts urbains/marais (CPU pur)
         if (generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
@@ -730,7 +735,7 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("décors des carrefours");
         await YieldLoadSlice();
         await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, LandSeed, LoadSliceSpent,
-            YieldLoadSlice, blockedCells, _wildFieldsLayout);
+            YieldLoadSlice, blockedCells, _wildFieldsLayout, _rhythmZones);
     }
 
     private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
