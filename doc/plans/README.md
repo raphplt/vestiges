@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 novembre — le Bas-Port découpé ([plan 58 §13](58-terres-completes.md), §212) :** quatre sous-lots, chacun capturé et mesuré. T2a, le terrain (chenaux, passerelles, roselières, vasières). T2b, la cale du chantier naval au cœur, et les quais qui bordent la mer oubliée, un pan de vide. T2c, les marais salants et la digue rompue. T2d, les maisons du port et la mesure. Suite : T2a.
+
 **10 novembre — le viaduc effondré, les bois sont faits ([plan 58 T1d](58-terres-completes.md), §211) :** cinq décors neufs (piles, tronçons de tablier tombés, panneau d'autoroute) composent la quatrième pièce des bois, qui en pose trois ou quatre par run. La mesure compte les pièces vues : le bot en voit une à trois aux bois, contre une avant T1. Le bot des terres contourne enfin un obstacle près de sa cible. Suite : T2, le Bas-Port.
 
 **10 novembre — l'aire de pique-nique et la maison engloutie ([plan 58 T1c](58-terres-completes.md), §210) :** neuf décors neufs aux bois (tables, balançoire, barbecue, poubelle, boîte aux lettres, maison mangée de lierre, voiture-jardinière). Deux pièces les composent et remplacent les démonstrations de T0 : les bois posent trois pièces faites main par run. Suite : T1d, le viaduc effondré et la mesure des pièces vues.

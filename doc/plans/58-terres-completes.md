@@ -307,3 +307,30 @@ Le bot voit une à trois pièces des bois sur trois ou quatre. Il va droit aux M
 **Bilan de T1** : les bois ont un terrain rythmé (clairières, sous-bois, fourrés), un cœur fait main (la clairière du Cerf) et quatre pièces neuves, faites de vingt-quatre décors neufs. Trois ou quatre de ces pièces sont posées à chaque run.
 
 **Ce qui reste :** un tablier debout, sous lequel on passe, est en réserve ([§211](DECISIONS.md)). Le mur long de la maison engloutie manque toujours. Le Bas-Port (T2) suit, dans l'ordre du §5.
+
+## 13. T2, le Bas-Port — découpage proposé le 11 novembre
+
+Proposition de l'agent, réversible ([§212](DECISIONS.md)). Le lot est élevé : il se coupe en quatre, comme T1, chacun livré, capturé et mesuré avant le suivant.
+
+**Ce qui ne va pas aujourd'hui** ([planches/plan58_t2_bas_port_avant.png](planches/plan58_t2_bas_port_avant.png), graines 7 et 42) :
+- La terre est un marécage générique : des taches d'eau éparses, un semis uniforme d'arbres morts, de racines et d'ossements. Rien ne dit « port », ni de loin ni à hauteur du joueur.
+- Le cœur est un anneau d'arbres morts autour du Cerf, gardien provisoire jusqu'au Pilleur (plan 57 G4).
+- Deux pièces de démonstration : le ponton des pêcheurs et l'autel noyé. Le marais a vingt-six décors, aucun du port.
+- Le lore en dit beaucoup : la digue rompue à 22 h 40, la cale où Marc Delmas est allé fermer le chantier, les quais d'une mer que la ville a oubliée, le courrier que le Facteur portait encore à des adresses rayées.
+
+| Sous-lot | Contenu | Effort |
+|---|---|---|
+| **T2a** | **Le terrain du Bas-Port.** Des **chenaux** : rubans d'eau sinueux, tirés d'une isoligne de bruit comme les trouées des fourrés, interrompus par des gués. Quand un chemin croise un chenal, la cellule redevient du sol et porte une **passerelle**. Puis les zones du rythme de T1a : **roselières** (roseaux hauts, presque rien qui bloque), **vasières** (sol nu, pieux, épaves), **prés salés** (le semis d'aujourd'hui, allégé de ses arbres morts). Décors neufs : passerelle (deux sens), pieux d'amarrage, roseaux hauts, casiers, filet qui sèche sur des perches | Moyen à élevé |
+| **T2b** | **La cale du chantier naval et les quais.** Le **cœur** : une coque de chalutier sur sa cale, étayée, le treuil et sa chaîne, des tas de planches, la cabane du chantier ; le repaire au pied de la coque. **Les quais**, pièce qui borde un **pan de vide** (la mer oubliée), comme le belvédère : un quai de pierre, des bittes d'amarrage, une échelle qui descend dans le Néant, une grue de port, des barques couchées. Le ponton des pêcheurs est retiré | Élevé |
+| **T2c** | **Les marais salants et la digue.** Les **marais salants** : des bassins d'eau rectangulaires séparés de diguettes où l'on marche, des tas de sel devenu gris, la cabane du saunier, un las et une brouette. **La digue** : un long talus de pierres sèches, avec **la brèche** par où l'eau est entrée, des blocs effondrés et des sacs de sable. Une pièce peut désormais poser de l'eau (`water`, comme `void`). L'autel noyé est retiré | Moyen à élevé |
+| **T2d** | **Les maisons du port et la mesure.** Une rangée de maisons de pêcheurs basses (`building`, de plain-pied, crépi blanc, volets peints écaillés), des filets, des casiers, une boîte aux lettres qui déborde de courrier « retour à l'envoyeur ». Décors remarquables garantis du port. Vue d'ensemble avant/après, captures de chaque pièce, `measure_run` avant/après au même commit de base, pièces vues | Moyen |
+
+Ensuite, le Bas-Port a un cœur et quatre pièces neuves, et en pose trois ou quatre par run.
+
+**Tranché par défaut, réversible :**
+- **La mer oubliée est le vide** : les quais bordent un pan de Néant, comme le belvédère des bois. Le lore le dit (« pour oublier le Bas-Port, elle oublie la mer ») ; c'est aussi un lieu où pousser la horde (pilier 1).
+- **Les chenaux ralentissent, ils n'arrêtent pas** : l'eau ralentit déjà le joueur sans le bloquer. Un chenal a des gués tous les quelques mètres, et aucun chemin ne s'y arrête.
+- **Le Cerf reste le gardien provisoire** du Bas-Port jusqu'au Pilleur (plan 57 G4). La cale garde la place du repaire, au pied de la coque.
+- **Les deux pièces de démonstration partent** au fil des sous-lots : le ponton avec les quais (T2b), l'autel noyé avec les marais salants (T2c).
+- **Le marais reste le biome** (`swamp`) : son identifiant ne change pas, seuls ses décors, son rythme et ses pièces deviennent ceux du port.
+- **Corps procéduraux** (`tools/sprites/props/swamp.py`), repris ensuite par l'ami artiste.

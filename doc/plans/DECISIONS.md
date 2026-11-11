@@ -2573,3 +2573,19 @@ Raphaël, le 10 novembre, sur ce lot : « Oui, lance T1d ».
 - **Le viaduc est tombé, pas debout** : des piles, des tronçons de tablier au sol, rien sous quoi passer. Un tablier debout demanderait une canopée qui ne se balance pas au vent, et un passage dessous ; c'est en réserve si Raphaël le veut.
 - **Les bois posent trois ou quatre pièces parmi quatre**, comme le réglage commun : on ne voit pas tout à chaque run.
 - **Une pièce est « vue »** quand le cadre de la caméra recouvre la moitié centrale de son emprise ; le cœur ne compte pas, on y va toujours.
+
+## 212. Le Bas-Port, découpage de T2 — 11 novembre 2026
+
+Lot T2 du [plan 58](58-terres-completes.md), découpage au §13 du plan. Raphaël, le 11 novembre : « Oui, découpe T2 ».
+
+**Proposition de l'agent, réversible :**
+- **Quatre sous-lots**, dans cet ordre :
+  - T2a, le terrain : chenaux, passerelles, roselières, vasières, prés salés ;
+  - T2b, la cale du chantier naval (cœur) et les quais ;
+  - T2c, les marais salants et la digue ;
+  - T2d, les maisons du port et la mesure.
+- **La mer oubliée est le vide** : les quais bordent un pan de Néant, comme le belvédère.
+- **Les chenaux ralentissent sans arrêter**, avec des gués et des passerelles là où passent les chemins.
+- **Le Cerf reste le gardien provisoire** jusqu'au Pilleur (plan 57 G4).
+- **Les pièces de démonstration partent** : le ponton en T2b, l'autel noyé en T2c.
+- **L'identifiant `swamp` ne change pas.**
