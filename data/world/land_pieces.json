@@ -1,5 +1,5 @@
 {
-  "_doc": "Pièces maîtresses des terres (plan 58). Une terre pose sa pièce du cœur autour du repaire (lair_offset_px de data/world/guardian.json), puis pieces_per_land pièces tirées parmi celles de son biome, à min_spacing_px les unes des autres au moins, dans la bande des Mémoriaux (lands.memorial_band de world_gen.json) ; attempts emplacements tirés par pièce, dont les candidates_per_piece premiers valides sont comparés (le plus écarté gagne) ; une pièce sans sol imposé refuse un emplacement à plus de max_water_share d'eau. Une pièce est un plan de lieu (mêmes clés que data/world/quarry_sites.json : half_extent_px, path_reach_px, spur_start, spur_width_factor, elements) avec id, unique dans son biome ; memorial : place de son Mémorial, en pixels écran depuis son centre, dans l'ellipse inscrite dans l'emprise (les Mémoriaux se posent dans les pièces d'abord) ; ground : sol imposé sous toute l'emprise (grass, concrete ou forest, dans l'ellipse inscrite dans l'emprise ; l'eau y sèche). Un élément peut porter group : de tous les éléments d'un même groupe, un seul est posé par pièce. Un élément flat (non bloquant) est plaqué au sol quelle que soit sa hauteur à l'écran : plancher, cale, pavés. Le pan de vide d'une pièce (void) se cale sur la grille d'Effacement : l'ancre glisse pour que son centre tombe pile au centre d'une cellule ; void.at doit pour cela tomber sur la grille des tuiles (x multiple de 32, y de 16, x/32 + y/16 pair). Des rayons qui gardent cette marge creusent les mêmes cellules à chaque run, et le bord tombe au même endroit de la pièce. Un décor « …_base » prend la canopée « …_canopy » de son dossier. Le cœur exige un ground et ne prend pas de Mémorial : il garde la place du gardien et de son combat ; le joueur arrive à l'ouest de son centre, laisser ce côté ouvert. Démonstration de T0 : des pièces faites de décors existants, refaites par les lots de chaque terre.",
+  "_doc": "Pièces maîtresses des terres (plan 58). Une terre pose sa pièce du cœur autour du repaire (lair_offset_px de data/world/guardian.json), puis pieces_per_land pièces tirées parmi celles de son biome, à min_spacing_px les unes des autres au moins, dans la bande des Mémoriaux (lands.memorial_band de world_gen.json) ; attempts emplacements tirés par pièce, dont les candidates_per_piece premiers valides sont comparés (le plus écarté gagne) ; une pièce sans sol imposé refuse un emplacement à plus de max_water_share d'eau. Une pièce est un plan de lieu (mêmes clés que data/world/quarry_sites.json : half_extent_px, path_reach_px, spur_start, spur_width_factor, elements) avec id, unique dans son biome ; memorial : place de son Mémorial, en pixels écran depuis son centre, dans l'ellipse inscrite dans l'emprise (les Mémoriaux se posent dans les pièces d'abord) ; ground : sol imposé sous toute l'emprise (grass, concrete ou forest, dans l'ellipse inscrite dans l'emprise ; l'eau y sèche). Un élément peut porter group : de tous les éléments d'un même groupe, un seul est posé par pièce. Un élément flat (non bloquant) est plaqué au sol quelle que soit sa hauteur à l'écran : plancher, cale, pavés. Une pièce peut poser des bassins (water) : rectangles alignés sur l'écran (at, half_extent_px), remplis d'eau une fois toutes les pièces et leurs chemins posés (l'eau l'emporte sur le sol imposé), sauf sous un chemin qui les traverse ; le Mémorial reste à 64 px de leur bord. Le pan de vide d'une pièce (void) se cale sur la grille d'Effacement : l'ancre glisse pour que son centre tombe pile au centre d'une cellule ; void.at doit pour cela tomber sur la grille des tuiles (x multiple de 32, y de 16, x/32 + y/16 pair). Des rayons qui gardent cette marge creusent les mêmes cellules à chaque run, et le bord tombe au même endroit de la pièce. Un décor « …_base » prend la canopée « …_canopy » de son dossier. Le cœur exige un ground et ne prend pas de Mémorial : il garde la place du gardien et de son combat ; le joueur arrive à l'ouest de son centre, laisser ce côté ouvert. Démonstration de T0 : des pièces faites de décors existants, refaites par les lots de chaque terre.",
   "pieces_per_land": [3, 4],
   "min_spacing_px": 1400,
   "attempts": 240,
@@ -296,21 +296,77 @@
           ]
         },
         {
-          "id": "autel_noye",
-          "half_extent_px": [380, 200],
+          "id": "marais_salants",
+          "_doc": "Les marais salants (plan 58 T2c) : six salines en deux rangs (l'eau du terrain dessous, un peu plus petite que le décor plaqué qui en donne la forme, et remontée de 24 px : une tuile d'eau se dessine plus bas que sa cellule), séparées de diguettes où l'on marche, des vannes entre eux ; au sud, le sel de la dernière récolte, devenu gris, le las et la brouette ; la cabane du saunier à l'est.",
+          "half_extent_px": [600, 380],
           "ground": "grass",
-          "memorial": [0, 50],
+          "memorial": [-420, 230],
+          "water": [
+            {"at": [-300, -234], "half_extent_px": [80, 26]},
+            {"at": [0, -234], "half_extent_px": [80, 26]},
+            {"at": [300, -234], "half_extent_px": [80, 26]},
+            {"at": [-300, -84], "half_extent_px": [80, 26]},
+            {"at": [0, -84], "half_extent_px": [80, 26]},
+            {"at": [300, -84], "half_extent_px": [80, 26]}
+          ],
+          "spur_start": [0, 330],
           "elements": [
-            { "sprites": ["prop_sunken_shrine"], "at": [0, -150], "blocking": true },
-            { "sprites": ["prop_bound_tree"], "at": [-260, -120], "blocking": true },
-            { "sprites": ["prop_vine_curtain", "prop_hanging_moss"], "at": [250, -130], "blocking": true },
-            { "sprites": ["prop_swamp_lantern"], "at": [-120, -170], "blocking": false },
-            { "sprites": ["prop_swamp_lantern"], "at": [120, -170], "blocking": false },
-            { "sprites": ["prop_bone_pile"], "at": [-300, 90], "blocking": false },
-            { "sprites": ["prop_bone_pile"], "at": [290, 120], "blocking": false, "chance": 0.6 },
-            { "sprites": ["prop_toxic_mushrooms", "prop_spore_patch"], "at": [-330, 170], "to": [330, 170], "step": 110, "blocking": false, "chance": 0.7 },
-            { "sprites": ["prop_dead_tree_large_base", "prop_root_mass_large"], "at": [350, 40], "blocking": true },
-            { "sprites": ["prop_dead_tree_mossy_large", "prop_aerial_roots"], "at": [-350, 20], "blocking": true }
+            {"sprites": ["prop_salt_pan"], "at": [-300, -210], "blocking": false, "flat": true},
+            {"sprites": ["prop_salt_pan"], "at": [0, -210], "blocking": false, "flat": true},
+            {"sprites": ["prop_salt_pan"], "at": [300, -210], "blocking": false, "flat": true},
+            {"sprites": ["prop_salt_pan"], "at": [-300, -60], "blocking": false, "flat": true},
+            {"sprites": ["prop_salt_pan"], "at": [0, -60], "blocking": false, "flat": true},
+            {"sprites": ["prop_salt_pan"], "at": [300, -60], "blocking": false, "flat": true},
+            {"sprites": ["prop_sluice_gate"], "at": [-150, -200], "blocking": false},
+            {"sprites": ["prop_sluice_gate"], "at": [150, -50], "blocking": false},
+            {"sprites": ["prop_sluice_gate"], "at": [-150, -50], "blocking": false, "chance": 0.6},
+            {"sprites": ["prop_salt_pile"], "at": [-300, 90], "blocking": true},
+            {"sprites": ["prop_salt_pile"], "at": [-200, 110], "blocking": true, "chance": 0.7},
+            {"sprites": ["prop_salt_pile"], "at": [20, 100], "blocking": true},
+            {"sprites": ["prop_salt_pile"], "at": [260, 90], "blocking": true},
+            {"sprites": ["prop_salt_rake"], "at": [-110, 40], "blocking": false},
+            {"sprites": ["prop_wheelbarrow"], "at": [140, 110], "blocking": false},
+            {"sprites": ["prop_saltworker_hut"], "at": [490, -40], "blocking": true},
+            {"sprites": ["prop_rusted_barrel"], "at": [450, 40], "blocking": true, "chance": 0.7},
+            {"sprites": ["prop_old_post"], "at": [-470, -90], "blocking": false},
+            {"sprites": ["prop_stake_row"], "at": [-470, -300], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_swamp_lantern"], "at": [400, 120], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [-540, -190], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [470, -240], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [530, 200], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [-250, 290], "blocking": false, "chance": 0.7}
+          ]
+        },
+        {
+          "id": "digue_rompue",
+          "_doc": "La digue rompue (plan 58 T2c) : un long talus de pierres sèches d'ouest en est, l'eau au nord ; au milieu, la brèche par où elle est entrée à 22 h 40, des blocs roulés, une langue d'eau qui s'étale au sud, des sacs de sable posés trop tard.",
+          "half_extent_px": [620, 360],
+          "ground": "grass",
+          "memorial": [380, 230],
+          "water": [
+            {"at": [0, -200], "half_extent_px": [600, 100]},
+            {"at": [0, -60], "half_extent_px": [70, 50]},
+            {"at": [0, 40], "half_extent_px": [130, 60]}
+          ],
+          "spur_start": [-300, 320],
+          "elements": [
+            {"sprites": ["prop_dike_wall"], "at": [-560, -40], "to": [-140, -40], "step": 70, "blocking": true},
+            {"sprites": ["prop_dike_wall"], "at": [140, -40], "to": [560, -40], "step": 70, "blocking": true},
+            {"sprites": ["prop_dike_rubble"], "at": [-110, -10], "blocking": true},
+            {"sprites": ["prop_dike_rubble"], "at": [115, 0], "blocking": false},
+            {"sprites": ["prop_dike_rubble"], "at": [-40, 120], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_sandbags"], "at": [-190, 20], "blocking": false},
+            {"sprites": ["prop_sandbags"], "at": [200, 25], "blocking": false},
+            {"sprites": ["prop_sandbags"], "at": [170, 60], "blocking": false, "chance": 0.6},
+            {"sprites": ["prop_upturned_boat"], "at": [-360, 110], "blocking": true, "chance": 0.7},
+            {"sprites": ["prop_rusted_barrel"], "at": [300, 120], "blocking": true},
+            {"sprites": ["prop_drowned_cart"], "at": [60, 150], "blocking": true, "chance": 0.6},
+            {"sprites": ["prop_stake_row"], "at": [-430, 30], "blocking": false},
+            {"sprites": ["prop_swamp_lantern"], "at": [-250, 60], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [-560, 60], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [560, 70], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [-150, 250], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_tall_reeds"], "at": [220, 270], "blocking": false}
           ]
         }
       ]

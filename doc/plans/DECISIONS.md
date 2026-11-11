@@ -2613,3 +2613,13 @@ Raphaël, le 11 novembre : « continue d'avancer en autonomie le plus possible �
 - **Les quais n'ont pas de garde-corps** : la bordure est basse et ne bloque pas. Le vide se longe à découvert, et la horde peut y tomber.
 - **Un pan de vide se cale sur la grille d'Effacement** : l'ancre de la pièce glisse un peu pour que le bord du pan tombe au même endroit à chaque run. Le belvédère des bois en profite aussi.
 - **L'île du gardien et le ponton des pêcheurs partent.** Leurs décors restent au semis.
+
+## 215. Les marais salants et la digue rompue — 11 novembre 2026
+
+Lot T2c du [plan 58](58-terres-completes.md), dans le découpage du §212. Détail au plan 58 §16. Fait dans la suite du « continue d'avancer en autonomie le plus possible » du §214.
+
+**Tranché par défaut, réversible :**
+- **Une pièce pose de l'eau par bassins rectangulaires** (`water`), pas par ellipses : une saline, un bassin de chasse, une mer derrière une digue ont des bords droits. Les bassins se remplissent une fois toutes les pièces posées, et un chemin qui les traverse reste à sec.
+- **La forme d'une saline vient d'un décor plaqué**, l'eau du terrain dessous ne fait que ralentir. Les tuiles d'eau, avec leur bordure de vase, fondent des bassins voisins en une seule mare.
+- **La mer est revenue derrière la digue** : une bande d'eau au nord du talus, et une langue d'eau par la brèche. C'est de l'eau, pas du vide : la mer oubliée reste aux quais.
+- **L'autel noyé part.** Ses décors restent au semis du marais.

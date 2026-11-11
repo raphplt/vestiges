@@ -1934,6 +1934,258 @@ def fish_crates(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(100, 76), footprint=box_footprint(0.7 * M, 0.35 * M))
 
 
+# Les marais salants et la digue (plan 58 T2c) : le sel que plus personne ne récolte a grisé, la digue a cédé.
+SALT_GREY = "#9C9A90"
+SALT_DIRTY = "#7E786C"
+LIME_WASH = "#C4BCA8"
+ROOF_TILE = "#8A5C46"
+DRY_STONE = "#7E7A6C"
+SACK = "#8E7E5C"
+GRASS_TOP = "#5A7A40"
+
+
+def salt_pile(stem: str, seed: int) -> PropModel:
+    """Tas de sel laissé au bord des bassins : un cône tassé, gris, sali à la base, croûté et raviné par les pluies, quelques cristaux clairs."""
+    SALT, DIRT, CRUST, BRIGHT = range(4)
+    materials = [make_material("salt", SALT_GREY, contrast=0.6), make_material("dirt", SALT_DIRTY, contrast=0.6),
+                 make_material("crust", "#8E8A7E", contrast=0.5), make_material("bright", "#D4D2C8", contrast=0.4)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        lean = w.uniform(-0.12, 0.12) * M
+        heap = lambda p: np.maximum(capsule(p, (0.0, 0.25 * M, 0.0), (lean, 1.3 * M, 0.0), 1.2 * M, 0.12 * M), -p[:, 1])
+        gullies = bands(0, 0.22 * M, 0.025 * M, frame=lambda p: p * np.array([1.0, 0.3, 1.0]))
+        return [
+            Part(heap, SALT),
+            Part(painted(heap, both(lambda p: p[:, 1] - 0.4 * M, noise_mask(0.2 * M, seed + 1, 0.6))), DIRT, relief=False),
+            Part(painted(heap, noise_mask(0.3 * M, seed + 3, 0.35)), CRUST, relief=False),
+            Part(painted(heap, both(gullies, lambda p: p[:, 1] - 0.9 * M, noise_mask(0.25 * M, seed + 4, 0.5))), DIRT, relief=False),
+            Part(painted(heap, noise_mask(0.06 * M, seed + 2, 0.1)), BRIGHT, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(100, 84), footprint=box_footprint(1.1 * M, 1.1 * M))
+
+
+def salt_pan(stem: str, seed: int) -> PropModel:
+    """
+    Une saline : bassin rectangulaire peu profond bordé d'une diguette d'argile tassée, l'eau laiteuse et immobile, une
+    croûte de sel gris prise sur les bords et en plaques. À plat sur le sol : l'eau du terrain dessous ralentit, elle
+    donne la forme.
+    """
+    CLAY, CLAY_DARK, WATER, CRUST, STREAK = range(5)
+    materials = [make_material("clay", "#7A6E58", contrast=0.6), make_material("clay_dark", "#5A5042", contrast=0.5),
+                 make_material("brine", "#5E7470", contrast=0.4), make_material("crust", SALT_GREY, contrast=0.4),
+                 make_material("streak", WATER_MILK, contrast=0.3)]
+    half = (6.45 * M, 5.4 * M)
+    rim = 0.6 * M
+
+    def parts() -> list[Part]:
+        outer = lambda p: rounded_box(p, (0.0, 0.06 * M, 0.0), (half[0], 0.06 * M, half[1]), 0.04 * M)
+        inner = lambda p: rounded_box(p, (0.0, 0.06 * M, 0.0), (half[0] - rim, 0.1 * M, half[1] - rim), 0.1 * M)
+        bank = lambda p: np.maximum(outer(p), -inner(p))
+        brine = lambda p: rounded_box(p, (0.0, 0.02 * M, 0.0), (half[0] - rim, 0.02 * M, half[1] - rim), 0.05 * M)
+        edge = lambda p: -np.minimum(half[0] - rim - np.abs(p[:, 0]), half[1] - rim - np.abs(p[:, 2])) - 0.0 * M
+        crust_edge = lambda p: -edge(p) - 0.45 * M - 1.0 * M * (value_noise(p, 0.9 * M, seed) - 0.5)
+        return [
+            Part(bank, CLAY),
+            Part(painted(bank, noise_mask(0.4 * M, seed + 1, 0.35)), CLAY_DARK, relief=False),
+            Part(brine, WATER),
+            Part(painted(brine, crust_edge), CRUST, relief=False),
+            Part(painted(brine, noise_mask(1.1 * M, seed + 2, 0.1)), CRUST, relief=False),
+            Part(painted(brine, both(noise_mask(0.7 * M, seed + 3, 0.05, (3.0, 1.0, 0.6)), lambda p: -edge(p) - 1.0 * M)), STREAK,
+                 relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, ray_range=float(3.0 * half[1]), canvas=(340, 220), smooth_slopes=True)
+
+
+def salt_rake(stem: str, seed: int) -> PropModel:
+    """Le las du saunier, couché au bord d'un bassin : un long manche, la planchette qui ramène le sel, du sel gris resté collé."""
+    WOOD, SALT = range(2)
+    materials = [make_material("wood", WOOD_OLD, contrast=0.7), make_material("salt", SALT_GREY, contrast=0.5)]
+
+    def parts() -> list[Part]:
+        handle = lambda p: capsule(p, (-1.6 * M, 0.05 * M, 0.0), (1.1 * M, 0.08 * M, 0.0), 0.035 * M)
+        blade = lambda p: rounded_box(p, (1.18 * M, 0.1 * M, 0.0), (0.05 * M, 0.08 * M, 0.42 * M), 0.015 * M)
+        crust = lambda p: rounded_box(p, (1.26 * M, 0.04 * M, 0.0), (0.06 * M, 0.04 * M, 0.38 * M), 0.03 * M)
+        return [Part(lambda p: np.minimum(handle(p), blade(p)), WOOD), Part(crust, SALT)]
+
+    return PropModel(stem, parts, materials, float(np.radians(-28.0)), canvas=(110, 56))
+
+
+def wheelbarrow(stem: str, seed: int) -> PropModel:
+    """Brouette de bois du saunier, une roue cerclée de fer, les brancards au sol, pleine d'un sel gris qui a pris en bloc."""
+    WOOD, IRON_M, SALT, RUST_M = range(4)
+    materials = [make_material("wood", WOOD_OLD, contrast=0.7), make_material("iron", IRON, contrast=0.8),
+                 make_material("salt", SALT_GREY, contrast=0.5), make_material("rust", RUST, contrast=0.7)]
+
+    def parts() -> list[Part]:
+        tilt = rotation_z(-0.12)
+        box = lambda p: rounded_box(p, (0.1 * M, 0.55 * M, 0.0), (0.62 * M, 0.2 * M, 0.42 * M), 0.03 * M, tilt)
+        hollow = lambda p: rounded_box(p, (0.1 * M, 0.66 * M, 0.0), (0.56 * M, 0.2 * M, 0.36 * M), 0.02 * M, tilt)
+        tub = lambda p: np.maximum(box(p), -hollow(p))
+        load = lambda p: np.maximum(ellipsoid(p, (0.1 * M, 0.62 * M, 0.0), (0.56 * M, 0.2 * M, 0.36 * M), tilt), -box(p) - 0.2 * M)
+        shafts = lambda p: _union(*(capsule(p, (0.75 * M, 0.38 * M, z), (-1.0 * M, 0.06 * M, z), 0.035 * M) for z in (-0.3 * M, 0.3 * M)))
+        legs = lambda p: _union(*(capsule(p, (-0.35 * M, 0.4 * M, z), (-0.42 * M, 0.02 * M, z), 0.03 * M) for z in (-0.3 * M, 0.3 * M)))
+        wheel = lambda p: cylinder(p, (0.9 * M, 0.25 * M, 0.0), 0.25 * M, 0.05 * M, 0.01 * M, rotation_x(np.pi / 2))
+        rim = lambda p: np.maximum(wheel(p) - 0.005 * M, 0.2 * M - np.hypot(p[:, 0] - 0.9 * M, p[:, 1] - 0.25 * M))
+        return [
+            Part(tub, WOOD),
+            Part(painted(tub, noise_mask(0.15 * M, seed + 1, 0.15)), RUST_M, relief=False),
+            Part(load, SALT),
+            Part(lambda p: np.minimum(shafts(p), legs(p)), WOOD),
+            Part(wheel, WOOD),
+            Part(rim, IRON_M),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(100, 76), footprint=box_footprint(0.95 * M, 0.45 * M))
+
+
+def saltworker_hut(stem: str, seed: int) -> PropModel:
+    """
+    La cabane du saunier : murs de moellons passés à la chaux qui s'écaille sur la pierre, toit de tuiles creuses à deux
+    pans dont il manque des tuiles, porte basse fermée d'un cadenas, un banc de pierre contre le mur.
+    """
+    WALL, STONE_M, ROOF, GAP, DOOR, SILL = range(6)
+    materials = [make_material("lime", LIME_WASH, contrast=0.6), make_material("stone", DRY_STONE, contrast=0.7),
+                 make_material("tiles", ROOF_TILE, contrast=0.8), make_material("gap", "#3E3430", contrast=0.4),
+                 make_material("door", WOOD_DARK, contrast=0.6), make_material("sill", STONE, contrast=0.6)]
+    half = (1.3 * M, 1.0 * M, 1.0 * M)
+
+    def parts() -> list[Part]:
+        walls = lambda p: rounded_box(p, (0.0, half[1], 0.0), half, 0.06 * M)
+        slope_l = lambda p: rounded_box(p, (0.0, 2.38 * M, -0.6 * M), (1.5 * M, 0.06 * M, 0.78 * M), 0.02 * M, rotation_x(0.58))
+        slope_r = lambda p: rounded_box(p, (0.0, 2.38 * M, 0.6 * M), (1.5 * M, 0.06 * M, 0.78 * M), 0.02 * M, rotation_x(-0.58))
+        roof = lambda p: np.minimum(slope_l(p), slope_r(p))
+        gable = lambda p: np.maximum(rounded_box(p, (0.0, 2.3 * M, 0.0), (1.28 * M, 0.4 * M, 0.98 * M), 0.02 * M),
+                                     p[:, 1] - 2.75 * M + np.abs(p[:, 2]) * 0.65)
+        channels = bands(0, 0.2 * M, 0.06 * M)
+        front = lambda p: half[2] - 0.08 * M - p[:, 2]
+        door = both(lambda p: np.abs(p[:, 0] - 0.35 * M) - 0.32 * M, lambda p: p[:, 1] - 1.45 * M, front)
+        bench = lambda p: rounded_box(p, (-0.65 * M, 0.25 * M, half[2] + 0.2 * M), (0.45 * M, 0.08 * M, 0.17 * M), 0.02 * M)
+        bench_feet = lambda p: _union(*(rounded_box(p, (x * M, 0.1 * M, half[2] + 0.2 * M), (0.07 * M, 0.1 * M, 0.13 * M), 0.01 * M)
+                                        for x in (-0.95, -0.35)))
+        return [
+            Part(lambda p: np.minimum(walls(p), gable(p)), WALL),
+            Part(painted(lambda p: np.minimum(walls(p), gable(p)), both(noise_mask(0.18 * M, seed + 1, 0.3),
+                                                                        lambda p: p[:, 1] - 0.9 * M)), STONE_M, relief=False),
+            Part(painted(walls, noise_mask(0.1 * M, seed + 3, 0.06)), STONE_M, relief=False),
+            Part(roof, ROOF),
+            Part(painted(roof, channels), GAP, relief=False),
+            Part(painted(roof, noise_mask(0.18 * M, seed + 2, 0.08), 0.03 * M), GAP, relief=False),
+            Part(painted(walls, door, 0.02 * M), DOOR, relief=False),
+            Part(lambda p: np.minimum(bench(p), bench_feet(p)), SILL),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, ray_range=160.0, canvas=(130, 130), footprint=box_footprint(half[0], half[2]))
+
+
+def sluice_gate(stem: str, seed: int) -> PropModel:
+    """Vanne entre deux bassins : deux poteaux, la planche coulissante relevée, sa crémaillère et la manivelle rouillée."""
+    WOOD, IRON_M, RUST_M = range(3)
+    materials = [make_material("wood", WET_WOOD, contrast=0.7), make_material("iron", IRON, contrast=0.8),
+                 make_material("rust", RUST_ORANGE, contrast=0.7)]
+
+    def parts() -> list[Part]:
+        posts = lambda p: _union(*(rounded_box(p, (x * M, 0.6 * M, 0.0), (0.08 * M, 0.6 * M, 0.08 * M), 0.015 * M) for x in (-0.5, 0.5)))
+        beam = lambda p: rounded_box(p, (0.0, 1.2 * M, 0.0), (0.62 * M, 0.07 * M, 0.09 * M), 0.015 * M)
+        board = lambda p: rounded_box(p, (0.0, 0.62 * M, 0.0), (0.42 * M, 0.26 * M, 0.04 * M), 0.01 * M)
+        rack = lambda p: rounded_box(p, (0.0, 1.32 * M, 0.0), (0.03 * M, 0.42 * M, 0.03 * M), 0.008 * M)
+        crank = lambda p: _union(cylinder(p, (0.12 * M, 1.32 * M, 0.0), 0.1 * M, 0.02 * M, 0.005 * M, rotation_z(np.pi / 2)),
+                                 capsule(p, (0.14 * M, 1.32 * M, 0.0), (0.14 * M, 1.44 * M, 0.1 * M), 0.02 * M))
+        iron = lambda p: np.minimum(rack(p), crank(p))
+        return [
+            Part(lambda p: _union(posts(p), beam(p), board(p)), WOOD),
+            Part(iron, IRON_M),
+            Part(painted(iron, noise_mask(0.06 * M, seed + 1, 0.4)), RUST_M, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, THREE_QUARTER, canvas=(72, 90), footprint=box_footprint(0.6 * M, 0.12 * M))
+
+
+def dike_wall(stem: str, seed: int) -> PropModel:
+    """
+    Un tronçon de la digue : un talus de pierres sèches à fruit, assises irrégulières, joints vides, le dessus enherbé ;
+    des pierres manquent ici et là. Bloquant : on passe par la brèche.
+    """
+    STONE_M, JOINT, GRASS, MOSS = range(4)
+    materials = [make_material("stone", DRY_STONE, contrast=0.7), make_material("joint", "#4A463E", contrast=0.5),
+                 make_material("grass", GRASS_TOP, contrast=0.7), make_material("moss", "#6A7448", contrast=0.6)]
+    length, height, base = 2.1 * M, 1.1 * M, 0.95 * M
+
+    def bank(p: np.ndarray) -> np.ndarray:
+        taper = base - (base - 0.45 * M) * np.clip(p[:, 1] / height, 0.0, 1.0)
+        body = np.maximum(np.maximum(np.abs(p[:, 0]) - length, np.abs(p[:, 2]) - taper), np.maximum(-p[:, 1], p[:, 1] - height))
+        bumps = 0.08 * M * (value_noise(p, 0.3 * M, seed) - 0.5)
+        return body + bumps
+
+    def parts() -> list[Part]:
+        courses = bands(1, 0.22 * M, 0.035 * M)
+        heads = lambda p: (lambda row: (lambda phase: np.minimum(phase, 0.38 * M - phase) - 0.025 * M)(
+            np.mod(p[:, 0] + row * 0.17 * M, 0.38 * M)))(np.floor(p[:, 1] / (0.22 * M)))
+        joints = lambda p: np.minimum(courses(p), heads(p))
+        top = lambda p: np.maximum(ellipsoid(p, (0.0, height, 0.0), (length + 0.05 * M, 0.16 * M, 0.5 * M)), -bank(p) - 0.12 * M)
+        return [
+            Part(bank, STONE_M),
+            Part(painted(bank, joints), JOINT, relief=False),
+            Part(painted(bank, noise_mask(0.3 * M, seed + 1, 0.06), 0.04 * M), JOINT, relief=False),
+            Part(painted(bank, both(noise_mask(0.25 * M, seed + 2, 0.4), lambda p: p[:, 1] - 0.4 * M)), MOSS, relief=False),
+            Part(top, GRASS),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(150, 90), footprint=box_footprint(length, base))
+
+
+def dike_rubble(stem: str, seed: int) -> PropModel:
+    """Les pierres de la brèche, roulées par l'eau : des blocs épars et basculés, un pan de talus effondré, de la vase entre eux."""
+    STONE_M, MOSS, MUD_M = range(3)
+    materials = [make_material("stone", DRY_STONE, contrast=0.7), make_material("moss", "#6A7448", contrast=0.6),
+                 make_material("mud", MUD, contrast=0.5)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        blocks = [((x * M + w.uniform(-0.12, 0.12) * M, w.uniform(0.2, 0.32) * M, w.uniform(-0.45, 0.45) * M),
+                   (w.uniform(0.24, 0.36) * M, w.uniform(0.2, 0.28) * M, w.uniform(0.2, 0.3) * M),
+                   rotation_y(w.uniform(0, 3.0)) @ rotation_z(w.uniform(-0.6, 0.6)))
+                  for x in (-1.0, -0.6, -0.2, 0.25, 0.7, 1.05, -0.4, 0.45)]
+        blocks += [((x * M, 0.6 * M, w.uniform(-0.15, 0.15) * M), (0.28 * M, 0.2 * M, 0.24 * M), rotation_y(w.uniform(0, 3.0)) @ rotation_x(0.4))
+                   for x in (-0.55, 0.3)]
+        stones = lambda p: _union(*(rounded_box(p, c, h, 0.05 * M, r) for c, h, r in blocks))
+        slump = lambda p: np.maximum(ellipsoid(p, (-0.2 * M, 0.0, 0.0), (1.0 * M, 0.25 * M, 0.5 * M)), -p[:, 1])
+        mud = lambda p: np.maximum(ellipsoid(p, (0.2 * M, 0.0, 0.1 * M), (1.4 * M, 0.06 * M, 0.75 * M)), -p[:, 1])
+        return [
+            Part(mud, MUD_M),
+            Part(lambda p: np.minimum(stones(p), slump(p)), STONE_M),
+            Part(painted(lambda p: np.minimum(stones(p), slump(p)), both(noise_mask(0.2 * M, seed + 1, 0.3), lambda p: p[:, 1] - 0.25 * M)),
+                 MOSS, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(120, 84), footprint=box_footprint(1.2 * M, 0.6 * M))
+
+
+def sandbags(stem: str, seed: int) -> PropModel:
+    """Sacs de sable entassés à la hâte au bord de la brèche, deux rangs décalés, toile pourrie, un sac crevé qui a coulé."""
+    CLOTH, DARK, SAND = range(3)
+    materials = [make_material("sack", SACK, contrast=0.6), make_material("damp", "#5E5442", contrast=0.5),
+                 make_material("sand", "#A08E66", contrast=0.5)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        bags = [((x * M + w.uniform(-0.04, 0.04) * M, 0.14 * M, w.uniform(-0.05, 0.05) * M), rotation_y(w.uniform(-0.15, 0.15)))
+                for x in (-0.84, -0.28, 0.28, 0.84)]
+        bags += [(((x + 0.03) * M, 0.38 * M, w.uniform(-0.04, 0.04) * M), rotation_y(w.uniform(-0.2, 0.2))) for x in (-0.56, 0.0, 0.56)]
+        sacks = lambda p: _union(*(ellipsoid(p, c, (0.3 * M, 0.13 * M, 0.2 * M), r) for c, r in bags))
+        spill = lambda p: np.maximum(ellipsoid(p, (1.25 * M, 0.0, 0.15 * M), (0.35 * M, 0.08 * M, 0.25 * M)), -p[:, 1])
+        burst = lambda p: ellipsoid(p, (1.12 * M, 0.08 * M, 0.0), (0.24 * M, 0.08 * M, 0.18 * M))
+        return [
+            Part(lambda p: np.minimum(sacks(p), burst(p)), CLOTH),
+            Part(painted(lambda p: np.minimum(sacks(p), burst(p)), lambda p: p[:, 1] - 0.12 * M), DARK, relief=False),
+            Part(spill, SAND),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(110, 60), footprint=box_footprint(1.15 * M, 0.25 * M))
+
+
 def catalog() -> list[PropModel]:
     models: list[PropModel] = []
     models += dead_tree_large("prop_dead_tree_large", 501)
@@ -1981,5 +2233,14 @@ def catalog() -> list[PropModel]:
         harbor_crane("prop_harbor_crane", 569),
         upturned_boat("prop_upturned_boat", 570),
         fish_crates("prop_fish_crates", 571),
+        salt_pile("prop_salt_pile", 581),
+        salt_rake("prop_salt_rake", 582),
+        salt_pan("prop_salt_pan", 589),
+        wheelbarrow("prop_wheelbarrow", 583),
+        saltworker_hut("prop_saltworker_hut", 584),
+        sluice_gate("prop_sluice_gate", 585),
+        dike_wall("prop_dike_wall", 586),
+        dike_rubble("prop_dike_rubble", 587),
+        sandbags("prop_sandbags", 588),
     ]
     return models

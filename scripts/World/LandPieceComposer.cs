@@ -48,17 +48,20 @@ public static class LandPieceComposer
         {
             if (taken >= wanted)
                 break;
-            if (!TryPick(generator, paths, usedCells, config, band, piece, placed, rng, out Vector2 anchor))
+            // Le sens d'abord : l'ancre d'une pièce à pan de vide se cale selon lui, avant qu'on éprouve sa place.
+            bool mirrored = rng.Randf() < 0.5f;
+            if (!TryPick(generator, paths, usedCells, config, band, piece, placed, mirrored, voidGridPx, rng, out Vector2 anchor))
             {
                 GD.PushWarning($"[LandPieceComposer] Pas de place pour la pièce « {piece.Id} »");
                 continue;
             }
-            bool mirrored = rng.Randf() < 0.5f;
-            anchor = AlignVoid(generator, paths, usedCells, config, piece, placed, anchor, mirrored, voidGridPx);
             Settle(generator, terrain, paths, usedCells, piece, anchor, mirrored, style);
             placed.Add(new PlacedPiece(piece, anchor, mirrored, false));
             taken++;
         }
+        // Les bassins une fois tous les embranchements tracés : un chemin qui en traverse un y reste à sec, comme une diguette.
+        foreach (PlacedPiece piece in placed)
+            Flood(generator, terrain, paths, piece);
         GD.Print($"[LandPieceComposer] {placed.Count} pièce(s) : {string.Join(", ", placed.ConvertAll(p => p.Piece.Id))}, "
             + $"{Time.GetTicksMsec() - started} ms");
         return placed;
@@ -90,27 +93,42 @@ public static class LandPieceComposer
             ForEachCell(anchor, half, cell =>
             {
                 Vector2 offset = PathNetworkGenerator.CellCenter(cell) - anchor;
-                if ((offset.X * offset.X) / (half.X * half.X) + (offset.Y * offset.Y) / (half.Y * half.Y) > 1f)
-                    return;
-                int gx = cell.X + generator.MapRadiusX;
-                int gy = cell.Y + generator.MapRadiusY;
-                if (generator.IsWithinBounds(cell.X, cell.Y) && gx >= 0 && gy >= 0 && gx < terrain.GetLength(0) && gy < terrain.GetLength(1))
-                    terrain[gx, gy] = ground;
+                if ((offset.X * offset.X) / (half.X * half.X) + (offset.Y * offset.Y) / (half.Y * half.Y) <= 1f)
+                    SetTerrain(generator, terrain, cell, ground);
             });
         }
         if (paths != null)
             SiteComposer.TryConnect(paths, piece.Plan, anchor, mirrored, style);
     }
 
+    /// <summary>Remplit les bassins de la pièce, sauf sous un chemin.</summary>
+    private static void Flood(WorldGenerator generator, TerrainType[,] terrain, PathNetwork paths, PlacedPiece piece)
+    {
+        foreach (Rect2 basin in piece.Piece.Water)
+        {
+            Vector2 center = piece.Anchor + SiteComposer.Mirror(basin.GetCenter(), piece.Mirrored);
+            ForEachCell(center, basin.Size / 2f, cell =>
+            {
+                if (paths == null || !paths.Cells.Contains(cell))
+                    SetTerrain(generator, terrain, cell, TerrainType.Water);
+            });
+        }
+    }
+
+    private static void SetTerrain(WorldGenerator generator, TerrainType[,] terrain, Vector2I cell, TerrainType type)
+    {
+        int gx = cell.X + generator.MapRadiusX;
+        int gy = cell.Y + generator.MapRadiusY;
+        if (generator.IsWithinBounds(cell.X, cell.Y) && gx >= 0 && gy >= 0 && gx < terrain.GetLength(0) && gy < terrain.GetLength(1))
+            terrain[gx, gy] = type;
+    }
+
     /// <summary>
     /// Le pan de vide se creuse par cellules d'Effacement entières : l'ancre glisse vers la cellule de tuile dont le pan
-    /// tombe le plus près du centre d'une cellule d'Effacement (à quelques pixels près, la grille des tuiles ne les
-    /// contient pas toutes). Avec des rayons qui gardent cette marge, les mêmes cellules se creusent à chaque run : le bord
-    /// tombe au même endroit de la pièce, et un quai ou une rambarde peut le longer. Si la place ne tient plus après le
-    /// glissement ou s'approche trop d'une autre pièce, l'ancre ne bouge pas.
+    /// tombe au centre d'une cellule d'Effacement (exactement, void.at étant sur la grille des tuiles). Les mêmes cellules
+    /// se creusent alors à chaque run : le bord tombe au même endroit de la pièce, et un quai ou une rambarde peut le longer.
     /// </summary>
-    private static Vector2 AlignVoid(WorldGenerator generator, PathNetwork paths, HashSet<Vector2I> usedCells, LandPieceConfig config,
-        LandPieceConfig.Piece piece, List<PlacedPiece> placed, Vector2 anchor, bool mirrored, int gridPx)
+    private static Vector2 AlignVoid(LandPieceConfig.Piece piece, Vector2 anchor, bool mirrored, int gridPx)
     {
         if (piece.VoidCenter is not Vector2 center)
             return anchor;
@@ -130,23 +148,15 @@ public static class LandPieceComposer
                     aligned = candidate;
             }
         }
-        foreach (PlacedPiece other in placed)
-        {
-            if (aligned.DistanceTo(other.Anchor) < config.MinSpacingPx)
-                return Refuse(piece, anchor);
-        }
-        return Fits(generator, paths, usedCells, config, piece, aligned) ? aligned : Refuse(piece, anchor);
-
-        static Vector2 Refuse(LandPieceConfig.Piece piece, Vector2 anchor)
-        {
-            GD.PushWarning($"[LandPieceComposer] Le vide de « {piece.Id} » reste hors de la grille d'Effacement : son bord tombera ailleurs");
-            return anchor;
-        }
+        return aligned;
     }
 
-    /// <summary>Emplacements tirés dans la bande : garde le plus éloigné des pièces posées parmi les premiers valides.</summary>
+    /// <summary>
+    /// Emplacements tirés dans la bande, calés sur la grille d'Effacement s'ils portent un pan de vide : garde le plus
+    /// éloigné des pièces posées parmi les premiers valides.
+    /// </summary>
     private static bool TryPick(WorldGenerator generator, PathNetwork paths, HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band,
-        LandPieceConfig.Piece piece, List<PlacedPiece> placed, RandomNumberGenerator rng, out Vector2 best)
+        LandPieceConfig.Piece piece, List<PlacedPiece> placed, bool mirrored, int voidGridPx, RandomNumberGenerator rng, out Vector2 best)
     {
         best = default;
         float bestScore = float.MinValue;
@@ -159,7 +169,7 @@ public static class LandPieceComposer
             float distance = radius * Mathf.Sqrt(rng.RandfRange(band.X * band.X, band.Y * band.Y));
             float angle = rng.RandfRange(0f, Mathf.Tau);
             Vector2I cell = new(Mathf.RoundToInt(Mathf.Cos(angle) * distance), Mathf.RoundToInt(Mathf.Sin(angle) * distance * stretchY));
-            Vector2 anchor = PathNetworkGenerator.CellCenter(cell);
+            Vector2 anchor = AlignVoid(piece, PathNetworkGenerator.CellCenter(cell), mirrored, voidGridPx);
             float nearest = float.MaxValue;
             foreach (PlacedPiece other in placed)
                 nearest = Mathf.Min(nearest, anchor.DistanceTo(other.Anchor));

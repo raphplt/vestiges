@@ -28,6 +28,11 @@ public sealed class LandPieceConfig
         public Vector2? VoidCenter;
         /// <summary>Demi-axes de l'ellipse du vide, en pixels écran.</summary>
         public Vector2 VoidRadii;
+        /// <summary>
+        /// Bassins d'eau posés par la pièce (plan 58 T2c), rectangles alignés sur l'écran, en pixels écran depuis son centre.
+        /// Ils remplissent les cellules dont le centre y tombe, sauf celles d'un chemin.
+        /// </summary>
+        public readonly List<Rect2> Water = new();
     }
 
     /// <summary>Pièces d'un biome, décors tirés de son dossier.</summary>
@@ -62,6 +67,11 @@ public sealed class LandPieceConfig
     // Pas de la grille des tuiles (PathNetworkGenerator.CellCenter) : 32 px en x d'une rangée à l'autre, 16 px en y.
     private const int TileStepXPx = 32;
     private const int TileStepYPx = 16;
+    // Un bassin plus petit qu'une cellule de tuile (64 × 32 px) pourrait n'en remplir aucune.
+    private const float BasinMinHalfXPx = 32f;
+    private const float BasinMinHalfYPx = 16f;
+    // Le Mémorial se pose au sec, son socle à distance de la berge.
+    private const float BasinMemorialMarginPx = 64f;
 
     /// <summary>Réglages valides, ou une exception qui nomme le champ fautif (génération, bancs).</summary>
     public static LandPieceConfig Load()
@@ -179,6 +189,15 @@ public sealed class LandPieceConfig
             reader.Fail($"{biomeId}, pièce « {piece.Id} » : memorial hors de l'ellipse de half_extent_px");
         if (JsonConfigReader.Has(item, "void"))
             ReadVoid(reader, reader.Section(item, "void"), biomeId, piece);
+        if (JsonConfigReader.Has(item, "water"))
+        {
+            foreach (JsonElement basin in reader.List(item, "water", 1))
+            {
+                ReadBasin(reader, basin, biomeId, piece);
+                if (reader.Error != null)
+                    break;
+            }
+        }
         return piece;
     }
 
@@ -204,6 +223,28 @@ public sealed class LandPieceConfig
         piece.VoidRadii = radii;
     }
 
+    /// <summary>Un bassin couvre au moins une cellule de tuile, tient dans l'emprise et laisse la place du Mémorial au sec.</summary>
+    private static void ReadBasin(JsonConfigReader reader, JsonElement element, string biomeId, Piece piece)
+    {
+        string where = $"{biomeId}, pièce « {piece.Id} », water";
+        reader.AllowOnly(element, where, "at", "half_extent_px");
+        Vector2 center = SitePlan.Vector(reader, element, "at");
+        Vector2 half = SitePlan.Vector(reader, element, "half_extent_px");
+        if (reader.Error != null)
+            return;
+        Vector2 extent = piece.Plan.HalfExtentPx;
+        Rect2 basin = new(center - half, half * 2f);
+        if (half.X < BasinMinHalfXPx || half.Y < BasinMinHalfYPx)
+            reader.Fail($"{where} : half_extent_px d'au moins {BasinMinHalfXPx} × {BasinMinHalfYPx} px, une cellule de tuile");
+        else if (Mathf.Abs(center.X) + half.X > extent.X || Mathf.Abs(center.Y) + half.Y > extent.Y)
+            reader.Fail($"{where} : bassin hors de half_extent_px");
+        else if (piece.Memorial is Vector2 slot && Mathf.Abs(slot.X - center.X) <= half.X + BasinMemorialMarginPx
+                 && Mathf.Abs(slot.Y - center.Y) <= half.Y + BasinMemorialMarginPx)
+            reader.Fail($"{where} : memorial dans un bassin ou à moins de {BasinMemorialMarginPx} px de son bord");
+        if (reader.Error == null)
+            piece.Water.Add(basin);
+    }
+
     /// <summary>
     /// Une ancre de tuile plus ce décalage peut-elle tomber pile au centre d'une cellule d'Effacement ? Les rangées paires
     /// et impaires décalent x de 32 px : x et y doivent changer de rangée ensemble, retourné ou non.
@@ -226,7 +267,7 @@ public sealed class LandPieceConfig
 
     private static string[] BuildPieceKeys()
     {
-        List<string> keys = new(SitePlan.CommonKeys) { "id", "memorial", "ground", "void" };
+        List<string> keys = new(SitePlan.CommonKeys) { "id", "memorial", "ground", "void", "water" };
         return keys.ToArray();
     }
 }

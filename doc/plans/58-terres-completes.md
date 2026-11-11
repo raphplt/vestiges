@@ -452,3 +452,82 @@ Le bot ravive les trois Mémoriaux du Bas-Port 13 à 17 s plus tôt aux graines 
 - La première minute moins dense est à surveiller dans la mesure de T2d.
 
 Suite : T2c, les marais salants et la digue.
+
+## 16. T2c, les marais salants et la digue rompue — livré le 11 novembre
+
+**Ce qui est fait :**
+- **Neuf décors neufs** (`tools/sprites/props/swamp.py`) :
+  - la **saline**, plaquée au sol : une diguette d'argile autour d'une eau laiteuse, une croûte de sel gris sur les bords et en plaques ;
+  - le **tas de sel** devenu gris, sali à la base, raviné ;
+  - le **las** du saunier, couché ;
+  - la **brouette** pleine de sel pris en bloc ;
+  - la **cabane du saunier** : moellons passés à la chaux qui s'écaille, toit de tuiles creuses où il en manque, banc de pierre ;
+  - la **vanne** entre deux bassins, planche relevée et manivelle rouillée ;
+  - le **talus de la digue**, en pierres sèches enherbées, qui bloque ;
+  - les **blocs de la brèche**, roulés par l'eau ;
+  - les **sacs de sable** posés trop tard, un crevé.
+- **Une pièce peut poser de l'eau** (`water`, `LandPieceConfig`) : des bassins rectangulaires en coordonnées de pièce, retournés avec elle.
+  - Ils se remplissent une fois toutes les pièces et leurs embranchements posés. Un chemin qui en traverse un reste à sec.
+  - L'eau l'emporte sur le sol imposé.
+  - Le lecteur refuse un bassin plus petit qu'une tuile, hors de l'emprise, ou à moins de 64 px du Mémorial.
+- **Les marais salants** (`marais_salants`, à la place de l'autel noyé) :
+  - six salines en deux rangs, séparées de diguettes où l'on marche, des vannes entre elles ;
+  - au sud, les tas de sel de la dernière récolte, le las, la brouette ;
+  - la cabane du saunier à l'est ;
+  - le Mémorial au sud-ouest.
+- **La digue rompue** (`digue_rompue`, pièce neuve) :
+  - un long talus d'ouest en est, la mer revenue au nord ;
+  - au milieu, la brèche : des blocs roulés, une langue d'eau qui passe et s'étale au sud, des sacs de sable de part et d'autre ;
+  - le Mémorial au sud-est.
+- **Le Bas-Port pose désormais ses trois pièces à chaque run** : les quais, les marais salants, la digue.
+
+**Écarts au plan :**
+- **La forme d'une saline vient du décor, pas des tuiles.** Posés seuls, six bassins d'eau se fondaient en une mare : la bordure de vase des tuiles d'eau noie les diguettes. Le décor plaqué donne la forme, l'eau dessous ralentit.
+  - L'eau est un peu plus petite que le décor, et remontée de 24 px : une tuile d'eau se dessine plus bas que sa cellule.
+  - Il reste un halo de vase autour de chaque saline, qui se lit comme de la terre mouillée.
+- **Le calage du vide (T2b) se fait dès le choix de l'emplacement.** Sur les dix graines de placement, la graine 99 refusait le glissement des quais (trop près d'une autre pièce) : 16 cellules et un avertissement.
+  - Le sens de la pièce est désormais tiré avant les candidats. Chaque candidat est calé avant qu'on éprouve sa place et son écart aux autres pièces : il n'y a plus de glissement à refuser.
+  - L'ordre du tirage change, donc les placements de toutes les terres aussi.
+
+**Vérifié :**
+- `tools/validate.sh` démarrage, catalogues, terres et mouvement : démarrage et mouvement verts, puis catalogues et terres verts au code final. Build sans avertissement.
+- Le contrat des catalogues lit les six bassins des marais salants. Il refuse cinq nouveaux cas : liste de bassins vide, clé inconnue, bassin plus petit qu'une tuile, bassin hors de l'emprise, Mémorial au bord d'un bassin.
+- **Placement** (`--capture-pieces`, Bas-Port en première terre, graines 1, 2, 3, 5, 7, 11, 13, 17, 42 et 99) : quatre pièces à chaque graine (le cœur et les trois pièces), dix-sept cellules de vide aux quais à chaque graine, aucun avertissement.
+- **Captures** : [planches/plan58_t2c_salants_digue.png](planches/plan58_t2c_salants_digue.png), qui montre :
+  - les marais salants (graine 42) ;
+  - la digue rompue (graine 7) ;
+  - les neuf décors ;
+  - la brèche de près.
+
+  Les salines ont demandé quatre essais. Six bassins d'eau seuls se fondaient en une mare. Écartés, ils restaient reliés par la vase. Avec le décor plaqué, un liseré d'eau dépassait. L'eau remontée de 24 px le fait disparaître.
+- Relecture `godot-reviewer`. Trois remarques ont été traitées :
+  - la marge du Mémorial est inclusive : le cas de test tombait pile sur le bord exclu de `Rect2.HasPoint` ;
+  - les bassins se remplissent une fois toutes les pièces posées, pour qu'un embranchement tracé plus tard n'en traverse pas un plein d'eau ;
+  - l'écriture du terrain passe par une seule aide (`SetTerrain`).
+
+**Mesure** (`measure_run`, profil dev, Vagabond, Bas-Port puis bois puis carrière, 600 s, graines 7, 42 et 11, avant au commit ccb6754f, après au code final, chacun dans sa copie de travail) :
+
+| | Avant (7 / 42 / 11) | Après (7 / 42 / 11) |
+|---|---|---|
+| Pièces du Bas-Port posées (hors cœur) | 2 / 2 / 2 | 3 / 3 / 3 |
+| Pièces du Bas-Port vues (hors cœur) | 1 / 1 / 1 | 2 / 1 / 2 |
+| Troisième Mémorial du Bas-Port ravivé (s) | 114 / 122 / 93 | 104 / 125 / 160 |
+| Bas-Port quitté (s) | 190 / 208 / 160 | 168 / 194 / 223 |
+| Créatures visibles, 0-60 s | 19,7 / 16,6 / 15,7 | 18,2 / 16,2 / 14,4 |
+| Créatures visibles, 180-300 s | 20,3 / 17,3 / 21,8 | 20,3 / 21,4 / 19,1 |
+| Éliminations | 1 076 / 820 / 1 091 | 1 561 / 1 052 / 743 |
+| Distance parcourue (m) | 8 305 / 8 684 / 9 415 | 7 946 / 8 677 / 8 525 |
+| Gardiens et échos vaincus | 3 / 2 / 3 | 4 / 3 / 2 |
+| Morts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Le bot voit une à deux pièces du Bas-Port au lieu d'une. Aux graines 7 et 42, il ravive les trois Mémoriaux 10 s plus tôt et 3 s plus tard. À la graine 11, le nouveau tirage éloigne les pièces : premier Mémorial à 59 s au lieu de 33 s, troisième à 160 s au lieu de 93 s. Le bot quitte alors la terre 63 s plus tard et vainc un écho de moins. Il ne se bloque nulle part ; c'est le placement qui change. La densité ne bouge pas.
+
+Une première mesure, au code d'avant le calage au choix de l'emplacement, donnait 3 / 2 / 2 pièces vues et des Mémoriaux ravivés en 116 / 115 / 109 s. La différence entre les deux mesures donne l'ordre de l'écart d'un tirage à l'autre.
+
+**Ce qui reste :**
+- Un halo de vase entoure chaque saline. Il se lit comme de la terre mouillée, mais un bord d'eau propre à la saline demanderait une tuile de bassin.
+- La première minute moins dense de T2b ne revient pas ici. À regarder dans la mesure d'ensemble de T2d, avec plus de graines.
+- À la graine 11, les pièces éloignées allongent le Bas-Port d'une minute. La mesure d'ensemble de T2d dira si c'est fréquent.
+- La suite des terres a échoué deux fois sur la carrière, par instabilité : une fois le gardien (le repaire ne s'ouvre pas), une fois un chronomètre de 16 ms sous une charge de 6. Elle passe à chaque relance. Ces deux tests ne touchent pas le Bas-Port.
+
+Suite : T2d, les maisons du port et la mesure d'ensemble.
