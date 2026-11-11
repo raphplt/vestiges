@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 novembre — le terrain du Bas-Port ([plan 58 T2a](58-terres-completes.md), §213) :** des chenaux sinueux traversent la terre, coupés de gués ; là où un chemin les croise, une passerelle de planches dans l'un des quatre sens. Trois zones : roselières, prés salés, vasières. Cinq décors neufs : passerelle, roseaux hauts, casiers, filet qui sèche, pieux. `SwampPropPlacer` et ses placements en dur sont retirés. Au bot, raviver les trois Mémoriaux prend 12 à 17 s de plus, et la densité de créatures ne bouge pas. Suite : T2b, la cale et les quais.
+
 **11 novembre — le Bas-Port découpé ([plan 58 §13](58-terres-completes.md), §212) :** quatre sous-lots, chacun capturé et mesuré. T2a, le terrain (chenaux, passerelles, roselières, vasières). T2b, la cale du chantier naval au cœur, et les quais qui bordent la mer oubliée, un pan de vide. T2c, les marais salants et la digue rompue. T2d, les maisons du port et la mesure. Suite : T2a.
 
 **10 novembre — le viaduc effondré, les bois sont faits ([plan 58 T1d](58-terres-completes.md), §211) :** cinq décors neufs (piles, tronçons de tablier tombés, panneau d'autoroute) composent la quatrième pièce des bois, qui en pose trois ou quatre par run. La mesure compte les pièces vues : le bot en voit une à trois aux bois, contre une avant T1. Le bot des terres contourne enfin un obstacle près de sa cible. Suite : T2, le Bas-Port.

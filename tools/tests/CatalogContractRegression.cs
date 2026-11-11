@@ -1585,8 +1585,26 @@ public partial class CatalogContractRegression : Node
             Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
         }
         int forest = files.FindIndex(file => file.Name == "forest_reclaimed.json");
-        Check(configs?["forest_reclaimed"].Rhythm?.Zones.Count == 3 && configs["swamp"].Rhythm == null,
-            "décors : terrain rythmé des bois lu (trois zones), absent du marais");
+        Check(configs?["forest_reclaimed"].Rhythm?.Zones.Count == 3 && configs["forest_reclaimed"].Rhythm.ChannelSet == null,
+            "décors : terrain rythmé des bois lu (trois zones), sans chenaux");
+        Check(configs?["swamp"].Rhythm?.Zones.Count == 3 && configs["swamp"].Rhythm.ChannelSet?.Bridges.Length == 4,
+            "décors : terrain rythmé du Bas-Port lu (trois zones, chenaux, quatre passerelles)");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("chenaux, clé inconnue", root => root["rhythm"]!["channels"]!["depth"] = 1, "clé « depth » inconnue"),
+            ("chenaux trop larges", root => root["rhythm"]!["channels"]!["width"] = 0.5, "width"),
+            ("chenaux sans gués", root => root["rhythm"]!["channels"]!.AsObject().Remove("fords"), "section fords absente"),
+            ("gués toujours", root => root["rhythm"]!["channels"]!["fords"]!["below"] = 1, "below"),
+            ("passerelle manquante", root => root["rhythm"]!["channels"]!["bridges"]!.AsObject().Remove("rising"), "rising absent"),
+            ("passerelle inconnue", root => root["rhythm"]!["channels"]!["bridges"]!["north"] = "assets/props/swamp/prop_footbridge_x.png", "clé « north » inconnue"),
+            ("passerelle sans image", root => root["rhythm"]!["channels"]!["bridges"]!["along_x"] = "assets/props/swamp/prop_absent.png", "image « assets/props/swamp/prop_absent.png » introuvable"),
+        })
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[swamp] = (files[swamp].Name, Mutated(files[swamp].Text, mutate));
+            string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
+        }
         foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
         {
             ("rythme, clé inconnue", root => root["rhythm"]!["octaves"] = 3, "clé « octaves » inconnue"),

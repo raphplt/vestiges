@@ -24,6 +24,8 @@ public struct PathNetworkConfig
     public float ForestCost;
     public float SidewalkCost;
     public float PlazaCost;
+    /// <summary>Coût d'une cellule de chenal franchie sur une passerelle (plan 58 T2a).</summary>
+    public float ChannelCost;
     /// <summary>Ondulation latérale du tracé lissé, en pixels au sol.</summary>
     public float WobblePx;
     /// <summary>Aucun chemin à moins de ce nombre de cellules du bord dissous.</summary>
@@ -47,6 +49,7 @@ public struct PathNetworkConfig
         ForestCost = 1.35f,
         SidewalkCost = 2f,
         PlazaCost = 1.5f,
+        ChannelCost = 6f,
         WobblePx = 7f,
         EdgeMargin = 8,
         MaxExpansions = 80000,
@@ -77,7 +80,8 @@ public struct PathNetworkConfig
         if (JsonConfigReader.Has(section, "costs"))
         {
             JsonElement costs = reader.Section(section, "costs");
-            reader.AllowOnly(costs, "paths.costs", "road", "existing_path", "field_lane", "forest", "sidewalk", "plaza");
+            reader.AllowOnly(costs, "paths.costs", "road", "existing_path", "field_lane", "forest", "sidewalk", "plaza",
+                "channel");
             if (JsonConfigReader.Has(costs, "road"))
                 config.RoadCost = reader.Positive(costs, "road");
             if (JsonConfigReader.Has(costs, "existing_path"))
@@ -90,6 +94,8 @@ public struct PathNetworkConfig
                 config.SidewalkCost = reader.Positive(costs, "sidewalk");
             if (JsonConfigReader.Has(costs, "plaza"))
                 config.PlazaCost = reader.Positive(costs, "plaza");
+            if (JsonConfigReader.Has(costs, "channel"))
+                config.ChannelCost = reader.Positive(costs, "channel");
         }
         if (JsonConfigReader.Has(section, "wobble_px"))
             config.WobblePx = reader.NonNegative(section, "wobble_px");

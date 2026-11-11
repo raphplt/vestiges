@@ -74,7 +74,6 @@ public partial class WorldSetup : Node2D
     // Données générées en _Ready() (CPU rapide), consommées par InitializeWorldAsync()
     private TerrainType[,] _terrain;
     private UrbanLayout _urbanLayout;
-    private SwampPropLayout _swampLayout;
     private WildFieldsLayout _wildFieldsLayout;
     // Zones du terrain rythmé par cellule (plan 58 T1a), nul si aucun biome actif n'a de rythme.
     private byte[,] _rhythmZones;
@@ -236,26 +235,23 @@ public partial class WorldSetup : Node2D
         _rhythmZones = TerrainRhythm.Apply(generator, _terrain, PropSpawner.LoadRhythms(), LandSeed);
         LoadProfiler.Span("terrain rythmé (thread)", ref step);
 
-        // Layouts urbains/marais (CPU pur)
+        // Layouts urbains et champs (CPU pur)
         if (generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
         {
             UrbanLayoutGenerator urbanGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY);
             _urbanLayout = urbanGen.Apply(_terrain, generator, "urban_ruins");
             _roadTiles = RoadTileGenerator.Build(_urbanLayout);
         }
-        if (generator.ActiveBiomes.Any(b => b.Id == "swamp"))
-            _swampLayout = SwampPropPlacer.BuildLayout(generator, LandSeed);
         if (generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
         {
             WildFieldsLayoutGenerator wildFieldsGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY);
             _wildFieldsLayout = wildFieldsGen.Apply(_terrain, generator, "wild_fields");
         }
 
-        LoadProfiler.Span("plans de la ville, de ses chaussées, du marais et des champs (thread)", ref step);
+        LoadProfiler.Span("plans de la ville, de ses chaussées et des champs (thread)", ref step);
         // Chemins de terre entre les régions, raccordés aux rues (plan 10 T3) : rien ne pousse dessus.
-        _pathNetwork = PathNetworkGenerator.Build(generator, _terrain, _urbanLayout, _wildFieldsLayout, _config.Paths,
-                                                  _config.BiomeLayout.RegionSpacing, LandSeed);
-        _swampLayout?.Placements.RemoveAll(placement => _pathNetwork.Cells.Contains(placement.Cell));
+        _pathNetwork = PathNetworkGenerator.Build(generator, _terrain, _urbanLayout, _wildFieldsLayout, _rhythmZones,
+                                                  _config.Paths, _config.BiomeLayout.RegionSpacing, LandSeed);
         LoadProfiler.Span("chemins (thread)", ref step);
 
         // Pièces maîtresses de la terre (plan 58) : avant les fermes et les chantiers, qui s'écartent de leur emprise.
@@ -270,6 +266,8 @@ public partial class WorldSetup : Node2D
         // Chantiers de la carrière : galerie étayée, voie et wagonnets, baraque et machines groupées.
         _quarryPlan = SitePlan.Load(QuarrySitesPath, "collapsed_quarry", QuarryFolder, "chantiers");
         _quarrySites = SiteComposer.Plan(generator, _pathNetwork, _usedCells, _quarryPlan, LandSeed);
+        // Tous les chemins tracés, raccords compris : ceux qui franchissent un chenal y reçoivent une passerelle.
+        PathNetworkGenerator.BridgeChannels(_pathNetwork, _terrain, _rhythmZones, generator);
         LoadProfiler.Span("fermes et chantiers (thread)", ref step);
         _builtGenerator = generator;
 
@@ -357,7 +355,7 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("points d'intérêt, coffres et lieux");
 
         onProgress?.Invoke("Décors...");
-        await SpawnEnvironmentPropsAsync(_urbanLayout, _swampLayout);
+        await SpawnEnvironmentPropsAsync(_urbanLayout);
         LoadGuard.InjectFault("décors");
         LoadProfiler.Mark("décors des biomes");
         await YieldFrame();
@@ -368,11 +366,6 @@ public partial class WorldSetup : Node2D
             LoadProfiler.Mark("décors de la ville");
             await YieldFrame();
         }
-        if (_swampLayout != null)
-        {
-            SwampPropPlacer.PlaceProps(_swampLayout, _ground, _propStaging, _usedCells);
-        }
-        LoadProfiler.Mark("décors du marais");
         await BuildPropOcclusionAsync();
         await YieldFrame();
         LoadProfiler.Mark("tronçons de décors");
@@ -390,7 +383,6 @@ public partial class WorldSetup : Node2D
         _urbanLayout = null;
         _roadTiles = null;
         _tileMapper.SetRoadTiles(null);
-        _swampLayout = null;
         _wildFieldsLayout = null;
         _pathCells = _pathNetwork?.Cells;
         _pathNetwork = null;
@@ -703,7 +695,7 @@ public partial class WorldSetup : Node2D
     }
 
     /// <summary>Décors des biomes, placeur après placeur ; le moteur reprend la main entre chacun et par tranches de temps.</summary>
-    private async Task SpawnEnvironmentPropsAsync(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
+    private async Task SpawnEnvironmentPropsAsync(UrbanLayout urbanLayout)
     {
         // Conteneur final, trié en Y avec le joueur, les ennemis et les POI : un décor masque ce qui passe derrière lui.
         if (GetNodeOrNull<Node2D>("PropContainer") == null)
@@ -723,7 +715,7 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("décors des fermes");
         await YieldFrame();
         SiteComposer.Place(_quarrySites, _quarryPlan, propContainer, LandSeed);
-        HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout, swampLayout);
+        HashSet<Vector2I> blockedCells = BuildEnvironmentPropBlockedCells(urbanLayout);
         LoadProfiler.Mark("décors des carrières");
         await YieldFrame();
         WildFieldsComposer.PlaceParcelProps(_wildFieldsLayout, _farmConfig, _usedCells, blockedCells, _ground, propContainer, LandSeed);
@@ -732,13 +724,14 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Mark("décors des champs");
         await YieldFrame();
         JunctionPropPlacer.Place(_generator, _config.JunctionProps, _usedCells, blockedCells, _ground, propContainer, LandSeed);
-        LoadProfiler.Mark("décors des carrefours");
+        ChannelBridgePlacer.Place(_generator, _pathNetwork, PropSpawner.LoadRhythms(), propContainer);
+        LoadProfiler.Mark("décors des carrefours et des passerelles");
         await YieldLoadSlice();
         await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, LandSeed, LoadSliceSpent,
             YieldLoadSlice, blockedCells, _wildFieldsLayout, _rhythmZones);
     }
 
-    private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout, SwampPropLayout swampLayout)
+    private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout)
     {
         HashSet<Vector2I> blocked = new();
 
@@ -754,12 +747,6 @@ public partial class WorldSetup : Node2D
                     blocked.Add(new Vector2I(gx - urbanLayout.MapRadius, gy - urbanLayout.MapRadiusY));
                 }
             }
-        }
-
-        if (swampLayout != null)
-        {
-            foreach (Vector2I cell in swampLayout.ReservedCells)
-                blocked.Add(cell);
         }
 
         if (_pathNetwork != null)

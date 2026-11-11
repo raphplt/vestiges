@@ -29,14 +29,15 @@ public static class PathNetworkGenerator
     private static readonly int[] Corner = { -1, 0, 1, 0, 0, -2, 0, 2 };
 
     public static PathNetwork Build(WorldGenerator generator, TerrainType[,] terrain, UrbanLayout urban,
-                                    WildFieldsLayout fields, PathNetworkConfig config, float regionSpacing, ulong seed)
+                                    WildFieldsLayout fields, byte[,] rhythmZones, PathNetworkConfig config, float regionSpacing,
+                                    ulong seed)
     {
         PathNetwork network = new();
         if (!config.Enabled)
             return network;
 
         ulong started = Time.GetTicksMsec();
-        Router router = new(generator, terrain, urban, fields, config, seed);
+        Router router = new(generator, terrain, urban, fields, rhythmZones, config, seed);
         List<int> nodes = new();
         List<Vector2> nodeCenters = new();
         foreach (Vector2 center in generator.BiomeRegionCenters)
@@ -81,6 +82,84 @@ public static class PathNetworkGenerator
         GD.Print($"[PathNetwork] {nodes.Count} régions, {links.Count} liaisons, {network.Strokes.Count} tronçons, " +
                  $"{network.Cells.Count} cellules, {router.Expansions} cellules explorées, {Time.GetTicksMsec() - started} ms");
         return network;
+    }
+
+    /// <summary>
+    /// L'eau d'un chenal sous un chemin redevient du sol : le joueur n'y est pas ralenti. Une passerelle se pose sur chaque
+    /// cellule de chenal que l'axe du tracé traverse, tournée selon sa tangente ; les bords du tracé n'en reçoivent pas,
+    /// sinon des modules de travers flanquent le chemin. Appelé une fois les raccords des pièces, des fermes et des
+    /// chantiers tracés.
+    /// </summary>
+    public static void BridgeChannels(PathNetwork network, TerrainType[,] terrain, byte[,] rhythmZones, WorldGenerator generator)
+    {
+        if (rhythmZones == null)
+            return;
+        bool IsChannelWater(Vector2I cell)
+        {
+            int gx = cell.X + generator.MapRadiusX;
+            int gy = cell.Y + generator.MapRadiusY;
+            return gx >= 0 && gy >= 0 && gx < terrain.GetLength(0) && gy < terrain.GetLength(1)
+                && terrain[gx, gy] == TerrainType.Water && TerrainRhythm.IsChannel(rhythmZones[gx, gy]);
+        }
+
+        // Une traversée = une suite de points du tracé sur l'eau d'un chenal. Chaque cellule reçoit un module au point moyen
+        // du tracé chez elle (au centre de la cellule, les modules feraient un escalier) ; toute la traversée prend le sens
+        // de son entrée à sa sortie, sinon un chemin qui tourne sur l'eau alterne les modules.
+        HashSet<Vector2I> bridged = new();
+        List<(Vector2I Cell, Vector2 Sum, int Count)> run = new();
+        int runPoints = 0;
+        foreach (PathStroke stroke in network.Strokes)
+        {
+            for (int i = 0; i <= stroke.Points.Length; i++)
+            {
+                Vector2I cell = i < stroke.Points.Length ? CellAt(stroke.Points[i]) : default;
+                if (i < stroke.Points.Length && IsChannelWater(cell))
+                {
+                    if (run.Count > 0 && run[^1].Cell == cell)
+                        run[^1] = (cell, run[^1].Sum + stroke.Points[i], run[^1].Count + 1);
+                    else
+                        run.Add((cell, stroke.Points[i], 1));
+                    runPoints++;
+                    continue;
+                }
+                if (run.Count == 0)
+                    continue;
+                // Une traversée en épingle revient près de son entrée : son sens est celui du tracé en son milieu.
+                Vector2 span = run.Count == 1 ? Vector2.Zero : run[^1].Sum / run[^1].Count - run[0].Sum / run[0].Count;
+                if (span.LengthSquared() < 16f * 16f)
+                    span = Tangent(stroke.Points, i - 1 - runPoints / 2);
+                BridgeHeading heading = HeadingOf(span);
+                foreach ((Vector2I runCell, Vector2 sum, int count) in run)
+                {
+                    if (bridged.Add(runCell))
+                        network.Bridges.Add(new ChannelBridge(sum / count, heading));
+                }
+                run.Clear();
+                runPoints = 0;
+            }
+        }
+        foreach (Vector2I cell in network.Cells)
+        {
+            if (IsChannelWater(cell))
+                terrain[cell.X + generator.MapRadiusX, cell.Y + generator.MapRadiusY] = TerrainType.Grass;
+        }
+    }
+
+    private static Vector2 Tangent(Vector2[] points, int i) =>
+        points[Math.Min(points.Length - 1, i + 1)] - points[Math.Max(0, i - 1)];
+
+    /// <summary>
+    /// Sens d'une traversée à l'écran, lu au sol (un pas vertical à l'écran vaut le double au sol) : à moins de 22,5° d'un
+    /// axe, le long de cet axe ; sinon une diagonale, qui descend vers la droite quand x et y croissent ensemble.
+    /// </summary>
+    private static BridgeHeading HeadingOf(Vector2 screen)
+    {
+        float angle = Mathf.Atan2(Mathf.Abs(screen.Y) * 2f, Mathf.Abs(screen.X));
+        if (angle < Mathf.Pi / 8f)
+            return BridgeHeading.AlongX;
+        if (angle > Mathf.Pi * 3f / 8f)
+            return BridgeHeading.AlongY;
+        return screen.X * screen.Y > 0f ? BridgeHeading.Falling : BridgeHeading.Rising;
     }
 
     /// <summary>Arbre couvrant des régions voisines (Kruskal), boucles tirées par hash, liaisons du départ.</summary>
@@ -406,7 +485,7 @@ public static class PathNetworkGenerator
         public long Expansions { get; private set; }
 
         public Router(WorldGenerator generator, TerrainType[,] terrain, UrbanLayout urban, WildFieldsLayout fields,
-                      PathNetworkConfig config, ulong seed)
+                      byte[,] rhythmZones, PathNetworkConfig config, ulong seed)
         {
             _generator = generator;
             _config = config;
@@ -440,11 +519,15 @@ public static class PathNetworkGenerator
                     if (generator.EllipseDistance(x, y) > limit || !generator.IsWithinBounds(x, y) || generator.IsErased(x, y))
                         continue;
                     TerrainType type = terrain[gx, gy];
-                    if (type == TerrainType.Water)
-                        continue;
-
                     // Grille « stacked » : un rang vaut une demi-colonne au sol, le bruit est échantillonné au sol.
                     float wander = Mathf.Max(0.2f, 1f + config.NoiseAmplitude * noise.GetNoise2D(x, y * 0.5f));
+                    // L'eau arrête les chemins, sauf celle d'un chenal : ils la franchissent, cher, sur une passerelle.
+                    if (type == TerrainType.Water)
+                    {
+                        if (rhythmZones != null && TerrainRhythm.IsChannel(rhythmZones[gx, gy]))
+                            _cost[index] = config.ChannelCost * wander;
+                        continue;
+                    }
                     UrbanCellType urbanType = urban?.CellGrid[gx, gy] ?? UrbanCellType.None;
                     switch (urbanType)
                     {

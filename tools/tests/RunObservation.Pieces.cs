@@ -6,8 +6,9 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-pieces (plan 58) : chaque pièce maîtresse de la terre cadrée en entier, son Mémorial s'il en a un, puis une
-/// vue de haut de toute la terre. Sans créatures, pour juger la composition.
+/// --capture-pieces (plan 58) : chaque pièce maîtresse de la terre cadrée en entier, son Mémorial s'il en a un, les deux
+/// passerelles de chenal les plus proches du départ s'il y en a (T2a), puis une vue de haut de toute la terre. Sans
+/// créatures, pour juger la composition.
 /// </summary>
 public partial class RunObservation
 {
@@ -44,6 +45,16 @@ public partial class RunObservation
             index++;
         }
 
+        _camera.Zoom = initialZoom;
+        int bridge = 0;
+        foreach (Vector2I cell in NearestBridges(2))
+        {
+            _player.GlobalPosition = PathNetworkGenerator.CellCenter(cell) + new Vector2(0f, 90f);
+            _camera.ResetSmoothing();
+            await Frames(40);
+            SaveFrame($"bridge-{bridge++:00}");
+        }
+
         _camera.Zoom = new Vector2(LandOverviewZoom, LandOverviewZoom);
         _player.GlobalPosition = Vector2.Zero;
         _camera.ResetSmoothing();
@@ -51,5 +62,30 @@ public partial class RunObservation
         SaveFrame("pieces-land");
         _camera.Zoom = initialZoom;
         GD.Print($"[RunObservation] RESULT pieces={_world.Pieces.Count}");
+    }
+
+    /// <summary>Cellules de chemin entre deux cellules d'eau (en x ou en y à l'écran), les plus proches du départ, écartées.</summary>
+    private System.Collections.Generic.List<Vector2I> NearestBridges(int count)
+    {
+        WorldGenerator generator = _world.Generator;
+        System.Collections.Generic.List<Vector2I> found = new();
+        if (_world.PathCells == null)
+            return found;
+        System.Collections.Generic.List<Vector2I> candidates = new();
+        foreach (Vector2I cell in _world.PathCells)
+        {
+            bool water(int dx, int dy) => generator.GetTerrain(cell.X + dx, cell.Y + dy) == TerrainType.Water;
+            if (generator.GetTerrain(cell.X, cell.Y) != TerrainType.Water && ((water(-1, 0) && water(1, 0)) || (water(0, -2) && water(0, 2))))
+                candidates.Add(cell);
+        }
+        candidates.Sort((a, b) => PathNetworkGenerator.CellCenter(a).LengthSquared().CompareTo(PathNetworkGenerator.CellCenter(b).LengthSquared()));
+        foreach (Vector2I cell in candidates)
+        {
+            if (found.Count >= count)
+                break;
+            if (found.TrueForAll(other => PathNetworkGenerator.CellCenter(other).DistanceTo(PathNetworkGenerator.CellCenter(cell)) > 1200f))
+                found.Add(cell);
+        }
+        return found;
     }
 }

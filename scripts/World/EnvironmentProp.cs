@@ -39,13 +39,15 @@ public partial class EnvironmentProp : StaticBody2D
 	/// <summary>
 	/// Initialise le prop. La position courante est le centre de la cellule. Avec un manifeste, le pivot au sol
 	/// du sprite s'y pose ; sinon le nœud remonte au centre de l'emprise estimée et le sprite redescend d'autant.
+	/// <paramref name="flat"/> plaque au sol un décor plus haut que le seuil des décalques (tablier qu'on foule).
 	/// </summary>
 	public void Initialize(
 		Texture2D baseTexture,
 		Texture2D canopyTexture,
 		float canopyOffsetY,
 		bool blocking,
-		float footprintScale = 1f)
+		float footprintScale = 1f,
+		bool flat = false)
 	{
 		PropRules rules = PropRules.Current;
 		_footprint = PropFootprint.Of(baseTexture);
@@ -124,7 +126,7 @@ public partial class EnvironmentProp : StaticBody2D
 		if (!blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.TrampleMaxHeight && rules.Tramples(baseTexture.ResourcePath))
 			_baseSprite.Material = _trampleMaterial;
 
-		bool decal = !blocks && canopyTexture == null && _footprint.VisibleHeight <= rules.GroundDecalMaxHeight;
+		bool decal = !blocks && canopyTexture == null && (flat || _footprint.VisibleHeight <= rules.GroundDecalMaxHeight);
 		if (decal)
 			ZIndex = -1;
 		else if (_footprint.OpaquePixels > 0)

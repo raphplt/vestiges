@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Godot;
@@ -8,7 +9,8 @@ namespace Vestiges.World;
 /// <summary>
 /// Terrain rythmé d'une terre (plan 58 T1a) : un bruit lent découpe le biome en zones (clairières, fourrés, places,
 /// paliers…), chacune avec sa densité de décors, ses décors favoris et parfois son sol. Lu dans la clé « rhythm » du
-/// fichier de décors du biome ; le code ne connaît que des zones pondérées.
+/// fichier de décors du biome ; le code ne connaît que des zones pondérées. Une terre peut aussi y tracer des chenaux
+/// (plan 58 T2a) : des rubans d'eau que les chemins franchissent sur des passerelles.
 /// </summary>
 public sealed class TerrainRhythm
 {
@@ -17,8 +19,14 @@ public sealed class TerrainRhythm
     private const int MaxZones = 16;
     // Bit de la carte des zones : la cellule est sur une trouée, rien n'y bloque.
     private const byte LaneBit = 0x80;
+    // Bit de la carte des zones : la cellule est l'eau d'un chenal, qu'un chemin peut franchir.
+    private const byte ChannelBit = 0x40;
     private const ulong ZoneSalt = 0x7A11E5UL;
     private const ulong LaneSalt = 0x1A4E5UL;
+    private const ulong ChannelSalt = 0xC4A77E1UL;
+    private const ulong FordSalt = 0xF02DUL;
+    // Le départ reste au sec : deux cellules de plus que son dégagement.
+    private const int SpawnDryMargin = 2;
 
     public sealed class Zone
     {
@@ -36,16 +44,33 @@ public sealed class TerrainRhythm
         public float LaneWidth;
     }
 
+    /// <summary>
+    /// Chenaux : l'isoligne 0,5 d'un bruit de pas <see cref="ScalePx"/>, de demi-largeur <see cref="Width"/>, devient de
+    /// l'eau, sauf aux gués (bruit des gués sous <see cref="FordBelow"/>). Un chemin y passe sur une passerelle,
+    /// tournée selon sa traversée (<see cref="BridgeHeading"/>).
+    /// </summary>
+    public sealed class Channels
+    {
+        public float ScalePx;
+        public float Width;
+        public float FordScalePx;
+        public float FordBelow;
+        /// <summary>Image de passerelle par sens, indexée par <see cref="BridgeHeading"/>.</summary>
+        public string[] Bridges;
+    }
+
     /// <summary>Taille des zones à l'écran, en pixels : le pas du réseau du bruit lent.</summary>
     public float ScalePx;
     public List<Zone> Zones = new();
+    public Channels ChannelSet;
 
-    public static byte ZoneIndex(byte packed) => packed == NoZone ? NoZone : (byte)(packed & ~LaneBit);
+    public static byte ZoneIndex(byte packed) => packed == NoZone ? NoZone : (byte)(packed & ~(LaneBit | ChannelBit));
     public static bool IsLane(byte packed) => packed != NoZone && (packed & LaneBit) != 0;
+    public static bool IsChannel(byte packed) => packed != NoZone && (packed & ChannelBit) != 0;
 
     /// <summary>
-    /// Zones de chaque cellule des biomes rythmés, sur le thread de génération ; impose leur sol à la grille de terrain.
-    /// Rend nul si aucun biome actif n'a de rythme.
+    /// Zones de chaque cellule des biomes rythmés, sur le thread de génération ; impose leur sol et l'eau des chenaux à la
+    /// grille de terrain. Rend nul si aucun biome actif n'a de rythme.
     /// </summary>
     public static byte[,] Apply(WorldGenerator generator, TerrainType[,] terrain, IReadOnlyDictionary<string, TerrainRhythm> rhythms,
         ulong seed)
@@ -61,8 +86,12 @@ public sealed class TerrainRhythm
         byte[,] zones = new byte[sizeX, sizeY];
         Dictionary<string, int> cellsByZone = new();
         int laneCells = 0;
+        int channelCells = 0;
         ulong zoneSalt = seed ^ ZoneSalt;
         ulong laneSalt = seed ^ LaneSalt;
+        ulong channelSalt = seed ^ ChannelSalt;
+        ulong fordSalt = seed ^ FordSalt;
+        int dry = generator.SpawnClearance + SpawnDryMargin;
         for (int gx = 0; gx < sizeX; gx++)
         {
             for (int gy = 0; gy < sizeY; gy++)
@@ -85,6 +114,15 @@ public sealed class TerrainRhythm
                 zones[gx, gy] = packed;
                 if (zone.Ground is TerrainType ground && terrain[gx, gy] is TerrainType.Grass or TerrainType.Forest)
                     terrain[gx, gy] = ground;
+                if (rhythm.ChannelSet is Channels channels && terrain[gx, gy] is TerrainType.Grass or TerrainType.Forest
+                    && (Mathf.Abs(x) > dry || Mathf.Abs(y) > dry)
+                    && Mathf.Abs(Fractal(point, channels.ScalePx, channelSalt) - 0.5f) < channels.Width
+                    && Fractal(point, channels.FordScalePx, fordSalt) >= channels.FordBelow)
+                {
+                    terrain[gx, gy] = TerrainType.Water;
+                    zones[gx, gy] |= ChannelBit;
+                    channelCells++;
+                }
             }
         }
         int total = 0;
@@ -93,7 +131,7 @@ public sealed class TerrainRhythm
         List<string> shares = new();
         foreach ((string id, int count) in cellsByZone)
             shares.Add($"{id} {100 * count / Mathf.Max(1, total)} %");
-        GD.Print($"[TerrainRhythm] {string.Join(" · ", shares)} · trouées {laneCells} cellules");
+        GD.Print($"[TerrainRhythm] {string.Join(" · ", shares)} · trouées {laneCells} cellules · chenaux {channelCells} cellules");
         return zones;
     }
 
@@ -127,11 +165,14 @@ public sealed class TerrainRhythm
         return Mathf.Lerp(top, bottom, ty);
     }
 
-    /// <summary>Clé « rhythm » d'un fichier de décors ; les décors nommés dans les poids doivent exister.</summary>
-    public static TerrainRhythm Parse(JsonConfigReader reader, JsonElement element, IReadOnlyCollection<string> propIds)
+    /// <summary>Clé « rhythm » d'un fichier de décors ; les décors nommés dans les poids et les images des passerelles doivent exister.</summary>
+    public static TerrainRhythm Parse(JsonConfigReader reader, JsonElement element, IReadOnlyCollection<string> propIds,
+        Func<string, bool> spriteExists)
     {
-        reader.AllowOnly(element, "rhythm", "scale_px", "zones");
+        reader.AllowOnly(element, "rhythm", "scale_px", "zones", "channels");
         TerrainRhythm rhythm = new() { ScalePx = reader.Between(element, "scale_px", 128f, 8192f) };
+        if (JsonConfigReader.Has(element, "channels"))
+            rhythm.ChannelSet = ParseChannels(reader, reader.Section(element, "channels"), spriteExists);
         HashSet<string> ids = new();
         float previous = 0f;
         List<JsonElement> zones = reader.List(element, "zones", 2);
@@ -187,5 +228,34 @@ public sealed class TerrainRhythm
             rhythm.Zones.Add(zone);
         }
         return rhythm;
+    }
+
+    /// <summary>
+    /// Clé « channels » : bruits des chenaux et des gués, et les images des quatre passerelles (chemins sans « res:// »,
+    /// comme les décors du fichier).
+    /// </summary>
+    private static Channels ParseChannels(JsonConfigReader reader, JsonElement element, Func<string, bool> spriteExists)
+    {
+        reader.AllowOnly(element, "rhythm.channels", "scale_px", "width", "fords", "bridges");
+        Channels channels = new()
+        {
+            ScalePx = reader.Between(element, "scale_px", 128f, 8192f),
+            Width = reader.Between(element, "width", 0.005f, 0.2f),
+        };
+        JsonElement fords = reader.Section(element, "fords");
+        reader.AllowOnly(fords, "rhythm.channels.fords", "scale_px", "below");
+        channels.FordScalePx = reader.Between(fords, "scale_px", 64f, 4096f);
+        channels.FordBelow = reader.Between(fords, "below", 0.05f, 0.95f);
+        JsonElement bridges = reader.Section(element, "bridges");
+        string[] keys = { "along_x", "along_y", "falling", "rising" };
+        reader.AllowOnly(bridges, "rhythm.channels.bridges", keys);
+        channels.Bridges = new string[keys.Length];
+        for (int i = 0; i < keys.Length; i++)
+        {
+            channels.Bridges[i] = reader.Text(bridges, keys[i]);
+            if (reader.Error == null && !spriteExists(channels.Bridges[i]))
+                reader.Fail($"rhythm.channels.bridges : image « {channels.Bridges[i]} » introuvable");
+        }
+        return channels;
     }
 }

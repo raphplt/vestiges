@@ -8,7 +8,8 @@ violet profond pour ce qui est vénéneux, spore verte pour les rares lueurs, re
 est sombre et moucheté : un décor s'y lit par sa valeur (bois blanchi, os, lichen clair) et par un pied mouillé plus
 sombre, jamais par un contour seul. Ce qui est « noyé » est coupé à un niveau d'eau sous le point au sol et cerné d'un
 liseré de clapot argenté, pour se lire posé dans l'eau plutôt que sur elle.
-Le placement reste celui de `SwampPropPlacer` (zones d'eau, lisières, bosquets morts, poches fongiques).
+Le marais est devenu le Bas-Port (plan 58 T2) : chenaux, roselières, vasières et prés salés se règlent dans le rythme de
+`data/props/swamp.json`, et les décors du port rejoignent ceux du marais.
 """
 from __future__ import annotations
 
@@ -1268,6 +1269,206 @@ def swamp_lantern(stem: str, seed: int) -> PropModel:
 # Catalogue
 # ---------------------------------------------------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Le Bas-Port (plan 58 T2a) : passerelles des chenaux, roselières, vasières
+# ---------------------------------------------------------------------------------------------------------------------
+
+NET = "#8E9A88"
+NET_DARK = "#4E5A50"
+CORK = "#B07A4A"
+FLOAT_RED = "#B04A34"
+PLUME = "#7E6656"
+
+
+def footbridge(stem: str, seed: int, angle: float, half_length: float) -> PropModel:
+    """
+    Passerelle d'un chenal, posée là où passe un chemin : un caillebotis de planches clouées en travers sur deux
+    longerons, quelques planches manquantes ou de biais. Pas de pieux : vus de haut, ils en faisaient une clôture. Un
+    module par cellule de chemin : les modules voisins se touchent et font la passerelle. Quatre sens (le long de x,
+    de y, et les deux diagonales de l'écran), tournés de `angle` au sol. À plat, il se range dans les décalques au sol.
+    """
+    PLANK, PLANK_LIGHT, GRAIN, BEAM = range(4)
+    materials = [make_material("plank", WOOD_OLD), make_material("plank_light", BLEACHED),
+                 make_material("grain", WOOD_DARK, contrast=0.7), make_material("beam", WOOD_DARK, contrast=0.8)]
+    length = half_length
+    half_width = 0.7 * M
+    deck = 0.16 * M
+    # Le module se construit le long de x, puis se tourne au sol vers son sens.
+    turn = rotation_y(angle)
+    frame = lambda p: p @ turn
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        count = int(round(2 * length / (0.34 * M)))
+        planks = [(np.array([x, deck + w.uniform(-0.01, 0.01) * M, w.uniform(-0.05, 0.05) * M]),
+                   rotation_y(w.uniform(-0.06, 0.06)) @ rotation_z(w.uniform(-0.03, 0.03)), k % 2)
+                  for k, x in enumerate(np.linspace(-length + 0.16 * M, length - 0.16 * M, count)) if k not in (2, count - 3)]
+
+        def plank_shape(kind: int):
+            return lambda p: _union(*(rounded_box(frame(p), c, (0.15 * M, 0.03 * M, half_width), 0.012 * M, r)
+                                      for c, r, k in planks if k == kind))
+
+        everything = lambda p: np.minimum(plank_shape(0)(p), plank_shape(1)(p))
+        grain = noise_mask(0.07 * M, seed + 1, 0.2, (1.0, 1.0, 7.0), frame=frame)
+        beams = lambda p: _union(*(rounded_box(frame(p), (0.0, deck - 0.07 * M, z * M), (length, 0.04 * M, 0.06 * M), 0.01 * M)
+                                   for z in (-0.5, 0.5)))
+        return [
+            Part(plank_shape(0), PLANK),
+            Part(plank_shape(1), PLANK_LIGHT),
+            Part(painted(everything, grain), GRAIN, relief=False),
+            Part(beams, BEAM),
+        ]
+
+    # Plancher plat vu à 30° : sans lissage des pentes, chaque planche se couvre de lignes internes et noircit.
+    return PropModel(stem, parts, materials, FRONT, canvas=(96, 64), smooth_slopes=True)
+
+
+def tall_reeds(stem: str, seed: int) -> PropModel:
+    """
+    Roseaux de la roselière : une touffe haute de deux mètres, tiges fines et droites, panaches gris-brun qui penchent
+    tous du même côté, quelques feuilles en lame à mi-hauteur. Plus haut et plus pâle que les massettes.
+    """
+    STEM, LEAF, PLUME_M = range(3)
+    materials = [make_material("stem", MOSS_LIGHT, contrast=0.6), make_material("leaf", LICHEN, contrast=0.6),
+                 make_material("plume", PLUME, contrast=0.7)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        stems = []
+        for k in range(11):
+            x, z = w.uniform(-0.55, 0.55) * M, w.uniform(-0.35, 0.35) * M
+            h = w.uniform(1.6, 2.3) * M
+            lean = w.uniform(0.05, 0.22)
+            base = np.array([x, 0.0, z])
+            stems.append((base, base + np.array([lean * h, h, w.uniform(-0.05, 0.05) * M])))
+        blades = []
+        for base, top in stems[::2]:
+            mid = base + (top - base) * w.uniform(0.35, 0.55)
+            blades.append((mid, mid + np.array([w.choice((-1.0, 1.0)) * 0.35 * M, -0.12 * M, w.uniform(-0.1, 0.1) * M])))
+        return [
+            Part(lambda p: _union(*(capsule(p, a, b, 0.022 * M, 0.014 * M) for a, b in stems)), STEM),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.03 * M, 0.005 * M) for a, b in blades)), LEAF),
+            Part(lambda p: _union(*(ellipsoid(p, b + np.array([0.09 * M, -0.05 * M, 0.0]), (0.15 * M, 0.06 * M, 0.05 * M), rotation_z(-0.5))
+                                    for _, b in stems[::2])), PLUME_M),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(72, 96))
+
+
+def lobster_pots(stem: str, seed: int) -> PropModel:
+    """
+    Casiers de pêcheur empilés : des cages carrées, cadre de bois sombre et filet tendu, deux au sol, un dessus, un
+    tombé sur le flanc ; un bout de cordage et un flotteur rouge passé. Ce que le port laissait sur les quais.
+    """
+    FRAME, NET_M, MESH, ROPE, FLOAT = range(5)
+    materials = [make_material("frame", WOOD_DARK, contrast=0.8), make_material("net", NET, contrast=0.6),
+                 make_material("mesh", NET_DARK, contrast=0.7), make_material("rope", FUNGUS, contrast=0.7),
+                 make_material("float", FLOAT_RED, contrast=0.7)]
+    half = np.array([0.3, 0.2, 0.24]) * M
+    pots = [(np.array([-0.34 * M, half[1], 0.0]), rotation_y(0.04)), (np.array([0.34 * M, half[1], 0.04 * M]), rotation_y(-0.06)),
+            (np.array([0.02 * M, 3 * half[1] + 0.01 * M, 0.02 * M]), rotation_y(0.15)),
+            (np.array([1.05 * M, half[2], 0.45 * M]), rotation_y(0.9) @ rotation_x(np.pi / 2))]
+
+    def local(p: np.ndarray, origin, rotation) -> np.ndarray:
+        return (p - origin) @ rotation
+
+    def cage(p: np.ndarray) -> np.ndarray:
+        return _union(*(rounded_box(local(p, o, r), (0.0, 0.0, 0.0), tuple(half), 0.015 * M) for o, r in pots))
+
+    def frame(p: np.ndarray) -> np.ndarray:
+        # Arêtes du cadre : le bord de la boîte, là où deux faces se rencontrent.
+        result = []
+        for o, r in pots:
+            q = np.abs(local(p, o, r)) - half
+            edge = np.sort(q, axis=1)[:, 1]
+            result.append(np.maximum(rounded_box(local(p, o, r), (0.0, 0.0, 0.0), tuple(half + 0.012 * M), 0.015 * M), -edge - 0.035 * M))
+        return _union(*result)
+
+    def parts() -> list[Part]:
+        mesh = lambda p: np.minimum(np.abs(np.mod(p[:, 0] + p[:, 2], 0.1 * M) - 0.05 * M) - 0.012 * M,
+                                    np.abs(np.mod(p[:, 1], 0.1 * M) - 0.05 * M) - 0.012 * M)
+        float_at = np.array([-0.95 * M, 0.13 * M, 0.5 * M])
+        rope = [np.array([0.02 * M, 0.82 * M, 0.2 * M]), np.array([-0.45 * M, 0.45 * M, 0.4 * M]), np.array([-0.75 * M, 0.05 * M, 0.55 * M]), float_at]
+        return [
+            Part(cage, NET_M),
+            Part(painted(cage, mesh), MESH, relief=False),
+            Part(frame, FRAME),
+            Part(_branch_chain(rope, 0.03 * M, 0.025 * M), ROPE),
+            Part(lambda p: ellipsoid(p, float_at, (0.15 * M, 0.12 * M, 0.12 * M)), FLOAT),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(96, 80), footprint=box_footprint(0.75 * M, 0.4 * M))
+
+
+def drying_net(stem: str, seed: int) -> PropModel:
+    """
+    Filet qui sèche, jeté sur une perche entre deux fourches : il pend des deux côtés en pans inégaux, effrangé en bas,
+    maillage clair sur un filet sombre pour qu'on le lise ajouré ; flotteurs de liège le long de la ralingue.
+    """
+    POLE, NET_M, MESH, CORK_M = range(4)
+    materials = [make_material("pole", BLEACHED), make_material("net", NET_DARK, contrast=0.6),
+                 make_material("mesh", NET, contrast=0.6), make_material("cork", CORK, contrast=0.7)]
+    span = 1.0 * M
+    ridge = 1.35 * M
+
+    def net(p: np.ndarray) -> np.ndarray:
+        x, y, z = p[:, 0], p[:, 1], p[:, 2]
+        # Deux pans qui tombent de la perche en s'écartant, plus bas d'un côté, bord effrangé par un bruit.
+        flare = 0.32 * M * np.clip((ridge - y) / ridge, 0.0, 1.0)
+        sheet = np.abs(np.abs(z) - flare) - 0.025 * M
+        drop = np.where(z > 0, 0.25 * M, 0.55 * M) + 0.12 * M * value_noise(p, 0.2 * M, seed, (1.0, 100.0, 100.0))
+        inside = np.maximum(np.abs(x) - span + 0.12 * M, np.maximum(y - ridge, drop - y))
+        return np.maximum(sheet, inside)
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        forks = lambda p: _union(*(np.minimum(capsule(p, (x * span, 0.0, 0.0), (x * span, ridge + 0.05 * M, 0.0), 0.05 * M, 0.04 * M),
+                                              capsule(p, (x * span, ridge - 0.05 * M, 0.0), (x * span + 0.08 * M, ridge + 0.18 * M, 0.06 * M), 0.035 * M, 0.025 * M))
+                                   for x in (-1.0, 1.0)))
+        pole = lambda p: capsule(p, (-span - 0.15 * M, ridge + 0.04 * M, 0.0), (span + 0.15 * M, ridge + 0.04 * M + w.uniform(-0.03, 0.03) * M, 0.0), 0.04 * M)
+        mesh = lambda p: np.minimum(np.abs(np.mod(p[:, 0] + p[:, 1], 0.12 * M) - 0.06 * M) - 0.014 * M,
+                                    np.abs(np.mod(p[:, 0] - p[:, 1], 0.12 * M) - 0.06 * M) - 0.014 * M)
+        corks = lambda p: _union(*(ellipsoid(p, (x, ridge - 0.12 * M, side * 0.06 * M), (0.06 * M, 0.045 * M, 0.04 * M))
+                                   for x in np.linspace(-0.75 * span, 0.75 * span, 5) for side in (-1.0, 1.0)))
+        return [
+            Part(lambda p: np.minimum(forks(p), pole(p)), POLE),
+            Part(net, NET_M),
+            Part(painted(net, mesh), MESH, relief=False),
+            Part(corks, CORK_M),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(-18.0)), canvas=(90, 90), footprint=box_footprint(1.0 * M, 0.3 * M))
+
+
+def stake_row(stem: str, seed: int) -> PropModel:
+    """
+    Rangée de pieux dans la vase : ce qui reste d'un parc ou d'une clôture de bord d'eau, six bois de hauteurs inégales,
+    deux cassés, un penché, le pied noirci et verdi par l'eau qui montait.
+    """
+    WOOD, GROOVE, WET, TOP = range(4)
+    materials = [make_material("post", BLEACHED), make_material("bark_groove", BARK_GREY, contrast=0.8),
+                 make_material("wet_wood", WET_WOOD, contrast=0.8), make_material("end_grain", FUNGUS, contrast=0.6)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        stakes = []
+        for k, x in enumerate(np.linspace(-1.3, 1.3, 6)):
+            h = (0.45 if k in (1, 4) else w.uniform(0.8, 1.25)) * M
+            lean = rotation_z(w.uniform(-0.08, 0.08) + (0.3 if k == 3 else 0.0)) @ rotation_x(w.uniform(-0.06, 0.06))
+            stakes.append((np.array([x * M, 0.0, w.uniform(-0.08, 0.08) * M]), h, w.uniform(0.07, 0.1) * M, lean))
+        shape = lambda p: _union(*(cylinder((p - b) @ r, (0.0, h * 0.5, 0.0), rad, h * 0.5, 0.02 * M) for b, h, rad, r in stakes))
+        tops = lambda p: _union(*(np.maximum(cylinder((p - b) @ r, (0.0, h * 0.5, 0.0), rad - 0.01 * M, h * 0.5, 0.02 * M),
+                                             -(((p - b) @ r)[:, 1] - h + 0.04 * M)) for b, h, rad, r in stakes))
+        return [
+            Part(shape, WOOD),
+            Part(_grooves(shape, seed + 1, period=0.07 * M), GROOVE),
+            Part(_wet_foot(shape, seed + 2, 0.35 * M), WET),
+            Part(tops, TOP),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(110, 64))
+
+
 def catalog() -> list[PropModel]:
     models: list[PropModel] = []
     models += dead_tree_large("prop_dead_tree_large", 501)
@@ -1296,5 +1497,13 @@ def catalog() -> list[PropModel]:
         bone_pile("prop_bone_pile", 547),
         sunken_shrine("prop_sunken_shrine", 548),
         swamp_lantern("prop_swamp_lantern", 549),
+        footbridge("prop_footbridge_x", 551, 0.0, 1.9 * M),
+        footbridge("prop_footbridge_y", 552, np.pi / 2, 1.5 * M),
+        footbridge("prop_footbridge_falling", 557, -np.pi / 4, 1.45 * M),
+        footbridge("prop_footbridge_rising", 558, np.pi / 4, 1.45 * M),
+        tall_reeds("prop_tall_reeds", 553),
+        lobster_pots("prop_lobster_pots", 554),
+        drying_net("prop_drying_net", 555),
+        stake_row("prop_stake_row", 556),
     ]
     return models

@@ -334,3 +334,58 @@ Ensuite, le Bas-Port a un cœur et quatre pièces neuves, et en pose trois ou qu
 - **Les deux pièces de démonstration partent** au fil des sous-lots : le ponton avec les quais (T2b), l'autel noyé avec les marais salants (T2c).
 - **Le marais reste le biome** (`swamp`) : son identifiant ne change pas, seuls ses décors, son rythme et ses pièces deviennent ceux du port.
 - **Corps procéduraux** (`tools/sprites/props/swamp.py`), repris ensuite par l'ami artiste.
+
+## 14. T2a, le terrain du Bas-Port — livré le 11 novembre
+
+**Ce qui est fait :**
+- **Des chenaux** (`rhythm.channels` dans `data/props/swamp.json`, `TerrainRhythm`) : l'isoligne d'un bruit lent (pas de 1 500 px) creuse des rubans d'eau sinueux. Un second bruit les coupe de **gués**, sur un peu moins d'un tiers de leur longueur. Ils évitent les abords du départ. Ils couvrent 4 700 à 6 500 cellules selon la graine.
+- **Les chemins franchissent les chenaux** : le routeur traverse l'eau d'un chenal à un coût de 6 (`paths.costs.channel`, `world_gen.json`). Les autres eaux restent infranchissables. Les cellules d'eau sous un chemin redeviennent du sol, et chaque cellule que l'axe du chemin traverse porte une **passerelle** (`ChannelBridgePlacer`) :
+  - un caillebotis non bloquant, plaqué au sol, qu'on foule sans passer derrière (option `flat` d'`EnvironmentProp.Initialize`) ;
+  - quatre sens : le long de x, le long de y, et les deux diagonales. Toute une traversée prend le sens de son entrée à sa sortie, sinon un chemin qui tourne sur l'eau alterne les modules en escalier ;
+  - 17 à 44 passerelles par terre.
+- **Trois zones** (le rythme de T1a) :
+  - **roselières** : roseaux hauts, presque rien qui bloque, densité ×1,4 ;
+  - **prés salés** : le semis d'avant, allégé de ses arbres morts, avec des casiers et des filets qui sèchent ;
+  - **vasières** : sol nu, pieux, épaves, barques, densité ×0,6.
+
+  Selon la graine, chaque zone couvre 26 à 40 % de la terre.
+- **Les décors neufs** (`tools/sprites/props/swamp.py`) :
+  - quatre modules de passerelle ;
+  - des roseaux hauts à plumets ;
+  - des casiers à homards, avec leur cordage et leur flotteur rouge ;
+  - un filet qui sèche sur deux perches, effrangé, avec ses lièges ;
+  - une rangée de pieux d'amarrage, deux cassés.
+- **Le marais perd ses taches d'eau** : le poids de l'eau du biome passe de 0,20 à 0,10, sinon les flaques naturelles noient les chenaux.
+- **`SwampPropPlacer` est retiré.** Ses 870 lignes posaient une centaine de décors en dur, à des cellules réservées. Le rythme JSON fait ce travail désormais.
+- **La capture des pièces** (`--capture-pieces`) prend aussi les deux traversées de chenal les plus proches du départ (`bridge-00`, `bridge-01`).
+
+**Vérifié :**
+- `tools/validate.sh` démarrage, catalogues, terres et mouvement : 4/4. Build sans avertissement.
+- Le contrat des catalogues lit le rythme du Bas-Port (trois zones, chenaux, quatre passerelles). Il refuse sept chenaux mal formés : clé inconnue, chenal trop large, gués absents, gués partout, passerelle manquante, passerelle inconnue, image absente.
+- **Placement** (`--capture-pieces`, Bas-Port en première terre, graines 1, 2, 3, 5, 7, 11, 13, 17, 42 et 99) : les trois pièces actuelles sont posées à chaque graine, et deux traversées sont capturées à chaque graine.
+- **Captures** : [planches/plan58_t2a_terrain_bas_port.png](planches/plan58_t2a_terrain_bas_port.png), qui montre :
+  - la vue d'ensemble avant et après (graine 7) ;
+  - une passerelle en roselière (graine 7) ;
+  - une traversée en diagonale (graine 42).
+- Relecture `godot-reviewer` : aucun défaut bloquant. Trois remarques ont été traitées :
+  - les modules diagonaux (28 à 30 px) dépassaient le seuil des décalques : ils sont désormais plaqués au sol ;
+  - le biome d'une passerelle se lit par la même cellule que le relevé ;
+  - une traversée en épingle prend le sens du tracé en son milieu.
+
+**Mesure** (`measure_run`, profil dev, Scaphandrière, Bas-Port puis bois puis carrière, 600 s, graines 7, 42 et 11, avant au commit c8a13cb8, après au code final, chacun dans sa copie de travail) :
+
+| | Avant (7 / 42 / 11) | Après (7 / 42 / 11) |
+|---|---|---|
+| Troisième Mémorial du Bas-Port ravivé (s) | 118 / 97 / 98 | 135 / 112 / 110 |
+| Bas-Port quitté (s) | 185 / 165 / 193 | 168 / 186 / 208 |
+| Pièces du Bas-Port vues (hors cœur) | 1 / 1 / 1 | 1 / 1 / 2 |
+| Créatures visibles, 0-60 s | 11,1 / 17,3 / 18,1 | 13,3 / 15,9 / 15,3 |
+| Créatures visibles, 180-300 s | 19,7 / 19,5 / 20,1 | 18,4 / 18,8 / 19,2 |
+| Éliminations | 1 972 / 1 597 / 788 | 2 471 / 920 / 749 |
+| Distance parcourue (m) | 8 068 / 8 063 / 8 567 | 8 412 / 9 174 / 8 307 |
+| Gardiens et échos vaincus | 4 / 3 / 2 | 4 / 3 / 2 |
+| Morts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Le bot met 12 à 17 s de plus à raviver les trois Mémoriaux du Bas-Port. Il ne suit pas les chemins : il coupe à travers les chenaux, dans l’eau qui le ralentit. Il quitte la terre entre 17 s plus tôt et 21 s plus tard. La densité de créatures et le compte des gardiens ne bougent pas.
+
+**Ce qui reste :** au sol, les trois zones se distinguent par leurs décors plus que par leur couleur ; la teinte propre de chaque zone attendra les maisons et le sel (T2c, T2d). Les deux pièces de démonstration (ponton, autel noyé) sont encore là. Suite : T2b, la cale du chantier naval et les quais.

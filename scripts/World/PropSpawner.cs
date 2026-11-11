@@ -706,7 +706,7 @@ public partial class PropSpawner : Node2D
 			}
 		}
 		if (JsonConfigReader.Has(root, "rhythm"))
-			config.Rhythm = TerrainRhythm.Parse(reader, reader.Section(root, "rhythm"), ids);
+			config.Rhythm = TerrainRhythm.Parse(reader, reader.Section(root, "rhythm"), ids, spriteExists);
 		return config;
 	}
 

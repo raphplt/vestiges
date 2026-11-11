@@ -2589,3 +2589,15 @@ Lot T2 du [plan 58](58-terres-completes.md), découpage au §13 du plan. Raphaë
 - **Le Cerf reste le gardien provisoire** jusqu'au Pilleur (plan 57 G4).
 - **Les pièces de démonstration partent** : le ponton en T2b, l'autel noyé en T2c.
 - **L'identifiant `swamp` ne change pas.**
+
+## 213. Le terrain du Bas-Port — 11 novembre 2026
+
+Lot T2a du [plan 58](58-terres-completes.md), dans le découpage du §212. Détail au plan 58 §14.
+
+Raphaël, le 11 novembre, sur ce lot : « Oui, lance T2a ».
+
+**Tranché par défaut, réversible :**
+- **`SwampPropPlacer` est retiré** : le Bas-Port se règle comme les bois, par son rythme et ses chenaux en JSON. Les placements en dur ne reviennent pas ; ce qui doit être fait main ira dans les pièces (T2b à T2d).
+- **Sous un chemin, un chenal redevient du sol**, et une passerelle s'y pose. Le chemin reste praticable à pleine vitesse ; hors des chemins, l'eau ralentit sans bloquer.
+- **Quatre sens de passerelle**, dont deux diagonales, et un sens par traversée.
+- **Moins de taches d'eau** au marais (poids 0,10 au lieu de 0,20), pour que les chenaux se lisent.

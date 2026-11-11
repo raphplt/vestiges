@@ -4,9 +4,9 @@
     "place_key": "LAND_PLACE_SWAMP",
     "guardian": "grand_cerf",
     "terrain_weights": {
-        "grass": 0.25,
+        "grass": 0.35,
         "concrete": 0.05,
-        "water": 0.20,
+        "water": 0.10,
         "forest": 0.50
     },
     "exploration_enemy_pool": ["presage", "shadow_crawler", "fading_spitter", "rampant"],
