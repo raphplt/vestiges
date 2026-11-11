@@ -389,3 +389,66 @@ Ensuite, le Bas-Port a un cœur et quatre pièces neuves, et en pose trois ou qu
 Le bot met 12 à 17 s de plus à raviver les trois Mémoriaux du Bas-Port. Il ne suit pas les chemins : il coupe à travers les chenaux, dans l’eau qui le ralentit. Il quitte la terre entre 17 s plus tôt et 21 s plus tard. La densité de créatures et le compte des gardiens ne bougent pas.
 
 **Ce qui reste :** au sol, les trois zones se distinguent par leurs décors plus que par leur couleur ; la teinte propre de chaque zone attendra les maisons et le sel (T2c, T2d). Les deux pièces de démonstration (ponton, autel noyé) sont encore là. Suite : T2b, la cale du chantier naval et les quais.
+
+## 15. T2b, la cale du chantier naval et les quais — livré le 11 novembre
+
+**Ce qui est fait :**
+- **Onze décors neufs** (`tools/sprites/props/swamp.py`) :
+  - le **chalutier sur sa cale** : coque bleue délavée, antifouling rouille, timonerie, potence de chalut, mât de charge, posé sur ses tins et tenu par trois paires d'étais, coulures de rouille et bois nu ;
+  - la **cale de halage** : longrines goudronnées, traverses, rails ;
+  - le **treuil**, avec sa chaîne enroulée qui court au sol ;
+  - un **tas de planches** ;
+  - la **cabane du chantier** : planches peintes, tôle ondulée rouillée, porte entrouverte, carreau cassé, enseigne ;
+  - pour les quais : la **bordure de granit**, les **pavés**, la **bitte d'amarrage** et la **grue du port**, dont la flèche en treillis passe au-dessus du vide ;
+  - une **barque retournée** sur ses chevalets ;
+  - des **caisses à poisson** en plastique.
+- **Le cœur devient la cale du chantier** (`cale_du_chantier`, à la place de l'île du gardien) :
+  - le chalutier au nord, sa cale dessous, le treuil en tête de cale, la cabane à l'est ;
+  - des planches, des casiers et des barils, une barque retournée ;
+  - le Cerf dort au pied de la coque ;
+  - l'ouest reste ouvert.
+- **Les quais** (`quais`, à la place du ponton des pêcheurs) bordent la mer oubliée, un pan de vide au nord :
+  - la bordure de granit le longe en ligne droite, avec le pavé derrière, quatre bittes et la grue ;
+  - des barques, des caisses et des filets ;
+  - le Mémorial se tient au sud-ouest ;
+  - on y pousse la horde dans le Néant.
+- **Le pan de vide se cale sur la grille d'Effacement** (`LandPieceComposer.AlignVoid`).
+  - Le vide se creuse par cellules de 128 px, alignées sur le monde, alors que les pièces s'ancrent sur la grille des tuiles. Le bord du pan tombait donc n'importe où dans la pièce, à une cellule près.
+  - L'ancre glisse désormais pour que le centre du pan tombe pile au centre d'une cellule. Pour cela, le décalage du pan (`void.at`) doit tomber sur la grille des tuiles : x multiple de 32, y de 16, x/32 + y/16 pair. Sinon le catalogue est refusé. Les mêmes dix-sept cellules se creusent alors à chaque run.
+  - Si l'ancre alignée ne tient pas (place prise, trop près d'une autre pièce), elle ne bouge pas, et un avertissement le dit.
+  - Le belvédère des bois en profite : son bord tombe droit, juste au-dessus de la rambarde. Son pan passe de (0, −150) à (0, −160), sur la grille.
+- **Les éléments de lieu ont une clé `flat`** : un plancher, une cale ou des pavés se plaquent au sol quelle que soit leur hauteur à l'écran. On marche dessus sans passer derrière. Un élément `flat` ne peut pas bloquer.
+
+**Vérifié :**
+- `tools/validate.sh` démarrage, catalogues, terres et mouvement : 4/4. Après les retours de relecture, catalogues et terres repassent. Build sans avertissement.
+- Le contrat des catalogues lit le cœur et les quais. Il refuse quatre nouveaux cas : `flat` non booléen, `flat` et bloquant, vide entre deux pixels, vide entre deux rangées de tuiles.
+- **Placement** (`--capture-pieces`, Bas-Port en première terre, graines 1, 2, 3, 5, 7, 11, 13, 17, 42 et 99) : trois pièces à chaque graine, dix-sept cellules de vide à chaque graine, sans avertissement. Avant le calage, la graine 2 en creusait douze.
+- **Captures** : [planches/plan58_t2b_cale_quais.png](planches/plan58_t2b_cale_quais.png), qui montre :
+  - le cœur (graine 7) ;
+  - les quais, avec la bordure contre le bord du vide (graine 42) ;
+  - les onze décors ;
+  - le belvédère calé (graine 1 des bois).
+- Relecture `godot-reviewer`. Elle relève que l'ancre retombe sur la grille des tuiles : le centre du pan restait jusqu'à 32 px du centre de cellule, et les colonnes du bord pouvaient basculer (16 ou 17 cellules selon la graine). L'ancre prend désormais la cellule de tuile la plus proche du point visé, et les rayons des quais (430 × 190 px) gardent la marge. Une seconde relecture relève que le glissement ignorait l'écart minimal entre pièces et se taisait s'il était refusé : il respecte désormais l'écart et avertit. Le test des quais ne dépend plus de l'ordre des pièces.
+
+**Mesure** (`measure_run`, profil dev, Traqueur, Bas-Port puis bois puis carrière, 600 s, graines 7, 42 et 11, avant au commit 4c3c7c43, après au code d'avant la seconde relecture (qui ne touche que des cas de refus et le belvédère), chacun dans sa copie de travail) :
+
+| | Avant (7 / 42 / 11) | Après (7 / 42 / 11) |
+|---|---|---|
+| Troisième Mémorial du Bas-Port ravivé (s) | 123 / 106 / 101 | 106 / 112 / 88 |
+| Bas-Port quitté (s) | 176 / 170 / 175 | 166 / 187 / 148 |
+| Pièces du Bas-Port vues (hors cœur) | 1 / 1 / 2 | 1 / 1 / 1 |
+| Créatures visibles, 0-60 s | 19,4 / 19,1 / 23,4 | 14,6 / 16,8 / 19,4 |
+| Créatures visibles, 180-300 s | 18,3 / 19,9 / 21,0 | 17,5 / 18,9 / 18,2 |
+| Éliminations | 1 650 / 1 289 / 1 017 | 2 096 / 1 359 / 1 354 |
+| Distance parcourue (m) | 9 300 / 9 762 / 10 038 | 8 999 / 10 321 / 11 519 |
+| Gardiens et échos vaincus | 4 / 3 / 3 | 4 / 3 / 3 |
+| Morts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Le bot ravive les trois Mémoriaux du Bas-Port 13 à 17 s plus tôt aux graines 7 et 11, et 6 s plus tard à la graine 42. Il voit les quais aux graines 42 et 11. Sur la première minute, il voit 3 à 5 créatures de moins, mais il en tue davantage (+70 à +450 sur la run). Le cœur est plus ouvert que l'île du gardien, et le bot y nettoie plus vite. Entre 180 et 300 s, la densité ne bouge pas. Le compte des gardiens non plus.
+
+**Ce qui reste :**
+- Le pavé des quais se lit un peu répétitif : trois rangées du même module.
+- En capture, le pan de vide n'est pas encore dessiné quand la caméra saute sur une pièce juste après le cœur. La minimap le montre. C'est un artefact du téléport de la capture, pas du jeu.
+- La première minute moins dense est à surveiller dans la mesure de T2d.
+
+Suite : T2c, les marais salants et la digue.

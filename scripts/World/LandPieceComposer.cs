@@ -17,7 +17,7 @@ public static class LandPieceComposer
     private const float VoidPathMarginPx = 96f;
 
     public static List<PlacedPiece> Plan(WorldGenerator generator, TerrainType[,] terrain, PathNetwork paths,
-        HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band, Vector2 heartAnchor, ulong seed)
+        HashSet<Vector2I> usedCells, LandPieceConfig config, Vector2 band, Vector2 heartAnchor, int voidGridPx, ulong seed)
     {
         List<PlacedPiece> placed = new();
         if (generator.ActiveBiomes.Count != 1 || !config.Biomes.TryGetValue(generator.ActiveBiomes[0].Id, out LandPieceConfig.BiomePieces biome))
@@ -54,6 +54,7 @@ public static class LandPieceComposer
                 continue;
             }
             bool mirrored = rng.Randf() < 0.5f;
+            anchor = AlignVoid(generator, paths, usedCells, config, piece, placed, anchor, mirrored, voidGridPx);
             Settle(generator, terrain, paths, usedCells, piece, anchor, mirrored, style);
             placed.Add(new PlacedPiece(piece, anchor, mirrored, false));
             taken++;
@@ -99,6 +100,48 @@ public static class LandPieceComposer
         }
         if (paths != null)
             SiteComposer.TryConnect(paths, piece.Plan, anchor, mirrored, style);
+    }
+
+    /// <summary>
+    /// Le pan de vide se creuse par cellules d'Effacement entières : l'ancre glisse vers la cellule de tuile dont le pan
+    /// tombe le plus près du centre d'une cellule d'Effacement (à quelques pixels près, la grille des tuiles ne les
+    /// contient pas toutes). Avec des rayons qui gardent cette marge, les mêmes cellules se creusent à chaque run : le bord
+    /// tombe au même endroit de la pièce, et un quai ou une rambarde peut le longer. Si la place ne tient plus après le
+    /// glissement ou s'approche trop d'une autre pièce, l'ancre ne bouge pas.
+    /// </summary>
+    private static Vector2 AlignVoid(WorldGenerator generator, PathNetwork paths, HashSet<Vector2I> usedCells, LandPieceConfig config,
+        LandPieceConfig.Piece piece, List<PlacedPiece> placed, Vector2 anchor, bool mirrored, int gridPx)
+    {
+        if (piece.VoidCenter is not Vector2 center)
+            return anchor;
+        Vector2 offset = SiteComposer.Mirror(center, mirrored);
+        Vector2 voidAt = anchor + offset;
+        Vector2 snapped = new((Mathf.Floor(voidAt.X / gridPx) + 0.5f) * gridPx, (Mathf.Floor(voidAt.Y / gridPx) + 0.5f) * gridPx);
+        Vector2 target = snapped - offset;
+        Vector2I around = PathNetworkGenerator.CellAt(target);
+        Vector2 aligned = PathNetworkGenerator.CellCenter(around);
+        // Les rangées de tuiles alternent leur décalage de 32 px : une rangée voisine peut tomber plus juste.
+        for (int dy = -2; dy <= 2; dy++)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                Vector2 candidate = PathNetworkGenerator.CellCenter(around + new Vector2I(dx, dy));
+                if (candidate.DistanceSquaredTo(target) < aligned.DistanceSquaredTo(target))
+                    aligned = candidate;
+            }
+        }
+        foreach (PlacedPiece other in placed)
+        {
+            if (aligned.DistanceTo(other.Anchor) < config.MinSpacingPx)
+                return Refuse(piece, anchor);
+        }
+        return Fits(generator, paths, usedCells, config, piece, aligned) ? aligned : Refuse(piece, anchor);
+
+        static Vector2 Refuse(LandPieceConfig.Piece piece, Vector2 anchor)
+        {
+            GD.PushWarning($"[LandPieceComposer] Le vide de « {piece.Id} » reste hors de la grille d'Effacement : son bord tombera ailleurs");
+            return anchor;
+        }
     }
 
     /// <summary>Emplacements tirés dans la bande : garde le plus éloigné des pièces posées parmi les premiers valides.</summary>

@@ -257,7 +257,7 @@ public partial class WorldSetup : Node2D
         // Pièces maîtresses de la terre (plan 58) : avant les fermes et les chantiers, qui s'écartent de leur emprise.
         _pieces = _land.IsLand && _land.MemorialBand is Vector2 band
             ? LandPieceComposer.Plan(generator, _terrain, _pathNetwork, _usedCells, LandPieceConfig.Load(), band,
-                GuardianConfig.Load(out _)?.LairOffset ?? Vector2.Zero, LandSeed)
+                GuardianConfig.Load(out _)?.LairOffset ?? Vector2.Zero, ErasureConfig.Load().CellSize, LandSeed)
             : new List<PlacedPiece>();
         LoadProfiler.Span("pièces de la terre (thread)", ref step);
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.

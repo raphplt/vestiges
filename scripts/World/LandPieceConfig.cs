@@ -59,6 +59,9 @@ public sealed class LandPieceConfig
     private const float VoidMinRadiusPx = 128f;
     // Le cercle d'un Mémorial (radius_px de landmarks.json, 220 px) reste sur le sol et frôle le bord du vide.
     private const float VoidMemorialMarginPx = 240f;
+    // Pas de la grille des tuiles (PathNetworkGenerator.CellCenter) : 32 px en x d'une rangée à l'autre, 16 px en y.
+    private const int TileStepXPx = 32;
+    private const int TileStepYPx = 16;
 
     /// <summary>Réglages valides, ou une exception qui nomme le champ fautif (génération, bancs).</summary>
     public static LandPieceConfig Load()
@@ -194,8 +197,24 @@ public sealed class LandPieceConfig
             reader.Fail($"{biomeId}, pièce « {piece.Id} » : void déborde de half_extent_px");
         else if (piece.Memorial is Vector2 slot && InEllipse(slot, center, radii + Vector2.One * VoidMemorialMarginPx))
             reader.Fail($"{biomeId}, pièce « {piece.Id} » : memorial dans le void ou à moins de {VoidMemorialMarginPx} px de son bord");
+        else if (!OnTileGrid(center))
+            reader.Fail($"{biomeId}, pièce « {piece.Id} » : void.at hors de la grille des tuiles (x multiple de {TileStepXPx}, "
+                + $"y de {TileStepYPx}, x/{TileStepXPx} + y/{TileStepYPx} pair), son bord ne tomberait pas juste");
         piece.VoidCenter = center;
         piece.VoidRadii = radii;
+    }
+
+    /// <summary>
+    /// Une ancre de tuile plus ce décalage peut-elle tomber pile au centre d'une cellule d'Effacement ? Les rangées paires
+    /// et impaires décalent x de 32 px : x et y doivent changer de rangée ensemble, retourné ou non.
+    /// </summary>
+    private static bool OnTileGrid(Vector2 offset)
+    {
+        if (offset.X != Mathf.Round(offset.X) || offset.Y != Mathf.Round(offset.Y))
+            return false;
+        int x = (int)offset.X;
+        int y = (int)offset.Y;
+        return x % TileStepXPx == 0 && y % TileStepYPx == 0 && (x / TileStepXPx + y / TileStepYPx) % 2 == 0;
     }
 
     /// <summary>Le point tombe-t-il dans l'ellipse alignée sur les axes (bord compris) ?</summary>

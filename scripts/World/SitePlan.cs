@@ -21,6 +21,8 @@ public sealed class SitePlan
         public Vector2? To;
         public float Step;
         public bool Blocking;
+        /// <summary>Plaqué au sol quelle que soit sa hauteur à l'écran : un plancher, une cale, des pavés qu'on foule.</summary>
+        public bool Flat;
         public float Chance = 1f;
         /// <summary>Variantes d'une même place : de tous les éléments d'un groupe, un seul est posé par lieu.</summary>
         public string Group;
@@ -117,7 +119,7 @@ public sealed class SitePlan
             return plan;
         foreach (JsonElement item in reader.List(owner, "elements", 0))
         {
-            reader.AllowOnly(item, "elements", "sprites", "at", "to", "step", "blocking", "chance", "group");
+            reader.AllowOnly(item, "elements", "sprites", "at", "to", "step", "blocking", "flat", "chance", "group");
             Element element = new()
             {
                 Sprites = Sprites(reader, item, "sprites", 1, spriteExists).ToArray(),
@@ -133,6 +135,10 @@ public sealed class SitePlan
                 element.To = Vector(reader, item, "to");
                 element.Step = reader.Positive(item, "step");
             }
+            if (JsonConfigReader.Has(item, "flat"))
+                element.Flat = reader.Flag(item, "flat");
+            if (element.Flat && element.Blocking)
+                reader.Fail("elements : un élément flat ne bloque pas (on marche dessus)");
             if (JsonConfigReader.Has(item, "chance"))
                 element.Chance = reader.Chance(item, "chance");
             if (JsonConfigReader.Has(item, "group"))

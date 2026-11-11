@@ -720,6 +720,8 @@ public partial class CatalogContractRegression : Node
             ("rangée sans pas", root => root["elements"]![1]!.AsObject().Remove("step"), "to et step vont ensemble"),
             ("pas sans rangée", root => root["elements"]![0]!["step"] = 10, "to et step vont ensemble"),
             ("pas nul", root => root["elements"]![1]!["step"] = 0, "step"),
+            ("plat non booléen", root => root["elements"]![1]!["flat"] = 1, "flat"),
+            ("plat et bloquant", root => root["elements"]![0]!["flat"] = true, "un élément flat ne bloque pas"),
         };
         foreach ((string name, Action<JsonObject> mutate, string expected) in planCases)
         {
@@ -768,8 +770,10 @@ public partial class CatalogContractRegression : Node
             && loaded.Biomes["swamp"].Heart != null && loaded.Biomes["swamp"].Pieces.Count == 2
             && loaded.Biomes["swamp"].Pieces[0].Memorial is Vector2 && loaded.Biomes["swamp"].Pieces[1].Ground == TerrainType.Grass
             && loaded.Biomes["swamp"].Pieces[0].Plan.Elements.Exists(element => element.Group == "barque")
-            && loaded.Biomes["forest_reclaimed"].Pieces.Exists(piece => piece.Id == "belvedere" && piece.VoidCenter is Vector2),
-            $"pièces du dépôt acceptées, vide du belvédère lu {loadError}");
+            && loaded.Biomes["forest_reclaimed"].Pieces.Exists(piece => piece.Id == "belvedere" && piece.VoidCenter is Vector2)
+            && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "quais" && piece.VoidCenter is Vector2)
+            && loaded.Biomes["swamp"].Heart.Plan.Elements.Exists(element => element.Flat),
+            $"pièces du dépôt acceptées, vides du belvédère et des quais lus, cale plaquée au sol {loadError}");
         string valid = FileAccess.GetFileAsString(LandPieceConfig.FilePath);
         JsonNode Piece(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![0]!;
         JsonNode Belvedere(JsonObject root) => root["biomes"]!["forest_reclaimed"]!["pieces"]![0]!;
@@ -783,9 +787,9 @@ public partial class CatalogContractRegression : Node
             ("biome inconnu", root => root["biomes"]!["desert"] = root["biomes"]!["swamp"]!.DeepClone(), "biome « desert » inconnu"),
             ("dossier hors res", root => root["biomes"]!["swamp"]!["folder"] = "assets/props/swamp/", "folder"),
             ("champ de pièce inconnu", root => Piece(root)["memoriel"] = new JsonArray(0, 0), "clé « memoriel » inconnue"),
-            ("pièce en double", root => Piece(root)["id"] = "ile_du_gardien", "déjà déclarée"),
-            ("Mémorial hors emprise", root => Piece(root)["memorial"] = new JsonArray(0, 400), "memorial hors de l'ellipse"),
-            ("Mémorial dans un coin de l'emprise", root => Piece(root)["memorial"] = new JsonArray(400, 180), "memorial hors de l'ellipse"),
+            ("pièce en double", root => Piece(root)["id"] = "cale_du_chantier", "déjà déclarée"),
+            ("Mémorial hors emprise", root => Piece(root)["memorial"] = new JsonArray(0, 420), "memorial hors de l'ellipse"),
+            ("Mémorial dans un coin de l'emprise", root => Piece(root)["memorial"] = new JsonArray(520, 330), "memorial hors de l'ellipse"),
             ("cœur sans sol", root => root["biomes"]!["swamp"]!["heart"]!.AsObject().Remove("ground"), "ground exigé"),
             ("part d'eau hors borne", root => root["max_water_share"] = 1.5, "max_water_share"),
             ("candidats nuls", root => root["candidates_per_piece"] = 0, "candidates_per_piece"),
@@ -796,6 +800,8 @@ public partial class CatalogContractRegression : Node
             ("vide plus petit qu'une cellule", root => Belvedere(root)["void"]!["radii"] = new JsonArray(100, 170), "void.radii"),
             ("vide hors emprise", root => Belvedere(root)["void"]!["at"] = new JsonArray(300, -140), "void déborde"),
             ("Mémorial au bord du vide", root => Belvedere(root)["memorial"] = new JsonArray(0, 200), "memorial dans le void"),
+            ("vide entre deux pixels", root => Belvedere(root)["void"]!["at"] = new JsonArray(0, -150), "grille des tuiles"),
+            ("vide entre deux rangées", root => Belvedere(root)["void"]!["at"] = new JsonArray(32, -160), "grille des tuiles"),
             ("vide au cœur", root => root["biomes"]!["forest_reclaimed"]!["heart"]!["void"] = new JsonObject
             {
                 ["at"] = new JsonArray(0, 0), ["radii"] = new JsonArray(200, 150),

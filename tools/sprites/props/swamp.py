@@ -1469,6 +1469,471 @@ def stake_row(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(110, 64))
 
 
+# Le chantier naval et les quais (plan 58 T2b) : ce que le port a laissé à terre. Peintures marines passées,
+# antifouling rouille, granit des quais, jaune de grue écaillé.
+HULL_BLUE = "#40586A"
+ANTIFOUL = "#7A3A2C"
+BOOT_WHITE = "#C6C2B0"
+TARRED = "#3A3430"
+CABIN_PAINT = "#B8B29E"
+GLASS_DARK = "#2C3238"
+SHED_PAINT = "#66705E"
+TIN = "#7A7470"
+GRANITE = "#7A7870"
+CRANE_YELLOW = "#A8843A"
+CRATE_BLUE = "#3E6884"
+CRATE_RED = "#8A4A3C"
+MUD = "#4A4234"
+
+
+def trawler_hull(stem: str, seed: int) -> PropModel:
+    """
+    Le chalutier sur sa cale : coque bleue délavée, antifouling rouille sous la ligne de flottaison, liston clair,
+    timonerie à l'arrière, potence de chalut au tableau, mât de charge à l'avant. Posé sur ses tins, tenu par trois
+    paires d'étais. Coulures de rouille, bois nu là où la peinture est partie : le chantier s'est arrêté en plein carénage.
+    """
+    (HULL, ANTI, BOOT, STRAKE, BARE, RUST_M, DECK, CABIN, WINDOW, ROOF, STEEL, TIMBER, TIMBER_DARK) = range(13)
+    materials = [make_material("hull", HULL_BLUE), make_material("antifouling", ANTIFOUL),
+                 make_material("boot", BOOT_WHITE, contrast=0.6), make_material("strake", TARRED, contrast=0.7),
+                 make_material("bare_wood", WOOD_OLD, contrast=0.7), make_material("rust", RUST_ORANGE, contrast=0.7),
+                 make_material("deck", WOOD_OLD), make_material("cabin", CABIN_PAINT),
+                 make_material("window", GLASS_DARK, contrast=0.5), make_material("roof", RUST, contrast=0.8),
+                 make_material("steel", IRON, contrast=0.8), make_material("timber", WOOD_OLD, contrast=0.8),
+                 make_material("timber_dark", WOOD_DARK, contrast=0.8)]
+    half_length, beam, depth, keel_y = 4.2 * M, 1.5 * M, 2.4 * M, 0.9 * M
+    deck_y = keel_y + depth - 0.35 * M
+
+    def taper(x: np.ndarray) -> np.ndarray:
+        # La coque s'effile vers l'étrave (+x) et garde du gras à l'arrière.
+        return np.maximum(1.0 - np.clip(x / half_length, 0.0, 1.0) ** 2 * 0.72 - np.clip(-x / half_length, 0.0, 1.0) ** 2 * 0.2, 0.2)
+
+    def sheer(x: np.ndarray) -> np.ndarray:
+        return depth + 0.22 * M * (x / half_length) ** 2 + 0.35 * M * np.clip(x / half_length, 0.0, 1.0) ** 2
+
+    def outer(p: np.ndarray) -> np.ndarray:
+        q = p - np.array([0.0, keel_y, 0.0])
+        t = taper(q[:, 0])
+        scaled = np.stack([q[:, 0], q[:, 1], q[:, 2] / t], axis=1)
+        body = ellipsoid(scaled, (0.0, depth, 0.0), (half_length, depth, beam)) * t
+        body = np.maximum(body, q[:, 1] - sheer(q[:, 0]))
+        return np.maximum(body, -q[:, 0] - 0.88 * half_length)
+
+    def hull(p: np.ndarray) -> np.ndarray:
+        o = outer(p)
+        # Pavois : l'intérieur au-dessus du pont est creusé, il reste un bordé de 9 cm.
+        well = np.maximum(o + 0.09 * M, deck_y - p[:, 1])
+        shell = np.maximum(o, -well)
+        keel = rounded_box(p, (0.05 * half_length, keel_y + 0.06 * M, 0.0), (0.68 * half_length, 0.12 * M, 0.07 * M), 0.02 * M)
+        return np.minimum(shell, keel)
+
+    def side_z(x: float, height: float) -> float:
+        # Demi-largeur de la coque à l'abscisse x et à la hauteur donnée (au-dessus de la quille).
+        ratio = 1.0 - ((height - depth) / depth) ** 2 - (x / half_length) ** 2
+        return float(beam * taper(np.array([x]))[0] * np.sqrt(max(ratio, 0.0)))
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        qy = lambda p: p[:, 1] - keel_y
+        waterline_y = 0.42 * depth
+        anti = lambda p: qy(p) - waterline_y - 0.08 * M * p[:, 0] / half_length
+        boot = lambda p: np.abs(qy(p) - waterline_y - 0.08 * M * p[:, 0] / half_length - 0.11 * M) - 0.055 * M
+        strake = lambda p: np.abs(qy(p) - sheer(p[:, 0]) + 0.22 * M) - 0.07 * M
+        topsides = lambda p: waterline_y + 0.2 * M - qy(p)
+        bare = both(noise_mask(0.4 * M, seed + 1, 0.1), topsides)
+        streaks = both(noise_mask(0.12 * M, seed + 2, 0.14, (1.0, 9.0, 1.0)), lambda p: qy(p) - depth + 0.1 * M)
+        deck_floor = both(lambda p: np.abs(p[:, 1] - deck_y) - 0.06 * M, lambda p: outer(p) + 0.05 * M)
+        cabin_at = np.array([-0.3 * half_length, deck_y + 0.95 * M, 0.0])
+        cabin = lambda p: rounded_box(p, cabin_at, (0.8 * M, 0.95 * M, 0.85 * M), 0.05 * M)
+        roof = lambda p: rounded_box(p, cabin_at + np.array([0.0, 1.0 * M, 0.0]), (0.95 * M, 0.07 * M, 1.0 * M), 0.02 * M)
+        windows = both(lambda p: np.abs(p[:, 1] - cabin_at[1] - 0.42 * M) - 0.22 * M,
+                       lambda p: 0.045 * M - np.abs(np.mod(p[:, 0] + p[:, 2], 0.46 * M) - 0.23 * M))
+        stern_x = -0.8 * half_length
+        gallow_z = side_z(stern_x, depth) * 0.8
+        gallows = [((stern_x, deck_y, s * gallow_z), (stern_x - 0.1 * M, deck_y + 1.8 * M, s * gallow_z * 0.8)) for s in (-1.0, 1.0)]
+        gallows.append(((stern_x - 0.1 * M, deck_y + 1.8 * M, -gallow_z * 0.8), (stern_x - 0.1 * M, deck_y + 1.8 * M, gallow_z * 0.8)))
+        mast_x = 0.3 * half_length
+        rigging = [((mast_x, deck_y, 0.0), (mast_x, deck_y + 3.2 * M, 0.0)),
+                   ((mast_x, deck_y + 0.6 * M, 0.0), (0.72 * half_length, deck_y + 1.7 * M, 0.25 * M))]
+        shores = []
+        for x in (-0.55 * half_length, -0.1 * half_length, 0.35 * half_length):
+            touch = depth * 0.45
+            z = side_z(x, touch)
+            for s in (-1.0, 1.0):
+                shores.append(((x + w.uniform(-0.2, 0.2) * M, 0.0, s * (z + 1.7 * M)), (x, keel_y + touch, s * (z - 0.05 * M))))
+        blocks = [x * half_length for x in (-0.6, -0.2, 0.2, 0.55)]
+        block_shape = lambda p: _union(*(rounded_box(p, (x, keel_y * 0.5 - 0.04 * M, 0.0), (0.22 * M, keel_y * 0.5 - 0.04 * M, 0.42 * M), 0.02 * M)
+                                         for x in blocks))
+        return [
+            Part(hull, HULL),
+            Part(painted(hull, anti), ANTI, relief=False),
+            Part(painted(hull, boot), BOOT, relief=False),
+            Part(painted(hull, strake, 0.02 * M), STRAKE),
+            Part(painted(hull, bare, 0.016 * M), BARE, relief=False),
+            Part(painted(hull, streaks, 0.02 * M), RUST_M, relief=False),
+            Part(painted(hull, deck_floor), DECK, relief=False),
+            Part(cabin, CABIN),
+            Part(painted(cabin, windows), WINDOW, relief=False),
+            Part(painted(cabin, streaks, 0.02 * M), RUST_M, relief=False),
+            Part(roof, ROOF),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.07 * M) for a, b in gallows + rigging)), STEEL),
+            Part(lambda p: _union(*(capsule(p, a, b, 0.085 * M) for a, b in shores)), TIMBER),
+            Part(block_shape, TIMBER_DARK),
+            Part(painted(block_shape, bands(1, 0.2 * M, 0.03 * M)), TIMBER, relief=False),
+        ]
+
+    top_y = deck_y + 3.4 * M
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, ray_range=float(2.5 * top_y), canvas=(260, 220),
+                     footprint=box_footprint(0.85 * half_length, beam + 0.3 * M),
+                     bounds=((-half_length - 0.4 * M, -0.2 * M, -beam - 1.5 * M), (half_length + 0.4 * M, top_y, beam + 1.5 * M)),
+                     supersample=3)
+
+
+def slipway(stem: str, seed: int) -> PropModel:
+    """
+    La cale de halage : deux longrines goudronnées sur des traverses, un rail de fer rouillé sur chacune, qui filent
+    sous la coque et descendent vers l'eau qu'il n'y a plus. Des traverses manquent. À plat : on marche dessus.
+    """
+    WAY, SLEEPER, GRAIN, RAIL = range(4)
+    materials = [make_material("way", TARRED, contrast=0.7), make_material("sleeper", WOOD_DARK, contrast=0.8),
+                 make_material("grain", WOOD_OLD, contrast=0.6), make_material("rail", RUST, contrast=0.7)]
+    start, end = -5.4 * M, 5.4 * M
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        sleepers = [(x, rotation_y(w.uniform(-0.06, 0.06))) for k, x in enumerate(np.arange(start + 0.2 * M, end, 0.78 * M)) if k not in (3, 9)]
+        ways = lambda p: _union(*(rounded_box(p, ((start + end) * 0.5, 0.1 * M, z * M), ((end - start) * 0.5, 0.07 * M, 0.14 * M), 0.02 * M)
+                                  for z in (-0.62, 0.62)))
+        sleeper_shape = lambda p: _union(*(rounded_box(p, (x, 0.03 * M, 0.0), (0.12 * M, 0.03 * M, 0.98 * M), 0.015 * M, r) for x, r in sleepers))
+        return [
+            Part(sleeper_shape, SLEEPER),
+            Part(painted(sleeper_shape, noise_mask(0.06 * M, seed + 1, 0.25, (1.0, 1.0, 6.0))), GRAIN, relief=False),
+            Part(ways, WAY),
+            Part(lambda p: _union(*(capsule(p, (start + 0.1 * M, 0.2 * M, z * M), (end - 0.1 * M, 0.2 * M, z * M), 0.035 * M) for z in (-0.62, 0.62))), RAIL),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, ray_range=float(end - start), canvas=(260, 110), smooth_slopes=True,
+                     bounds=((start - 0.2 * M, -0.1 * M, -1.1 * M), (end + 0.2 * M, 0.4 * M, 1.1 * M)))
+
+
+def winch(stem: str, seed: int) -> PropModel:
+    """Le treuil de la cale : bâti de fonte en A sur un patin de bois, tambour où la chaîne est encore enroulée, grande roue dentée, manivelle ; la chaîne sort et court au sol."""
+    IRON_M, RUST_M, SKID, CHAIN = range(4)
+    materials = [make_material("iron", IRON, contrast=0.8), make_material("rust", RUST_ORANGE, contrast=0.7),
+                 make_material("skid", WOOD_DARK, contrast=0.8), make_material("chain", RUST, contrast=0.8)]
+    axle_y = 0.72 * M
+    across = rotation_x(np.pi / 2)
+
+    def parts() -> list[Part]:
+        frames = lambda p: _union(*(np.minimum(np.minimum(capsule(p, (-0.42 * M, 0.2 * M, z), (0.0, axle_y + 0.12 * M, z), 0.06 * M),
+                                                          capsule(p, (0.42 * M, 0.2 * M, z), (0.0, axle_y + 0.12 * M, z), 0.06 * M)),
+                                               rounded_box(p, (0.0, 0.24 * M, z), (0.45 * M, 0.04 * M, 0.04 * M), 0.01 * M))
+                                    for z in (-0.38 * M, 0.38 * M)))
+        drum = lambda p: cylinder(p, (0.0, axle_y, 0.0), 0.22 * M, 0.34 * M, 0.02 * M, across)
+        flanges = lambda p: _union(*(cylinder(p, (0.0, axle_y, z), 0.3 * M, 0.025 * M, 0.01 * M, across) for z in (-0.32 * M, 0.32 * M)))
+        gear = lambda p: np.maximum(cylinder(p, (0.08 * M, axle_y - 0.05 * M, 0.5 * M), 0.4 * M, 0.035 * M, 0.01 * M, across),
+                                    -cylinder(p, (0.08 * M, axle_y - 0.05 * M, 0.5 * M), 0.28 * M, 0.06 * M, 0.0, across))
+        spokes = lambda p: _union(*(capsule(p, (0.08 * M, axle_y - 0.05 * M, 0.5 * M),
+                                            (0.08 * M + 0.3 * M * np.cos(a), axle_y - 0.05 * M + 0.3 * M * np.sin(a), 0.5 * M), 0.03 * M)
+                                    for a in np.linspace(0.3, 0.3 + 2 * np.pi, 5, endpoint=False)))
+        crank = lambda p: np.minimum(capsule(p, (0.0, axle_y, -0.45 * M), (0.28 * M, axle_y + 0.22 * M, -0.5 * M), 0.035 * M),
+                                     capsule(p, (0.28 * M, axle_y + 0.22 * M, -0.5 * M), (0.28 * M, axle_y + 0.22 * M, -0.72 * M), 0.035 * M))
+        iron = lambda p: _union(frames(p), flanges(p), gear(p), spokes(p), crank(p))
+        skid = lambda p: rounded_box(p, (0.0, 0.1 * M, 0.0), (0.75 * M, 0.1 * M, 0.52 * M), 0.02 * M)
+        wound = painted(drum, bands(2, 0.075 * M, 0.035 * M), 0.025 * M)
+        run = [np.array([0.2 * M, axle_y - 0.18 * M, 0.05 * M]), np.array([0.6 * M, 0.25 * M, 0.15 * M]),
+               np.array([1.0 * M, 0.04 * M, 0.3 * M]), np.array([1.5 * M, 0.04 * M, 0.2 * M]), np.array([1.85 * M, 0.04 * M, 0.45 * M])]
+        return [
+            Part(skid, SKID),
+            Part(iron, IRON_M),
+            Part(painted(iron, noise_mask(0.12 * M, seed + 1, 0.35)), RUST_M, relief=False),
+            Part(drum, IRON_M),
+            Part(wound, CHAIN),
+            Part(_branch_chain(run, 0.045 * M, 0.04 * M), CHAIN),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(110, 84), footprint=box_footprint(0.75 * M, 0.52 * M))
+
+
+def plank_stack(stem: str, seed: int) -> PropModel:
+    """Tas de planches du chantier : cinq lits séparés de liteaux, celui du dessus glissé de travers, une planche tombée devant."""
+    PLANK, PLANK_LIGHT, GRAIN, BATTEN = range(4)
+    materials = [make_material("plank", WOOD_OLD), make_material("plank_light", BLEACHED),
+                 make_material("grain", WOOD_DARK, contrast=0.7), make_material("batten", WOOD_DARK, contrast=0.8)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        planks, battens = [], []
+        for layer in range(5):
+            y = 0.1 * M + layer * 0.11 * M
+            slide = (w.uniform(0.2, 0.45) * M, rotation_y(w.uniform(-0.18, 0.18))) if layer == 4 else (w.uniform(-0.05, 0.05) * M, rotation_y(w.uniform(-0.02, 0.02)))
+            for k, z in enumerate(np.linspace(-0.55, 0.55, 6)):
+                if layer == 4 and k >= 4:
+                    continue
+                planks.append((np.array([slide[0], y + 0.04 * M, z * M]), slide[1], (layer + k) % 2))
+            for x in (-0.95, 0.0, 0.95):
+                battens.append(np.array([x * M, y - 0.025 * M, 0.0]))
+        fallen = [(np.array([0.2 * M, 0.03 * M, 0.95 * M]), rotation_y(0.25))]
+
+        def plank_shape(kind: int):
+            return lambda p: _union(*(rounded_box(p, c, (1.3 * M, 0.03 * M, 0.11 * M), 0.01 * M, r) for c, r, k in planks if k == kind))
+
+        lean_shape = lambda p: _union(*(rounded_box(p, c, (1.3 * M, 0.03 * M, 0.11 * M), 0.01 * M, r) for c, r in fallen))
+        everything = lambda p: _union(plank_shape(0)(p), plank_shape(1)(p), lean_shape(p))
+        return [
+            Part(plank_shape(0), PLANK),
+            Part(plank_shape(1), PLANK_LIGHT),
+            Part(lean_shape, PLANK_LIGHT),
+            Part(painted(everything, noise_mask(0.07 * M, seed + 1, 0.22, (7.0, 1.0, 1.0))), GRAIN, relief=False),
+            Part(lambda p: _union(*(rounded_box(p, c, (0.05 * M, 0.025 * M, 0.62 * M), 0.008 * M) for c in battens)), BATTEN),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(110, 84), smooth_slopes=True, footprint=box_footprint(1.3 * M, 0.7 * M))
+
+
+def shipyard_shed(stem: str, seed: int) -> PropModel:
+    """
+    La cabane du chantier : planches verticales peintes d'un vert passé, toit à un pan de tôle ondulée galvanisée que la
+    rouille gagne, porte entrouverte sur le noir, carreau cassé, l'enseigne au-dessus de la porte, un tuyau de poêle.
+    """
+    WALL, BOARD, BARE, DOOR, GLASS, ROOF, RUST_M, SIGN, PIPE = range(9)
+    materials = [make_material("wall", SHED_PAINT), make_material("board_joint", WOOD_DARK, contrast=0.6),
+                 make_material("bare", WOOD_OLD, contrast=0.6), make_material("doorway", GLASS_DARK, contrast=0.4),
+                 make_material("glass", "#4A5A64", contrast=0.5), make_material("roof", TIN, contrast=0.8),
+                 make_material("rust", RUST_ORANGE, contrast=0.7), make_material("sign", PAINT_FADED, contrast=0.6),
+                 make_material("pipe", IRON, contrast=0.8)]
+    half = (1.45 * M, 1.2 * M, 1.1 * M)
+
+    def parts() -> list[Part]:
+        walls = lambda p: rounded_box(p, (0.0, half[1], 0.0), half, 0.03 * M)
+        roof = lambda p: rounded_box(p, (0.0, 2.55 * M, 0.0), (1.72 * M, 0.05 * M, 1.4 * M), 0.02 * M, rotation_x(-0.2))
+        joints = lambda p: np.minimum(bands(0, 0.25 * M, 0.03 * M)(p), bands(2, 0.25 * M, 0.03 * M)(p))
+        front = lambda p: half[2] - 0.08 * M - p[:, 2]
+        doorway = both(lambda p: np.abs(p[:, 0] - 0.55 * M) - 0.4 * M, lambda p: p[:, 1] - 1.95 * M, front)
+        window = both(lambda p: np.abs(p[:, 0] + 0.7 * M) - 0.33 * M, lambda p: np.abs(p[:, 1] - 1.4 * M) - 0.28 * M, front)
+        cracked = both(window, lambda p: np.abs((p[:, 0] + 0.7 * M) - (p[:, 1] - 1.4 * M) * 0.8) - 0.03 * M)
+        leaf = lambda p: rounded_box(p, (1.2 * M, 0.98 * M, half[2] + 0.3 * M), (0.4 * M, 0.97 * M, 0.035 * M), 0.01 * M, rotation_y(0.9))
+        sign = lambda p: rounded_box(p, (0.4 * M, 2.18 * M, half[2] + 0.02 * M), (0.7 * M, 0.13 * M, 0.025 * M), 0.01 * M)
+        letters = both(lambda p: np.abs(p[:, 1] - 2.18 * M) - 0.05 * M, noise_mask(0.05 * M, seed + 3, 0.5, (1.0, 4.0, 1.0)))
+        pipe = lambda p: cylinder(p, (-1.0 * M, 2.95 * M, -0.5 * M), 0.07 * M, 0.45 * M, 0.01 * M)
+        corrugation = bands(2, 0.12 * M, 0.04 * M, frame=lambda p: p @ rotation_x(-0.2))
+        return [
+            Part(walls, WALL),
+            Part(painted(walls, joints), BOARD, relief=False),
+            Part(painted(walls, noise_mask(0.3 * M, seed + 1, 0.22)), BARE, relief=False),
+            Part(painted(walls, doorway, 0.02 * M), DOOR, relief=False),
+            Part(painted(walls, window, 0.02 * M), GLASS, relief=False),
+            Part(painted(walls, cracked, 0.025 * M), DOOR, relief=False),
+            Part(leaf, BARE),
+            Part(roof, ROOF),
+            Part(painted(roof, corrugation), PIPE, relief=False),
+            Part(painted(roof, noise_mask(0.25 * M, seed + 2, 0.4), 0.02 * M), RUST_M, relief=False),
+            Part(sign, SIGN),
+            Part(painted(sign, letters), BOARD, relief=False),
+            Part(pipe, PIPE),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, ray_range=180.0, canvas=(150, 150), footprint=box_footprint(half[0], half[2]))
+
+
+def quay_edge(stem: str, seed: int) -> PropModel:
+    """
+    Bordure du quai, au bord de la mer oubliée : quatre blocs de granit taillé, un peu déjointés, un épaufré, lichen et
+    taches d'humidité, un anneau d'amarrage scellé. Bas : on le longe et on y pousse la horde dans le vide.
+    """
+    STONE_M, LICHEN_M, WET, RING = range(4)
+    materials = [make_material("granite", GRANITE), make_material("lichen", "#6E7A4A", contrast=0.6),
+                 make_material("wet", "#5E5E5A", contrast=0.6), make_material("ring", RUST, contrast=0.8)]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        blocks = [((x * M, 0.22 * M + w.uniform(-0.03, 0.02) * M, w.uniform(-0.04, 0.04) * M), rotation_y(w.uniform(-0.035, 0.035)))
+                  for x in (-1.68, -0.56, 0.56, 1.68)]
+        stone = lambda p: np.maximum(_union(*(rounded_box(p, c, (0.54 * M, 0.22 * M, 0.4 * M), 0.04 * M, r) for c, r in blocks)),
+                                     -sphere(p, (0.95 * M, 0.5 * M, 0.38 * M), 0.22 * M))
+        ring = lambda p: np.abs(cylinder(p, (-0.6 * M, 0.46 * M, 0.05 * M), 0.12 * M, 0.015 * M)) - 0.025 * M
+        return [
+            Part(stone, STONE_M),
+            Part(painted(stone, noise_mask(0.2 * M, seed + 1, 0.12)), LICHEN_M, relief=False),
+            Part(painted(stone, both(noise_mask(0.3 * M, seed + 2, 0.4), lambda p: p[:, 1] - 0.25 * M)), WET, relief=False),
+            Part(ring, RING),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(140, 64), smooth_slopes=True)
+
+
+def quay_paving(stem: str, seed: int) -> PropModel:
+    """Pavés du quai : un pan de granit en rangées décalées, joints sombres, pavés arrachés laissant la vase, herbe dans les joints. À plat."""
+    STONE_M, JOINT, HOLE, WEED = range(4)
+    materials = [make_material("sett", GRANITE, contrast=0.6), make_material("joint", "#55524C", contrast=0.5),
+                 make_material("mud", MUD, contrast=0.5), make_material("weed", MOSS_LIGHT, contrast=0.6)]
+    half = (2.2 * M, 1.1 * M)
+
+    def slab(p: np.ndarray) -> np.ndarray:
+        box = rounded_box(p, (0.0, 0.03 * M, 0.0), (half[0], 0.03 * M, half[1]), 0.01 * M)
+        reach = np.maximum(np.abs(p[:, 0]) / half[0], np.abs(p[:, 2]) / half[1])
+        return np.maximum(box, (reach - 0.86 - 0.3 * (value_noise(p, 0.45 * M, seed) - 0.5)) * half[1])
+
+    def parts() -> list[Part]:
+        row = lambda p: np.floor(p[:, 2] / (0.22 * M))
+        cross = lambda p: (lambda phase: np.minimum(phase, 0.3 * M - phase) - 0.015 * M)(np.mod(p[:, 0] + row(p) * 0.15 * M, 0.3 * M))
+        joints = lambda p: np.minimum(bands(2, 0.22 * M, 0.03 * M)(p), cross(p))
+        w = Weathering(seed)
+        tufts = [(w.uniform(-1.8, 1.8) * M, w.uniform(-0.8, 0.8) * M) for _ in range(7)]
+        return [
+            Part(slab, STONE_M),
+            Part(painted(slab, joints), JOINT, relief=False),
+            Part(painted(slab, noise_mask(0.35 * M, seed + 1, 0.16), 0.016 * M), HOLE, relief=False),
+            Part(lambda p: _union(*(capsule(p, (x, 0.04 * M, z), (x + 0.04 * M, 0.16 * M, z), 0.035 * M, 0.01 * M) for x, z in tufts)), WEED),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(160, 64), smooth_slopes=True)
+
+
+def bollard(stem: str, seed: int) -> PropModel:
+    """Bitte d'amarrage en fonte : socle, fût à taille, chapeau débordant ; un bout de cordage encore tourné autour, qui retombe au sol."""
+    IRON_M, RUST_M, ROPE = range(3)
+    materials = [make_material("iron", "#4A4848", contrast=0.8), make_material("rust", RUST, contrast=0.7),
+                 make_material("rope", FUNGUS, contrast=0.7)]
+
+    def parts() -> list[Part]:
+        body = lambda p: _union(cylinder(p, (0.0, 0.07 * M, 0.0), 0.36 * M, 0.07 * M, 0.02 * M),
+                                cylinder(p, (0.0, 0.5 * M, 0.0), 0.22 * M, 0.4 * M, 0.02 * M),
+                                ellipsoid(p, (0.05 * M, 0.92 * M, 0.0), (0.33 * M, 0.11 * M, 0.3 * M)))
+        loop = lambda p: np.abs(cylinder(p, (0.0, 0.56 * M, 0.0), 0.27 * M, 0.035 * M)) - 0.035 * M
+        tail = [np.array([0.26 * M, 0.54 * M, 0.1 * M]), np.array([0.45 * M, 0.12 * M, 0.3 * M]), np.array([0.8 * M, 0.03 * M, 0.35 * M]),
+                np.array([1.15 * M, 0.03 * M, 0.15 * M])]
+        return [
+            Part(body, IRON_M),
+            Part(painted(body, noise_mask(0.1 * M, seed + 1, 0.12, (1.0, 4.0, 1.0))), RUST_M, relief=False),
+            Part(lambda p: np.minimum(loop(p), _branch_chain(tail, 0.04 * M, 0.035 * M)(p)), ROPE),
+        ]
+
+    return PropModel(stem, parts, materials, FRONT, canvas=(72, 64), footprint=box_footprint(0.36 * M, 0.36 * M))
+
+
+def harbor_crane(stem: str, seed: int) -> PropModel:
+    """
+    La grue du port : portique de quatre jambes contreventées, cabine tournante aux vitres crevées, contrepoids de béton,
+    flèche en treillis tendue vers le large (le vide), le crochet encore pendu au bout de son câble. Jaune écaillé, rouille.
+    """
+    PAINT, RUST_M, STEEL, CABIN, WINDOW, WEIGHT, CABLE = range(7)
+    materials = [make_material("paint", CRANE_YELLOW), make_material("rust", RUST_ORANGE, contrast=0.7),
+                 make_material("steel", IRON, contrast=0.8), make_material("cabin", CRANE_YELLOW),
+                 make_material("window", GLASS_DARK, contrast=0.4), make_material("counterweight", STONE, contrast=0.7),
+                 make_material("cable", "#2E2C2C", contrast=0.6)]
+    top = 3.1 * M
+    root = np.array([0.0, 3.7 * M, -0.8 * M])
+    tip = np.array([0.0, 8.6 * M, -5.6 * M])
+
+    def parts() -> list[Part]:
+        legs = [(x * M, z * M) for x in (-0.9, 0.9) for z in (-0.9, 0.9)]
+        leg_shape = lambda p: _union(*(rounded_box(p, (x, top * 0.5, z), (0.12 * M, top * 0.5, 0.12 * M), 0.02 * M) for x, z in legs))
+        braces = [((-0.9 * M, 0.3 * M, z * M), (0.9 * M, top - 0.3 * M, z * M)) for z in (-0.9, 0.9)]
+        braces += [((x * M, 0.3 * M, -0.9 * M), (x * M, top - 0.3 * M, 0.9 * M)) for x in (-0.9, 0.9)]
+        platform = lambda p: rounded_box(p, (0.0, top + 0.1 * M, 0.0), (1.1 * M, 0.12 * M, 1.1 * M), 0.02 * M)
+        cabin = lambda p: rounded_box(p, (0.1 * M, top + 0.95 * M, 0.2 * M), (0.85 * M, 0.75 * M, 0.95 * M), 0.05 * M)
+        windows = both(lambda p: np.abs(p[:, 1] - top - 1.2 * M) - 0.26 * M, lambda p: 0.04 * M - np.abs(np.mod(p[:, 0], 0.5 * M) - 0.25 * M))
+        weight = lambda p: rounded_box(p, (0.1 * M, top + 0.7 * M, 1.4 * M), (0.7 * M, 0.45 * M, 0.3 * M), 0.03 * M)
+        chords, lattice = [], []
+        for side in (-1.0, 1.0):
+            a = root + np.array([side * 0.32 * M, 0.0, 0.0])
+            b = tip + np.array([side * 0.08 * M, 0.0, 0.0])
+            chords.append((a, b))
+        for k in range(9):
+            t0, t1 = k / 9.0, (k + 1) / 9.0
+            side = 1.0 if k % 2 == 0 else -1.0
+            p0 = root + (tip - root) * t0 + np.array([side * (0.32 - 0.24 * t0) * M, 0.0, 0.0])
+            p1 = root + (tip - root) * t1 + np.array([-side * (0.32 - 0.24 * t1) * M, 0.0, 0.0])
+            lattice.append((p0, p1))
+        hook_at = np.array([0.0, 4.4 * M, tip[2]])
+        steelwork = lambda p: _union(leg_shape(p), platform(p), *(capsule(p, a, b, 0.06 * M) for a, b in braces + chords),
+                                     *(capsule(p, a, b, 0.035 * M) for a, b in lattice))
+        return [
+            Part(steelwork, PAINT),
+            Part(painted(steelwork, noise_mask(0.18 * M, seed + 1, 0.18, (1.0, 4.0, 1.0)), 0.02 * M), RUST_M, relief=False),
+            Part(cabin, CABIN),
+            Part(painted(cabin, windows), WINDOW, relief=False),
+            Part(painted(cabin, noise_mask(0.2 * M, seed + 2, 0.15, (1.0, 6.0, 1.0)), 0.02 * M), RUST_M, relief=False),
+            Part(weight, WEIGHT),
+            Part(lambda p: capsule(p, tip, hook_at + np.array([0.0, 0.25 * M, 0.0]), 0.03 * M), CABLE),
+            Part(lambda p: np.minimum(rounded_box(p, hook_at + np.array([0.0, 0.18 * M, 0.0]), (0.14 * M, 0.12 * M, 0.08 * M), 0.02 * M),
+                                      np.abs(cylinder(p, hook_at - np.array([0.0, 0.05 * M, 0.0]), 0.1 * M, 0.03 * M, 0.0, rotation_x(np.pi / 2))) - 0.03 * M), STEEL),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(20.0)), ray_range=float(2.5 * tip[1]), canvas=(200, 290),
+                     footprint=box_footprint(1.0 * M, 1.0 * M), supersample=3,
+                     bounds=((-1.6 * M, -0.1 * M, -6.2 * M), (1.6 * M, tip[1] + 0.3 * M, 2.0 * M)))
+
+
+def upturned_boat(stem: str, seed: int) -> PropModel:
+    """Barque retournée sur deux chevalets, quille en l'air : bordé à clins, peinture bleu-gris passée qui s'écaille sur le bois, un trou dans les fonds."""
+    WOOD, PAINT, STRAKE, KEEL, TRESTLE, HOLE = range(6)
+    materials = [make_material("wood", WOOD_DARK, contrast=0.7), make_material("paint", "#7E949C", contrast=0.7),
+                 make_material("strake", WOOD_DARK, contrast=0.6), make_material("keel", WOOD_OLD, contrast=0.8),
+                 make_material("trestle", WOOD_DARK, contrast=0.8), make_material("hole", GLASS_DARK, contrast=0.4)]
+    gunwale = 0.42 * M
+
+    def hull(p: np.ndarray) -> np.ndarray:
+        q = p - np.array([0.0, gunwale, 0.0])
+        t = np.maximum(1.0 - np.clip(q[:, 0] / (1.9 * M), 0.0, 1.0) ** 2 * 0.6, 0.3)
+        scaled = np.stack([q[:, 0], q[:, 1], q[:, 2] / t], axis=1)
+        return np.maximum(ellipsoid(scaled, (0.0, 0.0, 0.0), (1.9 * M, 0.55 * M, 0.72 * M)) * t, -q[:, 1])
+
+    def parts() -> list[Part]:
+        trestles = lambda p: _union(*(rounded_box(p, (x * M, gunwale * 0.5, 0.0), (0.1 * M, gunwale * 0.5, 0.82 * M), 0.02 * M) for x in (-0.95, 0.85)))
+        keel = lambda p: capsule(p, (-1.75 * M, gunwale + 0.56 * M, 0.0), (1.8 * M, gunwale + 0.5 * M, 0.0), 0.05 * M)
+        return [
+            Part(hull, WOOD),
+            Part(painted(hull, noise_mask(0.22 * M, seed + 1, 0.82)), PAINT, relief=False),
+            Part(painted(hull, bands(1, 0.13 * M, 0.025 * M), 0.016 * M), STRAKE, relief=False),
+            Part(painted(hull, both(lambda p: np.linalg.norm(p[:, [0, 2]] - np.array([0.5 * M, 0.25 * M]), axis=1) - 0.16 * M,
+                                    lambda p: gunwale + 0.25 * M - p[:, 1]), 0.02 * M), HOLE, relief=False),
+            Part(keel, KEEL),
+            Part(trestles, TRESTLE),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(120, 80), footprint=box_footprint(1.8 * M, 0.72 * M))
+
+
+def fish_crates(stem: str, seed: int) -> PropModel:
+    """Caisses à poisson en plastique : une pile de trois, deux à côté, une renversée ; bleu de criée et rouge passé, poignées ajourées, crasse au fond."""
+    BLUE, RED, SLOT, GRIME = range(4)
+    materials = [make_material("crate_blue", CRATE_BLUE), make_material("crate_red", CRATE_RED),
+                 make_material("slot", GLASS_DARK, contrast=0.4), make_material("grime", MUD, contrast=0.6)]
+    half = np.array([0.32, 0.13, 0.22]) * M
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        crates = [(np.array([-0.38 * M, half[1] + k * 2 * half[1], 0.0]), rotation_y(w.uniform(-0.08, 0.08)), k % 2) for k in range(3)]
+        crates += [(np.array([0.36 * M, half[1], 0.06 * M]), rotation_y(0.1), 1), (np.array([0.4 * M, 3 * half[1], 0.02 * M]), rotation_y(-0.12), 0)]
+        crates.append((np.array([1.05 * M, half[2], 0.45 * M]), rotation_y(0.8) @ rotation_x(np.pi / 2 + 0.1), 0))
+
+        def crate_shape(kind: int):
+            def shape(p: np.ndarray) -> np.ndarray:
+                result = []
+                for c, r, k in crates:
+                    if k != kind:
+                        continue
+                    q = (p - c) @ r
+                    box = rounded_box(q, (0.0, 0.0, 0.0), tuple(half), 0.02 * M)
+                    inner = rounded_box(q, (0.0, 0.05 * M, 0.0), tuple(half - np.array([0.03, 0.0, 0.03]) * M), 0.01 * M)
+                    result.append(np.maximum(box, -inner))
+                return _union(*result)
+            return shape
+
+        slots = both(lambda p: np.abs(np.mod(p[:, 1], 2 * half[1]) - 1.45 * half[1]) - 0.035 * M,
+                     lambda p: np.abs(np.mod(p[:, 0] + p[:, 2], 0.3 * M) - 0.15 * M) - 0.06 * M)
+        everything = lambda p: np.minimum(crate_shape(0)(p), crate_shape(1)(p))
+        return [
+            Part(crate_shape(0), BLUE),
+            Part(crate_shape(1), RED),
+            Part(painted(everything, slots), SLOT, relief=False),
+            Part(painted(everything, noise_mask(0.15 * M, seed + 1, 0.25)), GRIME, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_Y_YAW, canvas=(100, 76), footprint=box_footprint(0.7 * M, 0.35 * M))
+
+
 def catalog() -> list[PropModel]:
     models: list[PropModel] = []
     models += dead_tree_large("prop_dead_tree_large", 501)
@@ -1505,5 +1970,16 @@ def catalog() -> list[PropModel]:
         lobster_pots("prop_lobster_pots", 554),
         drying_net("prop_drying_net", 555),
         stake_row("prop_stake_row", 556),
+        trawler_hull("prop_trawler_hull", 561),
+        slipway("prop_slipway", 562),
+        winch("prop_winch", 563),
+        plank_stack("prop_plank_stack", 564),
+        shipyard_shed("prop_shipyard_shed", 565),
+        quay_edge("prop_quay_edge", 566),
+        quay_paving("prop_quay_paving", 567),
+        bollard("prop_bollard", 568),
+        harbor_crane("prop_harbor_crane", 569),
+        upturned_boat("prop_upturned_boat", 570),
+        fish_crates("prop_fish_crates", 571),
     ]
     return models

@@ -113,7 +113,7 @@ public static class SiteComposer
                     EnvironmentProp prop = new();
                     prop.GlobalPosition = site.Anchor + Mirror(element.At + step * k, site.Mirrored);
                     container.AddChild(prop);
-                    prop.Initialize(texture, CanopyOf(plan.Folder, stem, cache), 0f, element.Blocking);
+                    prop.Initialize(texture, CanopyOf(plan.Folder, stem, cache), 0f, element.Blocking, flat: element.Flat);
                     placed++;
                 }
             }

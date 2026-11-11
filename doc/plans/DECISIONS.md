@@ -2601,3 +2601,15 @@ Raphaël, le 11 novembre, sur ce lot : « Oui, lance T2a ».
 - **Sous un chemin, un chenal redevient du sol**, et une passerelle s'y pose. Le chemin reste praticable à pleine vitesse ; hors des chemins, l'eau ralentit sans bloquer.
 - **Quatre sens de passerelle**, dont deux diagonales, et un sens par traversée.
 - **Moins de taches d'eau** au marais (poids 0,10 au lieu de 0,20), pour que les chenaux se lisent.
+
+## 214. La cale du chantier naval et les quais — 11 novembre 2026
+
+Lot T2b du [plan 58](58-terres-completes.md), dans le découpage du §212. Détail au plan 58 §15.
+
+Raphaël, le 11 novembre : « continue d'avancer en autonomie le plus possible ».
+
+**Tranché par défaut, réversible :**
+- **Le chalutier est à terre, sur sa cale**, pas à flot : le chantier s'est arrêté en plein carénage. La cale descend vers une eau qu'il n'y a plus.
+- **Les quais n'ont pas de garde-corps** : la bordure est basse et ne bloque pas. Le vide se longe à découvert, et la horde peut y tomber.
+- **Un pan de vide se cale sur la grille d'Effacement** : l'ancre de la pièce glisse un peu pour que le bord du pan tombe au même endroit à chaque run. Le belvédère des bois en profite aussi.
+- **L'île du gardien et le ponton des pêcheurs partent.** Leurs décors restent au semis.
