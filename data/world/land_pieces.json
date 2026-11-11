@@ -296,6 +296,34 @@
           ]
         },
         {
+          "id": "maisons_du_port",
+          "_doc": "Les maisons du port (plan 58 T2d) : une rangée de maisons de pêcheurs basses, crépi blanc sali par les embruns, volets qui s'écaillent ; devant, les filets, les casiers, les barques retournées, et une boîte aux lettres qui déborde d'un courrier tamponné « retour à l'envoyeur ».",
+          "half_extent_px": [620, 340],
+          "ground": "grass",
+          "memorial": [-380, 220],
+          "spur_start": [0, 300],
+          "elements": [
+            {"sprites": ["prop_fisher_house_a", "prop_fisher_house_c"], "at": [-290, -130], "blocking": true},
+            {"sprites": ["prop_fisher_house_b"], "at": [10, -120], "blocking": true},
+            {"sprites": ["prop_fisher_house_c", "prop_fisher_house_a"], "at": [310, -130], "blocking": true},
+            {"sprites": ["prop_port_mailbox"], "at": [-50, -48], "blocking": false},
+            {"sprites": ["prop_drying_net"], "at": [-200, 30], "blocking": false},
+            {"sprites": ["prop_drying_net"], "at": [220, 40], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_lobster_pots"], "at": [110, 10], "blocking": false},
+            {"sprites": ["prop_lobster_pots"], "at": [-450, -20], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_fish_crates"], "at": [-120, 20], "blocking": true},
+            {"sprites": ["prop_upturned_boat"], "at": [300, 120], "blocking": true},
+            {"sprites": ["prop_upturned_boat"], "at": [-220, 140], "blocking": true, "chance": 0.6},
+            {"sprites": ["prop_rusted_barrel"], "at": [470, -40], "blocking": true, "chance": 0.7},
+            {"sprites": ["prop_swamp_lantern"], "at": [-90, 50], "blocking": false},
+            {"sprites": ["prop_swamp_lantern"], "at": [160, 60], "blocking": false, "chance": 0.7},
+            {"sprites": ["prop_plank_stack"], "at": [500, 30], "blocking": true, "chance": 0.5},
+            {"sprites": ["prop_tall_reeds"], "at": [-560, -60], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [570, 180], "blocking": false},
+            {"sprites": ["prop_tall_reeds"], "at": [40, 260], "blocking": false, "chance": 0.7}
+          ]
+        },
+        {
           "id": "marais_salants",
           "_doc": "Les marais salants (plan 58 T2c) : six salines en deux rangs (l'eau du terrain dessous, un peu plus petite que le décor plaqué qui en donne la forme, et remontée de 24 px : une tuile d'eau se dessine plus bas que sa cellule), séparées de diguettes où l'on marche, des vannes entre eux ; au sud, le sel de la dernière récolte, devenu gris, le las et la brouette ; la cabane du saunier à l'est.",
           "half_extent_px": [600, 380],

@@ -266,6 +266,15 @@
             "min_distance": 9
         },
         {
+            "id": "harbor_beacon",
+            "name": "Feu de port",
+            "weight": 0.02,
+            "terrain": ["grass", "forest"],
+            "sprite_base": "assets/props/swamp/prop_harbor_beacon.png",
+            "blocking": true,
+            "min_distance": 12
+        },
+        {
             "id": "bound_tree",
             "name": "Arbre ligaturé",
             "weight": 0.04,
@@ -311,5 +320,5 @@
             "min_distance": 3
         }
     ],
-    "remarkables": ["sunken_shrine", "collapsed_pontoon", "bound_tree", "drowned_cart"]
+    "remarkables": ["harbor_beacon", "collapsed_pontoon", "sunken_boat", "drowned_cart"]
 }

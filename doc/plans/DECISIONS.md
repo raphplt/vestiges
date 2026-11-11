@@ -2623,3 +2623,12 @@ Lot T2c du [plan 58](58-terres-completes.md), dans le découpage du §212. Déta
 - **La forme d'une saline vient d'un décor plaqué**, l'eau du terrain dessous ne fait que ralentir. Les tuiles d'eau, avec leur bordure de vase, fondent des bassins voisins en une seule mare.
 - **La mer est revenue derrière la digue** : une bande d'eau au nord du talus, et une langue d'eau par la brèche. C'est de l'eau, pas du vide : la mer oubliée reste aux quais.
 - **L'autel noyé part.** Ses décors restent au semis du marais.
+
+## 216. Les maisons du port, et le Bas-Port fait — 11 novembre 2026
+
+Lot T2d du [plan 58](58-terres-completes.md), dans le découpage du §212. Détail au plan 58 §17. Fait dans la suite du « continue d'avancer en autonomie le plus possible » du §214.
+
+**Tranché par défaut, réversible :**
+- **Les maisons du port sont une pièce, pas un semis** : trois maisons de pêcheurs en rangée, des filets et des casiers devant. Le Bas-Port a quatre pièces et en pose trois ou quatre par run, comme les bois.
+- **Pas de rue pavée devant les maisons** : la bande de pavés se lisait comme un muret. Le fouillis du port tient lieu de rue.
+- **Les décors remarquables du Bas-Port deviennent ceux du port** : le feu de port (neuf), le ponton effondré, la barque submergée, la charrette noyée. L'autel noyé et l'arbre ligaturé restent au semis, sans garantie.

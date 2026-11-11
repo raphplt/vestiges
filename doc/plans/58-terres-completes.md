@@ -531,3 +531,54 @@ Une première mesure, au code d'avant le calage au choix de l'emplacement, donna
 - La suite des terres a échoué deux fois sur la carrière, par instabilité : une fois le gardien (le repaire ne s'ouvre pas), une fois un chronomètre de 16 ms sous une charge de 6. Elle passe à chaque relance. Ces deux tests ne touchent pas le Bas-Port.
 
 Suite : T2d, les maisons du port et la mesure d'ensemble.
+
+## 17. T2d, les maisons du port et la mesure d'ensemble — livré le 11 novembre
+
+**Ce qui est fait :**
+- **Cinq décors neufs** (`tools/sprites/props/swamp.py`) :
+  - **trois maisons de pêcheurs** de plain-pied, reprises du générateur d'immeubles (`building`, style `house`) : crépi blanc sali, tuiles moussues, volets qui s'écaillent, deux largeurs, trois états ;
+  - la **boîte aux lettres** du port : tôle jaune passé, la fente bourrée, un tas d'enveloppes à ses pieds, tamponnées de rouge ;
+  - le **feu de port** : socle de béton, tourelle en treillis rouge délavé, lanterne éteinte.
+- **Les maisons du port** (`maisons_du_port`, pièce neuve) :
+  - trois maisons en rangée au nord, la boîte aux lettres devant celle du milieu ;
+  - des filets qui sèchent, des casiers, des caisses, des barques retournées, deux lanternes ;
+  - le sud reste ouvert pour le combat ;
+  - le Mémorial au sud-ouest.
+- **Le Bas-Port a quatre pièces** (les quais, les maisons, les marais salants, la digue) autour de la cale, et en pose trois ou quatre par run.
+- **Ses décors remarquables sont ceux du port** : le feu de port, le ponton effondré, la barque submergée, la charrette noyée, posés une fois chacun sur la terre (4 sur 4 à chaque graine mesurée). L'autel noyé et l'arbre ligaturé restent au semis.
+
+**Écart au plan :** une bande de pavés devant les maisons devait faire la rue. Elle se lisait comme un muret : elle est retirée.
+
+**Vérifié :**
+- `tools/validate.sh` démarrage, catalogues, terres et mouvement : 3/3 puis 3/3 au code final. Build sans avertissement.
+- Le contrat des catalogues compte quatre pièces au Bas-Port et lit les maisons du port.
+- **Placement** (graines 7, 42 et 11) : 4 à 5 pièces avec le cœur, quatre remarquables sur quatre, aucun avertissement.
+- **Captures** : [planches/plan58_t2d_maisons_port.png](planches/plan58_t2d_maisons_port.png), qui montre :
+  - le Bas-Port avant T2, puis après, à la graine 7 ;
+  - les maisons du port ;
+  - les cinq décors.
+- Pas de relecture `godot-reviewer` : le seul C# touché est le contrat des catalogues (deux index et deux comptes).
+
+**Mesure d'ensemble de T2** (`measure_run`, profil dev, Forgeuse, Bas-Port puis bois puis carrière, 600 s, graines 7, 42, 11, 3 et 99, avant au commit c8a13cb8, avant T2a, après au code final, chacun dans sa copie de travail) :
+
+| | Avant (7 / 42 / 11 / 3 / 99) | Après (7 / 42 / 11 / 3 / 99) |
+|---|---|---|
+| Pièces du Bas-Port posées (hors cœur) | 2 / 2 / 2 / 2 / 2 | 4 / 4 / 3 / 4 / 3 |
+| Pièces du Bas-Port vues (hors cœur) | 1 / 1 / 1 / 1 / 1 | 3 / 2 / 1 / 2 / 2 |
+| Troisième Mémorial du Bas-Port ravivé (s) | 121 / 99 / 100 / 102 / 100 | 129 / 130 / 139 / 119 / 120 |
+| Bas-Port quitté (s) | 202 / 172 / 179 / 156 / 183 | 189 / 218 / 210 / 165 / 188 |
+| Créatures visibles, 0-60 s | 10,6 / 15,4 / 16,4 / 18,0 / 17,6 | 11,4 / 13,3 / 17,3 / 12,7 / 14,2 |
+| Créatures visibles, 180-300 s | 17,9 / 20,2 / 19,0 / 19,7 / 18,2 | 22,8 / 18,5 / 20,5 / 22,7 / 21,0 |
+| Éliminations | 1 338 / 907 / 858 / 1 683 / 1 349 | 1 141 / 968 / 800 / 1 489 / 1 495 |
+| Distance parcourue (m) | 7 717 / 8 196 / 8 050 / 7 960 / 7 740 | 7 700 / 7 524 / 8 306 / 7 464 / 7 688 |
+| Gardiens et échos vaincus | 3 / 2 / 2 / 3 / 3 | 3 / 3 / 3 / 3 / 3 |
+| Morts | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 |
+
+Le bot voit en moyenne deux pièces du Bas-Port au lieu d'une : il traverse des lieux, plus seulement un semis. Les Mémoriaux se logent dans les pièces, plus éloignées les unes des autres : le troisième est ravivé 23 s plus tard en moyenne (104 → 127 s), et le Bas-Port est quitté 16 s plus tard (178 → 194 s). La première minute est un peu moins dense (15,6 → 13,8 créatures visibles), la suite un peu plus (19,0 → 21,1). Le bot vainc deux échos de plus sur cinq runs et ne meurt jamais.
+
+**Ce qui reste :**
+- Le Bas-Port dure un peu plus longtemps au bot (+16 s). Il ne suit pas les chemins : un joueur qui les suit, passerelles comprises, traverse plus vite.
+- Les maisons sont posées en rangée sans rue entre elles. Une rue demanderait un module de pavés qui se lise à plat.
+- Un halo de vase entoure les salines (T2c).
+
+**Le Bas-Port est fait.** Il a un cœur, quatre pièces neuves, des chenaux, des gués et des passerelles, et des décors remarquables de port. Suite : la Haute-Ville (T3), à découper comme T1 et T2.

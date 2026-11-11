@@ -23,6 +23,7 @@ from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation
 from ._flora import _align_y, _branch_chain, _clumps, _gnarled, _grooves, _sag, _shelves, _union
 from ._kit import AXIS_X_YAW, AXIS_Y_YAW, M, PropModel, Weathering, box_footprint
 from ._surface import bands, both, noise_mask, painted, value_noise, waterline
+from .buildings import BuildingSpec, building
 
 # Palette Marécages (charte §3).
 WATER_DARK = "#4A6A5E"
@@ -2186,6 +2187,89 @@ def sandbags(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, FRONT, canvas=(110, 60), footprint=box_footprint(1.15 * M, 0.25 * M))
 
 
+# Les maisons du port (plan 58 T2d) : du courrier que plus personne ne relève.
+FISHER_PLASTER = "#CEC8B6"
+POST_YELLOW = "#B89A42"
+LETTER = "#D8D2C0"
+STAMP_RED = "#9A3A30"
+BEACON_RED = "#8E4436"
+
+
+def fisher_house(stem: str, seed: int, width_cells: int, damage: float, mirrored: bool) -> PropModel:
+    """Maison de pêcheur basse : plain-pied, crépi blanc sali par les embruns, tuiles, volets peints qui s'écaillent."""
+    return building(BuildingSpec(stem, width_cells, 3, 1, "house", FISHER_PLASTER, damage, seed, mirrored, window_spacing=2.0 * M))
+
+
+def port_mailbox(stem: str, seed: int) -> PropModel:
+    """
+    Boîte aux lettres d'une maison du port : tôle jaune passé sur un poteau, la fente bourrée de lettres qui débordent,
+    un tas d'enveloppes à ses pieds, tamponnées en rouge « retour à l'envoyeur », que la pluie a collées entre elles.
+    """
+    POST, BOX, RUST_M, PAPER, STAMP = range(5)
+    materials = [make_material("post", "#6E5E4A"), make_material("box", POST_YELLOW, contrast=0.5), make_material("rust", RUST, contrast=0.7),
+                 make_material("paper", LETTER, contrast=0.5), make_material("stamp", STAMP_RED, contrast=0.6)]
+    w = Weathering(seed)
+    lean = rotation_z(w.uniform(-0.1, -0.05))
+    letters = [((w.uniform(-0.6, 0.65) * M, 0.02 * M + i * 0.01 * M, w.uniform(-0.1, 0.6) * M), rotation_y(w.uniform(0, 3.1)))
+               for i in range(22)]
+    stuck = [((w.uniform(-0.14, 0.14) * M, 1.24 * M, 0.38 * M), rotation_x(w.uniform(-0.5, 0.2)) @ rotation_y(w.uniform(-0.3, 0.3)))
+             for _ in range(4)]
+
+    def parts() -> list[Part]:
+        post = lambda p: rounded_box(p @ lean, (0.0, 0.55 * M, 0.0), (0.055 * M, 0.55 * M, 0.055 * M), 0.012 * M)
+        box = lambda p: rounded_box(p @ lean, (0.0, 1.22 * M, 0.06 * M), (0.3 * M, 0.24 * M, 0.3 * M), 0.03 * M)
+        pile = lambda p: _union(*(rounded_box(p, c, (0.16 * M, 0.008 * M, 0.11 * M), 0.003 * M, r) for c, r in letters))
+        out = lambda p: _union(*(rounded_box(p @ lean, c, (0.14 * M, 0.1 * M, 0.008 * M), 0.003 * M, r) for c, r in stuck))
+        paper = lambda p: np.minimum(pile(p), out(p))
+        return [
+            Part(post, POST),
+            Part(box, BOX),
+            Part(painted(box, noise_mask(0.08 * M, seed + 1, 0.12)), RUST_M, relief=False),
+            Part(paper, PAPER),
+            Part(painted(paper, noise_mask(0.06 * M, seed + 2, 0.12)), STAMP, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, THREE_QUARTER, canvas=(72, 84), footprint=box_footprint(0.3 * M, 0.3 * M))
+
+
+def harbor_beacon(stem: str, seed: int) -> PropModel:
+    """
+    Feu de port au bout d'une jetée qui n'existe plus : un socle de béton, une tourelle en treillis peinte en rouge
+    que la rouille délave, la lanterne vitrée au sommet, éteinte, et sa petite échelle.
+    """
+    CONCRETE, FRAME, RUST_M, LAMP, GLASS = range(5)
+    materials = [make_material("concrete", "#8A887E", contrast=0.6), make_material("frame", BEACON_RED),
+                 make_material("rust", RUST_ORANGE, contrast=0.7), make_material("lamp", IRON, contrast=0.8),
+                 make_material("glass", "#5A6A6E", contrast=0.5)]
+    top = 3.4 * M
+
+    def parts() -> list[Part]:
+        base = lambda p: rounded_box(p, (0.0, 0.25 * M, 0.0), (0.75 * M, 0.25 * M, 0.75 * M), 0.05 * M)
+        feet = [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)]
+        legs = lambda p: _union(*(capsule(p, (x * M, 0.5 * M, z * M), (x * 0.4 * M, top, z * 0.4 * M), 0.05 * M) for x, z in feet))
+        rings = lambda p: _union(*(np.maximum(rounded_box(p, (0.0, y * M, 0.0), (r * M, 0.03 * M, r * M), 0.01 * M),
+                                              -rounded_box(p, (0.0, y * M, 0.0), ((r - 0.06) * M, 0.1 * M, (r - 0.06) * M), 0.0))
+                                   for y, r in ((1.3, 0.44), (2.2, 0.34), (3.0, 0.26))))
+        braces = lambda p: _union(*(capsule(p, (a * M, ya * M, 0.5 * M * s), (b * M, yb * M, 0.42 * M * s), 0.025 * M)
+                                    for s in (-1, 1) for a, ya, b, yb in ((-0.47, 0.6, 0.38, 1.3), (0.42, 1.3, -0.33, 2.2))))
+        frame = lambda p: _union(legs(p), rings(p), braces(p))
+        deck = lambda p: rounded_box(p, (0.0, top, 0.0), (0.38 * M, 0.04 * M, 0.38 * M), 0.01 * M)
+        lantern = lambda p: cylinder(p, (0.0, top + 0.32 * M, 0.0), 0.2 * M, 0.26 * M, 0.02 * M)
+        cap = lambda p: capsule(p, (0.0, top + 0.6 * M, 0.0), (0.0, top + 0.78 * M, 0.0), 0.24 * M, 0.04 * M)
+        panes = both(bands(1, 0.5 * M, 0.38 * M, top + 0.32 * M), lambda p: np.abs(p[:, 1] - top - 0.32 * M) - 0.18 * M)
+        return [
+            Part(base, CONCRETE),
+            Part(frame, FRAME),
+            Part(painted(frame, noise_mask(0.15 * M, seed + 1, 0.3)), RUST_M, relief=False),
+            Part(lambda p: _union(deck(p), cap(p)), LAMP),
+            Part(lantern, LAMP),
+            Part(painted(lantern, panes, 0.02 * M), GLASS, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, THREE_QUARTER, ray_range=float(2.5 * top), canvas=(80, 150),
+                     footprint=box_footprint(0.75 * M, 0.75 * M))
+
+
 def catalog() -> list[PropModel]:
     models: list[PropModel] = []
     models += dead_tree_large("prop_dead_tree_large", 501)
@@ -2242,5 +2326,10 @@ def catalog() -> list[PropModel]:
         dike_wall("prop_dike_wall", 586),
         dike_rubble("prop_dike_rubble", 587),
         sandbags("prop_sandbags", 588),
+        fisher_house("prop_fisher_house_a", 591, 2, 0.25, False),
+        fisher_house("prop_fisher_house_b", 592, 3, 0.35, True),
+        fisher_house("prop_fisher_house_c", 593, 2, 0.5, True),
+        port_mailbox("prop_port_mailbox", 594),
+        harbor_beacon("prop_harbor_beacon", 595),
     ]
     return models
