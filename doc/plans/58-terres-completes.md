@@ -582,3 +582,33 @@ Le bot voit en moyenne deux pièces du Bas-Port au lieu d'une : il traverse des 
 - Un halo de vase entoure les salines (T2c).
 
 **Le Bas-Port est fait.** Il a un cœur, quatre pièces neuves, des chenaux, des gués et des passerelles, et des décors remarquables de port. Suite : la Haute-Ville (T3), à découper comme T1 et T2.
+
+## 18. T3, la Haute-Ville — découpage proposé le 11 novembre
+
+Proposition de l'agent, réversible ([§217](DECISIONS.md)). Le lot est élevé : il se coupe en quatre, comme T1 et T2, chacun livré, capturé et mesuré avant le suivant.
+
+**Ce qui ne va pas aujourd'hui** ([planches/plan58_t3_haute_ville_avant.png](planches/plan58_t3_haute_ville_avant.png), graines 7 et 42) :
+- **La grille est parfaite.** `UrbanLayoutGenerator` trace une rue tous les 14 rangs et toutes les 14 colonnes (± 2), d'une seule largeur. L'ondulation et l'effondrement des rues existent dans le code, mais leurs réglages sont à zéro (constantes en dur, pas en JSON). Résultat : environ 410 îlots presque identiques par terre.
+- **Chaque îlot porte une seule rangée d'immeubles au sud** et une cour de gravats. Les places ne sont que les restes trop petits pour un îlot, et restent vides.
+- **Rien ne se repère** : deux églises au plus, de la taille d'un immeuble, et deux pylônes.
+- **La ville n'a ni cœur, ni pièce, ni décor remarquable.** La grille est posée avant les pièces et remplit toute la terre. Le repaire du Cerf, gardien provisoire, est dans une zone dégagée quelconque.
+- Le lore en dit beaucoup : l'église Saint-Aubin et son clocher « visible de loin », la mairie où dormait le télégramme de tempête, l'école où Lise attendait ses parents, la poste et son standard, l'arrêt du car de la ligne 7 « là où l'on attendait ceux qui rentraient du port ».
+
+| Sous-lot | Contenu | Effort |
+|---|---|---|
+| **T3a** | **La grille qui ondule et casse.** Les réglages de la grille passent en JSON (`city` dans `data/props/urban_ruins.json`). L'écart entre les rues varie davantage, d'où des **îlots de tailles variées**. Il y a des **avenues** (rues larges) et des **ruelles** qui s'arrêtent en impasse. Les rues font des **décrochements** d'un ou deux rangs aux croisements. Des **rues effondrées** : un tronçon de chaussée ouvert en cratère, gravats et bordures cassées. Des **places** : un îlot sur quelques-uns reste ouvert, avec arbres, bancs et colonne d'affichage. **Les pièces trouent la grille** : sous l'emprise d'une pièce, ni rue ni immeuble, et les rues s'arrêtent à son bord. Démonstration : une place faite de ces décors. Décors neufs : tilleul taillé, banc public, colonne d'affichage, borne-fontaine, réverbère | Élevé |
+| **T3b** | **Le parvis de Saint-Aubin et la place de la mairie.** Le **cœur** : l'église en grand, son **clocher** au moins deux fois plus haut qu'un immeuble, qu'on voit de loin. Sur le parvis : corde de cloche coupée, monument aux morts, tilleuls, bancs ; pavés posés à plat ; le repaire au pied du clocher. Les deux petites églises du semis partent. **La place de la mairie** : la mairie (fronton, horloge arrêtée, drapeau délavé), une fontaine, un kiosque à musique, un panneau d'affichage couvert de faire-part d'oubli | Élevé |
+| **T3c** | **L'école et la poste.** **L'école** : le bâtiment, la cour et ses platanes, le préau, une marelle à la craie à plat, la cloche, la grille, des cartables. **La poste** : le bureau, la boîte jaune, des sacs de courrier, le vélo du facteur, la cabine, le standard téléphonique aux fiches encore branchées | Moyen à élevé |
+| **T3d** | **L'arrêt de la ligne 7 et la mesure.** L'abribus et son panneau d'horaires, le car arrêté, des valises posées, un banc. Les décors remarquables garantis de la ville. Vue d'ensemble avant/après, captures de chaque pièce, `measure_run` avant/après au même commit de base, pièces vues | Moyen |
+
+Ensuite, la Haute-Ville a un cœur et quatre pièces neuves, et en pose trois ou quatre par run.
+
+**Tranché par défaut, réversible :**
+- **Les rues restent sur les axes de l'écran.** La grille iso est « stacked » : une rue oblique ou courbe casserait les chaussées (`RoadTileGenerator`) et les rangées d'immeubles. « Onduler » se fait donc par décrochements, par largeurs et par écarts variés, pas par des courbes.
+- **Une rue effondrée est un cratère de gravats, pas un vide.** Un vide doit tomber sur la grille d'Effacement, et la ville n'en a pas besoin pour qu'on y pousse la horde : les impasses et les cratères font déjà des culs-de-sac.
+- **Une seule église, Saint-Aubin.** Les deux églises du semis partent avec T3b, et leurs sprites peuvent servir ailleurs.
+- **Ni la barrière ni la Montée dans T3.** La Barrière est le boss intermédiaire (plan 07). La Montée relie deux terres et ne tient pas dans une seule.
+- **La porte verte de Jeanne n'est pas posée** : elle tient à la vraie fin du jeu.
+- **Le Cerf reste le gardien provisoire** jusqu'au Tocsin (plan 57 G3). Le parvis garde la place du repaire, au pied du clocher.
+- **L'identifiant `urban_ruins` ne change pas.**
+- **Corps procéduraux** (`tools/sprites/props/urban.py` et `buildings.py`), repris ensuite par l'ami artiste.

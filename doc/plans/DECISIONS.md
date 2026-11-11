@@ -2632,3 +2632,20 @@ Lot T2d du [plan 58](58-terres-completes.md), dans le découpage du §212. Déta
 - **Les maisons du port sont une pièce, pas un semis** : trois maisons de pêcheurs en rangée, des filets et des casiers devant. Le Bas-Port a quatre pièces et en pose trois ou quatre par run, comme les bois.
 - **Pas de rue pavée devant les maisons** : la bande de pavés se lisait comme un muret. Le fouillis du port tient lieu de rue.
 - **Les décors remarquables du Bas-Port deviennent ceux du port** : le feu de port (neuf), le ponton effondré, la barque submergée, la charrette noyée. L'autel noyé et l'arbre ligaturé restent au semis, sans garantie.
+
+## 217. La Haute-Ville, découpage de T3 — 11 novembre 2026
+
+Lot T3 du [plan 58](58-terres-completes.md), découpage au §18 du plan. Raphaël, le 11 novembre : « continue d'avancer en autonomie le plus possible ».
+
+**Proposition de l'agent, réversible :**
+- **Quatre sous-lots**, dans cet ordre :
+  - T3a, la grille qui ondule et casse : avenues, ruelles, décrochements, rues effondrées, places, et des pièces qui trouent la grille ;
+  - T3b, le parvis de Saint-Aubin (cœur) et la place de la mairie ;
+  - T3c, l'école et la poste ;
+  - T3d, l'arrêt de la ligne 7 et la mesure.
+- **Les rues restent sur les axes de l'écran** : onduler, c'est décrocher, élargir et espacer autrement.
+- **Une rue effondrée est un cratère, pas un vide.**
+- **Une seule église**, Saint-Aubin.
+- **Ni barrière, ni Montée, ni porte verte** dans la Haute-Ville.
+- **Le Cerf reste le gardien provisoire** jusqu'au Tocsin (plan 57 G3).
+- **L'identifiant `urban_ruins` ne change pas.**
