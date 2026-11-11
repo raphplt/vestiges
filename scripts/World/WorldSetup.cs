@@ -236,11 +236,11 @@ public partial class WorldSetup : Node2D
         LoadProfiler.Span("terrain rythmé (thread)", ref step);
 
         // Layouts urbains et champs (CPU pur)
-        if (generator.ActiveBiomes.Any(b => b.Id == "urban_ruins"))
+        CityGrid city = generator.ActiveBiomes.Any(b => b.Id == "urban_ruins") ? PropSpawner.LoadCity("urban_ruins") : null;
+        if (city != null)
         {
-            UrbanLayoutGenerator urbanGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY);
+            UrbanLayoutGenerator urbanGen = new(LandSeed, _config.MapRadius, _config.MapRadiusY, city);
             _urbanLayout = urbanGen.Apply(_terrain, generator, "urban_ruins");
-            _roadTiles = RoadTileGenerator.Build(_urbanLayout);
         }
         if (generator.ActiveBiomes.Any(b => b.Id == "wild_fields"))
         {
@@ -259,6 +259,10 @@ public partial class WorldSetup : Node2D
             ? LandPieceComposer.Plan(generator, _terrain, _pathNetwork, _usedCells, LandPieceConfig.Load(), band,
                 GuardianConfig.Load(out _)?.LairOffset ?? Vector2.Zero, ErasureConfig.Load().CellSize, LandSeed)
             : new List<PlacedPiece>();
+        // Les pièces trouent la grille de la ville : ses chaussées se dessinent ensuite, rues arrêtées à leur bord.
+        UrbanLayoutGenerator.Carve(_urbanLayout, _pieces);
+        if (_urbanLayout != null)
+            _roadTiles = RoadTileGenerator.Build(_urbanLayout);
         LoadProfiler.Span("pièces de la terre (thread)", ref step);
         // Fermes des champs (plan 08 P4b) : cellules réservées avant les points d'intérêt, embranchement vers un chemin.
         _farmConfig = FarmConfig.Load();
@@ -362,7 +366,7 @@ public partial class WorldSetup : Node2D
 
         if (_urbanLayout != null)
         {
-            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, _ground, _propStaging, _usedCells, LandSeed);
+            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, PropSpawner.LoadCity("urban_ruins"), _ground, _propStaging, _usedCells, LandSeed);
             LoadProfiler.Mark("décors de la ville");
             await YieldFrame();
         }

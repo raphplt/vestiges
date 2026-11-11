@@ -18,6 +18,8 @@ public static class UrbanBuildingPlacer
 	// Distance du centre du module au bord de l'îlot : la façade s'arrête juste avant le trottoir.
 	private const int FrontInsetRows = 2;
 	private const int AlleyChance = 22;
+	// Un îlot assez profond (deux îlots fusionnés, plan 58 T3a) porte une seconde rangée en son milieu.
+	private const int TallBlockRows = 22;
 	// Repères rares (plan 08 P2) : église en tête de rangée d'un îlot préservé, pylône dans une cour d'îlot.
 	private const int ChurchChance = 8;
 	private const int MaxChurches = 2;
@@ -62,6 +64,8 @@ public static class UrbanBuildingPlacer
 			placed += PlaceRow(block, southRow, church, ground, container, usedCells, cache, seed, out bool churchPlaced);
 			if (churchPlaced)
 				churches.Add(blockCenter);
+			if (block.Size.Y >= TallBlockRows)
+				placed += PlaceRow(block, southRow - block.Size.Y / 2, false, ground, container, usedCells, cache, seed, out _);
 
 			// Pylône au milieu de la cour, derrière la rangée : il dépasse des toits.
 			int courtyardEnd = southRow - ModuleDepthRows / 2 - 1;
@@ -122,6 +126,12 @@ public static class UrbanBuildingPlacer
 					break;
 			}
 
+			// Une pièce réserve son emprise (plan 58 T3a) : le module entier doit tenir hors d'elle, pas seulement son ancre.
+			if (!IsFree(usedCells, x, width, row))
+			{
+				x++;
+				continue;
+			}
 			Vector2I anchor = new(x + width / 2, row);
 			if (UrbanPropPlacer.TryPlaceProp(path, anchor, ground, container, usedCells, cache))
 			{
@@ -168,6 +178,19 @@ public static class UrbanBuildingPlacer
 				fitting.Add(module);
 		}
 		return fitting.Count == 0 ? (0, null) : fitting[(int)(hash % (uint)fitting.Count)];
+	}
+
+	private static bool IsFree(HashSet<Vector2I> usedCells, int startX, int width, int row)
+	{
+		for (int x = startX; x < startX + width; x++)
+		{
+			for (int y = row - ModuleDepthRows / 2; y <= row + ModuleDepthRows / 2; y++)
+			{
+				if (usedCells.Contains(new Vector2I(x, y)))
+					return false;
+			}
+		}
+		return true;
 	}
 
 	private static void Reserve(HashSet<Vector2I> usedCells, int startX, int width, int row)

@@ -57,6 +57,10 @@ public static class UrbanPropPlacer
 		"assets/props/urban_ruins/prop_steel_beam_diagonal.png",
 	};
 
+	// Arbres d'une avenue : de part et d'autre de la chaussée, sur le trottoir (une rue verticale est plus large à l'écran).
+	private const float AvenueTreeOffsetXPx = 56f;
+	private const float AvenueTreeOffsetYPx = 26f;
+
 	// Décors qui bloquent le passage ; la forme vient de leur base visible (PropFootprint).
 	private static readonly HashSet<string> BlockingSprites = new()
 	{
@@ -80,6 +84,7 @@ public static class UrbanPropPlacer
 	/// <summary>Pose la ville et renvoie les scènes de l'exode (plan 39 B3).</summary>
 	public static List<ExodusScenePlacer.Scene> PlaceProps(
 		UrbanLayout layout,
+		CityGrid city,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
@@ -89,6 +94,10 @@ public static class UrbanPropPlacer
 		HashSet<Vector2I> intersections = FindIntersections(layout);
 
 		int buildingCount = UrbanBuildingPlacer.Place(layout, ground, container, usedCells, cache, seed);
+		// Places, arbres des avenues et gravats des cratères : avant l'exode et le semis des rues, qui s'en écartent.
+		int cityCount = PlaceSquares(layout, city, ground, container, usedCells, cache, seed)
+			+ PlaceAvenueTrees(layout, city, ground, container, usedCells, cache, seed)
+			+ PlaceCraters(layout, city, ground, container, usedCells, cache, seed);
 		// Décors de rue à l'échelle du personnage : au moins une cellule libre entre deux d'entre eux.
 		HashSet<Vector2I> streetProps = new();
 		List<ExodusScenePlacer.Scene> exodusScenes = new();
@@ -105,7 +114,8 @@ public static class UrbanPropPlacer
 		}
 		int sidewalkCount = PlaceSidewalkProps(layout, intersections, ground, container, usedCells, streetProps, cache, seed);
 
-		GD.Print($"[UrbanPropPlacer] Placed {buildingCount} building masses, {roadCount} road props, {sidewalkCount} sidewalk props");
+		GD.Print($"[UrbanPropPlacer] Placed {buildingCount} building masses, {cityCount} square, avenue and crater props, "
+			+ $"{roadCount} road props, {sidewalkCount} sidewalk props");
 		return exodusScenes;
 	}
 
@@ -213,6 +223,88 @@ public static class UrbanPropPlacer
 	}
 
 	// =========================================================================
+	// PLACES, AVENUES, CRATÈRES (plan 58 T3a)
+	// =========================================================================
+
+	/// <summary>
+	/// Place plantée : des arbres en quinconce, et entre eux bancs, réverbères, colonne ou borne-fontaine. Une marge d'une
+	/// cellule reste libre au bord, côté trottoir.
+	/// </summary>
+	private static int PlaceSquares(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
+	{
+		int placed = 0;
+		Vector2I every = city.SquareTreeEvery;
+		foreach (Rect2I square in layout.Squares)
+		{
+			for (int y = square.Position.Y + 1; y < square.End.Y - 1; y++)
+			{
+				for (int x = square.Position.X + 1; x < square.End.X - 1; x++)
+				{
+					Vector2I cell = new(x, y);
+					if (GetCellType(layout, cell) != UrbanCellType.Plaza)
+						continue;
+					int column = x - square.Position.X - 1;
+					int row = y - square.Position.Y - 1;
+					// Quinconce : une rangée sur deux décale ses arbres d'un demi-pas.
+					bool tree = row % every.Y == 0 && (column + (row / every.Y % 2) * (every.X / 2)) % every.X == 0;
+					uint hash = HashCell(cell, seed ^ 0x5C0A2EUL);
+					CityGrid.Dressing dressing = tree ? CityGrid.Pick(city.SquareTrees, hash)
+						: (hash >> 12) % 10000u / 10000f < city.SquareDensity ? CityGrid.Pick(city.SquareProps, hash) : null;
+					if (dressing != null && TryPlaceDressing(dressing, cell, ground, container, usedCells, cache, default))
+						placed++;
+				}
+			}
+		}
+		return placed;
+	}
+
+	/// <summary>Arbres d'alignement des avenues, de part et d'autre de la chaussée, à pas régulier.</summary>
+	private static int PlaceAvenueTrees(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
+	{
+		int placed = 0;
+		// Pas en cellules : 64 px par colonne le long d'une rue horizontale, 16 px par rang le long d'une verticale,
+		// en nombre pair pour qu'un arbre sur deux ne saute pas de ±32 px avec la parité du rang.
+		int stepX = Mathf.Max(1, Mathf.RoundToInt(city.AvenueTreeSpacingPx / 64f));
+		int stepY = Mathf.Max(2, Mathf.RoundToInt(city.AvenueTreeSpacingPx / 32f) * 2);
+		foreach (Vector2I cell in layout.AvenueCells)
+		{
+			if (!IsStraightRoadCell(layout, cell))
+				continue;
+			bool vertical = layout.RoadCells.Contains(cell + Vector2I.Up);
+			if (vertical ? Mathf.PosMod(cell.Y, stepY) != 0 : Mathf.PosMod(cell.X, stepX) != 0)
+				continue;
+			Vector2 street = StreetPoint(layout, ground, cell);
+			foreach (int side in new[] { -1, 1 })
+			{
+				Vector2 at = street + (vertical ? new Vector2(side * AvenueTreeOffsetXPx, 0f) : new Vector2(0f, side * AvenueTreeOffsetYPx));
+				Vector2I treeCell = ground.LocalToMap(at);
+				if (!layout.SidewalkCells.Contains(treeCell))
+					continue;
+				CityGrid.Dressing tree = CityGrid.Pick(city.AvenueTrees, HashCell(treeCell, seed ^ 0xA7E1UL));
+				if (TryPlaceDressing(tree, treeCell, ground, container, usedCells, cache, at - ground.MapToLocal(treeCell)))
+					placed++;
+			}
+		}
+		return placed;
+	}
+
+	/// <summary>Gravats d'une rue effondrée : la chaussée ouverte se couvre de blocs, de dalles et de poutrelles.</summary>
+	private static int PlaceCraters(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
+	{
+		int placed = 0;
+		foreach (Vector2I cell in layout.CraterCells)
+		{
+			CityGrid.Dressing dressing = CityGrid.Pick(city.CraterProps, HashCell(cell, seed ^ 0xC8A7E2UL));
+			if (dressing != null && TryPlaceDressing(dressing, cell, ground, container, usedCells, cache, default))
+				placed++;
+		}
+		return placed;
+	}
+
+	// =========================================================================
 	// INTERIOR DEBRIS
 	// =========================================================================
 
@@ -274,6 +366,24 @@ public static class UrbanPropPlacer
 		bool vertical = layout.RoadCells.Contains(roadCell + Vector2I.Up);
 		Vector2 offset = vertical ? new Vector2((roadCell.Y & 1) != 0 ? -16f : 16f, 0f) : Vector2.Zero;
 		return ground.MapToLocal(roadCell) + offset;
+	}
+
+	/// <summary>Décor de la grille (plan 58 T3a), canopée comprise, sur une cellule libre.</summary>
+	private static bool TryPlaceDressing(CityGrid.Dressing dressing, Vector2I cell, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, Vector2 offset)
+	{
+		if (usedCells.Contains(cell))
+			return false;
+		Texture2D texture = LoadCached(dressing.Sprite, cache);
+		if (texture == null)
+			return false;
+		EnvironmentProp prop = new();
+		prop.GlobalPosition = ground.MapToLocal(cell) + offset;
+		container.AddChild(prop);
+		Texture2D canopy = dressing.Canopy != null ? LoadCached(dressing.Canopy, cache) : null;
+		prop.Initialize(texture, canopy, dressing.CanopyOffsetY, dressing.Blocking);
+		usedCells.Add(cell);
+		return true;
 	}
 
 	internal static bool TryPlaceProp(

@@ -2649,3 +2649,14 @@ Lot T3 du [plan 58](58-terres-completes.md), découpage au §18 du plan. Raphaë
 - **Ni barrière, ni Montée, ni porte verte** dans la Haute-Ville.
 - **Le Cerf reste le gardien provisoire** jusqu'au Tocsin (plan 57 G3).
 - **L'identifiant `urban_ruins` ne change pas.**
+
+## 218. La grille de la Haute-Ville qui ondule et casse — 11 novembre 2026
+
+Lot T3a du [plan 58](58-terres-completes.md), compte rendu au §19 du plan. Raphaël, le 11 novembre : « continue d'avancer en autonomie le plus possible ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **Les avenues sont des rues plantées, pas des chaussées doubles.** `RoadTileGenerator` dessine des chaussées d'une cellule. Deux rangs de route côte à côte y laisseraient des trous entre les bandes. Une avenue a donc des trottoirs plus larges et une rangée de tilleuls de chaque côté.
+- **Le réglage de la grille est en JSON** (`city` dans `data/props/urban_ruins.json`). Ses anciennes constantes en dur, ondulation et effondrement à zéro, sont retirées.
+- **Une pièce pavée prend le dallage des places.** Sous une pièce sans sol imposé, ou à sol de béton, la grille laisse le dallage des places plutôt que le béton générique, qui faisait une tache sombre.
+- **Le square est une pièce de démonstration** : il donne à la ville sa première pièce et son premier Mémorial logé. T3b à T3d posent ensuite les vraies pièces. Le square restera ou partira selon ce qu'elles laisseront de place.
+- **Les tilleuls roussis disent la sécheresse** (« sans la mer, il ne pleut plus ») : un sur quatre dans les places et les avenues.

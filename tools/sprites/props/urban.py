@@ -526,6 +526,125 @@ def steel_beam(stem: str, diagonal: bool, seed: int) -> PropModel:
 # Catalogue : nom de fichier → modèle. Les noms historiques sont conservés (JSON et placeurs y font référence).
 # ---------------------------------------------------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Places et avenues (plan 58 T3a)
+# ---------------------------------------------------------------------------------------------------------------------
+
+LIME_LEAF = "#4E7A34"
+LIME_LEAF_TOP = "#7FA24A"
+LIME_DRY = "#8A7A3A"
+LIME_DRY_TOP = "#B49A4C"
+LIME_DRY_SHADE = "#5A4A26"
+COLUMN_GREEN = "#3B5246"
+
+
+def lime_tree(stem: str, seed: int, dry: bool) -> list[PropModel]:
+    """
+    Tilleul taillé des places et des avenues : fût droit, couronne basse et ronde, à hauteur d'un premier étage.
+    Le roussi est un tilleul que la sécheresse a pris : sans la mer, il ne pleut plus.
+    """
+    # forest importe déjà la voiture d'ici : l'import se fait à l'appel.
+    from .forest import CANOPY_DARK, TRUNK, tree
+
+    leaf, top, shade = (LIME_DRY, LIME_DRY_TOP, LIME_DRY_SHADE) if dry else (LIME_LEAF, LIME_LEAF_TOP, CANOPY_DARK)
+    return tree(stem, seed, 4.6 * M, 1.55 * M, 0.17 * M, 14, TRUNK, leaf, top, False, (100, 140), shade=shade)
+
+
+def morris_column(stem: str, seed: int) -> PropModel:
+    """
+    Colonne d'affichage vert bouteille : socle, fût couvert d'affiches superposées, déchirées par lés, et dôme à
+    écailles coiffé d'un fleuron. Les affiches passées laissent voir celles d'avant.
+    """
+    IRON, PAPER_A, PAPER_B, PAPER_C, PAPER_OLD, RUST = range(6)
+    materials = [
+        make_material("iron", COLUMN_GREEN),
+        make_material("paper_a", "#CBBF98", contrast=0.5),
+        make_material("paper_b", "#9A5844", contrast=0.5),
+        make_material("paper_c", "#5D7F86", contrast=0.5),
+        make_material("paper_old", "#8C8470", contrast=0.5),
+        make_material("rust", "#6A4430"),
+    ]
+    radius = 0.42 * M
+    shaft_low, shaft_high = 0.35 * M, 2.45 * M
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        shaft = lambda p: cylinder(p, (0, (shaft_low + shaft_high) / 2, 0), radius, (shaft_high - shaft_low) / 2, 0.02 * M)
+        iron = lambda p: _union(
+            cylinder(p, (0, 0.17 * M, 0), radius + 0.08 * M, 0.17 * M, 0.04 * M),
+            cylinder(p, (0, shaft_low, 0), radius + 0.04 * M, 0.04 * M, 0.02 * M),
+            cylinder(p, (0, shaft_high + 0.06 * M, 0), radius + 0.07 * M, 0.07 * M, 0.03 * M),
+            ellipsoid(p, (0, shaft_high + 0.18 * M, 0), (radius + 0.04 * M, 0.42 * M, radius + 0.04 * M)),
+            capsule(p, (0, shaft_high + 0.5 * M, 0), (0, shaft_high + 0.82 * M, 0), 0.07 * M, 0.03 * M),
+            sphere(p, (0, shaft_high + 0.86 * M, 0), 0.07 * M),
+        )
+        # Lés d'affiches : bandes verticales par secteur d'angle, de hauteurs inégales, déchirées par le bas.
+        sheets = []
+        for k in range(9):
+            a0 = k * 2 * np.pi / 9 + w.uniform(-0.1, 0.1)
+            bottom = shaft_low + w.uniform(0.15, 0.9) * M
+            sheets.append((a0, a0 + 2 * np.pi / 9 * w.uniform(0.7, 1.0), bottom, k % 3))
+
+        def sheet_mask(kind: int):
+            def mask(p: np.ndarray) -> np.ndarray:
+                angle = np.mod(np.arctan2(p[:, 2], p[:, 0]), 2 * np.pi)
+                result = np.full(len(p), 1.0)
+                for a0, a1, bottom, k in sheets:
+                    if k != kind:
+                        continue
+                    inside = (angle >= np.mod(a0, 2 * np.pi)) & (angle <= np.mod(a0, 2 * np.pi) + (a1 - a0))
+                    torn = bottom + (value_noise(p, 0.12 * M, seed + 7 + k) - 0.5) * 0.3 * M
+                    result = np.where(inside & (p[:, 1] > torn) & (p[:, 1] < shaft_high - 0.06 * M), -1.0, result)
+                return result
+            return mask
+
+        old = lambda p: np.maximum(p[:, 1] - shaft_high + 0.08 * M, shaft_low + 0.1 * M - p[:, 1])
+        streaks = both(noise_mask(0.14 * M, seed + 3, 0.3, (1.0, 4.0, 1.0)), lambda p: p[:, 1] - shaft_high)
+        return [
+            Part(iron, IRON),
+            Part(shaft, PAPER_OLD),
+            Part(painted(shaft, old, 0.01 * M), PAPER_OLD, relief=False),
+            Part(painted(shaft, sheet_mask(0), 0.02 * M), PAPER_A, relief=False),
+            Part(painted(shaft, sheet_mask(1), 0.02 * M), PAPER_B, relief=False),
+            Part(painted(shaft, sheet_mask(2), 0.02 * M), PAPER_C, relief=False),
+            Part(painted(iron, streaks, 0.015 * M), RUST, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(56, 110), footprint=box_footprint(radius, radius))
+
+
+def standpipe(stem: str, seed: int) -> PropModel:
+    """Borne-fontaine de fonte : fût cannelé, bouton de laiton, bec, et une flaque sèche, grise, à ses pieds."""
+    IRON, BRASS, STAIN, RUST = range(4)
+    materials = [
+        make_material("iron", "#3E4644"),
+        make_material("brass", "#A2873E", contrast=0.6),
+        make_material("stain", "#6E6A60", contrast=0.4),
+        make_material("rust", "#6A4430"),
+    ]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        tilt = rotation_z(w.uniform(-0.05, 0.05))
+        local = lambda p: p @ tilt
+        body = lambda p: _union(
+            cylinder(local(p), (0, 0.08 * M, 0), 0.24 * M, 0.08 * M, 0.03 * M),
+            cylinder(local(p), (0, 0.6 * M, 0), 0.15 * M, 0.5 * M, 0.03 * M),
+            ellipsoid(local(p), (0, 1.12 * M, 0), (0.18 * M, 0.12 * M, 0.18 * M)),
+            capsule(local(p), (0.1 * M, 0.75 * M, 0), (0.3 * M, 0.68 * M, 0), 0.045 * M, 0.035 * M),
+        )
+        flutes = painted(body, bands(0, 0.09 * M, 0.025 * M), 0.01 * M)
+        return [
+            Part(lambda p: ellipsoid(p, (0.35 * M, 0.0, 0.05 * M), (0.42 * M, 0.02 * M, 0.3 * M)), STAIN),
+            Part(body, IRON),
+            Part(flutes, IRON),
+            Part(lambda p: sphere(local(p), (0, 1.26 * M, 0), 0.06 * M), BRASS),
+            Part(painted(body, noise_mask(0.1 * M, seed + 2, 0.25), 0.012 * M), RUST, relief=False),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(48, 64), footprint=box_footprint(0.2 * M, 0.2 * M))
+
+
 def catalog() -> list[PropModel]:
     models = [car("prop_urban_car", "red", AXIS_X_YAW, 11)]
     for paint, seed in (("red", 12), ("teal", 21), ("cream", 31)):
@@ -546,5 +665,17 @@ def catalog() -> list[PropModel]:
         overturned_desk("prop_overturned_desk", 121),
         steel_beam("prop_steel_beam", False, 111),
         steel_beam("prop_steel_beam_diagonal", True, 112),
+        morris_column("prop_morris_column", 131),
+        standpipe("prop_standpipe", 141),
+    ]
+    models += lime_tree("prop_lime_tree", 151, False)
+    models += lime_tree("prop_lime_tree_dry", 152, True)
+    # Banc et réverbère des places : ceux du belvédère et des bois, dessinés ici pour que les pièces de la ville les trouvent.
+    from .forest import ivy_lamppost, park_bench
+
+    models += [
+        park_bench("prop_park_bench_x", 161, AXIS_X_YAW),
+        park_bench("prop_park_bench_y", 162, AXIS_Y_YAW),
+        ivy_lamppost("prop_street_lamp", 171),
     ]
     return models

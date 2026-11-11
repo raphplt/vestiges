@@ -36,6 +36,8 @@ public class BiomePropConfig
 	public List<string> Remarkables = new();
 	/// <summary>Terrain rythmé du biome (plan 58 T1a), nul si le semis reste uniforme.</summary>
 	public TerrainRhythm Rhythm;
+	/// <summary>Grille de la ville (plan 58 T3a), nulle hors de la Haute-Ville.</summary>
+	public CityGrid City;
 }
 
 /// <summary>
@@ -581,6 +583,12 @@ public partial class PropSpawner : Node2D
 		return rhythms;
 	}
 
+	public const string CityBiomeId = "urban_ruins";
+
+	/// <summary>Grille de la ville d'un biome, nulle s'il n'en règle pas ou si le catalogue est refusé.</summary>
+	public static CityGrid LoadCity(string biomeId) =>
+		LoadPropConfigs().TryGetValue(biomeId, out BiomePropConfig config) ? config.City : null;
+
 	/// <summary>Les décors acceptés ; un catalogue refusé n'en rend aucun (la génération s'arrête sur l'erreur journalisée).</summary>
 	private static Dictionary<string, BiomePropConfig> LoadPropConfigs()
 	{
@@ -632,6 +640,9 @@ public partial class PropSpawner : Node2D
 				BiomePropConfig config = ParseConfig(reader, reader.Root, biomeExists, spriteExists);
 				if (reader.Error == null && config.BiomeId + ".json" != name)
 					reader.Fail($"biome_id « {config.BiomeId} » différent du nom du fichier");
+				// La Haute-Ville sans grille ne serait qu'un sol nu : sa grille est exigée (plan 58 T3a).
+				if (reader.Error == null && config.BiomeId == CityBiomeId && config.City == null)
+					reader.Fail($"{CityBiomeId} : city exigé, la grille de la ville");
 				if (reader.Error != null)
 					return $"{where} : {reader.Error}";
 				parsed[config.BiomeId] = config;
@@ -650,7 +661,7 @@ public partial class PropSpawner : Node2D
 	private static BiomePropConfig ParseConfig(JsonConfigReader reader, JsonElement root, Func<string, bool> biomeExists,
 		Func<string, bool> spriteExists)
 	{
-		reader.AllowOnly(root, "décors", "biome_id", "density", "props", "remarkables", "rhythm");
+		reader.AllowOnly(root, "décors", "biome_id", "density", "props", "remarkables", "rhythm", "city");
 		BiomePropConfig config = new() { BiomeId = reader.Text(root, "biome_id"), Density = reader.Chance(root, "density") };
 		if (reader.Error == null && !biomeExists(config.BiomeId))
 			reader.Fail($"biome_id « {config.BiomeId} » inconnu");
@@ -707,6 +718,13 @@ public partial class PropSpawner : Node2D
 		}
 		if (JsonConfigReader.Has(root, "rhythm"))
 			config.Rhythm = TerrainRhythm.Parse(reader, reader.Section(root, "rhythm"), ids, spriteExists);
+		if (JsonConfigReader.Has(root, "city") && reader.Error == null)
+		{
+			Dictionary<string, PropDefinition> byId = new();
+			foreach (PropDefinition prop in config.Props)
+				byId[prop.Id] = prop;
+			config.City = CityGrid.Parse(reader, reader.Section(root, "city"), byId);
+		}
 		return config;
 	}
 

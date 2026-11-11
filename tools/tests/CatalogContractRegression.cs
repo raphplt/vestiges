@@ -766,7 +766,7 @@ public partial class CatalogContractRegression : Node
     {
         Func<string, bool> biomeExists = id => BiomeDataLoader.Get(id) != null;
         Func<string, string, bool> spriteExists = (folder, stem) => ResourceLoader.Exists($"{folder}{stem}.png");
-        Check(LandPieceConfig.TryLoad(out LandPieceConfig loaded, out string loadError) && loaded.Biomes.Count == 4
+        Check(LandPieceConfig.TryLoad(out LandPieceConfig loaded, out string loadError) && loaded.Biomes.Count == 5
             && loaded.Biomes["swamp"].Heart != null && loaded.Biomes["swamp"].Pieces.Count == 4
             && loaded.Biomes["swamp"].Pieces[0].Memorial is Vector2 && loaded.Biomes["swamp"].Pieces[1].Ground == TerrainType.Grass
             && loaded.Biomes["swamp"].Pieces[0].Plan.Elements.Exists(element => element.Group == "barque")
@@ -774,8 +774,9 @@ public partial class CatalogContractRegression : Node
             && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "quais" && piece.VoidCenter is Vector2)
             && loaded.Biomes["swamp"].Heart.Plan.Elements.Exists(element => element.Flat)
             && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "marais_salants" && piece.Water.Count == 6)
-            && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "maisons_du_port"),
-            $"pièces du dépôt acceptées, vides du belvédère et des quais lus, cale plaquée au sol, bassins des marais salants {loadError}");
+            && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "maisons_du_port")
+            && loaded.Biomes["urban_ruins"].Pieces.Exists(piece => piece.Id == "le_square"),
+            $"pièces du dépôt acceptées, vides du belvédère et des quais lus, cale plaquée au sol, bassins des marais salants, square de la ville {loadError}");
         string valid = FileAccess.GetFileAsString(LandPieceConfig.FilePath);
         JsonNode Piece(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![0]!;
         JsonNode Basin(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![2]!["water"]![0]!;
@@ -1637,6 +1638,30 @@ public partial class CatalogContractRegression : Node
         {
             List<(string, string)> candidate = new(files);
             candidate[forest] = (files[forest].Name, Mutated(files[forest].Text, mutate));
+            string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
+            Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
+        }
+        int urban = files.FindIndex(file => file.Name == "urban_ruins.json");
+        CityGrid city = configs?["urban_ruins"].City;
+        Check(city != null && city.RowSpacing.X <= city.RowSpacing.Y && city.CraterProps.Count > 0 && city.AvenueTrees.Count > 0
+            && city.SquareTrees.Count > 0 && city.SquareProps.Count > 0 && configs["swamp"].City == null,
+            "décors : grille de la Haute-Ville lue (écarts, cratères, avenues, places), aucune ailleurs");
+        foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
+        {
+            ("ville sans grille", root => root.Remove("city"), "city exigé"),
+            ("ville, clé inconnue", root => root["city"]!["boulevards"] = 1, "clé « boulevards » inconnue"),
+            ("ville, écart inversé", root => root["city"]!["row_spacing"]!["min"] = 30, "min 30 au-dessus de max"),
+            ("ville, écart trop serré", root => root["city"]!["column_spacing"]!["min"] = 2, "min"),
+            ("ville, décrochement trop ample", root => root["city"]!["jogs"]!["rows"] = 4, "le quart au plus"),
+            ("ville, fusions sans fin", root => root["city"]!["merge_chance"] = 0.9, "merge_chance"),
+            ("ville, cratères sans gravats", root => root["city"]!["craters"]!["weights"] = new JsonObject(), "au moins un décor"),
+            ("ville, arbre d'avenue absent", root => root["city"]!["avenues"]!["trees"]!["prop_absent"] = 1, "décor « prop_absent » absent de props"),
+            ("ville, places sans quinconce", root => root["city"]!["squares"]!.AsObject().Remove("tree_every"), "section tree_every absente"),
+            ("ville, décor de place absent", root => root["city"]!["squares"]!["weights"]!["prop_absent"] = 2, "décor « prop_absent » absent de props"),
+        })
+        {
+            List<(string, string)> candidate = new(files);
+            candidate[urban] = (files[urban].Name, Mutated(files[urban].Text, mutate));
             string error = PropSpawner.TryParseConfigs(candidate, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> refused);
             Check(error?.Contains(expected, StringComparison.Ordinal) == true && refused == null, $"décors, {name} refusé ({error})");
         }

@@ -399,6 +399,42 @@
         }
       ]
     },
+    "urban_ruins": {
+      "folder": "res://assets/props/urban_ruins/",
+      "pieces": [
+        {
+          "id": "le_square",
+          "_doc": "Le square (plan 58 T3a), démonstration : un carré de tilleuls taillés, verts ou roussis par la sécheresse, des bancs, deux réverbères, une colonne d'affichage aux affiches déchirées, une borne-fontaine sèche. Les rues de la grille s'arrêtent à son bord. T3b à T3d posent ensuite les vraies pièces de la ville.",
+          "half_extent_px": [560, 320],
+          "ground": "concrete",
+          "memorial": [0, 80],
+          "spur_start": [0, 300],
+          "elements": [
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-440, -230], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-220, -230], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [0, -230], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [220, -230], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [440, -230], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-440, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-220, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [0, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [220, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [440, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-500, -10], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [500, -10], "blocking": true },
+            { "sprites": ["prop_morris_column"], "at": [0, -110], "blocking": true },
+            { "sprites": ["prop_park_bench_x"], "at": [-250, -120], "blocking": false },
+            { "sprites": ["prop_park_bench_x"], "at": [250, -120], "blocking": false },
+            { "sprites": ["prop_park_bench_y"], "at": [-330, 40], "blocking": false },
+            { "sprites": ["prop_park_bench_y"], "at": [330, 60], "blocking": false, "chance": 0.6 },
+            { "sprites": ["prop_street_lamp"], "at": [-120, -150], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [130, 150], "blocking": true },
+            { "sprites": ["prop_standpipe"], "at": [170, -30], "blocking": false },
+            { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [-180, 130], "blocking": false, "chance": 0.7 }
+          ]
+        }
+      ]
+    },
     "collapsed_quarry": {
       "folder": "res://assets/props/collapsed_quarry/",
       "heart": {

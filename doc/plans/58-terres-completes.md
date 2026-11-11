@@ -612,3 +612,66 @@ Ensuite, la Haute-Ville a un cœur et quatre pièces neuves, et en pose trois ou
 - **Le Cerf reste le gardien provisoire** jusqu'au Tocsin (plan 57 G3). Le parvis garde la place du repaire, au pied du clocher.
 - **L'identifiant `urban_ruins` ne change pas.**
 - **Corps procéduraux** (`tools/sprites/props/urban.py` et `buildings.py`), repris ensuite par l'ami artiste.
+
+## 19. T3a, la grille qui ondule et casse — livré le 11 novembre
+
+**Ce qui est fait :**
+- **La grille se règle en JSON** : `city` dans `data/props/urban_ruins.json`, lu par `CityGrid`, et exigé pour la Haute-Ville. Les anciennes constantes en dur de `UrbanLayoutGenerator` sont retirées.
+- **Le tracé des rues est réécrit** (les rues restent sur les axes de l'écran) :
+  - des écarts tirés entre 10 et 19 rangs, et entre 8 et 16 colonnes : des îlots de tailles variées ;
+  - des **décrochements** d'un ou deux rangs, une fois sur trois, raccordés au croisement ;
+  - des **tronçons supprimés** (12 %) : deux îlots fusionnent, et un îlot profond porte une seconde rangée d'immeubles ;
+  - des **ruelles en impasse** (15 % des tronçons verticaux) ;
+  - des **rues effondrées** (12 % des longs tronçons) : deux ou trois cellules ouvertes en cratère, couvertes de gravats et de poutrelles ;
+  - des **avenues** (une rue sur cinq) : droites et entières, des trottoirs plus larges et une rangée de tilleuls de chaque côté ;
+  - des **places** : un îlot sur douze environ reste ouvert et dallé, à 1 600 px au moins des autres. Tilleuls en quinconce, bancs, réverbères, colonne d'affichage, borne-fontaine.
+- **Les pièces trouent la grille** :
+  - sous l'ellipse d'une pièce, ni rue ni trottoir, et le dallage des places si la pièce est pavée ;
+  - les chaussées se dessinent ensuite, rues arrêtées à son bord ;
+  - un immeuble ne se pose que si tout son module tient hors des cellules réservées.
+- **Sept décors** (`tools/sprites/props/urban.py`) :
+  - le tilleul taillé et le tilleul roussi par la sécheresse, troncs et couronnes séparés ;
+  - la colonne d'affichage vert bouteille aux affiches déchirées par lés ;
+  - la borne-fontaine ;
+  - le banc et le réverbère des bois, redessinés dans le dossier de la ville.
+- **Le square** (`le_square`), pièce de démonstration : un carré de tilleuls, des bancs, une colonne, une borne, le Mémorial au milieu. La Haute-Ville a sa première pièce et son premier Mémorial logé.
+
+**Écarts au plan :**
+- Les avenues ne sont pas des chaussées doubles (§218) : `RoadTileGenerator` ne dessine qu'une cellule de large.
+- Les décrochements ne touchent que les rues horizontales. Une rue verticale qui décroche demanderait de raccorder deux décrochements au même croisement.
+
+**Vérifié :**
+- `tools/validate.sh` :
+  - démarrage et déplacements : verts ;
+  - catalogues et terres : verts après relance ;
+  - au premier passage, trois tests du gardien ont échoué sous la charge de deux mesures en parallèle. Ils échouent aussi parfois au commit de base. La suite des terres passe au commit de base et ici, machine calme.
+- Le contrat des catalogues lit la grille et refuse dix cas : ville sans grille, clé inconnue, écart inversé ou trop serré, décrochement trop ample, fusions sans fin, cratères sans gravats, arbre ou décor de place absent, places sans quinconce.
+- Relecture `godot-reviewer`, avec trois corrections :
+  - le cratère garde les trottoirs de sa rue ;
+  - le choix d'un cratère regarde le milieu du tronçon ;
+  - la grille est exigée.
+- Les valeurs restées en code sont de la géométrie : décalage des arbres d'avenue, profondeur d'un îlot à deux rangées, longueur minimale d'un tronçon à cratère.
+- Build sans avertissement.
+- **Captures** (graines 7, 11 et 42) : la vue d'ensemble, le square, et la ville au ras des rues. Planche : [planches/plan58_t3a_grille.png](planches/plan58_t3a_grille.png).
+- **Placement** (graines 7, 11 et 42) : 294 à 308 îlots bâtis au lieu de 411, 10 à 13 places et 136 à 218 cellules de cratère par terre. Un square, sans avertissement.
+
+**Mesure** (`measure_run`, profil dev, Facteur, Haute-Ville puis bois puis carrière, 600 s, graines 7, 42 et 11, avant au commit 80b33f4b, après au code de T3a avant les trois corrections de la relecture, chacun dans sa copie de travail) :
+
+| | Avant (7 / 42 / 11) | Après (7 / 42 / 11) |
+|---|---|---|
+| Troisième Mémorial de la ville ravivé (s) | 107 / 119 / jamais | 114 / 105 / 143 |
+| Ville quittée (s) | 169 / 182 / jamais | 149 / 190 / 228 |
+| Créatures visibles, 0-60 s | 14,4 / 16,3 / 27,2 | 14,4 / 23,4 / 15,9 |
+| Créatures visibles, 180-300 s | 19,5 / 21,3 / 15,6 | 18,5 / 21,4 / 19,0 |
+| Éliminations | 2 166 / 1 099 / 329 | 2 235 / 1 090 / 743 |
+| Distance parcourue (m) | 8 896 / 9 418 / 1 633 | 8 437 / 10 381 / 10 078 |
+| Gardiens et échos vaincus | 4 / 3 / 0 | 4 / 3 / 2 |
+| Morts | 0 / 0 / 0 | 0 / 0 / 0 |
+
+Aux graines 7 et 42, la ville se traverse au même rythme, et la densité ne bouge pas au-delà du bruit d'une graine à l'autre. À la graine 11, le bot restait pris dans l'ancienne grille : deux Mémoriaux sur trois en 600 s, 1 633 m parcourus. Avec la nouvelle grille, il quitte la ville à 228 s. Une graine ne prouve pas que la ville se traverse mieux, mais la nouvelle grille ne l'enferme plus.
+
+**Ce qui reste :**
+- Vue de loin, la ville reste une grille. Les décrochements se lisent au ras des rues, à peine à 0,25. Les repères viendront de T3b : le clocher, la mairie.
+- Le square est maigre, comme les pièces de démonstration de T0.
+- Les rues verticales ne décrochent pas.
+- Les deux petites églises du semis restent jusqu'à T3b.

@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**11 novembre — la grille de la Haute-Ville qui ondule et casse ([plan 58 T3a](58-terres-completes.md), §218) :** la grille se règle en JSON. Les rues sont plus ou moins espacées ; certaines décrochent, fusionnent deux îlots, finissent en impasse ou s'effondrent en cratère. Des avenues plantées de tilleuls et des places en quinconce s'y ajoutent, et les pièces trouent la grille. Le square est la première pièce de la ville. Mesure (Facteur, trois graines) : densité inchangée. À la graine 11, le bot ne reste plus pris dans la ville.
+
 **11 novembre — la Haute-Ville découpée ([plan 58 §18](58-terres-completes.md), §217) :** quatre sous-lots. T3a : la grille qui ondule et casse. T3b : le parvis de Saint-Aubin et la place de la mairie. T3c : l'école et la poste. T3d : l'arrêt de la ligne 7 et la mesure.
 
 **11 novembre — les maisons du port, le Bas-Port est fait ([plan 58 T2d](58-terres-completes.md), §216) :** trois maisons de pêcheurs basses en rangée, des filets, des casiers, une boîte aux lettres qui déborde de courrier tamponné. Le Bas-Port a quatre pièces autour de la cale et en pose trois ou quatre par run. Ses décors remarquables sont ceux du port, dont un feu de port neuf. Mesure d'ensemble (cinq graines) : le bot voit deux pièces du Bas-Port au lieu d'une ; il ravive ses Mémoriaux 23 s plus tard et quitte la terre 16 s plus tard ; aucune mort. Suite : la Haute-Ville (T3), à découper.

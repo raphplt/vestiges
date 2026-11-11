@@ -109,6 +109,98 @@
             "sprite_base": "assets/props/urban_ruins/prop_mailbox.png",
             "blocking": false,
             "min_distance": 4
+        },
+        {
+            "id": "lime_tree",
+            "name": "Tilleul taillé",
+            "weight": 0.02,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/props/urban_ruins/prop_lime_tree_base.png",
+            "sprite_canopy": "assets/props/urban_ruins/prop_lime_tree_canopy.png",
+            "blocking": true,
+            "min_distance": 3
+        },
+        {
+            "id": "lime_tree_dry",
+            "name": "Tilleul roussi",
+            "weight": 0.02,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/props/urban_ruins/prop_lime_tree_dry_base.png",
+            "sprite_canopy": "assets/props/urban_ruins/prop_lime_tree_dry_canopy.png",
+            "blocking": true,
+            "min_distance": 3
+        },
+        {
+            "id": "morris_column",
+            "name": "Colonne d'affichage",
+            "weight": 0.01,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/props/urban_ruins/prop_morris_column.png",
+            "blocking": true,
+            "min_distance": 6
+        },
+        {
+            "id": "standpipe",
+            "name": "Borne-fontaine",
+            "weight": 0.01,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/props/urban_ruins/prop_standpipe.png",
+            "blocking": false,
+            "min_distance": 4
+        },
+        {
+            "id": "park_bench_x",
+            "name": "Banc public",
+            "weight": 0.01,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/props/urban_ruins/prop_park_bench_x.png",
+            "blocking": false,
+            "min_distance": 3
+        },
+        {
+            "id": "park_bench_y",
+            "name": "Banc public (de côté)",
+            "weight": 0.01,
+            "terrain": ["concrete", "grass"],
+            "sprite_base": "assets/props/urban_ruins/prop_park_bench_y.png",
+            "blocking": false,
+            "min_distance": 3
+        },
+        {
+            "id": "street_lamp",
+            "name": "Réverbère sous le lierre",
+            "weight": 0.01,
+            "terrain": ["concrete"],
+            "sprite_base": "assets/props/urban_ruins/prop_street_lamp.png",
+            "blocking": true,
+            "min_distance": 4
         }
-    ]
+    ],
+    "city": {
+        "_doc": "Grille de la Haute-Ville (plan 58 T3a). Les rues restent sur les axes de l'écran ; row_spacing et column_spacing tirent l'écart entre deux rues (rangs, colonnes). Un tronçon horizontal décroche de 1 à jogs.rows rangs (jogs.chance), un tronçon disparaît (merge_chance, deux îlots fusionnent), une rue verticale s'arrête à mi-îlot (dead_end_chance, une ruelle en impasse). craters : le milieu d'un long tronçon s'effondre sur length cellules, couvertes de gravats. avenues : rues droites et entières, trottoirs plus larges, arbres tous les tree_spacing_px. squares : un îlot d'au moins min_cells cellules reste ouvert (chance), à spacing_px des autres places ; arbres en quinconce (tree_every), et entre eux d'autres décors (density, weights).",
+        "row_spacing": { "min": 10, "max": 19 },
+        "column_spacing": { "min": 8, "max": 16 },
+        "jogs": { "chance": 0.35, "rows": 2 },
+        "merge_chance": 0.12,
+        "dead_end_chance": 0.15,
+        "craters": {
+            "chance": 0.12,
+            "length": { "min": 2, "max": 3 },
+            "weights": { "concrete_debris": 3, "concrete_debris_v2": 2, "concrete_debris_v3": 2, "steel_beam": 1, "steel_beam_diagonal": 1 }
+        },
+        "avenues": {
+            "chance": 0.2,
+            "trees": { "lime_tree": 3, "lime_tree_dry": 1 },
+            "tree_spacing_px": 128
+        },
+        "squares": {
+            "chance": 0.08,
+            "min_cells": 60,
+            "spacing_px": 1600,
+            "trees": { "lime_tree": 3, "lime_tree_dry": 1 },
+            "tree_every": { "columns": 3, "rows": 6 },
+            "density": 0.12,
+            "weights": { "park_bench_x": 3, "park_bench_y": 3, "street_lamp": 2, "morris_column": 1, "standpipe": 1 }
+        }
+    }
 }
