@@ -2673,3 +2673,18 @@ Raphaël, le 12 novembre, sur la proposition de l'agent : « ok, passe la Monté
 - **La Haute-Ville se finit d'abord** : T3a est livré, et laisser la terre à moitié faite obligerait à y revenir à froid.
 - **Les gardiens G3 à G5 gardent leur place**, après T5, chacun avec la pièce du cœur de sa terre. Le Cerf reste le gardien provisoire des terres qui n'ont pas encore le leur. La Montée compte un fragment de lore par gardien, quel qu'il soit.
 
+## 220. Le parvis de Saint-Aubin et la place de la mairie, découpage de T3b — 12 novembre 2026
+
+Lot T3b du [plan 58](58-terres-completes.md), découpage au §20 du plan. Raphaël, le 12 novembre : « vas-y, découpe le parvis et la mairie ».
+
+**Proposition de l'agent, réversible :**
+- **Deux sous-lots**, dans cet ordre :
+  - T3b1 : Saint-Aubin et son parvis, le cœur de la ville. Les deux églises du semis partent ;
+  - T3b2 : la place de la mairie, avec sa fontaine, son kiosque et son panneau de faire-part d'oubli.
+- **Le clocher fait environ 350 px**, deux fois et demie un immeuble. Il dépasse la hauteur permise parce qu'il est dans le cœur dégagé.
+- **La nef et le clocher sont un seul sprite**, trié à sa base.
+- **« Visible de loin » s'arrête à la caméra** : environ 600 px au nord de la base. Le repère de la terre reste la minimap.
+- **L'horloge de la mairie est arrêtée sur 23 h 03**, l'heure de l'ordre de fermer la barrière.
+- **Rien ne se lit ni ne sonne** : la cloche revient au Tocsin (plan 57 G3).
+- **Le square reste** jusqu'à T3d.
+

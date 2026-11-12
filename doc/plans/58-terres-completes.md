@@ -675,3 +675,36 @@ Aux graines 7 et 42, la ville se traverse au même rythme, et la densité ne bou
 - Le square est maigre, comme les pièces de démonstration de T0.
 - Les rues verticales ne décrochent pas.
 - Les deux petites églises du semis restent jusqu'à T3b.
+
+## 20. T3b, le parvis de Saint-Aubin et la place de la mairie — découpage proposé le 12 novembre
+
+Proposition de l'agent, réversible ([§220](DECISIONS.md)). T3b est élevé : il se coupe en deux, chacun livré et capturé avant le suivant. La mesure d'ensemble de la ville reste à T3d.
+
+**Ce qui ne va pas aujourd'hui :**
+- **La Haute-Ville n'a pas de cœur** (pas de clé `heart` pour `urban_ruins` dans `data/world/land_pieces.json`) : le Cerf dort dans une zone dégagée quelconque.
+- **Saint-Aubin n'existe pas.** `UrbanBuildingPlacer` sème jusqu'à deux églises de quartier (`prop_bld_church_w4_a/b`) de la taille d'un immeuble, environ 140 px de haut, dans une rangée d'îlot.
+- **La mairie, la fontaine et le kiosque n'existent pas.** Seul le square, pièce de démonstration de T3a, fait une place.
+- Le lore les nomme pourtant ([VESTIGES-LORE](../VESTIGES-LORE.md)) :
+  - le clocher « visible de loin », et qui « tient loin dans l'Effacement » ;
+  - Baptiste, le sonneur, empêché de sonner le tocsin à 23 h 10, d'où la corde coupée ;
+  - à 23 h 03, l'ordre de fermer la barrière, inscrit à la main courante de la mairie ;
+  - le télégramme de tempête oublié sur un bureau de la mairie ;
+  - les faire-part d'oubli.
+
+| Sous-lot | Contenu | Effort |
+|---|---|---|
+| **T3b1** | **Saint-Aubin et son parvis, le cœur de la ville.** **L'église en grand** (`tools/sprites/props/buildings.py`) : une nef de six cellules, portail au sud sur le parvis, et un **clocher d'environ 350 px**, deux fois et demie un immeuble, avec abat-sons, horloge et flèche. Deux variantes : croix droite ou penchée, abat-sons entiers ou crevés. **Le parvis** (`heart` de `urban_ruins`), au dallage des places : le monument aux morts (obélisque, noms illisibles, gerbe fanée), la **corde de cloche coupée**, lovée à plat au pied du clocher, des tilleuls et des bancs de T3a. Le côté ouest reste ouvert, par où arrive le joueur, et le repaire est au pied du clocher. **Les deux églises du semis partent** : leur code part de `UrbanBuildingPlacer`, leurs sprites restent (uid référencés). Vérification : vue d'ensemble, le parvis, le clocher vu en arrivant par le nord, collisions (`--capture-props`), combat du Cerf au bot sur trois graines | Moyen à élevé |
+| **T3b2** | **La place de la mairie.** **La mairie** (`buildings.py`) : façade de pierre à fronton, « MAIRIE » gravé, perron, **horloge arrêtée sur 23 h 03**, drapeau délavé sur sa hampe. Sur la place (`urban.py`) : une **fontaine** à vasque, sèche et fendue ; un **kiosque à musique** octogonal au toit de zinc ; un **panneau d'affichage couvert de faire-part d'oubli**, des papiers blancs bordés de noir ; des tilleuls, des bancs et des réverbères de T3a. Le Mémorial se loge devant la fontaine. Variantes : avec ou sans kiosque, drapeau ou hampe nue. Vérification : captures de la place, collisions, placement sur trois graines | Moyen |
+
+Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c ajoute l'école et la poste, T3d la ligne 7 et la mesure.
+
+**Tranché par défaut, réversible :**
+- **Le clocher dépasse la hauteur permise d'un immeuble** (~190 px, règle des îlots) parce qu'il se dresse dans le cœur, qui est dégagé. Son sommet peut cacher la rangée d'immeubles au nord du parvis : c'est accepté pour le repère. Le joueur caché derrière le clocher le voit s'éclaircir, comme tout décor haut (`PropOcclusion`).
+- **« Visible de loin » a une limite**, celle de la caméra au zoom 2 : on voit 960 × 540 px du monde. Un clocher de 350 px entre dans l'écran par le bas jusqu'à environ 600 px au nord de sa base, pas plus loin, et ne se voit pas de plus loin par les autres côtés. Le vrai repère de toute la terre reste la minimap, qui montre déjà le repaire dès l'arrivée (plan 57 C2). Pas d'icône neuve.
+- **Un seul sprite pour la nef et le clocher**, trié à sa base, avec une emprise rectangulaire. Le clocher n'est pas un décor à part : il aurait sa propre base de tri, et le joueur pourrait se dessiner entre la nef et lui.
+- **L'horloge de la mairie s'est arrêtée sur 23 h 03**, l'heure de l'ordre de fermer la barrière. Le télégramme de tempête reste hors champ : il est sur un bureau, à l'intérieur.
+- **Rien ne se lit ni ne s'interagit** : les noms du monument, les faire-part et l'horloge sont de l'image. Les systèmes de lore restent éteints (§5).
+- **La cloche ne sonne pas.** Le son du clocher revient au Tocsin, le gardien de la ville (plan 57 G3).
+- **Le Cerf reste le gardien provisoire** et dort au pied du clocher.
+- **Le square reste** jusqu'à T3d, qui tranchera selon la place que laissent l'école, la poste et la ligne 7 (§218).
+- **Corps procéduraux** (`buildings.py`, `urban.py`), repris ensuite par l'ami artiste.

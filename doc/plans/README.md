@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**12 novembre — le parvis et la mairie découpés ([plan 58 §20](58-terres-completes.md), §220) :** deux sous-lots. T3b1 : Saint-Aubin en grand, avec un clocher deux fois et demie plus haut qu'un immeuble, et son parvis comme cœur de la ville (monument aux morts, corde de cloche coupée, repaire au pied du clocher). Les deux églises du semis partent. T3b2 : la place de la mairie, avec l'horloge arrêtée sur 23 h 03, une fontaine sèche, un kiosque et un panneau de faire-part d'oubli.
+
 **12 novembre — la Montée avant la carrière et les champs ([LE-JEU](../LE-JEU.md), §219) :** demandé par Raphaël. Une fois la Haute-Ville finie (T3b à T3d), on fait la Montée et l'Indicible en finale (étape 6), pour qu'une run aille de bout en bout avant les testeurs. La carrière (T4), les champs (T5) et les gardiens G3 à G5 viennent après.
 
 **11 novembre — la grille de la Haute-Ville qui ondule et casse ([plan 58 T3a](58-terres-completes.md), §218) :** la grille se règle en JSON. Les rues sont plus ou moins espacées ; certaines décrochent, fusionnent deux îlots, finissent en impasse ou s'effondrent en cratère. Des avenues plantées de tilleuls et des places en quinconce s'y ajoutent, et les pièces trouent la grille. Le square est la première pièce de la ville. Mesure (Facteur, trois graines) : densité inchangée. À la graine 11, le bot ne reste plus pris dans la ville.
