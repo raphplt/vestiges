@@ -769,6 +769,233 @@ def church(stem: str, seed: int, mirrored: bool) -> PropModel:
                      supersample=3, smooth_slopes=True)
 
 
+def saint_aubin(stem: str, seed: int, ruined: bool) -> PropModel:
+    """
+    L'église Saint-Aubin, cœur de la Haute-Ville (plan 58 T3b1) : le clocher-porche à l'ouest, deux fois et demie plus
+    haut qu'un immeuble (horloge, abat-sons, haute flèche d'ardoise), le portail au sud sur le parvis et son perron,
+    une nef épaulée de contreforts et de hautes baies en ogive, une abside ronde à l'est. Elle dépasse la hauteur permise
+    aux immeubles : elle se dresse au cœur dégagé de la ville, pas dans une rangée d'îlot.
+    Variante ruinée : toit de la nef crevé, abat-sons arrachés, croix penchée, gravats au pied.
+    """
+    STONE, TRIM, GLASS, ROOF, DOOR, MOSS, RUBBLE, INTERIOR, BRONZE, BEAM, JOINT, GRIME, SLATE, DIAL, HAND = range(15)
+    materials = [
+        make_material("stone", "#A39A88"), make_material("trim", "#C2B8A0"),
+        make_material("glass", "#3A3456", contrast=0.6), make_material("roof", "#4E4A54"),
+        make_material("door", "#3A2E28", contrast=0.6), make_material("moss", "#5A7A38"),
+        make_material("rubble", "#8A857C"), make_material("interior", "#1E1A1D", contrast=0.4),
+        make_material("bronze", "#7A6038"), make_material("beam", "#5E4430", contrast=0.7),
+        make_material("joint", "#7E7668", contrast=0.6), make_material("grime", _shade("#A39A88", 0.7), contrast=0.9),
+        make_material("slate", "#3E3A44", contrast=0.7), make_material("dial", "#D6CDB4", contrast=0.5),
+        make_material("hand", "#2A2624", contrast=0.5),
+    ]
+    w = Weathering(seed)
+    tower = 2.3 * M
+    nave_len = 15.0 * M
+    apse_r = 3.2 * M
+    half_w = (2 * tower + nave_len + apse_r) / 2
+    tower_x = -half_w + tower
+    nave_x0 = tower_x + tower
+    nave_x1 = nave_x0 + nave_len
+    nave_cx = (nave_x0 + nave_x1) / 2
+    nave_hw = nave_len / 2
+    nave_d = 4.2 * M
+    wall_h = 8.0 * M
+    ridge = 4.2 * M
+    tower_h = 15.5 * M
+    spire_h = 7.0 * M
+    belfry_y0, belfry_h = 11.6 * M, 2.6 * M
+    clock_y = 9.4 * M
+    bays = [nave_x0 + (k + 0.5) * nave_len / 5 for k in range(5)]
+    breach = np.array([nave_cx + w.uniform(-0.2, 0.25) * nave_hw, wall_h + 0.75 * ridge, w.uniform(0.05, 0.3) * nave_d])
+    rubble = [(np.array([w.uniform(-0.3, 1.0) * half_w, 0.2 * M, nave_d + w.uniform(0.3, 1.4) * M]),
+               np.array([w.uniform(0.25, 0.55), w.uniform(0.18, 0.35), w.uniform(0.25, 0.5)]) * M, w.uniform(0, np.pi))
+              for _ in range(7 if ruined else 3)]
+    ivy = (_ivy(w, w.uniform(0.15, 0.45) * half_w, nave_d, 3.4 * M) + _ivy(w, w.uniform(0.55, 0.8) * half_w, nave_d, 2.6 * M)
+           + _ivy(w, tower_x + 1.2 * M, tower, 4.2 * M))
+
+    def ogive(p: np.ndarray, x: float, y0: float, height: float, half_width: float, z: float, depth: float) -> np.ndarray:
+        slot = _box(p, (x, y0 + height / 2, z), (half_width, height / 2, depth))
+        top = y0 + height
+        arch = np.maximum(sphere(p, (x - half_width * 0.6, top, z), half_width * 1.6),
+                          sphere(p, (x + half_width * 0.6, top, z), half_width * 1.6))
+        return np.minimum(slot, np.maximum(arch, top - p[:, 1]))
+
+    def side_ogive(p: np.ndarray, z: float, y0: float, height: float, half_width: float, x: float, depth: float) -> np.ndarray:
+        # Même baie, percée dans une face d'axe x (le flanc ouest du clocher).
+        return ogive(p[:, [2, 1, 0]], z, y0, height, half_width, x, depth)
+
+    def belfry(p: np.ndarray) -> np.ndarray:
+        return _union(ogive(p, tower_x - 0.9 * M, belfry_y0, belfry_h, 0.45 * M, tower, 0.4 * M),
+                      ogive(p, tower_x + 0.9 * M, belfry_y0, belfry_h, 0.45 * M, tower, 0.4 * M),
+                      side_ogive(p, -0.9 * M, belfry_y0, belfry_h, 0.45 * M, tower_x - tower, 0.4 * M),
+                      side_ogive(p, 0.9 * M, belfry_y0, belfry_h, 0.45 * M, tower_x - tower, 0.4 * M))
+
+    def openings(p: np.ndarray) -> np.ndarray:
+        bays_cut = _union(*(ogive(p, x, 2.2 * M, 4.2 * M, 0.42 * M, nave_d, 0.3 * M) for x in bays))
+        portal = ogive(p, tower_x, 0.0, 3.6 * M, 0.95 * M, tower, 0.3 * M)
+        tower_slits = ogive(p, tower_x, 6.4 * M, 1.4 * M, 0.2 * M, tower, 0.3 * M)
+        apse_bays = _union(*(ogive((p - np.array([nave_x1, 0, 0])) @ rotation_y(a), 0.0, 2.6 * M, 3.4 * M, 0.32 * M, apse_r, 0.4 * M)
+                             for a in (-0.55, 0.35)))
+        return _union(bays_cut, belfry(p), portal, tower_slits, apse_bays)
+
+    def breach_cut(p: np.ndarray) -> np.ndarray:
+        if not ruined:
+            return np.full(len(p), np.inf)
+        cell = np.floor(p / np.array([0.4 * M, 0.3 * M, 0.3 * M]))
+        jag = (_hash(cell[:, 0], cell[:, 1], cell[:, 2] + seed) - 0.5) * 0.9 * M
+        return sphere(p, breach, 3.0 * M) - jag
+
+    def nave_roof(p: np.ndarray) -> np.ndarray:
+        local = p - np.array([nave_cx, wall_h, 0])
+        slope = (np.abs(local[:, 2]) * ridge / (nave_d + 0.3 * M) + local[:, 1] - ridge) / np.sqrt(1 + (ridge / nave_d) ** 2)
+        return np.maximum(np.maximum(slope, -local[:, 1]), np.abs(local[:, 0]) - (nave_hw + 0.2 * M))
+
+    def apse(p: np.ndarray) -> np.ndarray:
+        drum = cylinder(p, (nave_x1, wall_h * 0.42, 0), apse_r, wall_h * 0.42)
+        return np.maximum(drum, nave_x1 - p[:, 0])
+
+    def apse_roof(p: np.ndarray) -> np.ndarray:
+        # Demi-cône d'ardoise posé sur le tambour de l'abside.
+        local = p - np.array([nave_x1, wall_h * 0.84, 0])
+        height = 2.6 * M
+        r = apse_r + 0.25 * M
+        side = (np.linalg.norm(local[:, [0, 2]], axis=1) * height / r + local[:, 1] - height) / np.sqrt(1 + (height / r) ** 2)
+        return np.maximum(np.maximum(side, -local[:, 1]), nave_x1 - p[:, 0])
+
+    def spire(p: np.ndarray) -> np.ndarray:
+        # Haute flèche à huit pans : l'intersection de deux pyramides tournées d'un huitième de tour.
+        local = p - np.array([tower_x, tower_h + 0.3 * M, 0])
+        r = tower - 0.1 * M
+        def pyramid(q: np.ndarray) -> np.ndarray:
+            return (np.maximum(np.abs(q[:, 0]), np.abs(q[:, 2])) * spire_h / r + q[:, 1] - spire_h) / np.sqrt(1 + (spire_h / r) ** 2)
+        eight = np.maximum(pyramid(local), pyramid(local @ rotation_y(np.pi / 4)))
+        return np.maximum(eight, -local[:, 1])
+
+    def walls(p: np.ndarray) -> np.ndarray:
+        nave = _box(p, (nave_cx, wall_h / 2, 0), (nave_hw, wall_h / 2, nave_d))
+        ends = np.abs(p[:, 0] - (nave_x1 - 0.15 * M)) - 0.15 * M
+        gable = np.maximum(nave_roof(p - np.array([0, -0.05 * M, 0])), ends)
+        shaft = _box(p, (tower_x, tower_h / 2, 0), (tower, tower_h / 2, tower))
+        # Contreforts d'angle du clocher, en deux ressauts.
+        corners = _union(*(_box(p, (tower_x + sx * (tower - 0.1 * M), 3.4 * M, sz * (tower - 0.1 * M)), (0.4 * M, 3.4 * M, 0.4 * M))
+                           for sx in (-1, 1) for sz in (-1, 1)),
+                         *(_box(p, (tower_x + sx * (tower - 0.15 * M), 8.0 * M, sz * (tower - 0.15 * M)), (0.28 * M, 1.4 * M, 0.28 * M))
+                           for sx in (-1, 1) for sz in (-1, 1)))
+        buttresses = _union(*(_box(p, (x + nave_len / 10, 2.6 * M, nave_d + 0.35 * M), (0.3 * M, 2.6 * M, 0.4 * M))
+                              for x in bays[:-1]))
+        body = _union(nave, gable, shaft, corners, buttresses, apse(p))
+        return np.maximum(body, -_union(openings(p), breach_cut(p)))
+
+    def inside(p: np.ndarray) -> np.ndarray:
+        # Le comble s'ouvre aussi sous la brèche : on voit le noir de la nef, pas un second toit.
+        under_roof = np.maximum(np.maximum(nave_roof(p + np.array([0, 0.25 * M, 0])), np.abs(p[:, 0] - nave_cx) - (nave_hw - 0.3 * M)),
+                                -breach_cut(p))
+        return _union(_box(p, (nave_cx, wall_h / 2, 0), (nave_hw - 0.25 * M, wall_h / 2, nave_d - 0.25 * M)), under_roof,
+                      _box(p, (tower_x, tower_h / 2, 0), (tower - 0.3 * M, tower_h / 2, tower - 0.3 * M)))
+
+    def glass(p: np.ndarray) -> np.ndarray:
+        kept = bays[1:] if ruined else bays
+        return _union(*(ogive(p, x, 2.2 * M, 4.2 * M, 0.42 * M, nave_d - 0.14 * M, 0.04 * M) for x in kept))
+
+    def trim(p: np.ndarray) -> np.ndarray:
+        cornice = _box(p, (tower_x, tower_h, 0), (tower + 0.2 * M, 0.15 * M, tower + 0.2 * M))
+        bands_ = _union(*(_box(p, (tower_x, y, 0), (tower + 0.1 * M, 0.1 * M, tower + 0.1 * M)) for y in (6.0 * M, 10.9 * M)))
+        eaves = _box(p, (nave_cx, wall_h, nave_d + 0.12 * M), (nave_hw, 0.12 * M, 0.14 * M))
+        archivolt = np.maximum(ogive(p, tower_x, 0.0, 3.9 * M, 1.2 * M, tower + 0.12 * M, 0.12 * M),
+                               -ogive(p, tower_x, -0.1 * M, 3.75 * M, 0.98 * M, tower + 0.12 * M, 0.4 * M))
+        return np.maximum(_union(cornice, bands_, eaves, archivolt), -openings(p))
+
+    # Abat-sons : lames de bois inclinées dans les baies du beffroi ; la variante ruinée n'en garde que des restes.
+    def louvres(p: np.ndarray) -> np.ndarray:
+        slats = np.abs(np.mod(p[:, 1] - belfry_y0, 0.32 * M) - 0.16 * M) - 0.05 * M
+        if ruined:
+            kept = value_noise(p, 0.5 * M, seed + 9) - 0.62
+            slats = np.maximum(slats, kept)
+        recess = _union(_box(p, (tower_x, belfry_y0 + belfry_h / 2, tower - 0.25 * M), (1.4 * M, belfry_h / 2, 0.08 * M)),
+                        _box(p, (tower_x - tower + 0.25 * M, belfry_y0 + belfry_h / 2, 0), (0.08 * M, belfry_h / 2, 1.4 * M)))
+        return np.maximum(np.maximum(recess, slats), belfry(p))
+
+    def roof(p: np.ndarray) -> np.ndarray:
+        return _union(np.maximum(nave_roof(p), -breach_cut(p)), spire(p), apse_roof(p))
+
+    def rafters(p: np.ndarray) -> np.ndarray:
+        if not ruined:
+            return np.full(len(p), np.inf)
+        under = np.abs(nave_roof(p + np.array([0, 0.25 * M, 0]))) - 0.1 * M
+        strips = _union(*(np.abs(p[:, 0] - (breach[0] + k * 0.8 * M)) - 0.1 * M for k in (-2, -1, 0, 1, 2)))
+        return np.maximum(np.maximum(under, strips), sphere(p, breach, 3.3 * M))
+
+    def cross(p: np.ndarray) -> np.ndarray:
+        base = np.array([tower_x, tower_h + 0.3 * M + spire_h - 0.2 * M, 0])
+        local = (p - base) @ rotation_z(0.5 if ruined else 0.0)
+        return _union(capsule(local, (0, 0, 0), (0, 1.3 * M, 0), 0.09 * M),
+                      capsule(local, (-0.42 * M, 0.85 * M, 0), (0.42 * M, 0.85 * M, 0), 0.08 * M),
+                      sphere(local, (0, 0.05 * M, 0), 0.18 * M))
+
+    def bell(p: np.ndarray) -> np.ndarray:
+        return ellipsoid(p, (tower_x, belfry_y0 + 1.2 * M, 0), (0.75 * M, 0.85 * M, 0.75 * M))
+
+    def door(p: np.ndarray) -> np.ndarray:
+        return ogive(p, tower_x, 0.0, 3.6 * M, 0.9 * M, tower - 0.12 * M, 0.08 * M)
+
+    def steps(p: np.ndarray) -> np.ndarray:
+        # Perron de trois marches devant le portail.
+        return _union(*(_box(p, (tower_x, (k + 0.5) * 0.18 * M, tower + (3 - k) * 0.45 * M - 0.2 * M),
+                             (1.7 * M - k * 0.15 * M, (k + 0.5) * 0.18 * M, (3 - k) * 0.45 * M)) for k in range(3)))
+
+    # Horloge du clocher, sur la face sud : cadran clair cerclé de bronze, aiguilles arrêtées.
+    dial_c = np.array([tower_x, clock_y, tower + 0.08 * M])
+
+    def dial(p: np.ndarray) -> np.ndarray:
+        return cylinder(p, dial_c, 1.0 * M, 0.08 * M, 0.02 * M, rotation_x(np.pi / 2))
+
+    def dial_ring(p: np.ndarray) -> np.ndarray:
+        return np.maximum(cylinder(p, dial_c, 1.15 * M, 0.11 * M, 0.02 * M, rotation_x(np.pi / 2)), -dial(p) - 0.03 * M)
+
+    def hands(p: np.ndarray) -> np.ndarray:
+        # Onze heures dix : l'heure où l'on a empêché le sonneur de monter.
+        front = dial_c + np.array([0, 0, 0.12 * M])
+        hour = front + 0.55 * M * np.array([np.sin(np.radians(335)), np.cos(np.radians(335)), 0])
+        minute = front + 0.85 * M * np.array([np.sin(np.radians(60)), np.cos(np.radians(60)), 0])
+        return _union(capsule(p, front, hour, 0.09 * M), capsule(p, front, minute, 0.07 * M))
+
+    leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.035 * M, 0.2 * M)
+
+    def moss(p: np.ndarray) -> np.ndarray:
+        d = np.minimum(np.abs(p[:, 2] - (nave_d + 0.04 * M)), np.abs(p[:, 2] - (tower + 0.04 * M))) - 0.4 * M
+        near = d < 0.2 * M
+        if near.any():
+            d[near] = leaves(p[near])
+        return d
+
+    def rubble_part(p: np.ndarray) -> np.ndarray:
+        return _union(*(rounded_box(p, c, h, 0.05 * M, rotation_y(a)) for c, h, a in rubble))
+
+    ashlar = bricks(0.42 * M, 0.85 * M, 0.04 * M)
+    damp = lambda p: p[:, 1] - (1.1 * M + value_noise(p, 0.7 * M, seed + 1) * 1.2 * M)
+    streaks = both(noise_mask(0.3 * M, seed + 4, 0.35, (1.0, 6.0, 1.0)), lambda p: p[:, 1] - tower_h)
+    slates = bricks(0.26 * M, 0.42 * M, 0.04 * M, frame=lambda q: np.stack([q[:, 0], q[:, 1], np.zeros(len(q))], axis=1))
+
+    def parts() -> list[Part]:
+        return [Part(inside, INTERIOR), Part(walls, STONE), Part(painted(walls, ashlar, 0.012 * M), JOINT),
+                Part(painted(walls, damp, 0.016 * M), GRIME, relief=False),
+                Part(painted(walls, streaks, 0.014 * M), GRIME, relief=False),
+                Part(glass, GLASS), Part(trim, TRIM), Part(louvres, BEAM), Part(roof, ROOF),
+                Part(painted(roof, slates, 0.012 * M), SLATE), Part(rafters, BEAM), Part(cross, BRONZE),
+                Part(bell, BRONZE), Part(door, DOOR), Part(steps, TRIM), Part(dial, DIAL), Part(dial_ring, BRONZE),
+                Part(hands, HAND), Part(moss, MOSS), Part(rubble_part, RUBBLE)]
+
+    extent_x = half_w + 1.6 * M
+    extent_z = nave_d + 2.4 * M
+    top = tower_h + spire_h + 1.8 * M
+    above = top * 0.62 * 0.87 + extent_z * 0.62 * 0.5 + 24
+    return PropModel(stem, parts, materials, BUILDING_YAW, ray_range=float(2.5 * max(extent_x, extent_z, top)),
+                     canvas=(int(extent_x * 2 * 0.62 * 1.05) + 24, int(above / 0.72) + 8),
+                     footprint=box_footprint(half_w, nave_d),
+                     bounds=((-extent_x, 0.0, -extent_z), (extent_x, top, extent_z)),
+                     supersample=3, smooth_slopes=True)
+
+
 def radio_mast(stem: str, seed: int) -> PropModel:
     """Pylône de télécommunication, repère rare des cours d'îlot (plan 08 P2) : treillis à trois pieds qui s'affine,
     bandes rouges et blanches, paraboles, feu de balisage éteint, local technique au pied. Visible par-dessus les toits."""
@@ -838,4 +1065,7 @@ def catalog() -> list[PropModel]:
                 specs.append(BuildingSpec(stem, width, DEPTH_ROWS, storeys, style, plaster, damage, seed, mirrored))
     # Repères rares (plan 08 P2) : l'église est un module de rangée, le pylône se plante dans une cour.
     return [building(spec) for spec in specs] + [church("prop_bld_church_w4_a", 541, False), church("prop_bld_church_w4_b", 542, True),
-                                                 radio_mast("prop_radio_mast", 551)]
+                                                 radio_mast("prop_radio_mast", 551),
+                                                 # Le cœur de la Haute-Ville (plan 58 T3b1), hors des rangées : pas de préfixe prop_bld_.
+                                                 saint_aubin("prop_saint_aubin", 561, False),
+                                                 saint_aubin("prop_saint_aubin_ruined", 562, True)]

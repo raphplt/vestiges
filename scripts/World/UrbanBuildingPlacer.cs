@@ -20,10 +20,7 @@ public static class UrbanBuildingPlacer
 	private const int AlleyChance = 22;
 	// Un îlot assez profond (deux îlots fusionnés, plan 58 T3a) porte une seconde rangée en son milieu.
 	private const int TallBlockRows = 22;
-	// Repères rares (plan 08 P2) : église en tête de rangée d'un îlot préservé, pylône dans une cour d'îlot.
-	private const int ChurchChance = 8;
-	private const int MaxChurches = 2;
-	private const float ChurchMinIntegrity = 0.55f;
+	// Repère rare (plan 08 P2) : pylône dans une cour d'îlot. L'église est Saint-Aubin, au cœur de la ville (plan 58 T3b1).
 	private const int MastChance = 10;
 	private const int MaxMasts = 2;
 	private const string MastSprite = "assets/props/urban_ruins/prop_radio_mast.png";
@@ -48,7 +45,6 @@ public static class UrbanBuildingPlacer
 		}
 
 		int placed = 0;
-		List<Vector2> churches = new();
 		List<Vector2> masts = new();
 		foreach (BuildingFootprint block in layout.Buildings)
 		{
@@ -57,15 +53,11 @@ public static class UrbanBuildingPlacer
 
 			uint blockHash = UrbanPropPlacer.HashCell(block.Origin, seed ^ 0xC4A9EUL);
 			Vector2 blockCenter = ground.MapToLocal(block.Origin + block.Size / 2);
-			bool church = churches.Count < MaxChurches && block.Integrity >= ChurchMinIntegrity && blockHash % 100 < ChurchChance
-				&& FarFrom(churches, blockCenter);
 			// Une seule rangée, au sud : elle s'élève au-dessus de la cour de son îlot plutôt que de la rue au nord.
 			int southRow = block.Origin.Y + block.Size.Y - 1 - FrontInsetRows;
-			placed += PlaceRow(block, southRow, church, ground, container, usedCells, cache, seed, out bool churchPlaced);
-			if (churchPlaced)
-				churches.Add(blockCenter);
+			placed += PlaceRow(block, southRow, ground, container, usedCells, cache, seed);
 			if (block.Size.Y >= TallBlockRows)
-				placed += PlaceRow(block, southRow - block.Size.Y / 2, false, ground, container, usedCells, cache, seed, out _);
+				placed += PlaceRow(block, southRow - block.Size.Y / 2, ground, container, usedCells, cache, seed);
 
 			// Pylône au milieu de la cour, derrière la rangée : il dépasse des toits.
 			int courtyardEnd = southRow - ModuleDepthRows / 2 - 1;
@@ -85,40 +77,33 @@ public static class UrbanBuildingPlacer
 				UrbanPropPlacer.PlaceInteriorDebris(block, ground, container, usedCells, cache, seed ^ (ulong)block.Origin.X, ref placed);
 			UrbanPropPlacer.ReserveBuildingFootprint(block, usedCells, inset: 0);
 		}
-		GD.Print($"[UrbanBuildingPlacer] Repères : {churches.Count} église(s), {masts.Count} pylône(s)");
+		GD.Print($"[UrbanBuildingPlacer] Repères : {masts.Count} pylône(s)");
 		return placed;
 	}
 
-	/// <summary>Rangée de modules ; avec <paramref name="church"/>, l'église ouvre la rangée si elle y tient.</summary>
+	/// <summary>Rangée de modules le long d'un rang de l'îlot, coupée de passages au hasard.</summary>
 	private static int PlaceRow(
 		BuildingFootprint block,
 		int row,
-		bool church,
 		TileMapLayer ground,
 		Node2D container,
 		HashSet<Vector2I> usedCells,
 		Dictionary<string, Texture2D> cache,
-		ulong seed,
-		out bool churchPlaced)
+		ulong seed)
 	{
-		churchPlaced = false;
 		int placed = 0;
 		int x = block.Origin.X + 1;
 		int end = block.Origin.X + block.Size.X - 2;
 		while (x <= end)
 		{
 			uint hash = UrbanPropPlacer.HashCell(new Vector2I(x, row), seed ^ 0xB17DUL);
-			bool first = x == block.Origin.X + 1;
-			if (!(church && first) && hash % 100 < AlleyChance)
+			if (hash % 100 < AlleyChance)
 			{
 				x++;
 				continue;
 			}
 
-			(int width, string path) = church && first ? PickModule("church", end - x + 1, hash >> 8) : (0, null);
-			bool isChurch = width > 0;
-			if (width == 0)
-				(width, path) = PickModule(PickStyle(block.Integrity, hash), end - x + 1, hash >> 8);
+			(int width, string path) = PickModule(PickStyle(block.Integrity, hash), end - x + 1, hash >> 8);
 			if (width == 0)
 			{
 				(width, path) = PickModule("ruin", end - x + 1, hash >> 8);
@@ -136,7 +121,6 @@ public static class UrbanBuildingPlacer
 			if (UrbanPropPlacer.TryPlaceProp(path, anchor, ground, container, usedCells, cache))
 			{
 				placed++;
-				churchPlaced |= isChurch;
 				Reserve(usedCells, x, width, row);
 			}
 			x += width;

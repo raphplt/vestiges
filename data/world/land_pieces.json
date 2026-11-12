@@ -401,6 +401,31 @@
     },
     "urban_ruins": {
       "folder": "res://assets/props/urban_ruins/",
+      "heart": {
+        "_doc": "Le parvis de Saint-Aubin (plan 58 T3b1) : l'église au nord, son clocher-porche à l'ouest, haut de deux fois et demie un immeuble, le portail et son perron tournés vers le parvis. Au pied du clocher, la corde de cloche coupée : on a empêché le sonneur de sonner le tocsin. Le monument aux morts à l'est, une rangée de tilleuls et de bancs au sud, des réverbères. Le parvis est dallé comme les places. Le Cerf dort au pied du clocher. L'ouest reste ouvert, d'où arrive le joueur.",
+        "id": "parvis_de_saint_aubin",
+        "half_extent_px": [560, 300],
+        "ground": "concrete",
+        "elements": [
+          { "sprites": ["prop_saint_aubin", "prop_saint_aubin_ruined"], "at": [130, -160], "blocking": true },
+          { "sprites": ["prop_bell_rope"], "at": [-90, -86], "blocking": false, "flat": true },
+          { "sprites": ["prop_war_memorial"], "at": [340, 30], "blocking": true },
+          { "sprites": ["prop_park_bench_y"], "at": [270, 40], "blocking": false, "chance": 0.7 },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-160, 220], "blocking": true },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [0, 235], "blocking": true },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [160, 235], "blocking": true },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [320, 220], "blocking": true },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [460, 150], "blocking": true },
+          { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [480, -70], "blocking": true, "chance": 0.8 },
+          { "sprites": ["prop_park_bench_x"], "at": [-80, 190], "blocking": false },
+          { "sprites": ["prop_park_bench_x"], "at": [80, 200], "blocking": false, "chance": 0.7 },
+          { "sprites": ["prop_park_bench_x"], "at": [240, 195], "blocking": false },
+          { "sprites": ["prop_street_lamp"], "at": [-220, -80], "blocking": true },
+          { "sprites": ["prop_street_lamp"], "at": [420, 60], "blocking": true },
+          { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2", "prop_concrete_debris_v3"], "at": [400, -150], "blocking": false, "chance": 0.7 },
+          { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [-300, 90], "blocking": false, "chance": 0.5 }
+        ]
+      },
       "pieces": [
         {
           "id": "le_square",

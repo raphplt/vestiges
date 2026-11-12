@@ -2688,3 +2688,30 @@ Lot T3b du [plan 58](58-terres-completes.md), découpage au §20 du plan. Rapha�
 - **Rien ne se lit ni ne sonne** : la cloche revient au Tocsin (plan 57 G3).
 - **Le square reste** jusqu'à T3d.
 
+## 221. Saint-Aubin et son parvis — 12 novembre 2026
+
+Lot T3b1 du [plan 58](58-terres-completes.md), dans le découpage du §220. Compte rendu au §21 du plan. Raphaël, le 12 novembre : « vas-y, attaque T3b1 ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **L'horloge du clocher est arrêtée sur 23 h 10**, l'heure où l'on a empêché Baptiste de sonner le tocsin. Celle de la mairie (T3b2) gardera 23 h 03.
+- **L'église a deux variantes, intacte et ruinée**, tirées au hasard à chaque run. La ruinée montre la nef par son toit crevé.
+- **Une église est un décor à part, pas un module d'îlot** : `prop_saint_aubin` ne porte pas le préfixe `prop_bld_`, pour que le placeur d'immeubles ne la pose jamais dans une rangée.
+- **Les sprites des églises de quartier restent** dans le dossier : plus rien ne les pose, mais leurs uid sont référencés.
+
+## 222. Les rues de la ville trop linéaires — 12 novembre 2026
+
+Raphaël, le 12 novembre, en regardant la Haute-Ville de T3a : « pour la map ville ça serait quand même très bien qu'il y ait plus de variations dans les rues, là c'est très linéaire. Il faut plus de patterns, des diagonales, des parcs, etc. »
+
+**Acté :**
+- **Le défaut du §217 « les rues restent sur les axes de l'écran » est levé.** La ville aura des rues en diagonale.
+- **Un lot neuf, T3e, « la ville sort de sa grille »**, passe après T3b1 et avant T3b2 : les diagonales, des parcs, des motifs de rues variés.
+
+**Tranché par défaut par l'agent, réversible :**
+- **Le lot se découpe au début de son travail**, après l'étude de `RoadTileGenerator` et de `UrbanLayoutGenerator`. La difficulté connue est que les chaussées ne se dessinent que sur une cellule de large et sur les axes. Sur la grille « stacked », la diagonale naturelle est celle des losanges, à 2 pour 1 à l'écran.
+- **Contenu visé**, à préciser au découpage :
+  - des avenues en diagonale qui traversent la grille ;
+  - des parcs, îlots verts avec pelouse, allées, arbres et bassin ;
+  - des places en étoile où plusieurs rues convergent ;
+  - des îlots coupés en biais par les diagonales.
+- **La mairie (T3b2) attend** : sa place se pose mieux dans une ville qui a déjà ses diagonales et ses parcs.
+

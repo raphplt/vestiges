@@ -708,3 +708,54 @@ Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c 
 - **Le Cerf reste le gardien provisoire** et dort au pied du clocher.
 - **Le square reste** jusqu'à T3d, qui tranchera selon la place que laissent l'école, la poste et la ligne 7 (§218).
 - **Corps procéduraux** (`buildings.py`, `urban.py`), repris ensuite par l'ami artiste.
+
+## 21. T3b1, Saint-Aubin et son parvis — livré le 12 novembre
+
+**Ce qui est fait :**
+- **L'église Saint-Aubin** (`saint_aubin`, `tools/sprites/props/buildings.py`), en deux variantes, `prop_saint_aubin` et `prop_saint_aubin_ruined`, de 410 × 399 px :
+  - le clocher-porche à l'ouest, contreforts d'angle à deux ressauts ;
+  - l'horloge au cadran clair, arrêtée sur 23 h 10, l'heure où l'on a empêché le sonneur de monter ;
+  - le beffroi et ses abat-sons, la cloche visible entre les lames ;
+  - une haute flèche d'ardoise à huit pans et sa croix ;
+  - le portail en ogive, son archivolte et un perron de trois marches tourné vers le parvis ;
+  - la nef de cinq travées, contreforts et hautes baies, et l'abside ronde à l'est ;
+  - la variante ruinée : toit de la nef crevé jusqu'au noir de la nef, chevrons à nu, abat-sons arrachés, croix penchée, gravats au pied.
+  - La base est à 339 px du sommet : 2,4 fois un immeuble (139 px). Le nom ne commence pas par `prop_bld_` : `UrbanBuildingPlacer` ne la pose jamais dans une rangée.
+- **Deux décors du parvis** (`urban.py`) :
+  - le **monument aux morts** : socle à deux degrés, dé de pierre, plaque de bronze aux noms illisibles, obélisque et pyramidion, gerbe fanée au ruban délavé, mousse au pied ;
+  - la **corde de cloche coupée**, lovée et plaquée au sol, avec la poignée de laine rayée rouge, blanc et bleu, et le bout tranché.
+- **Le cœur de la Haute-Ville** (`parvis_de_saint_aubin` dans `data/world/land_pieces.json`) :
+  - l'église au nord, une des deux variantes au hasard ;
+  - la corde au pied du clocher, à l'ouest du perron ;
+  - le monument et un banc à l'est ;
+  - une rangée de tilleuls et de bancs au sud, deux réverbères, des gravats ;
+  - un sol de béton, que la grille dalle comme les places ;
+  - l'ouest reste ouvert, et le Cerf dort au pied du clocher.
+- **Les églises de quartier du semis sont retirées** (`UrbanBuildingPlacer`). Leurs sprites restent, puisque leurs uid sont référencés. `--capture-landmarks` cherche désormais Saint-Aubin.
+
+**Vérifié :**
+- Build sans avertissement. `tools/validate.sh` : démarrage, catalogues, terres et déplacements.
+  - Au premier passage, trois tests du gardien de la carrière ont échoué : ce sont les trois instables notés à T3a.
+  - La suite des terres, relancée seule machine calme, passe.
+- Le contrat des catalogues lit le parvis : son identifiant, son sol de béton et sa corde plaquée.
+- Relecture `godot-reviewer` : aucun défaut. Le tirage des rangées sans église reste identique (mêmes hachages). Les sprites des églises de quartier restent sans emploi, volontairement (§221).
+- Première passe de la variante ruinée : la brèche était bouchée par le comble intérieur. Elle s'ouvre désormais jusqu'au noir de la nef.
+- **Placement** (`--capture-pieces`, la ville en première terre, graines 7 et 42) : le parvis et le square posés, sans avertissement.
+- **Captures** : [planches/plan58_t3b1_saint_aubin.png](planches/plan58_t3b1_saint_aubin.png). Vue à 0,25, l'église est le seul repère de la ville, et elle se trouve tout de suite.
+- **Combat du Cerf au bot** (`--lands-bot --nomad`, profil neuf, Forgeuse, la ville puis les bois puis la carrière, graines 7, 42 et 11) :
+
+| Graine | Troisième Mémorial ravivé (s) | Cerf réveillé | Ville quittée (s) |
+|---|---|---|---|
+| 7 | 134 | vaincu | 255 |
+| 42 | 185 | vaincu | 365 |
+| 11 | 142 | vaincu | 288 |
+
+  Le combat au pied du clocher se termine aux trois graines. La mesure de densité de la ville reste à T3d, qui la fera avant/après au même commit de base.
+
+**Écarts au plan :**
+- **Les collisions de l'église ne sont pas capturées.** `--capture-props` cadre le départ, qui tombe loin du parvis. L'emprise vient du manifeste (± 205 × 55 px, comme les immeubles), et le bot ne reste pas coincé.
+- **`--capture-landmarks` capture sous le carton d'arrivée** et donne des images sombres. La vue dézoomée reste lisible.
+
+**Ce qui reste :**
+- Le parvis est vaste et assez vide au milieu : c'est la place du combat du gardien.
+- Raphaël trouve les rues de la ville trop linéaires (§222). Le lot qui les casse passe avant T3b2.

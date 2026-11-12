@@ -6,12 +6,12 @@ using Vestiges.World;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// --capture-landmarks : repères rares des Ruines Urbaines (plan 08 P2), église et pylône. Les décors sont retrouvés
-/// par leur texture ; chacun est capturé au zoom normal, joueur dans la rue au sud, puis dézoomé (×0,6).
+/// --capture-landmarks : repères des Ruines Urbaines, Saint-Aubin (plan 58 T3b1) et le pylône (plan 08 P2). Les décors
+/// sont retrouvés par leur texture ; chacun est capturé au zoom normal, joueur dans la rue au sud, puis dézoomé (×0,6).
 /// </summary>
 public partial class RunObservation
 {
-    private static readonly string[] LandmarkStems = { "prop_bld_church", "prop_radio_mast" };
+    private static readonly string[] LandmarkStems = { "prop_saint_aubin", "prop_radio_mast" };
 
     private async Task CaptureLandmarks()
     {

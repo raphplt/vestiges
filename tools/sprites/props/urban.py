@@ -645,6 +645,121 @@ def standpipe(stem: str, seed: int) -> PropModel:
     return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(48, 64), footprint=box_footprint(0.2 * M, 0.2 * M))
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# Le parvis de Saint-Aubin (plan 58 T3b1)
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+def war_memorial(stem: str, seed: int) -> PropModel:
+    """
+    Monument aux morts du parvis : socle à deux degrés, dé de pierre où une plaque de bronze aligne des noms qu'on ne
+    lit plus, obélisque coiffé d'un pyramidion. Une gerbe fanée est restée appuyée contre le dé, son ruban délavé.
+    """
+    STONE, TRIM, BRONZE, NAMES, WREATH, RIBBON, GRIME, MOSS = range(8)
+    materials = [
+        make_material("stone", "#ABA391"), make_material("trim", "#C4BBA4"),
+        make_material("bronze", "#4E5A48", contrast=0.6), make_material("names", "#8E9A7A", contrast=0.5),
+        make_material("wreath", "#6A5A3A", contrast=0.8), make_material("ribbon", "#8E5A54", contrast=0.6),
+        make_material("grime", "#7A7262", contrast=0.9), make_material("moss", "#5A7A38"),
+    ]
+    die_h = 1.5 * M
+    shaft_low, shaft_high = 1.0 * M + die_h, 4.6 * M
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        steps = lambda p: _union(
+            rounded_box(p, (0, 0.15 * M, 0), (1.25 * M, 0.15 * M, 1.25 * M), 0.02 * M),
+            rounded_box(p, (0, 0.45 * M, 0), (0.95 * M, 0.15 * M, 0.95 * M), 0.02 * M),
+        )
+        die = lambda p: rounded_box(p, (0, 0.6 * M + die_h / 2, 0), (0.62 * M, die_h / 2, 0.62 * M), 0.02 * M)
+        cornice = lambda p: rounded_box(p, (0, 0.6 * M + die_h + 0.1 * M, 0), (0.72 * M, 0.1 * M, 0.72 * M), 0.02 * M)
+
+        def shaft(p: np.ndarray) -> np.ndarray:
+            # Obélisque : section carrée qui s'affine, pyramidion au sommet.
+            t = np.clip((p[:, 1] - shaft_low) / (shaft_high - shaft_low), 0.0, 1.0)
+            half = 0.42 * M - 0.16 * M * t
+            body = np.maximum(np.maximum(np.abs(p[:, 0]), np.abs(p[:, 2])) - half,
+                              np.maximum(shaft_low - p[:, 1], p[:, 1] - shaft_high))
+            apex = shaft_high + 0.45 * M
+            pyramid = (np.maximum(np.abs(p[:, 0]), np.abs(p[:, 2])) * 0.45 * M / (0.26 * M) + p[:, 1] - apex) / 1.9
+            return np.minimum(body, np.maximum(pyramid, shaft_high - p[:, 1]))
+
+        plaque = lambda p: rounded_box(p, (0, 0.6 * M + die_h * 0.52, 0.63 * M), (0.46 * M, 0.52 * M, 0.03 * M), 0.01 * M)
+        # Noms en lignes : de courts traits plus clairs, quelques-uns manquants, illisibles par construction.
+        lines = lambda p: np.maximum(np.abs(np.mod(p[:, 1] - 0.6 * M, 0.16 * M) - 0.08 * M) - 0.03 * M,
+                                     np.abs(np.mod(p[:, 0] + 0.5 * M, 0.42 * M) - 0.21 * M) - 0.15 * M)
+        tilt = rotation_x(-0.3)
+        wreath_c = np.array([0.62 * M, 0.95 * M, 0.98 * M])
+        twigs = [(np.array([np.cos(a) * 0.36, np.sin(a) * 0.36, 0.0]) * M, w.uniform(0.09, 0.14) * M)
+                 for a in np.linspace(0, 2 * np.pi, 11, endpoint=False)]
+        wreath = lambda p: _union(*(sphere((p - wreath_c) @ tilt, c, r) for c, r in twigs))
+        ribbon = lambda p: _union(
+            capsule((p - wreath_c) @ tilt, (0.05 * M, -0.3 * M, 0.05 * M), (0.12 * M, -0.62 * M, 0.08 * M), 0.06 * M, 0.04 * M),
+            capsule((p - wreath_c) @ tilt, (-0.08 * M, -0.3 * M, 0.05 * M), (-0.18 * M, -0.6 * M, 0.08 * M), 0.06 * M, 0.04 * M),
+        )
+        stone = lambda p: _union(steps(p), die(p), shaft(p))
+        streaks = both(noise_mask(0.18 * M, seed + 3, 0.35, (1.0, 5.0, 1.0)), lambda p: p[:, 1] - shaft_high)
+        moss = both(noise_mask(0.2 * M, seed + 5, 0.4), lambda p: p[:, 1] - 0.75 * M)
+        return [
+            Part(stone, STONE),
+            Part(cornice, TRIM),
+            Part(painted(stone, streaks, 0.012 * M), GRIME, relief=False),
+            Part(painted(stone, moss, 0.015 * M), MOSS, relief=False),
+            Part(plaque, BRONZE),
+            Part(painted(plaque, lines, 0.01 * M), NAMES, relief=False),
+            Part(wreath, WREATH),
+            Part(ribbon, RIBBON),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(80, 120), footprint=box_footprint(1.25 * M, 1.25 * M),
+                     bounds=((-1.4 * M, 0.0, -1.4 * M), (1.4 * M, 5.2 * M, 1.6 * M)))
+
+
+def bell_rope(stem: str, seed: int) -> PropModel:
+    """
+    Corde de cloche coupée, lovée sur les pavés au pied du clocher : la corde de chanvre en spirale lâche, la poignée
+    de laine rayée (rouge, blanc, bleu) que tenait le sonneur, et le bout tranché net, effiloché. On a empêché Baptiste
+    de sonner le tocsin. Plaquée au sol.
+    """
+    HEMP, RED, WHITE, BLUE, FRAY = range(5)
+    materials = [
+        make_material("hemp", "#A08A62", contrast=0.8), make_material("red", "#9A4038"),
+        make_material("white", "#CFC6B0"), make_material("blue", "#3E5A7E"),
+        make_material("fray", "#C2AE80", contrast=0.6),
+    ]
+    radius = 0.07 * M
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        points = []
+        for k in range(46):
+            a = k * 0.36
+            r = (0.18 + 0.022 * k) * M * w.uniform(0.92, 1.08)
+            points.append(np.array([np.cos(a) * r, radius + (0.05 * M if k % 9 == 0 else 0.0), np.sin(a) * r * 0.9]))
+        segments = list(zip(points, points[1:]))
+        rope = lambda p: _union(*(capsule(p, a, b, radius) for a, b in segments))
+        tail = points[-1]
+        cut_dir = np.array([0.55, 0.0, 0.25]) * M
+        cut = tail + cut_dir
+        rope_end = lambda p: capsule(p, tail, cut, radius)
+        fray = lambda p: _union(*(capsule(p, cut, cut + np.array([0.16, 0.0, (k - 1.5) * 0.06]) * M, 0.025 * M)
+                                  for k in range(4)))
+        # Poignée de laine (la « sallie ») sur le premier tour : bandes rouges, blanches et bleues.
+        grip = lambda p: _union(*(capsule(p, a, b, radius * 1.9) for a, b in segments[2:8]))
+        stripe = lambda k: lambda p: np.where(np.mod(np.floor((p[:, 0] + p[:, 2]) / (0.12 * M)), 3) == k, grip(p), np.inf)
+        return [
+            Part(rope, HEMP),
+            Part(rope_end, HEMP),
+            Part(fray, FRAY),
+            Part(stripe(0), RED),
+            Part(stripe(1), WHITE),
+            Part(stripe(2), BLUE),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, canvas=(72, 52),
+                     bounds=((-1.4 * M, 0.0, -1.4 * M), (1.4 * M, 0.4 * M, 1.4 * M)))
+
+
 def catalog() -> list[PropModel]:
     models = [car("prop_urban_car", "red", AXIS_X_YAW, 11)]
     for paint, seed in (("red", 12), ("teal", 21), ("cream", 31)):
@@ -677,5 +792,7 @@ def catalog() -> list[PropModel]:
         park_bench("prop_park_bench_x", 161, AXIS_X_YAW),
         park_bench("prop_park_bench_y", 162, AXIS_Y_YAW),
         ivy_lamppost("prop_street_lamp", 171),
+        war_memorial("prop_war_memorial", 181),
+        bell_rope("prop_bell_rope", 191),
     ]
     return models
