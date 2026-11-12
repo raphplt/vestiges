@@ -72,10 +72,10 @@ Proposition de l'agent, réversible. Chaque lot de terre la précise avant de co
 | **T4** | **La carrière des Aubiers.** Paliers et gouffres, le front de taille, la machine, les vestiaires, la descente ; plusieurs chantiers | Élevé |
 | **T5** | **Les fermes du plateau.** Le champ de l'Épouvantail, le marché, le moulin, le hameau, la ferme brûlée, trois plans de ferme | Moyen |
 
-Ensuite, les gardiens G3 à G5 du [plan 57](57-chemin-et-gardiens.md) (Tocsin, Pilleur, Carrier) prennent leur pièce du cœur.
+**Ordre revu le 12 novembre ([§219](DECISIONS.md)) :** après T3, la Montée et l'Indicible ([LE-JEU](../LE-JEU.md) étape 6) passent avant T4 et T5. Ensuite, les gardiens G3 à G5 du [plan 57](57-chemin-et-gardiens.md) (Tocsin, Pilleur, Carrier) prennent leur pièce du cœur.
 
 **Tranché par défaut, réversible :**
-- **L'ordre** : la grammaire d'abord, puis les bois, qui n'ont aucune structure. Ensuite le Bas-Port, le plus vide, puis la ville, la carrière, et les champs en dernier : ce sont déjà les plus riches.
+- **L'ordre** : la grammaire d'abord, puis les bois, qui n'ont aucune structure. Ensuite le Bas-Port, le plus vide, puis la ville, la carrière, et les champs en dernier : ce sont déjà les plus riches. Depuis le 12 novembre (§219), la Montée s'intercale entre la ville et la carrière.
 - **Les Mémoriaux dans les pièces** : un objectif devient un lieu. Les règles du Mémorial ne changent pas (cercle, 20 s, vagues).
 - **Les systèmes éteints** (éléments de lore, anciens POI) restent éteints. Une pièce peut reprendre une de leurs idées en décor (la balançoire, la porte sans mur), sans leur interaction.
 - **Corps procéduraux**, repris ensuite par l'ami artiste.

@@ -2660,3 +2660,16 @@ Lot T3a du [plan 58](58-terres-completes.md), compte rendu au §19 du plan. Raph
 - **Une pièce pavée prend le dallage des places.** Sous une pièce sans sol imposé, ou à sol de béton, la grille laisse le dallage des places plutôt que le béton générique, qui faisait une tache sombre.
 - **Le square est une pièce de démonstration** : il donne à la ville sa première pièce et son premier Mémorial logé. T3b à T3d posent ensuite les vraies pièces. Le square restera ou partira selon ce qu'elles laisseront de place.
 - **Les tilleuls roussis disent la sécheresse** (« sans la mer, il ne pleut plus ») : un sur quatre dans les places et les avenues.
+
+## 219. La Montée avant la carrière et les champs — 12 novembre 2026
+
+Raphaël, le 12 novembre, sur la proposition de l'agent : « ok, passe la Montée avant la carrière et les champs ».
+
+**Acté :**
+- **Nouvel ordre** : T3b à T3d (la Haute-Ville), puis la Montée et l'Indicible en finale ([LE-JEU](../LE-JEU.md) étape 6), puis T4 (la carrière), T5 (les champs), puis les gardiens G3 à G5.
+- **Pourquoi** : sans la Montée, une run n'a pas la fin que fixe la forme verrouillée, et les testeurs extérieurs ont besoin d'une run qui va de bout en bout. Les champs sont déjà la terre la plus riche : T5 est le lot qui rapporte le moins.
+
+**Tranché par défaut par l'agent, réversible :**
+- **La Haute-Ville se finit d'abord** : T3a est livré, et laisser la terre à moitié faite obligerait à y revenir à froid.
+- **Les gardiens G3 à G5 gardent leur place**, après T5, chacun avec la pièce du cœur de sa terre. Le Cerf reste le gardien provisoire des terres qui n'ont pas encore le leur. La Montée compte un fragment de lore par gardien, quel qu'il soit.
+

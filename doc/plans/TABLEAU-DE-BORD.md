@@ -4,7 +4,7 @@
 
 Le [registre](DECISIONS.md) garde les mots de Raphaël. Les plans gardent le détail. Ce tableau dit seulement **où en est chaque chose et qui doit agir**.
 
-> **18 octobre 2026 : forme du jeu verrouillée, gel des nouveautés ([§189, §190](DECISIONS.md), [LE-JEU.md](../LE-JEU.md)).** Un seul ordre de travail, en effort : la Série, le rythme du départ, l'essai du bac à sable, les terres complètes, la Montée et l'Indicible, un vrai gardien, la clarté, les testeurs. Tout ce qui est « à juger en jeu » au §1 est acquis tel quel ; on n'y revient que sur retour de test.
+> **18 octobre 2026 : forme du jeu verrouillée, gel des nouveautés ([§189, §190](DECISIONS.md), [LE-JEU.md](../LE-JEU.md)).** Un seul ordre de travail, en effort : la Série, le rythme du départ, l'essai du bac à sable, les terres complètes, la Montée et l'Indicible (passée avant la carrière et les champs le 12 novembre, §219), un vrai gardien, la clarté, les testeurs. Tout ce qui est « à juger en jeu » au §1 est acquis tel quel ; on n'y revient que sur retour de test.
 
 ## 1. En cours
 

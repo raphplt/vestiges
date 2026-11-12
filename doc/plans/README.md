@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**12 novembre — la Montée avant la carrière et les champs ([LE-JEU](../LE-JEU.md), §219) :** demandé par Raphaël. Une fois la Haute-Ville finie (T3b à T3d), on fait la Montée et l'Indicible en finale (étape 6), pour qu'une run aille de bout en bout avant les testeurs. La carrière (T4), les champs (T5) et les gardiens G3 à G5 viennent après.
+
 **11 novembre — la grille de la Haute-Ville qui ondule et casse ([plan 58 T3a](58-terres-completes.md), §218) :** la grille se règle en JSON. Les rues sont plus ou moins espacées ; certaines décrochent, fusionnent deux îlots, finissent en impasse ou s'effondrent en cratère. Des avenues plantées de tilleuls et des places en quinconce s'y ajoutent, et les pièces trouent la grille. Le square est la première pièce de la ville. Mesure (Facteur, trois graines) : densité inchangée. À la graine 11, le bot ne reste plus pris dans la ville.
 
 **11 novembre — la Haute-Ville découpée ([plan 58 §18](58-terres-completes.md), §217) :** quatre sous-lots. T3a : la grille qui ondule et casse. T3b : le parvis de Saint-Aubin et la place de la mairie. T3c : l'école et la poste. T3d : l'arrêt de la ligne 7 et la mesure.
