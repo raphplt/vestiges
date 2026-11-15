@@ -44,3 +44,6 @@ __pycache__/
 
 # Exports du jeu (doc/EXPORT.md)
 build/
+
+# Modèles mid poly du bac à sable (plan 60) : régénérés par python3 tools/export_lowpoly.py --detail mid
+assets/models/mid/

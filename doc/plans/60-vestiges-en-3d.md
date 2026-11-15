@@ -158,3 +158,31 @@ Vérification : captures des trois vues (`--capture`), contrôle des rebords (`-
 
 **Mesures.** Contrôle des rebords vert (113 rebords, aucun collant ; la tour et le haut palier ne se prennent pas d'un bond). Images par seconde lues sur le HUD, machine chargée (charge 2,3) : 144 en isométrique orthographique, autour de 65 à 70 dans les deux vues en perspective, avec 35 créatures, ombres portées et MSAA 4×. C'est une indication, pas une mesure : le banc A/B se fait en 60.0e.
 
+## 10. 60.0d avancé — les styles à basculer, avec des contours
+
+Retour de Raphaël sur 60.0b (§233) : les sols en facettes ne lui plaisent pas du tout, le reste à peine mieux. Il aime le low poly, mais celui-ci est « trop low » ; il veut des bordures noires et essayer plusieurs styles. Les styles passent donc avant les caméras.
+
+**Ce qui est fait.** Dans `tools/relief_sandbox.sh`, chaque effet se bascule seul, en jeu :
+
+| Touche | Effet | Choix |
+|---|---|---|
+| F1 | Sol | facettes ; lisse (cellules découpées en 3 × 3, couleur qui ondule en larges plaques, falaises droites) ; pixel art (les tuiles du jeu, éclairées) |
+| F2 | Corps et décors | low poly ; mid poly (maillage deux fois plus fin, ombrage lissé) |
+| F3 | Contours noirs | oui, non |
+| F4 | Pixelisation | image rendue au quart de la résolution, agrandie au pixel près |
+| F5 | Ombrage | normal ; toon (lumière en aplats) |
+
+Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`). Par défaut : sol lisse, mid poly, contours.
+
+- **Le mid poly** : `python3 tools/export_lowpoly.py --detail mid`, dans `assets/models/mid/`, non versionné (23 Mo). Le script du bac à sable le génère au premier lancement. Les modèles se lisent à l'exécution (`GltfDocument`), sans passer par l'import de Godot. Triangles par pose : facteur 14 100, rôdeur 10 800, rampant 7 000, maison 35 700.
+- **Les contours** (`tools/tests/relief_outline.gdshader`) se dessinent en post-traitement, sur la profondeur : un pixel devient un trait quand la profondeur y fait un saut ou un pli vers la caméra. Ils cernent les silhouettes, les arêtes des falaises et des marches, le bord du vide. Le test porte sur 1/z en perspective et sur z en orthographique, deux grandeurs qui varient en ligne droite sur un plan : un sol vu de biais ne se raye pas. Le trait fait 2 pixels en pleine résolution, 1 une fois pixelisé.
+- **Galerie de captures** : après le tour du bot, `--capture` photographie dix combinaisons (`style_*.png`).
+
+**Ce qu'on a appris.**
+- **En GL Compatibility, le MSAA prive les contours des petits corps** : la profondeur lue alors ne garde que les grands sauts (mesuré sur captures). Quand les contours sont actifs, l'anticrénelage passe donc au FXAA.
+- **Les seuils** : 0,0025 relatif en perspective, 0,012 cellule en orthographique. Plus haut, les arêtes de falaise tournées vers la caméra et les créatures restent sans trait.
+- **Ce que montrent les captures.** L'isométrique orthographique avec contours ressemble à une illustration à l'encre : chaque marche, chaque falaise et chaque créature est cernée. Pixelisée et en toon, elle ressemble à du pixel art. Le sol lisse sans pixelisation fait un peu flou, comme une texture étalée. Le sol en tuiles pixel art, vu en 3D, fourmille.
+- **Défaut** : quelques points isolés sur le sol lisse en perspective.
+
+**Ce qui reste pour 60.0d** : le choix de Raphaël parmi ces combinaisons, puis les réglages du style retenu (épaisseur du trait, couleurs, brouillard).
+

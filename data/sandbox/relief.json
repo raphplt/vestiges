@@ -147,7 +147,7 @@
 		"mouse_degrees_per_pixel": 0.22
 	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lot 60.0b), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F5 basculent en jeu (ground : facets, smooth ou pixel_art). pixel_scale : la pixelisation divise la résolution par ce facteur. outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
 		"metres_per_cell": 2.65,
 		"colors": {
 			"ground": "53613a",
@@ -181,6 +181,19 @@
 				],
 				"yaw_degrees": 0
 			}
-		]
+		],
+		"start": {
+			"ground": "smooth",
+			"models": "mid",
+			"outlines": true,
+			"pixels": false,
+			"toon": false
+		},
+		"pixel_scale": 4,
+		"outline": {
+			"color": "0a0612",
+			"sensitivity": 0.0025,
+			"ortho_sensitivity": 0.012
+		}
 	}
 }

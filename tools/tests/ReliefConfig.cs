@@ -39,6 +39,11 @@ public sealed class ReliefConfig
         public float MetresPerCell;
         public Color Ground, Terrace, Butte, Steps, Cliff, CliffDark;
         public float ShadeJitter, HeightJitter, CliffJitter;
+        public string StartGround;
+        public bool StartMid, StartOutlines, StartPixels, StartToon;
+        public int PixelScale;
+        public Color OutlineColor;
+        public float OutlineSensitivity, OutlineOrthoSensitivity;
         public LowPolyScatter[] Scatter;
         public LowPolyLandmark[] Landmarks;
     }
@@ -156,8 +161,19 @@ public sealed class ReliefConfig
         Dictionary colors = lowPoly["colors"].AsGodotDictionary();
         Array scatter = lowPoly["scatter"].AsGodotArray();
         Array landmarks = lowPoly["landmarks"].AsGodotArray();
+        Dictionary start = lowPoly["start"].AsGodotDictionary();
+        Dictionary outline = lowPoly["outline"].AsGodotDictionary();
         LowPolyStyle style = new()
         {
+            StartGround = start["ground"].AsString(),
+            StartMid = start["models"].AsString() == "mid",
+            StartOutlines = start["outlines"].AsBool(),
+            StartPixels = start["pixels"].AsBool(),
+            StartToon = start["toon"].AsBool(),
+            PixelScale = (int)F(lowPoly, "pixel_scale"),
+            OutlineColor = new Color(outline["color"].AsString()),
+            OutlineSensitivity = F(outline, "sensitivity"),
+            OutlineOrthoSensitivity = F(outline, "ortho_sensitivity"),
             MetresPerCell = F(lowPoly, "metres_per_cell"),
             Ground = new Color(colors["ground"].AsString()),
             Terrace = new Color(colors["terrace"].AsString()),

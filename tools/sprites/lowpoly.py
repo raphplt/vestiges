@@ -29,15 +29,19 @@ EDGES = [(0, 1), (2, 3), (4, 5), (6, 7), (0, 2), (1, 3), (4, 6), (5, 7), (0, 4),
 
 @dataclass
 class Mesh:
-    """Triangles non indexés : trois sommets par face, une normale et une couleur (sRGB) par face."""
+    """
+    Sans indices : trois sommets par face, une normale et une couleur (sRGB) par face. Avec indices (mid poly) : sommets
+    partagés, une normale et une couleur par sommet. `emissive` dit, triangle par triangle, s'il brille.
+    """
     positions: np.ndarray
     normals: np.ndarray
     colors: np.ndarray
     emissive: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=bool))
+    indices: np.ndarray | None = None
 
     @property
     def triangles(self) -> int:
-        return len(self.positions) // 3
+        return len(self.indices) if self.indices is not None else len(self.positions) // 3
 
 
 def material_colors(materials: Sequence[Material]) -> tuple[np.ndarray, np.ndarray]:
@@ -62,8 +66,8 @@ def find_bounds(parts: Sequence[Part], box_min, box_max, step: float) -> tuple[n
     return inside.min(axis=0) - step, inside.max(axis=0) + step
 
 
-def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
-    """Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle)."""
+def _surface_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float) -> tuple[np.ndarray, np.ndarray]:
+    """Sommets de la surface (un par cellule traversée) et quadrilatères qui les relient (indices de sommets)."""
     lo = np.asarray(bounds_min, dtype=np.float64) - step
     hi = np.asarray(bounds_max, dtype=np.float64) + step
     shape = np.ceil((hi - lo) / step).astype(int) + 1
@@ -115,15 +119,28 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
                 ring.append(index[tuple(c)])
             if min(ring) >= 0:
                 quads.append(ring)
-    if not quads:
-        return Mesh(np.zeros((0, 3)), np.zeros((0, 3)), np.zeros((0, 3)), np.zeros(0, dtype=bool))
-    q = np.array(quads)
-    a, b, c, e = (vertices[q[:, i]] for i in range(4))
-    # Coupe chaque quadrilatère selon sa diagonale la plus courte.
+    return vertices, np.array(quads, dtype=np.int64).reshape(-1, 4)
+
+
+def _split_quads(vertices: np.ndarray, quads: np.ndarray) -> np.ndarray:
+    """Coupe chaque quadrilatère selon sa diagonale la plus courte : triangles en indices de sommets."""
+    a, b, c, e = (vertices[quads[:, i]] for i in range(4))
     short_ac = np.linalg.norm(a - c, axis=1) <= np.linalg.norm(b - e, axis=1)
-    t1 = np.where(short_ac[:, None, None], np.stack([a, b, c], 1), np.stack([a, b, e], 1))
-    t2 = np.where(short_ac[:, None, None], np.stack([a, c, e], 1), np.stack([b, c, e], 1))
-    tris = np.concatenate([t1, t2])
+    t1 = np.where(short_ac[:, None], quads[:, [0, 1, 2]], quads[:, [0, 1, 3]])
+    t2 = np.where(short_ac[:, None], quads[:, [0, 2, 3]], quads[:, [1, 2, 3]])
+    return np.concatenate([t1, t2])
+
+
+def _empty_mesh() -> Mesh:
+    return Mesh(np.zeros((0, 3)), np.zeros((0, 3)), np.zeros((0, 3)), np.zeros(0, dtype=bool))
+
+
+def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
+    """Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle), faces non lissées."""
+    vertices, quads = _surface_nets(parts, bounds_min, bounds_max, step)
+    if not len(quads):
+        return _empty_mesh()
+    tris = vertices[_split_quads(vertices, quads)]
     normal = np.cross(tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0])
     length = np.linalg.norm(normal, axis=1)
     tris = tris[length > 1e-9]
@@ -144,8 +161,44 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
     return Mesh(tris.reshape(-1, 3), np.repeat(normal, 3, axis=0), np.repeat(face_color, 3, axis=0), face_emissive)
 
 
+def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
+    """
+    Même surface, sommets partagés et ombrage lissé (« mid poly ») : la normale d'un sommet est le gradient du volume,
+    sa couleur celle du matériau juste sous lui. Un triangle est émissif si l'un de ses sommets l'est.
+    """
+    vertices, quads = _surface_nets(parts, bounds_min, bounds_max, step)
+    if not len(quads):
+        return _empty_mesh()
+    tris = _split_quads(vertices, quads)
+    corners = vertices[tris]
+    normal = np.cross(corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0])
+    keep = np.linalg.norm(normal, axis=1) > 1e-9
+    tris, corners, normal = tris[keep], corners[keep], normal[keep]
+    normal /= np.linalg.norm(normal, axis=1)[:, None]
+    centroid = corners.mean(axis=1)
+    out_d, _ = _evaluate(parts, centroid + normal * step * 0.5)
+    in_d, _ = _evaluate(parts, centroid - normal * step * 0.5)
+    flip = out_d < in_d
+    tris[flip] = tris[flip][:, ::-1]
+
+    h = step * 0.25
+    gradient = np.zeros_like(vertices)
+    for axis in range(3):
+        offset = np.zeros(3)
+        offset[axis] = h
+        plus, _ = _evaluate(parts, vertices + offset)
+        minus, _ = _evaluate(parts, vertices - offset)
+        gradient[:, axis] = plus - minus
+    normals = gradient / np.maximum(np.linalg.norm(gradient, axis=1), 1e-9)[:, None]
+    _, mat, _ = _evaluate_with_part(parts, vertices - normals * step * 0.3)
+    colors, emissive = material_colors(materials)
+    mat = np.where(mat < 0, 0, mat)
+    tri_emissive = emissive[mat][tris].any(axis=1)
+    return Mesh(vertices, normals, colors[mat], tri_emissive, tris)
+
+
 def scaled(mesh: Mesh, factor: float) -> Mesh:
-    return Mesh(mesh.positions * factor, mesh.normals, mesh.colors, mesh.emissive)
+    return Mesh(mesh.positions * factor, mesh.normals, mesh.colors, mesh.emissive, mesh.indices)
 
 
 @dataclass
@@ -166,12 +219,14 @@ def write_glb(export: ModelExport, path: Path) -> dict:
 
     def add(data: np.ndarray, kind: str, target: int, with_bounds: bool = False) -> int:
         nonlocal offset
-        raw = data.astype(np.float32).tobytes()
+        is_index = target == 34963
+        raw = (data.astype(np.uint32) if is_index else data.astype(np.float32)).tobytes()
         pad = (-len(raw)) % 4
         chunks.append(raw + b"\0" * pad)
         buffer_views.append({"buffer": 0, "byteOffset": offset, "byteLength": len(raw), "target": target})
         offset += len(raw) + pad
-        accessor = {"bufferView": len(buffer_views) - 1, "componentType": 5126, "count": int(len(data)), "type": kind}
+        accessor = {"bufferView": len(buffer_views) - 1, "componentType": 5125 if is_index else 5126,
+                    "count": int(len(data)), "type": kind}
         if with_bounds:
             accessor["min"] = data.min(axis=0).astype(float).tolist()
             accessor["max"] = data.max(axis=0).astype(float).tolist()
@@ -186,7 +241,18 @@ def write_glb(export: ModelExport, path: Path) -> dict:
         frame_names = []
         for i, mesh in enumerate(poses):
             primitives = []
-            for emissive in (False, True):
+            if mesh.indices is not None:
+                # Sommets partagés par les deux surfaces ; seuls les indices se partagent entre l'éteinte et l'émissive.
+                pos = add(mesh.positions, "VEC3", 34962, True)
+                nor = add(mesh.normals, "VEC3", 34962)
+                col = add(mesh.colors, "VEC3", 34962)
+                for emissive in (False, True):
+                    chosen = mesh.indices[mesh.emissive == emissive]
+                    if len(chosen):
+                        primitives.append({"attributes": {"POSITION": pos, "NORMAL": nor, "COLOR_0": col},
+                                           "indices": add(chosen.reshape(-1), "SCALAR", 34963),
+                                           "material": 1 if emissive else 0})
+            for emissive in (() if mesh.indices is not None else (False, True)):
                 keep = np.repeat(mesh.emissive == emissive, 3) if len(mesh.emissive) else np.ones(len(mesh.positions), bool)
                 if emissive and not len(mesh.emissive):
                     continue

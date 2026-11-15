@@ -5,6 +5,8 @@
 # --sprites : le rendu du plan 59, sprites, sol et décors d'un vrai biome générés puis photographiés au lancement
 # (forêt par défaut) : --land-order <biome> (forest_reclaimed, wild_fields, collapsed_quarry, swamp, urban_ruins) ;
 # --tiles garde des tuiles simples, sans run.
+# Styles en jeu (low poly) : F1 sol (facettes, lisse, pixel art), F2 corps (low, mid poly), F3 contours, F4 pixels,
+# F5 ombrage toon ; départ réglé dans data/sandbox/relief.json (lowpoly.start).
 # Options après -- : --view 2d|3d|chase, --enemies N (35 par défaut), --seed S, --sprites.
 # Captures (bot qui fait le tour de l'arène, images des deux vues, puis fermeture) : --capture <dossier> [--seconds S].
 # Réglages et arène : data/sandbox/relief.json.
@@ -13,6 +15,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh
 dotnet build --nologo >/dev/null
+# Le mid poly n'est pas versionné (plan 60, 60.0d) : on le génère au premier lancement.
+if [[ ! -f assets/models/mid/characters/facteur.json ]]; then
+    echo "[relief_sandbox] Modèles mid poly absents : génération (une minute environ)…"
+    python3 tools/export_lowpoly.py --detail mid
+fi
 engine_args=()
 user_args=()
 while [[ $# -gt 0 && "$1" != -- ]]; do engine_args+=("$1"); shift; done

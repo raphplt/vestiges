@@ -68,8 +68,8 @@ public partial class ReliefSandbox : Node
 
     // Rendu low poly (plan 60, lot 60.0b).
     private bool _lowPoly;
-    private ReliefLowPoly.Model _playerModel;
-    private ReliefLowPoly.Model[] _creatureModels;
+    private ReliefLook _look;
+    private TextureRect _picture;
     private MeshInstance3D _playerBody;
     private MeshInstance3D[] _creatureBodies;
     private float _playerYaw;
@@ -147,14 +147,9 @@ public partial class ReliefSandbox : Node
         RegisterActions();
         _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
         if (_lowPoly)
-        {
-            LoadModels();
-            _biome = "low poly";
-        }
+            LoadMaterials();
         else
-        {
             LoadSprites();
-        }
         if (!_lowPoly && System.Array.IndexOf(args, "--tiles") < 0)
         {
             _biome = Argument(args, "--land-order", "forest_reclaimed");
@@ -187,6 +182,11 @@ public partial class ReliefSandbox : Node
         AddKeyAction("relief_crowd_more", Key.Equal);
         AddKeyAction("relief_crowd_less", Key.Minus);
         AddKeyAction("relief_respawn", Key.R);
+        AddKeyAction("relief_style_ground", Key.F1);
+        AddKeyAction("relief_style_models", Key.F2);
+        AddKeyAction("relief_style_outlines", Key.F3);
+        AddKeyAction("relief_style_pixels", Key.F4);
+        AddKeyAction("relief_style_toon", Key.F5);
         AddWheelAction("relief_zoom_in", MouseButton.WheelUp);
         AddWheelAction("relief_zoom_out", MouseButton.WheelDown);
     }
@@ -207,12 +207,8 @@ public partial class ReliefSandbox : Node
         InputMap.ActionAddEvent(action, new InputEventMouseButton { ButtonIndex = button });
     }
 
-    private void LoadModels()
+    private void LoadMaterials()
     {
-        _playerModel = ReliefLowPoly.LoadModel($"characters/{_config.Character}");
-        _creatureModels = new ReliefLowPoly.Model[_config.Creatures.Length];
-        for (int t = 0; t < _creatureModels.Length; t++)
-            _creatureModels[t] = ReliefLowPoly.LoadModel($"creatures/{_config.Creatures[t].Id}");
         _flashMaterial = new StandardMaterial3D { ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded, AlbedoColor = new Color(1f, 0.97f, 0.9f) };
         _hurtMaterial = new StandardMaterial3D { ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded, AlbedoColor = new Color(0.95f, 0.25f, 0.2f) };
     }
@@ -284,7 +280,7 @@ public partial class ReliefSandbox : Node
         AddChild(_viewport);
         CanvasLayer screen = new() { Name = "Screen", Layer = -1 };
         AddChild(screen);
-        TextureRect picture = new()
+        _picture = new TextureRect
         {
             Name = "Picture",
             Texture = _viewport.GetTexture(),
@@ -292,18 +288,12 @@ public partial class ReliefSandbox : Node
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.Scale,
         };
-        picture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        screen.AddChild(picture);
+        _picture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        screen.AddChild(_picture);
 
         Node3D world = new() { Name = "Arena" };
         _viewport.AddChild(world);
-        if (_lowPoly)
-        {
-            _litTerrain = ReliefLowPoly.BuildTerrain(_arena, _config.LowPoly);
-            world.AddChild(_litTerrain);
-            PlaceLowPolyProps(world);
-        }
-        else
+        if (!_lowPoly)
         {
             _flatTerrain = ReliefTerrainBuilder.Build(_arena, _config, false, _bake);
             _litTerrain = ReliefTerrainBuilder.Build(_arena, _config, true, _bake);
@@ -326,8 +316,11 @@ public partial class ReliefSandbox : Node
         world.AddChild(_sun);
         _environment = new WorldEnvironment { Name = "Environment", Environment = new Godot.Environment() };
         world.AddChild(_environment);
-        _camera = new Camera3D { Name = "Camera", Current = true, Near = 0.1f, Far = 200f };
+        // Proche plan reculé : la profondeur garde sa précision au loin, où les contours la lisent.
+        _camera = new Camera3D { Name = "Camera", Current = true, Near = _lowPoly ? 0.4f : 0.1f, Far = 200f };
         world.AddChild(_camera);
+        if (_lowPoly)
+            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, _picture, BotTour);
 
         Texture2D shadow = ShadowTexture();
         _playerShadow = NewShadow(world, shadow, "PlayerShadow");
@@ -428,25 +421,6 @@ public partial class ReliefSandbox : Node
         _sim.FinishObstacles();
     }
 
-    /// <summary>Décors low poly semés à l'écart du tour du bot, et la maison ; leurs emprises bloquent la simulation.</summary>
-    private void PlaceLowPolyProps(Node3D world)
-    {
-        Node3D container = new() { Name = "Props" };
-        world.AddChild(container);
-        Vector3 scale = Vector3.One / _config.LowPoly.MetresPerCell;
-        foreach (ReliefLowPoly.Placement placement in ReliefLowPoly.PlaceProps(_arena, _config.LowPoly, _sim, BotTour, _config.Spawn, 59))
-        {
-            container.AddChild(new MeshInstance3D
-            {
-                Mesh = placement.Model.Animation("idle")[0],
-                Position = new Vector3(placement.At.X, _arena.GroundAt(placement.At.X, placement.At.Y), placement.At.Y),
-                RotationDegrees = new Vector3(0f, placement.YawDegrees, 0f),
-                Scale = scale,
-            });
-        }
-        GD.Print($"[ReliefSandbox] {container.GetChildCount()} décors low poly");
-    }
-
     /// <summary>Point du monde du jeu (px) vers le sol de l'arène : l'inverse de la projection 64 × 32.</summary>
     private Vector2 PixelToGround(Vector2 pixel)
     {
@@ -519,10 +493,12 @@ public partial class ReliefSandbox : Node
 
     private void ApplyView()
     {
-        // En low poly, un seul relief éclairé sert aux trois vues.
-        if (_flatTerrain != null)
+        // En low poly, les reliefs de ReliefLook servent aux trois vues, toujours éclairés.
+        if (!_lowPoly)
+        {
             _flatTerrain.Visible = !Is3D;
-        _litTerrain.Visible = Is3D || _lowPoly;
+            _litTerrain.Visible = Is3D;
+        }
         _sun.Visible = Is3D || _lowPoly;
         if (_captureDir == null)
             Input.MouseMode = _view == View.Chase3D ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
@@ -541,7 +517,10 @@ public partial class ReliefSandbox : Node
         if (!Is3D)
             _yawDegrees = 45f;
         if (_lowPoly)
+        {
+            _look.Apply();
             return;
+        }
         // Les sprites restent debout ; on compense l'écrasement vertical de la caméra pour garder des pixels carrés.
         float pitch = Mathf.DegToRad(PitchDegrees);
         Vector3 stretch = new(1f, 1f / Mathf.Cos(pitch), 1f);
@@ -594,6 +573,31 @@ public partial class ReliefSandbox : Node
             _crowdTarget = Mathf.Max(0, _crowdTarget - 10);
         if (Input.IsActionJustPressed("relief_respawn"))
             _sim.Teleport(_config.Spawn);
+        if (_lowPoly)
+            HandleStyleInput();
+    }
+
+    /// <summary>F1 à F5 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
+    private void HandleStyleInput()
+    {
+        bool changed = true;
+        if (Input.IsActionJustPressed("relief_style_ground"))
+            _look.CycleGround();
+        else if (Input.IsActionJustPressed("relief_style_models"))
+            _look.Mid = !_look.Mid;
+        else if (Input.IsActionJustPressed("relief_style_outlines"))
+            _look.Outlines = !_look.Outlines;
+        else if (Input.IsActionJustPressed("relief_style_pixels"))
+            _look.Pixels = !_look.Pixels;
+        else if (Input.IsActionJustPressed("relief_style_toon"))
+            _look.Toon = !_look.Toon;
+        else
+            changed = false;
+        if (changed)
+        {
+            _look.Apply();
+            _hudTimer = 0f;
+        }
     }
 
     /// <summary>En poursuite, la souris tourne la caméra autour du joueur.</summary>
@@ -735,8 +739,8 @@ public partial class ReliefSandbox : Node
         float turn = 1f - Mathf.Exp(-TurnRate * dt);
         bool moving = _sim.PlayerVelocity.LengthSquared() > 0.05f;
         Mesh pose = _sim.PlayerAirborneFromBond
-            ? _playerModel.FrameAt("dash", 1f - Mathf.Clamp(_sim.PlayerPos.Z - PlayerGround(), 0f, 1f))
-            : moving ? _playerModel.Frame("walk", _animClock * PlayerWalkRate) : _playerModel.Frame("idle", _animClock);
+            ? _look.PlayerModel.FrameAt("dash", 1f - Mathf.Clamp(_sim.PlayerPos.Z - PlayerGround(), 0f, 1f))
+            : moving ? _look.PlayerModel.Frame("walk", _animClock * PlayerWalkRate) : _look.PlayerModel.Frame("idle", _animClock);
         SetPose(_playerBody, pose);
         _playerYaw = Mathf.LerpAngle(_playerYaw, Mathf.Atan2(_sim.PlayerFacing.X, _sim.PlayerFacing.Y), turn);
         _playerBody.Position = ToWorld(_sim.PlayerPos);
@@ -756,7 +760,7 @@ public partial class ReliefSandbox : Node
                 shadow.Visible = false;
                 continue;
             }
-            ReliefLowPoly.Model model = _creatureModels[_sim.EnemyType[i]];
+            ReliefLowPoly.Model model = _look.CreatureModel(_sim.EnemyType[i]);
             SetPose(body, state == ReliefSim.EnemyState.Dying
                 ? model.FrameAt("death", 1f - _sim.EnemyTimer[i] / ReliefSim.DyingDuration)
                 : model.Frame("walk", _animClock + i * 0.13f));
@@ -842,7 +846,8 @@ public partial class ReliefSandbox : Node
             View.Chase3D => "3D EN POURSUITE  (Tab : relief 2D · souris pour tourner · Échap libère la souris)",
             _ => "RELIEF 2D  (Tab : 3D de haut)",
         };
-        _hud.Text = $"Vue : {view} · sol : {_biome}\n"
+        _hud.Text = $"Vue : {view}" + (_lowPoly ? "" : $" · sol : {_biome}") + "\n"
+            + (_lowPoly ? _look.Describe() + "\n" : "")
             + $"Espace : bond · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
             + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
@@ -933,10 +938,62 @@ public partial class ReliefSandbox : Node
                 break;
             case 7 when _captureTimer >= 0.5f:
                 Save("chase_high");
-                GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Bonds} stomps={_sim.Stomps} deaths={_sim.Deaths} void_falls={_sim.VoidFalls}");
-                GetTree().Quit();
+                if (!_lowPoly)
+                {
+                    Finish();
+                    break;
+                }
+                _sim.Teleport(_config.Spawn);
+                _waypoint = 0;
+                ShowGalleryStyle(0);
+                Advance();
+                break;
+            // Galerie des styles (60.0d) : la même scène sous chaque combinaison.
+            case 8 when _captureTimer >= 0.8f:
+                Save(Gallery[_galleryIndex].Name);
+                _galleryIndex++;
+                if (_galleryIndex >= Gallery.Length)
+                {
+                    Finish();
+                    break;
+                }
+                ShowGalleryStyle(_galleryIndex);
+                _captureTimer = 0f;
                 break;
         }
+    }
+
+    private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Pixels, bool Toon)[] Gallery =
+    {
+        ("style_facettes_low", View.Iso3D, ReliefLook.Ground.Facets, false, false, false, false),
+        ("style_facettes_low_contours", View.Iso3D, ReliefLook.Ground.Facets, false, true, false, false),
+        ("style_lisse_mid", View.Iso3D, ReliefLook.Ground.Smooth, true, false, false, false),
+        ("style_lisse_mid_contours", View.Iso3D, ReliefLook.Ground.Smooth, true, true, false, false),
+        ("style_lisse_mid_contours_toon", View.Iso3D, ReliefLook.Ground.Smooth, true, true, false, true),
+        ("style_pixels_toon_contours", View.Iso3D, ReliefLook.Ground.Smooth, true, true, true, true),
+        ("style_sol_pixelart_mid_contours", View.Iso3D, ReliefLook.Ground.PixelArt, true, true, false, false),
+        ("style_iso_pixels_toon_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, true, true),
+        ("style_iso_lisse_mid_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, false, false),
+        ("style_poursuite_lisse_mid_contours", View.Chase3D, ReliefLook.Ground.Smooth, true, true, false, false),
+    };
+
+    private int _galleryIndex;
+
+    private void ShowGalleryStyle(int index)
+    {
+        (_, View view, ReliefLook.Ground ground, bool mid, bool outlines, bool pixels, bool toon) = Gallery[index];
+        _look.CurrentGround = ground;
+        _look.Mid = mid;
+        _look.Outlines = outlines;
+        _look.Pixels = pixels;
+        _look.Toon = toon;
+        SetView(view);
+    }
+
+    private void Finish()
+    {
+        GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Bonds} stomps={_sim.Stomps} deaths={_sim.Deaths} void_falls={_sim.VoidFalls}");
+        GetTree().Quit();
     }
 
     private float PlayerGround() => _arena.HighestUnder(_sim.PlayerPos.X, _sim.PlayerPos.Y, _config.PlayerRadius);

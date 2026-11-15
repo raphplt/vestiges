@@ -4,9 +4,10 @@ using Godot;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Rendu low poly du bac à sable de la verticalité (plan 60, lot 60.0b) : le relief de l'arène en facettes de couleur,
-/// les modèles exportés par <c>tools/export_lowpoly.py</c> et leurs poses, les décors semés. La simulation ne change pas :
-/// le sol qu'elle connaît reste plat par cellule, les facettes ne s'en écartent que de quelques centimètres.
+/// Rendu low poly du bac à sable de la verticalité (plan 60, lots 60.0b et 60.0d) : le relief de l'arène en couleurs,
+/// en facettes ou lisse, les modèles exportés par <c>tools/export_lowpoly.py</c> et leurs poses, les décors semés. La
+/// simulation ne change pas : le sol qu'elle connaît reste plat par cellule, les facettes ne s'en écartent que de
+/// quelques centimètres.
 /// </summary>
 public static class ReliefLowPoly
 {
@@ -42,10 +43,11 @@ public static class ReliefLowPoly
     private static StandardMaterial3D _glow;
 
     /// <summary>
-    /// Couleur par sommet, ombrage par faces (le .glb porte des normales de face). Les couleurs y sont écrites en sRGB
-    /// (plan 60 §8) : le matériau les prend telles quelles.
+    /// Couleur par sommet ; l'ombrage suit les normales du maillage (de face en low poly, lissées en mid poly). Les
+    /// couleurs du .glb sont écrites en sRGB (plan 60 §8) : le matériau les prend telles quelles. Partagé par le relief
+    /// et tous les modèles : l'ombrage toon se bascule ici, une fois.
     /// </summary>
-    private static StandardMaterial3D Plain => _plain ??= new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = 1f };
+    public static StandardMaterial3D Plain => _plain ??= new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = 1f };
 
     private static StandardMaterial3D Glow => _glow ??= new StandardMaterial3D
     {
@@ -53,7 +55,13 @@ public static class ReliefLowPoly
         ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
     };
 
-    /// <summary>Charge <c>res://assets/models/&lt;path&gt;.glb</c> et son manifeste ; les poses deviennent des maillages à poser.</summary>
+    /// <summary>Le modèle existe-t-il (le mid poly n'est pas versionné et se génère à la demande) ?</summary>
+    public static bool Exists(string path) => FileAccess.FileExists($"res://assets/models/{path}.json");
+
+    /// <summary>
+    /// Charge <c>res://assets/models/&lt;path&gt;.glb</c> et son manifeste ; les poses deviennent des maillages à poser.
+    /// Le .glb est lu à l'exécution, sans passer par l'import de Godot : le mid poly, non versionné, n'a pas de .import.
+    /// </summary>
     public static Model LoadModel(string path)
     {
         string root = $"res://assets/models/{path}";
@@ -62,7 +70,12 @@ public static class ReliefLowPoly
         Godot.Collections.Dictionary manifest = Json.ParseString(file.GetAsText()).AsGodotDictionary();
         model.Fps = (float)manifest["fps"].AsDouble();
 
-        Node scene = GD.Load<PackedScene>($"{root}.glb").Instantiate();
+        GltfDocument document = new();
+        GltfState state = new();
+        Error error = document.AppendFromFile(ProjectSettings.GlobalizePath($"{root}.glb"), state);
+        if (error != Error.Ok)
+            throw new System.IO.IOException($"{root}.glb : {error}");
+        Node scene = document.GenerateScene(state);
         Dictionary<string, Mesh> byName = new();
         foreach (Node child in scene.FindChildren("*", "MeshInstance3D", true, false))
         {
@@ -88,8 +101,12 @@ public static class ReliefLowPoly
         return model;
     }
 
-    /// <summary>Le relief en facettes : dessus des cellules, puis falaises vers chaque voisin plus bas ou vers le vide.</summary>
-    public static MeshInstance3D BuildTerrain(ReliefArena arena, ReliefConfig.LowPolyStyle style)
+    /// <summary>
+    /// Le relief : dessus des cellules, puis falaises vers chaque voisin plus bas ou vers le vide. En facettes, une
+    /// couleur par face et des coins bossués ; lisse, des cellules découpées en 3 × 3, à plat, dont la couleur ondule
+    /// doucement de sommet en sommet, et des falaises droites.
+    /// </summary>
+    public static MeshInstance3D BuildTerrain(ReliefArena arena, ReliefConfig.LowPolyStyle style, bool facets)
     {
         List<Vector3> vertices = new();
         List<Color> colors = new();
@@ -100,11 +117,14 @@ public static class ReliefLowPoly
                 float h = arena.CellHeight(x, y);
                 if (ReliefArena.IsVoid(h))
                     continue;
-                AddTop(vertices, colors, arena, style, x, y, h);
-                AddCliff(vertices, colors, arena, style, x, y, h, 1, 0);
-                AddCliff(vertices, colors, arena, style, x, y, h, 0, 1);
-                AddCliff(vertices, colors, arena, style, x, y, h, -1, 0);
-                AddCliff(vertices, colors, arena, style, x, y, h, 0, -1);
+                if (facets)
+                    AddTop(vertices, colors, arena, style, x, y, h);
+                else
+                    AddSmoothTop(vertices, colors, arena, style, x, y, h);
+                AddCliff(vertices, colors, arena, style, x, y, h, 1, 0, facets);
+                AddCliff(vertices, colors, arena, style, x, y, h, 0, 1, facets);
+                AddCliff(vertices, colors, arena, style, x, y, h, -1, 0, facets);
+                AddCliff(vertices, colors, arena, style, x, y, h, 0, -1, facets);
             }
         }
 
@@ -123,8 +143,8 @@ public static class ReliefLowPoly
         ArrayMesh mesh = new();
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         mesh.SurfaceSetMaterial(0, Plain);
-        GD.Print($"[ReliefLowPoly] Relief : {vertices.Count / 3} triangles");
-        return new MeshInstance3D { Name = "LowPolyTerrain", Mesh = mesh };
+        GD.Print($"[ReliefLowPoly] Relief {(facets ? "en facettes" : "lisse")} : {vertices.Count / 3} triangles");
+        return new MeshInstance3D { Name = facets ? "FacetTerrain" : "SmoothTerrain", Mesh = mesh };
     }
 
     private static Color TopColor(ReliefArena arena, ReliefConfig.LowPolyStyle style, float h)
@@ -180,12 +200,54 @@ public static class ReliefLowPoly
             Triangle(vertices, colors, a, c, d, Vary(baseColor, style.ShadeJitter, Hash(x, y, 4)));
     }
 
+    private const int SmoothSubdivisions = 3;
+
+    /// <summary>Bruit de valeur lissé, dans [0, 1], à l'échelle de <paramref name="scale"/> cellules.</summary>
+    private static float Noise(float x, float y, float scale, int salt)
+    {
+        float fx = x / scale, fy = y / scale;
+        int ix = Mathf.FloorToInt(fx), iy = Mathf.FloorToInt(fy);
+        float tx = fx - ix, ty = fy - iy;
+        tx = tx * tx * (3f - 2f * tx);
+        ty = ty * ty * (3f - 2f * ty);
+        float top = Mathf.Lerp(Hash(ix, iy, salt), Hash(ix + 1, iy, salt), tx);
+        float bottom = Mathf.Lerp(Hash(ix, iy + 1, salt), Hash(ix + 1, iy + 1, salt), tx);
+        return Mathf.Lerp(top, bottom, ty);
+    }
+
+    /// <summary>Couleur du sol lisse en un point : clair et sombre en larges plaques, avec des taches de terre sèche.</summary>
+    private static Color SmoothGround(Color baseColor, ReliefConfig.LowPolyStyle style, float x, float y)
+    {
+        float light = Noise(x, y, 1.6f, 11) * 0.65f + Noise(x, y, 0.55f, 12) * 0.35f;
+        Color color = baseColor * (1f - style.ShadeJitter * 1.6f + light * style.ShadeJitter * 3.2f);
+        float dry = Mathf.SmoothStep(0.62f, 0.82f, Noise(x, y, 3.3f, 13));
+        return color.Lerp(style.Steps, dry * 0.4f) with { A = 1f };
+    }
+
+    private static void AddSmoothTop(List<Vector3> vertices, List<Color> colors, ReliefArena arena, ReliefConfig.LowPolyStyle style, int x, int y, float h)
+    {
+        Color baseColor = TopColor(arena, style, h);
+        const float cell = 1f / SmoothSubdivisions;
+        for (int j = 0; j < SmoothSubdivisions; j++)
+        {
+            for (int i = 0; i < SmoothSubdivisions; i++)
+            {
+                float x0 = x + i * cell, y0 = y + j * cell, x1 = x0 + cell, y1 = y0 + cell;
+                Vector3 a = new(x0, h, y0), b = new(x1, h, y0), c = new(x1, h, y1), d = new(x0, h, y1);
+                Color ca = SmoothGround(baseColor, style, x0, y0), cb = SmoothGround(baseColor, style, x1, y0);
+                Color cc = SmoothGround(baseColor, style, x1, y1), cd = SmoothGround(baseColor, style, x0, y1);
+                Triangle(vertices, colors, a, b, c, ca, cb, cc);
+                Triangle(vertices, colors, a, c, d, ca, cc, cd);
+            }
+        }
+    }
+
     /// <summary>
     /// Falaise sur le côté (dx, dy) : une grille de facettes du dessus jusqu'au voisin plus bas, dont les sommets
     /// intérieurs ressortent un peu ; ses quatre arêtes restent droites, pour se raccorder aux falaises voisines.
     /// </summary>
     private static void AddCliff(List<Vector3> vertices, List<Color> colors, ReliefArena arena, ReliefConfig.LowPolyStyle style,
-        int x, int y, float h, int dx, int dy)
+        int x, int y, float h, int dx, int dy, bool facets)
     {
         float neighbour = arena.CellHeight(x + dx, y + dy);
         bool intoVoid = ReliefArena.IsVoid(neighbour);
@@ -207,7 +269,7 @@ public static class ReliefLowPoly
             Vector2 along = p0.Lerp(p1, i / (float)CliffColumns);
             float height = Mathf.Lerp(h, bottom, j / (float)rows);
             Vector3 p = new(along.X, height, along.Y);
-            if (i > 0 && i < CliffColumns && j > 0 && j < rows)
+            if (facets && i > 0 && i < CliffColumns && j > 0 && j < rows)
             {
                 int gx = Mathf.RoundToInt(along.X * CliffColumns);
                 int gy = Mathf.RoundToInt(along.Y * CliffColumns);
@@ -229,24 +291,28 @@ public static class ReliefLowPoly
                 Vector3 a = Point(i, j), b = Point(i + 1, j), c = Point(i + 1, j + 1), d = Point(i, j + 1);
                 int gx = Mathf.RoundToInt((a.X + c.X) * CliffColumns);
                 int gy = Mathf.RoundToInt((a.Z + c.Z) * CliffColumns);
-                Triangle(vertices, colors, a, b, c, Vary(rock, style.ShadeJitter, Hash(gx, gy, j * 2 + 5)));
-                Triangle(vertices, colors, a, c, d, Vary(rock, style.ShadeJitter, Hash(gx, gy, j * 2 + 6)));
+                float shade = facets ? style.ShadeJitter : style.ShadeJitter * 0.4f;
+                Triangle(vertices, colors, a, b, c, Vary(rock, shade, Hash(gx, gy, j * 2 + 5)));
+                Triangle(vertices, colors, a, c, d, Vary(rock, shade, Hash(gx, gy, j * 2 + 6)));
             }
         }
     }
 
-    private static void Triangle(List<Vector3> vertices, List<Color> colors, Vector3 a, Vector3 b, Vector3 c, Color color)
+    private static void Triangle(List<Vector3> vertices, List<Color> colors, Vector3 a, Vector3 b, Vector3 c, Color color) =>
+        Triangle(vertices, colors, a, b, c, color, color, color);
+
+    private static void Triangle(List<Vector3> vertices, List<Color> colors, Vector3 a, Vector3 b, Vector3 c, Color ca, Color cb, Color cc)
     {
         vertices.Add(a);
         vertices.Add(b);
         vertices.Add(c);
-        colors.Add(color);
-        colors.Add(color);
-        colors.Add(color);
+        colors.Add(ca);
+        colors.Add(cb);
+        colors.Add(cc);
     }
 
-    /// <summary>Un décor posé : son modèle, son pied (cellules), son orientation.</summary>
-    public readonly record struct Placement(Model Model, Vector2 At, float YawDegrees);
+    /// <summary>Un décor posé : son modèle et son chemin sous assets/models, son pied (cellules), son orientation.</summary>
+    public readonly record struct Placement(Model Model, string Path, Vector2 At, float YawDegrees);
 
     /// <summary>
     /// Décors semés par graine sur les cellules plates, à l'écart du chemin <paramref name="keepClear"/> et du départ, plus
@@ -260,7 +326,7 @@ public static class ReliefLowPoly
         foreach (ReliefConfig.LowPolyLandmark landmark in style.Landmarks)
         {
             Model model = LoadModel(landmark.Model);
-            placed.Add(new Placement(model, landmark.At, landmark.YawDegrees));
+            placed.Add(new Placement(model, landmark.Model, landmark.At, landmark.YawDegrees));
             AddFootprint(sim, model.Bounds, landmark.At, landmark.YawDegrees, cellsPerMetre);
         }
 
@@ -278,7 +344,7 @@ public static class ReliefLowPoly
                     if (!IsFlatInterior(arena, x, y) || at.DistanceTo(spawn) < 2.5f || DistanceToPath(at, keepClear) < 1.4f
                         || Crowded(placed, at, cellsPerMetre))
                         continue;
-                    placed.Add(new Placement(model, at, rng.RandfRange(0f, 360f)));
+                    placed.Add(new Placement(model, scatter.Model, at, rng.RandfRange(0f, 360f)));
                     sim.AddObstacle(at, scatter.Radius);
                 }
             }

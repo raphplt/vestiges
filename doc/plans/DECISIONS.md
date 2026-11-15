@@ -2836,3 +2836,13 @@ Raphaël : « Oui, lance 60.0b ». Détail au [plan 60 §9](60-vestiges-en-3d.md
 - **Les décors** sont semés par graine à l'écart du tour du bot, plus une maison posée à la main ; leurs emprises bloquent la simulation.
 - **En low poly, la vue « relief 2D » devient une isométrique orthographique éclairée**, premier essai de la caméra isométrique haute de 60.0c.
 
+## 233. Le low poly est trop « low » : essayer plusieurs styles, avec des contours noirs — 15 novembre 2026
+
+Raphaël, après 60.0b : « je suis pas fan du tout des low poly des sols, le reste c'est un peu moins pire », puis « je voudrais qu'il y ait des bordures noires sur les bords », et enfin : « tester plusieurs effets/styles. en vrai le low poly moi j'aime bien mais là c'est trop low ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **Les styles (60.0d) passent avant les caméras (60.0c)**, puisque c'est le style qui bloque.
+- **Chaque effet se bascule en jeu d'une touche, indépendamment des autres**, pour qu'il compare les combinaisons lui-même : F1 le sol (facettes, lisse, pixel art), F2 les corps (low poly, mid poly), F3 les contours noirs, F4 la pixelisation, F5 l'ombrage (normal ou toon).
+- **Le mid poly** : les mêmes volumes maillés deux fois plus fin, ombrage lissé. Ses modèles sont générés à la demande et ne sont pas versionnés (trop lourds pour un essai).
+- **Les contours** sont détectés à l'écran sur la profondeur : ils dessinent les silhouettes, les arêtes des falaises et des toits, sur tout ce qui est en 3D.
+
