@@ -1,0 +1,32 @@
+{
+	"model": "rampant",
+	"kind": "creature",
+	"fps": 8.0,
+	"max_triangles": 1644,
+	"animations": {
+		"idle": [
+			"idle_00",
+			"idle_01",
+			"idle_02",
+			"idle_03"
+		],
+		"walk": [
+			"walk_00",
+			"walk_01",
+			"walk_02",
+			"walk_03"
+		],
+		"attack": [
+			"attack_00",
+			"attack_01",
+			"attack_02",
+			"attack_03"
+		],
+		"death": [
+			"death_00",
+			"death_01",
+			"death_02",
+			"death_03"
+		]
+	}
+}

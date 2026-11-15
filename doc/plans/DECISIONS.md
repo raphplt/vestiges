@@ -2814,3 +2814,14 @@ Raphaël : « Oui, écris-le » (le plan 60). Détail au [plan 60](60-vestiges-e
 - **Les modèles naissent du pipeline de sprites**, qui modélise déjà personnages, créatures et décors en volumes 3D sur un squelette : une pièce low poly par forme, attachée à son os.
 - **60.0 se découpe en cinq sous-lots** : les corps en low poly, l'arène, les caméras, les styles, le moteur de rendu ; puis la séance de Raphaël, qui choisit la caméra, le style, le moteur et l'échelle.
 - **Arrêt** : si ni la caméra ni le style ne convainquent, ou si la horde ne tient pas 60 images par seconde, on le dit avant 60.1 ; le repli est le relief en 2D pure.
+
+## 231. Les corps en low poly : un maillage par pose — 15 novembre 2026
+
+Raphaël : « Oui, lance 60.0a ». Détail au [plan 60 §8](60-vestiges-en-3d.md).
+
+**Tranché par défaut par l'agent, réversible :**
+- **Un maillage par pose**, joué comme une planche de sprites (8 images par seconde), au lieu d'une pièce par forme attachée à son os : une forme du pipeline est une fonction de distance qu'on ne sait pas relire. Toutes les poses existantes servent telles quelles.
+- **Ombrage par faces, une couleur par face**, le ton de base de la rampe du matériau ; l'émissif à part.
+- **Couleurs de sommet écrites en sRGB** : Godot en GL Compatibility les relit ainsi. À revoir si Forward+ est choisi.
+- **Le pas de maillage** : 1,6 unité pour un personnage (le visage reste lisible), 2,0 pour une créature, un quarantième de la taille pour un décor. Les pièces plus fines laissent des éclats, acceptés pour l'essai.
+

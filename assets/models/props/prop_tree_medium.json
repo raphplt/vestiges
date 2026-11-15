@@ -1,0 +1,11 @@
+{
+	"model": "prop_tree_medium",
+	"kind": "prop",
+	"fps": 8.0,
+	"max_triangles": 6400,
+	"animations": {
+		"idle": [
+			"idle_00"
+		]
+	}
+}

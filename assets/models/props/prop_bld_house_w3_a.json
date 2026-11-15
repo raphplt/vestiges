@@ -1,0 +1,11 @@
+{
+	"model": "prop_bld_house_w3_a",
+	"kind": "prop",
+	"fps": 8.0,
+	"max_triangles": 10624,
+	"animations": {
+		"idle": [
+			"idle_00"
+		]
+	}
+}

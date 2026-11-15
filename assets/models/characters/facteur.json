@@ -1,0 +1,45 @@
+{
+	"model": "facteur",
+	"kind": "character",
+	"fps": 8.0,
+	"max_triangles": 3204,
+	"animations": {
+		"idle": [
+			"idle_00",
+			"idle_01",
+			"idle_02",
+			"idle_03",
+			"idle_04",
+			"idle_05"
+		],
+		"walk": [
+			"walk_00",
+			"walk_01",
+			"walk_02",
+			"walk_03",
+			"walk_04",
+			"walk_05",
+			"walk_06",
+			"walk_07"
+		],
+		"dash": [
+			"dash_00",
+			"dash_01",
+			"dash_02",
+			"dash_03"
+		],
+		"hurt": [
+			"hurt_00",
+			"hurt_01",
+			"hurt_02"
+		],
+		"death": [
+			"death_00",
+			"death_01",
+			"death_02",
+			"death_03",
+			"death_04",
+			"death_05"
+		]
+	}
+}

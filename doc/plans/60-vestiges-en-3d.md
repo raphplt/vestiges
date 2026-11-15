@@ -43,7 +43,7 @@ Ce qu'on en tire :
 - **La horde n'a pas de corps physiques.** Comme aujourd'hui et comme dans le bac à sable : grille de voisinage, `TickRoster`, collisions par la carte de hauteurs et les emprises des décors. Le joueur et le monde statique peuvent passer par Jolt, à mesurer.
 - **Les projectiles ignorent les étages**, et le contact ne touche qu'à hauteur égale (règles du bac à sable, plan 59 §8).
 - **Le style par défaut à essayer : low poly « crade »**, qui garde l'esprit de la DA (mystérieux, crade, indescriptible) : textures basse résolution, palette réduite, brouillard, tramage, ombrage par faces.
-- **Les modèles naissent du pipeline actuel.** Chaque forme d'un personnage devient une pièce low poly attachée à son os : une sphère devient un icosaèdre, une capsule un cylindre à six ou huit pans. On garde le squelette et les poses déjà écrits. Les volumes faits main d'un artiste peuvent s'y substituer plus tard, un par un.
+- **Les modèles naissent du pipeline actuel.** Le volume de chaque pose est maillé en low poly : un maillage par pose, comme une planche de sprites, joués à la cadence des sprites (§8, 60.0a). On garde le squelette et les poses déjà écrits. Les volumes faits main d'un artiste peuvent s'y substituer plus tard, un par un.
 - **Un décor qui cache le joueur s'ouvre.** Avec une caméra qui tourne, un mur ou un immeuble peut masquer le joueur ; il devient transparent ou se coupe. `PropOcclusion` a déjà l'index spatial pour ça.
 
 ## 4. Les lots
@@ -100,3 +100,33 @@ Ce que 60.0 doit trancher, à la fin :
 2. **le style** : crade, aplats ou mid poly ;
 3. **le moteur de rendu** : Compatibility ou Forward+ ;
 4. **l'échelle** : taille du joueur, d'une cellule, d'un étage.
+
+## 8. 60.0a livré — les corps en low poly
+
+**Ce qui est fait.**
+- `tools/sprites/lowpoly.py` : le volume SDF d'une pose est échantillonné sur une grille grossière puis maillé par « surface nets » (un sommet par cellule traversée, une face par arête traversée). Faces non lissées, une couleur par face : le ton de base (troisième) de la rampe du matériau qu'elle recouvre. Les matériaux émissifs (l'œil du rôdeur) vont dans une surface à part.
+- `tools/export_lowpoly.py` : sans argument, il exporte le jeu d'essai (facteur, rampant, rôdeur, arbre moyen, maison `prop_bld_house_w3_a`, rocher moussu) dans `assets/models/{characters,creatures,props}/`. Chaque modèle donne un `.glb` et un manifeste `.json` (animations, poses, cadence de 8 images par seconde, triangles). Unités : le mètre, Y vers le haut, l'avant vers +Z.
+- `tools/model_sheet.sh <dossier>` (scène `tools/tests/ModelSheet.tscn`) : importe chaque `.glb`, le montre de face, de trois quarts, de profil et de dos, puis chaque animation pose par pose, puis tous côte à côte à leur vraie taille.
+
+**Mesures.**
+
+| Modèle | Poses | Triangles au plus | Hauteur |
+|---|---|---|---|
+| facteur | 27 (idle, walk, dash, hurt, death) | 3 204 | 1,58 m |
+| rampant | 16 | 1 644 | 0,49 m |
+| rôdeur | 16 | 2 648 | 1,88 m |
+| arbre moyen | 1 | 6 400 | 5,06 m |
+| maison | 1 | 10 624 | 8,40 m |
+| rocher moussu | 1 | 440 | 0,92 m |
+
+Les échelles relatives sont celles des sprites : le facteur arrive à l'épaule du rôdeur, et la maison fait cinq hommes de haut. Tout s'importe dans Godot sans avertissement.
+
+**Écart au découpage.** Le §3 prévoyait une pièce low poly par forme, attachée à son os. Ce n'est pas faisable sans réécrire les modèles, car une forme du pipeline est une fonction de distance opaque : on ne peut pas lire qu'elle est une sphère de rayon 3 sur l'avant-bras. Le maillage par pose reprend donc les poses existantes telles quelles, sans rien redessiner. Le prix : il n'y a pas d'interpolation entre deux poses (8 images par seconde, comme les sprites), et la mémoire croît d'environ 30 Ko par pose. Si une animation fluide devient nécessaire, il faudra exposer la nature des primitives dans `sdf.py`, ce qui touche tout le pipeline.
+
+**Couleurs.** glTF veut des couleurs de sommet linéaires, mais Godot en GL Compatibility relit `COLOR_0` comme du sRGB, et le drapeau `vertex_color_is_srgb` du matériau n'y change rien (mesuré). Les couleurs sont donc écrites en sRGB : la veste du facteur, de base (78, 106, 140), rend (84, 115, 166) sous la lumière de la planche. Ce point est à revoir si 60.0e choisit Forward+.
+
+**Défauts connus.**
+- Une pièce plus fine que le pas de grille (les lettres du sac, les griffes, l'insigne de la casquette) se maille en éclats flottants. Le pas d'un personnage est de 1,6 unité, pour que le visage reste lisible ; à 2,4 unités, les yeux disparaissent.
+- La maison a 10 600 triangles, trop pour un décor répété. On décimera en 60.0b, ou on montera le pas des grands décors.
+- Les six modèles pèsent 18 Mo dans le dépôt, dont la moitié pour le facteur et ses 27 poses : chaque face garde ses propres sommets, en flottants. Avant d'exporter tout le bestiaire, il faudra quantifier (couleurs sur un octet, positions sur 16 bits) ou ne générer les modèles qu'au build.
+

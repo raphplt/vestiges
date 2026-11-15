@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**15 novembre — les corps en low poly ([plan 60 §8](60-vestiges-en-3d.md), §231) :** lot 60.0a. Le facteur, le rampant, le rôdeur, un arbre, une maison et un rocher sont tirés en low poly des volumes des sprites : un maillage par pose, une couleur par face. Ils s'importent dans Godot sans avertissement (`python3 tools/export_lowpoly.py`, planche par `tools/model_sheet.sh <dossier>`). Prochain sous-lot : 60.0b, l'arène low poly.
+
 **15 novembre — le plan 60, Vestiges en 3D ([plan 60](60-vestiges-en-3d.md), §230) :** neuf lots, de la caméra et du style (60.0) à la bascule (60.8). La moitié du code (sauvegardes, quêtes, Campement, audio, interface) ne bouge presque pas ; le joueur, les créatures, les effets et la sortie de la génération sont réécrits. Les personnages et créatures existent déjà en volumes 3D dans le pipeline de sprites, et deviennent les modèles low poly. Premier lot : 60.0, à jouer avant tout portage.
 
 **15 novembre — caméra et style ([plan 59 §10](59-verticalite.md), §229) :** la caméra tourne, la vue au pixel près tombe, et Raphaël est partant pour passer du pixel art au low/mid poly, à essayer d'abord. Le plan 60 commence par un bac à sable de caméra et de style, pour valider la caméra avant tout portage.

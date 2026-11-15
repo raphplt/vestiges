@@ -1,0 +1,11 @@
+{
+	"model": "prop_rock_mossy",
+	"kind": "prop",
+	"fps": 8.0,
+	"max_triangles": 440,
+	"animations": {
+		"idle": [
+			"idle_00"
+		]
+	}
+}
