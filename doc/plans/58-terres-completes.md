@@ -799,3 +799,32 @@ Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c 
 
 **Ce qui reste :**
 - L'école et la poste (T3c), puis l'arrêt de la ligne 7 et la mesure d'ensemble de la Haute-Ville (T3d).
+
+## 24. T3c, l'école et la poste — livré le 15 novembre
+
+**Ce qui est fait :**
+- **Deux bâtiments de la Haute-Ville** (`tools/sprites/props/buildings.py`) :
+  - **l'école communale** (`school`, `prop_school`, `290 × 222` px) : édifice républicain en pierre calcaire à soubassement de pierre, chaînages, entourages de baies et deux souches de cheminée en brique, avant-corps à fronton, double porte bleu-gris sous un cartouche gravé « ÉCOLE », cloche de bronze sous auvent de zinc, hautes fenêtres à petits bois dont une salle du rez-de-chaussée garde une lueur ambrée (21 h, là où l'instituteur fait patienter Lise) ;
+  - **le bureau de poste** (`post_office`, `prop_post_office`, `248 × 204` px) : façade ocre-gris à chaînages de pierre, enseigne horizontale « POSTES » bleue et jaune ocre, écusson PTT rond, porte et guichets à barreaux (lueur ambrée discrète côté standard téléphonique), volets persiennés gris-bleu à l'étage, et herse téléphonique à six isolateurs de porcelaine blanche et bouts de fils coupés sur le toit.
+- **Huit décors de cour d'école et de poste** (`tools/sprites/props/urban.py`) :
+  - le **préau d'école** (`prop_school_shed`, `68 × 77` px) : mur de pierre, banc d'écolier en bois, toit de zinc nervuré sur trois colonnes de fonte ;
+  - la **marelle à la craie** (`prop_hopscotch`, `52 × 16` px) : décalque plat posé à même les dalles (`"flat": true`), six rangées de cases jusqu'au demi-cercle et un palet rouge-ocre oublié ;
+  - les **cartables d'écolier** (`prop_school_bags`, `32 × 15` px) : cuir fauve à boucles de laiton et cartable couché d'où dépasse un cahier à marge rouge ;
+  - la **boîte aux lettres PTT sur pied** (`prop_post_box`, `20 × 32` px) : pied de fonte, coffre jaune à bande bleue, fente bourrée et enveloppes tombées tamponnées de rouge ;
+  - le **vélo du facteur** (`prop_mailman_bike`, `32 × 28` px) : béquillé, roues à rayons, sacoches gonflées et deux sacs postaux de jute au sol ;
+  - la **grille d'école** (`prop_school_fence`, `50 × 32` px) et le **portail entrouvert** (`prop_school_gate`, `58 × 42` px, `FENCE_YAW = 12°`) : muret de pierre, piliers à chapiteau, lisses et barreaux de fer forgé, fronton cintré et vantaux ouverts vers l'intérieur ;
+  - le **standard téléphonique de Mireille** (`prop_switchboard`, `42 × 46` px) : meuble en acajou, tableau noir à jacks de laiton et clapets blancs, six cordons rouges et cuivrés branchés, tabouret et casque.
+- **Deux pièces de la Haute-Ville et retrait du square** (`data/world/land_pieces.json`) :
+  - `ecole_communale` : bâtiment au nord, préau à l'ouest, marelle à plat et cartables dans la cour, Mémorial devant la façade, grille continue flanquant le portail central ouvert au sud, tilleuls, bancs et réverbères ;
+  - `bureau_de_poste` : bureau PTT au nord, boîte jaune et vélo du facteur sur le parvis, standard de Mireille, cabine téléphonique existante (`prop_phone_booth`, `28 × 50` px) réutilisée sans doublon, panneau de faire-part, Mémorial au sud, tilleuls, bancs et réverbères ;
+  - `le_square` (pièce de démonstration T3a) est retirée : les trois pièces définitives (`place_de_la_mairie`, `ecole_communale`, `bureau_de_poste`) sont posées à chaque run autour du parvis de Saint-Aubin.
+- **Outils et contrat des catalogues** : `"prop_school"` et `"prop_post_office"` ajoutés à `LandmarkStems` (`tools/tests/RunObservation.UrbanLandmarks.cs`), et `CheckLandPieces()` (`tools/tests/CatalogContractRegression.cs`) mis à jour pour exiger les trois pièces de la ville et le décalque plat de `ecole_communale`.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement, 0 erreur.
+- `tools/validate.sh` (`smoke`, `catalogs`, `lands`, `movement`) : 4/4 suites vertes après le recalage final de `land_pieces.json`.
+- **Captures** (`--land-order urban_ruins --capture-pieces`, graines `7` et `42`) : `RESULT pieces=4` sur les deux graines (`parvis_de_saint_aubin` et les trois pièces posées sans chevauchement, toitures/herse et grille sud entièrement dans le cadre).
+- **Planche** : [planches/plan58_t3c_ecole_poste.png](planches/plan58_t3c_ecole_poste.png).
+
+**Ce qui reste :**
+- L'arrêt de la ligne 7, les décors remarquables garantis et la mesure d'ensemble de la Haute-Ville (T3d).

@@ -11,7 +11,7 @@ namespace Vestiges.Tests;
 /// </summary>
 public partial class RunObservation
 {
-    private static readonly string[] LandmarkStems = { "prop_saint_aubin", "prop_town_hall", "prop_radio_mast" };
+    private static readonly string[] LandmarkStems = { "prop_saint_aubin", "prop_town_hall", "prop_school", "prop_post_office", "prop_radio_mast" };
 
     private async Task CaptureLandmarks()
     {

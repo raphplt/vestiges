@@ -1280,6 +1280,420 @@ def radio_mast(stem: str, seed: int) -> PropModel:
                      bounds=((-1.5 * M, 0.0, -1.5 * M), (2.4 * M, height, 1.8 * M)), smooth_slopes=True)
 
 
+def school(stem: str, seed: int) -> PropModel:
+    """
+    L'école communale de la Haute-Ville (plan 58 T3c) : édifice républicain à soubassement de pierre, chaînages et
+    entourages de baies en brique, avant-corps à fronton, double porte bleu-gris sous un cartouche « ÉCOLE », cloche
+    de bronze sous son auvent de zinc, toiture d'ardoise à deux cheminées. Une fenêtre du rez-de-chaussée garde une
+    lueur ambrée (21 h, là où l'instituteur fait patienter Lise).
+    """
+    (STONE, TRIM, BRICK, GLASS, WARM_GLASS, ROOF, SLATE, DOOR, MOSS, RUBBLE,
+     INTERIOR, BRONZE, ZINC, IRON, JOINT, GRIME) = range(16)
+    materials = [
+        make_material("stone", "#B8AE9A"),
+        make_material("trim", "#CDC5B0"),
+        make_material("brick", "#8E4E3E"),
+        make_material("glass", "#343E4C", contrast=0.6),
+        make_material("warm_glass", "#B88844", contrast=0.35),
+        make_material("roof", "#48454F"),
+        make_material("slate", "#3A3842", contrast=0.7),
+        make_material("door", "#3D5258", contrast=0.6),
+        make_material("moss", "#5A7A38"),
+        make_material("rubble", "#8A847A"),
+        make_material("interior", "#1E1B1E", contrast=0.4),
+        make_material("bronze", "#8E723C"),
+        make_material("zinc", "#6B757B", contrast=0.7),
+        make_material("iron", "#2E3438", contrast=0.5),
+        make_material("joint", "#8A806E", contrast=0.6),
+        make_material("grime", _shade("#B8AE9A", 0.72), contrast=0.9),
+    ]
+    w = Weathering(seed)
+    half_w = 7.6 * M
+    depth = 3.4 * M
+    wall_h = 6.8 * M
+    roof_h = 2.5 * M
+    proj_w = 2.0 * M
+    proj_z = depth + 0.35 * M
+    ped_y0 = wall_h + 0.12 * M
+    ped_h = 1.65 * M
+    ped_hw = 2.2 * M
+    bays = [-5.6 * M, -3.1 * M, 0.0, 3.1 * M, 5.6 * M]
+
+    rubble = [(np.array([w.uniform(-0.85, 0.85) * half_w, 0.15 * M, depth + w.uniform(0.35, 1.05) * M]),
+               np.array([w.uniform(0.20, 0.42), w.uniform(0.14, 0.25), w.uniform(0.20, 0.38)]) * M, w.uniform(0, np.pi))
+              for _ in range(4)]
+    ivy = _ivy(w, -half_w + 1.2 * M, depth, 3.6 * M) + _ivy(w, half_w - 1.3 * M, depth, 3.1 * M)
+
+    def main_block(p: np.ndarray) -> np.ndarray:
+        wing = _box(p, (0.0, wall_h / 2, 0.0), (half_w, wall_h / 2, depth))
+        risalit = _box(p, (0.0, wall_h * 0.51, (depth + proj_z) * 0.5 - 0.1 * M),
+                       (proj_w, wall_h * 0.51, (proj_z - depth) * 0.5 + 0.15 * M))
+        return np.minimum(wing, risalit)
+
+    def openings(p: np.ndarray) -> np.ndarray:
+        portal = _box(p, (0.0, 1.18 * M, proj_z), (0.72 * M, 1.18 * M, 0.32 * M))
+        gf = _union(*(_box(p, (x, 1.92 * M, depth), (0.62 * M, 1.02 * M, 0.30 * M)) for x in bays if x != 0.0))
+        uf = _union(*(
+            _box(p, (x, 4.92 * M, proj_z if x == 0.0 else depth), (0.58 * M if x == 0.0 else 0.54 * M, 0.86 * M, 0.30 * M))
+            for x in bays))
+        return _union(portal, gf, uf)
+
+    def pediment_body(p: np.ndarray) -> np.ndarray:
+        local_y = p[:, 1] - ped_y0
+        slope = np.abs(p[:, 0]) * ped_h / ped_hw + local_y - ped_h
+        return np.maximum(np.maximum(slope / np.sqrt(1.0 + (ped_h / ped_hw) ** 2), -local_y),
+                          np.abs(p[:, 2] - (proj_z - 0.52 * M)) - 0.62 * M)
+
+    def pediment_trim(p: np.ndarray) -> np.ndarray:
+        base_bar = _box(p, (0.0, ped_y0, proj_z + 0.06 * M), (ped_hw + 0.2 * M, 0.11 * M, 0.14 * M))
+        angle = float(np.arctan2(ped_h, ped_hw))
+        ramp_len = float(np.hypot(ped_hw + 0.22 * M, ped_h)) * 0.5
+        mid_y = ped_y0 + ped_h * 0.5 + 0.05 * M
+        left_r = rounded_box(p, (-ped_hw * 0.5, mid_y, proj_z + 0.08 * M), (ramp_len, 0.10 * M, 0.14 * M), 0.01 * M,
+                             rotation_z(angle))
+        right_r = rounded_box(p, (ped_hw * 0.5, mid_y, proj_z + 0.08 * M), (ramp_len, 0.10 * M, 0.14 * M), 0.01 * M,
+                              rotation_z(-angle))
+        return _union(base_bar, left_r, right_r)
+
+    def walls(p: np.ndarray) -> np.ndarray:
+        return np.maximum(_union(main_block(p), pediment_body(p)), -openings(p))
+
+    def inside(p: np.ndarray) -> np.ndarray:
+        return _box(p, (0.0, wall_h * 0.48, 0.0), (half_w - 0.26 * M, wall_h * 0.48, depth - 0.26 * M))
+
+    def glass_cold(p: np.ndarray) -> np.ndarray:
+        gf = _union(*(_box(p, (x, 1.92 * M, depth - 0.14 * M), (0.59 * M, 0.99 * M, 0.04 * M))
+                      for x in bays if x not in (0.0, 3.1 * M)))
+        uf = _union(*(_box(p, (x, 4.92 * M, (proj_z if x == 0.0 else depth) - 0.14 * M),
+                           (0.55 * M if x == 0.0 else 0.51 * M, 0.83 * M, 0.04 * M)) for x in bays))
+        return np.minimum(gf, uf)
+
+    def glass_warm(p: np.ndarray) -> np.ndarray:
+        # Fenêtre éclairée d'une lueur ambrée : la salle où l'instituteur garde Lise.
+        return _box(p, (3.1 * M, 1.92 * M, depth - 0.14 * M), (0.59 * M, 0.99 * M, 0.04 * M))
+
+    def door(p: np.ndarray) -> np.ndarray:
+        return _box(p, (0.0, 1.18 * M, proj_z - 0.12 * M), (0.69 * M, 1.15 * M, 0.07 * M))
+
+    def brick_work(p: np.ndarray) -> np.ndarray:
+        quoins = _union(*(_box(p, (sx * (half_w + 0.02 * M), 0.78 * M + k * 0.90 * M, sz * (depth + 0.02 * M)),
+                               (0.24 * M, 0.30 * M, 0.20 * M))
+                          for sx in (-1, 1) for sz in (-1, 1) for k in range(7)))
+        ris_quoins = _union(*(_box(p, (sx * (proj_w + 0.02 * M), 0.78 * M + k * 0.90 * M, proj_z),
+                                   (0.18 * M, 0.28 * M, 0.12 * M))
+                              for sx in (-1, 1) for k in range(7)))
+        gf_surrounds = _union(*(_box(p, (x, 1.92 * M, depth + 0.03 * M), (0.76 * M, 1.16 * M, 0.07 * M))
+                                for x in bays if x != 0.0))
+        uf_surrounds = _union(*(_box(p, (x, 4.92 * M, (proj_z if x == 0.0 else depth) + 0.03 * M),
+                                     (0.71 * M if x == 0.0 else 0.67 * M, 1.00 * M, 0.07 * M)) for x in bays))
+        door_surround = _box(p, (0.0, 1.24 * M, proj_z + 0.03 * M), (0.88 * M, 1.28 * M, 0.07 * M))
+        chimneys = _union(
+            _box(p, (-5.2 * M, wall_h + roof_h + 0.35 * M, -0.35 * M), (0.44 * M, 0.85 * M, 0.44 * M)),
+            _box(p, (5.2 * M, wall_h + roof_h + 0.35 * M, -0.35 * M), (0.44 * M, 0.85 * M, 0.44 * M)),
+        )
+        framed = np.maximum(_union(quoins, ris_quoins, gf_surrounds, uf_surrounds, door_surround), -openings(p))
+        return np.minimum(framed, chimneys)
+
+    def trim(p: np.ndarray) -> np.ndarray:
+        plinth = _box(p, (0.0, 0.34 * M, 0.0), (half_w + 0.08 * M, 0.34 * M, depth + 0.08 * M))
+        belt = _box(p, (0.0, 3.55 * M, 0.0), (half_w + 0.10 * M, 0.11 * M, depth + 0.10 * M))
+        eaves = _box(p, (0.0, wall_h + 0.06 * M, 0.0), (half_w + 0.18 * M, 0.11 * M, depth + 0.16 * M))
+        plaque = _box(p, (0.0, 3.00 * M, proj_z + 0.06 * M), (0.96 * M, 0.27 * M, 0.07 * M))
+        chim_caps = _union(
+            _box(p, (-5.2 * M, wall_h + roof_h + 1.24 * M, -0.35 * M), (0.52 * M, 0.08 * M, 0.52 * M)),
+            _box(p, (5.2 * M, wall_h + roof_h + 1.24 * M, -0.35 * M), (0.52 * M, 0.08 * M, 0.52 * M)),
+        )
+        return _union(plinth, belt, eaves, plaque, chim_caps, pediment_trim(p))
+
+    def steps(p: np.ndarray) -> np.ndarray:
+        return _union(*(_box(p, (0.0, (k + 0.5) * 0.18 * M, proj_z + (2 - k) * 0.40 * M - 0.14 * M),
+                             (1.25 * M - k * 0.12 * M, (k + 0.5) * 0.18 * M, (2 - k) * 0.40 * M)) for k in range(2)))
+
+    def roof(p: np.ndarray) -> np.ndarray:
+        local = p - np.array([0.0, wall_h + 0.12 * M, 0.0])
+        sx = (np.abs(local[:, 0]) - (half_w - roof_h * 1.15)) * roof_h / (roof_h * 1.32) + local[:, 1] - roof_h
+        sz = np.abs(local[:, 2]) * roof_h / (depth + 0.25 * M) + local[:, 1] - roof_h
+        hip = np.maximum(np.maximum(sx, sz), -local[:, 1])
+        return np.maximum(hip, np.maximum(np.abs(local[:, 0]) - (half_w + 0.20 * M), np.abs(local[:, 2]) - (depth + 0.22 * M)))
+
+    def bell_part(p: np.ndarray) -> np.ndarray:
+        return _union(
+            ellipsoid(p, (1.45 * M, 3.04 * M, proj_z + 0.22 * M), (0.18 * M, 0.22 * M, 0.18 * M)),
+            cylinder(p, (1.45 * M, 2.86 * M, proj_z + 0.22 * M), 0.22 * M, 0.05 * M, 0.02 * M),
+        )
+
+    def bell_hood(p: np.ndarray) -> np.ndarray:
+        # Petit auvent de zinc incliné protégeant la cloche de l'école.
+        return _union(
+            rounded_box(p, (1.45 * M, 3.36 * M, proj_z + 0.22 * M), (0.32 * M, 0.05 * M, 0.26 * M), 0.01 * M,
+                        rotation_x(0.28)),
+            _box(p, (1.45 * M, 3.22 * M, proj_z + 0.09 * M), (0.06 * M, 0.16 * M, 0.08 * M)),
+        )
+
+    def iron_details(p: np.ndarray) -> np.ndarray:
+        # Petits bois des hautes fenêtres de classe + séparation des deux vantaux de la porte + « ÉCOLE ».
+        gf_v = _union(*(_box(p, (x, 1.92 * M, depth - 0.10 * M), (0.03 * M, 0.98 * M, 0.03 * M)) for x in bays if x != 0.0))
+        gf_h = _union(*(_box(p, (x, 1.92 * M + dy, depth - 0.10 * M), (0.58 * M, 0.03 * M, 0.03 * M))
+                        for x in bays if x != 0.0 for dy in (-0.34 * M, 0.34 * M)))
+        uf_v = _union(*(_box(p, (x, 4.92 * M, (proj_z if x == 0.0 else depth) - 0.10 * M), (0.03 * M, 0.82 * M, 0.03 * M))
+                        for x in bays))
+        uf_h = _union(*(_box(p, (x, 4.92 * M, (proj_z if x == 0.0 else depth) - 0.10 * M),
+                             (0.54 * M if x == 0.0 else 0.50 * M, 0.03 * M, 0.03 * M)) for x in bays))
+        door_seam = _box(p, (0.0, 1.18 * M, proj_z - 0.05 * M), (0.035 * M, 1.12 * M, 0.04 * M))
+        glyphs = _union(*(_box(p, (-0.64 * M + i * 0.32 * M, 3.00 * M, proj_z + 0.13 * M), (0.09 * M, 0.13 * M, 0.03 * M))
+                          for i in range(5)))
+        return _union(gf_v, gf_h, uf_v, uf_h, door_seam, glyphs)
+
+    leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.032 * M, 0.18 * M)
+
+    def moss(p: np.ndarray) -> np.ndarray:
+        d = np.abs(p[:, 2] - (depth + 0.04 * M)) - 0.35 * M
+        near = d < 0.2 * M
+        if near.any():
+            d[near] = leaves(p[near])
+        return d
+
+    def rubble_part(p: np.ndarray) -> np.ndarray:
+        return _union(*(rounded_box(p, c, h, 0.04 * M, rotation_y(a)) for c, h, a in rubble))
+
+    ashlar = bricks(0.45 * M, 0.9 * M, 0.035 * M)
+    damp = lambda p: p[:, 1] - (0.85 * M + value_noise(p, 0.65 * M, seed + 2) * 0.90 * M)
+    slates = bricks(0.24 * M, 0.4 * M, 0.035 * M, frame=lambda q: np.stack([q[:, 0], q[:, 1], np.zeros(len(q))], axis=1))
+
+    def parts() -> list[Part]:
+        return [
+            Part(inside, INTERIOR),
+            Part(walls, STONE),
+            Part(painted(walls, ashlar, 0.012 * M), JOINT),
+            Part(painted(walls, damp, 0.015 * M), GRIME, relief=False),
+            Part(glass_cold, GLASS),
+            Part(glass_warm, WARM_GLASS),
+            Part(door, DOOR),
+            Part(brick_work, BRICK),
+            Part(trim, TRIM),
+            Part(steps, TRIM),
+            Part(roof, ROOF),
+            Part(painted(roof, slates, 0.012 * M), SLATE),
+            Part(bell_part, BRONZE),
+            Part(bell_hood, ZINC),
+            Part(iron_details, IRON),
+            Part(moss, MOSS),
+            Part(rubble_part, RUBBLE),
+        ]
+
+    extent_x = half_w + 1.2 * M
+    extent_z = depth + 2.0 * M
+    top = wall_h + roof_h + 2.0 * M
+    above = top * 0.62 * 0.87 + extent_z * 0.62 * 0.5 + 24
+    return PropModel(stem, parts, materials, BUILDING_YAW, ray_range=float(2.5 * max(extent_x, extent_z, top)),
+                     canvas=(int(extent_x * 2 * 0.62 * 1.05) + 24, int(above / 0.72) + 8),
+                     footprint=box_footprint(half_w, depth),
+                     bounds=((-extent_x, 0.0, -extent_z), (extent_x, top, extent_z)),
+                     supersample=3, smooth_slopes=True)
+
+
+def post_office(stem: str, seed: int) -> PropModel:
+    """
+    Le bureau de poste (PTT) de la Haute-Ville (plan 58 T3c) : façade enduite ocre-gris à chaînages de pierre, enseigne
+    horizontale « POSTES » bleue et jaune ocre, écusson PTT rond, porte vitrée et guichets à barreaux dont celui du
+    standard téléphonique filtre une faible lueur ambrée, volets gris-bleu à l'étage, et herse téléphonique à six
+    isolateurs de porcelaine sur le toit.
+    """
+    (STONE, TRIM, GLASS, WARM_GLASS, ROOF, SLATE, DOOR, SHUTTER,
+     PTT_BLUE, PTT_YELLOW, IRON, PORCELAIN, MOSS, RUBBLE, INTERIOR, JOINT, GRIME) = range(17)
+    materials = [
+        make_material("stone", "#ADA490"),
+        make_material("trim", "#C6BDA8"),
+        make_material("glass", "#323C48", contrast=0.6),
+        make_material("warm_glass", "#9E7840", contrast=0.35),
+        make_material("roof", "#48454F"),
+        make_material("slate", "#3A3842", contrast=0.7),
+        make_material("door", "#3A4452", contrast=0.6),
+        make_material("shutter", "#586874", contrast=0.75),
+        make_material("ptt_blue", "#344C6E", contrast=0.65),
+        make_material("ptt_yellow", "#C8A442", contrast=0.55),
+        make_material("iron", "#2C3034", contrast=0.55),
+        make_material("porcelain", "#DCD8CE", contrast=0.45),
+        make_material("moss", "#5A7A38"),
+        make_material("rubble", "#8A847A"),
+        make_material("interior", "#1E1B1E", contrast=0.4),
+        make_material("joint", "#8E8674", contrast=0.6),
+        make_material("grime", _shade("#ADA490", 0.72), contrast=0.9),
+    ]
+    w = Weathering(seed)
+    half_w = 6.4 * M
+    depth = 3.3 * M
+    wall_h = 6.4 * M
+    roof_h = 2.3 * M
+    bays = [-4.2 * M, -1.5 * M, 1.5 * M, 4.2 * M]
+    rack_x = -3.6 * M
+    rack_z = 0.0
+
+    rubble = [(np.array([w.uniform(-0.85, 0.85) * half_w, 0.15 * M, depth + w.uniform(0.32, 0.95) * M]),
+               np.array([w.uniform(0.20, 0.38), w.uniform(0.14, 0.24), w.uniform(0.20, 0.35)]) * M, w.uniform(0, np.pi))
+              for _ in range(3)]
+    ivy = _ivy(w, half_w - 1.1 * M, depth, 3.4 * M)
+
+    def openings(p: np.ndarray) -> np.ndarray:
+        portal = _box(p, (-1.5 * M, 1.18 * M, depth), (0.66 * M, 1.18 * M, 0.30 * M))
+        gf = _union(*(_box(p, (x, 1.78 * M, depth), (0.56 * M, 0.78 * M, 0.28 * M)) for x in bays if x != -1.5 * M))
+        uf = _union(*(_box(p, (x, 4.92 * M, depth), (0.50 * M, 0.76 * M, 0.28 * M)) for x in bays))
+        return _union(portal, gf, uf)
+
+    def walls(p: np.ndarray) -> np.ndarray:
+        return np.maximum(_box(p, (0.0, wall_h / 2, 0.0), (half_w, wall_h / 2, depth)), -openings(p))
+
+    def inside(p: np.ndarray) -> np.ndarray:
+        return _box(p, (0.0, wall_h * 0.48, 0.0), (half_w - 0.25 * M, wall_h * 0.48, depth - 0.25 * M))
+
+    def glass_cold(p: np.ndarray) -> np.ndarray:
+        gf = _union(*(_box(p, (x, 1.78 * M, depth - 0.14 * M), (0.53 * M, 0.75 * M, 0.04 * M))
+                      for x in (-4.2 * M, 4.2 * M)))
+        uf = _union(*(_box(p, (x, 4.92 * M, depth - 0.14 * M), (0.47 * M, 0.73 * M, 0.04 * M)) for x in bays))
+        return np.minimum(gf, uf)
+
+    def glass_warm(p: np.ndarray) -> np.ndarray:
+        # Faible lueur ambrée côté standard téléphonique (x = 1.5 M).
+        return _box(p, (1.5 * M, 1.78 * M, depth - 0.14 * M), (0.53 * M, 0.75 * M, 0.04 * M))
+
+    def door(p: np.ndarray) -> np.ndarray:
+        return _box(p, (-1.5 * M, 1.18 * M, depth - 0.12 * M), (0.63 * M, 1.15 * M, 0.07 * M))
+
+    def shutters(p: np.ndarray) -> np.ndarray:
+        leaves = _union(*(
+            _box(p, (x + side * 0.72 * M, 4.92 * M, depth + 0.06 * M), (0.21 * M, 0.75 * M, 0.05 * M))
+            for x in bays for side in (-1, 1)
+        ))
+        # Volets persiennés gris-bleu, ébréchés en pied par l'humidité plutôt qu'effacés.
+        slats = np.abs(np.mod(p[:, 1] - 4.18 * M, 0.18 * M) - 0.09 * M) - 0.065 * M
+        return np.minimum(leaves, np.maximum(leaves - 0.02 * M, slats))
+
+    def trim(p: np.ndarray) -> np.ndarray:
+        plinth = _box(p, (0.0, 0.34 * M, 0.0), (half_w + 0.08 * M, 0.34 * M, depth + 0.08 * M))
+        belt = _box(p, (0.0, 3.22 * M, 0.0), (half_w + 0.09 * M, 0.10 * M, depth + 0.09 * M))
+        eaves = _box(p, (0.0, wall_h + 0.05 * M, 0.0), (half_w + 0.16 * M, 0.10 * M, depth + 0.14 * M))
+        quoins = _union(*(_box(p, (sx * (half_w + 0.02 * M), 0.75 * M + k * 0.90 * M, sz * (depth + 0.02 * M)),
+                               (0.22 * M, 0.30 * M, 0.18 * M))
+                          for sx in (-1, 1) for sz in (-1, 1) for k in range(6)))
+        sills = _union(
+            *(_box(p, (x, 0.94 * M, depth + 0.06 * M), (0.64 * M, 0.07 * M, 0.09 * M)) for x in bays if x != -1.5 * M),
+            *(_box(p, (x, 4.10 * M, depth + 0.06 * M), (0.58 * M, 0.07 * M, 0.09 * M)) for x in bays),
+        )
+        door_frame = _box(p, (-1.5 * M, 1.24 * M, depth + 0.03 * M), (0.80 * M, 1.26 * M, 0.06 * M))
+        return np.maximum(_union(plinth, belt, eaves, quoins, sills, door_frame), -openings(p))
+
+    def steps(p: np.ndarray) -> np.ndarray:
+        return _union(*(_box(p, (-1.5 * M, (k + 0.5) * 0.18 * M, depth + (2 - k) * 0.38 * M - 0.12 * M),
+                             (1.05 * M - k * 0.10 * M, (k + 0.5) * 0.18 * M, (2 - k) * 0.38 * M)) for k in range(2)))
+
+    def roof(p: np.ndarray) -> np.ndarray:
+        local = p - np.array([0.0, wall_h + 0.10 * M, 0.0])
+        sx = (np.abs(local[:, 0]) - (half_w - roof_h * 1.15)) * roof_h / (roof_h * 1.32) + local[:, 1] - roof_h
+        sz = np.abs(local[:, 2]) * roof_h / (depth + 0.25 * M) + local[:, 1] - roof_h
+        hip = np.maximum(np.maximum(sx, sz), -local[:, 1])
+        hip = np.maximum(hip, np.maximum(np.abs(local[:, 0]) - (half_w + 0.18 * M), np.abs(local[:, 2]) - (depth + 0.20 * M)))
+        chimneys = _union(
+            _box(p, (1.4 * M, wall_h + roof_h + 0.35 * M, -0.35 * M), (0.40 * M, 0.80 * M, 0.40 * M)),
+            _box(p, (4.8 * M, wall_h + roof_h + 0.25 * M, -0.35 * M), (0.40 * M, 0.72 * M, 0.40 * M)),
+        )
+        return np.minimum(hip, chimneys)
+
+    def sign_blue(p: np.ndarray) -> np.ndarray:
+        board = _box(p, (0.0, 3.60 * M, depth + 0.10 * M), (3.35 * M, 0.25 * M, 0.06 * M))
+        crest = cylinder(p, (-2.65 * M, 2.28 * M, depth + 0.10 * M), 0.36 * M, 0.06 * M, 0.02 * M, rotation_x(np.pi / 2))
+        return np.minimum(board, crest)
+
+    def sign_yellow(p: np.ndarray) -> np.ndarray:
+        # Bordure et lettrage « POSTES » (6 glyphes) + anneau jaune de l'écusson PTT.
+        top_b = _box(p, (0.0, 3.82 * M, depth + 0.14 * M), (3.35 * M, 0.035 * M, 0.04 * M))
+        bot_b = _box(p, (0.0, 3.38 * M, depth + 0.14 * M), (3.35 * M, 0.035 * M, 0.04 * M))
+        glyphs = _union(*(_box(p, (-1.85 * M + i * 0.74 * M, 3.60 * M, depth + 0.15 * M), (0.20 * M, 0.14 * M, 0.04 * M))
+                          for i in range(6)))
+        crest_in = cylinder(p, (-2.65 * M, 2.28 * M, depth + 0.14 * M), 0.22 * M, 0.05 * M, 0.01 * M, rotation_x(np.pi / 2))
+        return _union(top_b, bot_b, glyphs, crest_in)
+
+    def iron_work(p: np.ndarray) -> np.ndarray:
+        # Barreaux des guichets et de la porte vitrée.
+        bars_gf = _union(*(
+            _box(p, (x + dx, 1.78 * M, depth - 0.04 * M), (0.035 * M, 0.75 * M, 0.035 * M))
+            for x in (-4.2 * M, 1.5 * M, 4.2 * M) for dx in (-0.30 * M, 0.0, 0.30 * M)
+        ))
+        bars_door = _union(*(
+            _box(p, (-1.5 * M + dx, 1.48 * M, depth - 0.02 * M), (0.035 * M, 0.65 * M, 0.035 * M))
+            for dx in (-0.25 * M, 0.0, 0.25 * M)
+        ))
+        # Herse téléphonique sur le toit : mât en fer, deux traverses horizontales et bouts de fils pendants.
+        y_bot = wall_h + 1.2 * M
+        y_bar1 = wall_h + roof_h + 1.15 * M
+        y_bar2 = wall_h + roof_h + 1.95 * M
+        y_top = wall_h + roof_h + 2.2 * M
+        mast = capsule(p, (rack_x, y_bot, rack_z), (rack_x, y_top, rack_z), 0.065 * M)
+        bar1 = _box(p, (rack_x, y_bar1, rack_z), (1.15 * M, 0.045 * M, 0.045 * M))
+        bar2 = _box(p, (rack_x, y_bar2, rack_z), (1.15 * M, 0.045 * M, 0.045 * M))
+        wires = _union(
+            capsule(p, (rack_x - 0.90 * M, y_bar2 + 0.12 * M, rack_z), (rack_x - 1.28 * M, y_bar2 - 0.55 * M, rack_z + 0.22 * M), 0.03 * M),
+            capsule(p, (rack_x + 0.90 * M, y_bar2 + 0.12 * M, rack_z), (rack_x + 1.24 * M, y_bar2 - 0.75 * M, rack_z + 0.18 * M), 0.03 * M),
+            capsule(p, (rack_x + 0.90 * M, y_bar1 + 0.12 * M, rack_z), (rack_x + 1.10 * M, y_bar1 - 0.62 * M, rack_z + 0.20 * M), 0.03 * M),
+        )
+        return _union(bars_gf, bars_door, mast, bar1, bar2, wires)
+
+    def porcelain(p: np.ndarray) -> np.ndarray:
+        y_bar1 = wall_h + roof_h + 1.29 * M
+        y_bar2 = wall_h + roof_h + 2.09 * M
+        return _union(*(
+            cylinder(p, (rack_x + dx, y_bar, rack_z), 0.09 * M, 0.11 * M, 0.02 * M)
+            for y_bar in (y_bar1, y_bar2) for dx in (-0.90 * M, 0.0, 0.90 * M)
+        ))
+
+    leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.032 * M, 0.18 * M)
+
+    def moss(p: np.ndarray) -> np.ndarray:
+        d = np.abs(p[:, 2] - (depth + 0.04 * M)) - 0.35 * M
+        near = d < 0.2 * M
+        if near.any():
+            d[near] = leaves(p[near])
+        return d
+
+    def rubble_part(p: np.ndarray) -> np.ndarray:
+        return _union(*(rounded_box(p, c, h, 0.04 * M, rotation_y(a)) for c, h, a in rubble))
+
+    ashlar = bricks(0.42 * M, 0.85 * M, 0.032 * M)
+    damp = lambda p: p[:, 1] - (0.8 * M + value_noise(p, 0.65 * M, seed + 3) * 0.85 * M)
+    slates = bricks(0.24 * M, 0.4 * M, 0.035 * M, frame=lambda q: np.stack([q[:, 0], q[:, 1], np.zeros(len(q))], axis=1))
+
+    def parts() -> list[Part]:
+        return [
+            Part(inside, INTERIOR),
+            Part(walls, STONE),
+            Part(painted(walls, ashlar, 0.010 * M), JOINT),
+            Part(painted(walls, damp, 0.014 * M), GRIME, relief=False),
+            Part(glass_cold, GLASS),
+            Part(glass_warm, WARM_GLASS),
+            Part(door, DOOR),
+            Part(shutters, SHUTTER),
+            Part(trim, TRIM),
+            Part(steps, TRIM),
+            Part(roof, ROOF),
+            Part(painted(roof, slates, 0.012 * M), SLATE),
+            Part(sign_blue, PTT_BLUE),
+            Part(sign_yellow, PTT_YELLOW),
+            Part(iron_work, IRON),
+            Part(porcelain, PORCELAIN),
+            Part(moss, MOSS),
+            Part(rubble_part, RUBBLE),
+        ]
+
+    extent_x = half_w + 1.2 * M
+    extent_z = depth + 1.8 * M
+    top = wall_h + roof_h + 2.6 * M
+    above = top * 0.62 * 0.87 + extent_z * 0.62 * 0.5 + 24
+    return PropModel(stem, parts, materials, BUILDING_YAW, ray_range=float(2.5 * max(extent_x, extent_z, top)),
+                     canvas=(int(extent_x * 2 * 0.62 * 1.05) + 24, int(above / 0.72) + 8),
+                     footprint=box_footprint(half_w, depth),
+                     bounds=((-extent_x, 0.0, -extent_z), (extent_x, top, extent_z)),
+                     supersample=3, smooth_slopes=True)
+
+
 def catalog() -> list[PropModel]:
     """Nom : prop_bld_<style>[_damaged]_w<largeur en cellules>_<a|b> (b = lacet opposé, pour varier les rues)."""
     specs = []
@@ -1306,4 +1720,7 @@ def catalog() -> list[PropModel]:
                                                  saint_aubin("prop_saint_aubin_ruined", 562, True),
                                                  # La mairie de la Haute-Ville (plan 58 T3b2), hors des rangées.
                                                  town_hall("prop_town_hall", 571, True),
-                                                 town_hall("prop_town_hall_bare", 572, False)]
+                                                 town_hall("prop_town_hall_bare", 572, False),
+                                                 # L'école communale et le bureau de poste (plan 58 T3c).
+                                                 school("prop_school", 581),
+                                                 post_office("prop_post_office", 591)]

@@ -26,6 +26,10 @@ def _union(*distances: np.ndarray) -> np.ndarray:
     return result
 
 
+def _box(p: np.ndarray, center, half) -> np.ndarray:
+    return rounded_box(p, center, half, 0.0)
+
+
 def _spots(points, radius_low: float, radius_high: float, w: Weathering):
     radii = [w.uniform(radius_low, radius_high) for _ in points]
     return lambda p: _union(*(sphere(p, c, r) for c, r in zip(points, radii)))
@@ -1011,6 +1015,537 @@ def obituary_board(stem: str, seed: int) -> PropModel:
                      supersample=3, smooth_slopes=True)
 
 
+def school_shed(stem: str, seed: int) -> PropModel:
+    """
+    Préau d'école (plan 58 T3c) : mur de fond en pierre avec long banc d'écolier en bois, toit de zinc incliné à
+    nervures soutenu à l'avant par trois colonnes de fonte sombre.
+    """
+    STONE, TRIM, WOOD, ZINC, ZINC_DARK, CAST, MOSS, GRIME = range(8)
+    materials = [
+        make_material("stone", "#B2A894"),
+        make_material("trim", "#CBC2AC"),
+        make_material("wood", "#7C5A3C"),
+        make_material("zinc", "#6E797E", contrast=0.7),
+        make_material("zinc_dark", "#4C565C", contrast=0.6),
+        make_material("cast", "#2B2F34", contrast=0.5),
+        make_material("moss", "#5A7A38"),
+        make_material("grime", "#7A7060", contrast=0.8),
+    ]
+    w = Weathering(seed)
+    half_w = 2.1 * M
+    slope_ang = float(np.arctan2(0.50, 1.55))
+    roof_rot = rotation_x(slope_ang)
+
+    def parts() -> list[Part]:
+        wall = lambda p: rounded_box(p, (0.0, 1.12 * M, -0.80 * M), (half_w, 1.12 * M, 0.14 * M), 0.02 * M)
+        coping = lambda p: _union(
+            _box(p, (0.0, 0.18 * M, -0.80 * M), (half_w + 0.05 * M, 0.18 * M, 0.17 * M)),
+            _box(p, (0.0, 2.26 * M, -0.80 * M), (half_w + 0.06 * M, 0.08 * M, 0.17 * M)),
+            _box(p, (-half_w, 1.12 * M, -0.80 * M), (0.14 * M, 1.14 * M, 0.17 * M)),
+            _box(p, (half_w, 1.12 * M, -0.80 * M), (0.14 * M, 1.14 * M, 0.17 * M)),
+        )
+        bench = lambda p: rounded_box(p, (0.0, 0.45 * M, -0.50 * M), (1.82 * M, 0.055 * M, 0.18 * M), 0.015 * M)
+        bench_legs = lambda p: _union(*(
+            _box(p, (x, 0.22 * M, -0.48 * M), (0.05 * M, 0.22 * M, 0.14 * M))
+            for x in (-1.45 * M, 0.0, 1.45 * M)
+        ))
+        cols = lambda p: _union(*(
+            capsule(p, (x, 0.0, 0.65 * M), (x, 1.92 * M, 0.65 * M), 0.07 * M)
+            for x in (-1.75 * M, 0.0, 1.75 * M)
+        ))
+        roof_slab = lambda p: rounded_box(p, (0.0, 2.16 * M, -0.04 * M), (half_w + 0.15 * M, 0.06 * M, 0.96 * M),
+                                          0.02 * M, roof_rot)
+        ribs = lambda p: _union(*(
+            rounded_box(p, (-1.9 * M + i * 0.63 * M, 2.21 * M, -0.04 * M), (0.045 * M, 0.03 * M, 0.96 * M),
+                        0.01 * M, roof_rot)
+            for i in range(7)
+        ))
+        moss = both(noise_mask(0.22 * M, seed + 2, 0.36), lambda p: p[:, 1] - 0.55 * M)
+        grime = both(noise_mask(0.25 * M, seed + 4, 0.32), lambda p: p[:, 1] - 0.95 * M)
+        return [
+            Part(wall, STONE),
+            Part(painted(wall, grime, 0.012 * M), GRIME, relief=False),
+            Part(painted(wall, moss, 0.014 * M), MOSS, relief=False),
+            Part(coping, TRIM),
+            Part(bench_legs, CAST),
+            Part(bench, WOOD),
+            Part(cols, CAST),
+            Part(roof_slab, ZINC),
+            Part(ribs, ZINC_DARK),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=260.0, canvas=(116, 108),
+                     footprint=box_footprint(2.1 * M, 0.85 * M),
+                     bounds=((-2.5 * M, 0.0, -1.2 * M), (2.5 * M, 2.75 * M, 1.15 * M)),
+                     supersample=3, smooth_slopes=True)
+
+
+def hopscotch(stem: str, seed: int) -> PropModel:
+    """
+    Marelle à la craie de Lise (plan 58 T3c) : décalque plat posé à même la cour (transparent autour des traits de craie),
+    six rangées de cases jusqu'au demi-cercle « CIEL », avec un palet rouge-ocre oublié sur une case.
+    """
+    CHALK, PUCK = range(2)
+    materials = [
+        make_material("chalk", "#E2E4DC", contrast=0.35),
+        make_material("puck", "#B85C3E", contrast=0.45),
+    ]
+    w = Weathering(seed)
+    t = 0.068 * M
+    hy = 0.045 * M
+    cy = 0.045 * M
+
+    def seg_x(p: np.ndarray, x0: float, x1: float, z: float) -> np.ndarray:
+        return _box(p, ((x0 + x1) * 0.5, cy, z), ((x1 - x0) * 0.5 + t, hy, t))
+
+    def seg_z(p: np.ndarray, x: float, z0: float, z1: float) -> np.ndarray:
+        return _box(p, (x, cy, (z0 + z1) * 0.5), (t, hy, (z1 - z0) * 0.5 + t))
+
+    def parts() -> list[Part]:
+        hw = 0.28 * M
+        dw = 0.54 * M
+        xs = [-1.32 * M, -0.92 * M, -0.52 * M, -0.12 * M, 0.30 * M, 0.72 * M]
+
+        def lines(p: np.ndarray) -> np.ndarray:
+            parts_d = [
+                # Cases simples 1, 2, 3
+                seg_x(p, xs[0], xs[3], -hw),
+                seg_x(p, xs[0], xs[3], hw),
+                *(seg_z(p, x, -hw, hw) for x in xs[:4]),
+                # Double case 4-5 + séparation centrale
+                seg_x(p, xs[3], xs[4], -dw),
+                seg_x(p, xs[3], xs[4], dw),
+                seg_x(p, xs[3], xs[4], 0.0),
+                seg_z(p, xs[3], -dw, dw),
+                seg_z(p, xs[4], -dw, dw),
+                # Case 6
+                seg_x(p, xs[4], xs[5], -hw),
+                seg_x(p, xs[4], xs[5], hw),
+                seg_z(p, xs[5], -hw, hw),
+            ]
+            # Demi-cercle « CIEL » au bout est
+            arc_c = np.array([xs[5], cy, 0.0])
+            radial = np.linalg.norm(p[:, [0, 2]] - arc_c[[0, 2]], axis=1)
+            ring = np.maximum(np.abs(radial - dw) - t, np.abs(p[:, 1] - cy) - hy)
+            arc = np.maximum(ring, xs[5] - p[:, 0])
+            close_bar = seg_z(p, xs[5], -dw, dw)
+            return _union(*parts_d, arc, close_bar)
+
+        puck = lambda p: cylinder(p, (-0.32 * M + w.uniform(-0.04, 0.04) * M, 0.06 * M, 0.04 * M),
+                                  0.11 * M, 0.036 * M, 0.012 * M)
+        return [Part(lines, CHALK), Part(puck, PUCK)]
+
+    return PropModel(stem, parts, materials, float(np.radians(16.0)), ray_range=220.0, canvas=(110, 68),
+                     footprint=None,
+                     bounds=((-1.55 * M, 0.0, -0.75 * M), (1.55 * M, 0.3 * M, 0.75 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def school_bags(stem: str, seed: int) -> PropModel:
+    """
+    Deux cartables d'écolier posés dans la cour (plan 58 T3c) : l'un en cuir fauve resté debout à boucles de laiton,
+    l'autre brun couché au sol d'où dépasse un cahier blanc à marge rouge.
+    """
+    FAUVE, BROWN, BRASS, PAPER, MARGIN = range(5)
+    materials = [
+        make_material("fauve", "#7A482A", contrast=0.7),
+        make_material("brown", "#563420", contrast=0.7),
+        make_material("brass", "#B89644", contrast=0.5),
+        make_material("paper", "#E4DEC8", contrast=0.4),
+        make_material("margin", "#B63832", contrast=0.5),
+    ]
+    w = Weathering(seed)
+    rot_a = rotation_y(0.28) @ rotation_z(0.14)
+    rot_b = rotation_y(-0.55)
+
+    def parts() -> list[Part]:
+        bag1_c = np.array([-0.32 * M, 0.26 * M, -0.04 * M])
+        bag1 = lambda p: _union(
+            rounded_box(p, bag1_c, (0.30 * M, 0.24 * M, 0.13 * M), 0.04 * M, rot_a),
+            rounded_box(p, bag1_c + np.array([-0.02 * M, 0.06 * M, 0.09 * M]), (0.31 * M, 0.18 * M, 0.06 * M), 0.03 * M, rot_a),
+            rounded_box(p, bag1_c + np.array([-0.03 * M, 0.26 * M, 0.0]), (0.10 * M, 0.05 * M, 0.03 * M), 0.02 * M, rot_a),
+        )
+        buckles = lambda p: _union(
+            rounded_box(p, bag1_c + np.array([-0.14 * M, -0.05 * M, 0.14 * M]), (0.045 * M, 0.055 * M, 0.02 * M), 0.01 * M, rot_a),
+            rounded_box(p, bag1_c + np.array([0.11 * M, -0.05 * M, 0.14 * M]), (0.045 * M, 0.055 * M, 0.02 * M), 0.01 * M, rot_a),
+        )
+        bag2_c = np.array([0.24 * M, 0.10 * M, 0.14 * M])
+        bag2 = lambda p: rounded_box(p, bag2_c, (0.28 * M, 0.10 * M, 0.22 * M), 0.035 * M, rot_b)
+        book_c = np.array([0.58 * M, 0.045 * M, 0.36 * M + w.uniform(-0.02, 0.02) * M])
+        notebook = lambda p: rounded_box(p, book_c, (0.22 * M, 0.03 * M, 0.16 * M), 0.008 * M, rot_b)
+        margin = lambda p: rounded_box(p, book_c + np.array([-0.08 * M, 0.022 * M, 0.01 * M]),
+                                       (0.024 * M, 0.018 * M, 0.15 * M), 0.004 * M, rot_b)
+        return [
+            Part(bag1, FAUVE),
+            Part(buckles, BRASS),
+            Part(bag2, BROWN),
+            Part(notebook, PAPER),
+            Part(margin, MARGIN),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=180.0, canvas=(72, 56),
+                     footprint=None,
+                     bounds=((-0.90 * M, 0.0, -0.55 * M), (0.98 * M, 0.75 * M, 0.80 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def post_box(stem: str, seed: int) -> PropModel:
+    """
+    Boîte aux lettres jaune des PTT sur pied en fonte (plan 58 T3c) : bande bleue, fente bourrée de lettres et
+    enveloppes tombées à terre marquées d'un tampon rouge.
+    """
+    CAST, YELLOW, BLUE, SLOT, PAPER, STAMP = range(6)
+    materials = [
+        make_material("cast", "#2E3236", contrast=0.5),
+        make_material("yellow", "#C69E36", contrast=0.65),
+        make_material("blue", "#344C6E", contrast=0.6),
+        make_material("slot", "#1E1D20", contrast=0.4),
+        make_material("paper", "#DDD6C6", contrast=0.4),
+        make_material("stamp", "#9E3832", contrast=0.5),
+    ]
+    w = Weathering(seed)
+    tilt = rotation_z(w.uniform(-0.04, 0.04))
+
+    def parts() -> list[Part]:
+        post = lambda p: _union(
+            cylinder(p, (0.0, 0.36 * M, 0.0), 0.10 * M, 0.36 * M, 0.02 * M),
+            cylinder(p, (0.0, 0.07 * M, 0.0), 0.20 * M, 0.07 * M, 0.02 * M),
+            _box(p, (0.0, 0.72 * M, 0.0), (0.31 * M, 0.05 * M, 0.25 * M)),
+        )
+        chest = lambda p: _union(
+            rounded_box(p, tilt @ np.array([0.0, 1.12 * M, 0.0]), (0.29 * M, 0.36 * M, 0.23 * M), 0.04 * M, tilt),
+            rounded_box(p, tilt @ np.array([0.0, 1.48 * M, 0.0]), (0.32 * M, 0.07 * M, 0.26 * M), 0.04 * M, tilt),
+        )
+        band = lambda p: rounded_box(p, tilt @ np.array([0.0, 1.18 * M, 0.0]), (0.305 * M, 0.065 * M, 0.245 * M),
+                                     0.015 * M, tilt)
+        slot = lambda p: rounded_box(p, tilt @ np.array([0.0, 1.32 * M, 0.23 * M]), (0.16 * M, 0.03 * M, 0.03 * M),
+                                     0.008 * M, tilt)
+        stuck = [
+            ((-0.05 * M, 1.31 * M, 0.27 * M), 0.15),
+            ((0.06 * M, 1.30 * M, 0.28 * M), -0.22),
+        ]
+        ground_env = [
+            ((-0.24 * M, 0.03 * M, 0.32 * M), 0.38),
+            ((0.18 * M, 0.03 * M, 0.36 * M), -0.45),
+            ((0.02 * M, 0.03 * M, 0.48 * M), 0.85),
+        ]
+        letters = lambda p: _union(
+            *(rounded_box(p, c, (0.10 * M, 0.022 * M, 0.08 * M), 0.004 * M, rotation_y(a) @ rotation_x(0.25))
+              for c, a in stuck),
+            *(rounded_box(p, c, (0.12 * M, 0.020 * M, 0.085 * M), 0.004 * M, rotation_y(a))
+              for c, a in ground_env),
+        )
+        stamps = lambda p: _union(*(
+            cylinder(p, (c[0] + 0.03 * M, c[1] + 0.022 * M, c[2]), 0.032 * M, 0.008 * M, 0.003 * M)
+            for c, _ in ground_env
+        ))
+        return [
+            Part(post, CAST),
+            Part(chest, YELLOW),
+            Part(band, BLUE),
+            Part(slot, SLOT),
+            Part(letters, PAPER),
+            Part(stamps, STAMP),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=200.0, canvas=(54, 72),
+                     footprint=box_footprint(0.38 * M, 0.34 * M),
+                     bounds=((-0.55 * M, 0.0, -0.45 * M), (0.55 * M, 1.75 * M, 0.65 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def mailman_bike(stem: str, seed: int) -> PropModel:
+    """
+    Vélo du facteur sur béquille et deux sacs postaux en jute (plan 58 T3c) : cadre bleu-noir, roues à rayons,
+    sacoches avant et arrière rebondies en toile beige-brun, lettres échappées.
+    """
+    TYRE, METAL, FRAME, LEATHER, PANNIER, SACK, STRIPE, PAPER = range(8)
+    materials = [
+        make_material("tyre", "#201E22", contrast=0.45),
+        make_material("metal", "#8C9092", contrast=0.6),
+        make_material("frame", "#263442", contrast=0.6),
+        make_material("leather", "#6A4026", contrast=0.65),
+        make_material("pannier", "#947A54", contrast=0.7),
+        make_material("sack", "#A28C68", contrast=0.7),
+        make_material("stripe", "#344C6E", contrast=0.6),
+        make_material("paper", "#DDD6C6", contrast=0.45),
+    ]
+    ROT_WHEEL_X = rotation_x(np.pi / 2)
+
+    def wheel_tyre(p: np.ndarray, cx: float) -> np.ndarray:
+        outer = cylinder(p, (cx, 0.38 * M, 0.0), 0.38 * M, 0.045 * M, 0.02 * M, ROT_WHEEL_X)
+        inner = cylinder(p, (cx, 0.38 * M, 0.0), 0.29 * M, 0.07 * M, 0.0, ROT_WHEEL_X)
+        return np.maximum(outer, -inner)
+
+    def wheel_spokes(p: np.ndarray, cx: float) -> np.ndarray:
+        hub = cylinder(p, (cx, 0.38 * M, 0.0), 0.06 * M, 0.055 * M, 0.01 * M, ROT_WHEEL_X)
+        spokes = []
+        for k in range(4):
+            a = k * np.pi / 4
+            dx, dy = np.cos(a) * 0.31 * M, np.sin(a) * 0.31 * M
+            spokes.append(capsule(p, (cx - dx, 0.38 * M - dy, 0.0), (cx + dx, 0.38 * M + dy, 0.0), 0.022 * M))
+        return _union(hub, *spokes)
+
+    def parts() -> list[Part]:
+        tyres = lambda p: _union(wheel_tyre(p, -0.64 * M), wheel_tyre(p, 0.64 * M))
+        metals = lambda p: _union(
+            wheel_spokes(p, -0.64 * M),
+            wheel_spokes(p, 0.64 * M),
+            capsule(p, (0.42 * M, 0.92 * M, 0.0), (0.36 * M, 1.08 * M, -0.20 * M), 0.03 * M),
+            capsule(p, (0.42 * M, 0.92 * M, 0.0), (0.36 * M, 1.08 * M, 0.20 * M), 0.03 * M),
+            capsule(p, (-0.20 * M, 0.34 * M, 0.05 * M), (-0.32 * M, 0.02 * M, 0.22 * M), 0.025 * M),
+        )
+        frame = lambda p: _union(
+            capsule(p, (-0.64 * M, 0.38 * M, 0.0), (-0.12 * M, 0.38 * M, 0.0), 0.035 * M),
+            capsule(p, (-0.12 * M, 0.38 * M, 0.0), (-0.26 * M, 0.88 * M, 0.0), 0.038 * M),
+            capsule(p, (-0.26 * M, 0.80 * M, 0.0), (0.44 * M, 0.84 * M, 0.0), 0.038 * M),
+            capsule(p, (-0.12 * M, 0.38 * M, 0.0), (0.44 * M, 0.80 * M, 0.0), 0.038 * M),
+            capsule(p, (0.42 * M, 0.92 * M, 0.0), (0.64 * M, 0.38 * M, 0.0), 0.038 * M),
+            capsule(p, (-0.64 * M, 0.38 * M, 0.0), (-0.26 * M, 0.80 * M, 0.0), 0.032 * M),
+        )
+        leather = lambda p: _union(
+            ellipsoid(p, (-0.28 * M, 0.94 * M, 0.0), (0.16 * M, 0.055 * M, 0.11 * M)),
+            capsule(p, (0.36 * M, 1.08 * M, -0.22 * M), (0.32 * M, 1.08 * M, -0.15 * M), 0.038 * M),
+            capsule(p, (0.36 * M, 1.08 * M, 0.22 * M), (0.32 * M, 1.08 * M, 0.15 * M), 0.038 * M),
+        )
+        panniers = lambda p: _union(
+            rounded_box(p, (-0.60 * M, 0.58 * M, -0.18 * M), (0.24 * M, 0.20 * M, 0.11 * M), 0.06 * M),
+            rounded_box(p, (-0.60 * M, 0.58 * M, 0.18 * M), (0.24 * M, 0.20 * M, 0.11 * M), 0.06 * M),
+            rounded_box(p, (0.60 * M, 0.78 * M, 0.0), (0.18 * M, 0.15 * M, 0.18 * M), 0.05 * M),
+        )
+        sacks = lambda p: _union(
+            ellipsoid(p, (0.10 * M, 0.24 * M, 0.44 * M), (0.28 * M, 0.24 * M, 0.22 * M)),
+            ellipsoid(p, (0.10 * M, 0.46 * M, 0.44 * M), (0.12 * M, 0.09 * M, 0.11 * M)),
+            ellipsoid(p, (-0.34 * M, 0.19 * M, 0.48 * M), (0.25 * M, 0.18 * M, 0.20 * M), rotation_y(0.45)),
+        )
+        sack_band = lambda p: _union(
+            cylinder(p, (0.10 * M, 0.24 * M, 0.44 * M), 0.245 * M, 0.04 * M, 0.01 * M),
+        )
+        letters = lambda p: _union(
+            rounded_box(p, (0.42 * M, 0.025 * M, 0.56 * M), (0.12 * M, 0.02 * M, 0.08 * M), 0.004 * M, rotation_y(0.32)),
+            rounded_box(p, (0.26 * M, 0.025 * M, 0.72 * M), (0.11 * M, 0.02 * M, 0.08 * M), 0.004 * M, rotation_y(-0.55)),
+        )
+        return [
+            Part(tyres, TYRE),
+            Part(metals, METAL),
+            Part(frame, FRAME),
+            Part(leather, LEATHER),
+            Part(panniers, PANNIER),
+            Part(sacks, SACK),
+            Part(sack_band, STRIPE),
+            Part(letters, PAPER),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=220.0, canvas=(88, 66),
+                     footprint=box_footprint(1.05 * M, 0.65 * M),
+                     bounds=((-1.15 * M, 0.0, -0.5 * M), (1.15 * M, 1.25 * M, 0.9 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+FENCE_YAW = float(np.radians(12.0))
+
+
+def school_fence(stem: str, seed: int) -> PropModel:
+    """
+    Travée de grille d'école (plan 58 T3c) : muret de pierre bas à couvertine claire, deux piliers aux bouts,
+    lisses et barreaux verticaux en fer forgé sombre à pointes. Orientée le long de la façade sud de l'école.
+    """
+    STONE, TRIM, IRON, MOSS, GRIME = range(5)
+    materials = [
+        make_material("stone", "#A89E8B"),
+        make_material("trim", "#C8BFA8"),
+        make_material("iron", "#2E3236", contrast=0.5),
+        make_material("moss", "#5A7A38"),
+        make_material("grime", "#756C5C", contrast=0.8),
+    ]
+    half_w = 1.35 * M
+
+    def parts() -> list[Part]:
+        stone_parts = lambda p: _union(
+            _box(p, (0.0, 0.19 * M, 0.0), (half_w - 0.06 * M, 0.19 * M, 0.14 * M)),
+            _box(p, (-1.22 * M, 0.70 * M, 0.0), (0.15 * M, 0.70 * M, 0.17 * M)),
+            _box(p, (1.22 * M, 0.70 * M, 0.0), (0.15 * M, 0.70 * M, 0.17 * M)),
+        )
+        trim_parts = lambda p: _union(
+            _box(p, (0.0, 0.40 * M, 0.0), (half_w - 0.04 * M, 0.045 * M, 0.17 * M)),
+            _box(p, (-1.22 * M, 1.44 * M, 0.0), (0.19 * M, 0.06 * M, 0.20 * M)),
+            _box(p, (1.22 * M, 1.44 * M, 0.0), (0.19 * M, 0.06 * M, 0.20 * M)),
+        )
+        iron_parts = lambda p: _union(
+            _box(p, (0.0, 0.56 * M, 0.0), (1.08 * M, 0.032 * M, 0.032 * M)),
+            _box(p, (0.0, 1.26 * M, 0.0), (1.08 * M, 0.032 * M, 0.032 * M)),
+            *(capsule(p, (-0.98 * M + i * 0.28 * M, 0.42 * M, 0.0),
+                      (-0.98 * M + i * 0.28 * M, 1.44 * M, 0.0), 0.032 * M)
+              for i in range(8)),
+        )
+        moss = both(noise_mask(0.18 * M, seed + 1, 0.35), lambda p: p[:, 1] - 0.45 * M)
+        grime = both(noise_mask(0.22 * M, seed + 3, 0.34), lambda p: p[:, 1] - 0.7 * M)
+        return [
+            Part(stone_parts, STONE),
+            Part(painted(stone_parts, grime, 0.012 * M), GRIME, relief=False),
+            Part(painted(stone_parts, moss, 0.014 * M), MOSS, relief=False),
+            Part(trim_parts, TRIM),
+            Part(iron_parts, IRON),
+        ]
+
+    return PropModel(stem, parts, materials, FENCE_YAW, ray_range=220.0, canvas=(72, 64),
+                     footprint=box_footprint(half_w, 0.22 * M),
+                     bounds=((-1.5 * M, 0.0, -0.35 * M), (1.5 * M, 1.65 * M, 0.35 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def school_gate(stem: str, seed: int) -> PropModel:
+    """
+    Portail de la cour d'école aux battants entrouverts (plan 58 T3c) : deux hauts piliers de pierre à chapiteau
+    mouluré, fronton cintré en fer forgé et deux vantaux ouverts vers l'intérieur laissant passer librement.
+    """
+    STONE, TRIM, IRON, MOSS, GRIME = range(5)
+    materials = [
+        make_material("stone", "#A89E8B"),
+        make_material("trim", "#CBC2AC"),
+        make_material("iron", "#2E3236", contrast=0.5),
+        make_material("moss", "#5A7A38"),
+        make_material("grime", "#756C5C", contrast=0.8),
+    ]
+    rot_l = rotation_y(0.58)
+    rot_r = rotation_y(-0.78)
+
+    def leaf_sdf(p: np.ndarray, hinge_x: float, sign_dir: float, rot: np.ndarray) -> np.ndarray:
+        q = (p - np.array([hinge_x, 0.0, 0.0])) @ rot
+        w_leaf = 0.96 * M
+        mid_x = sign_dir * w_leaf * 0.5
+        rails = _union(
+            _box(q, (mid_x, 0.25 * M, 0.0), (w_leaf * 0.5, 0.035 * M, 0.032 * M)),
+            _box(q, (mid_x, 1.48 * M, 0.0), (w_leaf * 0.5, 0.035 * M, 0.032 * M)),
+            _box(q, (mid_x, 0.85 * M, 0.0), (w_leaf * 0.5, 0.028 * M, 0.028 * M)),
+        )
+        bars = _union(*(
+            capsule(q, (sign_dir * (0.06 + i * 0.22) * M, 0.14 * M, 0.0),
+                    (sign_dir * (0.06 + i * 0.22) * M, 1.66 * M, 0.0), 0.032 * M)
+            for i in range(5)
+        ))
+        return np.minimum(rails, bars)
+
+    def parts() -> list[Part]:
+        piers = lambda p: _union(
+            _box(p, (-1.35 * M, 0.95 * M, 0.0), (0.20 * M, 0.95 * M, 0.22 * M)),
+            _box(p, (1.35 * M, 0.95 * M, 0.0), (0.20 * M, 0.95 * M, 0.22 * M)),
+        )
+        caps = lambda p: _union(*(
+            _union(
+                _box(p, (sx * 1.35 * M, 0.16 * M, 0.0), (0.24 * M, 0.16 * M, 0.26 * M)),
+                _box(p, (sx * 1.35 * M, 1.92 * M, 0.0), (0.26 * M, 0.07 * M, 0.28 * M)),
+                _box(p, (sx * 1.35 * M, 2.02 * M, 0.0), (0.18 * M, 0.06 * M, 0.20 * M)),
+            )
+            for sx in (-1, 1)
+        ))
+        arch = lambda p: _union(
+            capsule(p, (-1.20 * M, 1.90 * M, 0.0), (-0.42 * M, 2.16 * M, 0.0), 0.04 * M),
+            capsule(p, (-0.42 * M, 2.16 * M, 0.0), (0.42 * M, 2.16 * M, 0.0), 0.04 * M),
+            capsule(p, (0.42 * M, 2.16 * M, 0.0), (1.20 * M, 1.90 * M, 0.0), 0.04 * M),
+            capsule(p, (-1.20 * M, 1.78 * M, 0.0), (1.20 * M, 1.78 * M, 0.0), 0.032 * M),
+            *(capsule(p, (-0.75 * M + i * 0.30 * M, 1.78 * M, 0.0),
+                      (-0.75 * M + i * 0.30 * M, 2.08 * M - abs(-0.75 + i * 0.30) * 0.22 * M, 0.0), 0.025 * M)
+              for i in range(6)),
+        )
+        iron = lambda p: _union(
+            arch(p),
+            leaf_sdf(p, -1.16 * M, 1.0, rot_l),
+            leaf_sdf(p, 1.16 * M, -1.0, rot_r),
+        )
+        moss = both(noise_mask(0.20 * M, seed + 1, 0.35), lambda p: p[:, 1] - 0.55 * M)
+        grime = both(noise_mask(0.24 * M, seed + 2, 0.34), lambda p: p[:, 1] - 0.90 * M)
+        return [
+            Part(piers, STONE),
+            Part(painted(piers, grime, 0.012 * M), GRIME, relief=False),
+            Part(painted(piers, moss, 0.014 * M), MOSS, relief=False),
+            Part(caps, TRIM),
+            Part(iron, IRON),
+        ]
+
+    return PropModel(stem, parts, materials, FENCE_YAW, ray_range=260.0, canvas=(92, 82),
+                     footprint=box_footprint(1.65 * M, 0.45 * M),
+                     bounds=((-1.8 * M, 0.0, -1.2 * M), (1.8 * M, 2.35 * M, 0.5 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def switchboard(stem: str, seed: int) -> PropModel:
+    """
+    Standard téléphonique de Mireille (plan 58 T3c) : meuble en acajou sombre à tablette, panneau noir ponctué de
+    jacks en laiton et clapets blancs, six cordons souples rouges et cuivrés encore branchés, tabouret et casque posé.
+    """
+    MAHOGANY, PANEL, BRASS, DROP, CORD_RED, CORD_COPPER, STOOL, HEADSET = range(8)
+    materials = [
+        make_material("mahogany", "#523424", contrast=0.7),
+        make_material("panel", "#242428", contrast=0.45),
+        make_material("brass", "#BC9A48", contrast=0.5),
+        make_material("drop", "#D8D2C4", contrast=0.45),
+        make_material("cord_red", "#9E3A32", contrast=0.6),
+        make_material("cord_copper", "#A87838", contrast=0.6),
+        make_material("stool", "#6E4A30", contrast=0.7),
+        make_material("headset", "#1E1F22", contrast=0.45),
+    ]
+
+    def cord_arc(p: np.ndarray, x0: float, x1: float, y1: float) -> np.ndarray:
+        a = (x0, 0.90 * M, 0.48 * M)
+        mid = ((x0 + x1) * 0.5, 0.64 * M, 0.56 * M)
+        b = (x1, y1, 0.37 * M)
+        return np.minimum(capsule(p, a, mid, 0.025 * M), capsule(p, mid, b, 0.025 * M))
+
+    def parts() -> list[Part]:
+        cabinet = lambda p: _union(
+            rounded_box(p, (0.0, 0.96 * M, 0.0), (0.85 * M, 0.96 * M, 0.34 * M), 0.03 * M),
+            rounded_box(p, (0.0, 0.88 * M, 0.44 * M), (0.85 * M, 0.05 * M, 0.16 * M), 0.02 * M),
+            _box(p, (0.0, 1.94 * M, 0.0), (0.88 * M, 0.05 * M, 0.37 * M)),
+        )
+        panel = lambda p: _box(p, (0.0, 1.38 * M, 0.33 * M), (0.72 * M, 0.42 * M, 0.04 * M))
+        jacks = lambda p: _union(*(
+            cylinder(p, (-0.54 * M + col * 0.27 * M, 1.12 * M + row * 0.18 * M, 0.37 * M),
+                     0.035 * M, 0.025 * M, 0.005 * M, rotation_x(np.pi / 2))
+            for col in range(5) for row in (0, 1)
+        ))
+        drops = lambda p: _union(*(
+            _box(p, (-0.54 * M + col * 0.27 * M, 1.60 * M, 0.37 * M), (0.05 * M, 0.05 * M, 0.025 * M))
+            for col in range(5)
+        ))
+        cords_r = lambda p: _union(
+            cord_arc(p, -0.45 * M, -0.27 * M, 1.30 * M),
+            cord_arc(p, -0.05 * M, 0.27 * M, 1.12 * M),
+            cord_arc(p, 0.35 * M, 0.54 * M, 1.30 * M),
+        )
+        cords_c = lambda p: _union(
+            cord_arc(p, -0.25 * M, -0.54 * M, 1.12 * M),
+            cord_arc(p, 0.15 * M, 0.00 * M, 1.30 * M),
+            cord_arc(p, 0.52 * M, 0.27 * M, 1.30 * M),
+        )
+        sx, sz = 0.38 * M, 0.84 * M
+        stool = lambda p: _union(
+            cylinder(p, (sx, 0.50 * M, sz), 0.21 * M, 0.04 * M, 0.015 * M),
+            *(capsule(p, (sx + dx, 0.0, sz + dz), (sx + dx * 0.65, 0.48 * M, sz + dz * 0.65), 0.03 * M)
+              for dx, dz in ((-0.16 * M, -0.16 * M), (0.16 * M, -0.16 * M), (-0.16 * M, 0.16 * M), (0.16 * M, 0.16 * M))),
+        )
+        headset = lambda p: _union(
+            capsule(p, (sx - 0.10 * M, 0.57 * M, sz - 0.03 * M), (sx + 0.09 * M, 0.57 * M, sz + 0.03 * M), 0.02 * M),
+            sphere(p, (sx - 0.11 * M, 0.56 * M, sz - 0.03 * M), 0.045 * M),
+            sphere(p, (sx + 0.10 * M, 0.56 * M, sz + 0.03 * M), 0.045 * M),
+        )
+        return [
+            Part(cabinet, MAHOGANY),
+            Part(panel, PANEL),
+            Part(jacks, BRASS),
+            Part(drops, DROP),
+            Part(cords_r, CORD_RED),
+            Part(cords_c, CORD_COPPER),
+            Part(stool, STOOL),
+            Part(headset, HEADSET),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=220.0, canvas=(84, 86),
+                     footprint=box_footprint(0.95 * M, 0.65 * M),
+                     bounds=((-1.15 * M, 0.0, -0.55 * M), (1.15 * M, 2.15 * M, 1.25 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
 def catalog() -> list[PropModel]:
     models = [car("prop_urban_car", "red", AXIS_X_YAW, 11)]
     for paint, seed in (("red", 12), ("teal", 21), ("cream", 31)):
@@ -1048,5 +1583,13 @@ def catalog() -> list[PropModel]:
         dry_fountain("prop_dry_fountain", 201),
         bandstand("prop_bandstand", 211),
         obituary_board("prop_obituary_board", 221),
+        school_shed("prop_school_shed", 231),
+        hopscotch("prop_hopscotch", 241),
+        school_bags("prop_school_bags", 251),
+        post_box("prop_post_box", 261),
+        mailman_bike("prop_mailman_bike", 271),
+        school_fence("prop_school_fence", 281),
+        school_gate("prop_school_gate", 285),
+        switchboard("prop_switchboard", 291),
     ]
     return models
