@@ -2788,3 +2788,17 @@ Raphaël, après les pour et contre du pont de rendu (§227) : « pour moi il fa
 - **La run 3D se bâtit à côté de la run actuelle**, qui reste jouable et testée jusqu'à ce que la 3D l'égale.
 - **Un plan à part, le plan 60**, découpe le portage d'après un inventaire du code avant toute ligne.
 - **Trois choix de caméra pèsent sur l'amont** : rotation ou non, vue au pixel près ou non, portée de vue. Ils se font avant de produire beaucoup d'art.
+
+## 229. Caméra tournante, low/mid poly à essayer, la caméra validée d'abord — 15 novembre 2026
+
+Raphaël, sur les trois choix de caméra du §228 : « 1. je pense qu'il faut ca , oui. 2. la vue au pixel pres c'est quoi exactement 3. si on refait le jeu pour le passer en 3D je serai chaud pour changer la vue "pixel art" en une vue "low/mid poly". La portée de vue dépend de la caméra je suis d'accord. il faudra assez rapidement valider une caméra »
+
+**Acquis** :
+- **La caméra tourne** ; les bâtiments ont des volumes.
+- **La vue au pixel près est abandonnée** : elle ne sert qu'au pixel art, que la rotation et les modèles 3D rendent sans objet.
+- **La caméra se valide vite**, en premier.
+
+**Tranché par défaut par l'agent, réversible** :
+- **Low/mid poly à essayer**, pas encore adopté. La charte graphique reste en vigueur pour la run actuelle jusqu'à l'essai. Piste par défaut pour l'essai : le low poly « crade » (textures basse résolution, palette réduite, brouillard, tramage), qui garde l'esprit de la DA.
+- **Premier lot du plan 60 : le bac à sable de caméra et de style**, avant tout portage.
+- **Le moteur de rendu sera reconsidéré** dans le plan 60 : GL Compatibility a été choisi pour la 2D, et la 3D éclairée, les ombres et le brouillard le poussent dans ses limites.

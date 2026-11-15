@@ -178,3 +178,12 @@ Raphaël, après les pour et contre du pont : « pour moi il faut revoir tout en
 **Défaut de l'agent, réversible** : la run 3D se bâtit **à côté** de la run actuelle, dans une scène neuve. La run 2D reste jouable et testée tant que la 3D ne l'égale pas, puis elle part. Le jeu ne passe pas des mois sans run jouable.
 
 **Prochaine étape** : un plan à part (plan 60), qui découpe le portage système par système d'après un inventaire du code. Rien n'est codé avant qu'il soit écrit.
+
+### Les trois choix de caméra, tranchés en partie — 15 novembre 2026
+
+Raphaël : « 1. je pense qu'il faut ca , oui. 2. la vue au pixel pres c'est quoi exactement 3. si on refait le jeu pour le passer en 3D je serai chaud pour changer la vue "pixel art" en une vue "low/mid poly". La portée de vue dépend de la caméra je suis d'accord. il faudra assez rapidement valider une caméra »
+
+- **La caméra tourne.** Les décors se voient de tous côtés, et les bâtiments ont des volumes.
+- **La vue au pixel près tombe d'elle-même.** Elle ne servait qu'à garder le pixel art net : chaque pixel d'un sprite tombe sur un nombre entier de pixels de l'écran, sans rotation ni perspective. Une caméra qui tourne, ou des modèles 3D, la rendent sans objet.
+- **Direction artistique : low/mid poly**, à essayer avant d'être adoptée. C'est le plus gros changement : sprites, générateurs de pixel art, tuiles et 10 000 décors cèdent la place à des modèles 3D, et la [charte graphique](../CHARTE-GRAPHIQUE.md) sera à réécrire. Le « crade, mystérieux, indescriptible » se tient très bien en low poly : textures basse résolution, palette réduite, brouillard, tramage, à la manière des jeux 3D des années 1990.
+- **La caméra se valide en premier.** Avant tout portage, le plan 60 commence par un bac à sable de caméra et de style : une arène en low poly provisoire, la horde, la caméra tournante sous plusieurs réglages. Raphaël y choisit la caméra et le style, et l'équilibrage suivra ce choix.
