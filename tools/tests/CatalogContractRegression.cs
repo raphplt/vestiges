@@ -775,13 +775,14 @@ public partial class CatalogContractRegression : Node
             && loaded.Biomes["swamp"].Heart.Plan.Elements.Exists(element => element.Flat)
             && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "marais_salants" && piece.Water.Count == 6)
             && loaded.Biomes["swamp"].Pieces.Exists(piece => piece.Id == "maisons_du_port")
-            && loaded.Biomes["urban_ruins"].Pieces.Count == 3
+            && loaded.Biomes["urban_ruins"].Pieces.Count == 4
             && loaded.Biomes["urban_ruins"].Pieces.Exists(piece => piece.Id == "place_de_la_mairie")
             && loaded.Biomes["urban_ruins"].Pieces.Exists(piece => piece.Id == "ecole_communale" && piece.Plan.Elements.Exists(e => e.Flat))
             && loaded.Biomes["urban_ruins"].Pieces.Exists(piece => piece.Id == "bureau_de_poste")
+            && loaded.Biomes["urban_ruins"].Pieces.Exists(piece => piece.Id == "arret_ligne_7")
             && loaded.Biomes["urban_ruins"].Heart?.Id == "parvis_de_saint_aubin" && loaded.Biomes["urban_ruins"].Heart.Ground == TerrainType.Concrete
             && loaded.Biomes["urban_ruins"].Heart.Plan.Elements.Exists(element => element.Flat),
-            $"pièces du dépôt acceptées, vides du belvédère et des quais lus, cale plaquée au sol, bassins des marais salants, parvis, mairie, école et poste de la ville {loadError}");
+            $"pièces du dépôt acceptées, vides du belvédère et des quais lus, cale plaquée au sol, bassins des marais salants, parvis, mairie, école, poste et ligne 7 de la ville {loadError}");
         string valid = FileAccess.GetFileAsString(LandPieceConfig.FilePath);
         JsonNode Piece(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![0]!;
         JsonNode Basin(JsonObject root) => root["biomes"]!["swamp"]!["pieces"]![2]!["water"]![0]!;
@@ -1578,7 +1579,7 @@ public partial class CatalogContractRegression : Node
         Func<string, bool> spriteExists = path => ResourceLoader.Exists($"res://{path}");
         Check(PropSpawner.TryParseConfigs(files, biomeExists, spriteExists, out Dictionary<string, BiomePropConfig> configs) == null
             && configs.Count == 5 && configs["swamp"].Props.Count > 20 && configs["swamp"].Remarkables.Count == 4
-            && configs["urban_ruins"].Remarkables.Count == 0, "décors : cinq biomes publiés, remarquables du marais lus");
+            && configs["urban_ruins"].Remarkables.Count == 4, "décors : cinq biomes publiés, remarquables du marais et de la ville lus");
         foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
         {
             ("champ inconnu", root => root["seed"] = 3, "clé « seed » inconnue"),

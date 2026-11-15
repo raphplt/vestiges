@@ -65,7 +65,9 @@ public partial class PropSpawner : Node2D
 		Func<Task> yieldSlice,
 		HashSet<Vector2I> blockedCells = null,
 		WildFieldsLayout wildFieldsLayout = null,
-		byte[,] rhythmZones = null)
+		byte[,] rhythmZones = null,
+		UrbanLayout urbanLayout = null,
+		HashSet<Vector2I> pathCells = null)
 	{
 		// Charger les configs de props par biome
 		Dictionary<string, BiomePropConfig> configs = LoadPropConfigs();
@@ -191,7 +193,7 @@ public partial class PropSpawner : Node2D
 		{
 			if (configs.TryGetValue(active.Id, out BiomePropConfig activeConfig) && activeConfig.Remarkables.Count > 0)
 				totalSpawned += await PlaceRemarkablesAsync(generator, terrainGrid, ground, container, usedCells, blockedCells, textureCache,
-					activeConfig, seed, yieldSlice);
+					activeConfig, seed, yieldSlice, urbanLayout, pathCells);
 		}
 
 		GD.Print($"[PropSpawner] === SPAWN REPORT ===");
@@ -304,20 +306,28 @@ public partial class PropSpawner : Node2D
 		Dictionary<string, Texture2D> textureCache,
 		BiomePropConfig config,
 		ulong seed,
-		Func<Task> yieldSlice)
+		Func<Task> yieldSlice,
+		UrbanLayout urbanLayout,
+		HashSet<Vector2I> pathCells)
 	{
 		Dictionary<string, PropDefinition> propsById = new();
 		foreach (PropDefinition prop in config.Props)
 			propsById[prop.Id] = prop;
+		bool urbanCity = urbanLayout != null && config.BiomeId == "urban_ruins";
 		List<Vector2I> cells = new();
 		for (int x = -generator.MapRadiusX; x <= generator.MapRadiusX; x++)
 		{
 			for (int y = -generator.MapRadiusY; y <= generator.MapRadiusY; y++)
 			{
-				if (generator.IsWithinBounds(x, y) && generator.GetBiomeId(x, y) == config.BiomeId)
-					cells.Add(new Vector2I(x, y));
+				if (!generator.IsWithinBounds(x, y) || generator.GetBiomeId(x, y) != config.BiomeId)
+					continue;
+				Vector2I cell = new(x, y);
+				if (urbanCity && !IsUrbanRemarkableCell(urbanLayout, cell))
+					continue;
+				cells.Add(cell);
 			}
 		}
+		HashSet<Vector2I> remarkableBlocked = urbanCity ? pathCells : blockedCells;
 		RandomNumberGenerator rng = new() { Seed = seed ^ 0x8E3A0UL };
 		for (int i = cells.Count - 1; i > 0; i--)
 		{
@@ -331,7 +341,7 @@ public partial class PropSpawner : Node2D
 		{
 			int start = cells.Count > 0 ? rng.RandiRange(0, cells.Count - 1) : 0;
 			if (TryPlaceRemarkable(propsById[id], cells, start, placedCells, generator, terrainGrid, ground, container,
-					usedCells, blockedCells, textureCache))
+					usedCells, remarkableBlocked, textureCache))
 				placed++;
 			else
 				GD.PushWarning($"[PropSpawner] {config.BiomeId} : pas de place pour le décor remarquable {id}");
@@ -339,6 +349,25 @@ public partial class PropSpawner : Node2D
 		}
 		GD.Print($"[PropSpawner] {config.BiomeId} : {placed}/{config.Remarkables.Count} décors remarquables");
 		return placed;
+	}
+
+	private static bool IsUrbanRemarkableCell(UrbanLayout layout, Vector2I cell)
+	{
+		if (layout.ParkPondCells.Contains(cell))
+			return false;
+		UrbanCellType center = UrbanPropPlacer.GetCellType(layout, cell);
+		if (center is not (UrbanCellType.Plaza or UrbanCellType.Park))
+			return false;
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				UrbanCellType neighbor = UrbanPropPlacer.GetCellType(layout, cell + new Vector2I(dx, dy));
+				if (neighbor is UrbanCellType.Road or UrbanCellType.BuildingWall or UrbanCellType.BuildingInterior or UrbanCellType.None)
+					return false;
+			}
+		}
+		return true;
 	}
 
 	private bool TryPlaceRemarkable(

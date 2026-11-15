@@ -1546,6 +1546,269 @@ def switchboard(stem: str, seed: int) -> PropModel:
                      supersample=4, smooth_slopes=True)
 
 
+def line7_bus(stem: str, seed: int) -> PropModel:
+    """
+    Car interurbain arrêté de la ligne 7 (plan 58 T3d) : bas de caisse bleu ardoise et pavillon crème à bande ocre,
+    six baies latérales, pare-brise avant, porte pliante restée ouverte, girouette « 7 », galerie chargée sur le toit
+    et pneus avant affaissés le long du trottoir.
+    """
+    (BODY_LOW, BODY_HIGH, STRIPE, GLASS, GLINT, DOOR_DARK, ROOF_GREY, TRUNK, TARP,
+     TYRE, RUST, LAMP, TAIL, DEST_BG, DEST_NUM, MOSS, CHROME) = range(17)
+    materials = [
+        make_material("body_low", "#385068"),
+        make_material("body_high", "#BEB59A", contrast=0.72),
+        make_material("stripe", "#C69E36"),
+        make_material("glass", "#2A3844", contrast=0.55),
+        make_material("glint", "#7892A2", contrast=0.4),
+        make_material("door_dark", "#1C1E22", contrast=0.4),
+        make_material("roof_grey", "#64696E"),
+        make_material("trunk", "#6E4A30"),
+        make_material("tarp", "#54685E"),
+        make_material("tyre", "#221F24", contrast=0.5),
+        make_material("rust", "#744830"),
+        make_material("lamp", "#DCD2A6", contrast=0.4),
+        make_material("tail", "#96302A", contrast=0.55),
+        make_material("dest_bg", "#1E2024", contrast=0.45),
+        make_material("dest_num", "#E6C658", contrast=0.35),
+        make_material("moss", "#5C7A3A"),
+        make_material("chrome", "#8E9296"),
+    ]
+    half_x = 3.35 * M
+    half_z = 0.96 * M
+    sag = rotation_z(0.025)
+    wheel_rot = rotation_x(np.pi / 2)
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        lower_hull = lambda p: rounded_box(p, (0.0, 0.80 * M, 0.0), (half_x, 0.46 * M, half_z), 0.10 * M, sag)
+        upper_hull = lambda p: _union(
+            rounded_box(p, (0.0, 1.84 * M, 0.0), (half_x - 0.02 * M, 0.60 * M, half_z - 0.02 * M), 0.14 * M, sag),
+            rounded_box(p, (0.0, 2.42 * M, 0.0), (half_x - 0.14 * M, 0.10 * M, half_z - 0.10 * M), 0.08 * M, sag),
+        )
+        stripe = lambda p: _box(p, (0.0, 1.24 * M, 0.0), (half_x + 0.015 * M, 0.075 * M, half_z + 0.015 * M))
+        door_x0, door_x1 = -2.62 * M, -2.04 * M
+        door_mid = (door_x0 + door_x1) * 0.5
+        door_opening = lambda p: _box(p, (door_mid, 1.26 * M, half_z + 0.02 * M), (0.29 * M, 0.86 * M, 0.14 * M))
+        side_windows = lambda p: _union(
+            *(_box(p, (-1.45 * M + i * 0.90 * M, 1.76 * M, half_z), (0.37 * M, 0.34 * M, 0.04 * M)) for i in range(5)),
+            _box(p, (-3.00 * M, 1.76 * M, half_z), (0.24 * M, 0.34 * M, 0.04 * M)),
+            _box(p, (-half_x - 0.01 * M, 1.76 * M, 0.0), (0.04 * M, 0.36 * M, half_z - 0.16 * M)),
+            _box(p, (half_x + 0.01 * M, 1.80 * M, 0.0), (0.04 * M, 0.28 * M, half_z - 0.24 * M)),
+        )
+        glint = lambda p: _union(
+            *(_box(p, (-1.55 * M + i * 0.90 * M, 1.84 * M, half_z + 0.02 * M), (0.12 * M, 0.18 * M, 0.025 * M))
+              for i in range(5)),
+            _box(p, (-half_x - 0.02 * M, 1.84 * M, -0.32 * M), (0.03 * M, 0.18 * M, 0.16 * M)),
+        )
+        # Porte pliante avant restée ouverte : emmarchement sombre et deux battants repliés sur les montants.
+        door_cavity = lambda p: _union(
+            _box(p, (door_mid, 1.24 * M, half_z - 0.06 * M), (0.27 * M, 0.84 * M, 0.09 * M)),
+            _box(p, (door_x0 + 0.03 * M, 1.24 * M, half_z + 0.09 * M), (0.04 * M, 0.82 * M, 0.11 * M)),
+            _box(p, (door_x1 - 0.03 * M, 1.24 * M, half_z + 0.09 * M), (0.04 * M, 0.82 * M, 0.11 * M)),
+        )
+        # Girouette frontale et latérale avec l'indice « 7 » lisible.
+        dest_board = lambda p: _union(
+            _box(p, (-half_x - 0.03 * M, 2.24 * M, 0.0), (0.04 * M, 0.12 * M, 0.56 * M)),
+            _box(p, (-2.30 * M, 2.24 * M, half_z + 0.01 * M), (0.30 * M, 0.10 * M, 0.03 * M)),
+        )
+        seven_glyph = lambda p: _union(
+            _box(p, (-half_x - 0.055 * M, 2.30 * M, 0.0), (0.025 * M, 0.03 * M, 0.14 * M)),
+            capsule(p, (-half_x - 0.055 * M, 2.30 * M, -0.10 * M), (-half_x - 0.055 * M, 2.18 * M, 0.06 * M), 0.028 * M),
+            _box(p, (-2.30 * M, 2.29 * M, half_z + 0.03 * M), (0.10 * M, 0.025 * M, 0.02 * M)),
+            capsule(p, (-2.22 * M, 2.29 * M, half_z + 0.03 * M), (-2.36 * M, 2.19 * M, half_z + 0.03 * M), 0.024 * M),
+        )
+        roof_rack = lambda p: _union(
+            *(_box(p, (0.20 * M, 2.55 * M, sz * 0.72 * M), (2.25 * M, 0.035 * M, 0.035 * M)) for sz in (-1, 1)),
+            *(_box(p, (rx * M, 2.55 * M, 0.0), (0.035 * M, 0.035 * M, 0.72 * M)) for rx in (-2.0, -0.8, 0.4, 1.6, 2.4)),
+            *(_box(p, (rx * M, 2.49 * M, sz * 0.70 * M), (0.03 * M, 0.06 * M, 0.03 * M))
+              for rx in (-2.0, 0.4, 2.4) for sz in (-1, 1)),
+        )
+        roof_trunk = lambda p: rounded_box(p, (0.95 * M, 2.74 * M, -0.05 * M), (0.72 * M, 0.22 * M, 0.46 * M), 0.05 * M)
+        roof_tarp = lambda p: ellipsoid(p, (-0.85 * M, 2.68 * M, 0.08 * M), (0.76 * M, 0.18 * M, 0.48 * M))
+        tyres = lambda p: _union(*(
+            cylinder(p, (wx, 0.34 * M, wz), 0.36 * M, 0.13 * M, 0.04 * M, wheel_rot)
+            for wx in (-2.00 * M, 1.95 * M) for wz in (-half_z + 0.08 * M, half_z - 0.08 * M)
+        ))
+        hubs = lambda p: _union(*(
+            cylinder(p, (wx, 0.34 * M, wz), 0.18 * M, 0.145 * M, 0.02 * M, wheel_rot)
+            for wx in (-2.00 * M, 1.95 * M) for wz in (-half_z + 0.08 * M, half_z - 0.08 * M)
+        ))
+        bumpers_and_steps = lambda p: _union(
+            _box(p, (-half_x - 0.06 * M, 0.46 * M, 0.0), (0.08 * M, 0.09 * M, half_z + 0.02 * M)),
+            _box(p, (half_x + 0.06 * M, 0.48 * M, 0.0), (0.08 * M, 0.09 * M, half_z + 0.02 * M)),
+            _box(p, (door_mid, 0.46 * M, half_z - 0.04 * M), (0.25 * M, 0.035 * M, 0.08 * M)),
+            _box(p, (door_mid, 0.64 * M, half_z - 0.08 * M), (0.25 * M, 0.035 * M, 0.06 * M)),
+        )
+        lamps = lambda p: _union(
+            *(sphere(p, (-half_x - 0.02 * M, 0.76 * M, sz * 0.66 * M), 0.12 * M) for sz in (-1, 1)),
+        )
+        tails = lambda p: _union(
+            *(sphere(p, (half_x + 0.02 * M, 0.78 * M, sz * 0.70 * M), 0.10 * M) for sz in (-1, 1)),
+        )
+        hull_low_clean = lambda p: np.maximum(lower_hull(p), -door_opening(p))
+        hull_high_clean = lambda p: np.maximum(upper_hull(p), -door_opening(p))
+        rust = both(noise_mask(0.24 * M, seed + 1, 0.34), lambda p: p[:, 1] - 0.92 * M)
+        moss = both(noise_mask(0.32 * M, seed + 2, 0.22), lambda p: 2.34 * M - p[:, 1])
+        return [
+            Part(hull_low_clean, BODY_LOW),
+            Part(painted(hull_low_clean, rust, 0.015 * M), RUST, relief=False),
+            Part(hull_high_clean, BODY_HIGH),
+            Part(painted(hull_high_clean, moss, 0.014 * M), MOSS, relief=False),
+            Part(lambda p: np.maximum(stripe(p), -door_opening(p)), STRIPE),
+            Part(side_windows, GLASS),
+            Part(glint, GLINT, relief=False),
+            Part(door_cavity, DOOR_DARK),
+            Part(dest_board, DEST_BG),
+            Part(seven_glyph, DEST_NUM),
+            Part(roof_rack, ROOF_GREY),
+            Part(roof_trunk, TRUNK),
+            Part(roof_tarp, TARP),
+            Part(tyres, TYRE),
+            Part(hubs, RUST),
+            Part(bumpers_and_steps, CHROME),
+            Part(lamps, LAMP),
+            Part(tails, TAIL),
+        ]
+
+    return PropModel(stem, parts, materials, FENCE_YAW, ray_range=260.0, canvas=(180, 124),
+                     footprint=box_footprint(3.3 * M, 0.98 * M),
+                     bounds=((-3.6 * M, 0.0, -1.2 * M), (3.6 * M, 3.05 * M, 1.2 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def line7_sign(stem: str, seed: int) -> PropModel:
+    """
+    Poteau d'arrêt et tableau d'horaires de la ligne 7 (plan 58 T3d) : socle en fonte, mât gris-bleu, plaque
+    d'arrêt bleue à cartouche jaune ocre « 7 », cadre vitré des horaires jaunis et corbeille rouillée sur le côté.
+    """
+    POST, BLUE_PLATE, CREAM, YELLOW, PAPER, INK, GLASS, RUST = range(8)
+    materials = [
+        make_material("post", "#4B535A"),
+        make_material("blue_plate", "#344C6E"),
+        make_material("cream", "#DAD3BE"),
+        make_material("yellow", "#C8A038"),
+        make_material("paper", "#E0D9C2", contrast=0.45),
+        make_material("ink", "#363A40", contrast=0.5),
+        make_material("glass", "#728B94", contrast=0.45),
+        make_material("rust", "#6E462E"),
+    ]
+
+    def parts() -> list[Part]:
+        tilt = rotation_z(Weathering(seed).uniform(-0.04, 0.04))
+        post = lambda p: _union(
+            cylinder(p, (0.0, 0.08 * M, 0.0), 0.18 * M, 0.08 * M, 0.02 * M),
+            capsule(p, (0.0, 0.0, 0.0), tilt @ np.array([0.0, 2.38 * M, 0.0]), 0.055 * M),
+        )
+        head_cream = lambda p: rounded_box(p, tilt @ np.array([0.0, 2.26 * M, 0.0]), (0.28 * M, 0.24 * M, 0.04 * M), 0.04 * M, tilt)
+        head_blue = lambda p: rounded_box(p, tilt @ np.array([0.0, 2.26 * M, 0.0]), (0.23 * M, 0.19 * M, 0.052 * M), 0.01 * M, tilt)
+        head_badge = lambda p: rounded_box(p, tilt @ np.array([0.0, 2.30 * M, 0.0]), (0.14 * M, 0.09 * M, 0.062 * M), 0.01 * M, tilt)
+        seven = lambda p: _union(
+            rounded_box(p, tilt @ np.array([0.0, 2.34 * M, 0.0]), (0.08 * M, 0.02 * M, 0.072 * M), 0.005 * M, tilt),
+            capsule(p, tilt @ np.array([0.06 * M, 2.34 * M, 0.0]), tilt @ np.array([-0.04 * M, 2.24 * M, 0.0]), 0.022 * M),
+        )
+        sched_frame = lambda p: rounded_box(p, tilt @ np.array([0.0, 1.34 * M, 0.04 * M]), (0.22 * M, 0.28 * M, 0.045 * M), 0.005 * M, tilt)
+        sched_paper = lambda p: rounded_box(p, tilt @ np.array([0.0, 1.34 * M, 0.068 * M]), (0.17 * M, 0.23 * M, 0.025 * M), 0.005 * M, tilt)
+        sched_lines = lambda p: _union(
+            rounded_box(p, tilt @ np.array([0.0, 1.49 * M, 0.086 * M]), (0.14 * M, 0.025 * M, 0.015 * M), 0.004 * M, tilt),
+            *(rounded_box(p, tilt @ np.array([0.0, (1.20 + i * 0.07) * M, 0.086 * M]), (0.13 * M, 0.012 * M, 0.015 * M), 0.003 * M, tilt)
+              for i in range(4)),
+        )
+        basket = lambda p: _union(
+            cylinder(p, tilt @ np.array([0.18 * M, 0.74 * M, 0.04 * M]), 0.12 * M, 0.18 * M, 0.02 * M),
+            _box(p, tilt @ np.array([0.09 * M, 0.78 * M, 0.02 * M]), (0.09 * M, 0.025 * M, 0.025 * M)),
+        )
+        return [
+            Part(post, POST),
+            Part(head_cream, CREAM),
+            Part(head_blue, BLUE_PLATE),
+            Part(head_badge, YELLOW),
+            Part(seven, BLUE_PLATE),
+            Part(sched_frame, GLASS),
+            Part(sched_paper, PAPER),
+            Part(sched_lines, INK),
+            Part(basket, RUST),
+        ]
+
+    return PropModel(stem, parts, materials, FENCE_YAW, ray_range=220.0, canvas=(44, 72),
+                     footprint=box_footprint(0.20 * M, 0.20 * M),
+                     bounds=((-0.4 * M, 0.0, -0.3 * M), (0.45 * M, 2.65 * M, 0.3 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
+def line7_luggage(stem: str, seed: int) -> PropModel:
+    """
+    Bagages posés au pied de l'arrêt de la ligne 7 (plan 58 T3d) : grande valise en cuir fauve à sangles et étiquette
+    blanche, valise bleu-gris appuyée contre un colis ficelé, et cabas de toile ocre rayé de rouge posé au-devant.
+    """
+    LEATHER, STRAP, BRASS, TAG, BLUE_CASE, PARCEL, TWINE, TOTE, TOTE_STRIPE = range(9)
+    materials = [
+        make_material("leather", "#6E442A"),
+        make_material("strap", "#3E261A", contrast=0.6),
+        make_material("brass", "#BA9846", contrast=0.5),
+        make_material("tag", "#E4E0CA", contrast=0.45),
+        make_material("blue_case", "#465D6C"),
+        make_material("parcel", "#A68C64"),
+        make_material("twine", "#5A4630", contrast=0.6),
+        make_material("tote", "#B89A62"),
+        make_material("tote_stripe", "#8E4236", contrast=0.6),
+    ]
+
+    def parts() -> list[Part]:
+        w = Weathering(seed)
+        r_flat = rotation_y(0.18)
+        flat_c = np.array([-0.24 * M, 0.16 * M, -0.10 * M])
+        flat_case = lambda p: rounded_box(p, flat_c, (0.46 * M, 0.15 * M, 0.30 * M), 0.03 * M, r_flat)
+        straps = lambda p: _union(
+            *(_box(p, flat_c + r_flat @ np.array([sx * 0.24 * M, 0.01 * M, 0.0]), (0.04 * M, 0.162 * M, 0.312 * M))
+              for sx in (-1, 1)),
+            capsule(p, flat_c + r_flat @ np.array([-0.10 * M, 0.04 * M, 0.32 * M]),
+                    flat_c + r_flat @ np.array([0.10 * M, 0.04 * M, 0.32 * M]), 0.025 * M),
+        )
+        brass = lambda p: _union(
+            *(_box(p, flat_c + r_flat @ np.array([sx * 0.43 * M, 0.12 * M, sz * 0.27 * M]),
+                   (0.05 * M, 0.045 * M, 0.05 * M)) for sx in (-1, 1) for sz in (-1, 1)),
+            *(_box(p, flat_c + r_flat @ np.array([sx * 0.24 * M, 0.165 * M, 0.18 * M]),
+                   (0.05 * M, 0.02 * M, 0.04 * M)) for sx in (-1, 1)),
+        )
+        tag = lambda p: _box(p, flat_c + r_flat @ np.array([0.14 * M, 0.06 * M, 0.34 * M]), (0.065 * M, 0.018 * M, 0.04 * M))
+        blue_r = rotation_y(-0.28) @ rotation_z(w.uniform(-0.06, 0.06))
+        blue_c = np.array([0.36 * M, 0.34 * M, -0.06 * M])
+        blue_case = lambda p: rounded_box(p, blue_c, (0.28 * M, 0.32 * M, 0.11 * M), 0.04 * M, blue_r)
+        parcel_c = np.array([0.08 * M, 0.50 * M, -0.22 * M])
+        parcel = lambda p: _box(p, parcel_c, (0.22 * M, 0.18 * M, 0.20 * M))
+        twine = lambda p: _union(
+            _box(p, parcel_c, (0.232 * M, 0.02 * M, 0.212 * M)),
+            _box(p, parcel_c, (0.02 * M, 0.192 * M, 0.212 * M)),
+            _box(p, parcel_c, (0.232 * M, 0.192 * M, 0.02 * M)),
+        )
+        tote_c = np.array([0.08 * M, 0.20 * M, 0.30 * M])
+        tote_r = rotation_y(0.32)
+        tote = lambda p: _union(
+            rounded_box(p, tote_c, (0.22 * M, 0.20 * M, 0.14 * M), 0.04 * M, tote_r),
+            capsule(p, tote_c + tote_r @ np.array([-0.10 * M, 0.20 * M, 0.06 * M]),
+                    tote_c + tote_r @ np.array([0.10 * M, 0.28 * M, 0.06 * M]), 0.022 * M),
+            capsule(p, tote_c + tote_r @ np.array([-0.10 * M, 0.20 * M, -0.06 * M]),
+                    tote_c + tote_r @ np.array([0.10 * M, 0.28 * M, -0.06 * M]), 0.022 * M),
+        )
+        tote_stripe = lambda p: rounded_box(p, tote_c + np.array([0.0, 0.02 * M, 0.0]), (0.225 * M, 0.045 * M, 0.145 * M), 0.02 * M, tote_r)
+        return [
+            Part(flat_case, LEATHER),
+            Part(straps, STRAP),
+            Part(brass, BRASS),
+            Part(tag, TAG),
+            Part(blue_case, BLUE_CASE),
+            Part(parcel, PARCEL),
+            Part(twine, TWINE),
+            Part(tote, TOTE),
+            Part(tote_stripe, TOTE_STRIPE),
+        ]
+
+    return PropModel(stem, parts, materials, float(np.radians(22.0)), ray_range=220.0, canvas=(68, 52),
+                     footprint=None,
+                     bounds=((-0.9 * M, 0.0, -0.6 * M), (0.9 * M, 0.9 * M, 0.6 * M)),
+                     supersample=4, smooth_slopes=True)
+
+
 def catalog() -> list[PropModel]:
     models = [car("prop_urban_car", "red", AXIS_X_YAW, 11)]
     for paint, seed in (("red", 12), ("teal", 21), ("cream", 31)):
@@ -1591,5 +1854,8 @@ def catalog() -> list[PropModel]:
         school_fence("prop_school_fence", 281),
         school_gate("prop_school_gate", 285),
         switchboard("prop_switchboard", 291),
+        line7_bus("prop_line7_bus", 301),
+        line7_sign("prop_line7_sign", 311),
+        line7_luggage("prop_line7_luggage", 321),
     ]
     return models

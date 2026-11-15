@@ -519,6 +519,36 @@
             { "sprites": ["prop_street_lamp"], "at": [115, 185], "blocking": true },
             { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [230, 125], "blocking": false, "chance": 0.6 }
           ]
+        },
+        {
+          "id": "arret_ligne_7",
+          "_doc": "L'arrêt de la ligne 7 (plan 58 T3d) : le car interurbain arrêté au bord du quai, porte avant pliante restée ouverte, l'abribus et le poteau d'horaires, les valises et colis posés sur le trottoir là où l'on attendait ceux qui rentraient du port, le Mémorial au sud, tilleuls, bancs et réverbères.",
+          "half_extent_px": [520, 300],
+          "ground": "concrete",
+          "memorial": [0, 105],
+          "spur_start": [0, 280],
+          "elements": [
+            { "sprites": ["prop_line7_bus"], "at": [35, -95], "blocking": true },
+            { "sprites": ["prop_bus_shelter"], "at": [-215, -80], "blocking": true },
+            { "sprites": ["prop_line7_sign"], "at": [-130, -58], "blocking": true },
+            { "sprites": ["prop_line7_luggage"], "at": [-155, -18], "blocking": false },
+            { "sprites": ["prop_exodus_luggage"], "at": [145, -22], "blocking": false },
+            { "sprites": ["prop_exodus_suitcase_open"], "at": [-255, 10], "blocking": false, "chance": 0.75 },
+            { "sprites": ["prop_line7_luggage"], "at": [225, 25], "blocking": false, "chance": 0.65 },
+            { "sprites": ["prop_obituary_board"], "at": [-280, -45], "blocking": true, "chance": 0.7 },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-370, -110], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [370, -110], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-380, 185], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [380, 185], "blocking": true },
+            { "sprites": ["prop_park_bench_x"], "at": [-145, 170], "blocking": false },
+            { "sprites": ["prop_park_bench_x"], "at": [145, 170], "blocking": false },
+            { "sprites": ["prop_park_bench_y"], "at": [-275, 45], "blocking": false },
+            { "sprites": ["prop_street_lamp"], "at": [-170, -115], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [205, -115], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [-115, 185], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [115, 185], "blocking": true },
+            { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [245, 125], "blocking": false, "chance": 0.6 }
+          ]
         }
       ]
     },

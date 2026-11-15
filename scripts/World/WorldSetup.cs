@@ -361,15 +361,9 @@ public partial class WorldSetup : Node2D
         onProgress?.Invoke("Décors...");
         await SpawnEnvironmentPropsAsync(_urbanLayout);
         LoadGuard.InjectFault("décors");
-        LoadProfiler.Mark("décors des biomes");
+        LoadProfiler.Mark("décors des biomes et de la ville");
         await YieldFrame();
 
-        if (_urbanLayout != null)
-        {
-            _exodusScenes = UrbanPropPlacer.PlaceProps(_urbanLayout, PropSpawner.LoadCity("urban_ruins"), _ground, _propStaging, _usedCells, LandSeed);
-            LoadProfiler.Mark("décors de la ville");
-            await YieldFrame();
-        }
         await BuildPropOcclusionAsync();
         await YieldFrame();
         LoadProfiler.Mark("tronçons de décors");
@@ -731,8 +725,15 @@ public partial class WorldSetup : Node2D
         ChannelBridgePlacer.Place(_generator, _pathNetwork, PropSpawner.LoadRhythms(), propContainer);
         LoadProfiler.Mark("décors des carrefours et des passerelles");
         await YieldLoadSlice();
+        if (urbanLayout != null)
+        {
+            // Avant le placement des décors remarquables pour qu'immeubles, places, parcs et scènes de rue aient déjà réservé leurs cellules.
+            _exodusScenes = UrbanPropPlacer.PlaceProps(urbanLayout, PropSpawner.LoadCity("urban_ruins"), _ground, propContainer, _usedCells, LandSeed);
+            LoadProfiler.Mark("décors de la ville");
+            await YieldFrame();
+        }
         await _propSpawner.SpawnPropsAsync(_generator, _terrain, _ground, propContainer, _usedCells, LandSeed, LoadSliceSpent,
-            YieldLoadSlice, blockedCells, _wildFieldsLayout, _rhythmZones);
+            YieldLoadSlice, blockedCells, _wildFieldsLayout, _rhythmZones, urbanLayout, _pathNetwork?.Cells);
     }
 
     private HashSet<Vector2I> BuildEnvironmentPropBlockedCells(UrbanLayout urbanLayout)

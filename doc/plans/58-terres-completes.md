@@ -828,3 +828,46 @@ Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c 
 
 **Ce qui reste :**
 - L'arrêt de la ligne 7, les décors remarquables garantis et la mesure d'ensemble de la Haute-Ville (T3d).
+
+## 25. T3d, l'arrêt de la ligne 7 et la mesure d'ensemble — livré le 15 novembre
+
+**Ce qui est fait :**
+- **Trois décors de la ligne 7** (`tools/sprites/props/urban.py`) :
+  - le **car de la ligne 7** (`prop_line7_bus`, `126 × 64` px) : car interurbain arrêté au bord du quai, bas de caisse bleu ardoise et pavillon crème à filet ocre, six baies latérales, porte accordéon avant restée ouverte sur ses marches, girouettes avant et latérale marquées « 7 », galerie de toit avec malle et ballot bâché, pneus avant affaissés ;
+  - le **poteau d'arrêt** (`prop_line7_sign`, `14 × 41` px) : pied de fonte, enseigne bleue et crème « 7 », cadre vitré des horaires jaunis et corbeille rouillée ;
+  - les **valises et colis de la ligne 7** (`prop_line7_luggage`, `30 × 20` px) : valise en cuir, valise bleue appuyée contre un colis ficelé et cabas rayé restés sur le trottoir.
+- **L'arrêt de la ligne 7** (`arret_ligne_7`, `data/world/land_pieces.json`) : le car arrêté au nord, l'abribus (`prop_bus_shelter`) et le poteau d'horaires sur le quai, les valises posées et ouvertes, un panneau d'affichage des faire-part, le Mémorial au sud, tilleuls, bancs et réverbères.
+- **La Haute-Ville a désormais son cœur (`parvis_de_saint_aubin`) et quatre pièces** (`place_de_la_mairie`, `ecole_communale`, `bureau_de_poste`, `arret_ligne_7`), et en pose trois ou quatre par run.
+- **Quatre décors remarquables garantis de la ville** (`remarkables` dans `data/props/urban_ruins.json` : `obituary_board`, `phone_booth`, `morris_column`, `dry_fountain`) :
+  - `PropSpawner.PlaceRemarkablesAsync` (`scripts/World/PropSpawner.cs`) et `WorldSetup.SpawnEnvironmentPropsAsync` (`scripts/World/WorldSetup.cs`) placent désormais ces quatre décors sur les cellules intérieures des places et des parcs (`IsUrbanRemarkableCell`, hors bassins, chaussées, murs et intérieurs d'îlots, et sans bloquer les chemins), chacun posé une fois sur la terre (`4/4 décors remarquables` à toutes les graines testées). Les quatre autres biomes ne sont pas touchés.
+- **Outils et contrat des catalogues** : `"prop_line7_bus"` ajouté à `LandmarkStems` (`tools/tests/RunObservation.UrbanLandmarks.cs`), et `CatalogContractRegression` (`tools/tests/CatalogContractRegression.cs`) mis à jour pour exiger quatre pièces dont `arret_ligne_7` et quatre remarquables sur `urban_ruins`.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement, 0 erreur.
+- `tools/validate.sh` (`smoke`, `catalogs`, `lands`, `movement`) : 4/4 suites vertes (`sources modifiées : 0`).
+- **Placement et captures** (`--land-order urban_ruins --capture-pieces`, graines `7` et `42`) : `5` pièces posées par graine (cœur + 4 pièces), `4/4 décors remarquables` sans avertissement, `arret_ligne_7` lisible et sans chevauchement.
+- **Planche** : [planches/plan58_t3d_ligne7_ville.png](planches/plan58_t3d_ligne7_ville.png), qui montre :
+  - la vue d'ensemble avant T3 (graine 7) puis après T3 (Saint-Aubin, quatre pièces, diagonales, étoiles et parcs) ;
+  - l'arrêt de la ligne 7 en jeu aux graines 7 et 42 ;
+  - les trois décors neufs (`prop_line7_bus`, `prop_line7_sign`, `prop_line7_luggage`).
+
+**Mesure d'ensemble de T3** (`measure_run`, profil dev, Facteur, Haute-Ville puis bois puis carrière, 600 s, graines `7`, `42`, `11`, `3` et `99`, avant au commit `80b33f4b` avant T3a [§19 pour `7 / 42 / 11` + worktree `80b33f4b` pour `3 / 99`], après au code final T3d) :
+
+| | Avant (`7 / 42 / 11 / 3 / 99`) | Après (`7 / 42 / 11 / 3 / 99`) |
+|---|---|---|
+| Pièces de la ville posées (1re terre, hors cœur) | 0 / 0 / 0 / 0 / 0 | 4 / 4 / 3 / 4 / 3 |
+| Pièces de la ville vues (1re terre, hors cœur) | 0 / 0 / 0 / 0 / 0 | 2 / 3 / 1 / 3 / 1 |
+| Pièces de la ville vues (toute la run, hors cœur) | 0 / 0 / 0 / 0 / 0 | 4 / 3 / 1 / 3 / 3 |
+| Troisième Mémorial de la ville ravivé (s) | 107 / 119 / jamais / 108 / 126 | 126 / 248 / 108 / 155 / 127 |
+| Ville quittée (s) | 169 / 182 / jamais / 196 / jamais | 194 / jamais / 194 / 215 / 187 |
+| Créatures visibles, 0-60 s | 14,4 / 16,3 / 27,2 / 14,2 / 15,2 | 10,1 / 23,0 / 10,9 / 16,9 / 17,2 |
+| Créatures visibles, 180-300 s | 19,5 / 21,3 / 15,6 / 18,9 / 14,5 | 21,0 / 13,2 / 21,0 / 22,7 / 20,0 |
+| Éliminations | 2 166 / 1 099 / 329 / 771 / 497 | 1 946 / 288 / 983 / 1 641 / 1 254 |
+| Distance parcourue (m) | 8 896 / 9 418 / 1 633 / 10 409 / 1 878 | 8 415 / 3 368 / 10 651 / 9 327 / 9 425 |
+| Gardiens et échos vaincus | 4 / 3 / 0 / 3 / 0 | 4 / 0 / 3 / 4 / 4 |
+| Morts | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 |
+
+Les graines `11` et `99`, où le bot restait bloqué 600 s dans l'ancienne grille uniforme (`1 633 m` et `1 878 m`, `0` gardien), traversent désormais la ville sans encombre et la quittent en `194 s` et `187 s` avant de boucler les trois terres (`3` et `4` gardiens/échos vaincus). Aux graines `7`, `3`, `11` et `99`, la première Haute-Ville est quittée entre `187` et `215 s` et les quatre runs enchaînent jusqu'à l'endgame sans mort (dont un retour en Haute-Ville en 4e terre aux graines `7` et `99`, portant à `4` et `3` les passages dans des pièces urbaines sur l'ensemble de la run). À la graine `42`, le bot ravive bien les trois Mémoriaux à `248 s` (en voyant `3` pièces sur `4`), puis son retour en ligne droite vers le parvis (`TrySteerLand` avec détour aléatoire `±90°` dans `RunObservation.cs`) oscille derrière un large pâté d'immeubles jusqu'à la fin des `600 s` — comportement propre à ce bot aveugle aux pâtés plutôt qu'à un cul-de-sac du niveau. Sur l'ensemble des cinq graines, `15` gardiens et échos sont vaincus contre `10` avant T3, avec `0` mort.
+
+**Bilan de T3 — La Haute-Ville est faite.**
+La Haute-Ville sort de sa grille répétitive : écarts variés, décrochements, impasses, cratères, avenues droites et avenues diagonales 2:1, places en étoile et parcs arborés à bassins, îlots biseautés, quatre décors remarquables garantis (`obituary_board`, `phone_booth`, `morris_column`, `dry_fountain`), un cœur fait main (`parvis_de_saint_aubin` et son haut clocher arrêté sur `23 h 10`) et quatre pièces de mémoire autour de lui (`place_de_la_mairie`, `ecole_communale`, `bureau_de_poste`, `arret_ligne_7`), dont trois ou quatre sont posées à chaque run. Suite selon [§219](DECISIONS.md) : **La Montée et l'Indicible en finale** (plan 56 lot B4), avant de reprendre T4 et T5.
