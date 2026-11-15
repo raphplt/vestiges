@@ -27,9 +27,10 @@ public static class RoadTileGenerator
     private const int ColumnShift = 16;
     private const int RowStep = 16;
 
-    // Chaussée : 11 rangs pour une rue horizontale, 23 colonnes pour une verticale (2:1 au sol).
+    // Chaussée : 11 rangs pour une rue horizontale, 23 colonnes pour une verticale (2:1 au sol), 15 de demi-portée en diagonale.
     private const int AsphaltHalfH = 5;
     private const int AsphaltHalfV = 11;
+    private const int AsphaltHalfDiag = 15;
     // Angle abattu des croisements : dx + 2·dy ≤ portée, une diagonale du sol iso.
     private const int FilletReach = 14;
     // Hauteur de la face visible d'une bordure.
@@ -98,7 +99,9 @@ public static class RoadTileGenerator
     // Une même clé donne toujours les mêmes tuiles : elles servent d'une run à l'autre. Deux voisinages qui dessinent
     // la même tranche partagent leur groupe. Images remplies par la génération (hors du thread principal), textures
     // par le thread principal.
-    private static readonly Dictionary<int, string> GroupOfKey = new();
+    private readonly record struct RoadKey(int Ortho, ulong Diag);
+
+    private static readonly Dictionary<RoadKey, string> GroupOfKey = new();
     private static readonly Dictionary<string, Image[]> Images = new();
     private static readonly Dictionary<string, ImageTexture[]> Textures = new();
 
@@ -129,7 +132,7 @@ public static class RoadTileGenerator
         {
             if (!InGrid(layout, cell.X, cell.Y))
                 continue;
-            int key = KeyOf(layout, cell);
+            RoadKey key = KeyOf(layout, cell);
             if (!GroupOfKey.TryGetValue(key, out string group))
             {
                 group = Render(key);
@@ -161,20 +164,28 @@ public static class RoadTileGenerator
         return textures;
     }
 
-    /// <summary>Motif des routes dans le voisinage 5×5 de la cellule, et parité de son rang.</summary>
-    private static int KeyOf(UrbanLayout layout, Vector2I cell)
+    /// <summary>Motif des routes orthogonales et diagonales dans le voisinage 5×5 de la cellule, et parité de son rang.</summary>
+    private static RoadKey KeyOf(UrbanLayout layout, Vector2I cell)
     {
-        int key = (cell.Y & 1) != 0 ? ParityBit : 0;
+        int ortho = (cell.Y & 1) != 0 ? ParityBit : 0;
+        ulong diag = 0UL;
         for (int j = -Window; j <= Window; j++)
         {
             for (int i = -Window; i <= Window; i++)
             {
-                if (InGrid(layout, cell.X + i, cell.Y + j)
-                    && layout.CellGrid[cell.X + i + layout.MapRadius, cell.Y + j + layout.MapRadiusY] == UrbanCellType.Road)
-                    key |= 1 << WindowIndex(i, j);
+                RoadDir dir = layout.GetRoadDir(cell.X + i, cell.Y + j);
+                if (dir == RoadDir.None)
+                    continue;
+                int index = WindowIndex(i, j);
+                if ((dir & RoadDir.Orthogonal) != 0)
+                    ortho |= 1 << index;
+                if ((dir & RoadDir.DiagSe) != 0)
+                    diag |= 1UL << index;
+                if ((dir & RoadDir.DiagSw) != 0)
+                    diag |= 1UL << (index + 25);
             }
         }
-        return key;
+        return new RoadKey(ortho, diag);
     }
 
     private static bool InGrid(UrbanLayout layout, int x, int y)
@@ -186,8 +197,19 @@ public static class RoadTileGenerator
 
     private static int WindowIndex(int i, int j) => (i + Window) + (j + Window) * WindowSide;
 
-    private static bool IsRoad(int key, int i, int j) =>
-        i >= -Window && i <= Window && j >= -Window && j <= Window && (key & (1 << WindowIndex(i, j))) != 0;
+    private static bool InWindow(int i, int j) => i >= -Window && i <= Window && j >= -Window && j <= Window;
+
+    private static bool IsOrtho(RoadKey key, int i, int j) =>
+        InWindow(i, j) && (key.Ortho & (1 << WindowIndex(i, j))) != 0;
+
+    private static bool IsDiagSe(RoadKey key, int i, int j) =>
+        InWindow(i, j) && (key.Diag & (1UL << WindowIndex(i, j))) != 0;
+
+    private static bool IsDiagSw(RoadKey key, int i, int j) =>
+        InWindow(i, j) && (key.Diag & (1UL << (WindowIndex(i, j) + 25))) != 0;
+
+    private static bool IsAnyRoad(RoadKey key, int i, int j) =>
+        IsOrtho(key, i, j) || IsDiagSe(key, i, j) || IsDiagSw(key, i, j);
 
     // =====================================================================
     //  GÉOMÉTRIE — chaussée du réseau, autour de la tranche de la cellule
@@ -197,9 +219,9 @@ public static class RoadTileGenerator
     /// Chaussée vue de la cellule centrale : repère centré sur elle, x de −32 à 31, sa tranche de −8 à 7. Une cellule
     /// voisine du rang j est décalée de 32 px si sa parité diffère, et sa bande verticale recentrée de ±16 px.
     /// </summary>
-    private static bool[] Asphalt(int key)
+    private static bool[] Asphalt(RoadKey key)
     {
-        int parity = (key & ParityBit) != 0 ? 1 : 0;
+        int parity = (key.Ortho & ParityBit) != 0 ? 1 : 0;
         bool[] asphalt = new bool[EvalW * EvalH];
         for (int j = -1; j <= 1; j++)
         {
@@ -207,27 +229,98 @@ public static class RoadTileGenerator
             int centerY = j * RowStep;
             for (int i = -1; i <= 1; i++)
             {
-                if (!IsRoad(key, i, j))
+                bool ortho = IsOrtho(key, i, j);
+                bool diagSe = IsDiagSe(key, i, j);
+                bool diagSw = IsDiagSw(key, i, j);
+                if (!ortho && !diagSe && !diagSw)
                     continue;
+
                 int centerX = i * TileW + (rowParity - parity) * HalfW;
                 int column = centerX + (rowParity == 0 ? ColumnShift : -ColumnShift);
-                bool left = IsRoad(key, i - 1, j);
-                bool right = IsRoad(key, i + 1, j);
-                bool up = IsRoad(key, i, j - 1);
-                bool down = IsRoad(key, i, j + 1);
-                // Emprise de la cellule : sa tranche, l'angle abattu au-dessus, la colonne et ses angles de part et d'autre.
-                int fromX = Mathf.Max(0, centerX - HalfW - ColumnShift + Margin + HalfW);
-                int toX = Mathf.Min(EvalW, centerX + HalfW + ColumnShift + Margin + HalfW);
-                int fromY = Mathf.Max(0, centerY - SlotHalf - FilletReach / 2 + Margin + SlotHalf);
-                int toY = Mathf.Min(EvalH, centerY + SlotHalf + FilletReach / 2 + Margin + SlotHalf);
-                for (int y = fromY; y < toY; y++)
+
+                if (ortho)
                 {
-                    int py = y - Margin - SlotHalf;
-                    for (int x = fromX; x < toX; x++)
+                    bool left = IsOrtho(key, i - 1, j);
+                    bool right = IsOrtho(key, i + 1, j);
+                    bool up = IsOrtho(key, i, j - 1);
+                    bool down = IsOrtho(key, i, j + 1);
+                    // Emprise de la cellule : sa tranche, l'angle abattu au-dessus, la colonne et ses angles de part et d'autre.
+                    int fromX = Mathf.Max(0, centerX - HalfW - ColumnShift + Margin + HalfW);
+                    int toX = Mathf.Min(EvalW, centerX + HalfW + ColumnShift + Margin + HalfW);
+                    int fromY = Mathf.Max(0, centerY - SlotHalf - FilletReach / 2 + Margin + SlotHalf);
+                    int toY = Mathf.Min(EvalH, centerY + SlotHalf + FilletReach / 2 + Margin + SlotHalf);
+                    for (int y = fromY; y < toY; y++)
                     {
-                        int px = x - Margin - HalfW;
-                        if (InCell(px - column, py - centerY, px - centerX, left, right, up, down))
-                            asphalt[x + y * EvalW] = true;
+                        int py = y - Margin - SlotHalf;
+                        for (int x = fromX; x < toX; x++)
+                        {
+                            int px = x - Margin - HalfW;
+                            if (InCell(px - column, py - centerY, px - centerX, left, right, up, down))
+                                asphalt[x + y * EvalW] = true;
+                        }
+                    }
+
+                    // Raccord quand une rue verticale reculée de ±16 px croise une diagonale centrée sur la cellule.
+                    if ((up || down) && (diagSe || diagSw))
+                    {
+                        int bridgeLeft = Mathf.Min(centerX, column) - AsphaltHalfV;
+                        int bridgeRight = Mathf.Max(centerX, column) + AsphaltHalfV;
+                        for (int y = 0; y < EvalH; y++)
+                        {
+                            int py = y - Margin - SlotHalf;
+                            if (Mathf.Abs(py - centerY) > AsphaltHalfH + 2)
+                                continue;
+                            for (int x = 0; x < EvalW; x++)
+                            {
+                                int px = x - Margin - HalfW;
+                                if (px >= bridgeLeft && px <= bridgeRight)
+                                    asphalt[x + y * EvalW] = true;
+                            }
+                        }
+                    }
+                }
+
+                if (diagSe)
+                {
+                    int nwI = i - (1 - rowParity);
+                    int seI = i + rowParity;
+                    bool nw = IsAnyRoad(key, nwI, j - 1);
+                    bool se = IsAnyRoad(key, seI, j + 1);
+                    int minV = nw ? -40 : -AsphaltHalfDiag;
+                    int maxV = se ? 40 : AsphaltHalfDiag;
+                    for (int y = 0; y < EvalH; y++)
+                    {
+                        int dy = (y - Margin - SlotHalf) - centerY;
+                        for (int x = 0; x < EvalW; x++)
+                        {
+                            int dx = (x - Margin - HalfW) - centerX;
+                            int u = dx - 2 * dy;
+                            int v = dx + 2 * dy;
+                            if (Mathf.Abs(u) <= AsphaltHalfDiag && v >= minV && v <= maxV)
+                                asphalt[x + y * EvalW] = true;
+                        }
+                    }
+                }
+
+                if (diagSw)
+                {
+                    int neI = i + rowParity;
+                    int swI = i - (1 - rowParity);
+                    bool ne = IsAnyRoad(key, neI, j - 1);
+                    bool sw = IsAnyRoad(key, swI, j + 1);
+                    int minU = sw ? -40 : -AsphaltHalfDiag;
+                    int maxU = ne ? 40 : AsphaltHalfDiag;
+                    for (int y = 0; y < EvalH; y++)
+                    {
+                        int dy = (y - Margin - SlotHalf) - centerY;
+                        for (int x = 0; x < EvalW; x++)
+                        {
+                            int dx = (x - Margin - HalfW) - centerX;
+                            int u = dx - 2 * dy;
+                            int v = dx + 2 * dy;
+                            if (Mathf.Abs(v) <= AsphaltHalfDiag && u >= minU && u <= maxU)
+                                asphalt[x + y * EvalW] = true;
+                        }
                     }
                 }
             }
@@ -382,17 +475,22 @@ public static class RoadTileGenerator
     }
 
     /// <summary>Groupe de tuiles de la clé, peint à sa première rencontre ; nul si la tranche est vide.</summary>
-    private static string Render(int key)
+    private static string Render(RoadKey key)
     {
         bool[] asphalt = Asphalt(key);
         Surface[] surfaces = Surfaces(asphalt);
-        bool left = IsRoad(key, -1, 0) && IsRoad(key, 0, 0);
-        bool right = IsRoad(key, 1, 0) && IsRoad(key, 0, 0);
-        bool up = IsRoad(key, 0, -1) && IsRoad(key, 0, 0);
-        bool down = IsRoad(key, 0, 1) && IsRoad(key, 0, 0);
-        bool horizontalMarking = left && right && !up && !down;
-        bool verticalMarking = up && down && !left && !right;
-        int column = HalfW + ((key & ParityBit) != 0 ? -ColumnShift : ColumnShift);
+        bool centerOrtho = IsOrtho(key, 0, 0);
+        bool centerDiagSe = IsDiagSe(key, 0, 0);
+        bool centerDiagSw = IsDiagSw(key, 0, 0);
+        bool left = IsOrtho(key, -1, 0) && centerOrtho;
+        bool right = IsOrtho(key, 1, 0) && centerOrtho;
+        bool up = IsOrtho(key, 0, -1) && centerOrtho;
+        bool down = IsOrtho(key, 0, 1) && centerOrtho;
+        bool horizontalMarking = left && right && !up && !down && !centerDiagSe && !centerDiagSw;
+        bool verticalMarking = up && down && !left && !right && !centerDiagSe && !centerDiagSw;
+        bool diagSeMarking = centerDiagSe && !centerOrtho && !centerDiagSw;
+        bool diagSwMarking = centerDiagSw && !centerOrtho && !centerDiagSe;
+        int column = HalfW + ((key.Ortho & ParityBit) != 0 ? -ColumnShift : ColumnShift);
 
         // Empreinte de la tranche : surfaces et marquage, ce qui seul décide du dessin.
         ulong signature = 14695981039346656037UL;
@@ -406,6 +504,8 @@ public static class RoadTileGenerator
             return null;
         signature = (signature ^ (horizontalMarking ? 1UL : 0UL)) * 1099511628211UL;
         signature = (signature ^ (verticalMarking ? (ulong)column : 0UL)) * 1099511628211UL;
+        signature = (signature ^ (diagSeMarking ? 1UL : 0UL)) * 1099511628211UL;
+        signature = (signature ^ (diagSwMarking ? 2UL : 0UL)) * 1099511628211UL;
         string group = $"road_{signature:x16}";
         if (Images.ContainsKey(group))
             return group;
@@ -424,6 +524,10 @@ public static class RoadTileGenerator
                 tile.HorizontalMarking();
             if (verticalMarking)
                 tile.VerticalMarking(column);
+            if (diagSeMarking)
+                tile.DiagonalMarking(true);
+            if (diagSwMarking)
+                tile.DiagonalMarking(false);
             // Un nid-de-poule par motif au plus, sur la dernière variante : répété d'une tuile à l'autre, il ferait motif.
             if (variant == WearVariants - 1)
                 tile.Pothole();
@@ -675,6 +779,21 @@ public static class RoadTileGenerator
             {
                 if (y % 4 < 2 && Roll(7) != 0)
                     Mark(column, y);
+            }
+        }
+
+        // Diagonale 2:1 : suit exactement la pente d'un losange sur la tranche de 16 rangs.
+        public void DiagonalMarking(bool se)
+        {
+            int stepX = se ? 1 : -1;
+            for (int y = 0; y < SlotHalf * 2; y++)
+            {
+                if (y % 4 < 2 && Roll(7) != 0)
+                {
+                    int x = HalfW + stepX * 2 * (y - SlotHalf);
+                    Mark(x, y);
+                    Mark(x + stepX, y);
+                }
             }
         }
 

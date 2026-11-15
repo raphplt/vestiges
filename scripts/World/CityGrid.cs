@@ -51,11 +51,20 @@ public sealed class CityGrid
     public Vector2I SquareTreeEvery;
     public float SquareDensity;
     public readonly List<Dressing> SquareProps = new();
+    public Vector2I DiagonalCount;
+    public float StarRadiusPx;
+    public readonly List<Dressing> StarCenterProps = new();
+    public float ParkChance;
+    public int ParkMinCells;
+    public float ParkSpacingPx;
+    public float ParkPondChance;
+    public readonly List<Dressing> ParkTrees = new();
+    public readonly List<Dressing> ParkProps = new();
 
     public static CityGrid Parse(JsonConfigReader reader, JsonElement element, IReadOnlyDictionary<string, PropDefinition> props)
     {
         reader.AllowOnly(element, "city", "row_spacing", "column_spacing", "jogs", "merge_chance", "dead_end_chance", "craters",
-            "avenues", "squares");
+            "avenues", "squares", "diagonals", "parks");
         CityGrid city = new()
         {
             RowSpacing = Range(reader, element, "row_spacing", 6, 40),
@@ -95,6 +104,21 @@ public sealed class CityGrid
         city.SquareTreeEvery = new Vector2I(reader.Integer(every, "columns", 2, 16), reader.Integer(every, "rows", 2, 16));
         city.SquareDensity = reader.Chance(squares, "density");
         Weights(reader, squares, "weights", "city.squares", props, city.SquareProps);
+
+        JsonElement diagonals = reader.Section(element, "diagonals");
+        reader.AllowOnly(diagonals, "city.diagonals", "count", "star_radius_px", "star_center");
+        city.DiagonalCount = Range(reader, diagonals, "count", 1, 4);
+        city.StarRadiusPx = reader.Between(diagonals, "star_radius_px", 128f, 384f);
+        Weights(reader, diagonals, "star_center", "city.diagonals", props, city.StarCenterProps);
+
+        JsonElement parks = reader.Section(element, "parks");
+        reader.AllowOnly(parks, "city.parks", "chance", "min_cells", "spacing_px", "pond_chance", "trees", "weights");
+        city.ParkChance = reader.Between(parks, "chance", 0f, 0.4f);
+        city.ParkMinCells = reader.Integer(parks, "min_cells", 16, 4096);
+        city.ParkSpacingPx = reader.Between(parks, "spacing_px", 256f, 8192f);
+        city.ParkPondChance = reader.Chance(parks, "pond_chance");
+        Weights(reader, parks, "trees", "city.parks", props, city.ParkTrees);
+        Weights(reader, parks, "weights", "city.parks", props, city.ParkProps);
         return city;
     }
 

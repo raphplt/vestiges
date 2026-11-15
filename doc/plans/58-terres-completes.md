@@ -759,3 +759,23 @@ Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c 
 **Ce qui reste :**
 - Le parvis est vaste et assez vide au milieu : c'est la place du combat du gardien.
 - Raphaël trouve les rues de la ville trop linéaires (§222). Le lot qui les casse passe avant T3b2.
+
+## 22. T3e, la ville sort de sa grille — livré le 15 novembre
+
+**Ce qui est fait :**
+- **Avenues diagonales 2:1 (`NW–SE` et `NE–SW`)** (`UrbanLayoutGenerator`, `RoadTileGenerator`, `CityGrid`) : deux à trois traversées obliques par terre (`RoadDir`, clé `RoadKey(int Ortho, ulong Diag)`, demi-largeur d'asphalte `15 px`, bordures et pointillés jaunes dans l'axe `±(2, 1)`, trottoirs latéraux, tilleuls alignés sur la normale et mobilier routier sur les diagonales).
+- **Places en étoile** (`StarPlazas`, 2 à 4 par terre) : carrefours d'ancrage et croisements ouverts en places dallées à pans coupés, mobilier en couronne (tilleuls, bancs, réverbères) et décor central (`prop_war_memorial`, `prop_morris_column`, `prop_standpipe`).
+- **Parcs arborés** (`UrbanCellType.Park`, `Parks`) : îlots ouverts en parcs d'herbe verte (`foret/tile_foret_sol_w00..w15` ajouté aux groupes de Wang de `data/biomes/urban_ruins.json`), allées en croix et placette centrale dallées (`Plaza`), bassin d'eau (`TerrainType.Water`) dans un tiers des parcs admissibles, grilles/murets périphériques aux entrées ouvertes, tilleuls, bancs et réverbères.
+- **Îlots biseautés** (`BuildingFootprint.Angled`, `UrbanBuildingPlacer`, `UrbanPropPlacer`) : façades posées par paliers (`AngledRowStep = 5`, modules ajustés jusqu'à 3 cellules) strictement bornées aux cellules `BuildingInterior | BuildingWall` pour ne jamais déborder sur les chaussées obliques.
+- **Stabilisation de `LandChangeRegression`** (`tools/tests/LandChangeRegression.cs`) : règlement des écrans de montée de niveau parasites dans `Frames(int)` et `CheckGuardian()`.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement, 0 erreur.
+- `tools/validate.sh` (`smoke`, `catalogs`, `lands`, `movement`) : 4/4 suites vertes (`RESULT failures=0` sur `lands`) ; cinq cas négatifs ajoutés au contrat des catalogues pour `diagonals` et `parks`.
+- **Captures** (`--land-order urban_ruins --capture-pieces`) :
+  - graine 7 : `11 027` cellules de rue (dont `741` diagonales), `292` bâtiments, `3` places en étoile, `1` square, `21` parcs ;
+  - graine 42 : `10 928` cellules de rue (dont `484` diagonales), `303` bâtiments, `3` places en étoile, `18` parcs.
+- **Planche** : [planches/plan58_t3e_ville_diagonales_parcs.png](planches/plan58_t3e_ville_diagonales_parcs.png).
+
+**Ce qui reste :**
+- La suite immédiate de la Haute-Ville : T3b2 (la place de la mairie), T3c (l'école et la poste) et T3d (la ligne 7 et la mesure d'ensemble).

@@ -542,6 +542,7 @@ public static class PathNetworkGenerator
                             _cost[index] = config.SidewalkCost;
                             continue;
                         case UrbanCellType.Plaza:
+                        case UrbanCellType.Park:
                             _cost[index] = config.PlazaCost;
                             continue;
                     }

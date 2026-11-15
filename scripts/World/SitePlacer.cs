@@ -163,7 +163,7 @@ public sealed class SitePlacer
         if (_urban == null)
             return false;
         UrbanCellType type = UrbanCell(cell);
-        return type == UrbanCellType.Road || type == UrbanCellType.Sidewalk || type == UrbanCellType.Plaza;
+        return type is UrbanCellType.Road or UrbanCellType.Sidewalk or UrbanCellType.Plaza or UrbanCellType.Park;
     }
 
     private UrbanCellType UrbanCell(Vector2I cell)

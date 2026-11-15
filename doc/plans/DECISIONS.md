@@ -2715,3 +2715,12 @@ Raphaël, le 12 novembre, en regardant la Haute-Ville de T3a : « pour la map vi
   - des îlots coupés en biais par les diagonales.
 - **La mairie (T3b2) attend** : sa place se pose mieux dans une ville qui a déjà ses diagonales et ses parcs.
 
+## 223. 15 novembre 2026 — Suite du chantier : finir la Haute-Ville puis la Montée
+
+Raphaël choisit l'ordre proposé pour avancer vers une version distribuable et jouable : **finir la Haute-Ville** (d'abord T3e du §222, puis T3b2, T3c et T3d), enchaîner sur **la Montée et l'Indicible en finale** ([plan 56 lot B4](56-boucle-de-run.md), [LE-JEU.md](../LE-JEU.md) étape 6) pour boucler une vraie run de bout en bout, puis un 3e gardien propre ([plan 57 G3/G4](57-chemin-et-gardiens.md)) et la passe de clarté.
+
+**Acté :**
+- **Rien n'est abandonné** : les lots laissés de côté pour l'instant (carrière T4, champs T5, gardiens restants, réserves, conformité Steam) restent au programme pour la suite sans couper sur la qualité.
+- **Prévenir Raphaël dès qu'un jalon se prête à un vrai test en main**, puisqu'il n'a pas rejoué depuis la refonte : d'abord dès la Haute-Ville posée (`tools/play_lands.sh urban_ruins`), puis pour une vraie run complète une fois la Montée B4 branchée.
+
+

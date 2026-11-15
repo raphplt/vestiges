@@ -1646,8 +1646,9 @@ public partial class CatalogContractRegression : Node
         int urban = files.FindIndex(file => file.Name == "urban_ruins.json");
         CityGrid city = configs?["urban_ruins"].City;
         Check(city != null && city.RowSpacing.X <= city.RowSpacing.Y && city.CraterProps.Count > 0 && city.AvenueTrees.Count > 0
-            && city.SquareTrees.Count > 0 && city.SquareProps.Count > 0 && configs["swamp"].City == null,
-            "décors : grille de la Haute-Ville lue (écarts, cratères, avenues, places), aucune ailleurs");
+            && city.SquareTrees.Count > 0 && city.SquareProps.Count > 0 && city.DiagonalCount.X >= 1
+            && city.StarCenterProps.Count > 0 && city.ParkTrees.Count > 0 && city.ParkProps.Count > 0 && configs["swamp"].City == null,
+            "décors : grille de la Haute-Ville lue (écarts, cratères, avenues, places, diagonales, parcs), aucune ailleurs");
         foreach ((string name, Action<JsonObject> mutate, string expected) in new (string, Action<JsonObject>, string)[]
         {
             ("ville sans grille", root => root.Remove("city"), "city exigé"),
@@ -1660,6 +1661,11 @@ public partial class CatalogContractRegression : Node
             ("ville, arbre d'avenue absent", root => root["city"]!["avenues"]!["trees"]!["prop_absent"] = 1, "décor « prop_absent » absent de props"),
             ("ville, places sans quinconce", root => root["city"]!["squares"]!.AsObject().Remove("tree_every"), "section tree_every absente"),
             ("ville, décor de place absent", root => root["city"]!["squares"]!["weights"]!["prop_absent"] = 2, "décor « prop_absent » absent de props"),
+            ("ville, diagonales inversées", root => root["city"]!["diagonals"]!["count"]!["min"] = 4, "au-dessus de max"),
+            ("ville, étoile minuscule", root => root["city"]!["diagonals"]!["star_radius_px"] = 40, "star_radius_px"),
+            ("ville, centre d'étoile absent", root => root["city"]!["diagonals"]!["star_center"]!["prop_absent"] = 1, "décor « prop_absent » absent de props"),
+            ("ville, parc sans arbres", root => root["city"]!["parks"]!["trees"] = new JsonObject(), "au moins un décor"),
+            ("ville, bassin hors borne", root => root["city"]!["parks"]!["pond_chance"] = 1.5, "pond_chance"),
         })
         {
             List<(string, string)> candidate = new(files);

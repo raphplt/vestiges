@@ -60,6 +60,8 @@ public static class UrbanPropPlacer
 	// Arbres d'une avenue : de part et d'autre de la chaussée, sur le trottoir (une rue verticale est plus large à l'écran).
 	private const float AvenueTreeOffsetXPx = 56f;
 	private const float AvenueTreeOffsetYPx = 26f;
+	private static readonly Vector2 DiagonalSeTreeNormal = new(42f, -21f);
+	private static readonly Vector2 DiagonalSwTreeNormal = new(42f, 21f);
 
 	// Décors qui bloquent le passage ; la forme vient de leur base visible (PropFootprint).
 	private static readonly HashSet<string> BlockingSprites = new()
@@ -94,8 +96,11 @@ public static class UrbanPropPlacer
 		HashSet<Vector2I> intersections = FindIntersections(layout);
 
 		int buildingCount = UrbanBuildingPlacer.Place(layout, ground, container, usedCells, cache, seed);
-		// Places, arbres des avenues et gravats des cratères : avant l'exode et le semis des rues, qui s'en écartent.
+		usedCells.UnionWith(layout.ParkPondCells);
+		// Places, étoiles, parcs, arbres des avenues et gravats des cratères : avant l'exode et le semis des rues, qui s'en écartent.
 		int cityCount = PlaceSquares(layout, city, ground, container, usedCells, cache, seed)
+			+ PlaceStarPlazas(layout, city, ground, container, usedCells, cache, seed)
+			+ PlaceParks(layout, city, ground, container, usedCells, cache, seed)
 			+ PlaceAvenueTrees(layout, city, ground, container, usedCells, cache, seed)
 			+ PlaceCraters(layout, city, ground, container, usedCells, cache, seed);
 		// Décors de rue à l'échelle du personnage : au moins une cellule libre entre deux d'entre eux.
@@ -139,18 +144,19 @@ public static class UrbanPropPlacer
 		{
 			if (usedCells.Contains(roadCell))
 				continue;
-			if (!IsStraightRoadCell(layout, roadCell))
+			bool diagonal = layout.DiagonalCells.Contains(roadCell);
+			if (!diagonal && !IsStraightRoadCell(layout, roadCell))
 				continue;
 			if (IsNearIntersection(intersections, roadCell))
 				continue;
 
 			uint hash = HashCell(roadCell, seed ^ 0x1A2B3CUL);
 			float roll = (hash % 10000u) / 10000f;
-			if (roll >= config.ScatterChance)
+			if (roll >= (diagonal ? config.ScatterChance * 0.35f : config.ScatterChance))
 				continue;
 
 			string sprite;
-			if (roll < config.ScatterChance * config.ScatterCarShare)
+			if (!diagonal && roll < config.ScatterChance * config.ScatterCarShare)
 			{
 				string[] cars = layout.RoadCells.Contains(roadCell + Vector2I.Right) ? CarSpritesAxisX : CarSpritesAxisY;
 				sprite = cars[(int)((hash >> 8) % (uint)cars.Length)];
@@ -259,7 +265,7 @@ public static class UrbanPropPlacer
 		return placed;
 	}
 
-	/// <summary>Arbres d'alignement des avenues, de part et d'autre de la chaussée, à pas régulier.</summary>
+	/// <summary>Arbres d'alignement des avenues (orthogonales et diagonales), de part et d'autre de la chaussée.</summary>
 	private static int PlaceAvenueTrees(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
 		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
 	{
@@ -268,8 +274,31 @@ public static class UrbanPropPlacer
 		// en nombre pair pour qu'un arbre sur deux ne saute pas de ±32 px avec la parité du rang.
 		int stepX = Mathf.Max(1, Mathf.RoundToInt(city.AvenueTreeSpacingPx / 64f));
 		int stepY = Mathf.Max(2, Mathf.RoundToInt(city.AvenueTreeSpacingPx / 32f) * 2);
+		int stepDiag = Mathf.Max(2, Mathf.RoundToInt(city.AvenueTreeSpacingPx / 32f));
 		foreach (Vector2I cell in layout.AvenueCells)
 		{
+			if (layout.DiagonalCells.Contains(cell))
+			{
+				RoadDir dir = layout.GetRoadDir(cell.X, cell.Y);
+				if ((dir & RoadDir.Orthogonal) != 0 || ((dir & RoadDir.DiagSe) != 0 && (dir & RoadDir.DiagSw) != 0))
+					continue;
+				if (Mathf.PosMod(cell.Y, stepDiag) != 0)
+					continue;
+				Vector2 normal = (dir & RoadDir.DiagSe) != 0 ? DiagonalSeTreeNormal : DiagonalSwTreeNormal;
+				Vector2 diagOrigin = ground.MapToLocal(cell);
+				foreach (int side in new[] { -1, 1 })
+				{
+					Vector2 at = diagOrigin + normal * side;
+					Vector2I treeCell = ground.LocalToMap(at);
+					if (!layout.SidewalkCells.Contains(treeCell) || layout.RoadCells.Contains(treeCell))
+						continue;
+					CityGrid.Dressing tree = CityGrid.Pick(city.AvenueTrees, HashCell(treeCell, seed ^ 0xA7E1UL));
+					if (tree != null && TryPlaceDressing(tree, treeCell, ground, container, usedCells, cache, at - ground.MapToLocal(treeCell)))
+						placed++;
+				}
+				continue;
+			}
+
 			if (!IsStraightRoadCell(layout, cell))
 				continue;
 			bool vertical = layout.RoadCells.Contains(cell + Vector2I.Up);
@@ -283,11 +312,155 @@ public static class UrbanPropPlacer
 				if (!layout.SidewalkCells.Contains(treeCell))
 					continue;
 				CityGrid.Dressing tree = CityGrid.Pick(city.AvenueTrees, HashCell(treeCell, seed ^ 0xA7E1UL));
-				if (TryPlaceDressing(tree, treeCell, ground, container, usedCells, cache, at - ground.MapToLocal(treeCell)))
+				if (tree != null && TryPlaceDressing(tree, treeCell, ground, container, usedCells, cache, at - ground.MapToLocal(treeCell)))
 					placed++;
 			}
 		}
 		return placed;
+	}
+
+	/// <summary>Places en étoile (plan 58 T3e) : repère au centre et couronne de tilleuls et de bancs entre les rues.</summary>
+	private static int PlaceStarPlazas(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
+	{
+		int placed = 0;
+		foreach (StarPlaza star in layout.StarPlazas)
+		{
+			if (GetCellType(layout, star.CenterCell) == UrbanCellType.Plaza)
+			{
+				uint centerHash = HashCell(star.CenterCell, seed ^ 0x57A8UL);
+				CityGrid.Dressing monument = CityGrid.Pick(city.StarCenterProps, centerHash);
+				if (monument != null && TryPlaceDressing(monument, star.CenterCell, ground, container, usedCells, cache, default))
+					placed++;
+			}
+
+			float ringRadius = star.RadiusPx * 0.52f;
+			for (int k = 0; k < 8; k++)
+			{
+				float angle = (k + 0.5f) * Mathf.Pi / 4f;
+				Vector2 at = star.CenterWorld + new Vector2(Mathf.Cos(angle) * ringRadius, Mathf.Sin(angle) * ringRadius * 0.5f);
+				Vector2I cell = ground.LocalToMap(at);
+				if (GetCellType(layout, cell) != UrbanCellType.Plaza || IsNearRoad(layout, cell))
+					continue;
+				uint hash = HashCell(cell, seed ^ (ulong)(0x57A9 + k));
+				CityGrid.Dressing dressing = k % 2 == 0
+					? CityGrid.Pick(city.AvenueTrees, hash)
+					: CityGrid.Pick(city.SquareProps, hash);
+				if (dressing != null && TryPlaceDressing(dressing, cell, ground, container, usedCells, cache, default))
+					placed++;
+			}
+		}
+		return placed;
+	}
+
+	/// <summary>Parcs verts urbains (plan 58 T3e) : tilleuls en lisière et en bosquets, clôtures, bancs et réverbères le long des allées.</summary>
+	private static int PlaceParks(UrbanLayout layout, CityGrid city, TileMapLayer ground, Node2D container,
+		HashSet<Vector2I> usedCells, Dictionary<string, Texture2D> cache, ulong seed)
+	{
+		int placed = 0;
+		foreach (UrbanPark park in layout.Parks)
+		{
+			List<Vector2> parkTrees = new();
+			List<Vector2> parkFurniture = new();
+			HashSet<Vector2I> alleySet = new(park.AlleyCells);
+			HashSet<Vector2I> lawnOrPond = new(park.LawnCells);
+			lawnOrPond.UnionWith(park.PondCells);
+
+			foreach (Vector2I cell in park.PerimeterCells)
+			{
+				if (AdjacentToSet(cell, alleySet))
+					continue;
+				Vector2 world = ground.MapToLocal(cell);
+				uint hash = HashCell(cell, seed ^ 0x9A8C1UL);
+				if (FarEnoughFromAll(world, parkTrees, 100f))
+				{
+					CityGrid.Dressing tree = CityGrid.Pick(city.ParkTrees, hash);
+					if (tree != null && TryPlaceDressing(tree, cell, ground, container, usedCells, cache, default))
+					{
+						parkTrees.Add(world);
+						placed++;
+						continue;
+					}
+				}
+				if (hash % 100 < 12 && FarEnoughFromAll(world, parkFurniture, 96f)
+					&& TryPlaceProp(ChainLinkFenceSprite, cell, ground, container, usedCells, cache))
+				{
+					parkFurniture.Add(world);
+					placed++;
+				}
+			}
+
+			foreach (Vector2I cell in park.AlleyCells)
+			{
+				if (!AdjacentToSet(cell, lawnOrPond))
+					continue;
+				Vector2 world = ground.MapToLocal(cell);
+				if (world.DistanceSquaredTo(park.CenterWorld) < 36f * 36f)
+					continue;
+				uint hash = HashCell(cell, seed ^ 0x9A8C2UL);
+				if (hash % 100 >= 20 || !FarEnoughFromAll(world, parkFurniture, 90f) || !FarEnoughFromAll(world, parkTrees, 72f))
+					continue;
+				CityGrid.Dressing prop = CityGrid.Pick(city.ParkProps, hash >> 8);
+				if (prop != null && TryPlaceDressing(prop, cell, ground, container, usedCells, cache, default))
+				{
+					parkFurniture.Add(world);
+					placed++;
+				}
+			}
+
+			foreach (Vector2I cell in park.LawnCells)
+			{
+				Vector2 world = ground.MapToLocal(cell);
+				uint hash = HashCell(cell, seed ^ 0x9A8C3UL);
+				if (hash % 100 < 7 && FarEnoughFromAll(world, parkTrees, 110f))
+				{
+					CityGrid.Dressing tree = CityGrid.Pick(city.ParkTrees, hash >> 8);
+					if (tree != null && TryPlaceDressing(tree, cell, ground, container, usedCells, cache, default))
+					{
+						parkTrees.Add(world);
+						placed++;
+					}
+				}
+			}
+		}
+		return placed;
+	}
+
+	private static bool AdjacentToSet(Vector2I cell, HashSet<Vector2I> set)
+	{
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				if (set.Contains(new Vector2I(cell.X + dx, cell.Y + dy)))
+					return true;
+			}
+		}
+		return false;
+	}
+
+	private static bool FarEnoughFromAll(Vector2 point, List<Vector2> others, float minDistancePx)
+	{
+		float sq = minDistancePx * minDistancePx;
+		foreach (Vector2 other in others)
+		{
+			if (other.DistanceSquaredTo(point) < sq)
+				return false;
+		}
+		return true;
+	}
+
+	private static bool IsNearRoad(UrbanLayout layout, Vector2I cell)
+	{
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			for (int dy = -1; dy <= 1; dy++)
+			{
+				if (layout.RoadCells.Contains(new Vector2I(cell.X + dx, cell.Y + dy)))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	/// <summary>Gravats d'une rue effondrée : la chaussée ouverte se couvre de blocs, de dalles et de poutrelles.</summary>
@@ -309,6 +482,7 @@ public static class UrbanPropPlacer
 	// =========================================================================
 
 	internal static void PlaceInteriorDebris(
+		UrbanLayout layout,
 		BuildingFootprint building,
 		TileMapLayer ground,
 		Node2D container,
@@ -332,6 +506,9 @@ public static class UrbanPropPlacer
 			Vector2I cell = new(x, y);
 			if (usedCells.Contains(cell))
 				continue;
+			UrbanCellType cellType = GetCellType(layout, cell);
+			if (cellType != UrbanCellType.BuildingInterior && cellType != UrbanCellType.BuildingWall)
+				continue;
 
 			string sprite = InteriorDebrisSprites[(int)((seed + (ulong)i) % (ulong)InteriorDebrisSprites.Length)];
 			if (TryPlaceProp(sprite, cell, ground, container, usedCells, cache))
@@ -343,7 +520,7 @@ public static class UrbanPropPlacer
 	// HELPERS
 	// =========================================================================
 
-	internal static void ReserveBuildingFootprint(BuildingFootprint building, HashSet<Vector2I> usedCells, int inset)
+	internal static void ReserveBuildingFootprint(UrbanLayout layout, BuildingFootprint building, HashSet<Vector2I> usedCells, int inset)
 	{
 		int minX = building.Origin.X + inset;
 		int maxX = building.Origin.X + building.Size.X - 1 - inset;
@@ -353,7 +530,12 @@ public static class UrbanPropPlacer
 		for (int x = minX; x <= maxX; x++)
 		{
 			for (int y = minY; y <= maxY; y++)
-				usedCells.Add(new Vector2I(x, y));
+			{
+				Vector2I cell = new(x, y);
+				UrbanCellType cellType = GetCellType(layout, cell);
+				if (cellType == UrbanCellType.BuildingInterior || cellType == UrbanCellType.BuildingWall)
+					usedCells.Add(cell);
+			}
 		}
 	}
 
@@ -461,6 +643,8 @@ public static class UrbanPropPlacer
 
 	internal static bool IsStraightRoadCell(UrbanLayout layout, Vector2I cell)
 	{
+		if (layout.DiagonalCells.Contains(cell))
+			return false;
 		bool north = layout.RoadCells.Contains(cell + Vector2I.Up);
 		bool south = layout.RoadCells.Contains(cell + Vector2I.Down);
 		bool west = layout.RoadCells.Contains(cell + Vector2I.Left);
@@ -504,7 +688,11 @@ public static class UrbanPropPlacer
 					adjacent++;
 			}
 
-			if (adjacent >= 3)
+			RoadDir roadDir = layout.GetRoadDir(roadCell.X, roadCell.Y);
+			int dirCount = ((roadDir & RoadDir.Orthogonal) != 0 ? 1 : 0)
+				+ ((roadDir & RoadDir.DiagSe) != 0 ? 1 : 0)
+				+ ((roadDir & RoadDir.DiagSw) != 0 ? 1 : 0);
+			if (adjacent >= 3 || dirCount >= 2)
 				intersections.Add(roadCell);
 		}
 

@@ -376,6 +376,8 @@ public partial class LandChangeRegression : Node
         string rageSoon = string.Format(TranslationServer.Translate("LAND_OBJECTIVE_RAGE_SOON"), string.Empty);
         Check(collecting?.StartsWith(rageSoon, System.StringComparison.Ordinal) == true,
             $"objectif : la dernière minute avant que le gardien se lève seul se compte (« {collecting} »)");
+        if (GetTree().Paused)
+            await SettleChoices();
         memorials.SetLitForTests(config.WakeLights + 1);
         await Frame();
         await Frame();
@@ -492,7 +494,13 @@ public partial class LandChangeRegression : Node
     private async Task Frames(int count)
     {
         for (int i = 0; i < count; i++)
+        {
+            if (GetTree().Paused)
+                await SettleChoices();
             await Frame();
+        }
+        if (GetTree().Paused)
+            await SettleChoices();
     }
 
     private static ErasureManager.ErasureZonePhase Phase(float memory) => memory <= 0f ? ErasureManager.ErasureZonePhase.Void

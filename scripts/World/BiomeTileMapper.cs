@@ -227,6 +227,7 @@ public class BiomeTileMapper
 			&& _biomeIds.TryGetValue(biomeIndex, out string biomeId)
 			&& biomeId == "urban_ruins"
 			&& urbanCellType != UrbanCellType.None
+			&& urbanCellType != UrbanCellType.Park
 			&& TryGetUrbanRuinsSourceId(biomeIndex, urbanCellType, x, y, out int urbanSourceId))
 		{
 			return urbanSourceId;

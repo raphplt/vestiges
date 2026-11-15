@@ -177,7 +177,7 @@
         }
     ],
     "city": {
-        "_doc": "Grille de la Haute-Ville (plan 58 T3a). Les rues restent sur les axes de l'écran ; row_spacing et column_spacing tirent l'écart entre deux rues (rangs, colonnes). Un tronçon horizontal décroche de 1 à jogs.rows rangs (jogs.chance), un tronçon disparaît (merge_chance, deux îlots fusionnent), une rue verticale s'arrête à mi-îlot (dead_end_chance, une ruelle en impasse). craters : le milieu d'un long tronçon s'effondre sur length cellules, couvertes de gravats. avenues : rues droites et entières, trottoirs plus larges, arbres tous les tree_spacing_px. squares : un îlot d'au moins min_cells cellules reste ouvert (chance), à spacing_px des autres places ; arbres en quinconce (tree_every), et entre eux d'autres décors (density, weights).",
+        "_doc": "Grille de la Haute-Ville (plan 58 T3a et T3e). Les rues suivent les axes orthogonaux et diagonaux 2:1 de l'écran ; row_spacing et column_spacing tirent l'écart entre deux rues (rangs, colonnes). Un tronçon horizontal décroche de 1 à jogs.rows rangs (jogs.chance), un tronçon disparaît (merge_chance, deux îlots fusionnent), une rue verticale s'arrête à mi-îlot (dead_end_chance, une ruelle en impasse). craters : le milieu d'un long tronçon s'effondre sur length cellules, couvertes de gravats. avenues : rues droites et entières, trottoirs plus larges, arbres tous les tree_spacing_px. diagonals : grandes avenues en diagonale qui ouvrent des places en étoile (star_radius_px, star_center). squares : un îlot d'au moins min_cells cellules reste ouvert (chance), à spacing_px des autres places ; arbres en quinconce (tree_every), et entre eux d'autres décors (density, weights). parks : îlots verts de pelouse, allées, arbres, clôtures et parfois un bassin (pond_chance).",
         "row_spacing": { "min": 10, "max": 19 },
         "column_spacing": { "min": 8, "max": 16 },
         "jogs": { "chance": 0.35, "rows": 2 },
@@ -201,6 +201,19 @@
             "tree_every": { "columns": 3, "rows": 6 },
             "density": 0.12,
             "weights": { "park_bench_x": 3, "park_bench_y": 3, "street_lamp": 2, "morris_column": 1, "standpipe": 1 }
+        },
+        "diagonals": {
+            "count": { "min": 2, "max": 3 },
+            "star_radius_px": 220,
+            "star_center": { "morris_column": 2, "standpipe": 1, "street_lamp": 1 }
+        },
+        "parks": {
+            "chance": 0.16,
+            "min_cells": 50,
+            "spacing_px": 1300,
+            "pond_chance": 0.6,
+            "trees": { "lime_tree": 3, "lime_tree_dry": 2 },
+            "weights": { "park_bench_x": 3, "park_bench_y": 3, "street_lamp": 2, "standpipe": 1 }
         }
     }
 }

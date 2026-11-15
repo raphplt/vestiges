@@ -20,6 +20,9 @@ public static class UrbanBuildingPlacer
 	private const int AlleyChance = 22;
 	// Un îlot assez profond (deux îlots fusionnés, plan 58 T3a) porte une seconde rangée en son milieu.
 	private const int TallBlockRows = 22;
+	// Pas entre rangées d'immeubles en redans sur les îlots coupés en biais par une diagonale (plan 58 T3e).
+	private const int AngledRowStep = 5;
+	private const int MinModuleWidth = 3;
 	// Repère rare (plan 08 P2) : pylône dans une cour d'îlot. L'église est Saint-Aubin, au cœur de la ville (plan 58 T3b1).
 	private const int MastChance = 10;
 	private const int MaxMasts = 2;
@@ -53,11 +56,20 @@ public static class UrbanBuildingPlacer
 
 			uint blockHash = UrbanPropPlacer.HashCell(block.Origin, seed ^ 0xC4A9EUL);
 			Vector2 blockCenter = ground.MapToLocal(block.Origin + block.Size / 2);
-			// Une seule rangée, au sud : elle s'élève au-dessus de la cour de son îlot plutôt que de la rue au nord.
+			// Une seule rangée au sud sur les îlots droits (une seconde au milieu s'ils sont profonds) ; les îlots coupés en biais
+			// étagent leurs rangées en redans du sud au nord pour suivre le bord de l'avenue diagonale (plan 58 T3e).
 			int southRow = block.Origin.Y + block.Size.Y - 1 - FrontInsetRows;
-			placed += PlaceRow(block, southRow, ground, container, usedCells, cache, seed);
-			if (block.Size.Y >= TallBlockRows)
-				placed += PlaceRow(block, southRow - block.Size.Y / 2, ground, container, usedCells, cache, seed);
+			if (block.Angled)
+			{
+				for (int row = southRow; row >= block.Origin.Y + FrontInsetRows; row -= AngledRowStep)
+					placed += PlaceRow(layout, block, row, ground, container, usedCells, cache, seed);
+			}
+			else
+			{
+				placed += PlaceRow(layout, block, southRow, ground, container, usedCells, cache, seed);
+				if (block.Size.Y >= TallBlockRows)
+					placed += PlaceRow(layout, block, southRow - block.Size.Y / 2, ground, container, usedCells, cache, seed);
+			}
 
 			// Pylône au milieu de la cour, derrière la rangée : il dépasse des toits.
 			int courtyardEnd = southRow - ModuleDepthRows / 2 - 1;
@@ -65,7 +77,7 @@ public static class UrbanBuildingPlacer
 				&& FarFrom(masts, blockCenter))
 			{
 				Vector2I anchor = new(block.Origin.X + block.Size.X / 2, (block.Origin.Y + 1 + courtyardEnd) / 2);
-				if (UrbanPropPlacer.TryPlaceProp(MastSprite, anchor, ground, container, usedCells, cache))
+				if (IsBuildingCell(layout, anchor) && UrbanPropPlacer.TryPlaceProp(MastSprite, anchor, ground, container, usedCells, cache))
 				{
 					masts.Add(blockCenter);
 					placed++;
@@ -74,8 +86,8 @@ public static class UrbanBuildingPlacer
 
 			// Cour intérieure : gravats, sous les rangées déjà réservées.
 			if (block.Size.X * block.Size.Y >= 30)
-				UrbanPropPlacer.PlaceInteriorDebris(block, ground, container, usedCells, cache, seed ^ (ulong)block.Origin.X, ref placed);
-			UrbanPropPlacer.ReserveBuildingFootprint(block, usedCells, inset: 0);
+				UrbanPropPlacer.PlaceInteriorDebris(layout, block, ground, container, usedCells, cache, seed ^ (ulong)block.Origin.X, ref placed);
+			UrbanPropPlacer.ReserveBuildingFootprint(layout, block, usedCells, inset: 0);
 		}
 		GD.Print($"[UrbanBuildingPlacer] Repères : {masts.Count} pylône(s)");
 		return placed;
@@ -83,6 +95,7 @@ public static class UrbanBuildingPlacer
 
 	/// <summary>Rangée de modules le long d'un rang de l'îlot, coupée de passages au hasard.</summary>
 	private static int PlaceRow(
+		UrbanLayout layout,
 		BuildingFootprint block,
 		int row,
 		TileMapLayer ground,
@@ -96,6 +109,11 @@ public static class UrbanBuildingPlacer
 		int end = block.Origin.X + block.Size.X - 2;
 		while (x <= end)
 		{
+			if (!IsBuildingCell(layout, new Vector2I(x, row)))
+			{
+				x++;
+				continue;
+			}
 			uint hash = UrbanPropPlacer.HashCell(new Vector2I(x, row), seed ^ 0xB17DUL);
 			if (hash % 100 < AlleyChance)
 			{
@@ -103,16 +121,9 @@ public static class UrbanBuildingPlacer
 				continue;
 			}
 
-			(int width, string path) = PickModule(PickStyle(block.Integrity, hash), end - x + 1, hash >> 8);
+			string style = PickStyle(block.Integrity, hash);
+			(int width, string path) = PickFittingModule(layout, usedCells, style, x, row, end - x + 1, hash >> 8);
 			if (width == 0)
-			{
-				(width, path) = PickModule("ruin", end - x + 1, hash >> 8);
-				if (width == 0)
-					break;
-			}
-
-			// Une pièce réserve son emprise (plan 58 T3a) : le module entier doit tenir hors d'elle, pas seulement son ancre.
-			if (!IsFree(usedCells, x, width, row))
 			{
 				x++;
 				continue;
@@ -126,6 +137,23 @@ public static class UrbanBuildingPlacer
 			x += width;
 		}
 		return placed;
+	}
+
+	private static (int Width, string Path) PickFittingModule(UrbanLayout layout, HashSet<Vector2I> usedCells,
+		string style, int startX, int row, int room, uint hash)
+	{
+		for (int maxRoom = room; maxRoom >= MinModuleWidth; maxRoom--)
+		{
+			(int width, string path) = PickModule(style, maxRoom, hash);
+			if (width == 0)
+				(width, path) = PickModule("ruin", maxRoom, hash);
+			if (width == 0)
+				return (0, null);
+			if (IsFree(layout, usedCells, startX, width, row))
+				return (width, path);
+			maxRoom = width;
+		}
+		return (0, null);
 	}
 
 	private static bool FarFrom(List<Vector2> others, Vector2 point)
@@ -164,13 +192,17 @@ public static class UrbanBuildingPlacer
 		return fitting.Count == 0 ? (0, null) : fitting[(int)(hash % (uint)fitting.Count)];
 	}
 
-	private static bool IsFree(HashSet<Vector2I> usedCells, int startX, int width, int row)
+	private static bool IsBuildingCell(UrbanLayout layout, Vector2I cell) =>
+		UrbanPropPlacer.GetCellType(layout, cell) is UrbanCellType.BuildingInterior or UrbanCellType.BuildingWall;
+
+	private static bool IsFree(UrbanLayout layout, HashSet<Vector2I> usedCells, int startX, int width, int row)
 	{
 		for (int x = startX; x < startX + width; x++)
 		{
 			for (int y = row - ModuleDepthRows / 2; y <= row + ModuleDepthRows / 2; y++)
 			{
-				if (usedCells.Contains(new Vector2I(x, y)))
+				Vector2I cell = new(x, y);
+				if (usedCells.Contains(cell) || !IsBuildingCell(layout, cell))
 					return false;
 			}
 		}
