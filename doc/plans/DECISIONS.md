@@ -2802,3 +2802,15 @@ Raphaël, sur les trois choix de caméra du §228 : « 1. je pense qu'il faut ca
 - **Low/mid poly à essayer**, pas encore adopté. La charte graphique reste en vigueur pour la run actuelle jusqu'à l'essai. Piste par défaut pour l'essai : le low poly « crade » (textures basse résolution, palette réduite, brouillard, tramage), qui garde l'esprit de la DA.
 - **Premier lot du plan 60 : le bac à sable de caméra et de style**, avant tout portage.
 - **Le moteur de rendu sera reconsidéré** dans le plan 60 : GL Compatibility a été choisi pour la 2D, et la 3D éclairée, les ombres et le brouillard le poussent dans ses limites.
+
+## 230. Le plan 60 découpe le passage en 3D — 15 novembre 2026
+
+Raphaël : « Oui, écris-le » (le plan 60). Détail au [plan 60](60-vestiges-en-3d.md).
+
+**Tranché par défaut par l'agent, réversible :**
+- **Neuf lots**, de 60.0 (caméra et style) à 60.8 (la bascule). La run 3D devient jouable à plat à la fin de 60.3, et les terres passent en relief en 60.4.
+- **Gel des nouveautés sur la run 2D** pendant le portage : seulement des corrections. La Montée, la carrière T4 et les gardiens G3 à G5 se feront directement en 3D.
+- **La horde reste sans corps physiques** (grille de voisinage, `TickRoster`) ; l'unité est le mètre, sur un sol carré ; l'interface reste en 2D par-dessus.
+- **Les modèles naissent du pipeline de sprites**, qui modélise déjà personnages, créatures et décors en volumes 3D sur un squelette : une pièce low poly par forme, attachée à son os.
+- **60.0 se découpe en cinq sous-lots** : les corps en low poly, l'arène, les caméras, les styles, le moteur de rendu ; puis la séance de Raphaël, qui choisit la caméra, le style, le moteur et l'échelle.
+- **Arrêt** : si ni la caméra ni le style ne convainquent, ou si la horde ne tient pas 60 images par seconde, on le dit avant 60.1 ; le repli est le relief en 2D pure.

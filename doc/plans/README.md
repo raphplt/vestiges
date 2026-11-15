@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**15 novembre — le plan 60, Vestiges en 3D ([plan 60](60-vestiges-en-3d.md), §230) :** neuf lots, de la caméra et du style (60.0) à la bascule (60.8). La moitié du code (sauvegardes, quêtes, Campement, audio, interface) ne bouge presque pas ; le joueur, les créatures, les effets et la sortie de la génération sont réécrits. Les personnages et créatures existent déjà en volumes 3D dans le pipeline de sprites, et deviennent les modèles low poly. Premier lot : 60.0, à jouer avant tout portage.
+
 **15 novembre — caméra et style ([plan 59 §10](59-verticalite.md), §229) :** la caméra tourne, la vue au pixel près tombe, et Raphaël est partant pour passer du pixel art au low/mid poly, à essayer d'abord. Le plan 60 commence par un bac à sable de caméra et de style, pour valider la caméra avant tout portage.
 
 **15 novembre — tout le jeu passe en 3D ([plan 59 §10](59-verticalite.md), §228) :** Raphaël préfère un vrai passage en 3D, logique comprise, au pont de rendu. La caméra reste un choix libre. La run 3D se bâtit à côté de l'actuelle, qui reste jouable jusqu'à ce que la 3D l'égale. Le plan 60 découpera le portage.
