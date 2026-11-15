@@ -1,6 +1,6 @@
 # VESTIGES — Dossier de plans à valider
 
-**15 novembre — tes choix de style ([plan 60 §10](60-vestiges-en-3d.md), §234) :** les contours restent ; la pixelisation et la vue 3D de haut partent ; la caméra libre en poursuite te plaît davantage que l'isométrique, mais il lui manque le contrôle vertical. À la reprise : la caméra libre avec contrôle vertical, puis les contours du joueur et des créatures. Sol et détail des corps encore ouverts.
+**15 novembre — tes choix de style ([plan 60 §10](60-vestiges-en-3d.md), §234) :** les contours restent ; la pixelisation et la vue 3D de haut partent ; la caméra libre en poursuite te plaît davantage que l'isométrique, mais il lui manque le contrôle vertical. À la reprise : la caméra libre avec contrôle vertical, puis les contours du joueur et des créatures. Le sol lisse manque de texture : on regardera comment Megabonk et Minecraft font le leur. Le détail des corps reste ouvert.
 
 **15 novembre — les styles à basculer, avec des contours noirs ([plan 60 §10](60-vestiges-en-3d.md), §233) :** retour de Raphaël, le low poly est « trop low » et les sols en facettes ne vont pas. Dans `tools/relief_sandbox.sh`, chaque effet se bascule seul : F1 le sol (facettes, lisse, pixel art), F2 les corps (low ou mid poly), F3 les contours noirs, F4 la pixelisation, F5 l'ombrage toon. À toi de choisir la combinaison.
 

@@ -2856,5 +2856,6 @@ Raphaël, après avoir joué les styles (§233) :
 
 **Tranché par défaut par l'agent, réversible :**
 - **À la reprise** : retirer la vue 3D de haut et la bascule de pixelisation du bac à sable ; donner à la caméra libre le contrôle vertical (souris haut et bas, entre deux bornes réglées en JSON) ; faire de la caméra libre la vue de départ. Puis peaufiner les contours du joueur et des créatures.
-- **Le sol et le détail restent ouverts** : il n'a rien dit du sol (lisse, facettes ou pixel art), ni du low et du mid poly. On garde leurs bascules jusqu'à son choix.
+- **Le sol** : « le sol lisse je n'aime pas, ça manque de texture » ; les facettes non plus (§233). À la reprise, regarder comment Megabonk et Minecraft texturent leur sol (texture basse résolution posée sur des blocs, filtrée au plus proche) avant d'en proposer un.
+- **Le détail des corps reste ouvert** (low ou mid poly) : on garde sa bascule jusqu'à son choix.
 

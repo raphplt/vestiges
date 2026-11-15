@@ -191,5 +191,6 @@ Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`).
 - Pixelisation abandonnée.
 - Vue 3D de haut abandonnée.
 - Il penche pour la caméra libre en poursuite plutôt que pour l'isométrique ; il lui manque le contrôle vertical.
-- Sol et détail des corps non tranchés.
+- Sol : ni lisse (« ça manque de texture ») ni en facettes ; on regardera comment Megabonk et Minecraft texturent le leur.
+- Détail des corps non tranché.
 
