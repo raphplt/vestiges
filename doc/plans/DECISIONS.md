@@ -2768,3 +2768,12 @@ Raphaël, après la séance du bac à sable : « c'est dingue le jeu change tota
 - **Ne pas choisir la vue maintenant.** Les trois vues du bac à sable sont un même monde en 3D sous trois caméras. Le relief du jeu se bâtit sur ce monde 3D, rendu d'abord en relief 2D (pixel art, sprites et décors gardés). La 3D en poursuite reste ouverte : changement de caméra et volumes pour les bâtiments. Le choix se fera quand le relief sera dans une vraie terre, les deux vues sous la main.
 - **Rebords** : le joueur tient sur le plus haut sol sous son corps et ne tombe qu'une fois sorti du rebord tout entier. Contrôle `--check-edges` : 105 rebords collants sur 107 avant, 0 sur 113 après.
 - **Hauts paliers** : un palier à 2 étages et une tour à 4, chacun par un escalier de 7 marches, que le bond (1,17 étage au plus) ne prend pas. Vérifié par le même contrôle et en capture.
+
+## 227. Le relief entre dans le jeu par un pont de rendu : la logique reste en 2D — 15 novembre 2026
+
+Raphaël, sur « Les trois vues sont un même monde en 3D, filmé par trois caméras » : « parfait meme. je te laisse commit et me suire ensuite sur quoi on avance concretement. »
+
+**Tranché par défaut par l'agent, réversible** ([plan 59 §9](59-verticalite.md)) :
+- **La logique reste en 2D**, sur le plan du sol, avec une hauteur par entité. **Seul le rendu passe en 3D**, par un pont qui montre la run. Le jeu fait 92 000 lignes, dont 139 fichiers qui dessinent en 2D : les réécrire d'un coup serait la refonte que le §224 écartait.
+- **Ordre** : R0 le pont de rendu (la vraie run, à plat, vue par la caméra 3D, jouable, mesurée et avec l'inventaire de ce qui manque), R1 les étages dans les bois, R2 le portage des effets, R3 le relief dans la génération, la carrière d'abord. Le choix de la caméra se fait quand R1 se joue.
+- **Arrêt** : si R0 ne tient pas 60 images par seconde avec 120 créatures, ou si la moitié du jeu est à réécrire, le repli est un relief en 2D pure, sans la poursuite.

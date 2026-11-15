@@ -144,3 +144,20 @@ Les critères 1 et 2 du §6 sont pris : le relief reste. Deux retours de jeu, tr
 - **« des paliers plus hauts qu'on ne peut pas sauter »** : l'arène gagne au nord-ouest un **haut palier** à 2 étages au-dessus du sol, et sur lui une **tour** 2 étages plus haut (4 au-dessus du sol), chacun avec un escalier de 7 marches. Le bond monte 1,17 étage au plus : ni le palier ni la tour ne se prennent d'un bond. Le contrôle le vérifie (escaliers jusqu'à 4 étages, 0 étage gagné au bond seul), et le bot y passe à la fin de son tour. Les hauteurs s'écrivent au-delà de 9 en lettres (a = 10 quarts, g = 16).
 
 **Le choix de la vue n'a pas à se faire maintenant** (§226). Les trois vues sont un même monde en 3D sous trois caméras. Bâtir le relief du jeu sur ce monde 3D, rendu d'abord en relief 2D, garde la poursuite ouverte : ce serait alors un changement de caméra et des volumes pour les bâtiments, pas une refonte.
+
+## 9. La suite : le relief entre dans le jeu — 15 novembre 2026
+
+Raphaël : « Les trois vues sont un même monde en 3D, filmé par trois caméras » : « parfait ». Il remplace le §7, écrit avant l'essai.
+
+**Ce qui pèse** : le jeu fait 92 000 lignes de C#. 139 fichiers dessinent en 2D (`Node2D`, `Sprite2D`), 25 se servent de la physique 2D. Tout passer en 3D d'un coup serait la refonte que le §4 voulait éviter. La règle du portage : **la logique reste en 2D**, sur le plan du sol, avec une hauteur en plus par entité, comme la simulation du bac à sable. **Seul le rendu passe en 3D**, par un pont qui montre la run. Les armes, les créatures, les Mémoriaux, l'Effacement et la génération gardent leur code.
+
+| Lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **R0 Le pont de rendu** | La vraie run tourne, et une vue 3D la montre en direct : le sol de toute la terre photographié par tronçons, les décors regroupés (MultiMesh), le joueur, les créatures, les projectiles et le butin en sprites 3D. On la joue au clavier, à plat, en relief 2D et en poursuite (Tab). Les effets (VFX, chiffres de dégâts, shaders de l'Effacement, brouillard) sont d'abord absents, et listés un à un. | Une vraie run jouée en poursuite ; banc dense de 120 créatures dans les deux vues, sur une machine calme ; inventaire chiffré de ce qui reste à porter | Élevé |
+| **R1 Les étages dans la vraie run** | Une carte de hauteurs dans les bois (le belvédère et le viaduc ont déjà un relief dans leur récit). Une hauteur par entité, le dash devient le bond, les falaises bloquent, les créatures grimpent. On reprend les règles et le contrôle des rebords du bac à sable. | Contrôle des rebords sur la vraie carte ; suite de mouvement ; captures ; banc | Élevé |
+| **R2 Le portage du reste** | Effets, Effacement, brouillard, plaques et chiffres, d'après l'inventaire de R0 ; découpé à la fin de R0 | Captures avant/après de chaque effet ; banc | Élevé, à chiffrer en R0 |
+| **R3 Le relief dans la génération** | La carrière naît en relief (elle remplace T4), puis les autres terres. Raphaël choisit la caméra dès que R1 se joue | Mesure au bot ; captures | Élevé |
+
+**Critère d'arrêt de R0** : si le pont ne tient pas 60 images par seconde avec 120 créatures, ou si l'inventaire montre que la moitié du jeu est à réécrire, on le dit avant R1. Le repli est alors un relief en 2D pure (tri par étage, sans la poursuite).
+
+**Ce qui attend** : la Montée (étape 6) et la carrière T4, comme pendant l'essai.
