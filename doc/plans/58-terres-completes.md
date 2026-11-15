@@ -779,3 +779,23 @@ Ensuite, la Haute-Ville a un cœur et deux pièces, le square et la mairie. T3c 
 
 **Ce qui reste :**
 - La suite immédiate de la Haute-Ville : T3b2 (la place de la mairie), T3c (l'école et la poste) et T3d (la ligne 7 et la mesure d'ensemble).
+
+## 23. T3b2, la place de la mairie — livré le 15 novembre
+
+**Ce qui est fait :**
+- **La mairie** (`town_hall`, `tools/sprites/props/buildings.py`) en deux variantes (`prop_town_hall` avec drapeau tricolore délavé et `prop_town_hall_bare` à hampe nue, `318 × 242` px) : façade de pierre calcaire à refends et fronton sculpté, « MAIRIE » gravé au linteau, perron de trois marches, balcon en fer forgé, horloge arrêtée sur **23 h 03**, toit d'ardoise à deux lanternons, lierre sur le pignon.
+- **Trois décors de place** (`tools/sprites/props/urban.py`) :
+  - la **fontaine sèche** (`prop_dry_fountain`, `72 × 58` px), vasque octogonale fendue pleine de terre sèche et de feuilles mortes, fût sculpté et fleuron en bronze vert-de-gris ; ajoutée aussi comme décor central possible des places en étoile (`star_center`, `data/props/urban_ruins.json`) ;
+  - le **kiosque à musique octogonal** (`prop_bandstand`, `108 × 98` px) sur socle de pierre moussue, colonnes et garde-corps en fonte, escalier frontal, toiture de zinc à huit pans ;
+  - le **panneau d'affichage municipal** (`prop_obituary_board`, `26 × 47` px) couvert de faire-part d'oubli bordés de noir, un feuillet tombé au sol.
+- **La place de la mairie** (`place_de_la_mairie`, `data/world/land_pieces.json`) : mairie au nord, fontaine sèche devant le perron, Mémorial devant la fontaine, kiosque à musique à l'est (présent deux fois sur trois), panneaux de faire-part à l'ouest, tilleuls taillés et roussis, bancs, réverbères et gravats sur dallage des places.
+- **Correctif collatéral de test de mouvement** (`scripts/Progression/ObjectCombatEffects.cs`) : symétrie `_EnterTree` / `_ExitTree` sans libérer `_portrait` lors du retrait temporaire du joueur (`CheckGlideOnSkates`), avec gardes `GodotObject.IsInstanceValid(_portrait)`, supprimant une `ObjectDisposedException` sur le changement de personnage.
+
+**Vérifié :**
+- `dotnet build` : 0 avertissement, 0 erreur.
+- `tools/validate.sh` (`smoke`, `catalogs`, `lands`, `movement`) : 4/4 suites vertes après le correctif `ObjectCombatEffects`, puis revalidation `catalogs` (1/1) après le recalage du cadrage de `place_de_la_mairie`.
+- **Captures** (`--land-order urban_ruins --capture-pieces`, graines 7, 42, 11) : emplacement propre de la mairie, variante avec et sans kiosque, couronne de tilleuls et intégration avec les parcs et rues voisines.
+- **Planche** : [planches/plan58_t3b2_mairie.png](planches/plan58_t3b2_mairie.png).
+
+**Ce qui reste :**
+- L'école et la poste (T3c), puis l'arrêt de la ligne 7 et la mesure d'ensemble de la Haute-Ville (T3d).

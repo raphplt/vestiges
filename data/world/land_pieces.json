@@ -457,6 +457,39 @@
             { "sprites": ["prop_standpipe"], "at": [170, -30], "blocking": false },
             { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [-180, 130], "blocking": false, "chance": 0.7 }
           ]
+        },
+        {
+          "id": "place_de_la_mairie",
+          "_doc": "La place de la mairie (plan 58 T3b2) : la mairie au nord (fronton, horloge arrêtée sur 23 h 03, drapeau délavé ou hampe nue), la fontaine sèche et fendue au centre, le Mémorial devant elle, le kiosque à musique octogonal à l'est (présent deux fois sur trois), les panneaux d'affichage couverts de faire-part d'oubli bordés de noir, tilleuls, bancs et réverbères.",
+          "half_extent_px": [560, 320],
+          "ground": "concrete",
+          "memorial": [0, 105],
+          "spur_start": [0, 300],
+          "elements": [
+            { "sprites": ["prop_town_hall", "prop_town_hall_bare"], "at": [0, -155], "blocking": true },
+            { "sprites": ["prop_dry_fountain"], "at": [0, 5], "blocking": true },
+            { "sprites": ["prop_bandstand"], "at": [295, 25], "blocking": true, "chance": 0.65 },
+            { "sprites": ["prop_obituary_board"], "at": [-210, -45], "blocking": true },
+            { "sprites": ["prop_obituary_board"], "at": [-290, 50], "blocking": true, "chance": 0.6 },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-390, -125], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-255, -145], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [255, -145], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [390, -125], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-450, 210], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [-220, 220], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [220, 220], "blocking": true },
+            { "sprites": ["prop_lime_tree_base", "prop_lime_tree_dry_base"], "at": [450, 210], "blocking": true },
+            { "sprites": ["prop_park_bench_x"], "at": [-140, 175], "blocking": false },
+            { "sprites": ["prop_park_bench_x"], "at": [140, 175], "blocking": false },
+            { "sprites": ["prop_park_bench_y"], "at": [-355, -20], "blocking": false },
+            { "sprites": ["prop_park_bench_y"], "at": [145, -65], "blocking": false, "chance": 0.7 },
+            { "sprites": ["prop_street_lamp"], "at": [-135, -95], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [135, -95], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [-115, 190], "blocking": true },
+            { "sprites": ["prop_street_lamp"], "at": [115, 190], "blocking": true },
+            { "sprites": ["prop_concrete_debris", "prop_concrete_debris_v2"], "at": [-310, 140], "blocking": false, "chance": 0.7 },
+            { "sprites": ["prop_concrete_debris_v2", "prop_concrete_debris_v3"], "at": [210, 145], "blocking": false, "chance": 0.6 }
+          ]
         }
       ]
     },

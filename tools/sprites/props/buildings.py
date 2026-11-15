@@ -996,6 +996,241 @@ def saint_aubin(stem: str, seed: int, ruined: bool) -> PropModel:
                      supersample=3, smooth_slopes=True)
 
 
+def town_hall(stem: str, seed: int, has_flag: bool) -> PropModel:
+    """
+    La mairie de la Haute-Ville (plan 58 T3b2) : édifice républicain en pierre à cinq travées, perron à trois degrés,
+    balcon central, avant-corps à fronton triangulaire et inscription gravée « MAIRIE », horloge arrêtée sur 23 h 03
+    (l'heure de l'ordre de fermer la barrière), hampe et drapeau tricolore délavé (ou hampe nue), toiture d'ardoise à
+    croupes, souches de cheminée et lanternon.
+    """
+    (STONE, TRIM, GLASS, ROOF, DOOR, MOSS, RUBBLE, INTERIOR, BRONZE,
+     JOINT, GRIME, SLATE, DIAL, HAND, IRON, FLAG_B, FLAG_W, FLAG_R) = range(18)
+    materials = [
+        make_material("stone", "#A89E8B"), make_material("trim", "#C9C0AA"),
+        make_material("glass", "#343E4C", contrast=0.6), make_material("roof", "#48454F"),
+        make_material("door", "#443026", contrast=0.6), make_material("moss", "#5A7A38"),
+        make_material("rubble", "#8A847A"), make_material("interior", "#1E1B1E", contrast=0.4),
+        make_material("bronze", "#7A6038"), make_material("joint", "#827A6A", contrast=0.6),
+        make_material("grime", _shade("#A89E8B", 0.72), contrast=0.9),
+        make_material("slate", "#3A3842", contrast=0.7), make_material("dial", "#D6CDB4", contrast=0.5),
+        make_material("hand", "#282422", contrast=0.5), make_material("iron", "#353A3E", contrast=0.6),
+        make_material("flag_b", "#485C76", contrast=0.7), make_material("flag_w", "#CCC4B2", contrast=0.5),
+        make_material("flag_r", "#8C4842", contrast=0.7),
+    ]
+    w = Weathering(seed)
+    half_w = 8.4 * M
+    depth = 3.6 * M
+    wall_h = 7.2 * M
+    roof_h = 2.8 * M
+    proj_w = 2.35 * M
+    proj_z = depth + 0.45 * M
+    ped_y0 = wall_h + 0.15 * M
+    ped_h = 1.95 * M
+    ped_hw = 2.55 * M
+    bays = [-6.3 * M, -3.5 * M, 0.0, 3.5 * M, 6.3 * M]
+    dial_c = np.array([0.0, ped_y0 + 0.92 * M, proj_z + 0.14 * M])
+
+    rubble = [(np.array([w.uniform(-0.85, 0.85) * half_w, 0.16 * M, depth + w.uniform(0.35, 1.15) * M]),
+               np.array([w.uniform(0.22, 0.45), w.uniform(0.14, 0.28), w.uniform(0.22, 0.42)]) * M, w.uniform(0, np.pi))
+              for _ in range(4)]
+    ivy = _ivy(w, -half_w + 1.3 * M, depth, 3.8 * M) + _ivy(w, half_w - 1.5 * M, depth, 3.2 * M)
+
+    def main_block(p: np.ndarray) -> np.ndarray:
+        wing = _box(p, (0.0, wall_h / 2, 0.0), (half_w, wall_h / 2, depth))
+        risalit = _box(p, (0.0, wall_h * 0.52, (depth + proj_z) * 0.5 - 0.1 * M),
+                       (proj_w, wall_h * 0.52, (proj_z - depth) * 0.5 + 0.15 * M))
+        return np.minimum(wing, risalit)
+
+    def arch_slot(p: np.ndarray, x: float, y0: float, height: float, hw: float, z: float, d: float) -> np.ndarray:
+        rect = _box(p, (x, y0 + height / 2, z), (hw, height / 2, d))
+        arch = cylinder(p, (x, y0 + height, z), hw, d, 0.0, rotation_x(np.pi / 2))
+        return np.minimum(rect, arch)
+
+    def openings(p: np.ndarray) -> np.ndarray:
+        portal = arch_slot(p, 0.0, 0.0, 2.35 * M, 0.9 * M, proj_z, 0.35 * M)
+        gf = _union(*(arch_slot(p, x, 0.75 * M, 1.45 * M, 0.48 * M, depth, 0.3 * M) for x in bays if x != 0.0))
+        uf = _union(*(
+            _box(p, (x, 4.95 * M, proj_z if x == 0.0 else depth), (0.58 * M if x == 0.0 else 0.48 * M, 0.92 * M, 0.3 * M))
+            for x in bays))
+        return _union(portal, gf, uf)
+
+    def pediment_body(p: np.ndarray) -> np.ndarray:
+        # Fronton triangulaire en saillie sur l'avant-corps.
+        local_y = p[:, 1] - ped_y0
+        slope = np.abs(p[:, 0]) * ped_h / ped_hw + local_y - ped_h
+        tri = np.maximum(np.maximum(slope / np.sqrt(1.0 + (ped_h / ped_hw) ** 2), -local_y),
+                         np.abs(p[:, 2] - (proj_z - 0.55 * M)) - 0.65 * M)
+        return tri
+
+    def pediment_trim(p: np.ndarray) -> np.ndarray:
+        # Moulures du fronton : corniche horizontale + deux rampants obliques.
+        base_bar = _box(p, (0.0, ped_y0, proj_z + 0.06 * M), (ped_hw + 0.22 * M, 0.12 * M, 0.16 * M))
+        angle = float(np.arctan2(ped_h, ped_hw))
+        ramp_len = float(np.hypot(ped_hw + 0.25 * M, ped_h)) * 0.5
+        mid_y = ped_y0 + ped_h * 0.5 + 0.05 * M
+        left_r = rounded_box(p, (-ped_hw * 0.5, mid_y, proj_z + 0.08 * M), (ramp_len, 0.11 * M, 0.16 * M), 0.01 * M,
+                             rotation_z(angle))
+        right_r = rounded_box(p, (ped_hw * 0.5, mid_y, proj_z + 0.08 * M), (ramp_len, 0.11 * M, 0.16 * M), 0.01 * M,
+                              rotation_z(-angle))
+        return _union(base_bar, left_r, right_r)
+
+    def walls(p: np.ndarray) -> np.ndarray:
+        body = _union(main_block(p), pediment_body(p))
+        return np.maximum(body, -openings(p))
+
+    def inside(p: np.ndarray) -> np.ndarray:
+        return _box(p, (0.0, wall_h * 0.48, 0.0), (half_w - 0.28 * M, wall_h * 0.48, depth - 0.28 * M))
+
+    def glass(p: np.ndarray) -> np.ndarray:
+        gf = _union(*(arch_slot(p, x, 0.75 * M, 1.45 * M, 0.45 * M, depth - 0.16 * M, 0.04 * M)
+                      for x in bays if x != 0.0))
+        uf = _union(*(_box(p, (x, 4.95 * M, (proj_z if x == 0.0 else depth) - 0.16 * M),
+                           (0.55 * M if x == 0.0 else 0.45 * M, 0.9 * M, 0.04 * M)) for x in bays))
+        return np.minimum(gf, uf)
+
+    def door(p: np.ndarray) -> np.ndarray:
+        return arch_slot(p, 0.0, 0.0, 2.32 * M, 0.86 * M, proj_z - 0.15 * M, 0.08 * M)
+
+    def trim(p: np.ndarray) -> np.ndarray:
+        plinth = _box(p, (0.0, 0.35 * M, 0.0), (half_w + 0.1 * M, 0.35 * M, depth + 0.08 * M))
+        belt = _box(p, (0.0, 3.45 * M, 0.0), (half_w + 0.12 * M, 0.12 * M, depth + 0.1 * M))
+        eaves = _box(p, (0.0, wall_h + 0.06 * M, 0.0), (half_w + 0.18 * M, 0.12 * M, depth + 0.16 * M))
+        quoins = _union(*(_box(p, (sx * (half_w + 0.02 * M), 0.7 * M + k * 0.95 * M, sz * (depth + 0.02 * M)),
+                               (0.22 * M, 0.34 * M, 0.2 * M))
+                          for sx in (-1, 1) for sz in (-1, 1) for k in range(7)))
+        ris_quoins = _union(*(_box(p, (sx * (proj_w + 0.02 * M), 0.7 * M + k * 0.95 * M, proj_z),
+                                   (0.18 * M, 0.32 * M, 0.12 * M))
+                              for sx in (-1, 1) for k in range(7)))
+        balcony_slab = _box(p, (0.0, 3.65 * M, proj_z + 0.42 * M), (1.35 * M, 0.12 * M, 0.48 * M))
+        plaque = _box(p, (0.0, 6.65 * M, proj_z + 0.06 * M), (1.55 * M, 0.34 * M, 0.08 * M))
+        frames = _union(*(_box(p, (x, 3.92 * M, (proj_z if x == 0.0 else depth) + 0.08 * M),
+                               (0.68 * M if x == 0.0 else 0.58 * M, 0.09 * M, 0.1 * M)) for x in bays),
+                        *(_box(p, (x, 5.98 * M, (proj_z if x == 0.0 else depth) + 0.08 * M),
+                               (0.68 * M if x == 0.0 else 0.58 * M, 0.09 * M, 0.1 * M)) for x in bays))
+        return _union(plinth, belt, eaves, quoins, ris_quoins, balcony_slab, plaque, frames, pediment_trim(p))
+
+    def steps(p: np.ndarray) -> np.ndarray:
+        return _union(*(_box(p, (0.0, (k + 0.5) * 0.17 * M, proj_z + (3 - k) * 0.42 * M - 0.16 * M),
+                             (1.75 * M - k * 0.14 * M, (k + 0.5) * 0.17 * M, (3 - k) * 0.42 * M)) for k in range(3)))
+
+    def balcony_rail(p: np.ndarray) -> np.ndarray:
+        top_r = _box(p, (0.0, 4.45 * M, proj_z + 0.85 * M), (1.3 * M, 0.05 * M, 0.05 * M))
+        side_l = _box(p, (-1.28 * M, 4.45 * M, proj_z + 0.44 * M), (0.05 * M, 0.05 * M, 0.42 * M))
+        side_r = _box(p, (1.28 * M, 4.45 * M, proj_z + 0.44 * M), (0.05 * M, 0.05 * M, 0.42 * M))
+        bars = _union(*(_box(p, (-1.15 * M + i * 0.23 * M, 4.1 * M, proj_z + 0.85 * M), (0.035 * M, 0.35 * M, 0.035 * M))
+                        for i in range(11)))
+        # Lettres gravées « MAIRIE » sur le cartouche sous le fronton.
+        glyphs = _union(*(_box(p, (-0.95 * M + i * 0.38 * M, 6.65 * M, proj_z + 0.14 * M), (0.11 * M, 0.16 * M, 0.03 * M))
+                          for i in range(6)))
+        # Barreaux fins aux fenêtres.
+        mullions = _union(*(_box(p, (x, 4.95 * M, (proj_z if x == 0.0 else depth) - 0.12 * M), (0.035 * M, 0.88 * M, 0.03 * M))
+                            for x in bays))
+        return _union(top_r, side_l, side_r, bars, glyphs, mullions)
+
+    def roof(p: np.ndarray) -> np.ndarray:
+        # Croupe à la française : quatre versants + deux souches de cheminée + lanternon central.
+        local = p - np.array([0.0, wall_h + 0.12 * M, 0.0])
+        sx = (np.abs(local[:, 0]) - (half_w - roof_h * 1.15)) * roof_h / (roof_h * 1.35) + local[:, 1] - roof_h
+        sz = np.abs(local[:, 2]) * roof_h / (depth + 0.25 * M) + local[:, 1] - roof_h
+        hip = np.maximum(np.maximum(sx, sz), -local[:, 1])
+        hip = np.maximum(hip, np.maximum(np.abs(local[:, 0]) - (half_w + 0.2 * M), np.abs(local[:, 2]) - (depth + 0.22 * M)))
+        chimneys = _union(
+            _box(p, (-5.8 * M, wall_h + roof_h + 0.45 * M, -0.4 * M), (0.45 * M, 0.9 * M, 0.45 * M)),
+            _box(p, (5.8 * M, wall_h + roof_h + 0.45 * M, -0.4 * M), (0.45 * M, 0.9 * M, 0.45 * M)),
+        )
+        lantern_base = _box(p, (0.0, wall_h + roof_h + 0.35 * M, -0.2 * M), (0.85 * M, 0.75 * M, 0.85 * M))
+        lantern_cap = ellipsoid(p, (0.0, wall_h + roof_h + 1.25 * M, -0.2 * M), (0.95 * M, 0.65 * M, 0.95 * M))
+        return _union(hip, chimneys, lantern_base, lantern_cap)
+
+    def pole(p: np.ndarray) -> np.ndarray:
+        base = (0.0, 5.1 * M, proj_z + 0.8 * M)
+        tip = (0.85 * M, 7.35 * M, proj_z + 1.55 * M)
+        return capsule(p, base, tip, 0.05 * M)
+
+    def dial(p: np.ndarray) -> np.ndarray:
+        return cylinder(p, dial_c, 0.62 * M, 0.06 * M, 0.02 * M, rotation_x(np.pi / 2))
+
+    def dial_ring(p: np.ndarray) -> np.ndarray:
+        ring = np.maximum(cylinder(p, dial_c, 0.72 * M, 0.08 * M, 0.02 * M, rotation_x(np.pi / 2)), -dial(p) - 0.02 * M)
+        finial = capsule(p, (0.0, wall_h + roof_h + 1.8 * M, -0.2 * M), (0.0, wall_h + roof_h + 2.6 * M, -0.2 * M), 0.05 * M)
+        return _union(ring, finial, pole(p))
+
+    def hands(p: np.ndarray) -> np.ndarray:
+        # 23 h 03 : l'heure de l'ordre de fermer la barrière.
+        front = dial_c + np.array([0.0, 0.0, 0.09 * M])
+        hour = front + 0.36 * M * np.array([np.sin(np.radians(331.5)), np.cos(np.radians(331.5)), 0.0])
+        minute = front + 0.54 * M * np.array([np.sin(np.radians(18.0)), np.cos(np.radians(18.0)), 0.0])
+        return _union(capsule(p, front, hour, 0.065 * M), capsule(p, front, minute, 0.05 * M))
+
+    def flag_geom(p: np.ndarray) -> np.ndarray:
+        # Drapeau tricolore suspendu sous la hampe, ou simple lambeau quand la hampe est nue.
+        top_anchor = np.array([0.78 * M, 7.18 * M, proj_z + 1.48 * M])
+        local = p - top_anchor
+        h_span = 1.15 * M if has_flag else 0.34 * M
+        d = rounded_box(local - np.array([0.55 * h_span, -0.45 * M, 0.0]),
+                        (0.0, 0.0, 0.0), (0.55 * h_span, 0.42 * M, 0.04 * M), 0.02 * M)
+        wave = np.sin((local[:, 0] - local[:, 1] * 0.4) * (5.5 / M)) * (0.06 * M) * np.clip(-local[:, 1] / (0.8 * M), 0.1, 1.0)
+        return d + wave
+
+    def flag_band(band: int):
+        def _eval(p: np.ndarray) -> np.ndarray:
+            if not has_flag:
+                return np.where(band == 1, flag_geom(p), np.inf)
+            x_rel = (p[:, 0] - 0.78 * M) / (1.26 * M)
+            mask = (x_rel < 0.33) if band == 0 else ((x_rel < 0.67) if band == 1 else (x_rel >= 0.67))
+            return np.where(mask, flag_geom(p), np.inf)
+        return _eval
+
+    leaves = _clumps([c for c, _ in ivy], [tuple(r) for _, r in ivy], 0.032 * M, 0.18 * M)
+
+    def moss(p: np.ndarray) -> np.ndarray:
+        d = np.abs(p[:, 2] - (depth + 0.04 * M)) - 0.35 * M
+        near = d < 0.2 * M
+        if near.any():
+            d[near] = leaves(p[near])
+        return d
+
+    def rubble_part(p: np.ndarray) -> np.ndarray:
+        return _union(*(rounded_box(p, c, h, 0.04 * M, rotation_y(a)) for c, h, a in rubble))
+
+    ashlar = bricks(0.45 * M, 0.9 * M, 0.035 * M)
+    damp = lambda p: p[:, 1] - (0.9 * M + value_noise(p, 0.65 * M, seed + 2) * 0.95 * M)
+    slates = bricks(0.24 * M, 0.4 * M, 0.035 * M, frame=lambda q: np.stack([q[:, 0], q[:, 1], np.zeros(len(q))], axis=1))
+
+    def parts() -> list[Part]:
+        return [
+            Part(inside, INTERIOR),
+            Part(walls, STONE),
+            Part(painted(walls, ashlar, 0.012 * M), JOINT),
+            Part(painted(walls, damp, 0.015 * M), GRIME, relief=False),
+            Part(glass, GLASS),
+            Part(trim, TRIM),
+            Part(steps, TRIM),
+            Part(door, DOOR),
+            Part(roof, ROOF),
+            Part(painted(roof, slates, 0.012 * M), SLATE),
+            Part(balcony_rail, IRON),
+            Part(dial, DIAL),
+            Part(dial_ring, BRONZE),
+            Part(hands, HAND),
+            Part(flag_band(0), FLAG_B),
+            Part(flag_band(1), FLAG_W),
+            Part(flag_band(2), FLAG_R),
+            Part(moss, MOSS),
+            Part(rubble_part, RUBBLE),
+        ]
+
+    extent_x = half_w + 1.2 * M
+    extent_z = depth + 2.2 * M
+    top = wall_h + roof_h + 2.8 * M
+    above = top * 0.62 * 0.87 + extent_z * 0.62 * 0.5 + 24
+    return PropModel(stem, parts, materials, BUILDING_YAW, ray_range=float(2.5 * max(extent_x, extent_z, top)),
+                     canvas=(int(extent_x * 2 * 0.62 * 1.05) + 24, int(above / 0.72) + 8),
+                     footprint=box_footprint(half_w, depth),
+                     bounds=((-extent_x, 0.0, -extent_z), (extent_x, top, extent_z)),
+                     supersample=3, smooth_slopes=True)
+
+
 def radio_mast(stem: str, seed: int) -> PropModel:
     """Pylône de télécommunication, repère rare des cours d'îlot (plan 08 P2) : treillis à trois pieds qui s'affine,
     bandes rouges et blanches, paraboles, feu de balisage éteint, local technique au pied. Visible par-dessus les toits."""
@@ -1068,4 +1303,7 @@ def catalog() -> list[PropModel]:
                                                  radio_mast("prop_radio_mast", 551),
                                                  # Le cœur de la Haute-Ville (plan 58 T3b1), hors des rangées : pas de préfixe prop_bld_.
                                                  saint_aubin("prop_saint_aubin", 561, False),
-                                                 saint_aubin("prop_saint_aubin_ruined", 562, True)]
+                                                 saint_aubin("prop_saint_aubin_ruined", 562, True),
+                                                 # La mairie de la Haute-Ville (plan 58 T3b2), hors des rangées.
+                                                 town_hall("prop_town_hall", 571, True),
+                                                 town_hall("prop_town_hall_bare", 572, False)]

@@ -760,6 +760,257 @@ def bell_rope(stem: str, seed: int) -> PropModel:
                      bounds=((-1.4 * M, 0.0, -1.4 * M), (1.4 * M, 0.4 * M, 1.4 * M)))
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# La place de la mairie (plan 58 T3b2)
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+def dry_fountain(stem: str, seed: int) -> PropModel:
+    """
+    Fontaine de place sèche et fendue (plan 58 T3b2) : marche basse, bassin octogonal en pierre dont la margelle et
+    le fond sont entaillés d'une fissure nette, fût central mouluré portant une vasque et une pomme de pin en bronze
+    vert-de-gris ; feuilles mortes et mousse au fond du bassin vide.
+    """
+    STONE, TRIM, CRACK, BRONZE, LEAF, MOSS, GRIME = range(7)
+    materials = [
+        make_material("stone", "#A69E8C"), make_material("trim", "#C2B9A2"),
+        make_material("crack", "#282422", contrast=0.5), make_material("bronze", "#4E685C", contrast=0.7),
+        make_material("leaf", "#7A5E3A", contrast=0.8), make_material("moss", "#5A7A38"),
+        make_material("grime", "#756E60", contrast=0.8),
+    ]
+    w = Weathering(seed)
+    oct_rot = rotation_y(np.pi / 4.0)
+
+    def octagon(p: np.ndarray, radius: float, y0: float, y1: float) -> np.ndarray:
+        cy, hy = (y0 + y1) * 0.5, (y1 - y0) * 0.5
+        a = rounded_box(p, (0.0, cy, 0.0), (radius, hy, radius), 0.03 * M)
+        q = p - np.array([0.0, cy, 0.0])
+        b = rounded_box(q @ oct_rot, (0.0, 0.0, 0.0), (radius, hy, radius), 0.03 * M)
+        return np.maximum(a, b)
+
+    leaves = [(np.array([w.uniform(-0.95, 0.95), 0.24, w.uniform(-0.95, 0.95)]) * M,
+               w.uniform(0.08, 0.14) * M) for _ in range(10)]
+
+    def crack_cut(p: np.ndarray) -> np.ndarray:
+        # Fissure en biais traversant la margelle sud et le fond du bassin.
+        s1 = capsule(p, (-0.35 * M, 0.26 * M, -0.1 * M), (0.65 * M, 0.34 * M, 1.15 * M), 0.055 * M)
+        s2 = capsule(p, (0.65 * M, 0.34 * M, 1.15 * M), (1.05 * M, 0.42 * M, 1.65 * M), 0.065 * M)
+        return np.minimum(s1, s2)
+
+    def parts() -> list[Part]:
+        plinth = lambda p: octagon(p, 1.88 * M, 0.0, 0.14 * M)
+        basin_outer = lambda p: octagon(p, 1.65 * M, 0.12 * M, 0.54 * M)
+        basin_hollow = lambda p: cylinder(p, (0.0, 0.48 * M, 0.0), 1.32 * M, 0.28 * M, 0.02 * M)
+        shaft = lambda p: _union(
+            cylinder(p, (0.0, 0.85 * M, 0.0), 0.42 * M, 0.62 * M, 0.04 * M),
+            ellipsoid(p, (0.0, 0.88 * M, 0.0), (0.52 * M, 0.22 * M, 0.52 * M)),
+        )
+        upper_outer = lambda p: cylinder(p, (0.0, 1.48 * M, 0.0), 0.85 * M, 0.2 * M, 0.04 * M)
+        upper_hollow = lambda p: cylinder(p, (0.0, 1.62 * M, 0.0), 0.68 * M, 0.12 * M)
+        stone = lambda p: np.maximum(
+            _union(plinth(p), np.maximum(basin_outer(p), -basin_hollow(p)), shaft(p), np.maximum(upper_outer(p), -upper_hollow(p))),
+            -crack_cut(p),
+        )
+        rim_trim = lambda p: np.maximum(
+            _union(
+                np.maximum(octagon(p, 1.72 * M, 0.50 * M, 0.58 * M), -octagon(p, 1.3 * M, 0.44 * M, 0.64 * M)),
+                np.maximum(cylinder(p, (0.0, 1.64 * M, 0.0), 0.9 * M, 0.05 * M), -cylinder(p, (0.0, 1.64 * M, 0.0), 0.66 * M, 0.08 * M)),
+            ),
+            -crack_cut(p),
+        )
+        crack_floor = lambda p: np.maximum(crack_cut(p), -stone(p) - 0.04 * M)
+        finial = lambda p: _union(
+            cylinder(p, (0.0, 1.92 * M, 0.0), 0.22 * M, 0.28 * M, 0.03 * M),
+            ellipsoid(p, (0.0, 2.26 * M, 0.0), (0.24 * M, 0.34 * M, 0.24 * M)),
+            capsule(p, (0.2 * M, 1.95 * M, 0.0), (0.34 * M, 1.88 * M, 0.0), 0.04 * M),
+            capsule(p, (-0.2 * M, 1.95 * M, 0.0), (-0.34 * M, 1.88 * M, 0.0), 0.04 * M),
+        )
+        dry_leaves = lambda p: _union(*(sphere(p, c, r) for c, r in leaves))
+        streaks = both(noise_mask(0.2 * M, seed + 3, 0.38), lambda p: p[:, 1] - 1.7 * M)
+        moss = both(noise_mask(0.18 * M, seed + 7, 0.42), lambda p: p[:, 1] - 0.6 * M)
+        return [
+            Part(stone, STONE),
+            Part(rim_trim, TRIM),
+            Part(crack_floor, CRACK),
+            Part(painted(stone, streaks, 0.014 * M), GRIME, relief=False),
+            Part(painted(stone, moss, 0.015 * M), MOSS, relief=False),
+            Part(finial, BRONZE),
+            Part(dry_leaves, LEAF),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=240.0, canvas=(116, 108),
+                     footprint=box_footprint(1.6 * M, 1.6 * M),
+                     bounds=((-2.1 * M, 0.0, -2.1 * M), (2.1 * M, 2.8 * M, 2.1 * M)),
+                     supersample=3, smooth_slopes=True)
+
+
+def bandstand(stem: str, seed: int) -> PropModel:
+    """
+    Kiosque à musique octogonal (plan 58 T3b2) : soubassement de pierre et brique, escalier de trois marches au sud,
+    garde-corps en fer forgé, huit colonnes de fonte à consoles portant un toit octogonal en zinc à côtes marquées,
+    lambrequin et épi de faîtage.
+    """
+    STONE, TRIM, IRON, CAST, ZINC, ZINC_DARK, FLOOR, MOSS = range(8)
+    materials = [
+        make_material("stone", "#9E9584"), make_material("trim", "#C2B9A4"),
+        make_material("iron", "#2C3034", contrast=0.6), make_material("cast", "#3B4844", contrast=0.7),
+        make_material("zinc", "#646E74", contrast=0.7), make_material("zinc_dark", "#485056", contrast=0.7),
+        make_material("floor", "#6A5A4A", contrast=0.7), make_material("moss", "#5A7A38"),
+    ]
+    r_base = 2.25 * M
+    h_base = 0.65 * M
+    r_cols = 1.98 * M
+    h_eave = 3.05 * M
+    r_roof = 2.58 * M
+    h_roof = 1.45 * M
+    oct_rot = rotation_y(np.pi / 4.0)
+    angles = [k * np.pi / 4.0 + np.pi / 8.0 for k in range(8)]
+
+    def oct_prism(p: np.ndarray, radius: float, y0: float, y1: float) -> np.ndarray:
+        cy, hy = (y0 + y1) * 0.5, (y1 - y0) * 0.5
+        a = rounded_box(p, (0.0, cy, 0.0), (radius, hy, radius), 0.02 * M)
+        q = p - np.array([0.0, cy, 0.0])
+        b = rounded_box(q @ oct_rot, (0.0, 0.0, 0.0), (radius, hy, radius), 0.02 * M)
+        return np.maximum(a, b)
+
+    def parts() -> list[Part]:
+        socle = lambda p: oct_prism(p, r_base, 0.0, h_base)
+        deck = lambda p: oct_prism(p, r_cols + 0.05 * M, h_base - 0.04 * M, h_base + 0.05 * M)
+        cornice = lambda p: _union(
+            np.maximum(oct_prism(p, r_base + 0.1 * M, h_base - 0.06 * M, h_base + 0.04 * M), -deck(p) + 0.05 * M),
+            oct_prism(p, r_cols + 0.25 * M, h_eave - 0.1 * M, h_eave + 0.08 * M),
+        )
+        stairs = lambda p: _union(*(
+            rounded_box(p, (0.0, (k + 0.5) * 0.19 * M, r_base + (2 - k) * 0.34 * M + 0.06 * M),
+                        (0.68 * M, (k + 0.5) * 0.19 * M, 0.2 * M), 0.02 * M)
+            for k in range(3)
+        ))
+        cols = lambda p: _union(*(
+            capsule(p, (np.cos(a) * r_cols, h_base, np.sin(a) * r_cols),
+                    (np.cos(a) * r_cols, h_eave, np.sin(a) * r_cols), 0.075 * M)
+            for a in angles
+        ))
+        # Garde-corps ouvert devant l'escalier sud (arête entre angles 1 et 2, où sin > 0 et |cos| petit).
+        verts = [(np.cos(a) * r_cols, np.sin(a) * r_cols) for a in angles]
+        open_idx = max(range(8), key=lambda k: verts[k][1] + verts[(k + 1) % 8][1])
+        rails = []
+        balusters = []
+        for k in range(8):
+            if k == open_idx:
+                continue
+            x0, z0 = verts[k]
+            x1, z1 = verts[(k + 1) % 8]
+            rails.append(((x0, h_base + 0.66 * M, z0), (x1, h_base + 0.66 * M, z1)))
+            rails.append(((x0, h_base + 0.16 * M, z0), (x1, h_base + 0.16 * M, z1)))
+            for s in (0.25, 0.5, 0.75):
+                bx, bz = x0 + (x1 - x0) * s, z0 + (z1 - z0) * s
+                balusters.append(((bx, h_base + 0.05 * M, bz), (bx, h_base + 0.66 * M, bz)))
+
+        railing = lambda p: _union(
+            *(capsule(p, a, b, 0.045 * M) for a, b in rails),
+            *(capsule(p, a, b, 0.03 * M) for a, b in balusters),
+        )
+
+        def roof_body(p: np.ndarray) -> np.ndarray:
+            local = p - np.array([0.0, h_eave, 0.0])
+            # Pyramide octogonale : intersection de deux pyramides carrées tournées de 45°.
+            slope = h_roof / r_roof
+            norm = float(np.sqrt(1.0 + slope * slope))
+            s1 = (np.maximum(np.abs(local[:, 0]), np.abs(local[:, 2])) * slope + local[:, 1] - h_roof) / norm
+            q = local @ oct_rot
+            s2 = (np.maximum(np.abs(q[:, 0]), np.abs(q[:, 2])) * slope + local[:, 1] - h_roof) / norm
+            pyra = np.maximum(np.maximum(s1, s2), -local[:, 1])
+            finial = _union(
+                capsule(p, (0.0, h_eave + h_roof - 0.1 * M, 0.0), (0.0, h_eave + h_roof + 0.58 * M, 0.0), 0.055 * M),
+                sphere(p, (0.0, h_eave + h_roof + 0.15 * M, 0.0), 0.16 * M),
+            )
+            return np.minimum(pyra, finial)
+
+        def ribs(p: np.ndarray) -> np.ndarray:
+            # Côtes de zinc le long des huit arêtes du toit et lambrequin d'égout.
+            rim = np.maximum(oct_prism(p, r_roof + 0.04 * M, h_eave - 0.12 * M, h_eave + 0.04 * M),
+                             -oct_prism(p, r_roof - 0.08 * M, h_eave - 0.2 * M, h_eave + 0.1 * M))
+            top = (0.0, h_eave + h_roof, 0.0)
+            seams = _union(*(capsule(p, (np.cos(a) * r_roof, h_eave, np.sin(a) * r_roof), top, 0.05 * M) for a in angles))
+            return np.minimum(rim, seams)
+
+        moss = both(noise_mask(0.22 * M, seed + 5, 0.42), lambda p: p[:, 1] - h_base)
+        return [
+            Part(socle, STONE),
+            Part(stairs, TRIM),
+            Part(cornice, TRIM),
+            Part(deck, FLOOR),
+            Part(painted(socle, moss, 0.015 * M), MOSS, relief=False),
+            Part(railing, IRON),
+            Part(cols, CAST),
+            Part(roof_body, ZINC),
+            Part(ribs, ZINC_DARK),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=300.0, canvas=(156, 152),
+                     footprint=box_footprint(2.15 * M, 2.15 * M),
+                     bounds=((-2.9 * M, 0.0, -2.9 * M), (2.9 * M, 5.2 * M, 3.2 * M)),
+                     supersample=3, smooth_slopes=True)
+
+
+def obituary_board(stem: str, seed: int) -> PropModel:
+    """
+    Panneau d'affichage municipal couvert de faire-part d'oubli (plan 58 T3b2) : cadre de bois sombre sur deux poteaux,
+    auvent de zinc, et grille de feuillets blancs bordés de noir. Un ou deux feuillets décollés au pied.
+    """
+    WOOD, ZINC, BORDER, PAPER, GRIME, MOSS = range(6)
+    materials = [
+        make_material("wood", "#4A3C32", contrast=0.7), make_material("zinc", "#626C72", contrast=0.7),
+        make_material("border", "#201E22", contrast=0.4), make_material("paper", "#DAD4C4", contrast=0.4),
+        make_material("grime", "#362B24", contrast=0.8), make_material("moss", "#5A7A38"),
+    ]
+    w = Weathering(seed)
+    notices = []
+    for row in range(3):
+        for col in range(4):
+            if w.uniform(0.0, 1.0) < 0.08:
+                continue
+            cx = (-0.54 + col * 0.36 + w.uniform(-0.025, 0.025)) * M
+            cy = (1.66 - row * 0.35 + w.uniform(-0.02, 0.02)) * M
+            tilt = w.uniform(-0.09, 0.09)
+            notices.append((cx, cy, tilt))
+
+    def parts() -> list[Part]:
+        posts = lambda p: _union(
+            rounded_box(p, (-0.78 * M, 1.02 * M, 0.0), (0.07 * M, 1.02 * M, 0.07 * M), 0.02 * M),
+            rounded_box(p, (0.78 * M, 1.02 * M, 0.0), (0.07 * M, 1.02 * M, 0.07 * M), 0.02 * M),
+        )
+        board = lambda p: rounded_box(p, (0.0, 1.32 * M, 0.0), (0.85 * M, 0.62 * M, 0.06 * M), 0.02 * M)
+        frame = lambda p: np.minimum(posts(p), board(p))
+        awning = lambda p: rounded_box(p, (0.0, 2.02 * M, 0.1 * M), (0.94 * M, 0.05 * M, 0.24 * M), 0.02 * M,
+                                       rotation_x(0.24))
+        flyer_borders = lambda p: _union(
+            *(rounded_box(p, (cx, cy, 0.08 * M), (0.14 * M, 0.13 * M, 0.025 * M), 0.005 * M, rotation_z(tilt))
+              for cx, cy, tilt in notices),
+            rounded_box(p, (-0.28 * M, 0.03 * M, 0.28 * M), (0.14 * M, 0.02 * M, 0.12 * M), 0.005 * M, rotation_y(0.35)),
+        )
+        flyer_papers = lambda p: _union(
+            *(rounded_box(p, (cx, cy, 0.105 * M), (0.105 * M, 0.095 * M, 0.02 * M), 0.004 * M, rotation_z(tilt))
+              for cx, cy, tilt in notices),
+            rounded_box(p, (-0.28 * M, 0.045 * M, 0.28 * M), (0.105 * M, 0.015 * M, 0.09 * M), 0.004 * M, rotation_y(0.35)),
+        )
+        grime = both(noise_mask(0.18 * M, seed + 2, 0.35), lambda p: p[:, 1] - 0.6 * M)
+        moss = both(noise_mask(0.16 * M, seed + 4, 0.4), lambda p: p[:, 1] - 0.45 * M)
+        return [
+            Part(frame, WOOD),
+            Part(painted(frame, grime, 0.012 * M), GRIME, relief=False),
+            Part(painted(frame, moss, 0.014 * M), MOSS, relief=False),
+            Part(awning, ZINC),
+            Part(flyer_borders, BORDER),
+            Part(flyer_papers, PAPER),
+        ]
+
+    return PropModel(stem, parts, materials, AXIS_X_YAW, ray_range=220.0, canvas=(84, 92),
+                     footprint=box_footprint(0.9 * M, 0.35 * M),
+                     bounds=((-1.15 * M, 0.0, -0.45 * M), (1.15 * M, 2.35 * M, 0.55 * M)),
+                     supersample=3, smooth_slopes=True)
+
+
 def catalog() -> list[PropModel]:
     models = [car("prop_urban_car", "red", AXIS_X_YAW, 11)]
     for paint, seed in (("red", 12), ("teal", 21), ("cream", 31)):
@@ -794,5 +1045,8 @@ def catalog() -> list[PropModel]:
         ivy_lamppost("prop_street_lamp", 171),
         war_memorial("prop_war_memorial", 181),
         bell_rope("prop_bell_rope", 191),
+        dry_fountain("prop_dry_fountain", 201),
+        bandstand("prop_bandstand", 211),
+        obituary_board("prop_obituary_board", 221),
     ]
     return models

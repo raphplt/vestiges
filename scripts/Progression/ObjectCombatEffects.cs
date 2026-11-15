@@ -34,14 +34,14 @@ public partial class ObjectCombatEffects : Node
     public float RecoveryCooldown => Mathf.Max(0f, _recoveryReady - _clock);
     public float LinkRemaining => Mathf.Max(0f, _linkExpires - _clock);
     public bool DecoyActive => _decoyCopies > 0f && _decoyExpires > _clock && !_player.IsDead;
-    public Vector2 DecoyPosition => _portrait?.GlobalPosition ?? Vector2.Zero;
+    public Vector2 DecoyPosition => GodotObject.IsInstanceValid(_portrait) ? _portrait.GlobalPosition : Vector2.Zero;
     public int CancelsRemaining => _cancelsLeft;
 
     public static bool IsCombatStat(string stat) => stat is "cross_weapon_echo" or "damage_link"
         or "dash_cancel_projectiles" or "dash_recovery" or "dash_decoy";
 
     public void Initialize(Player player) { _player = player; _ownerId = player.GetInstanceId(); }
-    public override void _Ready()
+    public override void _EnterTree()
     {
         _bus = GetNode<EventBus>("/root/EventBus");
         _bus.EnemyDamageResolved += OnDamage;
@@ -50,9 +50,12 @@ public partial class ObjectCombatEffects : Node
         _bus.PlayerDashMoved += OnDashMoved;
         _bus.PlayerDashFinished += OnDashFinished;
         _erasure = GetTree().CurrentScene?.GetNodeOrNull<ErasureManager>("ErasureManager");
-        _portrait = new Sprite2D { Name = "RememberedPortrait", TopLevel = true, Visible = false,
-            SelfModulate = new Color(.8f, .95f, 1f, .7f) };
-        _player.AddChild(_portrait);
+        if (!GodotObject.IsInstanceValid(_portrait))
+        {
+            _portrait = new Sprite2D { Name = "RememberedPortrait", TopLevel = true, Visible = false,
+                SelfModulate = new Color(.8f, .95f, 1f, .7f) };
+            _player.AddChild(_portrait);
+        }
     }
     public override void _ExitTree()
     {
@@ -64,7 +67,6 @@ public partial class ObjectCombatEffects : Node
             _bus.PlayerDashMoved -= OnDashMoved;
             _bus.PlayerDashFinished -= OnDashFinished;
         }
-        if (GodotObject.IsInstanceValid(_portrait)) _portrait.QueueFree();
     }
     public void Configure(PassiveSouvenirData data)
     {
@@ -94,7 +96,7 @@ public partial class ObjectCombatEffects : Node
     {
         _clock += delta;
         if (_player.IsDead) { HideDecoy(); _linkExpires = 0f; _woundCount = 0; _dashActive = false; }
-        if (_portrait.Visible && (!DecoyActive || (_erasure != null && GodotObject.IsInstanceValid(_erasure)
+        if (GodotObject.IsInstanceValid(_portrait) && _portrait.Visible && (!DecoyActive || (_erasure != null && GodotObject.IsInstanceValid(_erasure)
             && _erasure.GetZonePhaseAt(_portrait.GlobalPosition) == ErasureManager.ErasureZonePhase.Void))) HideDecoy();
         if (_clock < _cleanupAt) return;
         _cleanupAt = _clock + 1f;
@@ -212,6 +214,6 @@ public partial class ObjectCombatEffects : Node
     private void HideDecoy()
     {
         _decoyExpires = 0f;
-        if (_portrait != null) _portrait.Visible = false;
+        if (GodotObject.IsInstanceValid(_portrait)) _portrait.Visible = false;
     }
 }
