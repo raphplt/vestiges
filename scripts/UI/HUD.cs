@@ -161,6 +161,7 @@ public partial class HUD : CanvasLayer
         _hudRoot.AddChild(new DashHint { Name = "DashHint" });
         _hudRoot.AddChild(new Minimap { Name = "Minimap" });
         _hudRoot.AddChild(new LandMemorialPips { Name = "LandMemorialPips" });
+        _hudRoot.AddChild(new LandChecklist { Name = "LandChecklist" });
         LandObjective landObjective = new() { Name = "LandObjective" };
         _hudRoot.AddChild(landObjective);
         LandArrivalCard arrivalCard = new() { Name = "LandArrivalCard" };

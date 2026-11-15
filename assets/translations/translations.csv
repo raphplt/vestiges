@@ -615,6 +615,10 @@ LAND_ARRIVAL_GOAL_LAST,Les échos des gardiens te traquent : tiens bon,The guard
 LAND_READY_LIGHTS,{0} Mémoriaux ravivés,{0} Memorials rekindled
 LAND_READY_TITLE,Le gardien t'attend,The guardian awaits
 LAND_READY_GOAL,"Rejoins le cœur, et réveille-le","Return to the heart, and wake it"
+LAND_CHECK_LIGHTS,"Raviver les Mémoriaux {0}/{1}","Rekindle the Memorials {0}/{1}"
+LAND_CHECK_WAKE,Réveiller le gardien,Wake the guardian
+LAND_CHECK_WAKE_LAIR,"Réveiller le gardien, au cœur","Wake the guardian, at the heart"
+LAND_CHECK_DEFEAT,Vaincre le gardien,Defeat the guardian
 LAND_PLACE_FOREST,Les bois de la colline,The Hill Woods
 LAND_PLACE_FIELDS,Les fermes du plateau,The Plateau Farms
 LAND_PLACE_URBAN,La Haute-Ville,Haute-Ville

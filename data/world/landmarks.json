@@ -16,7 +16,7 @@
 		"shard_urgent_time": 5,
 		"shard_pickup_px": 30,
 		"circle": {
-			"seconds": 20, "radius_px": 220, "leave_decay": 0.5, "abandon_px": 560, "crowd_density": 1.6,
+			"seconds": 12, "radius_px": 220, "leave_decay": 0.5, "abandon_px": 560, "crowd_density": 1.6,
 			"waves": { "at": [0.33, 0.66], "count": 8, "warning_seconds": 1.2, "audio": "sfx_resurgence_accent" },
 			"closing": { "from": 0.66, "radius_share": 0.55 },
 			"burst": { "radius_px": 380, "damage_share": 0.6, "push_px": 160, "audio": "sfx_indicible_wave_crash" },
