@@ -1,0 +1,119 @@
+using System.Collections.Generic;
+using Godot;
+
+namespace Vestiges.Tests;
+
+/// <summary>
+/// Contrôle des rebords du bac à sable de la verticalité (plan 59) : sur chaque marche et chaque falaise de l'arène, le
+/// joueur seul descend en marchant puis continue tout droit, et revient buter contre la paroi avant de repartir. Il ne
+/// doit jamais rester collé. Lancé par <c>--check-edges</c>, sans rendu ni biome.
+/// </summary>
+public static class ReliefEdgeCheck
+{
+    private const float Dt = 1f / 60f;
+    private static readonly Vector2I[] Directions = { new(1, 0), new(-1, 0), new(0, 1), new(0, -1) };
+
+    /// <summary>Renvoie le nombre de rebords où le joueur reste collé, et les imprime.</summary>
+    public static int Run(ReliefConfig config, ReliefArena arena)
+    {
+        int tested = 0;
+        List<string> stuck = new();
+        for (int y = 0; y < arena.Depth; y++)
+        {
+            for (int x = 0; x < arena.Width; x++)
+            {
+                float high = arena.CellHeight(x, y);
+                if (ReliefArena.IsVoid(high))
+                    continue;
+                foreach (Vector2I d in Directions)
+                {
+                    // Une marche ou une falaise vers le bas, puis trois cellules de sol plat derrière : la place de s'éloigner.
+                    float low = arena.CellHeight(x + d.X, y + d.Y);
+                    if (ReliefArena.IsVoid(low) || low >= high - 0.01f)
+                        continue;
+                    if (arena.CellHeight(x + 2 * d.X, y + 2 * d.Y) != low || arena.CellHeight(x + 3 * d.X, y + 3 * d.Y) != low)
+                        continue;
+                    // Les deux voisins latéraux de la paroi, au même niveau, sinon le joueur longe un coin.
+                    Vector2I side = new(d.Y, d.X);
+                    if (!SameRow(arena, x, y, side, high) || !SameRow(arena, x + d.X, y + d.Y, side, low))
+                        continue;
+                    tested++;
+                    Vector2 dir = new(d.X, d.Y);
+                    Vector2 top = new(x + 0.5f, y + 0.5f);
+
+                    // Descendre : partir du centre du haut et marcher 0,8 s vers le bas.
+                    ReliefSim sim = new(config, arena, 1, 1);
+                    sim.Teleport(top);
+                    Walk(sim, dir, 0.8f);
+                    float down = Progress(sim, top, dir);
+                    // Puis buter contre la paroi depuis le bas (on monte si la marche le permet), et repartir.
+                    Vector2 below = top + dir * 2.5f;
+                    sim.Teleport(below);
+                    Walk(sim, -dir, 0.8f);
+                    Vector2 hug = new(sim.PlayerPos.X, sim.PlayerPos.Y);
+                    Walk(sim, dir, 0.3f);
+                    float away = Progress(sim, hug, dir);
+
+                    if (down < 1.6f || away < 0.8f)
+                        stuck.Add($"({x},{y})→({d.X},{d.Y}) {high / arena.LevelHeight:0.##}→{low / arena.LevelHeight:0.##} étage : descente {down:0.00}, départ du pied {away:0.00}");
+                }
+            }
+        }
+        GD.Print($"[ReliefEdgeCheck] RESULT rebords={tested} colles={stuck.Count}");
+        for (int i = 0; i < Mathf.Min(stuck.Count, 12); i++)
+            GD.Print($"[ReliefEdgeCheck]   {stuck[i]}");
+        return stuck.Count + CheckHighGround(config, arena);
+    }
+
+    /// <summary>
+    /// Le haut palier et la tour (plan 59) : on y monte par leurs escaliers, pas d'un bond. Renvoie le nombre d'échecs.
+    /// </summary>
+    private static int CheckHighGround(ReliefConfig config, ReliefArena arena)
+    {
+        int failures = 0;
+        ReliefSim sim = new(config, arena, 1, 1);
+        sim.Teleport(new Vector2(22.5f, 8f));
+        foreach (Vector2 goal in new Vector2[] { new(14.5f, 8f), new(14.5f, 5f), new(5.5f, 4.5f) })
+        {
+            for (float t = 0f; t < 4f && new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y).DistanceTo(goal) > 0.2f; t += Dt)
+                sim.Step(Dt, (goal - new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y)).Normalized(), 0);
+        }
+        float stairsLevel = sim.PlayerLevel;
+        if (stairsLevel < 3.99f)
+            failures++;
+
+        // Bond depuis le pied de chaque paroi, droit dessus : il ne doit jamais y retomber.
+        (Vector2 From, Vector2 Dir, string Name)[] bonds =
+        {
+            (new Vector2(9.5f, 10.4f), new Vector2(0f, -1f), "haut palier"),
+            (new Vector2(5.5f, 6.4f), new Vector2(0f, -1f), "tour"),
+        };
+        string bondReport = "";
+        foreach ((Vector2 from, Vector2 dir, string name) in bonds)
+        {
+            sim = new ReliefSim(config, arena, 1, 1);
+            sim.Teleport(from);
+            float start = sim.PlayerLevel;
+            sim.QueueBond();
+            Walk(sim, dir, 1.2f);
+            float gained = sim.PlayerLevel - start;
+            bondReport += $" {name}=+{gained:0.00}";
+            if (gained > 0.01f)
+                failures++;
+        }
+        GD.Print($"[ReliefEdgeCheck] RESULT escaliers_jusqu_a_la_tour={stairsLevel:0.00} étage, bond seul :{bondReport} étage ; échecs={failures}");
+        return failures;
+    }
+
+    private static bool SameRow(ReliefArena arena, int x, int y, Vector2I side, float height) =>
+        arena.CellHeight(x + side.X, y + side.Y) == height && arena.CellHeight(x - side.X, y - side.Y) == height;
+
+    private static void Walk(ReliefSim sim, Vector2 dir, float seconds)
+    {
+        for (float t = 0f; t < seconds; t += Dt)
+            sim.Step(Dt, dir, 0);
+    }
+
+    private static float Progress(ReliefSim sim, Vector2 from, Vector2 dir) =>
+        (new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y) - from).Dot(dir);
+}

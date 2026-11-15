@@ -1,0 +1,149 @@
+{
+	"_comment": "Bac à sable de la verticalité (plan 59). Arène : une ligne par rang y, un caractère par cellule x ; '.' vide, '0' à '9' puis 'a' (10) à 'g' (16) hauteur en quarts d'étage (4 = gradin, 8 = butte et haut palier, g = tour, les autres = marches ; le bond monte d'un étage, 4 quarts, pas de deux). Unités : une cellule = 1 ; un étage = level_height. Projection de la vue 2D : 64 × 32 px par cellule, comme la grille du jeu. Toutes les vitesses en cellules par seconde.",
+	"level_height": 0.7,
+	"spawn": [
+		20.5,
+		18.5
+	],
+	"player": {
+		"speed": 4.6,
+		"radius": 0.28,
+		"step": 0.26,
+		"hp": 100,
+		"hurt_invulnerable_seconds": 0.7,
+		"bond_vertical": 6.0,
+		"bond_horizontal": 8.5,
+		"bond_cooldown": 0.45,
+		"bond_invulnerable_seconds": 0.25,
+		"air_accel": 10.0,
+		"gravity": 22.0,
+		"safe_drop_levels": 1.2,
+		"drop_damage_per_level": 12,
+		"stomp_min_drop_levels": 0.6,
+		"stomp_radius": 1.9,
+		"stomp_push": 7.0,
+		"stomp_damage": 14,
+		"void_damage": 20
+	},
+	"weapon": {
+		"interval": 0.32,
+		"range": 7.5,
+		"damage": 10,
+		"speed": 13.0,
+		"hit_radius": 0.45,
+		"push": 1.2
+	},
+	"crowd": {
+		"count": 35,
+		"spawn_min": 9.0,
+		"spawn_max": 14.0,
+		"radius": 0.3,
+		"separation": 2.2,
+		"climb_speed": 0.55,
+		"contact_reach": 0.55,
+		"contact_height": 0.45,
+		"contact_damage": 8,
+		"push_decay": 6.0,
+		"fall_damage_per_level": 18,
+		"safe_drop_levels": 0.9
+	},
+	"creatures": [
+		{
+			"id": "rampant",
+			"speed": 1.9,
+			"hp": 22,
+			"weight": 3
+		},
+		{
+			"id": "rodeur",
+			"speed": 3.0,
+			"hp": 14,
+			"weight": 2
+		},
+		{
+			"id": "charognard",
+			"speed": 2.4,
+			"hp": 34,
+			"weight": 1
+		}
+	],
+	"tiles": {
+		"ground": [
+			"assets/tiles/foret/tile_foret_sol_base.png",
+			"assets/tiles/foret/tile_foret_sol_v2.png"
+		],
+		"steps": [
+			"assets/tiles/champs/tile_champs_sol_base.png",
+			"assets/tiles/champs/tile_champs_sol_v2.png"
+		],
+		"terrace": [
+			"assets/tiles/champs/tile_champs_herbe_base.png",
+			"assets/tiles/champs/tile_champs_herbe_v2.png"
+		],
+		"butte": [
+			"assets/tiles/carriere/tile_carriere_roche_w12.png",
+			"assets/tiles/carriere/tile_carriere_sol_base.png"
+		]
+	},
+	"character": "facteur",
+	"camera_3d": {
+		"pitch_degrees": 48,
+		"distance": 15.0,
+		"fov": 42,
+		"min_distance": 7.0,
+		"max_distance": 26.0
+	},
+	"arena": [
+		"............................................",
+		"............................................",
+		"..0000000000000000000000000000000000000000..",
+		"..00gggg8888888000000000000000000000000000..",
+		"..00ggggfedcba9000000000000000000000000000..",
+		"..00ggggfedcba9000000000000000000000000000..",
+		"..0088888888888000000000444444444444444444..",
+		"..0088888888888765432100444444444444444444..",
+		"..0088888888888765432100444444444444444444..",
+		"..0088888888888000000000444444488888884444..",
+		"..0000000000000000000000444444488888884444..",
+		"..0000000000000000000000444456788888884444..",
+		"..000000000......0000123444456788888884444..",
+		"..000000000......0000123444444488888884444..",
+		"..000000000......0000123444444488888884444..",
+		"..000000000......0000000444444488888884444..",
+		"..0000000000000000000000444444444444444444..",
+		"..0000000000000000000000444444444444444444..",
+		"..0000000800000000000000444444444444444444..",
+		"..0000000000000000000000444444444444444444..",
+		"..0000000000000000000000444444444444444444..",
+		"..0000000000000000000000000000444444444000..",
+		"..0000000000000000000000000000444444444000..",
+		"..0000000000000000040000000000444444444000..",
+		"..0000000000000000040000008000444444444000..",
+		"..0000000000000000040000000000444444444000..",
+		"..0000000000000000040000000000444444444000..",
+		"..0000044444400000040000000000444444444000..",
+		"..0000044444400000040000000000444444444000..",
+		"..0000044444400000040000000000444444444000..",
+		"..0000044444400000040000000000444444444000..",
+		"..0000044444400000040000000000444444444000..",
+		"..0000044444400000040000000000000333000000..",
+		"..0000000000000000040000000000000222000000..",
+		"..0000000000000000040000000000000111000000..",
+		"..0000000000000000040000088000000000000000..",
+		"..0000000000000000040000088000000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"..0000000000000800000000000000000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"............................................",
+		"............................................"
+	],
+	"camera_chase": {
+		"pitch_degrees": 24,
+		"distance": 7.5,
+		"fov": 62,
+		"height": 0.9,
+		"mouse_degrees_per_pixel": 0.22
+	}
+}

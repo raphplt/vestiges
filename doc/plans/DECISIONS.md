@@ -2724,3 +2724,47 @@ Raphaël choisit l'ordre proposé pour avancer vers une version distribuable et 
 - **Prévenir Raphaël dès qu'un jalon se prête à un vrai test en main**, puisqu'il n'a pas rejoué depuis la refonte : d'abord dès la Haute-Ville posée (`tools/play_lands.sh urban_ruins`), puis pour une vraie run complète une fois la Montée B4 branchée.
 
 
+
+## 224. Les terres font vide : essai de la verticalité ; raviver plus court ; l'objectif en cases à cocher — 15 novembre 2026
+
+Raphaël, après avoir joué les terres d'un seul biome : « comparé à avant où tous les biomes se mélangeaient, ça fait très vide […] je ne pense pas que rajouter des props à l'infini règle le problème. J'ai une solution, et elle est radicale : rajouter de la verticalité au jeu. Comme dans Megabonk, avoir des étages, et donc aussi pouvoir sauter […] c'est à essayer au moins. Et on va se concentrer sur ça. » Puis : « 20 secondes pour raviver un mémorial au début c'est peut-être trop long », et « comme il n'y a pas d'objectif affiché à l'écran, le nouveau joueur sera perdu. Ne serait-ce qu'une case à cocher avec marqué : raviver les 3 mémoriaux pour réveiller le boss. » Détail au [plan 59](59-verticalite.md).
+
+**Acté :**
+- **La verticalité devient le chantier en cours**, comme un essai avec critère d'arrêt (plan 59 §6). La forme du 18 octobre est rouverte sur ce seul point. La Montée (étape 6) et la carrière (T4) attendent.
+
+**Proposé par l'agent, en attente du mot de Raphaël sur l'option :**
+- **relief en 2D isométrique plutôt que passage en 3D**, d'abord en bac à sable (lots V0 à V2), puis séance de Raphaël ;
+- **le dash devient le bond**, sur la même touche ; contact au même étage seulement ; créatures qui grimpent lentement ; falaise qui compte comme un vide (plan 59 §5) ;
+- **repli si l'essai ne prend pas** : des terres plus petites et plus denses.
+
+**Tranché par défaut par l'agent, réversible, et fait le jour même :**
+- **Raviver un Mémorial prend 12 s au lieu de 20** (`circle.seconds` de `landmarks.json`), sur toutes les terres. Les deux vagues et le resserrement suivent, puisqu'ils sont en parts du temps. Une durée qui monte avec le rang reste possible d'un mot.
+- **L'objectif de la terre revient en cases à cocher**, en haut à gauche sous les PV (`LandChecklist`) : « Raviver les Mémoriaux 0/3 », puis « Réveiller le gardien » (« …, au cœur » quand il attend), puis « Vaincre le gardien ». Une case cochée passe en or ; la terre franchie, la liste s'efface. Elle est cachée sur la terre du late game. Cela revient sur le « HUD se tait » du §203 : la ligne du haut au centre reste muette, la liste tient en deux lignes courtes sans fond. Les icônes collées à la minimap restent.
+
+## 225. Étudier les deux voies en bac à sable : relief 2D et 3D — 15 novembre 2026
+
+Raphaël, sur l'option du §224 : « étudier les deux dans un sandbox, relief 2D et 3D ». Détail au [plan 59 §8](59-verticalite.md).
+
+**Tranché par défaut par l'agent, réversible :**
+- **Un seul bac à sable, une seule simulation, trois vues** qu'on bascule avec Tab sur la même partie : relief 2D (isométrique orthographique sans lumière, pixel pour pixel), 3D de haut (perspective, lumière, ombres, qu'on tourne), 3D en poursuite (caméra derrière le joueur, à la souris). On compare ainsi le rendu et la caméra, pas deux jeux. La poursuite est ajoutée parce que la 3D de haut ressemblait trop au relief 2D pour juger « comme dans Megabonk ».
+- **Le bac à sable est autonome** (`tools/tests/Relief*.cs`, `data/sandbox/relief.json`, `tools/relief_sandbox.sh`) : il n'emploie que les tuiles et sprites du jeu, pas `Player` ni `Enemy`. Rien n'entre dans le jeu avant la séance de Raphaël.
+- **Le bond sur Espace**, comme proposé au §224. Les créatures grimpent, longent le vide, et ne se blessent en tombant que poussées.
+- **Les touches du bac à sable sont déclarées à son lancement**, pas dans `project.godot`, pour ne pas encombrer la carte d'entrées du jeu.
+
+**Appris en construisant** : la vue relief 2D est rendue par le moteur 3D, ce qui règle le tri et l'occlusion des falaises, le plus gros chantier d'un relief en 2D pure. Si le relief est gardé avec l'aspect 2D, c'est la voie recommandée (plan 59 §8).
+
+**Retour de Raphaël après un premier essai** : « la horde est bcp trop grande. aussi essaye avec les vrais biomes et pas les tuiles moches ».
+- **La horde passe de 90 à 35 créatures**, et +/- la change par 10.
+- **Le décor est un vrai biome** : le bac à sable génère la vraie run sur la terre demandée (`--land-order`, la forêt par défaut), photographie son sol tel que le jeu le dessine et relève ses décors debout, puis la libère. Le sol devient le dessus des étages, les décors sont replacés et bloquent selon leur emprise. `--tiles` garde les tuiles simples. Le relief reste celui de l'arène.
+- **Vu en le faisant** : en 3D, un décor reste une carte plate. Ça passe pour un arbre, pas pour un immeuble. La vraie 3D demanderait des volumes pour les bâtiments ; le relief 2D garde les sprites tels quels.
+
+## 226. Le relief prend, les deux vues plaisent : bâtir sur un monde 3D, la caméra viendra après — 15 novembre 2026
+
+Raphaël, après la séance du bac à sable : « c'est dingue le jeu change totalement de dimension (que ce soit avec la 2D relief ou la 3D). c'est formidable. par contre j'arrive pas à me décider, les deux me plaisent énormément. » Puis : « il y a un bug sur les rebords dans les 2, en gros on reste bloqué (quand on essaie de monter ou de descendre) il faut sauter pour s'extraire », et « les marches c'est bien mais j'aurai peut etre essayé aussi des paliers plus hauts qu'on ne peut pas sauter ».
+
+**Acquis** : le relief est gardé. Les critères 1 et 2 du plan 59 §6 sont pris.
+
+**Tranché par défaut par l'agent, réversible :**
+- **Ne pas choisir la vue maintenant.** Les trois vues du bac à sable sont un même monde en 3D sous trois caméras. Le relief du jeu se bâtit sur ce monde 3D, rendu d'abord en relief 2D (pixel art, sprites et décors gardés). La 3D en poursuite reste ouverte : changement de caméra et volumes pour les bâtiments. Le choix se fera quand le relief sera dans une vraie terre, les deux vues sous la main.
+- **Rebords** : le joueur tient sur le plus haut sol sous son corps et ne tombe qu'une fois sorti du rebord tout entier. Contrôle `--check-edges` : 105 rebords collants sur 107 avant, 0 sur 113 après.
+- **Hauts paliers** : un palier à 2 étages et une tour à 4, chacun par un escalier de 7 marches, que le bond (1,17 étage au plus) ne prend pas. Vérifié par le même contrôle et en capture.
