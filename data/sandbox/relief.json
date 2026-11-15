@@ -145,5 +145,42 @@
 		"fov": 62,
 		"height": 0.9,
 		"mouse_degrees_per_pixel": 0.22
+	},
+	"lowpoly": {
+		"_comment": "Rendu low poly (plan 60, lot 60.0b), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules).",
+		"metres_per_cell": 2.65,
+		"colors": {
+			"ground": "53613a",
+			"terrace": "6f7d3e",
+			"butte": "8a826c",
+			"steps": "7d6a4c",
+			"cliff": "6e5d4c",
+			"cliff_dark": "564739"
+		},
+		"shade_jitter": 0.07,
+		"height_jitter": 0.04,
+		"cliff_jitter": 0.09,
+		"scatter": [
+			{
+				"model": "props/prop_tree_medium",
+				"density": 0.035,
+				"radius": 0.22
+			},
+			{
+				"model": "props/prop_rock_mossy",
+				"density": 0.025,
+				"radius": 0.25
+			}
+		],
+		"landmarks": [
+			{
+				"model": "props/prop_bld_house_w3_a",
+				"at": [
+					8.0,
+					38.5
+				],
+				"yaw_degrees": 0
+			}
+		]
 	}
 }

@@ -130,3 +130,31 @@ Les échelles relatives sont celles des sprites : le facteur arrive à l'épaule
 - La maison a 10 600 triangles, trop pour un décor répété. On décimera en 60.0b, ou on montera le pas des grands décors.
 - Les six modèles pèsent 18 Mo dans le dépôt, dont la moitié pour le facteur et ses 27 poses : chaque face garde ses propres sommets, en flottants. Avant d'exporter tout le bestiaire, il faudra quantifier (couleurs sur un octet, positions sur 16 bits) ou ne générer les modèles qu'au build.
 
+
+## 9. 60.0b — l'arène low poly, découpage
+
+Le bac à sable garde sa simulation, son arène et ses trois vues ; seul le rendu change, et l'ancien reste à portée pour comparer.
+
+- **Rendu low poly par défaut**, l'ancien (sprites et sol photographié d'un biome) derrière `--sprites`. Sans photographie, le bac à sable démarre sans générer de run.
+- **Le sol** : un triangle par demi-cellule, faces non lissées, une couleur par étage (sol, gradin, butte, marches) avec un léger écart de teinte et de hauteur par sommet, nul au bord des parois pour ne pas les décoller.
+- **Les falaises** : découpées en facettes d'un tiers de cellule sur un demi-étage, bossuées vers l'extérieur sans toucher leurs arêtes, en strates de roche ; le haut garde la couleur du dessus, comme une lèvre d'herbe ; dans le vide, elles s'assombrissent jusqu'au noir.
+- **Les corps** : le facteur, le rampant, le rôdeur et le charognard à la place des sprites, un maillage par pose (marche, repos, bond, blessure, mort), tournés vers leur marche ; flash blanc au coup, rouge à la blessure ; ombres portées réelles en plus de la tache au sol, qui dit la hauteur du bond.
+- **Les décors** : arbres et rochers semés par graine sur les cellules plates à l'écart du tour du bot, une maison posée dans le coin sud-ouest ; leurs emprises deviennent des obstacles de la simulation (la maison en chapelet de cercles).
+- **L'échelle** : celle des sprites, 2,65 m par cellule (un étage fait 1,86 m, le facteur 0,6 cellule), réglée dans `data/sandbox/relief.json` ; l'échelle définitive se tranche à la fin de 60.0.
+- **La vue « relief 2D »** devient, en low poly, une vue isométrique orthographique éclairée : un avant-goût de la caméra isométrique haute de 60.0c.
+
+Vérification : captures des trois vues (`--capture`), contrôle des rebords (`--check-edges`) toujours vert, build sans avertissement.
+
+**Livré.** `tools/relief_sandbox.sh` démarre en low poly ; `--sprites` rend l'ancien bac à sable.
+- `tools/tests/ReliefLowPoly.cs` : le relief en facettes (20 400 triangles pour l'arène de 44 × 44), le chargement d'un modèle et de ses poses, les décors semés (34 : arbres, rochers, la maison).
+- Réglages dans le bloc `lowpoly` de `data/sandbox/relief.json` : échelle, couleurs, écarts de teinte et de relief, décors.
+- Le charognard rejoint les modèles exportés (`tools/export_lowpoly.py`), car la horde du bac à sable en compte.
+
+**Ce que montrent les captures.**
+- La scène se lit d'emblée dans les trois vues : les étages par leurs strates et leur lèvre d'herbe, la fosse de vide qui noircit, la horde par ses silhouettes, et les vraies ombres des arbres et de la maison, qui donnent l'échelle.
+- La vue isométrique orthographique est la plus nette ; la poursuite montre toute l'arène et ses escaliers.
+- Les bosses des falaises se voient à peine : les parois restent des pans droits. C'est à revoir avec les styles (60.0d), par exemple des parois plus hautes ou des rochers posés au pied.
+- Les piliers isolés (un seul cube de deux étages) font caisses : un décor de rocher ou de ruine les habillera mieux.
+
+**Mesures.** Contrôle des rebords vert (113 rebords, aucun collant ; la tour et le haut palier ne se prennent pas d'un bond). Images par seconde lues sur le HUD, machine chargée (charge 2,3) : 144 en isométrique orthographique, autour de 65 à 70 dans les deux vues en perspective, avec 35 créatures, ombres portées et MSAA 4×. C'est une indication, pas une mesure : le banc A/B se fait en 60.0e.
+

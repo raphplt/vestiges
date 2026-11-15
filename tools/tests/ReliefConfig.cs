@@ -17,6 +17,32 @@ public sealed class ReliefConfig
         public int Weight;
     }
 
+    /// <summary>Décor semé : une chance par cellule plate, et son emprise d'obstacle (cellules).</summary>
+    public sealed class LowPolyScatter
+    {
+        public string Model;
+        public float Density;
+        public float Radius;
+    }
+
+    /// <summary>Décor posé à la main : son pied (cellules) et son orientation.</summary>
+    public sealed class LowPolyLandmark
+    {
+        public string Model;
+        public Vector2 At;
+        public float YawDegrees;
+    }
+
+    /// <summary>Rendu low poly (plan 60, lot 60.0b) : échelle des modèles, couleurs du relief, décors.</summary>
+    public sealed class LowPolyStyle
+    {
+        public float MetresPerCell;
+        public Color Ground, Terrace, Butte, Steps, Cliff, CliffDark;
+        public float ShadeJitter, HeightJitter, CliffJitter;
+        public LowPolyScatter[] Scatter;
+        public LowPolyLandmark[] Landmarks;
+    }
+
     public float LevelHeight;
     public Vector2 Spawn;
     public string[] Arena;
@@ -32,6 +58,7 @@ public sealed class ReliefConfig
     public float SpawnMin, SpawnMax, CrowdRadius, Separation, ClimbSpeed, ContactReach, ContactHeight, ContactDamage;
     public float PushDecay, CrowdFallDamagePerLevel, CrowdSafeDropLevels;
     public Creature[] Creatures;
+    public LowPolyStyle LowPoly;
 
     public string[] GroundTiles, StepTiles, TerraceTiles, ButteTiles;
 
@@ -120,7 +147,47 @@ public sealed class ReliefConfig
                 Weight = (int)F(creature, "weight"),
             };
         }
+        config.LowPoly = LoadLowPoly(root["lowpoly"].AsGodotDictionary());
         return config;
+    }
+
+    private static LowPolyStyle LoadLowPoly(Dictionary lowPoly)
+    {
+        Dictionary colors = lowPoly["colors"].AsGodotDictionary();
+        Array scatter = lowPoly["scatter"].AsGodotArray();
+        Array landmarks = lowPoly["landmarks"].AsGodotArray();
+        LowPolyStyle style = new()
+        {
+            MetresPerCell = F(lowPoly, "metres_per_cell"),
+            Ground = new Color(colors["ground"].AsString()),
+            Terrace = new Color(colors["terrace"].AsString()),
+            Butte = new Color(colors["butte"].AsString()),
+            Steps = new Color(colors["steps"].AsString()),
+            Cliff = new Color(colors["cliff"].AsString()),
+            CliffDark = new Color(colors["cliff_dark"].AsString()),
+            ShadeJitter = F(lowPoly, "shade_jitter"),
+            HeightJitter = F(lowPoly, "height_jitter"),
+            CliffJitter = F(lowPoly, "cliff_jitter"),
+            Scatter = new LowPolyScatter[scatter.Count],
+            Landmarks = new LowPolyLandmark[landmarks.Count],
+        };
+        for (int i = 0; i < scatter.Count; i++)
+        {
+            Dictionary entry = scatter[i].AsGodotDictionary();
+            style.Scatter[i] = new LowPolyScatter { Model = entry["model"].AsString(), Density = F(entry, "density"), Radius = F(entry, "radius") };
+        }
+        for (int i = 0; i < landmarks.Count; i++)
+        {
+            Dictionary entry = landmarks[i].AsGodotDictionary();
+            Array at = entry["at"].AsGodotArray();
+            style.Landmarks[i] = new LowPolyLandmark
+            {
+                Model = entry["model"].AsString(),
+                At = new Vector2((float)at[0].AsDouble(), (float)at[1].AsDouble()),
+                YawDegrees = F(entry, "yaw_degrees"),
+            };
+        }
+        return style;
     }
 
     private static float F(Dictionary dictionary, string key) => (float)dictionary[key].AsDouble();

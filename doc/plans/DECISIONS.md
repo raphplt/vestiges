@@ -2825,3 +2825,14 @@ Raphaël : « Oui, lance 60.0a ». Détail au [plan 60 §8](60-vestiges-en-3d.md
 - **Couleurs de sommet écrites en sRGB** : Godot en GL Compatibility les relit ainsi. À revoir si Forward+ est choisi.
 - **Le pas de maillage** : 1,6 unité pour un personnage (le visage reste lisible), 2,0 pour une créature, un quarantième de la taille pour un décor. Les pièces plus fines laissent des éclats, acceptés pour l'essai.
 
+## 232. L'arène low poly : le bac à sable passe en facettes — 15 novembre 2026
+
+Raphaël : « Oui, lance 60.0b ». Détail au [plan 60 §9](60-vestiges-en-3d.md).
+
+**Tranché par défaut par l'agent, réversible :**
+- **Le low poly devient le rendu par défaut du bac à sable** ; l'ancien (sprites, sol photographié d'un biome) reste derrière `--sprites` pour comparer.
+- **L'échelle est celle des sprites** : 2,65 m par cellule, un étage de 1,86 m, le facteur haut de 0,6 cellule. Elle se règle dans `data/sandbox/relief.json` et se tranche à la fin de 60.0.
+- **Le relief** : une couleur par étage, de légers écarts de teinte et de hauteur, des falaises en strates avec une lèvre de la couleur du dessus. La simulation garde son sol plat par cellule.
+- **Les décors** sont semés par graine à l'écart du tour du bot, plus une maison posée à la main ; leurs emprises bloquent la simulation.
+- **En low poly, la vue « relief 2D » devient une isométrique orthographique éclairée**, premier essai de la caméra isométrique haute de 60.0c.
+

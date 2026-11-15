@@ -35,7 +35,7 @@ CREATURE_METRES = 1.0 / M
 
 DEFAULT_SET = {
     "character": ["facteur"],
-    "creature": ["rampant", "rodeur"],
+    "creature": ["rampant", "rodeur", "charognard"],
     "prop": ["forest:prop_tree_medium_base+prop_tree_medium_canopy", "urban_buildings:prop_bld_house_w3_a",
              "forest:prop_rock_mossy"],
 }
