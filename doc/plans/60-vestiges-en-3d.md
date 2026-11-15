@@ -186,3 +186,10 @@ Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`).
 
 **Ce qui reste pour 60.0d** : le choix de Raphaël parmi ces combinaisons, puis les réglages du style retenu (épaisseur du trait, couleurs, brouillard).
 
+**Séance de Raphaël (§234).**
+- Contours gardés, à peaufiner sur le joueur et les créatures.
+- Pixelisation abandonnée.
+- Vue 3D de haut abandonnée.
+- Il penche pour la caméra libre en poursuite plutôt que pour l'isométrique ; il lui manque le contrôle vertical.
+- Sol et détail des corps non tranchés.
+

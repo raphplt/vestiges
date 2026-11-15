@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**15 novembre — tes choix de style ([plan 60 §10](60-vestiges-en-3d.md), §234) :** les contours restent ; la pixelisation et la vue 3D de haut partent ; la caméra libre en poursuite te plaît davantage que l'isométrique, mais il lui manque le contrôle vertical. À la reprise : la caméra libre avec contrôle vertical, puis les contours du joueur et des créatures. Sol et détail des corps encore ouverts.
+
 **15 novembre — les styles à basculer, avec des contours noirs ([plan 60 §10](60-vestiges-en-3d.md), §233) :** retour de Raphaël, le low poly est « trop low » et les sols en facettes ne vont pas. Dans `tools/relief_sandbox.sh`, chaque effet se bascule seul : F1 le sol (facettes, lisse, pixel art), F2 les corps (low ou mid poly), F3 les contours noirs, F4 la pixelisation, F5 l'ombrage toon. À toi de choisir la combinaison.
 
 **15 novembre — l'arène low poly ([plan 60 §9](60-vestiges-en-3d.md), §232) :** lot 60.0b. Le bac à sable de la verticalité passe en facettes : relief en strates, le facteur et la horde en modèles animés, arbres, rochers et une maison, avec de vraies ombres. À jouer avec `tools/relief_sandbox.sh` (Tab pour les trois vues) ; `--sprites` rend l'ancien pour comparer. Prochain sous-lot : 60.0c, les caméras.

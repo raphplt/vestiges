@@ -2846,3 +2846,15 @@ Raphaël, après 60.0b : « je suis pas fan du tout des low poly des sols, le re
 - **Le mid poly** : les mêmes volumes maillés deux fois plus fin, ombrage lissé. Ses modèles sont générés à la demande et ne sont pas versionnés (trop lourds pour un essai).
 - **Les contours** sont détectés à l'écran sur la profondeur : ils dessinent les silhouettes, les arêtes des falaises et des toits, sur tout ce qui est en 3D.
 
+## 234. Les contours restent, la pixelisation et la 3D de haut partent, la caméra libre en tête — 15 novembre 2026
+
+Raphaël, après avoir joué les styles (§233) :
+- « La pixelisation : on oublie définitivement. »
+- Contours : « j'aime beaucoup le rendu », à peaufiner sur le joueur et parfois sur les ennemis : « c'est du détail ».
+- « La vue 3D de haut sans mouvement de caméra, on peut la tuer définitivement. » Le choix se joue entre le relief 2D (isométrique orthographique) et la 3D à caméra libre (poursuite).
+- Il préfère la caméra libre : « beaucoup plus fun et plaisante à jouer (c'est peut-être le fait que je sois un joueur de Megabonk) ». Mais « il manque le contrôle vertical de la caméra ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **À la reprise** : retirer la vue 3D de haut et la bascule de pixelisation du bac à sable ; donner à la caméra libre le contrôle vertical (souris haut et bas, entre deux bornes réglées en JSON) ; faire de la caméra libre la vue de départ. Puis peaufiner les contours du joueur et des créatures.
+- **Le sol et le détail restent ouverts** : il n'a rien dit du sol (lisse, facettes ou pixel art), ni du low et du mid poly. On garde leurs bascules jusqu'à son choix.
+
