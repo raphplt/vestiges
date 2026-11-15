@@ -147,6 +147,8 @@ Les critères 1 et 2 du §6 sont pris : le relief reste. Deux retours de jeu, tr
 
 ## 9. La suite : le relief entre dans le jeu — 15 novembre 2026
 
+> **Remplacé par le §10** : Raphaël préfère tout passer en 3D plutôt qu'un pont de rendu (§228).
+
 Raphaël : « Les trois vues sont un même monde en 3D, filmé par trois caméras » : « parfait ». Il remplace le §7, écrit avant l'essai.
 
 **Ce qui pèse** : le jeu fait 92 000 lignes de C#. 139 fichiers dessinent en 2D (`Node2D`, `Sprite2D`), 25 se servent de la physique 2D. Tout passer en 3D d'un coup serait la refonte que le §4 voulait éviter. La règle du portage : **la logique reste en 2D**, sur le plan du sol, avec une hauteur en plus par entité, comme la simulation du bac à sable. **Seul le rendu passe en 3D**, par un pont qui montre la run. Les armes, les créatures, les Mémoriaux, l'Effacement et la génération gardent leur code.
@@ -161,3 +163,18 @@ Raphaël : « Les trois vues sont un même monde en 3D, filmé par trois caméra
 **Critère d'arrêt de R0** : si le pont ne tient pas 60 images par seconde avec 120 créatures, ou si l'inventaire montre que la moitié du jeu est à réécrire, on le dit avant R1. Le repli est alors un relief en 2D pure (tri par étage, sans la poursuite).
 
 **Ce qui attend** : la Montée (étape 6) et la carrière T4, comme pendant l'essai.
+
+## 10. Tout le jeu passe en 3D — 15 novembre 2026
+
+Raphaël, après les pour et contre du pont : « pour moi il faut revoir tout en 3D au lieu de faire un pont meme si ca coute encore plus. et on est d'accord que avec le passage en 3D je serai encore libre de choisir le "type" de 3D comme lors des tests ? »
+
+**Ce qui change** : la logique passe aussi en 3D (positions, collisions, mouvement, IA, génération), sur un sol carré, comme la simulation du bac à sable. Plus de pont ni de double monde. Le prix : presque tout le code de la run est touché, sur un effort très élevé.
+
+**La liberté de caméra reste entière.** Dans un monde 3D, la vue est un réglage : relief 2D au pixel près, 3D de haut, poursuite, ou un entre-deux. C'est ce que faisait le bac à sable. Trois choix pèsent toutefois sur le travail fait en amont, et se font avant de produire beaucoup d'art :
+- **la caméra tourne-t-elle ?** Si oui, les décors se voient de tous côtés : volumes pour les bâtiments, et plus de faces à dessiner ;
+- **la vue au pixel près** demande un monde calé sur la grille, une caméra fixe à 45° et à 30°, et des positions calées au pixel ;
+- **la portée de vue** change selon la caméra : de haut on voit tout autour, en poursuite on voit loin devant et peu derrière. Les créatures, les tirs et la densité se règlent pour une caméra.
+
+**Défaut de l'agent, réversible** : la run 3D se bâtit **à côté** de la run actuelle, dans une scène neuve. La run 2D reste jouable et testée tant que la 3D ne l'égale pas, puis elle part. Le jeu ne passe pas des mois sans run jouable.
+
+**Prochaine étape** : un plan à part (plan 60), qui découpe le portage système par système d'après un inventaire du code. Rien n'est codé avant qu'il soit écrit.

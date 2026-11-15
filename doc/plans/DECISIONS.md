@@ -2777,3 +2777,14 @@ Raphaël, sur « Les trois vues sont un même monde en 3D, filmé par trois cam�
 - **La logique reste en 2D**, sur le plan du sol, avec une hauteur par entité. **Seul le rendu passe en 3D**, par un pont qui montre la run. Le jeu fait 92 000 lignes, dont 139 fichiers qui dessinent en 2D : les réécrire d'un coup serait la refonte que le §224 écartait.
 - **Ordre** : R0 le pont de rendu (la vraie run, à plat, vue par la caméra 3D, jouable, mesurée et avec l'inventaire de ce qui manque), R1 les étages dans les bois, R2 le portage des effets, R3 le relief dans la génération, la carrière d'abord. Le choix de la caméra se fait quand R1 se joue.
 - **Arrêt** : si R0 ne tient pas 60 images par seconde avec 120 créatures, ou si la moitié du jeu est à réécrire, le repli est un relief en 2D pure, sans la poursuite.
+
+## 228. Tout le jeu passe en 3D, la logique comprise — 15 novembre 2026
+
+Raphaël, après les pour et contre du pont de rendu (§227) : « pour moi il faut revoir tout en 3D au lieu de faire un pont meme si ca coute encore plus. et on est d'accord que avec le passage en 3D je serai encore libre de choisir le "type" de 3D comme lors des tests ? »
+
+**Acquis** : le §227 est remplacé. La logique et le rendu passent en 3D, sur un sol carré. Le choix de la caméra reste libre : relief 2D au pixel près, 3D de haut, poursuite.
+
+**Tranché par défaut par l'agent, réversible** ([plan 59 §10](59-verticalite.md)) :
+- **La run 3D se bâtit à côté de la run actuelle**, qui reste jouable et testée jusqu'à ce que la 3D l'égale.
+- **Un plan à part, le plan 60**, découpe le portage d'après un inventaire du code avant toute ligne.
+- **Trois choix de caméra pèsent sur l'amont** : rotation ou non, vue au pixel près ou non, portée de vue. Ils se font avant de produire beaucoup d'art.

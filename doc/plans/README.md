@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**15 novembre — tout le jeu passe en 3D ([plan 59 §10](59-verticalite.md), §228) :** Raphaël préfère un vrai passage en 3D, logique comprise, au pont de rendu. La caméra reste un choix libre. La run 3D se bâtit à côté de l'actuelle, qui reste jouable jusqu'à ce que la 3D l'égale. Le plan 60 découpera le portage.
+
 **15 novembre — la suite du relief ([plan 59 §9](59-verticalite.md), §227) :** la logique du jeu reste en 2D et seul le rendu passe en 3D, par un pont. D'abord R0 : la vraie run, à plat, jouée en relief 2D et en poursuite, mesurée, avec la liste de ce qui reste à porter. Puis les étages dans les bois (R1), les effets (R2), et le relief dans la génération (R3).
 
 **15 novembre — le relief prend ([plan 59 §8](59-verticalite.md), §226) :** Raphaël trouve que le jeu « change totalement de dimension », en relief 2D comme en 3D, sans pouvoir choisir. Par défaut, le relief se bâtit sur un monde 3D rendu d'abord en relief 2D, ce qui garde la poursuite ouverte. Dans le bac à sable, on ne reste plus collé aux rebords (105 sur 107 avant, 0 après), et un haut palier et une tour ne se prennent que par leurs escaliers.
