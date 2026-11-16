@@ -1,26 +1,12 @@
 {
   "mcpServers": {
     "godot": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@coding-solo/godot-mcp@0.1.1"
-      ],
-      "env": {
-        "GODOT_PATH": "${HOME}/Applications/Godot_mono.app/Contents/MacOS/Godot"
-      }
+      "command": "bash",
+      "args": ["tools/mcp/godot.sh"]
     },
     "wick": {
-      "command": "${HOME}/.dotnet/dotnet",
-      "args": [
-        "${HOME}/.local/share/wick/src/Wick.Server/bin/Release/net10.0/Wick.Server.dll"
-      ],
-      "env": {
-        "DOTNET_ROOT": "${HOME}/.dotnet",
-        "WICK_GROUPS": "core,runtime",
-        "WICK_GODOT_BIN": "${HOME}/Applications/Godot_mono.app/Contents/MacOS/Godot",
-        "WICK_PROJECT_PATH": "."
-      }
+      "command": "bash",
+      "args": ["tools/mcp/wick.sh"]
     }
   }
 }
