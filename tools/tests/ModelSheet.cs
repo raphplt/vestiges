@@ -9,6 +9,9 @@ namespace Vestiges.Tests;
 /// trois quarts, de profil et de dos à la même hauteur, avec la marche pose par pose, puis tous côte à côte à leur
 /// vraie taille. Les images vont dans le dossier passé par <c>--capture</c>, et la scène se ferme.
 /// Les couleurs viennent des sommets ; le matériau est posé ici, comme le feront les styles du bac à sable.
+/// Avec <c>--library &lt;dossier&gt;</c> (plan 60 §17, lot C1) : la bibliothèque de l'export de masse, lue sans import
+/// d'après son index.json, en planches d'alignement par catalogue, dix modèles par planche du plus petit au plus grand,
+/// chacun nommé, le facteur à gauche pour l'échelle.
 /// </summary>
 public partial class ModelSheet : Node3D
 {
@@ -46,6 +49,14 @@ public partial class ModelSheet : Node3D
         _view.AddChild(_camera);
         _stage = new Node3D();
         _view.AddChild(_stage);
+
+        int library = System.Array.IndexOf(args, "--library");
+        if (library >= 0 && library + 1 < args.Length)
+        {
+            await ShootLibrary(args[library + 1]);
+            GetTree().Quit();
+            return;
+        }
 
         foreach (string folder in new[] { "characters", "creatures", "props" })
             LoadFolder($"{ModelRoot}/{folder}");
@@ -126,6 +137,8 @@ public partial class ModelSheet : Node3D
         foreach (Node child in node.FindChildren("*", "MeshInstance3D", true, false))
         {
             MeshInstance3D mesh = (MeshInstance3D)child;
+            if (mesh.Mesh == null)
+                continue;
             for (int s = 0; s < mesh.Mesh.GetSurfaceCount(); s++)
             {
                 bool emissive = mesh.Mesh.SurfaceGetMaterial(s)?.ResourceName.Contains("emissive") ?? false;
@@ -185,19 +198,39 @@ public partial class ModelSheet : Node3D
     }
 
     /// <summary>Tous les modèles côte à côte, à leur vraie taille, de trois quarts comme la caméra du jeu.</summary>
-    private async System.Threading.Tasks.Task ShootLineup()
+    private System.Threading.Tasks.Task ShootLineup()
+    {
+        List<(Node3D, string, string)> row = new();
+        foreach ((_, Node3D model, Dictionary<string, string[]> animations) in _models)
+            row.Add((model, animations["idle"][0], null));
+        return ShootRow(row, "alignement");
+    }
+
+    private async System.Threading.Tasks.Task ShootRow(List<(Node3D Model, string Frame, string Label)> row, string name)
     {
         float x = 0f;
         float tallest = 0f;
         List<Node3D> copies = new();
-        foreach ((_, Node3D model, Dictionary<string, string[]> animations) in _models)
+        foreach ((Node3D model, string frame, string label) in row)
         {
-            string frame = animations["idle"][0];
             float width = Width(model, frame);
             Node3D copy = (Node3D)model.Duplicate();
             ShowFrame(copy, frame);
             copy.Position = new Vector3(x + width * 0.5f, 0f, 0f);
             copy.RotationDegrees = new Vector3(0f, 30f, 0f);
+            if (label != null)
+            {
+                copy.AddChild(new Label3D
+                {
+                    Text = label,
+                    Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
+                    FixedSize = true,
+                    PixelSize = 0.0009f,
+                    FontSize = 22,
+                    NoDepthTest = true,
+                    Position = new Vector3(0f, -0.25f, 0f),
+                });
+            }
             _stage.AddChild(copy);
             copies.Add(copy);
             x += width + 0.6f;
@@ -206,9 +239,75 @@ public partial class ModelSheet : Node3D
         foreach (Node3D copy in copies)
             copy.Position -= new Vector3(x * 0.5f, 0f, 0f);
         Frame(x, tallest, 35f);
-        await Save("alignement");
+        await Save(name);
         foreach (Node3D copy in copies)
             copy.QueueFree();
+    }
+
+    /// <summary>
+    /// La bibliothèque de l'export de masse, catalogue par catalogue. Ses .glb sont lus à l'exécution (GltfDocument) :
+    /// elle est hors de l'import de Godot, qui n'a pas à en garder des centaines en cache.
+    /// </summary>
+    private async System.Threading.Tasks.Task ShootLibrary(string root)
+    {
+        using FileAccess file = FileAccess.Open($"{root}/index.json", FileAccess.ModeFlags.Read);
+        Godot.Collections.Array entries = Json.ParseString(file.GetAsText()).AsGodotDictionary()["models"].AsGodotArray();
+        Dictionary<string, List<(string Path, float Height)>> folders = new();
+        foreach (Variant value in entries)
+        {
+            Godot.Collections.Dictionary entry = value.AsGodotDictionary();
+            // Un décor plat (flaque, rail, marelle) sort sans triangle : il deviendra un décalque, pas un maillage.
+            if (entry.ContainsKey("error") || entry["max_triangles"].AsInt32() == 0)
+                continue;
+            string path = entry["path"].AsString();
+            string folder = path.GetBaseDir();
+            if (!folders.TryGetValue(folder, out List<(string, float)> list))
+                folders[folder] = list = new List<(string, float)>();
+            list.Add((path, (float)entry["height_m"].AsDouble()));
+        }
+        (Node3D Model, string Frame) reference = LoadRuntime($"{root}/characters/facteur");
+        const int perPage = 10;
+        int pages = 0;
+        foreach ((string folder, List<(string Path, float Height)> list) in folders)
+        {
+            list.Sort((a, b) => a.Height.CompareTo(b.Height));
+            for (int start = 0; start < list.Count; start += perPage)
+            {
+                List<(Node3D, string, string)> row = new();
+                if (reference.Model != null)
+                    row.Add((reference.Model, reference.Frame, "facteur"));
+                List<Node3D> loaded = new();
+                for (int i = start; i < Mathf.Min(start + perPage, list.Count); i++)
+                {
+                    (Node3D model, string frame) = LoadRuntime($"{root}/{list[i].Path.GetBaseName()}");
+                    if (model == null)
+                        continue;
+                    loaded.Add(model);
+                    row.Add((model, frame, list[i].Path.GetFile().GetBaseName().TrimPrefix("prop_")));
+                }
+                await ShootRow(row, $"{folder.Replace('/', '_')}_{start / perPage + 1:00}");
+                foreach (Node3D model in loaded)
+                    model.Free();
+                pages++;
+            }
+        }
+        reference.Model?.Free();
+        GD.Print($"[ModelSheet] {pages} planches de la bibliothèque : {_captureDir}");
+    }
+
+    private static (Node3D Model, string Frame) LoadRuntime(string pathWithoutExtension)
+    {
+        if (!FileAccess.FileExists($"{pathWithoutExtension}.glb"))
+            return (null, null);
+        GltfDocument document = new();
+        GltfState state = new();
+        if (document.AppendFromFile($"{pathWithoutExtension}.glb", state) != Error.Ok)
+            return (null, null);
+        Node3D model = (Node3D)document.GenerateScene(state);
+        ApplyVertexColorMaterial(model);
+        Dictionary<string, string[]> animations = ReadManifest($"{pathWithoutExtension}.json");
+        string first = animations.TryGetValue("idle", out string[] idle) ? idle[0] : animations.Values.GetEnumerator() is var e && e.MoveNext() ? e.Current[0] : null;
+        return (model, first);
     }
 
     /// <summary>Cadre une bande de <paramref name="width"/> × <paramref name="height"/> mètres centrée au-dessus du sol.</summary>

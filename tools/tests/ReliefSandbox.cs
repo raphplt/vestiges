@@ -109,14 +109,14 @@ public partial class ReliefSandbox : Node
     private float _botStuckTimer;
     private static readonly Vector2[] BotTour =
     {
-        // Le haut palier par sa rampe, puis la tour par la sienne : trop hauts pour le saut (§239).
-        new(20.5f, 13.5f), new(22.5f, 10.9f), new(15f, 10.9f), new(7f, 12.4f), new(7f, 6.5f), new(7f, 12.4f),
-        new(15f, 10.9f), new(22.5f, 10.9f),
-        // Le gradin d'un étage d'un saut, puis le plateau qui le domine par sa rampe.
-        new(24f, 15.5f), new(28f, 13.5f), new(33.9f, 13.6f), new(33.9f, 7f), new(33.9f, 13.6f), new(38f, 16.5f),
-        // Les gradins du sud-est, sautés un à un, puis les rampes de la falaise sud et du plateau sud-ouest.
-        new(34f, 24f), new(34f, 26f), new(28f, 33f), new(24.9f, 32.4f), new(24.9f, 38f), new(24.9f, 32.4f),
-        new(19.8f, 31.9f), new(8f, 32f), new(19.8f, 31.9f), new(20.5f, 18.5f),
+        // Toutes les falaises sont trop hautes pour le saut (§240) : chaque plateau par sa rampe, et retour par elle.
+        new(20.5f, 13.5f), new(24f, 10.9f), new(15f, 10.9f), new(7f, 12.4f), new(7f, 6.5f), new(7f, 12.4f),
+        new(15f, 10.9f), new(24f, 10.9f),
+        new(28.9f, 20.5f), new(28.9f, 12.5f), new(33.9f, 12.4f), new(33.9f, 7f), new(33.9f, 12.4f), new(28.9f, 12.5f),
+        new(28.9f, 20.5f),
+        new(22f, 25.9f), new(34f, 26f), new(22f, 25.9f),
+        new(24.9f, 30.4f), new(24.9f, 38.5f), new(24.9f, 30.4f),
+        new(21.8f, 31.9f), new(8f, 32f), new(21.8f, 31.9f), new(20.5f, 18.5f),
     };
 
     public override async void _Ready()
@@ -962,8 +962,8 @@ public partial class ReliefSandbox : Node
             case 4 when _captureTimer >= 0.6f:
                 Save("2d");
                 SetView(View.Chase3D);
-                // Au pied de la rampe du plateau sud-ouest, trois étages, que le bot monte.
-                _sim.Teleport(new Vector2(20.5f, 31.9f));
+                // Au pied de la rampe du plateau sud-ouest, quatre étages, que le bot monte.
+                _sim.Teleport(new Vector2(21.8f, 31.9f));
                 _waypoint = System.Array.IndexOf(BotTour, new Vector2(8f, 32f));
                 Advance();
                 break;

@@ -2953,3 +2953,15 @@ Raphaël :
   - Ce nœud s'essaie dans le bac à sable avant le portage : falaises, poussée et chute y sont déjà.
 - **Le facteur** se reprend dans son modèle SDF au détail des corps, après l'arrêt du style (plan 60 §16).
 - **La conversion des assets** : presque tout a une source SDF et il ne reste aucune retouche à la main, donc la voie est surtout automatique. Cinq outils sont à écrire, dans l'ordre du plan 60 §16 : export de masse, emprises, poids, planches, sols.
+
+## 240. Toutes les falaises hors de portée du saut ; la conversion des assets commence — 16 novembre 2026
+
+Raphaël : « En fait, je ne ferai pas de falaises qu'on peut grimper en sautant. Je les ferai toutes plus hautes, et même plus que 2 étages : je dirais 3 à 5, à tester. Bref, je veux qu'on avance maintenant, et qu'on commence à préparer la conversion des assets. »
+
+**Tranché par défaut par l'agent, réversible :**
+- **Plus aucun gradin sautable** : toutes les falaises de l'arène font 3, 4 ou 5 étages (4 à 6,6 m), et chaque plateau a sa rampe (plan 60 §17). Les plateaux de 3 étages restent herbus ; ceux de 4 et 5 sont en roche nue (seuil à 3,5 étages, inchangé).
+- **La chute de ces hauteurs est sévère** : une vingtaine de PV pour 3 étages, près de 50 pour 5 (`safe_drop_levels` 1,2). On ne le corrige pas avant de l'avoir joué : c'est aussi ce qui fait du vide une arme contre la horde (§239).
+- **La conversion des assets commence par l'export de masse** (lot C1 du plan 60 §17), sans attendre l'arrêt du style : l'outil ne fige rien, il se relance en deux minutes quand le style ou les modèles changent.
+  - **La bibliothèque n'est pas versionnée** : `build/models/`, ignorée de git et de Godot. Plusieurs centaines de Mo de .glb régénérables n'ont rien à faire dans le dépôt ; seuls les modèles que lit le bac à sable restent dans `assets/models/`.
+  - **Les variantes orientées sont réduites à la première**, et le tronc et la canopée d'un arbre fondus en un modèle : la caméra tourne, le jeu tourne le modèle. Les variantes écartées sont notées dans l'index, pour les reprendre si l'une diffère vraiment.
+  - **Les décors plats** (flaques, rails, marelle, flèches au sol, salines) sortent presque sans volume : ils deviendront des décalques au sol, avec les textures du lot C5, pas des maillages.

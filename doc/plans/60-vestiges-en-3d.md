@@ -374,3 +374,57 @@ Inventaire fait le 16 novembre (§239) en lisant le code. Il n'existe plus aucun
 Plus tard, transversal : un squelette glTF exporté pièce par pièce, pour une animation interpolée et moins lourde que le maillage par pose (élevé).
 
 **Le facteur** : Raphaël le trouve « assez moche ». Son modèle se reprend dans le SDF (`tools/sprites/characters/facteur.py`) au moment du détail des corps, puis passe par la même conversion. Pas avant que le style soit arrêté.
+
+## 17. Toutes les falaises hautes ; la conversion commence : l'export de masse (lot C1, 16 novembre)
+
+Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 étages, « à tester » ; et avancer, en commençant la conversion des assets.
+
+**L'arène** (`data/sandbox/relief.json`) est redessinée sans aucun gradin : deux plateaux de 3 étages au nord, chacun avec un sommet de 5 étages ; deux plateaux de 4 étages (sud-ouest et est) ; une falaise de 3 étages au sud ; le puits ; trois piliers de 3 étages. Chaque hauteur a sa rampe, parfois longue de huit cases. Les plateaux de 3 étages sont herbus, ceux de 4 et 5 en roche nue.
+- Contrôle headless : rebords 86 sur 86 sans collage, la tour atteinte par les rampes (5,00 étages), et le saut ne monte sur aucune des six parois essayées (+0,00).
+- À jouer : tomber de 3 étages coûte une vingtaine de PV, de 5 près de 50. Les créatures mettent 4 à 6 s à escalader.
+
+### Les lots de la conversion
+
+| Lot | Outil | État | Effort |
+|---|---|---|---|
+| **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
+| C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
+| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | à faire | moyen |
+| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | à faire | moyen |
+| C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
+
+Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
+
+### C1 livré
+
+`python3 tools/export_lowpoly.py --all --jobs 6` exporte tout ce qui a une source SDF dans `build/models/`, en 106 s.
+- **Ce que couvre `--all`** : personnages, créatures, faune et les douze catalogues de décors de `generate_props.py`. Cela inclut les coffres, les monuments (Mémoriaux, Failles, stèles), la Barrière, l'Indicible et l'exode urbain.
+- **Ce qui est réduit** :
+  - le tronc et la canopée d'un arbre se fondent en un modèle ;
+  - d'une famille de variantes orientées (`_x`/`_y`, `_h`/`_v`, `_e`/`_w`/`_n`/`_s`, et la forme sans suffixe), seule la première est gardée.
+  - Il reste 312 modèles ; les 36 variantes écartées sont notées dans l'index.
+- **La bibliothèque n'est pas versionnée** : elle est ignorée de git, et de Godot par un `.gdignore`.
+  - Son `index.json` donne, modèle par modèle, ses sources, ses variantes écartées, ses poses, son plus gros maillage, sa hauteur en mètres, son poids et sa durée.
+  - Le mode explicite (`--character`, `--prop`, sortie dans `assets/models/`) ne change pas pour le bac à sable.
+- **Les échecs sont rapportés, pas levés** : un modèle en erreur n'arrête pas les autres.
+  - Si un processus est tué (mémoire, machine chargée par d'autres builds), ce qui restait repasse un par un.
+- **Les décors minces** (clôtures, grillage, rambarde) sortaient vides, parce que leur pas, calé sur la longueur, enjambait les lattes. Le pas est maintenant affiné jusqu'à 1,2 unité tant que le maillage n'atteint pas la hauteur de la matière. Une clôture fait 1,06 m, le grillage 1,46 m.
+- **La planche de la bibliothèque** : `tools/model_sheet.sh <dossier> --library build/models`.
+  - Elle lit les .glb à l'exécution, sans import.
+  - Elle montre les modèles par dizaines et par catalogue, du plus petit au plus grand, nommés, le facteur à gauche pour l'échelle : 37 planches.
+
+**Bilan** : 312 modèles, 0 échec, 275 Mo.
+
+| | Modèles | Poids |
+|---|---|---|
+| Personnages | 14 | 112 Mo |
+| Créatures | 14 | 100 Mo |
+| Décors (12 catalogues) | 279 | 62 Mo |
+| Faune | 5 | 1 Mo |
+
+Ce que montrent les planches, pour les lots suivants :
+- **Le poids est dans les animations** : un maillage complet par pose, 27 poses pour un personnage. Les deux plus lourds sont le Grand Cerf (34 Mo, 15 800 triangles) et l'épouvantail (29 Mo, 16 700). C'est le premier gain de C3, et le squelette glTF (transversal) le réglerait à la racine.
+- **Bâtiments, véhicules, rochers, personnages et créatures** passent bien. Les bâtiments font 8 000 à 10 600 triangles, la gloriette 12 600.
+- **Les pièces minces des grands décors cassent** : les branches de l'arbre mort, la flèche de la grue du port et l'antenne radio sortent en morceaux, et la poubelle grillagée est trouée. Leur pas suit la taille du décor. C3 leur donne un pas plancher par pièce.
+- **18 décors sont plats par nature** : flaques, rails, marelle, flèches au sol, salines, pavés, nénuphars, cale. Cinq sortent sans aucun triangle. Ils deviennent des décalques au sol (C5), pas des maillages ; la planche les écarte.
+- **Les couleurs sont crues** : le maillage ne porte que la couleur de base de chaque matériau, alors que le sprite la nuançait en quatre tons. Le vert des buissons, notamment, est vif. Ce réglage appartient au style (60.0), pas à l'export.

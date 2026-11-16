@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — toutes les falaises hautes, l'export de masse des assets ([plan 60 §17](60-vestiges-en-3d.md), §240) :**
+- Dans le bac à sable, plus aucune falaise ne se saute : toutes font 3 à 5 étages, chacune avec sa rampe. À jouer : la chute coûte 20 à 50 PV.
+- La conversion commence (lot C1) : `python3 tools/export_lowpoly.py --all` tire en deux minutes 312 modèles 3D de tout ce qui a une source SDF. La bibliothèque est dans `build/models/`, non versionnée.
+- Planches : `tools/model_sheet.sh <dossier> --library build/models`. Restent les emprises, le poids des animations, les pièces minces, l'import Godot et les sols (C2 à C5).
+
 **16 novembre — des falaises qu'on ne saute pas, des rampes, la conversion des assets ([plan 60 §15 et §16](60-vestiges-en-3d.md), §239) :**
 - **Falaises** : la plupart font deux étages ou plus, au-delà du saut. On y monte par des rampes. Quelques gradins d'un étage restent sautables.
 - **Mécanique forte** : pas de nouvelle, nouer les ingrédients. L'Effacement crée le vide, la hauteur est le refuge, on jette la horde en bas, et la Série le récompense.
