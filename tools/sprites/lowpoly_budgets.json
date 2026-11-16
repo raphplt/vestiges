@@ -1,0 +1,6 @@
+{
+  "character": {"coarsen": true, "tiers": [[0.0, 5000]]},
+  "creature": {"coarsen": true, "tiers": [[0.0, 4000], [4.0, 16000]]},
+  "prop": {"coarsen": false, "tiers": [[0.0, 2500], [2.0, 6000], [5.0, 10000]]},
+  "max_coarsening": 2.5
+}

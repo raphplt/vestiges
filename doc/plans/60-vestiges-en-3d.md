@@ -389,7 +389,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 |---|---|---|---|
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
-| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | C3a et C3b livrés (§18), C3c à faire | moyen |
+| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | à faire | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
@@ -536,3 +536,48 @@ Les pièces minces. Le pas de grille d'un décor suit la taille de son cadre (`m
 - Ces réglages relèvent de C3c ou d'un retour de Raphaël.
 
 **Suite** : C3c (budgets de triangles), seulement sur demande de Raphaël.
+
+### C3c livré — 16 novembre
+
+Les budgets de triangles. Un fichier de réglages, `tools/sprites/lowpoly_budgets.json`, donne par sorte de modèle des paliers `[taille minimale en mètres, budget]` (la taille est la plus grande dimension du modèle) et un drapeau `coarsen`.
+
+| Sorte | Budget | Grossit |
+|---|---|---|
+| Personnage | 5 000 | oui |
+| Créature | 4 000, 16 000 à partir de 4 m (grands gardiens) | oui |
+| Décor | 2 500, 6 000 à partir de 2 m, 10 000 à partir de 5 m | non (dépassement noté) |
+
+- `max_coarsening` vaut 2,5. Le mid poly a quatre fois le budget. `--step` ignore les budgets.
+- `fit_budget` (`tools/export_lowpoly.py`) exporte au pas d'origine. Au-dessus du budget, si la sorte se grossit, il cherche par dichotomie le plus petit facteur de pas qui rentre : première tentative au facteur racine(triangles / budget), puis 3 bissections. Hors de portée à ×2,5, le modèle garde son pas et le dépassement est noté.
+- L'index note par modèle `budget`, `coarsening`, `over_budget`, et dans le résumé le nombre de pas grossis et la liste des dépassements. La console aussi.
+- Pour un décor, le pas fin des pièces minces (C3b) reste celui d'avant le budget (`fine_base`), si le grossissement des décors est rallumé.
+
+**Écarts au découpage**
+1. Personnage à 5 000 au lieu de 3 000. À 3 000, 7 personnages sur 14 auraient grossi, alors que le pas de 1,6 est réglé pour que le visage reste lisible. À 5 000 aucun ne dépasse (le plus lourd, le vagabond, 4 528) : c'est un garde-fou.
+2. Grand gardien à 16 000 au lieu de 8 000. À 8 000 (pas ×1,42 et ×1,45), le Grand Cerf perdait les andouillers de ses bois, l'épouvantail son corbeau et le ruban de son chapeau. Un gardien est seul à l'écran.
+3. Des paliers de décor par taille, au lieu d'un budget « décor » et d'un budget « bâtiment » : un budget unique écrasait les grands décors.
+4. Les décors ne se grossissent pas. Deux essais sur la bibliothèque complète, planches avant/après regardées :
+   - Essai 1, pas fin grossi avec le pas : 51 modèles grossis, aucun dépassement, 48,3 → 41,3 Mo, décors 1 009 446 → 857 166 triangles. Les pièces minces se défont : barreaux du vantail cassé fondus en panneau à ×1,78, poteaux du hangar tronqués, balustres du kiosque, fût du silo en lames.
+   - Essai 2, pas fin figé : 21 grossis, 29 dépassements, décors −5 % seulement (958 070). Tout ce qui est bâti se dégrade dès ×1,2 : porte de la cabane de carrière en damier et toit fendu, façade de la ruine criblée de trous, toit de la cabine du chalutier, bassin de la fontaine, chaîne de l'aile de grille. Seuls feuillages et troncs tiennent (arbre moyen ×1,91).
+   - D'où la règle : les décors gardent leur pas. La distance relèvera des niveaux de détail que l'import de Godot génère (C4, déjà tranché au §241).
+
+**Mesures** : export complet `python3 tools/export_lowpoly.py --all --jobs 2`, 312 modèles, 0 échec, 467 s, contre C3b.
+
+| | C3b | C3c |
+|---|---|---|
+| Poids de la bibliothèque | 48,3 Mo | 47,9 Mo |
+| Triangles des créatures | 56 192 | 53 896 |
+| Triangles des personnages | 43 212 | identiques |
+| Triangles des décors | 1 009 446 | identiques |
+
+- 2 modèles grossis : l'épouvantail ×1,03 (16 700 → 15 672 triangles) et la brute du vide ×1,15 (5 188 → 3 920). Planches regardées : ils tiennent (épines du dos de la brute un peu réduites).
+- 48 décors au-dessus de leur budget, tous signalés dans l'index : 452 000 des 1,01 million de triangles de décors. Grilles et vantaux, œil de l'Indicible, hangars, kiosque, moulin, coquelicots, hautes herbes, tilleuls, arbres fruitiers, maisons. Aucun personnage ni créature en dépassement.
+- Le poids tient surtout aux animations (personnages 16,5 Mo, créatures 13,8 Mo, maillées pose par pose). La cible de moins de 40 Mo n'est pas tenue (47,9 Mo). Le levier est le squelette glTF, laissé à plus tard au §241, pas un budget de triangles.
+
+**Vérifications** : planches avant/après (`tools/model_sheet.sh`) des modèles grossis à chaque essai, regardées (dont par le sous-agent `regard`). Modèles versionnés de `assets/models` régénérés : inchangés (aucun du jeu d'essai n'est grossi). Pas de smoke test ni de capture : seul l'outil d'export (Python) change, aucun asset versionné ne bouge.
+
+**Points ouverts**
+- Les 48 décors en dépassement : à traiter par les niveaux de détail de C4, ou par un budget relevé sur décision de Raphaël.
+- Les défauts de C3b restent : câble de la grue, pointe du mât, épaississements.
+
+**Suite** : C2 (emprises et collisions dans le manifeste) ou C4 (chaîne d'import Godot, niveaux de détail), au choix de Raphaël.

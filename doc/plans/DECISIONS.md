@@ -2983,3 +2983,13 @@ Raphaël : reprendre la conversion par le lot C3 (poids et finesse), découpage 
 - **Le pas des décors reste calé sur leur boîte de cadrage**, qui surestime leur taille réelle d'environ 1,9 en médiane. La corriger rendrait tous les décors plus fins partout : c'est une décision de style, laissée à Raphaël.
 - **L'orientation des faces par le gradient du volume s'applique à tous les modèles**, personnages compris.
 - **Un affinage local de la grille remplace le pas tiré de l'épaisseur** prévu au découpage, parce qu'une pièce mince n'est souvent pas une pièce SDF à elle seule ; la variante au pas fin calé sur la taille réelle de la matière est écartée (570 000 à 1,66 million de triangles, 10 à 28 Mo, gain non visible sur les planches).
+
+**C3c livré, tranché par défaut par l'agent, réversible** (plan 60 §18) :
+- **Budgets dans `tools/sprites/lowpoly_budgets.json`** : personnage 5 000, créature 4 000 (16 000 à partir de 4 m), décor 2 500 (6 000 à partir de 2 m, 10 000 à partir de 5 m), grossissement maximal ×2,5, mid poly à quatre fois le budget, `--step` les ignore.
+- **Personnage à 5 000 au lieu de 3 000** : à 3 000, 7 personnages sur 14 auraient grossi, alors que le pas de 1,6 est réglé pour la lisibilité du visage. Garde-fou, aucun ne dépasse (le plus lourd : 4 528).
+- **Grand gardien à 16 000 au lieu de 8 000** : à 8 000, le Grand Cerf perdait les andouillers et l'épouvantail son corbeau et le ruban de son chapeau. Un gardien est seul à l'écran.
+- **Paliers de décor par taille** au lieu des budgets « décor » et « bâtiment » : un budget unique écrasait les grands décors.
+- **Les décors ne se grossissent pas** (`coarsen` faux), leur dépassement est noté dans l'index. Deux essais mesurés l'ont montré : pas fin grossi, 51 modèles grossis et 48,3 → 41,3 Mo mais pièces minces défaites ; pas fin figé, 21 grossis, 29 dépassements, décors −5 %, le bâti se dégrade dès ×1,2. La distance relève des niveaux de détail de C4.
+- **Résultat** : 2 modèles grossis (épouvantail ×1,03, brute du vide ×1,15), 48 décors au-dessus de leur budget et signalés, bibliothèque 48,3 → 47,9 Mo. La cible de moins de 40 Mo n'est pas tenue ; le levier est le squelette glTF, toujours laissé à plus tard.
+- **Suite au choix de Raphaël** : C2 ou C4.
+

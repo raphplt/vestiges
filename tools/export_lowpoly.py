@@ -22,12 +22,21 @@ Pas par défaut en low poly : 1,6 unité pour un personnage (le visage reste lis
 quarantième de la taille pour un décor, affiné jusqu'à 1,2 pour un décor long et mince (clôture, grillage) que la grille
 traverserait ; en mid poly, deux fois plus fin. Un processus tué en route (mémoire) n'arrête pas l'export : ce qu'il
 restait à faire repasse un par un.
+
+Budgets de triangles (plan 60 §18, lot C3c), dans tools/sprites/lowpoly_budgets.json : par sorte de modèle, des paliers
+[taille minimale en mètres, budget], la taille étant la plus grande dimension du modèle. Une créature ou un personnage
+au-dessus de son budget reprend un pas plus grossier, cherché par dichotomie, jusqu'à `max_coarsening` fois le pas
+d'origine ; au-delà, il garde son pas et l'index note le dépassement. Un décor (`coarsen` faux) ne se grossit pas : ses
+portes, fenêtres, parois et chaînes se défont dès 1,2 fois le pas, et ses pièces minces font l'essentiel de son poids ;
+l'index note seulement son dépassement. Le mid poly a quatre fois le budget. `--step` impose le pas et ignore les
+budgets.
 """
 from __future__ import annotations
 
 import argparse
 import importlib
 import json
+import math
 import os
 import re
 import sys
@@ -37,6 +46,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 
@@ -54,6 +64,9 @@ from tools.sprites.render import MODEL_SCALE, PITCH  # noqa: E402
 OUT = ROOT / "assets" / "models"
 LIBRARY = ROOT / "build" / "models"
 SPRITES = ROOT / "tools" / "sprites"
+BUDGETS = SPRITES / "lowpoly_budgets.json"
+# Itérations de la dichotomie du pas, une fois le budget encadré : un huitième de l'écart suffit.
+BISECTIONS = 3
 # Un modèle se ramène au mètre par son échelle de rendu : les personnages, modélisés plus grands et rendus plus petits,
 # gardent à l'écran la taille relative des sprites, et la faune son agrandissement propre.
 CREATURE_METRES = 1.0 / M
@@ -108,13 +121,14 @@ def _props_catalog(catalog: str) -> dict:
     return {m.stem: m for m in importlib.import_module(BIOMES[catalog][0]).catalog()}
 
 
-def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float) -> tuple[Mesh, int]:
+def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float, fine_base: float) -> tuple[Mesh, int]:
     """
     Le pas d'un décor suit la taille de son cadre, et ses pièces minces (fût, flèche, branche, grillage) passent entre
     les points de la grille : la grille s'affine localement autour d'elles (plan 60 §18, lot C3b), à la moitié du pas
-    sans descendre sous `FINE_FLOOR`. Un pas fin calé sur la taille réelle de la matière triplait les triangles des
-    décors pour un gain que la planche ne montre pas. En dernier recours, un décor qui sort encore trop bas (clôture
-    couchée) reprend un pas plus fin partout. Renvoie aussi les triangles de l'affinage.
+    sans descendre sous `FINE_FLOOR`. Un pas fin calé sur la taille réelle de la matière triplait les triangles des décors
+    pour un gain que la planche ne montre pas. `fine_base` est le pas d'avant le budget (lot C3c) : un décor grossi pour
+    tenir son budget garde ses pièces minces telles quelles. En dernier recours, un décor qui sort encore trop bas
+    (clôture couchée) reprend un pas plus fin partout. Renvoie aussi les triangles de l'affinage.
     """
     parts = prop.parts()
     coarse_step = max(prop_step * 1.6, 3.0)
@@ -125,7 +139,7 @@ def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float) -> tu
     expected = float(bounds[1][1] - bounds[0][1]) - 3.0 * coarse_step
     while True:
         mesh_bounds = _bounds(parts, box, prop_step)
-        fine_step = max(FINE_FLOOR / fineness, prop_step / 2.0)
+        fine_step = max(FINE_FLOOR / fineness, min(prop_step, fine_base) / 2.0)
         mesh, detail = mesh_parts_adaptive(parts, prop.materials, mesh_bounds[0], mesh_bounds[1], prop_step, fine_step, smooth)
         height = float(np.ptp(mesh.positions[:, 1])) if len(mesh.positions) else 0.0
         if height >= 0.6 * expected or prop_step <= 1.2:
@@ -133,7 +147,8 @@ def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float) -> tu
         prop_step = max(1.2, prop_step * 0.5)
 
 
-def export_prop(catalog: str, stems: list[str], model_id: str, step: float | None, smooth: bool, fineness: float) -> ModelExport:
+def export_prop(catalog: str, stems: list[str], model_id: str, step: float | None, smooth: bool, fineness: float,
+                coarsening: float = 1.0) -> ModelExport:
     props = _props_catalog(catalog)
     pieces = []
     detail = 0
@@ -144,10 +159,63 @@ def export_prop(catalog: str, stems: list[str], model_id: str, step: float | Non
         if step is not None:
             mesh = _mesh_pose(prop.parts(), prop.materials, box, step, smooth)
         else:
-            mesh, added = _mesh_prop(prop, box, max(2.4 / fineness, extent / (40.0 * fineness)), smooth, fineness)
+            prop_step = max(2.4 / fineness, extent / (40.0 * fineness))
+            mesh, added = _mesh_prop(prop, box, prop_step * coarsening, smooth, fineness, prop_step)
             detail += added
         pieces.append(scaled(mesh, CREATURE_METRES))
     return ModelExport(model_id, {"idle": [merged(pieces)]}, kind="prop", detail_triangles=detail)
+
+
+def _triangles(export: ModelExport) -> int:
+    return max((mesh.triangles for poses in export.animations.values() for mesh in poses), default=0)
+
+
+def _size_m(export: ModelExport) -> float:
+    positions = export.animations[next(iter(export.animations))][0].positions
+    return float(np.ptp(positions, axis=0).max()) if len(positions) else 0.0
+
+
+def budget_for(kind: str, size_m: float, budgets: dict) -> int:
+    """Le budget du plus haut palier que la taille atteint (paliers rangés par taille croissante)."""
+    return [budget for size, budget in budgets[kind]["tiers"] if size_m >= size][-1]
+
+
+def fit_budget(build: Callable[[float], ModelExport], kind: str, budgets: dict, scale: float) -> tuple[ModelExport, dict]:
+    """
+    Exporte au pas d'origine (`build(1.0)`), puis, au-dessus du budget, au pas multiplié par le plus petit facteur qui y
+    rentre. Les triangles baissent comme le carré du pas : la première tentative vise ce facteur, la dichotomie affine.
+    Renvoie le modèle et ce que l'index en retient.
+    """
+    export = build(1.0)
+    triangles = _triangles(export)
+    budget = int(budget_for(kind, _size_m(export), budgets) * scale)
+    info = {"budget": budget, "coarsening": 1.0}
+    if triangles <= budget:
+        return export, info
+    if not budgets[kind]["coarsen"]:
+        info["over_budget"] = True
+        return export, info
+    limit = float(budgets["max_coarsening"])
+    low, high = 1.0, min(limit, math.sqrt(triangles / budget) * 1.05)
+    while True:
+        candidate = build(high)
+        if _triangles(candidate) <= budget:
+            best = (high, candidate)
+            break
+        if high >= limit:
+            # Hors de portée : le grossir l'abîmerait sans le faire tenir. Il garde son pas, le dépassement est noté.
+            info["over_budget"] = True
+            return export, info
+        low, high = high, min(limit, high * 1.2)
+    for _ in range(BISECTIONS):
+        middle = (low + high) / 2.0
+        candidate = build(middle)
+        if _triangles(candidate) <= budget:
+            high, best = middle, (middle, candidate)
+        else:
+            low = middle
+    info["coarsening"] = round(best[0], 3)
+    return best[1], info
 
 
 @dataclass
@@ -196,14 +264,20 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
     if job.dropped:
         entry["dropped_variants"] = job.dropped
     try:
-        if job.catalog == "characters":
-            export = export_animated(models.character(job.model_id), "character", step or 1.6 / fineness, smooth)
-        elif job.catalog == "creatures":
-            export = export_animated(models.creature(job.model_id), "creature", step or 2.0 / fineness, smooth)
-        elif job.catalog == "fauna":
-            export = export_animated(fauna_model(job.model_id), "creature", step or 2.0 / fineness, smooth)
+        if job.catalog in ANIMATED:
+            kind = "character" if job.catalog == "characters" else "creature"
+            model = (models.character(job.model_id) if job.catalog == "characters"
+                     else models.creature(job.model_id) if job.catalog == "creatures" else fauna_model(job.model_id))
+            base = (1.6 if kind == "character" else 2.0) / fineness
+            build = lambda c: export_animated(model, kind, (step or base) * c, smooth)  # noqa: E731
         else:
-            export = export_prop(job.catalog, job.sources, job.model_id, step, smooth, fineness)
+            kind = "prop"
+            build = lambda c: export_prop(job.catalog, job.sources, job.model_id, step, smooth, fineness, c)  # noqa: E731
+        if step is None:
+            export, budget = fit_budget(build, kind, json.loads(BUDGETS.read_text()), fineness ** 2)
+            entry.update(budget)
+        else:
+            export = build(1.0)
         path = out / job.folder / f"{job.model_id}.glb"
         manifest = write_glb(export, path)
         idle = export.animations[next(iter(export.animations))][0].positions
@@ -226,7 +300,12 @@ def _print_entry(entry: dict) -> None:
     if "error" in entry:
         print(f"[lowpoly] ÉCHEC {entry['path']} : {entry['error']}", flush=True)
         return
-    print(f"[lowpoly] {entry['path']} : {entry['poses']} poses, {entry['max_triangles']} triangles au plus, "
+    budget = ""
+    if "budget" in entry:
+        budget = f" (budget {entry['budget']}"
+        budget += f", pas ×{entry['coarsening']:.2f}" if entry["coarsening"] > 1.0 else ""
+        budget += ", DÉPASSÉ)" if entry.get("over_budget") else ")"
+    print(f"[lowpoly] {entry['path']} : {entry['poses']} poses, {entry['max_triangles']} triangles au plus{budget}, "
           f"{entry['height_m']:.2f} m de haut, {entry['bytes'] / 1e6:.1f} Mo, {entry['seconds']:.1f} s", flush=True)
 
 
@@ -243,10 +322,13 @@ def write_index(out: Path, entries: list[dict]) -> None:
         "failures": len(models_list) - len(ok),
         "megabytes": round(sum(e["bytes"] for e in ok) / 1e6, 1),
         "dropped_variants": sum(len(e.get("dropped_variants", [])) for e in models_list),
+        "coarsened": sum(1 for e in ok if e.get("coarsening", 1.0) > 1.0),
+        "over_budget": [e["id"] for e in ok if e.get("over_budget")],
     }
     path.write_text(json.dumps({"summary": summary, "models": models_list}, indent=1, ensure_ascii=False) + "\n")
     print(f"[lowpoly] index : {path} — {summary['models']} modèles, {summary['failures']} échecs, "
-          f"{summary['megabytes']} Mo, {summary['dropped_variants']} variantes orientées écartées")
+          f"{summary['megabytes']} Mo, {summary['dropped_variants']} variantes orientées écartées, "
+          f"{summary['coarsened']} pas grossis pour le budget, dépassements : {', '.join(summary['over_budget']) or 'aucun'}")
 
 
 def main() -> None:

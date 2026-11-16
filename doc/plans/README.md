@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — les budgets de triangles des modèles 3D ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
+- Un fichier de réglages fixe un budget par sorte de modèle (personnage 5 000, créature 4 000, grand gardien 16 000, décor 2 500 à 10 000 selon la taille). L'index de la bibliothèque note les dépassements.
+- Seuls 2 modèles grossissent (épouvantail, brute du vide), planches regardées. Les décors gardent leur pas : le grossir défaisait les pièces minces. 48 décors dépassent leur budget, signalés. Bibliothèque de 48,3 à 47,9 Mo ; la cible de 40 Mo n'est pas tenue, le poids tient aux animations.
+- Suite : C2 (emprises et collisions) ou C4 (import Godot, niveaux de détail), au choix de Raphaël.
+
 **16 novembre — les pièces minces des décors 3D ne disparaissent plus ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
 - Le réverbère, la grue, l'arbre mort, les grillages et le mât radio sortent entiers : la grille se raffine là où une pièce plus mince que son pas passait au travers. Décors de 568 212 à 1 009 446 triangles (×1,78), bibliothèque de 40,8 à 48,3 Mo.
 - Réserves notées au plan : câble de la grue et pointe du mât manquent encore, quelques épaississements et petits trous.
