@@ -36,7 +36,7 @@ public static class ReliefGrass
             for (int x = 0; x < arena.Width; x++)
             {
                 float h = arena.CellHeight(x, y);
-                if (!IsGrass(arena, h))
+                if (arena.IsRamp(x, y) || !IsGrass(arena, h))
                     continue;
                 Color tone = h / arena.LevelHeight < 0.5f ? style.Ground : style.Terrace;
                 for (int k = 0; k < perCell; k++)
@@ -85,7 +85,7 @@ public static class ReliefGrass
         if (ReliefArena.IsVoid(h))
             return false;
         float level = h / arena.LevelHeight;
-        return Mathf.Abs(level - Mathf.Round(level)) < 0.01f && level < 1.5f;
+        return Mathf.Abs(level - Mathf.Round(level)) < 0.01f && level < ReliefTexturedGround.TerraceTopLevel;
     }
 
     private static bool LowerAround(ReliefArena arena, Vector2 at, float margin, float h) =>

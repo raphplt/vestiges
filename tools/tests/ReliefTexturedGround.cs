@@ -10,7 +10,8 @@ namespace Vestiges.Tests;
 /// couture, les strates des flancs restent à la même hauteur partout. Une frange d'herbe déborde du haut des falaises
 /// herbues ; la teinte des sommets ondule en larges plaques ; les falaises du vide plongent au noir.
 /// Deux variantes : droite, des falaises planes ; taillée (§238), des falaises en facettes de roche, dont le bruit court
-/// d'une cellule à la suivante tant que la paroi continue, sans que la texture s'étire.
+/// d'une cellule à la suivante tant que la paroi continue, sans que la texture s'étire. Les rampes (§239) ont un dessus
+/// en pente, couvert de terre battue, et des talus droits.
 /// </summary>
 public static class ReliefTexturedGround
 {
@@ -23,6 +24,9 @@ public static class ReliefTexturedGround
     // Maillage des falaises taillées : trois facettes par cellule de large, une rangée par quart de cellule.
     private const int CarvedColumns = 3;
     private const float CarvedRowHeight = 0.25f;
+
+    // Les plateaux d'un à trois étages sont herbus ; au-delà, la roche nue (la tour), §239.
+    internal const float TerraceTopLevel = 3.5f;
 
     private enum Layer { Ground, Terrace, Butte, Steps, EarthSide, RockSide, LipGround, LipTerrace }
 
@@ -90,8 +94,8 @@ public static class ReliefTexturedGround
                 float h = arena.CellHeight(x, y);
                 if (ReliefArena.IsVoid(h))
                     continue;
-                Layer top = TopLayer(arena, h);
-                AddTop(surfaces[(int)top], x, y, h);
+                Layer top = arena.IsRamp(x, y) ? Layer.Steps : TopLayer(arena, h);
+                AddTop(surfaces[(int)top], arena, x, y);
                 for (int side = 0; side < 4; side++)
                 {
                     int dx = side == 0 ? 1 : side == 1 ? -1 : 0;
@@ -159,7 +163,7 @@ public static class ReliefTexturedGround
         float level = h / arena.LevelHeight;
         return Mathf.Abs(level - Mathf.Round(level)) > 0.01f ? Layer.Steps
             : level < 0.5f ? Layer.Ground
-            : level < 1.5f ? Layer.Terrace
+            : level < TerraceTopLevel ? Layer.Terrace
             : Layer.Butte;
     }
 
@@ -172,9 +176,11 @@ public static class ReliefTexturedGround
 
     private static Vector2 TopUv(float x, float y) => new(x / CellsPerTexture, y / CellsPerTexture);
 
-    private static void AddTop(Surface surface, int x, int y, float h)
+    /// <summary>Dessus de la cellule, en pente sur une rampe.</summary>
+    private static void AddTop(Surface surface, ReliefArena arena, int x, int y)
     {
-        Vector3 a = new(x, h, y), b = new(x + 1, h, y), c = new(x + 1, h, y + 1), d = new(x, h, y + 1);
+        Vector3 a = new(x, arena.CellSurface(x, y, x, y), y), b = new(x + 1, arena.CellSurface(x, y, x + 1, y), y);
+        Vector3 c = new(x + 1, arena.CellSurface(x, y, x + 1, y + 1), y + 1), d = new(x, arena.CellSurface(x, y, x, y + 1), y + 1);
         surface.Quad(a, b, c, d, TopUv(x, y), TopUv(x + 1, y), TopUv(x + 1, y + 1), TopUv(x, y + 1),
             Tint(x, y, 31), Tint(x + 1, y, 31), Tint(x + 1, y + 1, 31), Tint(x, y + 1, 31));
     }
@@ -188,11 +194,16 @@ public static class ReliefTexturedGround
     {
         float neighbour = arena.CellHeight(x + dx, y + dy);
         bool intoVoid = ReliefArena.IsVoid(neighbour);
+        (Vector2 p0, Vector2 p1) = ReliefLowPoly.CliffEdge(x, y, dx, dy);
+        if (arena.IsRamp(x, y) || arena.IsRamp(x + dx, y + dy))
+        {
+            AddSlopedCliff(surfaces[(int)Layer.EarthSide], arena, x, y, dx, dy, intoVoid, p0, p1);
+            return;
+        }
         float bottom = intoVoid ? h - ReliefLowPoly.VoidDepth : neighbour;
         if (bottom >= h - 0.001f)
             return;
         bool carved = relief > 0f;
-        (Vector2 p0, Vector2 p1) = ReliefLowPoly.CliffEdge(x, y, dx, dy);
         bool grassy = top is Layer.Ground or Layer.Terrace;
         float lip = grassy ? Mathf.Min(LipHeight, h - bottom) : 0f;
         float rowHeight = carved ? CarvedRowHeight : intoVoid ? ReliefLowPoly.CliffRowHeight : float.PositiveInfinity;
@@ -246,6 +257,31 @@ public static class ReliefTexturedGround
                 fringe.Quad(Point(i, j) + off, Point(i + 1, j) + off, Point(i + 1, j + 1) + off, Point(i, j + 1) + off,
                     Lip(i, j), Lip(i + 1, j), Lip(i + 1, j + 1), Lip(i, j + 1), tint0, tint1, tint1, tint0, flip);
             }
+        }
+    }
+
+    /// <summary>
+    /// Flanc contre une rampe (§239) : son haut ou son pied suit la pente, d'un bout de l'arête à l'autre. Il reste droit,
+    /// sans frange : ce sont les talus des cases de montée et les parois que longe une rampe.
+    /// </summary>
+    private static void AddSlopedCliff(Surface side, ReliefArena arena, int x, int y, int dx, int dy, bool intoVoid, Vector2 p0, Vector2 p1)
+    {
+        float top0 = arena.CellSurface(x, y, p0.X, p0.Y), top1 = arena.CellSurface(x, y, p1.X, p1.Y);
+        float bottom0 = intoVoid ? top0 - ReliefLowPoly.VoidDepth : Mathf.Min(top0, arena.CellSurface(x + dx, y + dy, p0.X, p0.Y));
+        float bottom1 = intoVoid ? top1 - ReliefLowPoly.VoidDepth : Mathf.Min(top1, arena.CellSurface(x + dx, y + dy, p1.X, p1.Y));
+        float tallest = Mathf.Max(top0 - bottom0, top1 - bottom1);
+        if (tallest <= 0.001f)
+            return;
+        int rows = intoVoid ? Mathf.CeilToInt(tallest / ReliefLowPoly.CliffRowHeight) : 1;
+        float u0 = (dx != 0 ? p0.Y : p0.X) / CellsPerTexture, u1 = (dx != 0 ? p1.Y : p1.X) / CellsPerTexture;
+        for (int j = 0; j < rows; j++)
+        {
+            float a0 = Mathf.Lerp(top0, bottom0, j / (float)rows), a1 = Mathf.Lerp(top1, bottom1, j / (float)rows);
+            float b0 = Mathf.Lerp(top0, bottom0, (j + 1f) / rows), b1 = Mathf.Lerp(top1, bottom1, (j + 1f) / rows);
+            side.Quad(new Vector3(p0.X, a0, p0.Y), new Vector3(p1.X, a1, p1.Y), new Vector3(p1.X, b1, p1.Y), new Vector3(p0.X, b0, p0.Y),
+                new Vector2(u0, -a0 / CellsPerTexture), new Vector2(u1, -a1 / CellsPerTexture),
+                new Vector2(u1, -b1 / CellsPerTexture), new Vector2(u0, -b0 / CellsPerTexture),
+                SideTint(p0, top0, a0, intoVoid), SideTint(p1, top1, a1, intoVoid), SideTint(p1, top1, b1, intoVoid), SideTint(p0, top0, b0, intoVoid));
         }
     }
 

@@ -325,3 +325,52 @@ Ce qui change :
   Désormais, l'image se rend à la définition réelle de la fenêtre et suit son redimensionnement. Le trait garde la même largeur à l'écran : 2 px pour 1 080 lignes. Le shader teste le pli à quatre portées et prend la part de celles qui touchent, et son seuil est adouci. Le cœur du trait reste plein et ses bords s'estompent (vu sur un rebord agrandi, avant/après).
 
 **Reste à voir** : les arêtes de la géométrie sans contour (brins d'herbe) restent crénelées, faute de MSAA avec les contours. Un suréchantillonnage coûterait 4 fois les pixels d'une image 4K, et n'est pas fait.
+
+## 15. 60.0d suite — des falaises hautes et des cases de montée (16 novembre)
+
+Raphaël (§239) : « il faut que les falaises soient beaucoup plus hautes, genre la plupart, on ne peut pas les sauter. Et donc il faut des cases de montée. »
+
+- **Les cases de montée sont des rampes** (`ReliefArena`). Dans l'arène, `>`, `<`, `v` et `^` montent vers l'est, l'ouest, le sud ou le nord. Plusieurs cases de suite font une seule pente, de la case pleine qui la précède à celle qui la suit.
+  - Le sol de la simulation (`GroundAt`, `HighestUnder`) y est continu. Le joueur et la horde montent en marchant, et rien d'autre ne change dans `ReliefSim`.
+  - Le rendu : un dessus en pente couvert de terre battue, des talus droits sur les côtés (`AddSlopedCliff`), pas d'herbe. Le contrôle des rebords les écarte.
+  - Le rendu en sprites (`--sprites`) ne connaît pas les rampes : il les dessine à plat, à mi-hauteur.
+- **L'arène est redessinée** : la plupart des falaises font deux étages (2,65 m) ou plus, au-delà des 1,64 m du saut.
+  - Un haut palier de 2 étages, et la tour de 4 étages dessus, chacun par sa rampe.
+  - Un gradin d'un étage, qu'on saute, et un plateau de 3 étages qui le domine, par sa rampe.
+  - Un plateau de 3 étages au sud-ouest, par une longue rampe.
+  - Une falaise de 2 étages au sud, avec une rampe au milieu.
+  - Deux gradins sautables à l'est, le puits et trois piliers de 2 étages à contourner.
+- **Les plateaux d'un à trois étages sont herbus**, avec leur frange ; seule la tour, au-delà, est en roche nue.
+- **Contrôle headless** : rebords 105 sur 105 sans collage. On monte à la tour par les rampes (4,00 étages). Le saut seul ne monte sur aucune falaise de deux étages ou plus (+0,00 sur quatre parois), mais monte sur le gradin (+1,00).
+- **Conséquence à jouer** : la chute fait mal. Tomber de 2 étages coûte une dizaine de PV, de la tour une trentaine (`safe_drop_levels` 1,2). Les créatures escaladent les parois à 0,4 cellule par seconde : 2,5 s pour deux étages, ce qui donne à la hauteur un vrai refuge.
+
+## 16. Convertir les assets (60.7) — inventaire et outillage proposé
+
+Inventaire fait le 16 novembre (§239) en lisant le code. Il n'existe plus aucune retouche Aseprite : le dossier `art/` est absent, les dernières ont été retirées (commit 65d3f0c7). **Presque tout a une source procédurale SDF**, donc une conversion depuis le SDF ne perd rien.
+
+| Catégorie | Sources | Voie | Effort |
+|---|---|---|---|
+| Personnages jouables (6), candidats (5) et habitants (3) | SDF, `tools/sprites/characters/` ; 2 jouables exportés | automatique (`export_lowpoly.py`, même interface) | faible |
+| Créatures (14) | SDF ; 3 exportées | automatique ; les grands gardiens (Grand Cerf, tréant) à alléger | faible, puis moyen |
+| Faune (5) | SDF, `tools/sprites/fauna/` | automatique, après une ligne d'outil (`models.creature` ne lit que `creatures/`) | faible |
+| Décors des biomes (285 entrées, ~240 modèles 3D une fois fusionnés) | SDF ; 7 catalogues sur 8 accessibles, exodus manque | automatique ; fusionner les variantes orientées et les canopées séparées, inutiles avec une caméra qui tourne | moyen |
+| Bâtiments (~37) | SDF ; la maison fait 10 600 triangles | hybride : alléger, fenêtres en matériau émissif, intérieurs et ouverture au masquage à refaire | moyen à élevé |
+| Coffres, Mémoriaux, Failles, stèles, Barrière | SDF (`props/chests.py`, `landmarks.py`, `barrier.py`), absents de l'export | automatique, à ajouter aux catalogues | faible |
+| Indicible | SDF et shaders | hybride : maillages et shaders refaits | élevé |
+| Autels, repaires, cercles, marqueurs | dessinés en C# | à refaire en maillages ou décalques | moyen |
+| Sols (22 matières, ~79 anciennes tuiles) | motifs procéduraux (`ground_motifs.py`) | hybride : rendre les mêmes matières en textures carrées sans couture, comme `generate_relief_textures.py` ; routes à refaire | moyen |
+| Projectiles (29) | SDF | billboards ou maillages minuscules | moyen |
+| VFX (~40 dont 17 en C#, 33 shaders) | partiel | hybride : pickups en maillages, lueurs en lumières, shaders réécrits en `spatial` | élevé |
+| Sang | 1 PNG | décalque au sol | faible |
+| Interface (~400 PNG) | — | reste en 2D ; plaques, chiffres et invites en `Label3D` | moyen |
+
+**L'outillage à écrire, dans cet ordre** (lots de 60.7, à lancer dès que le style est arrêté) :
+1. **Export de masse dirigé par les catalogues** (`--all`, `--biome`) : catalogues manquants, faune, pickups, et fusion automatique des variantes orientées et des canopées. Effort moyen.
+2. **Emprises et collisions dans le manifeste** : emprise au sol (déjà dans `PropModel`), boîte de collision, point d'ancrage. Effort faible.
+3. **Poids et finesse** : sommets partagés et quantifiés (29 Mo pour 9 modèles aujourd'hui), décimation des grands décors, niveaux de détail, plancher de pas pour les petites pièces. Effort moyen.
+4. **Planches de contrôle par catalogue** (`tools/model_sheet.sh` étendu), avec un budget de triangles. Scènes ou `MeshLibrary` par biome générées depuis les manifestes. Effort moyen.
+5. **Textures de sol des 22 matières**, par le générateur du relief branché sur les `GroundMaterial` du jeu. Effort moyen.
+
+Plus tard, transversal : un squelette glTF exporté pièce par pièce, pour une animation interpolée et moins lourde que le maillage par pose (élevé).
+
+**Le facteur** : Raphaël le trouve « assez moche ». Son modèle se reprend dans le SDF (`tools/sprites/characters/facteur.py`) au moment du détail des corps, puis passe par la même conversion. Pas avant que le style soit arrêté.

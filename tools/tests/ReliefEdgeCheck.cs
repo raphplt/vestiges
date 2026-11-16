@@ -23,13 +23,14 @@ public static class ReliefEdgeCheck
             for (int x = 0; x < arena.Width; x++)
             {
                 float high = arena.CellHeight(x, y);
-                if (ReliefArena.IsVoid(high))
+                // Les rampes et leurs talus n'ont pas de rebord franc à tester : on les monte en marchant.
+                if (ReliefArena.IsVoid(high) || arena.IsRamp(x, y))
                     continue;
                 foreach (Vector2I d in Directions)
                 {
                     // Une marche ou une falaise vers le bas, puis trois cellules de sol plat derrière : la place de s'éloigner.
                     float low = arena.CellHeight(x + d.X, y + d.Y);
-                    if (ReliefArena.IsVoid(low) || low >= high - 0.01f)
+                    if (ReliefArena.IsVoid(low) || low >= high - 0.01f || arena.IsRamp(x + d.X, y + d.Y))
                         continue;
                     if (arena.CellHeight(x + 2 * d.X, y + 2 * d.Y) != low || arena.CellHeight(x + 3 * d.X, y + 3 * d.Y) != low)
                         continue;
@@ -91,14 +92,15 @@ public static class ReliefEdgeCheck
     }
 
     /// <summary>
-    /// Le haut palier et la tour (plan 59) : on y monte par leurs escaliers, pas d'un bond. Renvoie le nombre d'échecs.
+    /// Les falaises de deux étages et plus (§239) : on y monte par leurs rampes, jamais d'un saut ; le gradin d'un étage, si.
+    /// Renvoie le nombre d'échecs.
     /// </summary>
     private static int CheckHighGround(ReliefConfig config, ReliefArena arena)
     {
         int failures = 0;
         ReliefSim sim = new(config, arena, 1, 1);
-        sim.Teleport(new Vector2(22.5f, 8f));
-        foreach (Vector2 goal in new Vector2[] { new(14.5f, 8f), new(14.5f, 5f), new(5.5f, 4.5f) })
+        sim.Teleport(new Vector2(22.5f, 10.9f));
+        foreach (Vector2 goal in new Vector2[] { new(15f, 10.9f), new(7f, 12.4f), new(7f, 6.5f) })
         {
             for (float t = 0f; t < 4f && new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y).DistanceTo(goal) > 0.2f; t += Dt)
                 sim.Step(Dt, (goal - new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y)).Normalized(), 0);
@@ -107,14 +109,17 @@ public static class ReliefEdgeCheck
         if (stairsLevel < 3.99f)
             failures++;
 
-        // Bond depuis le pied de chaque paroi, droit dessus : il ne doit jamais y retomber.
-        (Vector2 From, Vector2 Dir, string Name)[] bonds =
+        // Saut depuis le pied de chaque paroi, droit dessus : il ne monte que sur le gradin d'un étage.
+        (Vector2 From, Vector2 Dir, string Name, float Expected)[] bonds =
         {
-            (new Vector2(9.5f, 10.4f), new Vector2(0f, -1f), "haut palier"),
-            (new Vector2(5.5f, 6.4f), new Vector2(0f, -1f), "tour"),
+            (new Vector2(10f, 13.4f), new Vector2(0f, -1f), "haut palier", 0f),
+            (new Vector2(5f, 9.4f), new Vector2(0f, -1f), "tour", 0f),
+            (new Vector2(32f, 10.4f), new Vector2(0f, -1f), "plateau nord-est", 0f),
+            (new Vector2(13.6f, 29f), new Vector2(-1f, 0f), "plateau sud-ouest", 0f),
+            (new Vector2(28f, 15.4f), new Vector2(0f, -1f), "gradin", 1f),
         };
         string bondReport = "";
-        foreach ((Vector2 from, Vector2 dir, string name) in bonds)
+        foreach ((Vector2 from, Vector2 dir, string name, float expected) in bonds)
         {
             sim = new ReliefSim(config, arena, 1, 1);
             sim.Teleport(from);
@@ -123,10 +128,10 @@ public static class ReliefEdgeCheck
             Walk(sim, dir, 1.2f);
             float gained = sim.PlayerLevel - start;
             bondReport += $" {name}=+{gained:0.00}";
-            if (gained > 0.01f)
+            if (Mathf.Abs(gained - expected) > 0.01f)
                 failures++;
         }
-        GD.Print($"[ReliefEdgeCheck] RESULT escaliers_jusqu_a_la_tour={stairsLevel:0.00} étage, bond seul :{bondReport} étage ; échecs={failures}");
+        GD.Print($"[ReliefEdgeCheck] RESULT rampes_jusqu_a_la_tour={stairsLevel:0.00} étage, saut seul :{bondReport} étage ; échecs={failures}");
         return failures;
     }
 

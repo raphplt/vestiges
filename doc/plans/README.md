@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — des falaises qu'on ne saute pas, des rampes, la conversion des assets ([plan 60 §15 et §16](60-vestiges-en-3d.md), §239) :**
+- **Falaises** : la plupart font deux étages ou plus, au-delà du saut. On y monte par des rampes. Quelques gradins d'un étage restent sautables.
+- **Mécanique forte** : pas de nouvelle, nouer les ingrédients. L'Effacement crée le vide, la hauteur est le refuge, on jette la horde en bas, et la Série le récompense.
+- **Assets** : inventaire fait. Presque tout se convertit depuis le SDF, et cinq outils sont à écrire.
+
 **16 novembre — un seul sol, des falaises taillées, des contours lissés ([plan 60 §14](60-vestiges-en-3d.md), §238) :**
 - **Sol** : seul le sol texturé reste. F1 bascule ses falaises, taillées en facettes de roche ou droites.
 - **Contours** : l'image se rend à la définition de l'écran (elle était en 1080p agrandie), et le trait est anticrénelé.

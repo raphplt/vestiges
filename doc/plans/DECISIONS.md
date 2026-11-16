@@ -2929,3 +2929,27 @@ Puis une crainte : « le mode caméra libre, que je trouve beaucoup plus fun que
   - Le sol et le monde vont vers l'identité de Vestiges : crade, éteint, mystérieux, un monde qui s'efface derrière le joueur.
   - Les différences de fond se tiennent au premier plan : l'Effacement qui pousse toujours en avant, sans arène ni minuterie ; la verticalité pour fuir ; les personnages, le bestiaire et le lore du jeu.
   - La caméra libre est gardée.
+
+## 239. Des falaises qu'on ne saute pas, des rampes ; l'identité validée ; la mécanique forte ; convertir les assets — 16 novembre 2026
+
+Raphaël :
+- « Il faut que les falaises soient beaucoup plus hautes, genre la plupart, on ne peut pas les sauter. Et donc il faut des cases de montée. »
+- « Le sprite du joueur (le facteur) est assez moche », pas prioritaire.
+- Il valide la ligne du §238 : « crade, éteint, mystérieux, un monde qui s'efface derrière toi », l'Effacement, la verticalité pour fuir, les personnages, le bestiaire et le lore. « Je me demande s'il ne faut pas une nouvelle mécanique forte et unique, ou si on a déjà tous les ingrédients. »
+- « Penser à des systèmes pour convertir les assets dans le nouveau format, de manière automatisée ou hybride. »
+
+**Correction de l'agent sur le §238** : il y écrivait « l'Effacement qui pousse toujours en avant, sans arène ni minuterie ». C'est la Stratégie V2 de mars. La forme verrouillée le 18 octobre (§190, [LE-JEU](../LE-JEU.md)) a trois terres, chacune avec son gardien et son arène, et une horloge de run. Ses deux signatures sont la Série et le vide. L'Effacement y ronge la terre. Ce qui distingue le jeu de Megabonk tient donc à la Série, au vide et à l'Effacement, pas à l'absence d'arène.
+
+**Tranché par défaut par l'agent, réversible :**
+- **Des falaises de deux étages et plus**, au-delà du saut, et **des rampes** pour y monter (plan 60 §15). Seuls quelques gradins d'un étage restent sautables. Les plateaux jusqu'à trois étages sont herbus.
+- **Pas de nouvelle mécanique : les ingrédients y sont, il faut les nouer.** Le relief 3D fait se rejoindre ce qui était séparé :
+  - l'Effacement crée le vide ;
+  - le vide est l'arme : pousser la horde du haut des falaises, la chute tue, et elle compte plus dans la Série (§190) ;
+  - la hauteur est le refuge : la horde escalade lentement, on tient le plateau et on la repousse en bas ;
+  - la Série récompense ce jeu-là.
+
+  En une phrase : « la ville s'effondre dans l'oubli ; tiens les hauteurs, jette la horde dans le vide ».
+  - **Avocat du diable** : si, en jouant, on ne pousse pas la horde sans qu'on le dise (critère d'arrêt de LE-JEU), le vide n'est pas la mécanique forte. Il faudra alors en chercher une autre, partie de la mémoire et de l'oubli (§190 : jamais une signature reprise d'un autre jeu).
+  - Ce nœud s'essaie dans le bac à sable avant le portage : falaises, poussée et chute y sont déjà.
+- **Le facteur** se reprend dans son modèle SDF au détail des corps, après l'arrêt du style (plan 60 §16).
+- **La conversion des assets** : presque tout a une source SDF et il ne reste aucune retouche à la main, donc la voie est surtout automatique. Cinq outils sont à écrire, dans l'ordre du plan 60 §16 : export de masse, emprises, poids, planches, sols.

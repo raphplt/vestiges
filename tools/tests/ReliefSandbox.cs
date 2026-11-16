@@ -109,11 +109,14 @@ public partial class ReliefSandbox : Node
     private float _botStuckTimer;
     private static readonly Vector2[] BotTour =
     {
-        new(20.5f, 13.5f), new(24.8f, 13.5f), new(27.6f, 11.6f), new(31.2f, 11.6f), new(34f, 12f), new(34f, 17.5f),
-        new(36f, 22f), new(34.5f, 30.5f), new(34.5f, 35.5f), new(26f, 30.5f), new(21f, 30.5f), new(17f, 30f),
-        new(11f, 29.5f), new(9f, 30f), new(15f, 25f), new(20.5f, 18.5f),
-        // Le haut palier par son escalier, puis la tour par le sien : trop hauts pour le bond.
-        new(22.5f, 8f), new(14.5f, 8f), new(14.5f, 5f), new(5.5f, 4.5f),
+        // Le haut palier par sa rampe, puis la tour par la sienne : trop hauts pour le saut (§239).
+        new(20.5f, 13.5f), new(22.5f, 10.9f), new(15f, 10.9f), new(7f, 12.4f), new(7f, 6.5f), new(7f, 12.4f),
+        new(15f, 10.9f), new(22.5f, 10.9f),
+        // Le gradin d'un étage d'un saut, puis le plateau qui le domine par sa rampe.
+        new(24f, 15.5f), new(28f, 13.5f), new(33.9f, 13.6f), new(33.9f, 7f), new(33.9f, 13.6f), new(38f, 16.5f),
+        // Les gradins du sud-est, sautés un à un, puis les rampes de la falaise sud et du plateau sud-ouest.
+        new(34f, 24f), new(34f, 26f), new(28f, 33f), new(24.9f, 32.4f), new(24.9f, 38f), new(24.9f, 32.4f),
+        new(19.8f, 31.9f), new(8f, 32f), new(19.8f, 31.9f), new(20.5f, 18.5f),
     };
 
     public override async void _Ready()
@@ -959,7 +962,9 @@ public partial class ReliefSandbox : Node
             case 4 when _captureTimer >= 0.6f:
                 Save("2d");
                 SetView(View.Chase3D);
-                _sim.Teleport(new Vector2(39f, 11f));
+                // Au pied de la rampe du plateau sud-ouest, trois étages, que le bot monte.
+                _sim.Teleport(new Vector2(20.5f, 31.9f));
+                _waypoint = System.Array.IndexOf(BotTour, new Vector2(8f, 32f));
                 Advance();
                 break;
             case 5 when _captureTimer >= 2.5f:
