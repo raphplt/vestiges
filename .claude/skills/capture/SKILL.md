@@ -28,7 +28,7 @@ Le mode `run` écrit aussi dans sa ligne `RESULT` les coffres entrés dans le ca
 1. Dossier de sortie dans le scratchpad de la session (jamais dans le dépôt), un dossier neuf par capture.
 2. Lancer, par exemple : `CAPTURE_EXTRA_ARGS="--capture-props --hide-collisions" tools/capture_run.sh <dossier> 10 0 1920x1080 1002`. Seed par défaut du banc : 221092026 ; 1002 donne une ville dense proche du spawn. Garder la même seed pour un avant/après.
 3. Vérifier le journal : `grep -E "RunObservation|ERROR: \[|Exception" <dossier>/run.log`.
-4. **Ouvrir les PNG avec Read et les regarder.** Les captures font 3840×2160 sur écran haute densité : pour juger un détail, recadrer autour du joueur avec Pillow (`Image.crop`, puis `resize(..., Image.NEAREST)`) plutôt que d'agrandir toute l'image.
+4. **Ouvrir les PNG avec Read et les regarder.** Au-delà de deux ou trois images, les confier au sous-agent `regard` (dossier + ce que le changement doit montrer) : il les ouvre hors du contexte principal et rend un verdict par image. Les captures font 3840×2160 sur écran haute densité : pour juger un détail, recadrer autour du joueur avec Pillow (`Image.crop`, puis `resize(..., Image.NEAREST)`) plutôt que d'agrandir toute l'image.
 5. Rendre compte de ce qui est vu (et de ce qui cloche), avec le chemin des images pour Raphaël. Ne pas versionner les captures.
 
 ## Pièges

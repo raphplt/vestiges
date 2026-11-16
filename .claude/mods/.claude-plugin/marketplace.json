@@ -1,0 +1,33 @@
+{
+  "name": "vestiges-mods",
+  "owner": {
+    "name": "Raphaël"
+  },
+  "plugins": [
+    {
+      "name": "vestiges-garde-fous",
+      "source": "./vestiges-garde-fous",
+      "description": "Refuse pkill -f qui se tuerait, git add -A / commit -a / git destructif, commits mal formés (Co-Authored-By, .cs.uid, .import, .godot), bancs machine chargée, tâches lourdes mémoire basse"
+    },
+    {
+      "name": "vestiges-captures",
+      "source": "./vestiges-captures",
+      "description": "Interdit de conclure un tour qui a produit des PNG sans en ouvrir aucun"
+    },
+    {
+      "name": "vestiges-moniteur",
+      "source": "./vestiges-moniteur",
+      "description": "Ligne d'état charge/mémoire/tâches longues, alerte OOM, /moniteur"
+    },
+    {
+      "name": "vestiges-routage",
+      "source": "./vestiges-routage",
+      "description": "Effort (et modèle au premier tour) selon la nature de la demande, /route"
+    },
+    {
+      "name": "vestiges-reprise",
+      "source": "./vestiges-reprise",
+      "description": "Donne à Claude l'état de l'arbre, les derniers commits et la dernière mise à jour des plans à l'ouverture"
+    }
+  ]
+}

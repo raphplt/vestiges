@@ -1,0 +1,1 @@
+{ "name": "vestiges-routage", "version": "0.1.0", "description": "Vestiges : classe chaque demande (docs, JSON, Python, C#, perf, question) et règle l'effort du tour ; le modèle ne change qu'au premier tour ou vers le haut, pour garder le cache de prompt. /route pour voir ou forcer.", "types": "./types/index.d.ts" }

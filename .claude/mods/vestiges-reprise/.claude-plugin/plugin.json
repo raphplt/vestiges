@@ -1,0 +1,1 @@
+{ "name": "vestiges-reprise", "version": "0.1.0", "description": "Vestiges : à l'ouverture d'une session (et après /clear ou compactage), donne à Claude l'état de l'arbre, les derniers commits et la dernière mise à jour du dossier de plans, comme le demande la reprise de session de CLAUDE.md." }

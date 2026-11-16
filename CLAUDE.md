@@ -6,9 +6,9 @@
 
 ## Reprise de session
 
-1. `git status` : des fichiers modifiés par Raphaël pendant ses tests sont **volontaires**, ne pas les annuler.
+1. État de l'arbre et derniers commits : déjà dans le contexte d'ouverture (mod `vestiges-reprise`), sinon `git status` et `git log --oneline -15`. Des fichiers modifiés par Raphaël pendant ses tests sont **volontaires**, ne pas les annuler.
 2. Lire `doc/LE-JEU.md` (la forme du jeu, verrouillée, et l'ordre de travail), puis `doc/plans/README.md` (mises à jour datées) et `doc/plans/DECISIONS.md` (ce qui est acquis).
-3. `git log --oneline -15` pour le dernier lot livré.
+3. Le dernier lot livré : les derniers commits ci-dessus.
 4. **Aucun point en suspens** (DECISIONS §190, remplace la règle du §48) : le §2 de `doc/plans/TABLEAU-DE-BORD.md` reste vide. Toute question nouvelle reçoit aussitôt une décision par défaut de l'agent, franche, consignée dans `DECISIONS.md` et réversible par Raphaël, ou une place dans l'ordre de `doc/LE-JEU.md`. Ne poser à Raphaël (avec `AskUserQuestion`, recommandation en premier) que ce qui change la forme du jeu ou ce qu'il doit jouer.
 
 Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implémenter sans accord explicite.
@@ -52,7 +52,15 @@ Les plans 13 (butin) et 14 (anomalies) ne sont pas arbitrés : ne pas les implé
 | `/close-lot` | Clôture d'un lot : vérifications, plans, roadmap, commit |
 | `/roadmap-sync` | Réaligner la roadmap V2 sur le code |
 | `godot-reviewer` | Sous-agent de relecture d'un diff C#/Godot |
+| `regard` | Sous-agent (Sonnet) qui ouvre les images d'une capture, d'une planche ou d'un générateur et rend un verdict par image ; au-delà de deux ou trois images, pour les garder hors du contexte principal |
+| `greffier` | Sous-agent (Sonnet) qui rédige la doc de clôture (plan, registre, README des plans, tableau de bord, roadmap) à partir des faits qu'on lui donne et propose le message de commit ; appelé par `/close-lot`, ne committe pas |
 | Hooks | JSON de `data/` et manifestes de décors validés à l'écriture ; `dotnet build` en fin de tour si du C# a changé |
+| Mods (`.claude/mods/`, marché `vestiges-mods` déclaré et activé dans `.claude/settings.json`) | Lus dans le dépôt : après une modification, `/reload-plugins` ; vérifier par `claude plugin validate .claude/mods/<mod>` et `claude plugin test .claude/mods/<mod>` |
+| Mod `vestiges-garde-fous` | Refuse en expliquant : `pkill -f motif` qui tuerait son propre shell (écrire `'[m]otif'`), `git add -A`/`.`, `git commit -a`, `stash`, `reset --hard`, `checkout .`, `clean -f` ; bancs de FPS au-delà d'un quart des cœurs de charge ; tâches lourdes sous 3 Gio disponibles ; `export_lowpoly.py --jobs N` au-delà de 5 Gio par ouvrier ; `git commit` avec un trailer `Co-Authored-By`, un `.cs` neuf sans `.cs.uid`, un PNG neuf d'`assets/` sans `.import`, un `.cs.uid` orphelin ou un fichier de `.godot/`. `GARDE_FOUS=off` en tête de commande lève la charge et la mémoire, sur décision de Raphaël |
+| Mod `vestiges-reprise` | À l'ouverture, après `/clear` ou un compactage : branche, `git status`, 12 derniers commits et dernière mise à jour de `doc/plans/README.md` dans le contexte |
+| Mod `vestiges-captures` | Bloque une fois la fin d'un tour qui a produit des PNG (captures, planches, générateurs) sans en ouvrir aucun avec Read |
+| Mod `vestiges-moniteur` | Ligne d'état : charge, mémoire disponible, tâches longues en cours ; alerte et prévient Claude quand earlyoom ou le noyau tue un processus ; `/moniteur` pour le détail |
+| Mod `vestiges-routage` | Classe chaque demande (perf, C#, Python, JSON, docs, question) et règle l'effort du tour ; le modèle ne change qu'au premier tour de session, ensuite seulement vers le haut (cache de prompt) ; table dans `hooks/routes.ts` ; `/route` : état et cache, `auto`, `off`, `<catégorie>`, `effort <niveau>`, `modele <alias>` |
 | `.claude/rules/` | Règles chargées selon les fichiers touchés : C#, JSON, pixel art, monde et décors |
 | Plugin `csharp-lsp` | Diagnostics et navigation C# après chaque édition ; serveur `csharp-ls` (dotnet tool global), lancé par `~/.local/bin/csharp-ls` qui fixe `DOTNET_ROOT` |
 | MCP `godot` (`.mcp.json`) | Lancer le jeu fenêtré et lire sa sortie de débogage en direct ; ne remplace ni `/capture` ni les régressions. Ne pas appeler `update_project_uids` (uid référencés) |

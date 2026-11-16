@@ -1,0 +1,1 @@
+{ "name": "vestiges-garde-fous", "version": "0.1.0", "description": "Vestiges : refuse pkill -f qui tuerait son propre shell, git add -A et commit -a (sessions parallèles), git destructif, bancs de FPS machine chargée et tâches lourdes mémoire basse." }

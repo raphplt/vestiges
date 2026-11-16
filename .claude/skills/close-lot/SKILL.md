@@ -27,6 +27,8 @@ Un échec n'est jamais passé sous silence : il figure dans le compte rendu.
 
 ## 2. Documenter
 
+Confier la rédaction au sous-agent `greffier` (Sonnet) : lui donner le lot, ce qui a été fait, les résultats exacts de l'étape 1, les mesures, les mots de Raphaël et les décisions prises par défaut. Relire ensuite son diff (`git diff doc/`) avant de committer ; il ne committe pas. Les règles qu'il applique :
+
 - **Plan concerné** (`doc/plans/NN-*.md`) : section « <lot> livré — <date> » avec ce qui a été fait, les écarts au plan, les mesures (avant/après, matériel, réserves), les points ouverts. Garder le style des sections voisines : phrases courtes, chiffres, pas de superlatifs.
 - **`doc/plans/DECISIONS.md`** : uniquement les décisions et retours explicites de Raphaël, avec leur date. Ne jamais y présenter une proposition comme validée.
 - **`doc/plans/README.md`** : une ligne dans la mise à jour du jour si le lot change l'état du dossier.

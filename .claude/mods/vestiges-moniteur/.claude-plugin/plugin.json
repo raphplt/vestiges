@@ -1,0 +1,1 @@
+{ "name": "vestiges-moniteur", "version": "0.1.0", "description": "Vestiges : ligne d'état avec charge, mémoire disponible et tâches longues en cours ; alerte et prévient Claude quand le noyau tue un processus faute de mémoire. /moniteur pour le détail." }
