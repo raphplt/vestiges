@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# Bac à sable de la verticalité (plan 59), à jouer à la main : arène en étages, horde, bond sur Espace, et trois vues de la
-# même simulation qu'on bascule avec Tab (relief 2D isométrique, 3D de haut avec Q/E et molette, 3D en poursuite à la souris).
+# Bac à sable de la verticalité (plan 59), à jouer à la main : arène en étages, horde, bond sur Espace, et deux vues de la
+# même simulation qu'on bascule avec Tab : caméra libre (par défaut ; souris pour tourner et incliner, molette pour le recul)
+# et relief 2D isométrique.
 # Rendu low poly par défaut (plan 60, lot 60.0b) : relief en facettes, modèles de assets/models, décors semés.
 # --sprites : le rendu du plan 59, sprites, sol et décors d'un vrai biome générés puis photographiés au lancement
 # (forêt par défaut) : --land-order <biome> (forest_reclaimed, wild_fields, collapsed_quarry, swamp, urban_ruins) ;
 # --tiles garde des tuiles simples, sans run.
-# Styles en jeu (low poly) : F1 sol (facettes, lisse, pixel art), F2 corps (low, mid poly), F3 contours, F4 pixels,
-# F5 ombrage toon ; départ réglé dans data/sandbox/relief.json (lowpoly.start).
-# Options après -- : --view 2d|3d|chase, --enemies N (35 par défaut), --seed S, --sprites.
+# Styles en jeu (low poly) : F1 sol (facettes, lisse, pixel art), F2 corps (low, mid poly), F3 contours, F4 ombrage
+# toon ; départ réglé dans data/sandbox/relief.json (lowpoly.start).
+# Options après -- : --view chase|2d, --enemies N (35 par défaut), --seed S, --sprites.
 # Captures (bot qui fait le tour de l'arène, images des deux vues, puis fermeture) : --capture <dossier> [--seconds S].
 # Réglages et arène : data/sandbox/relief.json.
-# Exemple : tools/relief_sandbox.sh -- --land-order urban_ruins --view chase
+# Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source tools/lib/portable.sh

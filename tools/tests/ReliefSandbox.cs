@@ -8,18 +8,19 @@ namespace Vestiges.Tests;
 /// escalier, arête, fosse de vide), la horde, un bond sur Espace, et deux rendus de la même simulation, qu'on bascule à
 /// la volée avec Tab :
 /// <list type="bullet">
-/// <item>relief 2D : caméra orthographique isométrique, sans lumière, réglée pour rendre les tuiles 64×32 du jeu pixel
-/// pour pixel. C'est l'image qu'aurait le jeu actuel avec des étages ;</item>
-/// <item>3D vue de haut : caméra en perspective qu'on tourne (Q/E) et qu'on rapproche (molette), lumière, ombres portées,
-/// brume ;</item>
-/// <item>3D en poursuite : caméra basse derrière le joueur, tournée à la souris, comme dans Megabonk.</item>
+/// <item>caméra libre (la vue de départ, plan 60, §234) : caméra en perspective derrière le joueur, tournée à la souris
+/// de gauche à droite et de haut en bas, rapprochée à la molette, comme dans Megabonk ; elle se rapproche seule quand le
+/// relief s'interpose ;</item>
+/// <item>relief 2D : caméra orthographique isométrique, réglée pour rendre les tuiles 64×32 du jeu pixel pour pixel.
+/// C'est l'image qu'aurait le jeu actuel avec des étages.</item>
 /// </list>
+/// La vue 3D de haut, à caméra fixe, a été retirée (DECISIONS §234).
 /// Par défaut, tout est en low poly (plan 60, lot 60.0b, <see cref="ReliefLowPoly"/>) : relief en facettes, modèles et
 /// décors exportés du pipeline des sprites ; la vue « relief 2D » y devient une isométrique orthographique éclairée.
 /// Avec <c>--sprites</c>, le rendu du plan 59 : sprites, et sol et décors d'un vrai biome (<see cref="ReliefBake"/>),
 /// la run générée sur la terre de <c>--land-order</c>, photographiée, puis libérée ; <c>--tiles</c> garde alors les
 /// tuiles simples, sans run.
-/// Arguments après -- : --view 2d|3d|chase, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
+/// Arguments après -- : --view chase|2d, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
 /// tour de l'arène, garde des images des deux vues, puis ferme).
 /// </summary>
 public partial class ReliefSandbox : Node
@@ -69,7 +70,6 @@ public partial class ReliefSandbox : Node
     // Rendu low poly (plan 60, lot 60.0b).
     private bool _lowPoly;
     private ReliefLook _look;
-    private TextureRect _picture;
     private MeshInstance3D _playerBody;
     private MeshInstance3D[] _creatureBodies;
     private float _playerYaw;
@@ -77,11 +77,15 @@ public partial class ReliefSandbox : Node
     private StandardMaterial3D _flashMaterial;
     private StandardMaterial3D _hurtMaterial;
 
-    private enum View { Relief2D, Iso3D, Chase3D }
+    private enum View { Chase3D, Relief2D }
 
     private View _view;
     private float _yawDegrees = 45f;
+    private float _pitchDegrees;
     private float _distance;
+    // Recul réel de la caméra libre : sa distance, raccourcie quand le relief s'interpose.
+    private float _reach;
+    private bool _stretchDirty;
     private Vector3 _cameraTarget;
     private int _crowdTarget;
     private ReliefBake _bake;
@@ -139,10 +143,12 @@ public partial class ReliefSandbox : Node
             return;
         }
         _sim = new ReliefSim(_config, _arena, Mathf.Max(_crowdTarget, 1) + 120, seed);
-        _view = Argument(args, "--view", "2d") switch { "3d" => View.Iso3D, "chase" => View.Chase3D, _ => View.Relief2D };
+        _view = Argument(args, "--view", "chase") == "2d" ? View.Relief2D : View.Chase3D;
         _captureDir = Argument(args, "--capture", null);
         _captureSeconds = float.Parse(Argument(args, "--seconds", "14"), CultureInfo.InvariantCulture);
-        _distance = _config.CameraDistance;
+        _pitchDegrees = _config.ChasePitch;
+        _distance = _config.ChaseDistance;
+        _reach = _distance;
 
         RegisterActions();
         _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
@@ -185,8 +191,7 @@ public partial class ReliefSandbox : Node
         AddKeyAction("relief_style_ground", Key.F1);
         AddKeyAction("relief_style_models", Key.F2);
         AddKeyAction("relief_style_outlines", Key.F3);
-        AddKeyAction("relief_style_pixels", Key.F4);
-        AddKeyAction("relief_style_toon", Key.F5);
+        AddKeyAction("relief_style_toon", Key.F4);
         AddWheelAction("relief_zoom_in", MouseButton.WheelUp);
         AddWheelAction("relief_zoom_out", MouseButton.WheelDown);
     }
@@ -280,7 +285,7 @@ public partial class ReliefSandbox : Node
         AddChild(_viewport);
         CanvasLayer screen = new() { Name = "Screen", Layer = -1 };
         AddChild(screen);
-        _picture = new TextureRect
+        TextureRect picture = new()
         {
             Name = "Picture",
             Texture = _viewport.GetTexture(),
@@ -288,8 +293,8 @@ public partial class ReliefSandbox : Node
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.Scale,
         };
-        _picture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        screen.AddChild(_picture);
+        picture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        screen.AddChild(picture);
 
         Node3D world = new() { Name = "Arena" };
         _viewport.AddChild(world);
@@ -320,7 +325,7 @@ public partial class ReliefSandbox : Node
         _camera = new Camera3D { Name = "Camera", Current = true, Near = _lowPoly ? 0.4f : 0.1f, Far = 200f };
         world.AddChild(_camera);
         if (_lowPoly)
-            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, _picture, BotTour);
+            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour);
 
         Texture2D shadow = ShadowTexture();
         _playerShadow = NewShadow(world, shadow, "PlayerShadow");
@@ -476,14 +481,9 @@ public partial class ReliefSandbox : Node
     }
 
     /// <summary>Bascule entre le relief 2D (orthographique, sans lumière) et la 3D (perspective, lumière, brume).</summary>
-    private bool Is3D => _view != View.Relief2D;
+    private bool Is3D => _view == View.Chase3D;
 
-    private float PitchDegrees => _view switch
-    {
-        View.Iso3D => _config.CameraPitch,
-        View.Chase3D => _config.ChasePitch,
-        _ => IsoPitchDegrees,
-    };
+    private float PitchDegrees => Is3D ? _pitchDegrees : IsoPitchDegrees;
 
     private void SetView(View view)
     {
@@ -493,7 +493,7 @@ public partial class ReliefSandbox : Node
 
     private void ApplyView()
     {
-        // En low poly, les reliefs de ReliefLook servent aux trois vues, toujours éclairés.
+        // En low poly, les reliefs de ReliefLook servent aux deux vues, toujours éclairés.
         if (!_lowPoly)
         {
             _flatTerrain.Visible = !Is3D;
@@ -501,7 +501,7 @@ public partial class ReliefSandbox : Node
         }
         _sun.Visible = Is3D || _lowPoly;
         if (_captureDir == null)
-            Input.MouseMode = _view == View.Chase3D ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
+            Input.MouseMode = Is3D ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
         Godot.Environment env = _environment.Environment;
         env.BackgroundMode = Godot.Environment.BGMode.Color;
         env.BackgroundColor = VoidColor;
@@ -513,15 +513,19 @@ public partial class ReliefSandbox : Node
         env.FogDensity = 0.012f;
         _camera.Projection = Is3D ? Camera3D.ProjectionType.Perspective : Camera3D.ProjectionType.Orthogonal;
         _camera.Size = RenderSize.Y / PixelsPerUnit;
-        _camera.Fov = _view == View.Chase3D ? _config.ChaseFov : _config.CameraFov;
+        _camera.Fov = _config.ChaseFov;
         if (!Is3D)
             _yawDegrees = 45f;
         if (_lowPoly)
-        {
             _look.Apply();
-            return;
-        }
-        // Les sprites restent debout ; on compense l'écrasement vertical de la caméra pour garder des pixels carrés.
+        else
+            ApplyStretch();
+    }
+
+    /// <summary>Les sprites restent debout ; on compense l'écrasement vertical de la caméra pour garder des pixels carrés.</summary>
+    private void ApplyStretch()
+    {
+        _stretchDirty = false;
         float pitch = Mathf.DegToRad(PitchDegrees);
         Vector3 stretch = new(1f, 1f / Mathf.Cos(pitch), 1f);
         _player.Scale = stretch;
@@ -557,15 +561,15 @@ public partial class ReliefSandbox : Node
     private void HandleInput(float dt)
     {
         if (Input.IsActionJustPressed("relief_toggle_view"))
-            SetView((View)(((int)_view + 1) % 3));
+            SetView(Is3D ? View.Relief2D : View.Chase3D);
         if (Is3D)
         {
             float turn = Input.GetAxis("relief_rotate_left", "relief_rotate_right");
             _yawDegrees += turn * RotateDegreesPerSecond * dt;
             if (Input.IsActionJustPressed("relief_zoom_in"))
-                _distance = Mathf.Max(_config.CameraMinDistance, _distance * 0.88f);
+                _distance = Mathf.Max(_config.ChaseMinDistance, _distance * 0.88f);
             if (Input.IsActionJustPressed("relief_zoom_out"))
-                _distance = Mathf.Min(_config.CameraMaxDistance, _distance / 0.88f);
+                _distance = Mathf.Min(_config.ChaseMaxDistance, _distance / 0.88f);
         }
         if (Input.IsActionJustPressed("relief_crowd_more"))
             _crowdTarget = Mathf.Min(_sim.Capacity, _crowdTarget + 10);
@@ -577,7 +581,7 @@ public partial class ReliefSandbox : Node
             HandleStyleInput();
     }
 
-    /// <summary>F1 à F5 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
+    /// <summary>F1 à F4 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
     private void HandleStyleInput()
     {
         bool changed = true;
@@ -587,8 +591,6 @@ public partial class ReliefSandbox : Node
             _look.Mid = !_look.Mid;
         else if (Input.IsActionJustPressed("relief_style_outlines"))
             _look.Outlines = !_look.Outlines;
-        else if (Input.IsActionJustPressed("relief_style_pixels"))
-            _look.Pixels = !_look.Pixels;
         else if (Input.IsActionJustPressed("relief_style_toon"))
             _look.Toon = !_look.Toon;
         else
@@ -600,11 +602,18 @@ public partial class ReliefSandbox : Node
         }
     }
 
-    /// <summary>En poursuite, la souris tourne la caméra autour du joueur.</summary>
+    /// <summary>
+    /// Caméra libre : la souris la tourne autour du joueur ; monter la souris abaisse la caméra et relève le regard vers
+    /// l'horizon, comme dans les jeux à la troisième personne.
+    /// </summary>
     public override void _Input(InputEvent @event)
     {
-        if (_view == View.Chase3D && @event is InputEventMouseMotion motion && Input.MouseMode == Input.MouseModeEnum.Captured)
+        if (Is3D && @event is InputEventMouseMotion motion && Input.MouseMode == Input.MouseModeEnum.Captured)
+        {
             _yawDegrees -= motion.Relative.X * _config.ChaseMouseDegrees;
+            _pitchDegrees = Mathf.Clamp(_pitchDegrees + motion.Relative.Y * _config.ChaseMouseDegrees, _config.ChaseMinPitch, _config.ChaseMaxPitch);
+            _stretchDirty = true;
+        }
         if (@event.IsActionPressed("ui_cancel"))
             Input.MouseMode = Input.MouseModeEnum.Visible;
     }
@@ -620,7 +629,7 @@ public partial class ReliefSandbox : Node
         return wish.LengthSquared() > 1f ? wish.Normalized() : wish;
     }
 
-    private Vector3 PlayerAnchor() => ToWorld(_sim.PlayerPos) + new Vector3(0f, _view == View.Chase3D ? _config.ChaseHeight : 0.4f, 0f);
+    private Vector3 PlayerAnchor() => ToWorld(_sim.PlayerPos) + new Vector3(0f, Is3D ? _config.ChaseHeight : 0.4f, 0f);
 
     private static Vector3 ToWorld(Vector3 sim) => new(sim.X, sim.Z, sim.Y);
 
@@ -631,16 +640,19 @@ public partial class ReliefSandbox : Node
         float pitch = Mathf.DegToRad(PitchDegrees);
         Vector3 back = new(Mathf.Sin(yaw) * Mathf.Cos(pitch), Mathf.Sin(pitch), Mathf.Cos(yaw) * Mathf.Cos(pitch));
         Vector3 target = _cameraTarget;
-        float distance = _view switch
-        {
-            View.Iso3D => _distance,
-            View.Chase3D => _config.ChaseDistance,
-            _ => OrthoDistance,
-        };
-        _camera.Position = target + back * distance;
-        _camera.LookAt(target, Vector3.Up);
         if (Is3D)
+        {
+            // Rapprochée vite quand le relief s'interpose, éloignée en douceur quand il s'efface.
+            float clear = ClearDistance(target, back, _distance);
+            _reach = clear < _reach ? Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-25f * dt)) : Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-4f * dt));
+            _camera.Position = target + back * _reach;
+            _camera.LookAt(target, Vector3.Up);
+            if (_stretchDirty && !_lowPoly)
+                ApplyStretch();
             return;
+        }
+        _camera.Position = target + back * OrthoDistance;
+        _camera.LookAt(target, Vector3.Up);
         // Orthographique : la caméra se cale sur la grille des pixels, sans quoi les tuiles scintillent.
         Basis basis = _camera.GlobalBasis;
         float right = target.Dot(basis.X);
@@ -648,6 +660,26 @@ public partial class ReliefSandbox : Node
         float snappedRight = Mathf.Round(right * PixelsPerUnit) / PixelsPerUnit;
         float snappedUp = Mathf.Round(up * PixelsPerUnit) / PixelsPerUnit;
         _camera.Position += basis.X * (snappedRight - right) + basis.Y * (snappedUp - up);
+    }
+
+    /// <summary>
+    /// Recul de la caméra libre sans traverser le relief : le premier point du rayon, du joueur vers la caméra, qui passe
+    /// sous le sol (plus une marge) arrête la caméra juste avant lui.
+    /// </summary>
+    private float ClearDistance(Vector3 target, Vector3 back, float distance)
+    {
+        const float sampleStep = 0.2f;
+        const float minimum = 0.8f;
+        int samples = Mathf.CeilToInt(distance / sampleStep);
+        for (int s = 1; s <= samples; s++)
+        {
+            float d = distance * s / samples;
+            Vector3 at = target + back * d;
+            float ground = _arena.GroundAt(at.X, at.Z);
+            if (!ReliefArena.IsVoid(ground) && ground + _config.ChaseClearance > at.Y)
+                return Mathf.Max(minimum, distance * (s - 1) / samples);
+        }
+        return distance;
     }
 
     /// <summary>Direction d'écran (0 = E, 2 = S, 6 = N) d'une vitesse au sol, vue par la caméra actuelle.</summary>
@@ -840,12 +872,9 @@ public partial class ReliefSandbox : Node
             if (_sim.EnemyClimbing[i])
                 climbing++;
         }
-        string view = _view switch
-        {
-            View.Iso3D => "3D DE HAUT  (Tab : poursuite · Q/E tourner · molette zoom)",
-            View.Chase3D => "3D EN POURSUITE  (Tab : relief 2D · souris pour tourner · Échap libère la souris)",
-            _ => "RELIEF 2D  (Tab : 3D de haut)",
-        };
+        string view = Is3D
+            ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · molette : recul · Échap libère la souris)"
+            : "RELIEF 2D  (Tab : caméra libre)";
         _hud.Text = $"Vue : {view}" + (_lowPoly ? "" : $" · sol : {_biome}") + "\n"
             + (_lowPoly ? _look.Describe() + "\n" : "")
             + $"Espace : bond · R : retour au départ · +/- : foule ({_crowdTarget})\n"
@@ -874,7 +903,7 @@ public partial class ReliefSandbox : Node
             _botStuckTimer = 0f;
         }
         Vector2 dir = (goal - at).Normalized();
-        if (_view == View.Chase3D)
+        if (Is3D)
         {
             // Caméra derrière le bot : le « bas » de l'écran est l'opposé de sa marche.
             float behind = Mathf.RadToDeg(Mathf.Atan2(-dir.X, -dir.Y));
@@ -893,50 +922,53 @@ public partial class ReliefSandbox : Node
         if (!_airCaptured && _captureTimer > 3f && _sim.PlayerAirborneFromBond && airHeight > 0.45f)
         {
             _airCaptured = true;
-            Save("2d_air");
+            Save("air");
         }
         switch (_captureStep)
         {
             case 0 when _captureTimer >= _captureSeconds:
-                Save("2d");
-                SetView(View.Iso3D);
-                Advance();
-                break;
-            case 1 when _captureTimer >= 0.6f:
-                Save("3d");
-                _yawDegrees += 90f;
-                Advance();
-                break;
-            case 2 when _captureTimer >= 0.8f:
-                Save("3d_rot");
-                _yawDegrees = 45f;
                 SetView(View.Chase3D);
                 Advance();
                 break;
-            case 3 when _captureTimer >= 2f:
+            case 1 when _captureTimer >= 1.5f:
                 Save("chase");
+                SetPitch(_config.ChaseMaxPitch);
+                Advance();
+                break;
+            case 2 when _captureTimer >= 0.6f:
+                Save("chase_plongee");
+                SetPitch(_config.ChaseMinPitch);
+                Advance();
+                break;
+            case 3 when _captureTimer >= 0.6f:
+                Save("chase_horizon");
+                SetPitch(_config.ChasePitch);
                 SetView(View.Relief2D);
+                Advance();
+                break;
+            case 4 when _captureTimer >= 0.6f:
+                Save("2d");
+                SetView(View.Chase3D);
                 _sim.Teleport(new Vector2(39f, 11f));
                 Advance();
                 break;
-            case 4 when _captureTimer >= 2.5f:
-                Save("2d_edge");
-                SetView(View.Iso3D);
+            case 5 when _captureTimer >= 2.5f:
+                Save("chase_edge");
+                SetView(View.Relief2D);
                 Advance();
                 break;
-            case 5 when _captureTimer >= 0.6f:
-                Save("3d_edge");
-                SetView(View.Relief2D);
+            case 6 when _captureTimer >= 0.6f:
+                Save("2d_edge");
                 _sim.Teleport(new Vector2(5.5f, 4.5f));
                 _waypoint = System.Array.IndexOf(BotTour, new Vector2(20.5f, 13.5f));
                 Advance();
                 break;
-            case 6 when _captureTimer >= 0.5f:
+            case 7 when _captureTimer >= 0.5f:
                 Save("2d_high");
                 SetView(View.Chase3D);
                 Advance();
                 break;
-            case 7 when _captureTimer >= 0.5f:
+            case 8 when _captureTimer >= 0.5f:
                 Save("chase_high");
                 if (!_lowPoly)
                 {
@@ -949,7 +981,7 @@ public partial class ReliefSandbox : Node
                 Advance();
                 break;
             // Galerie des styles (60.0d) : la même scène sous chaque combinaison.
-            case 8 when _captureTimer >= 0.8f:
+            case 9 when _captureTimer >= 0.8f:
                 Save(Gallery[_galleryIndex].Name);
                 _galleryIndex++;
                 if (_galleryIndex >= Gallery.Length)
@@ -963,29 +995,32 @@ public partial class ReliefSandbox : Node
         }
     }
 
-    private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Pixels, bool Toon)[] Gallery =
+    private void SetPitch(float degrees)
     {
-        ("style_facettes_low", View.Iso3D, ReliefLook.Ground.Facets, false, false, false, false),
-        ("style_facettes_low_contours", View.Iso3D, ReliefLook.Ground.Facets, false, true, false, false),
-        ("style_lisse_mid", View.Iso3D, ReliefLook.Ground.Smooth, true, false, false, false),
-        ("style_lisse_mid_contours", View.Iso3D, ReliefLook.Ground.Smooth, true, true, false, false),
-        ("style_lisse_mid_contours_toon", View.Iso3D, ReliefLook.Ground.Smooth, true, true, false, true),
-        ("style_pixels_toon_contours", View.Iso3D, ReliefLook.Ground.Smooth, true, true, true, true),
-        ("style_sol_pixelart_mid_contours", View.Iso3D, ReliefLook.Ground.PixelArt, true, true, false, false),
-        ("style_iso_pixels_toon_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, true, true),
-        ("style_iso_lisse_mid_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, false, false),
-        ("style_poursuite_lisse_mid_contours", View.Chase3D, ReliefLook.Ground.Smooth, true, true, false, false),
+        _pitchDegrees = degrees;
+        _stretchDirty = true;
+    }
+
+    private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Toon)[] Gallery =
+    {
+        ("style_texture_mid_contours", View.Chase3D, ReliefLook.Ground.Textured, true, true, false),
+        ("style_texture_mid_contours_toon", View.Chase3D, ReliefLook.Ground.Textured, true, true, true),
+        ("style_iso_texture_mid_contours", View.Relief2D, ReliefLook.Ground.Textured, true, true, false),
+        ("style_facettes_low_contours", View.Chase3D, ReliefLook.Ground.Facets, false, true, false),
+        ("style_lisse_mid_contours", View.Chase3D, ReliefLook.Ground.Smooth, true, true, false),
+        ("style_lisse_mid_contours_toon", View.Chase3D, ReliefLook.Ground.Smooth, true, true, true),
+        ("style_sol_pixelart_mid_contours", View.Chase3D, ReliefLook.Ground.PixelArt, true, true, false),
+        ("style_iso_lisse_mid_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, false),
     };
 
     private int _galleryIndex;
 
     private void ShowGalleryStyle(int index)
     {
-        (_, View view, ReliefLook.Ground ground, bool mid, bool outlines, bool pixels, bool toon) = Gallery[index];
+        (_, View view, ReliefLook.Ground ground, bool mid, bool outlines, bool toon) = Gallery[index];
         _look.CurrentGround = ground;
         _look.Mid = mid;
         _look.Outlines = outlines;
-        _look.Pixels = pixels;
         _look.Toon = toon;
         SetView(view);
     }

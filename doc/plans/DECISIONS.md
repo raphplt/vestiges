@@ -2859,3 +2859,21 @@ Raphaël, après avoir joué les styles (§233) :
 - **Le sol** : « le sol lisse je n'aime pas, ça manque de texture » ; les facettes non plus (§233). À la reprise, regarder comment Megabonk et Minecraft texturent leur sol (texture basse résolution posée sur des blocs, filtrée au plus proche) avant d'en proposer un.
 - **Le détail des corps reste ouvert** (low ou mid poly) : on garde sa bascule jusqu'à son choix.
 
+
+## 235. Caméra libre réglable en hauteur et sol texturé à la Minecraft — 16 novembre 2026
+
+Suite de §234. Raphaël : « le sol lisse je n'aime pas, ça manque de texture […] on regardera comment Megabonk / Minecraft font ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **La caméra libre est la vue de départ.**
+  - La souris l'incline entre 4° et 72° ; la molette règle le recul, de 3,5 à 14 cellules (`camera_chase`).
+  - Elle ne traverse plus le relief : elle s'arrête devant la première falaise qui coupe le rayon du joueur.
+  - Monter la souris abaisse la caméra (convention des jeux à la troisième personne), sans option d'inversion pour l'instant.
+- **La vue 3D de haut et la pixelisation sont retirées** du bac à sable (§234). Il reste deux vues, caméra libre et relief 2D, et quatre bascules de style (F1 à F4).
+- **Le sol, d'après Minecraft et Megabonk** : des textures pixel art basse résolution, lues au plus proche, posées en coordonnées du monde sur la géométrie du sol lisse.
+  - 32 px par cellule, la densité des tuiles du jeu.
+  - Les motifs sont ceux des sols du jeu.
+  - Une frange d'herbe pend au haut des falaises.
+  - C'est le style de départ ; les trois autres sols restent sous F1 pour comparer.
+- **Les textures sont générées par script** (`tools/generate_relief_textures.py`), comme les sprites, pour rester retouchables et reproductibles. Le relief les lit sans passer par l'import de Godot, pour calculer lui-même leurs mipmaps.
+- **À juger par Raphaël** : le sol texturé, puis l'accord entre ce sol et les corps lisses (low ou mid poly, ou corps texturés à leur tour).

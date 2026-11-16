@@ -194,3 +194,44 @@ Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`).
 - Sol : ni lisse (« ça manque de texture ») ni en facettes ; on regardera comment Megabonk et Minecraft texturent le leur.
 - Détail des corps non tranché.
 
+
+## 11. 60.0d suite — la caméra libre et le sol texturé (16 novembre)
+
+**La caméra libre devient la vue de départ** (§234, §235). La souris la tourne autour du joueur, de gauche à droite et, désormais, de haut en bas.
+- Monter la souris abaisse la caméra et relève le regard vers l'horizon, comme dans les jeux à la troisième personne.
+- L'inclinaison va de 4° (presque à hauteur du joueur) à 72° (presque à la verticale), 24° au départ.
+- La molette règle le recul, de 3,5 à 14 cellules.
+- Tout se règle dans `camera_chase` de `data/sandbox/relief.json`.
+- **La caméra ne traverse plus le relief.** Le rayon qui va du joueur à la caméra est sondé tous les 0,2 cellule. Au premier point qui passe sous le sol (plus une marge de 0,35 cellule), la caméra s'arrête juste avant. Elle se rapproche vite et se recule en douceur.
+- **Retirés** : la vue 3D de haut et la pixelisation. Tab bascule maintenant entre la caméra libre et le relief 2D. Les styles passent de F1 à F4 : sol, corps, contours, ombrage toon.
+
+**Comment Megabonk et Minecraft font leur sol.**
+- Minecraft : des textures de 16 × 16 pixels sur des blocs d'un mètre, lues au plus proche. Le pixel reste franc à toute distance ; le motif est un grain au pixel, en quelques tons proches.
+- Megabonk : la même recette sur des modèles low poly. Textures pixel art grossières, contours, un ciel et un étalonnage qui unifient l'image.
+- Dans Godot, cela se fait avec des coordonnées de texture tirées du monde et un filtre au plus proche avec mipmaps.
+
+**Le sol texturé**, nouveau style F1 et style de départ :
+- **Les textures** viennent de `python3 tools/generate_relief_textures.py [--sheet planche.png]` et vont dans `assets/models/textures/`. Il y en a huit de 128 px, qui se répètent sans couture et couvrent chacune 4 × 4 cellules, soit 32 px par cellule, la densité des tuiles du jeu.
+  - Quatre dessus : sol, terrasse, butte, marches.
+  - Deux flancs : terre en strates, roche en blocs.
+  - Deux franges d'herbe.
+- **Leur fabrication** : un bruit périodique et un grain au pixel ramenés à quatre tons. Les tons forment une rampe aux ombres froides et aux lumières chaudes, autour des couleurs du bloc `lowpoly.colors`. Par-dessus, on sème les motifs des sols du jeu (`tools/sprites/ground_motifs.py`) : touffes, feuilles, cailloux, fissures, mousse. Le tirage est déterministe.
+- **Le relief** (`tools/tests/ReliefTexturedGround.cs`) reprend la géométrie du sol lisse, une matière par texture. Les coordonnées de texture sont celles du monde : le motif passe d'une cellule à l'autre sans couture, et les strates des flancs restent à la même hauteur d'une falaise à l'autre.
+  - Une frange d'herbe découpée pend du haut des falaises herbues, comme le côté d'un bloc d'herbe de Minecraft.
+  - La teinte des dessus ondule en larges plaques.
+  - Les falaises du vide plongent au noir.
+- **Ce que montrent les captures.** En caméra libre, le sol a enfin une matière : herbe en grain, terre battue des marches, roche de la butte, strates sous la frange. Cela se lit de près comme à l'horizon. En isométrique, le rendu rappelle une carte de jeu de stratégie en pixel art. Le contraste entre le sol texturé et les corps lisses en mid poly reste à juger.
+
+**Vérifié** :
+- build sans avertissement ;
+- smoke test ;
+- contrôle des rebords inchangé (`rebords=113 colles=0`, escaliers jusqu'à la tour 4,00, bond seul +0,00) ;
+- captures des deux vues, aux deux bornes d'inclinaison et au sommet de la tour ;
+- le mode `--sprites` tourne toujours ;
+- les textures régénérées sont identiques à l'octet près.
+
+**Ce qui reste pour 60.0d** :
+- l'avis de Raphaël sur le sol texturé ;
+- le détail des corps : low poly, mid poly, ou des corps texturés comme le sol ;
+- les contours du joueur et des créatures ;
+- les quelques points isolés des contours sur le sol en perspective.

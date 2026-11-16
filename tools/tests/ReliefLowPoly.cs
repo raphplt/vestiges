@@ -11,9 +11,9 @@ namespace Vestiges.Tests;
 /// </summary>
 public static class ReliefLowPoly
 {
-    private const float VoidDepth = 4f;
+    internal const float VoidDepth = 4f;
     private const int CliffColumns = 3;
-    private const float CliffRowHeight = 0.35f;
+    internal const float CliffRowHeight = 0.35f;
 
     /// <summary>Un modèle low poly : ses poses par animation, déjà habillées du matériau à couleurs de sommet.</summary>
     public sealed class Model
@@ -157,7 +157,7 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Hachage stable d'un point de la grille, dans [0, 1[ : la même graine donne le même relief.</summary>
-    private static float Hash(int x, int y, int salt)
+    internal static float Hash(int x, int y, int salt)
     {
         uint h = (uint)(x * 73856093) ^ (uint)(y * 19349663) ^ (uint)(salt * 83492791);
         h ^= h >> 13;
@@ -203,7 +203,7 @@ public static class ReliefLowPoly
     private const int SmoothSubdivisions = 3;
 
     /// <summary>Bruit de valeur lissé, dans [0, 1], à l'échelle de <paramref name="scale"/> cellules.</summary>
-    private static float Noise(float x, float y, float scale, int salt)
+    internal static float Noise(float x, float y, float scale, int salt)
     {
         float fx = x / scale, fy = y / scale;
         int ix = Mathf.FloorToInt(fx), iy = Mathf.FloorToInt(fy);
@@ -254,12 +254,7 @@ public static class ReliefLowPoly
         float bottom = intoVoid ? h - VoidDepth : neighbour;
         if (bottom >= h - 0.001f)
             return;
-        // Arête commune, parcourue dans le sens qui tourne la face vers l'extérieur.
-        Vector2 p0, p1;
-        if (dx == 1) { p0 = new Vector2(x + 1, y + 1); p1 = new Vector2(x + 1, y); }
-        else if (dx == -1) { p0 = new Vector2(x, y); p1 = new Vector2(x, y + 1); }
-        else if (dy == 1) { p0 = new Vector2(x, y + 1); p1 = new Vector2(x + 1, y + 1); }
-        else { p0 = new Vector2(x + 1, y); p1 = new Vector2(x, y); }
+        (Vector2 p0, Vector2 p1) = CliffEdge(x, y, dx, dy);
         Vector3 outward = new(dx, 0f, dy);
         int rows = Mathf.Max(1, Mathf.CeilToInt((h - bottom) / CliffRowHeight));
         Color lip = TopColor(arena, style, h) * 0.82f;
@@ -296,6 +291,18 @@ public static class ReliefLowPoly
                 Triangle(vertices, colors, a, c, d, Vary(rock, shade, Hash(gx, gy, j * 2 + 6)));
             }
         }
+    }
+
+    /// <summary>Arête commune d'une cellule et de son voisin (dx, dy), parcourue dans le sens qui tourne la falaise vers l'extérieur.</summary>
+    internal static (Vector2 From, Vector2 To) CliffEdge(int x, int y, int dx, int dy)
+    {
+        if (dx == 1)
+            return (new Vector2(x + 1, y + 1), new Vector2(x + 1, y));
+        if (dx == -1)
+            return (new Vector2(x, y), new Vector2(x, y + 1));
+        if (dy == 1)
+            return (new Vector2(x, y + 1), new Vector2(x + 1, y + 1));
+        return (new Vector2(x + 1, y), new Vector2(x, y));
     }
 
     private static void Triangle(List<Vector3> vertices, List<Color> colors, Vector3 a, Vector3 b, Vector3 c, Color color) =>

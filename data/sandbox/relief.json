@@ -86,13 +86,6 @@
 		]
 	},
 	"character": "facteur",
-	"camera_3d": {
-		"pitch_degrees": 48,
-		"distance": 15.0,
-		"fov": 42,
-		"min_distance": 7.0,
-		"max_distance": 26.0
-	},
 	"arena": [
 		"............................................",
 		"............................................",
@@ -140,14 +133,20 @@
 		"............................................"
 	],
 	"camera_chase": {
+		"_comment": "Caméra libre (plan 60, §234), la vue de départ : la souris la tourne autour du joueur, de gauche à droite et de haut en bas entre deux inclinaisons (degrés au-dessus de l'horizon), la molette la rapproche. Elle se rapproche seule quand le relief s'interpose (ground_clearance : marge au-dessus du sol, en cellules).",
 		"pitch_degrees": 24,
+		"min_pitch_degrees": 4,
+		"max_pitch_degrees": 72,
 		"distance": 7.5,
+		"min_distance": 3.5,
+		"max_distance": 14.0,
+		"ground_clearance": 0.35,
 		"fov": 62,
 		"height": 0.9,
 		"mouse_degrees_per_pixel": 0.22
 	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F5 basculent en jeu (ground : facets, smooth ou pixel_art). pixel_scale : la pixelisation divise la résolution par ce facteur. outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : textured, facets, smooth ou pixel_art ; textured lit les textures de tools/generate_relief_textures.py). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
 		"metres_per_cell": 2.65,
 		"colors": {
 			"ground": "53613a",
@@ -183,13 +182,11 @@
 			}
 		],
 		"start": {
-			"ground": "smooth",
+			"ground": "textured",
 			"models": "mid",
 			"outlines": true,
-			"pixels": false,
 			"toon": false
 		},
-		"pixel_scale": 4,
 		"outline": {
 			"color": "0a0612",
 			"sensitivity": 0.0025,

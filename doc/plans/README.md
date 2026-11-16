@@ -1,5 +1,7 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — la caméra libre et le sol texturé ([plan 60 §11](60-vestiges-en-3d.md), §235) :** dans `tools/relief_sandbox.sh`, la caméra libre est la vue de départ. La souris l'incline aussi de haut en bas (de 4° à 72°), la molette règle le recul, et la caméra ne traverse plus les falaises. La 3D de haut et la pixelisation sont retirées. Le sol suit Minecraft et Megabonk : des textures pixel art (herbe, terre battue, roche, strates) lues au plus proche, avec une frange d'herbe qui pend au haut des falaises. À toi de juger ce sol, et son accord avec les corps (F2).
+
 **15 novembre — tes choix de style ([plan 60 §10](60-vestiges-en-3d.md), §234) :** les contours restent ; la pixelisation et la vue 3D de haut partent ; la caméra libre en poursuite te plaît davantage que l'isométrique, mais il lui manque le contrôle vertical. À la reprise : la caméra libre avec contrôle vertical, puis les contours du joueur et des créatures. Le sol lisse manque de texture : on regardera comment Megabonk et Minecraft font le leur. Le détail des corps reste ouvert.
 
 **15 novembre — les styles à basculer, avec des contours noirs ([plan 60 §10](60-vestiges-en-3d.md), §233) :** retour de Raphaël, le low poly est « trop low » et les sols en facettes ne vont pas. Dans `tools/relief_sandbox.sh`, chaque effet se bascule seul : F1 le sol (facettes, lisse, pixel art), F2 les corps (low ou mid poly), F3 les contours noirs, F4 la pixelisation, F5 l'ombrage toon. À toi de choisir la combinaison.

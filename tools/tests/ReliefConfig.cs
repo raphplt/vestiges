@@ -40,8 +40,7 @@ public sealed class ReliefConfig
         public Color Ground, Terrace, Butte, Steps, Cliff, CliffDark;
         public float ShadeJitter, HeightJitter, CliffJitter;
         public string StartGround;
-        public bool StartMid, StartOutlines, StartPixels, StartToon;
-        public int PixelScale;
+        public bool StartMid, StartOutlines, StartToon;
         public Color OutlineColor;
         public float OutlineSensitivity, OutlineOrthoSensitivity;
         public LowPolyScatter[] Scatter;
@@ -67,8 +66,8 @@ public sealed class ReliefConfig
 
     public string[] GroundTiles, StepTiles, TerraceTiles, ButteTiles;
 
-    public float CameraPitch, CameraDistance, CameraFov, CameraMinDistance, CameraMaxDistance;
-    public float ChasePitch, ChaseDistance, ChaseFov, ChaseHeight, ChaseMouseDegrees;
+    public float ChasePitch, ChaseMinPitch, ChaseMaxPitch, ChaseDistance, ChaseMinDistance, ChaseMaxDistance;
+    public float ChaseFov, ChaseHeight, ChaseMouseDegrees, ChaseClearance;
 
     public static ReliefConfig Load(string path)
     {
@@ -78,7 +77,6 @@ public sealed class ReliefConfig
         Dictionary weapon = root["weapon"].AsGodotDictionary();
         Dictionary crowd = root["crowd"].AsGodotDictionary();
         Dictionary tiles = root["tiles"].AsGodotDictionary();
-        Dictionary camera = root["camera_3d"].AsGodotDictionary();
         Dictionary chase = root["camera_chase"].AsGodotDictionary();
         Array spawn = root["spawn"].AsGodotArray();
         Array creatures = root["creatures"].AsGodotArray();
@@ -129,13 +127,13 @@ public sealed class ReliefConfig
             StepTiles = tiles["steps"].AsStringArray(),
             TerraceTiles = tiles["terrace"].AsStringArray(),
             ButteTiles = tiles["butte"].AsStringArray(),
-            CameraPitch = F(camera, "pitch_degrees"),
-            CameraDistance = F(camera, "distance"),
-            CameraFov = F(camera, "fov"),
-            CameraMinDistance = F(camera, "min_distance"),
-            CameraMaxDistance = F(camera, "max_distance"),
             ChasePitch = F(chase, "pitch_degrees"),
+            ChaseMinPitch = F(chase, "min_pitch_degrees"),
+            ChaseMaxPitch = F(chase, "max_pitch_degrees"),
             ChaseDistance = F(chase, "distance"),
+            ChaseMinDistance = F(chase, "min_distance"),
+            ChaseMaxDistance = F(chase, "max_distance"),
+            ChaseClearance = F(chase, "ground_clearance"),
             ChaseFov = F(chase, "fov"),
             ChaseHeight = F(chase, "height"),
             ChaseMouseDegrees = F(chase, "mouse_degrees_per_pixel"),
@@ -168,9 +166,7 @@ public sealed class ReliefConfig
             StartGround = start["ground"].AsString(),
             StartMid = start["models"].AsString() == "mid",
             StartOutlines = start["outlines"].AsBool(),
-            StartPixels = start["pixels"].AsBool(),
             StartToon = start["toon"].AsBool(),
-            PixelScale = (int)F(lowPoly, "pixel_scale"),
             OutlineColor = new Color(outline["color"].AsString()),
             OutlineSensitivity = F(outline, "sensitivity"),
             OutlineOrthoSensitivity = F(outline, "ortho_sensitivity"),
