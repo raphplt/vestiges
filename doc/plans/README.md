@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — les pièces minces des décors 3D ne disparaissent plus ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
+- Le réverbère, la grue, l'arbre mort, les grillages et le mât radio sortent entiers : la grille se raffine là où une pièce plus mince que son pas passait au travers. Décors de 568 212 à 1 009 446 triangles (×1,78), bibliothèque de 40,8 à 48,3 Mo.
+- Réserves notées au plan : câble de la grue et pointe du mât manquent encore, quelques épaississements et petits trous.
+- Suite : C3c (budgets de triangles), sur demande de Raphaël.
+
 **16 novembre — des modèles 3D près de sept fois plus légers ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
 - La bibliothèque de modèles passe de 275 à 41 Mo, sans changement visible sur les planches : sommets partagés, couleurs et indices plus petits, facettes calculées au shader. Les triangles ne bougent pas.
 - Suite : C3b (les pièces minces : arbre mort, grue, antenne, grillage, réverbère), puis C3c (les budgets de triangles).

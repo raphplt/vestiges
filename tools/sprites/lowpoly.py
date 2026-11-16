@@ -73,24 +73,42 @@ def find_bounds(parts: Sequence[Part], box_min, box_max, step: float) -> tuple[n
     return inside.min(axis=0) - step, inside.max(axis=0) + step
 
 
-def _surface_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float) -> tuple[np.ndarray, np.ndarray]:
-    """Sommets de la surface (un par cellule traversée) et quadrilatères qui les relient (indices de sommets)."""
+def _grid(bounds_min, bounds_max, step: float) -> tuple[np.ndarray, np.ndarray]:
+    """Origine et nombre de points de la grille qui couvre la boîte, débordant d'un pas de chaque côté."""
     lo = np.asarray(bounds_min, dtype=np.float64) - step
     hi = np.asarray(bounds_max, dtype=np.float64) + step
-    shape = np.ceil((hi - lo) / step).astype(int) + 1
+    return lo, np.ceil((hi - lo) / step).astype(int) + 1
+
+
+def _sample(parts: Sequence[Part], lo: np.ndarray, shape: np.ndarray, step: float) -> np.ndarray:
     axes = [lo[a] + np.arange(shape[a]) * step for a in range(3)]
     grid = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1)
     d, _ = _evaluate(parts, grid.reshape(-1, 3))
-    d = d.reshape(shape)
+    return d.reshape(shape)
+
+
+def _corners(d: np.ndarray) -> list[np.ndarray]:
+    """Les huit coins de chaque cellule, dans l'ordre de CORNERS."""
+    nx, ny, nz = d.shape
+    return [d[cx:nx - 1 + cx, cy:ny - 1 + cy, cz:nz - 1 + cz] for cx, cy, cz in CORNERS]
+
+
+def _nets(d: np.ndarray, lo: np.ndarray, step: float, keep: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Sommets de la surface (un par cellule traversée) et quadrilatères qui les relient (indices de sommets), d'après les
+    distances échantillonnées. `keep`, masque de cellules, ne garde que les faces dont les quatre cellules y sont.
+    """
+    shape = np.array(d.shape)
     inside = d < 0.0
-    nx, ny, nz = shape
 
     # Cellules traversées par la surface, et leur sommet : moyenne des passages à zéro sur leurs arêtes.
-    corner_d = [d[cx:nx - 1 + cx, cy:ny - 1 + cy, cz:nz - 1 + cz] for cx, cy, cz in CORNERS]
+    corner_d = _corners(d)
     corner_in = [c < 0.0 for c in corner_d]
     any_in = np.logical_or.reduce(corner_in)
     all_in = np.logical_and.reduce(corner_in)
     active = any_in & ~all_in
+    if keep is not None:
+        active &= keep
     accum = np.zeros(active.shape + (3,))
     count = np.zeros(active.shape)
     for a, b in EDGES:
@@ -129,6 +147,126 @@ def _surface_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float) ->
     return vertices, np.array(quads, dtype=np.int64).reshape(-1, 4)
 
 
+def _surface_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float) -> tuple[np.ndarray, np.ndarray]:
+    lo, shape = _grid(bounds_min, bounds_max, step)
+    return _nets(_sample(parts, lo, shape, step), lo, step)
+
+
+def _dilate(mask: np.ndarray, radius: int) -> np.ndarray:
+    """Agrandit un masque 3D de `radius` cellules dans toutes les directions (voisinage cubique)."""
+    out = mask.copy()
+    for _ in range(radius):
+        padded = np.pad(out, 1)
+        grown = np.zeros_like(out)
+        for dx in range(3):
+            for dy in range(3):
+                for dz in range(3):
+                    grown |= padded[dx:dx + out.shape[0], dy:dy + out.shape[1], dz:dz + out.shape[2]]
+        out = grown
+    return out
+
+
+def _erode_min(d: np.ndarray, radius: int) -> np.ndarray:
+    """Minimum de la grille sur un voisinage cubique de `radius` points."""
+    out = d
+    for _ in range(radius):
+        padded = np.pad(out, 1, constant_values=np.inf)
+        low = out.copy()
+        for dx in range(3):
+            for dy in range(3):
+                for dz in range(3):
+                    low = np.minimum(low, padded[dx:dx + out.shape[0], dy:dy + out.shape[1], dz:dz + out.shape[2]])
+        out = low
+    return out
+
+
+def _cells_to_fine(cells: np.ndarray, k: int) -> np.ndarray:
+    """Masque de cellules grossières → masque des cellules fines qu'elles contiennent (k par côté)."""
+    return np.repeat(np.repeat(np.repeat(cells, k, axis=0), k, axis=1), k, axis=2)
+
+
+def _cells_to_points(cells: np.ndarray) -> np.ndarray:
+    """Masque de cellules → masque des points qui en sont les coins."""
+    points = np.zeros(tuple(s + 1 for s in cells.shape), dtype=bool)
+    for cx, cy, cz in CORNERS:
+        points[cx:cx + cells.shape[0], cy:cy + cells.shape[1], cz:cz + cells.shape[2]] |= cells
+    return points
+
+
+# Une distance assez grande pour être dehors, assez petite pour ne pas donner de NaN dans les interpolations.
+_FAR = 1.0e6
+# Profondeur, en pas grossiers, au-delà de laquelle la matière voisine est épaisse : la cellule ratée n'est qu'une bosse.
+THICK_DEPTH = 0.5
+# Épaisseur ajoutée aux pièces minces, en pas fins : une barre qui passe entre les points prend au moins une cellule.
+THIN_INFLATE = 0.5
+
+def adaptive_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float, fine_step: float) -> tuple[
+        tuple[np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray] | None, float]:
+    """
+    Surface au pas `step`, affinée là où elle rate la matière (plan 60 §18, lot C3b). Une pièce plus mince que le pas
+    (fût, bras, flèche, branche, treillis) passe entre les points de la grille : la cellule a ses huit coins dehors,
+    alors que l'échantillonnage fin y trouve de la matière. Une surface ordinaire ne trompe pas ce critère, contrairement
+    à l'interpolation de la grille grossière, qui se trompe sur les courbes. Ces cellules seules se maillent au pas fin ;
+    la pièce y gagne `THIN_INFLATE` pas fin d'épaisseur, pour rester entière au lieu de s'émietter. La surface grossière
+    ne change pas.
+    Renvoie (sommets, quads) grossiers, fins (ou None) et le pas fin retenu.
+    """
+    k = int(np.ceil(step / fine_step - 1e-6))
+    lo, shape = _grid(bounds_min, bounds_max, step)
+    d = _sample(parts, lo, shape, step)
+    if k < 2:
+        return _nets(d, lo, step), None, step
+    fine = step / k
+    corner_d = _corners(d)
+    # Cellules aux huit coins dehors, mais assez près de la matière pour qu'une pièce mince les traverse.
+    near = (np.minimum.reduce(corner_d) < 0.9 * step) & np.logical_and.reduce([c >= 0.0 for c in corner_d])
+    if not near.any():
+        return _nets(d, lo, step), None, step
+
+    fine_d = np.full(tuple((s - 1) * k + 1 for s in shape), _FAR)
+    evaluated = np.zeros(fine_d.shape, dtype=bool)
+    # Un détail peint (crépi, gravier, mousse) colore sans sculpter : plus mince qu'un pixel, il passerait partout pour
+    # une pièce ratée. La surface fine ne suit que les pièces en relief ; la couleur, elle, les lit toutes.
+    solid = [part for part in parts if part.relief] or list(parts)
+
+    def evaluate(fine_cells: np.ndarray) -> None:
+        todo = _cells_to_points(fine_cells) & ~evaluated
+        if todo.any():
+            index = np.argwhere(todo)
+            fine_d[todo], _ = _evaluate(solid, lo + index * fine)
+            evaluated[todo] = True
+
+    evaluate(_cells_to_fine(near, k))
+    hidden = evaluated & (fine_d < 0.0)
+    # Un point caché marque les cellules grossières qui le contiennent (plusieurs s'il est sur leur bord).
+    points = np.argwhere(hidden)
+    hidden_cells = np.zeros(near.shape, dtype=bool)
+    cell = np.minimum(points // k, np.array(near.shape) - 1)
+    on_edge = (points % k) == 0
+    for offset in np.ndindex(2, 2, 2):
+        c = cell - np.array(offset) * on_edge
+        valid = (c >= 0).all(axis=1)
+        hidden_cells[tuple(c[valid].T)] = True
+    # Une bosse d'usure sur un mur épais trompe aussi la grille : elle a, tout près, de la matière profonde. Une pièce
+    # mince n'en a pas, sa profondeur ne dépasse pas son rayon.
+    depth = np.minimum.reduce(_corners(_erode_min(d, 1)))
+    thin = depth > -THICK_DEPTH * step
+    missed = hidden_cells & near & thin
+    if not missed.any():
+        return _nets(d, lo, step), None, step
+    # Autour d'une cellule ratée, la grille grossière a saisi des morceaux de la même pièce, rétrécis : ces cellules à
+    # demi saisies, minces elles aussi, passent au pas fin, et leur surface grossière s'efface. La surface fine déborde
+    # d'une cellule fine pour rejoindre ce qui reste au pas grossier.
+    crossed = np.logical_or.reduce([c < 0.0 for c in corner_d]) & ~np.logical_and.reduce([c < 0.0 for c in corner_d])
+    grabbed = crossed & thin & _dilate(missed, 1)
+    for _ in range(2):
+        grabbed |= crossed & thin & _dilate(grabbed | missed, 1)
+    patch = _dilate(_cells_to_fine(missed | grabbed, k), 1)
+    evaluate(patch)
+    detail = _nets(fine_d - THIN_INFLATE * fine, lo, fine, keep=patch)
+    return _nets(d, lo, step, keep=~grabbed), detail, fine
+
+
 def _split_quads(vertices: np.ndarray, quads: np.ndarray) -> np.ndarray:
     """Coupe chaque quadrilatère selon sa diagonale la plus courte : triangles en indices de sommets."""
     a, b, c, e = (vertices[quads[:, i]] for i in range(4))
@@ -147,7 +285,28 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
     Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle), pour un ombrage par faces. Chaque face
     prend le matériau juste sous elle ; un sommet sert à toutes ses faces d'un même matériau.
     """
-    vertices, quads = _surface_nets(parts, bounds_min, bounds_max, step)
+    return _flat_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step)
+
+
+def _facing_inward(parts: Sequence[Part], points: np.ndarray, normal: np.ndarray, step: float) -> np.ndarray:
+    """
+    La face regarde-t-elle vers l'intérieur ? On suit le gradient du volume pris tout près d'elle : comparer la distance
+    à un demi-pas de part et d'autre se trompe sur une pièce plus mince qu'un pas, dont les deux côtés sont dehors, et
+    la face retournée disparaît à l'affichage.
+    """
+    h = step * 0.05
+    gradient = np.zeros_like(points)
+    for axis in range(3):
+        offset = np.zeros(3)
+        offset[axis] = h
+        plus, _ = _evaluate(parts, points + offset)
+        minus, _ = _evaluate(parts, points - offset)
+        gradient[:, axis] = plus - minus
+    return np.einsum("ij,ij->i", normal, gradient) < 0.0
+
+
+def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: np.ndarray, quads: np.ndarray, step: float,
+               inset: float = 0.0) -> Mesh:
     if not len(quads):
         return _empty_mesh()
     tris = _split_quads(vertices, quads)
@@ -159,12 +318,10 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
 
     # Oriente chaque face vers l'extérieur, puis prend le matériau juste sous elle.
     centroid = corners.mean(axis=1)
-    out_d, _ = _evaluate(parts, centroid + normal * step * 0.5)
-    in_d, _ = _evaluate(parts, centroid - normal * step * 0.5)
-    flip = out_d < in_d
+    flip = _facing_inward(parts, centroid, normal, step)
     tris[flip] = tris[flip][:, ::-1]
     normal[flip] = -normal[flip]
-    _, mat, _ = _evaluate_with_part(parts, centroid - normal * step * 0.3)
+    _, mat, _ = _evaluate_with_part(parts, centroid - normal * (step * 0.3 + inset))
     colors, emissive = material_colors(materials)
     mat = np.where(mat < 0, 0, mat)
 
@@ -180,7 +337,11 @@ def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], boun
     Même surface, sommets partagés et ombrage lissé (« mid poly ») : la normale d'un sommet est le gradient du volume,
     sa couleur celle du matériau juste sous lui. Un triangle est émissif si l'un de ses sommets l'est.
     """
-    vertices, quads = _surface_nets(parts, bounds_min, bounds_max, step)
+    return _smooth_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step)
+
+
+def _smooth_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: np.ndarray, quads: np.ndarray, step: float,
+                 inset: float = 0.0) -> Mesh:
     if not len(quads):
         return _empty_mesh()
     tris = _split_quads(vertices, quads)
@@ -190,9 +351,7 @@ def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], boun
     tris, corners, normal = tris[keep], corners[keep], normal[keep]
     normal /= np.linalg.norm(normal, axis=1)[:, None]
     centroid = corners.mean(axis=1)
-    out_d, _ = _evaluate(parts, centroid + normal * step * 0.5)
-    in_d, _ = _evaluate(parts, centroid - normal * step * 0.5)
-    flip = out_d < in_d
+    flip = _facing_inward(parts, centroid, normal, step)
     tris[flip] = tris[flip][:, ::-1]
 
     h = step * 0.25
@@ -204,11 +363,30 @@ def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], boun
         minus, _ = _evaluate(parts, vertices - offset)
         gradient[:, axis] = plus - minus
     normals = gradient / np.maximum(np.linalg.norm(gradient, axis=1), 1e-9)[:, None]
-    _, mat, _ = _evaluate_with_part(parts, vertices - normals * step * 0.3)
+    _, mat, _ = _evaluate_with_part(parts, vertices - normals * (step * 0.3 + inset))
     colors, emissive = material_colors(materials)
     mat = np.where(mat < 0, 0, mat)
     tri_emissive = emissive[mat][tris].any(axis=1)
     return Mesh(vertices, normals, colors[mat], tri_emissive, tris)
+
+
+def mesh_parts_adaptive(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float,
+                        fine_step: float, smooth: bool) -> tuple[Mesh, int]:
+    """
+    Comme `mesh_parts` (ou `mesh_parts_smooth`), affiné au pas `fine_step` là où les pièces minces passent entre les
+    points de la grille (voir `adaptive_nets`). Renvoie le maillage et le nombre de triangles de l'affinage.
+    """
+    mesher = _smooth_mesh if smooth else _flat_mesh
+    coarse, detail, fine = adaptive_nets(parts, bounds_min, bounds_max, step, fine_step)
+    mesh = mesher(parts, materials, *coarse, step)
+    if detail is None:
+        return mesh, 0
+    # La surface fine est épaissie : le matériau se lit d'autant plus profond, dans la pièce et non sur la mousse peinte
+    # qui l'enveloppe.
+    patch = mesher(parts, materials, *detail, fine, inset=THIN_INFLATE * fine)
+    if not patch.triangles:
+        return mesh, 0
+    return (merged([mesh, patch]) if mesh.triangles else patch), patch.triangles
 
 
 def merged(pieces: Sequence[Mesh]) -> Mesh:
@@ -231,6 +409,8 @@ class ModelExport:
     animations: dict[str, list[Mesh]]
     fps: float = 8.0
     kind: str = "creature"
+    # Triangles ajoutés par l'affinage des pièces minces (lot C3b), pour l'index.
+    detail_triangles: int = 0
 
 
 COMPONENT_TYPES = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}

@@ -46,7 +46,8 @@ sys.path.insert(0, str(ROOT))
 from tools.generate_fauna import model as fauna_model  # noqa: E402
 from tools.generate_props import BIOMES  # noqa: E402
 from tools.sprites import models  # noqa: E402
-from tools.sprites.lowpoly import Mesh, ModelExport, find_bounds, merged, mesh_parts, mesh_parts_smooth, scaled, write_glb  # noqa: E402
+from tools.sprites.lowpoly import (Mesh, ModelExport, find_bounds, merged, mesh_parts, mesh_parts_adaptive,  # noqa: E402
+                                   mesh_parts_smooth, scaled, write_glb)  # noqa: E402
 from tools.sprites.props._kit import M  # noqa: E402
 from tools.sprites.render import MODEL_SCALE, PITCH  # noqa: E402
 
@@ -65,6 +66,9 @@ DEFAULT_SET = {
 }
 ANIMATED = ("characters", "creatures", "fauna")
 ORIENTED = re.compile(r"^(.*)_(?:x|y|e|w|n|s|h|v)(_v\d+)?$")
+# Pas le plus fin de l'affinage des pièces minces (unités du modèle, 1 m ≈ 27,5) : 4 cm, même quand le décor reprend un
+# pas plus fin partout.
+FINE_FLOOR = 1.2
 
 
 def _metres(model: models.SpriteModel) -> float:
@@ -77,10 +81,15 @@ def _frame_box(frame_size, scale):
     return (-width * 0.7, -height * 0.2, -width * 0.7), (width * 0.7, height * 1.1, width * 0.7)
 
 
-def _mesh_pose(parts, materials, box, step, smooth: bool) -> Mesh:
+def _bounds(parts, box, step):
     bounds = find_bounds(parts, box[0], box[1], max(step * 1.6, 3.0))
     if bounds is None:
         raise ValueError("volume vide")
+    return bounds
+
+
+def _mesh_pose(parts, materials, box, step, smooth: bool) -> Mesh:
+    bounds = _bounds(parts, box, step)
     mesher = mesh_parts_smooth if smooth else mesh_parts
     return mesher(parts, materials, bounds[0], bounds[1], step)
 
@@ -99,11 +108,13 @@ def _props_catalog(catalog: str) -> dict:
     return {m.stem: m for m in importlib.import_module(BIOMES[catalog][0]).catalog()}
 
 
-def _mesh_prop(prop, box, prop_step: float, smooth: bool) -> Mesh:
+def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float) -> tuple[Mesh, int]:
     """
-    Le pas d'un décor suit sa taille, mais un décor long et mince (clôture, grillage, rambarde) passe alors entre les
-    points de la grille et sort vide ou couché : on affine le pas tant que le maillage n'atteint pas la hauteur de ses
-    parties, jusqu'au pas des personnages.
+    Le pas d'un décor suit la taille de son cadre, et ses pièces minces (fût, flèche, branche, grillage) passent entre
+    les points de la grille : la grille s'affine localement autour d'elles (plan 60 §18, lot C3b), à la moitié du pas
+    sans descendre sous `FINE_FLOOR`. Un pas fin calé sur la taille réelle de la matière triplait les triangles des
+    décors pour un gain que la planche ne montre pas. En dernier recours, un décor qui sort encore trop bas (clôture
+    couchée) reprend un pas plus fin partout. Renvoie aussi les triangles de l'affinage.
     """
     parts = prop.parts()
     coarse_step = max(prop_step * 1.6, 3.0)
@@ -113,16 +124,19 @@ def _mesh_prop(prop, box, prop_step: float, smooth: bool) -> Mesh:
     # La boîte grossière déborde de la matière d'un pas et demi de chaque côté.
     expected = float(bounds[1][1] - bounds[0][1]) - 3.0 * coarse_step
     while True:
-        mesh = _mesh_pose(parts, prop.materials, box, prop_step, smooth)
+        mesh_bounds = _bounds(parts, box, prop_step)
+        fine_step = max(FINE_FLOOR / fineness, prop_step / 2.0)
+        mesh, detail = mesh_parts_adaptive(parts, prop.materials, mesh_bounds[0], mesh_bounds[1], prop_step, fine_step, smooth)
         height = float(np.ptp(mesh.positions[:, 1])) if len(mesh.positions) else 0.0
         if height >= 0.6 * expected or prop_step <= 1.2:
-            return mesh
+            return mesh, detail
         prop_step = max(1.2, prop_step * 0.5)
 
 
 def export_prop(catalog: str, stems: list[str], model_id: str, step: float | None, smooth: bool, fineness: float) -> ModelExport:
     props = _props_catalog(catalog)
     pieces = []
+    detail = 0
     for stem in stems:
         prop = props[stem]
         box = prop.bounds if prop.bounds is not None else _frame_box(prop.canvas, MODEL_SCALE)
@@ -130,9 +144,10 @@ def export_prop(catalog: str, stems: list[str], model_id: str, step: float | Non
         if step is not None:
             mesh = _mesh_pose(prop.parts(), prop.materials, box, step, smooth)
         else:
-            mesh = _mesh_prop(prop, box, max(2.4 / fineness, extent / (40.0 * fineness)), smooth)
+            mesh, added = _mesh_prop(prop, box, max(2.4 / fineness, extent / (40.0 * fineness)), smooth, fineness)
+            detail += added
         pieces.append(scaled(mesh, CREATURE_METRES))
-    return ModelExport(model_id, {"idle": [merged(pieces)]}, kind="prop")
+    return ModelExport(model_id, {"idle": [merged(pieces)]}, kind="prop", detail_triangles=detail)
 
 
 @dataclass
@@ -196,6 +211,7 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
             "poses": sum(len(v) for v in manifest["animations"].values()),
             "meshes": manifest["meshes"],
             "max_triangles": manifest["max_triangles"],
+            "detail_triangles": export.detail_triangles,
             "height_m": round(float(idle[:, 1].max() - idle[:, 1].min()), 2) if len(idle) else 0.0,
             "bytes": path.stat().st_size,
         })

@@ -2977,3 +2977,9 @@ Raphaël : reprendre la conversion par le lot C3 (poids et finesse), découpage 
 - **Pas de décimation par effondrement d'arêtes** : un modèle trop lourd reprend un pas plus grossier, ce qui garde le low poly uniforme.
 - **Le maillage par pose reste** ; le squelette glTF reste plus tard.
 - **Les normales de sommet ne sont pas écrites dans le fichier, elles sont reconstruites au chargement** (lissées), pour le seul décalage des ombres. Les écrire coûterait environ 75 % de plus sur les sommets.
+
+**C3b livré, tranché par défaut par l'agent, réversible** (plan 60 §18) :
+- **Pas fin = la moitié du pas du décor**, plancher 4 cm.
+- **Le pas des décors reste calé sur leur boîte de cadrage**, qui surestime leur taille réelle d'environ 1,9 en médiane. La corriger rendrait tous les décors plus fins partout : c'est une décision de style, laissée à Raphaël.
+- **L'orientation des faces par le gradient du volume s'applique à tous les modèles**, personnages compris.
+- **Un affinage local de la grille remplace le pas tiré de l'épaisseur** prévu au découpage, parce qu'une pièce mince n'est souvent pas une pièce SDF à elle seule ; la variante au pas fin calé sur la taille réelle de la matière est écartée (570 000 à 1,66 million de triangles, 10 à 28 Mo, gain non visible sur les planches).

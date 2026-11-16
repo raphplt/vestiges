@@ -389,7 +389,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 |---|---|---|---|
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
-| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | C3a livré (§18), C3b et C3c à faire | moyen |
+| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | C3a et C3b livrés (§18), C3c à faire | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | à faire | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
@@ -495,3 +495,44 @@ Le format compact. `tools/sprites/lowpoly.py` écrit moins d'octets par triangle
 **Pas de banc** : le changement ne touche que le bac à sable et l'outillage, pas la run. Le coût en jeu se mesurera à l'import (C4).
 
 **Reste** : le réverbère et la lanterne des marais étaient déjà cassés avant (mât trop mince) ; c'est C3b. Puis C3c, les budgets.
+
+### C3b livré — 16 novembre
+
+Les pièces minces. Le pas de grille d'un décor suit la taille de son cadre (`max(2,4, étendue du cadre / 40)`). Les pièces plus minces que ce pas (fût du réverbère, flèche de la grue, branches de l'arbre mort, barreaux de grille, mât radio, voie de carrière) passaient entre les points de la grille : elles sortaient trouées ou disparaissaient.
+- **Affinage local de la grille** (`adaptive_nets`, `mesh_parts_adaptive` dans `tools/sprites/lowpoly.py`, appelés par `tools/export_lowpoly.py`). Au lieu du pas tiré de l'épaisseur prévu au découpage, une cellule grossière « ratée » se maille plus fin : une pièce mince n'est souvent pas une pièce SDF à elle seule (le treillis de la grue, les barreaux d'une grille tiennent dans une même pièce), et la mailler à part l'aurait détachée du reste.
+  - Une cellule dont les huit coins sont dehors, mais où un échantillonnage fin trouve de la matière, est ratée.
+  - Un test de profondeur (érosion, `THICK_DEPTH` 0,5 pas) écarte la matière épaisse.
+  - Les cellules ratées et leurs voisines traversées et minces se maillent au pas fin ; la surface grossière s'y efface.
+  - La pièce fine gagne un demi-pas fin d'épaisseur (`THIN_INFLATE`) pour rester entière.
+  - Les pièces peintes (`relief=False`) n'entrent pas dans la surface fine.
+  - Le pas fin vaut la moitié du pas du décor, pas moins de 4 cm (`FINE_FLOOR`).
+- **Orientation des faces** : `_facing_inward` suit le gradient du volume pris tout près de la face, au lieu de comparer les distances à un demi-pas de part et d'autre, qui se trompait sur les pièces plus minces qu'un pas. Le changement touche aussi personnages et créatures : mêmes triangles, quelques sommets de plus aux frontières de matériaux, yeux du facteur un peu plus nets.
+- **Matériau de la surface fine** : il se lit plus profond (de l'épaisseur ajoutée). Sans cela, la mousse peinte qui enveloppe le bois gagnait et le bois sortait en damier vert et noir (table de pique-nique, barrière cassée, rambarde).
+- **Variante écartée** : un pas fin calé sur la taille réelle de la matière (un quarantième de son étendue). Planches très bonnes, mais décors de 570 000 à 1,66 million de triangles et environ 10 à 28 Mo, pour un gain non visible sur les planches.
+
+**Mesures** : export complet `python3 tools/export_lowpoly.py --all --jobs 2`, 312 modèles, 0 échec, 163 s, contre C3a.
+
+| | C3a | C3b |
+|---|---|---|
+| Poids de la bibliothèque | 40,8 Mo | 48,3 Mo |
+| Triangles des décors | 568 212 | 1 009 446 (×1,78) |
+| Triangles des personnages | 43 212 | 43 212 |
+| Triangles des créatures | 56 192 | 56 192 |
+
+- 232 décors sur 274 affinés.
+- Triangles par catalogue, rapport à C3a : barrier ×3,6, landmarks ×3,6, indicible ×3,1, fields ×2,6, swamp ×2,3, urban_exodus ×2,2, quarry ×1,9, forest ×1,8, chests ×1,7, urban et fields_farm ×1,6, urban_buildings ×1,2.
+- Avant → après : voie de carrière 0 → 2 260, barrière en bois cassée 24 → 1 564, rambarde cassée 48 → 1 552, pile d'os 160 → 2 998.
+- Après : réverbère 1 016, arbre mort 1 940, abri de bus 2 850, grillage 2 602, mât radio 3 534, grue 7 558, kiosque 17 556. Les plus lourds : vantaux de grille et œil de l'Indicible, 15 000 à 18 250.
+- La cible de 40 Mo de §18 n'est plus tenue (48,3 Mo) : C3c reprend les budgets.
+
+**Vérifications** : planches avant/après (`tools/model_sheet.sh`) regardées. La grue retrouve sa flèche, l'arbre mort ses branches, le mât ses montants, les grilles leurs barreaux, la voie de carrière apparaît. Réverbère, grue, mât, kiosque, immeuble et abri de bus vérifiés à l'œil. `tools/smoke_test.sh` vert. Bac à sable du relief capturé (`tools/relief_sandbox.sh -- --capture`), en low et mid poly, images regardées : rendu normal. Modèles versionnés de `assets/models` régénérés (export par défaut ; le `--detail mid` n'est pas versionné).
+
+**Points ouverts**
+- Le câble du crochet de la grue et la pointe du mât restent plus fins que le pas fin et manquent.
+- Petit trou au bas du tronc de l'arbre mort.
+- Épaississement visible sur certaines pièces : cils de l'œil de l'Indicible devenus bulbeux, bande grise du vantail abîmé, bouts de poteaux arrondis.
+- Quelques triangles sombres sur le bois (rainures peintes) et petits trous noirs (grilles, plateau de la table).
+- La poubelle a perdu sa grille ajourée.
+- Ces réglages relèvent de C3c ou d'un retour de Raphaël.
+
+**Suite** : C3c (budgets de triangles), seulement sur demande de Raphaël.
