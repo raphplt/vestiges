@@ -141,6 +141,9 @@ public partial class ReliefSandbox : Node
         _arena = new ReliefArena(_config.Arena, _config.LevelHeight);
         _crowdTarget = int.Parse(Argument(args, "--enemies", _config.CrowdCount.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         ulong seed = ulong.Parse(Argument(args, "--seed", "59"), CultureInfo.InvariantCulture);
+        _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
+        if (_lowPoly)
+            _config.ScaleBodies(_config.LowPoly.BodyScale);
         if (System.Array.IndexOf(args, "--check-edges") >= 0)
         {
             GetTree().Quit(ReliefEdgeCheck.Run(_config, _arena) == 0 ? 0 : 1);
@@ -154,7 +157,6 @@ public partial class ReliefSandbox : Node
         _reach = _config.ChaseDistance;
 
         RegisterActions();
-        _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
         if (_lowPoly)
             LoadMaterials();
         else
@@ -332,7 +334,7 @@ public partial class ReliefSandbox : Node
             _enemyShadows[i] = NewShadow(world, shadow, $"CreatureShadow{i}");
         if (_lowPoly)
         {
-            Vector3 scale = Vector3.One / _config.LowPoly.MetresPerCell;
+            Vector3 scale = Vector3.One * _config.LowPoly.BodyScale / _config.LowPoly.MetresPerCell;
             _playerBody = new MeshInstance3D { Name = "Player", Scale = scale };
             world.AddChild(_playerBody);
             _creatureBodies = new MeshInstance3D[_sim.Capacity];
@@ -714,7 +716,7 @@ public partial class ReliefSandbox : Node
         _player.Position = ToWorld(_sim.PlayerPos) + nudge;
         bool blink = _sim.PlayerInvulnerable > 0f && !_sim.PlayerAirborneFromBond && (int)(_animClock * 16f) % 2 == 0;
         _player.Modulate = _sim.PlayerHurtFlash > 0f ? new Color(1.6f, 0.5f, 0.45f) : blink ? new Color(1f, 1f, 1f, 1f) * 1.4f : _tint;
-        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f, _config.PlayerRadius);
+        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * BodyScale, _config.PlayerRadius);
 
         for (int i = 0; i < _sim.Capacity; i++)
         {
@@ -744,7 +746,7 @@ public partial class ReliefSandbox : Node
             sprite.Offset = new Vector2(0f, _creatureFoot[type]);
             sprite.Position = ToWorld(_sim.EnemyPos[i]) + nudge;
             sprite.Modulate = _sim.EnemyFlash[i] > 0f ? new Color(2.2f, 2.2f, 2.2f) : _sim.EnemyClimbing[i] ? new Color(0.85f, 0.8f, 0.95f) * _tint : _tint;
-            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f);
+            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * BodyScale);
         }
     }
 
@@ -777,7 +779,7 @@ public partial class ReliefSandbox : Node
         _playerBody.Rotation = new Vector3(0f, _playerYaw, 0f);
         bool blink = _sim.PlayerInvulnerable > 0f && !_sim.PlayerAirborneFromBond && (int)(_animClock * 16f) % 2 == 0;
         _playerBody.MaterialOverride = _sim.PlayerHurtFlash > 0f ? _hurtMaterial : blink ? _flashMaterial : null;
-        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f, _config.PlayerRadius);
+        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * BodyScale, _config.PlayerRadius);
 
         for (int i = 0; i < _sim.Capacity; i++)
         {
@@ -801,7 +803,7 @@ public partial class ReliefSandbox : Node
             body.Position = ToWorld(_sim.EnemyPos[i]);
             body.Rotation = new Vector3(0f, _creatureYaw[i], 0f);
             body.MaterialOverride = _sim.EnemyFlash[i] > 0f ? _flashMaterial : null;
-            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f);
+            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * BodyScale);
         }
     }
 
@@ -1029,6 +1031,8 @@ public partial class ReliefSandbox : Node
         GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Bonds} stomps={_sim.Stomps} deaths={_sim.Deaths} void_falls={_sim.VoidFalls}");
         GetTree().Quit();
     }
+
+    private float BodyScale => _lowPoly ? _config.LowPoly.BodyScale : 1f;
 
     private float PlayerGround() => _arena.HighestUnder(_sim.PlayerPos.X, _sim.PlayerPos.Y, _config.PlayerRadius);
 

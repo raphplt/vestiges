@@ -289,3 +289,14 @@ Les rebords ne collent toujours pas (113 sur 113). Les escaliers mènent à la t
 - l'avis de Raphaël sur le mouvement en main et sur ce sol ;
 - le détail des corps ;
 - les contours du joueur et des créatures.
+
+## 13. 60.0d suite — des corps plus grands, la caméra plus proche, l'herbe en bouquets (16 novembre)
+
+Raphaël, capture de Megabonk à l'appui (§237) : « le personnage pourrait (et devrait) être plus grand, et pareil pour les ennemis », « les herbes, il y en a beaucoup trop ». Dans Megabonk, le personnage tient environ un sixième de la hauteur de l'écran, la caméra est proche et basse, et l'herbe pousse en rares bouquets sur une texture qui porte le reste.
+- **Corps ×1,35** (`lowpoly.body_scale`) : le joueur et les créatures, avec leurs ombres, leurs emprises et leurs portées de contact (`ReliefConfig.ScaleBodies`). Les décors gardent leur taille. Le rendu en sprites (`--sprites`) n'est pas touché.
+- **La caméra libre se rapproche et s'abaisse** : 4 cellules de recul au lieu de 7,5, 16° d'inclinaison au départ au lieu de 24°, visée à 1,05 cellule au-dessus des pieds. Le facteur tient environ un septième de la hauteur de l'écran.
+- **L'herbe en bouquets épars** : 3 touffes par cellule au cœur d'un bouquet, semées selon un bruit de grande échelle, avec de larges plaques nues entre les bouquets. Il y a 1 500 touffes au lieu de 16 000. Chaque touffe a neuf brins plus larges, couchés vers l'extérieur et moins contrastés, sur 0,2 cellule de haut.
+
+Les rebords ne collent toujours pas avec les emprises agrandies (113 sur 113, contrôle headless). Les escaliers mènent à la tour, et le saut seul n'y monte pas.
+
+**Ce qui reste** : le jugement de Raphaël sur cette échelle et sur le mouvement en main, puis le détail des corps et leurs contours.

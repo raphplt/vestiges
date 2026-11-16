@@ -37,6 +37,8 @@ public sealed class ReliefConfig
     public sealed class LowPolyStyle
     {
         public float MetresPerCell;
+        // Agrandissement du joueur et des créatures, décors à part (§237) : des corps qui comptent à l'écran, comme Megabonk.
+        public float BodyScale;
         public Color Ground, Terrace, Butte, Steps, Cliff, CliffDark;
         public float ShadeJitter, HeightJitter, CliffJitter;
         public string StartGround;
@@ -164,6 +166,18 @@ public sealed class ReliefConfig
         return config;
     }
 
+    /// <summary>
+    /// Des corps plus grands occupent plus de place : le joueur et la horde grossissent de leur emprise au sol et de leur
+    /// portée de contact, pour que les corps ne se traversent pas.
+    /// </summary>
+    public void ScaleBodies(float scale)
+    {
+        PlayerRadius *= scale;
+        CrowdRadius *= scale;
+        ContactReach *= scale;
+        ContactHeight *= scale;
+    }
+
     private const string CharactersPath = "res://data/characters/characters.json";
     // Un pas de la grille iso du jeu : la diagonale d'une cellule fait 64 px, son côté 45.
     private const float GamePixelsPerCell = 45.254834f;
@@ -206,6 +220,7 @@ public sealed class ReliefConfig
             OutlineSensitivity = F(outline, "sensitivity"),
             OutlineOrthoSensitivity = F(outline, "ortho_sensitivity"),
             MetresPerCell = F(lowPoly, "metres_per_cell"),
+            BodyScale = F(lowPoly, "body_scale"),
             GrassPerCell = F(lowPoly["grass"].AsGodotDictionary(), "per_cell"),
             GrassHeight = F(lowPoly["grass"].AsGodotDictionary(), "height"),
             Ground = new Color(colors["ground"].AsString()),

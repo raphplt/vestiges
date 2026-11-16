@@ -2895,3 +2895,12 @@ Raphaël, en jouant le bac à sable après §235 :
 - **La caméra libre est à distance fixe.** Plus de molette.
 - **Le sol** : textures à 16 px par cellule, avec moins de motifs. Des touffes d'herbe en relief sur les cellules d'herbe, invisibles des contours.
 - **Mesuré en mètres** par le contrôle headless (plan 60 §12) : c'est la règle pour comparer les réglages de mouvement sans image.
+
+## 237. Des corps plus grands, l'herbe plus rare — 16 novembre 2026
+
+Raphaël, après §236, avec une capture de Megabonk : « je pense que le personnage pourrait (et devrait) être plus grand, et pareil pour les ennemis ; là il est trop petit. Aussi les herbes, il y en a beaucoup trop. Megabonk gère ça mieux. »
+
+**Tranché par défaut par l'agent, réversible :**
+- **Les corps passent à ×1,35**, joueur comme créatures, avec leurs emprises et leurs portées de contact. Les décors ne bougent pas. L'échelle commune (`metres_per_cell`) reste à trancher en fin de 60.0.
+- **La caméra libre se rapproche** : 4 cellules de recul au lieu de 7,5, 16° d'inclinaison au départ au lieu de 24°.
+- **L'herbe pousse en bouquets épars**, avec des plaques nues entre eux : 1 500 touffes au lieu de 16 000, plus larges et moins contrastées.

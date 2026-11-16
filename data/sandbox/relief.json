@@ -136,21 +136,22 @@
 	],
 	"camera_chase": {
 		"_comment": "Caméra libre (plan 60, §234), la vue de départ : la souris la tourne autour du joueur, de gauche à droite et de haut en bas entre deux inclinaisons (degrés au-dessus de l'horizon), à distance fixe (§236 : le joueur ne règle pas le recul). Elle se rapproche seule quand le relief s'interpose (ground_clearance : marge au-dessus du sol, en cellules).",
-		"pitch_degrees": 24,
+		"pitch_degrees": 16,
 		"min_pitch_degrees": 4,
 		"max_pitch_degrees": 72,
-		"distance": 7.5,
+		"distance": 4.0,
 		"ground_clearance": 0.35,
 		"fov": 62,
-		"height": 0.9,
+		"height": 1.05,
 		"mouse_degrees_per_pixel": 0.22
 	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : textured, facets, smooth ou pixel_art ; textured lit les textures de tools/generate_relief_textures.py). grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe, et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : textured, facets, smooth ou pixel_art ; textured lit les textures de tools/generate_relief_textures.py). body_scale : agrandissement du joueur et des créatures, décors à part (§237 : des corps qui comptent à l'écran, comme Megabonk), emprises et portées de contact comprises. grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe au cœur d'un bouquet (§237 : en bouquets épars, plaques nues entre eux), et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
 		"metres_per_cell": 2.65,
+		"body_scale": 1.35,
 		"grass": {
-			"per_cell": 12,
-			"height": 0.17
+			"per_cell": 3,
+			"height": 0.2
 		},
 		"colors": {
 			"ground": "53613a",

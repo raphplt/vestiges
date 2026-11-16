@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — des corps plus grands, l'herbe en bouquets ([plan 60 §13](60-vestiges-en-3d.md), §237) :**
+- **Corps** : le joueur et les créatures sont 1,35 fois plus grands.
+- **Caméra libre** : plus proche (4 cellules) et plus basse, comme dans Megabonk.
+- **Herbe** : en rares bouquets, avec des plaques nues entre eux.
+
 **16 novembre — le mouvement repris, l'herbe en relief ([plan 60 §12](60-vestiges-en-3d.md), §236) :**
 - **Mouvement** : le facteur court à 8,4 m/s au lieu de 12, avec un peu d'inertie.
 - **Saut** (Espace) : commun à tous, à hauteur d'homme (1,64 m), il garde l'élan sans pousser (5,9 m en course au lieu de 12). Les étages descendent à 1,33 m pour rester franchissables d'un saut.
