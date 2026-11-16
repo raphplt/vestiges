@@ -2904,3 +2904,28 @@ Raphaël, après §236, avec une capture de Megabonk : « je pense que le person
 - **Les corps passent à ×1,35**, joueur comme créatures, avec leurs emprises et leurs portées de contact. Les décors ne bougent pas. L'échelle commune (`metres_per_cell`) reste à trancher en fin de 60.0.
 - **La caméra libre se rapproche** : 4 cellules de recul au lieu de 7,5, 16° d'inclinaison au départ au lieu de 24°.
 - **L'herbe pousse en bouquets épars**, avec des plaques nues entre eux : 1 500 touffes au lieu de 16 000, plus larges et moins contrastées.
+
+## 238. Un seul sol, des falaises taillées, des contours lissés ; la crainte d'un air de Megabonk — 16 novembre 2026
+
+Raphaël, sur les sols du bac à sable :
+- tuiles du jeu : « tu peux les retirer, elles ne me plaisent pas du tout » ;
+- facettes : « juste des carrés coupés en deux, ça n'est pas esthétique du tout » ;
+- lisse : « je n'aime pas du tout » ;
+- texturé : « mon préféré jusqu'à présent, à voir si on peut pas faire quelque chose de mieux avec des polys ».
+
+Et : « les contours créent trop d'escaliers, on voit les pixels ».
+
+Puis une crainte : « le mode caméra libre, que je trouve beaucoup plus fun que le relief 2D, plus les polys, plus le concept même du jeu font qu'on se rapproche dangereusement d'un Megabonk ; j'ai peur qu'on puisse parler de plagiat ou de copie ».
+
+**Tranché par défaut par l'agent, réversible :**
+- **Seul le sol texturé reste**, avec deux variantes de falaises sous F1 : taillées en facettes de roche (au départ) ou droites (plan 60 §14).
+- **Les contours se rendent à la définition de l'écran, et le trait est anticrénelé** dans son shader. Le FXAA n'existe pas dans le renderer du jeu.
+- **Sur Megabonk**, analyse de l'agent, sans valeur de conseil juridique :
+  - Une mécanique ou un genre ne se protège pas, en France comme ailleurs : les idées sont de libre parcours. La caméra à la troisième personne, le low poly aux textures pixelisées et la horde à survivre sont des communs de genre. Megabonk lui-même est un survivors-like en 3D, après Vampire Survivors.
+  - Ce qui expose, c'est de reprendre son expression : personnages, noms, interface, présentation des coffres, des autels et des améliorations, palette, ton, musique. Le droit français ajoute le parasitisme : s'approprier pas à pas l'identité d'un concurrent pour profiter de sa notoriété.
+  - Le vrai risque est d'image : des joueurs qui écrivent « clone de Megabonk ».
+- **Règle de conduite qui en découle :**
+  - Megabonk ne sert que de leçon d'ergonomie : échelle des corps à l'écran, densité du détail. Jamais de modèle d'aspect, de ton ou d'interface. Pas de ciel bleu ni d'herbe vive à sa manière.
+  - Le sol et le monde vont vers l'identité de Vestiges : crade, éteint, mystérieux, un monde qui s'efface derrière le joueur.
+  - Les différences de fond se tiennent au premier plan : l'Effacement qui pousse toujours en avant, sans arène ni minuterie ; la verticalité pour fuir ; les personnages, le bestiaire et le lore du jeu.
+  - La caméra libre est gardée.

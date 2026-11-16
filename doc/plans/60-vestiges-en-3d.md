@@ -179,7 +179,7 @@ Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`).
 - **Galerie de captures** : après le tour du bot, `--capture` photographie dix combinaisons (`style_*.png`).
 
 **Ce qu'on a appris.**
-- **En GL Compatibility, le MSAA prive les contours des petits corps** : la profondeur lue alors ne garde que les grands sauts (mesuré sur captures). Quand les contours sont actifs, l'anticrénelage passe donc au FXAA.
+- **En GL Compatibility, le MSAA prive les contours des petits corps** : la profondeur lue alors ne garde que les grands sauts (mesuré sur captures). Quand les contours sont actifs, l'anticrénelage passait donc au FXAA, qui en fait n'existe pas en GL Compatibility (corrigé au §14).
 - **Les seuils** : 0,0025 relatif en perspective, 0,012 cellule en orthographique. Plus haut, les arêtes de falaise tournées vers la caméra et les créatures restent sans trait.
 - **Ce que montrent les captures.** L'isométrique orthographique avec contours ressemble à une illustration à l'encre : chaque marche, chaque falaise et chaque créature est cernée. Pixelisée et en toon, elle ressemble à du pixel art. Le sol lisse sans pixelisation fait un peu flou, comme une texture étalée. Le sol en tuiles pixel art, vu en 3D, fourmille.
 - **Défaut** : quelques points isolés sur le sol lisse en perspective.
@@ -300,3 +300,28 @@ Raphaël, capture de Megabonk à l'appui (§237) : « le personnage pourrait (et
 Les rebords ne collent toujours pas avec les emprises agrandies (113 sur 113, contrôle headless). Les escaliers mènent à la tour, et le saut seul n'y monte pas.
 
 **Ce qui reste** : le jugement de Raphaël sur cette échelle et sur le mouvement en main, puis le détail des corps et leurs contours.
+
+## 14. 60.0d suite — un seul sol, des falaises taillées, des contours sans escaliers (16 novembre)
+
+Retours de Raphaël sur les quatre sols (§238) :
+- tuiles du jeu : « elles ne me plaisent pas du tout » ;
+- facettes : « juste des carrés coupés en deux, pas esthétique du tout » ;
+- lisse : « je n'aime pas du tout » ;
+- texturé : « mon préféré jusqu'à présent ; à voir si on peut pas faire quelque chose de mieux avec des polys » ;
+- contours : « trop d'escaliers, on voit les pixels ».
+
+Ce qui change :
+- **Le sol texturé reste seul.** Les trois autres sont retirés du bac à sable, avec leur code (`ReliefLowPoly.BuildTerrain`) et leurs réglages (`shade_jitter`, `height_jitter`, `cliff_jitter`, quatre couleurs). Le rendu en sprites (`--sprites`) garde ses tuiles.
+- **F1 bascule ses falaises : taillées (au départ) ou droites.** Taillées, elles sont des facettes de roche :
+  - trois par cellule de large, une rangée par quart de cellule ;
+  - les sommets intérieurs ressortent jusqu'à `carved_relief` (0,14 cellule) selon un bruit qui court le long de la paroi. Le relief continue d'une cellule à l'autre et ne s'arrête qu'aux coins ;
+  - le haut et le pied restent droits, pour se raccorder au sol et à la simulation ;
+  - la texture reste en coordonnées du monde, sans s'étirer, et la frange d'herbe épouse les mêmes facettes ;
+  - les contours marquent les plis comme de fines fissures. 28 000 triangles au lieu de 8 400.
+- **Les escaliers des contours avaient deux causes**, relevées dans le code :
+  - l'image 3D se calculait en 1920 × 1080, puis s'agrandissait ×2 sur l'écran 4K ;
+  - le FXAA, choisi quand les contours sont actifs, n'existe pas en GL Compatibility : il n'y avait aucun anticrénelage.
+
+  Désormais, l'image se rend à la définition réelle de la fenêtre et suit son redimensionnement. Le trait garde la même largeur à l'écran : 2 px pour 1 080 lignes. Le shader teste le pli à quatre portées et prend la part de celles qui touchent, et son seuil est adouci. Le cœur du trait reste plein et ses bords s'estompent (vu sur un rebord agrandi, avant/après).
+
+**Reste à voir** : les arêtes de la géométrie sans contour (brins d'herbe) restent crénelées, faute de MSAA avec les contours. Un suréchantillonnage coûterait 4 fois les pixels d'une image 4K, et n'est pas fait.

@@ -27,8 +27,6 @@ public partial class ReliefSandbox : Node
 {
     private const string ConfigPath = "res://data/sandbox/relief.json";
     private static readonly Vector2I RenderSize = new(960, 540);
-    // Le low poly n'a pas de pixels à respecter : il se rend à la taille de la fenêtre, lissé.
-    private static readonly Vector2I LowPolyRenderSize = new(1920, 1080);
     // Cadence de marche : la marche du modèle se joue au rythme des pas sur le sol, pour que les pieds ne glissent pas.
     private const float WalkCyclesPerCell = 0.43f;
     private const float TurnRate = 14f;
@@ -276,7 +274,9 @@ public partial class ReliefSandbox : Node
         _viewport = new SubViewport
         {
             Name = "World",
-            Size = _lowPoly ? LowPolyRenderSize : RenderSize,
+            // Le low poly n'a pas de pixels à respecter : il se rend à la définition réelle de la fenêtre (§238), pour
+            // qu'un écran 4K ne montre pas une image 1080p agrandie, aux contours en escalier.
+            Size = _lowPoly ? WindowPixels() : RenderSize,
             OwnWorld3D = true,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
             Msaa3D = _lowPoly ? Viewport.Msaa.Msaa4X : Viewport.Msaa.Disabled,
@@ -325,7 +325,10 @@ public partial class ReliefSandbox : Node
         _camera = new Camera3D { Name = "Camera", Current = true, Near = _lowPoly ? 0.4f : 0.1f, Far = 200f };
         world.AddChild(_camera);
         if (_lowPoly)
+        {
             _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour);
+            GetWindow().SizeChanged += FitRender;
+        }
 
         Texture2D shadow = ShadowTexture();
         _playerShadow = NewShadow(world, shadow, "PlayerShadow");
@@ -533,6 +536,12 @@ public partial class ReliefSandbox : Node
             enemy.Scale = stretch;
         foreach ((Sprite3D sprite, Vector2 scale) in _props)
             sprite.Scale = new Vector3(scale.X, scale.Y * stretch.Y, 1f);
+    }
+
+    public override void _ExitTree()
+    {
+        if (_look != null)
+            GetWindow().SizeChanged -= FitRender;
     }
 
     public override void _Process(double delta)
@@ -1004,14 +1013,12 @@ public partial class ReliefSandbox : Node
 
     private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Toon)[] Gallery =
     {
-        ("style_texture_mid_contours", View.Chase3D, ReliefLook.Ground.Textured, true, true, false),
-        ("style_texture_mid_contours_toon", View.Chase3D, ReliefLook.Ground.Textured, true, true, true),
-        ("style_iso_texture_mid_contours", View.Relief2D, ReliefLook.Ground.Textured, true, true, false),
-        ("style_facettes_low_contours", View.Chase3D, ReliefLook.Ground.Facets, false, true, false),
-        ("style_lisse_mid_contours", View.Chase3D, ReliefLook.Ground.Smooth, true, true, false),
-        ("style_lisse_mid_contours_toon", View.Chase3D, ReliefLook.Ground.Smooth, true, true, true),
-        ("style_sol_pixelart_mid_contours", View.Chase3D, ReliefLook.Ground.PixelArt, true, true, false),
-        ("style_iso_lisse_mid_contours", View.Relief2D, ReliefLook.Ground.Smooth, true, true, false),
+        ("style_taille_mid_contours", View.Chase3D, ReliefLook.Ground.Carved, true, true, false),
+        ("style_taille_mid_contours_toon", View.Chase3D, ReliefLook.Ground.Carved, true, true, true),
+        ("style_iso_taille_mid_contours", View.Relief2D, ReliefLook.Ground.Carved, true, true, false),
+        ("style_droit_mid_contours", View.Chase3D, ReliefLook.Ground.Straight, true, true, false),
+        ("style_taille_low_contours", View.Chase3D, ReliefLook.Ground.Carved, false, true, false),
+        ("style_taille_mid_sans_contours", View.Chase3D, ReliefLook.Ground.Carved, true, false, false),
     };
 
     private int _galleryIndex;
@@ -1030,6 +1037,20 @@ public partial class ReliefSandbox : Node
     {
         GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Bonds} stomps={_sim.Stomps} deaths={_sim.Deaths} void_falls={_sim.VoidFalls}");
         GetTree().Quit();
+    }
+
+    private Vector2I WindowPixels()
+    {
+        Vector2I size = GetWindow().Size;
+        return new Vector2I(Mathf.Max(size.X, 1), Mathf.Max(size.Y, 1));
+    }
+
+    /// <summary>L'image 3D suit la fenêtre, et les contours sa définition.</summary>
+    private void FitRender()
+    {
+        Vector2I size = WindowPixels();
+        _viewport.Size = size;
+        _look.FitOutlines(size.Y);
     }
 
     private float BodyScale => _lowPoly ? _config.LowPoly.BodyScale : 1f;

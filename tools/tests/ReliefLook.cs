@@ -5,18 +5,22 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Les styles du bac à sable de la verticalité (plan 60, lot 60.0d), basculés en jeu, chacun indépendamment : le sol
-/// (texturé, facettes, lisse, tuiles pixel art), le détail des corps et des décors (low ou mid poly), les contours noirs,
-/// l'ombrage (normal ou toon). La pixelisation de l'image a été écartée (DECISIONS §234). Tout est construit au lancement ; basculer ne fait que montrer,
-/// cacher ou échanger des maillages et régler les matériaux.
+/// texturé (falaises taillées ou droites), le détail des corps et des décors (low ou mid poly), les contours noirs,
+/// l'ombrage (normal ou toon). La pixelisation de l'image a été écartée (§234), les sols en facettes, lisse et en tuiles
+/// du jeu aussi (§238). Tout est construit au lancement ; basculer ne fait que montrer, cacher ou échanger des maillages
+/// et régler les matériaux.
 /// </summary>
 public sealed class ReliefLook
 {
-    public enum Ground { Textured, Facets, Smooth, PixelArt }
+    public enum Ground { Carved, Straight }
 
-    private static readonly string[] GroundNames = { "texturé", "facettes", "lisse", "tuiles du jeu" };
+    private static readonly string[] GroundNames = { "texturé, falaises taillées", "texturé, falaises droites" };
+    // Épaisseur des contours (px) pour une image de 1080 lignes : elle suit la définition, pour garder la même largeur à l'écran.
+    private const float OutlineThickness1080 = 2f;
     private const string OutlineShader = "res://tools/tests/relief_outline.gdshader";
 
-    private readonly MeshInstance3D[] _grounds = new MeshInstance3D[4];
+    private readonly MeshInstance3D[] _grounds = new MeshInstance3D[2];
+    private readonly ShaderMaterial _outlineMaterial;
     private readonly MeshInstance3D _outline;
     private readonly List<BaseMaterial3D> _shaded = new();
     private readonly List<(MeshInstance3D Body, ReliefLowPoly.Model[] Models)> _props = new();
@@ -61,54 +65,35 @@ public sealed class ReliefLook
         if (!MidAvailable)
             GD.PushWarning("[ReliefLook] Mid poly absent : python3 tools/export_lowpoly.py --detail mid");
 
-        // Sans ses textures (python3 tools/generate_relief_textures.py), le sol texturé cède la place au sol lisse.
-        _grounds[(int)Ground.Textured] = ReliefTexturedGround.Available()
-            ? ReliefTexturedGround.Build(arena)
-            : ReliefLowPoly.BuildTerrain(arena, style, false);
+        _grounds[(int)Ground.Carved] = ReliefTexturedGround.Build(arena, style.CarvedRelief);
+        _grounds[(int)Ground.Straight] = ReliefTexturedGround.Build(arena, 0f);
+        foreach (MeshInstance3D ground in _grounds)
+            world.AddChild(ground);
         _shaded.AddRange(ReliefTexturedGround.Materials);
         _grass = ReliefGrass.Build(arena, style, 61);
         world.AddChild(_grass);
         _shaded.Add(ReliefGrass.Material);
-        if (!ReliefTexturedGround.Available())
-            GD.PushWarning("[ReliefLook] Textures du relief absentes : python3 tools/generate_relief_textures.py");
-        _grounds[(int)Ground.Facets] = ReliefLowPoly.BuildTerrain(arena, style, true);
-        _grounds[(int)Ground.Smooth] = ReliefLowPoly.BuildTerrain(arena, style, false);
-        _grounds[(int)Ground.PixelArt] = ReliefTerrainBuilder.Build(arena, config, true, null);
-        foreach (MeshInstance3D ground in _grounds)
-            world.AddChild(ground);
         _shaded.Add(ReliefLowPoly.Plain);
-        Mesh tiles = _grounds[(int)Ground.PixelArt].Mesh;
-        for (int s = 0; s < tiles.GetSurfaceCount(); s++)
-        {
-            if (tiles.SurfaceGetMaterial(s) is BaseMaterial3D material)
-                _shaded.Add(material);
-        }
 
         PlaceProps(arena, style, sim, world, keepClear, config.Spawn);
 
         // Quadrilatère plein écran, devant la caméra : son shader place lui-même ses sommets aux coins de l'image.
-        ShaderMaterial outline = new() { Shader = GD.Load<Shader>(OutlineShader), RenderPriority = (int)Material.RenderPriorityMax };
-        outline.SetShaderParameter("line_color", style.OutlineColor);
-        outline.SetShaderParameter("sensitivity", style.OutlineSensitivity);
-        outline.SetShaderParameter("ortho_sensitivity", style.OutlineOrthoSensitivity);
-        outline.SetShaderParameter("thickness", 2f);
+        _outlineMaterial = new ShaderMaterial { Shader = GD.Load<Shader>(OutlineShader), RenderPriority = (int)Material.RenderPriorityMax };
+        _outlineMaterial.SetShaderParameter("line_color", style.OutlineColor);
+        _outlineMaterial.SetShaderParameter("sensitivity", style.OutlineSensitivity);
+        _outlineMaterial.SetShaderParameter("ortho_sensitivity", style.OutlineOrthoSensitivity);
+        FitOutlines(viewport.Size.Y);
         _outline = new MeshInstance3D
         {
             Name = "Outline",
             Mesh = new QuadMesh { Size = new Vector2(2f, 2f) },
-            MaterialOverride = outline,
+            MaterialOverride = _outlineMaterial,
             Position = new Vector3(0f, 0f, -1f),
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
         };
         camera.AddChild(_outline);
 
-        CurrentGround = style.StartGround switch
-        {
-            "facets" => Ground.Facets,
-            "smooth" => Ground.Smooth,
-            "pixel_art" => Ground.PixelArt,
-            _ => Ground.Textured,
-        };
+        CurrentGround = style.StartGround == "straight" ? Ground.Straight : Ground.Carved;
         Mid = style.StartMid && MidAvailable;
         Outlines = style.StartOutlines;
         Toon = style.StartToon;
@@ -147,6 +132,10 @@ public sealed class ReliefLook
 
     public ReliefLowPoly.Model CreatureModel(int type) => Creatures[Detail][type];
 
+    /// <summary>Règle l'épaisseur des contours sur la hauteur de l'image rendue.</summary>
+    public void FitOutlines(int renderHeight) =>
+        _outlineMaterial.SetShaderParameter("thickness", OutlineThickness1080 * renderHeight / 1080f);
+
     public void CycleGround() => CurrentGround = (Ground)(((int)CurrentGround + 1) % _grounds.Length);
 
     /// <summary>Met la scène au style courant.</summary>
@@ -155,7 +144,6 @@ public sealed class ReliefLook
         Mid &= MidAvailable;
         for (int g = 0; g < _grounds.Length; g++)
             _grounds[g].Visible = g == (int)CurrentGround;
-        _grass.Visible = CurrentGround == Ground.Textured;
         foreach ((MeshInstance3D body, ReliefLowPoly.Model[] models) in _props)
             body.Mesh = models[Detail].Animation("idle")[0];
         _outline.Visible = Outlines;
@@ -164,10 +152,10 @@ public sealed class ReliefLook
             material.DiffuseMode = Toon ? BaseMaterial3D.DiffuseModeEnum.Toon : BaseMaterial3D.DiffuseModeEnum.Burley;
             material.SpecularMode = Toon ? BaseMaterial3D.SpecularModeEnum.Disabled : BaseMaterial3D.SpecularModeEnum.SchlickGgx;
         }
-        // Avec le MSAA, GL Compatibility ne donne aux contours qu'une profondeur où les petits corps manquent (mesuré) :
-        // les contours passent au FXAA.
+        // Avec le MSAA, GL Compatibility ne donne aux contours qu'une profondeur où les petits corps manquent (mesuré), et
+        // il n'a pas de FXAA : avec les contours, l'image se rend à la définition de l'écran et le trait s'adoucit dans
+        // son propre shader (§238).
         _viewport.Msaa3D = Outlines ? Viewport.Msaa.Disabled : Viewport.Msaa.Msaa4X;
-        _viewport.ScreenSpaceAA = Outlines ? Viewport.ScreenSpaceAAEnum.Fxaa : Viewport.ScreenSpaceAAEnum.Disabled;
     }
 
     public string Describe() =>

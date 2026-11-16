@@ -39,8 +39,10 @@ public sealed class ReliefConfig
         public float MetresPerCell;
         // Agrandissement du joueur et des créatures, décors à part (§237) : des corps qui comptent à l'écran, comme Megabonk.
         public float BodyScale;
-        public Color Ground, Terrace, Butte, Steps, Cliff, CliffDark;
-        public float ShadeJitter, HeightJitter, CliffJitter;
+        // Teintes de l'herbe du sol et des terrasses, que les touffes reprennent.
+        public Color Ground, Terrace;
+        // Saillie des facettes des falaises taillées (cellules, §238).
+        public float CarvedRelief;
         public string StartGround;
         public bool StartMid, StartOutlines, StartToon;
         public Color OutlineColor;
@@ -225,13 +227,7 @@ public sealed class ReliefConfig
             GrassHeight = F(lowPoly["grass"].AsGodotDictionary(), "height"),
             Ground = new Color(colors["ground"].AsString()),
             Terrace = new Color(colors["terrace"].AsString()),
-            Butte = new Color(colors["butte"].AsString()),
-            Steps = new Color(colors["steps"].AsString()),
-            Cliff = new Color(colors["cliff"].AsString()),
-            CliffDark = new Color(colors["cliff_dark"].AsString()),
-            ShadeJitter = F(lowPoly, "shade_jitter"),
-            HeightJitter = F(lowPoly, "height_jitter"),
-            CliffJitter = F(lowPoly, "cliff_jitter"),
+            CarvedRelief = F(lowPoly, "carved_relief"),
             Scatter = new LowPolyScatter[scatter.Count],
             Landmarks = new LowPolyLandmark[landmarks.Count],
         };

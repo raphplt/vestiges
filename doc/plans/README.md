@@ -1,5 +1,10 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — un seul sol, des falaises taillées, des contours lissés ([plan 60 §14](60-vestiges-en-3d.md), §238) :**
+- **Sol** : seul le sol texturé reste. F1 bascule ses falaises, taillées en facettes de roche ou droites.
+- **Contours** : l'image se rend à la définition de l'écran (elle était en 1080p agrandie), et le trait est anticrénelé.
+- **Megabonk** : une conduite pour s'en tenir à distance.
+
 **16 novembre — des corps plus grands, l'herbe en bouquets ([plan 60 §13](60-vestiges-en-3d.md), §237) :**
 - **Corps** : le joueur et les créatures sont 1,35 fois plus grands.
 - **Caméra libre** : plus proche (4 cellules) et plus basse, comme dans Megabonk.

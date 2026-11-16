@@ -33,18 +33,30 @@ float planar(vec2 uv, mat4 inv_projection, bool orthographic) {
 	return orthographic ? z : 1.0 / max(z, 0.0001);
 }
 
+// Pli de la profondeur autour de uv, mesuré à `reach` pixels de part et d'autre, en fraction du seuil.
+float crease(vec2 uv, vec2 reach, float c, mat4 inv_projection, bool orthographic) {
+	float l = planar(uv - vec2(reach.x, 0.0), inv_projection, orthographic);
+	float r = planar(uv + vec2(reach.x, 0.0), inv_projection, orthographic);
+	float u = planar(uv - vec2(0.0, reach.y), inv_projection, orthographic);
+	float d = planar(uv + vec2(0.0, reach.y), inv_projection, orthographic);
+	// Le trait se pose du côté le plus proche de la caméra : sur la silhouette, pas sur le fond derrière elle.
+	float nearer = orthographic ? -1.0 : 1.0;
+	float bend = max(nearer * (2.0 * c - l - r), nearer * (2.0 * c - u - d));
+	return bend / (orthographic ? ortho_sensitivity : sensitivity * abs(c));
+}
+
 void fragment() {
 	bool orthographic = PROJECTION_MATRIX[3][3] > 0.5;
 	vec2 px = thickness / VIEWPORT_SIZE;
 	float c = planar(SCREEN_UV, INV_PROJECTION_MATRIX, orthographic);
-	float l = planar(SCREEN_UV - vec2(px.x, 0.0), INV_PROJECTION_MATRIX, orthographic);
-	float r = planar(SCREEN_UV + vec2(px.x, 0.0), INV_PROJECTION_MATRIX, orthographic);
-	float u = planar(SCREEN_UV - vec2(0.0, px.y), INV_PROJECTION_MATRIX, orthographic);
-	float d = planar(SCREEN_UV + vec2(0.0, px.y), INV_PROJECTION_MATRIX, orthographic);
-	// Le trait se pose du côté le plus proche de la caméra : sur la silhouette, pas sur le fond derrière elle.
-	float nearer = orthographic ? -1.0 : 1.0;
-	float bend = max(nearer * (2.0 * c - l - r), nearer * (2.0 * c - u - d));
-	float edge = step(orthographic ? ortho_sensitivity : sensitivity * abs(c), bend);
+	// Anticrénelage (§238) : le test se fait à quatre portées, et le pixel prend la part de celles qui le voient sur le
+	// trait. Le cœur du trait est plein, ses bords s'estompent : le trait n'a plus de marches d'un pixel franc. Le seuil
+	// lui-même est adouci, pour que les plis à peine marqués ne clignotent pas.
+	float edge = 0.0;
+	for (int k = 0; k < 4; k++) {
+		float reach = 0.4 + 0.3 * float(k);
+		edge += smoothstep(0.7, 1.4, crease(SCREEN_UV, px * reach, c, INV_PROJECTION_MATRIX, orthographic));
+	}
 	ALBEDO = line_color.rgb;
-	ALPHA = edge * line_color.a;
+	ALPHA = edge * 0.25 * line_color.a;
 }
