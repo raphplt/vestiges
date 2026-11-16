@@ -3,6 +3,8 @@
 	"kind": "creature",
 	"fps": 8.0,
 	"max_triangles": 2648,
+	"flat_normals": true,
+	"meshes": 16,
 	"animations": {
 		"idle": [
 			"idle_00",

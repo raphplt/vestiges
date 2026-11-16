@@ -2,18 +2,24 @@
 Modèles low poly tirés des volumes SDF du pipeline (plan 60, lot 60.0a).
 
 Le volume d'une pose est échantillonné sur une grille grossière, puis maillé par « surface nets » : un sommet par
-cellule traversée par la surface, une face par arête de la grille qui la traverse. Chaque triangle garde son propre
-sommet (ombrage par faces) et prend la couleur du matériau qu'il recouvre. Une animation devient une suite de
+cellule traversée par la surface, une face par arête de la grille qui la traverse. Chaque triangle prend la couleur du
+matériau qu'il recouvre ; les sommets sont partagés, et ne se doublent qu'à la frontière de deux matériaux. Une animation devient une suite de
 maillages, un par pose, comme les sprites : on ne réécrit aucun modèle.
 
 Sortie glTF 2.0 binaire (.glb) : un nœud par pose, nommé `<animation>_<NN>`, sous un nœud racine ; un manifeste JSON à
 côté donne les animations, leurs poses et la cadence. Unités : le mètre, Y vers le haut, l'avant du modèle vers +Z.
+
+Format compact (plan 60 §18, lot C3a), en glTF de base seulement : couleurs sur 8 bits, indices sur 16 bits quand le
+maillage le permet, et pas de normale en low poly. L'ombrage par faces se calcule dans le shader du jeu, depuis les
+dérivées de la position (`lowpoly_flat.gdshader`) ; le manifeste le dit par `flat_normals`. Une pose identique à une
+précédente de la même animation réutilise son maillage.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import struct
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -30,18 +36,19 @@ EDGES = [(0, 1), (2, 3), (4, 5), (6, 7), (0, 2), (1, 3), (4, 6), (5, 7), (0, 4),
 @dataclass
 class Mesh:
     """
-    Sans indices : trois sommets par face, une normale et une couleur (sRGB) par face. Avec indices (mid poly) : sommets
-    partagés, une normale et une couleur par sommet. `emissive` dit, triangle par triangle, s'il brille.
+    Sommets partagés, une couleur (sRGB) par sommet, triangles en indices. Normales par sommet en mid poly ; aucune en
+    low poly (`normals` vaut None), où l'ombrage par faces vient du shader. `emissive` dit, triangle par triangle, s'il
+    brille.
     """
     positions: np.ndarray
-    normals: np.ndarray
+    normals: np.ndarray | None
     colors: np.ndarray
-    emissive: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=bool))
-    indices: np.ndarray | None = None
+    emissive: np.ndarray
+    indices: np.ndarray
 
     @property
     def triangles(self) -> int:
-        return len(self.indices) if self.indices is not None else len(self.positions) // 3
+        return len(self.indices)
 
 
 def material_colors(materials: Sequence[Material]) -> tuple[np.ndarray, np.ndarray]:
@@ -132,22 +139,26 @@ def _split_quads(vertices: np.ndarray, quads: np.ndarray) -> np.ndarray:
 
 
 def _empty_mesh() -> Mesh:
-    return Mesh(np.zeros((0, 3)), np.zeros((0, 3)), np.zeros((0, 3)), np.zeros(0, dtype=bool))
+    return Mesh(np.zeros((0, 3)), None, np.zeros((0, 3)), np.zeros(0, dtype=bool), np.zeros((0, 3), dtype=np.int64))
 
 
 def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
-    """Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle), faces non lissées."""
+    """
+    Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle), pour un ombrage par faces. Chaque face
+    prend le matériau juste sous elle ; un sommet sert à toutes ses faces d'un même matériau.
+    """
     vertices, quads = _surface_nets(parts, bounds_min, bounds_max, step)
     if not len(quads):
         return _empty_mesh()
-    tris = vertices[_split_quads(vertices, quads)]
-    normal = np.cross(tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0])
+    tris = _split_quads(vertices, quads)
+    corners = vertices[tris]
+    normal = np.cross(corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0])
     length = np.linalg.norm(normal, axis=1)
-    tris = tris[length > 1e-9]
-    normal = normal[length > 1e-9] / length[length > 1e-9, None]
+    keep = length > 1e-9
+    tris, corners, normal = tris[keep], corners[keep], normal[keep] / length[keep, None]
 
     # Oriente chaque face vers l'extérieur, puis prend le matériau juste sous elle.
-    centroid = tris.mean(axis=1)
+    centroid = corners.mean(axis=1)
     out_d, _ = _evaluate(parts, centroid + normal * step * 0.5)
     in_d, _ = _evaluate(parts, centroid - normal * step * 0.5)
     flip = out_d < in_d
@@ -156,9 +167,12 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
     _, mat, _ = _evaluate_with_part(parts, centroid - normal * step * 0.3)
     colors, emissive = material_colors(materials)
     mat = np.where(mat < 0, 0, mat)
-    face_color = colors[mat]
-    face_emissive = emissive[mat]
-    return Mesh(tris.reshape(-1, 3), np.repeat(normal, 3, axis=0), np.repeat(face_color, 3, axis=0), face_emissive)
+
+    # Un sommet par couple (sommet de la grille, matériau) : la couleur reste franche d'une face à l'autre.
+    keys = tris * len(materials) + mat[:, None]
+    unique, remap = np.unique(keys.reshape(-1), return_inverse=True)
+    return Mesh(vertices[unique // len(materials)], None, colors[unique % len(materials)], emissive[mat],
+                remap.reshape(-1, 3))
 
 
 def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
@@ -197,6 +211,15 @@ def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], boun
     return Mesh(vertices, normals, colors[mat], tri_emissive, tris)
 
 
+def merged(pieces: Sequence[Mesh]) -> Mesh:
+    """Un maillage fait de plusieurs, sans les souder."""
+    offsets = np.cumsum([0] + [len(p.positions) for p in pieces[:-1]])
+    normals = None if any(p.normals is None for p in pieces) else np.concatenate([p.normals for p in pieces])
+    return Mesh(np.concatenate([p.positions for p in pieces]), normals, np.concatenate([p.colors for p in pieces]),
+                np.concatenate([p.emissive for p in pieces]),
+                np.concatenate([p.indices + o for p, o in zip(pieces, offsets)]))
+
+
 def scaled(mesh: Mesh, factor: float) -> Mesh:
     return Mesh(mesh.positions * factor, mesh.normals, mesh.colors, mesh.emissive, mesh.indices)
 
@@ -210,6 +233,18 @@ class ModelExport:
     kind: str = "creature"
 
 
+COMPONENT_TYPES = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
+
+
+def _mesh_key(mesh: Mesh) -> bytes:
+    """Empreinte d'un maillage, pour n'écrire qu'une fois deux poses identiques."""
+    digest = hashlib.blake2b(digest_size=16)
+    for array in (mesh.positions.astype(np.float32), mesh.colors.astype(np.float32), mesh.indices.astype(np.int64),
+                  mesh.emissive.astype(np.uint8)):
+        digest.update(array.tobytes())
+    return digest.digest()
+
+
 def write_glb(export: ModelExport, path: Path) -> dict:
     """Écrit le .glb et son manifeste ; renvoie le manifeste."""
     chunks: list[bytes] = []
@@ -217,54 +252,60 @@ def write_glb(export: ModelExport, path: Path) -> dict:
     accessors: list[dict] = []
     offset = 0
 
-    def add(data: np.ndarray, kind: str, target: int, with_bounds: bool = False) -> int:
+    def add(data: np.ndarray, kind: str, target: int, component: int = 5126, with_bounds: bool = False) -> int:
+        """Un accesseur : flottants (5126), octets normalisés (5121) ou indices sur 16 (5123) ou 32 bits (5125)."""
         nonlocal offset
-        is_index = target == 34963
-        raw = (data.astype(np.uint32) if is_index else data.astype(np.float32)).tobytes()
+        raw = data.astype(COMPONENT_TYPES[component]).tobytes()
         pad = (-len(raw)) % 4
         chunks.append(raw + b"\0" * pad)
         buffer_views.append({"buffer": 0, "byteOffset": offset, "byteLength": len(raw), "target": target})
         offset += len(raw) + pad
-        accessor = {"bufferView": len(buffer_views) - 1, "componentType": 5125 if is_index else 5126,
-                    "count": int(len(data)), "type": kind}
+        accessor = {"bufferView": len(buffer_views) - 1, "componentType": component, "count": int(len(data)), "type": kind}
+        if component == 5121:
+            accessor["normalized"] = True
         if with_bounds:
             accessor["min"] = data.min(axis=0).astype(float).tolist()
             accessor["max"] = data.max(axis=0).astype(float).tolist()
         accessors.append(accessor)
         return len(accessors) - 1
 
+    def add_mesh(name: str, mesh: Mesh) -> int:
+        if not mesh.triangles:
+            # Un décor plat sort sans volume (plan 60 §17) : il garde son nœud, sans surface.
+            meshes.append({"name": name, "primitives": []})
+            return len(meshes) - 1
+        # Sommets partagés par les deux surfaces ; seuls les indices se partagent entre l'éteinte et l'émissive.
+        attributes = {"POSITION": add(mesh.positions, "VEC3", 34962, with_bounds=True)}
+        if mesh.normals is not None:
+            attributes["NORMAL"] = add(mesh.normals, "VEC3", 34962)
+        # Un attribut de sommet s'aligne sur 4 octets : la couleur prend un alpha opaque.
+        rgba = np.concatenate([np.round(np.clip(mesh.colors, 0.0, 1.0) * 255.0), np.full((len(mesh.colors), 1), 255.0)], axis=1)
+        attributes["COLOR_0"] = add(rgba, "VEC4", 34962, 5121)
+        index_type = 5123 if len(mesh.positions) <= 0xFFFF else 5125
+        primitives = []
+        for emissive in (False, True):
+            chosen = mesh.indices[mesh.emissive == emissive]
+            if len(chosen):
+                primitives.append({"attributes": attributes, "indices": add(chosen.reshape(-1), "SCALAR", 34963, index_type),
+                                   "material": 1 if emissive else 0})
+        meshes.append({"name": name, "primitives": primitives})
+        return len(meshes) - 1
+
     meshes: list[dict] = []
     nodes: list[dict] = [{"name": export.model_id, "children": []}]
     manifest_animations = {}
     triangles = 0
+    flat = False
+    by_content: dict[bytes, int] = {}
     for name, poses in export.animations.items():
         frame_names = []
         for i, mesh in enumerate(poses):
-            primitives = []
-            if mesh.indices is not None:
-                # Sommets partagés par les deux surfaces ; seuls les indices se partagent entre l'éteinte et l'émissive.
-                pos = add(mesh.positions, "VEC3", 34962, True)
-                nor = add(mesh.normals, "VEC3", 34962)
-                col = add(mesh.colors, "VEC3", 34962)
-                for emissive in (False, True):
-                    chosen = mesh.indices[mesh.emissive == emissive]
-                    if len(chosen):
-                        primitives.append({"attributes": {"POSITION": pos, "NORMAL": nor, "COLOR_0": col},
-                                           "indices": add(chosen.reshape(-1), "SCALAR", 34963),
-                                           "material": 1 if emissive else 0})
-            for emissive in (() if mesh.indices is not None else (False, True)):
-                keep = np.repeat(mesh.emissive == emissive, 3) if len(mesh.emissive) else np.ones(len(mesh.positions), bool)
-                if emissive and not len(mesh.emissive):
-                    continue
-                if not keep.any():
-                    continue
-                pos = add(mesh.positions[keep], "VEC3", 34962, True)
-                nor = add(mesh.normals[keep], "VEC3", 34962)
-                col = add(mesh.colors[keep], "VEC3", 34962)
-                primitives.append({"attributes": {"POSITION": pos, "NORMAL": nor, "COLOR_0": col}, "material": 1 if emissive else 0})
             node_name = f"{name}_{i:02d}"
-            meshes.append({"name": node_name, "primitives": primitives})
-            nodes.append({"name": node_name, "mesh": len(meshes) - 1})
+            flat |= mesh.normals is None
+            key = _mesh_key(mesh)
+            if key not in by_content:
+                by_content[key] = add_mesh(node_name, mesh)
+            nodes.append({"name": node_name, "mesh": by_content[key]})
             nodes[0]["children"].append(len(nodes) - 1)
             frame_names.append(node_name)
             triangles = max(triangles, mesh.triangles)
@@ -298,6 +339,6 @@ def write_glb(export: ModelExport, path: Path) -> dict:
         f.write(binary)
 
     manifest = {"model": export.model_id, "kind": export.kind, "fps": export.fps, "max_triangles": triangles,
-                "animations": manifest_animations}
+                "flat_normals": flat, "meshes": len(meshes), "animations": manifest_animations}
     path.with_suffix(".json").write_text(json.dumps(manifest, indent="\t", ensure_ascii=False) + "\n")
     return manifest

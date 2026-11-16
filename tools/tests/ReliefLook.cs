@@ -147,6 +147,7 @@ public sealed class ReliefLook
         foreach ((MeshInstance3D body, ReliefLowPoly.Model[] models) in _props)
             body.Mesh = models[Detail].Animation("idle")[0];
         _outline.Visible = Outlines;
+        ReliefLowPoly.SetToon(Toon);
         foreach (BaseMaterial3D material in _shaded)
         {
             material.DiffuseMode = Toon ? BaseMaterial3D.DiffuseModeEnum.Toon : BaseMaterial3D.DiffuseModeEnum.Burley;

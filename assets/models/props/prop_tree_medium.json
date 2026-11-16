@@ -3,6 +3,8 @@
 	"kind": "prop",
 	"fps": 8.0,
 	"max_triangles": 6400,
+	"flat_normals": true,
+	"meshes": 1,
 	"animations": {
 		"idle": [
 			"idle_00"

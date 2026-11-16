@@ -1023,6 +1023,7 @@ public partial class ReliefSandbox : Node
         ("style_iso_taille_mid_contours", View.Relief2D, ReliefLook.Ground.Carved, true, true, false),
         ("style_droit_mid_contours", View.Chase3D, ReliefLook.Ground.Straight, true, true, false),
         ("style_taille_low_contours", View.Chase3D, ReliefLook.Ground.Carved, false, true, false),
+        ("style_taille_low_contours_toon", View.Chase3D, ReliefLook.Ground.Carved, false, true, true),
         ("style_taille_mid_sans_contours", View.Chase3D, ReliefLook.Ground.Carved, true, false, false),
     };
 

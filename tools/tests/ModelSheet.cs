@@ -104,12 +104,13 @@ public partial class ModelSheet : Node3D
                 continue;
             string path = $"{folder}/{file}";
             Node3D model = GD.Load<PackedScene>(path).Instantiate<Node3D>();
-            ApplyVertexColorMaterial(model);
-            _models.Add((path, model, ReadManifest(path.GetBaseName() + ".json")));
+            (Dictionary<string, string[]> animations, bool flatNormals) = ReadManifest(path.GetBaseName() + ".json");
+            ApplyVertexColorMaterial(model, flatNormals);
+            _models.Add((path, model, animations));
         }
     }
 
-    private static Dictionary<string, string[]> ReadManifest(string path)
+    private static (Dictionary<string, string[]> Animations, bool FlatNormals) ReadManifest(string path)
     {
         Dictionary<string, string[]> animations = new();
         using FileAccess file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
@@ -122,27 +123,25 @@ public partial class ModelSheet : Node3D
                 names[i] = frames[i].AsString();
             animations[key.AsString()] = names;
         }
-        return animations;
+        return (animations, ReliefLowPoly.FlatNormals(data));
     }
 
-    /// <summary>Couleur par sommet, ombrage par faces (normales des faces) ; les faces émissives brillent de leur couleur.</summary>
-    private static void ApplyVertexColorMaterial(Node node)
+    /// <summary>
+    /// Couleur par sommet, ombrage par faces (calculées dans le shader au format compact, sinon normales du maillage) ;
+    /// les faces émissives brillent de leur couleur. Les matériaux du bac à sable, pour juger le même rendu.
+    /// </summary>
+    private static void ApplyVertexColorMaterial(Node node, bool flatNormals)
     {
-        StandardMaterial3D plain = new() { VertexColorUseAsAlbedo = true, Roughness = 1f };
-        StandardMaterial3D glow = new()
-        {
-            VertexColorUseAsAlbedo = true,
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-        };
         foreach (Node child in node.FindChildren("*", "MeshInstance3D", true, false))
         {
             MeshInstance3D mesh = (MeshInstance3D)child;
             if (mesh.Mesh == null)
                 continue;
+            ReliefLowPoly.AddSmoothNormals(mesh);
             for (int s = 0; s < mesh.Mesh.GetSurfaceCount(); s++)
             {
                 bool emissive = mesh.Mesh.SurfaceGetMaterial(s)?.ResourceName.Contains("emissive") ?? false;
-                mesh.SetSurfaceOverrideMaterial(s, emissive ? glow : plain);
+                mesh.SetSurfaceOverrideMaterial(s, ReliefLowPoly.SurfaceMaterial(emissive, flatNormals));
             }
         }
     }
@@ -304,8 +303,8 @@ public partial class ModelSheet : Node3D
         if (document.AppendFromFile($"{pathWithoutExtension}.glb", state) != Error.Ok)
             return (null, null);
         Node3D model = (Node3D)document.GenerateScene(state);
-        ApplyVertexColorMaterial(model);
-        Dictionary<string, string[]> animations = ReadManifest($"{pathWithoutExtension}.json");
+        (Dictionary<string, string[]> animations, bool flatNormals) = ReadManifest($"{pathWithoutExtension}.json");
+        ApplyVertexColorMaterial(model, flatNormals);
         string first = animations.TryGetValue("idle", out string[] idle) ? idle[0] : animations.Values.GetEnumerator() is var e && e.MoveNext() ? e.Current[0] : null;
         return (model, first);
     }

@@ -46,7 +46,7 @@ sys.path.insert(0, str(ROOT))
 from tools.generate_fauna import model as fauna_model  # noqa: E402
 from tools.generate_props import BIOMES  # noqa: E402
 from tools.sprites import models  # noqa: E402
-from tools.sprites.lowpoly import Mesh, ModelExport, find_bounds, mesh_parts, mesh_parts_smooth, scaled, write_glb  # noqa: E402
+from tools.sprites.lowpoly import Mesh, ModelExport, find_bounds, merged, mesh_parts, mesh_parts_smooth, scaled, write_glb  # noqa: E402
 from tools.sprites.props._kit import M  # noqa: E402
 from tools.sprites.render import MODEL_SCALE, PITCH  # noqa: E402
 
@@ -95,16 +95,6 @@ def export_animated(model: models.SpriteModel, kind: str, step: float, smooth: b
     return ModelExport(model.model_id, animations, kind=kind)
 
 
-def _merge(pieces: list[Mesh]) -> Mesh:
-    if all(p.indices is None for p in pieces):
-        return Mesh(np.concatenate([p.positions for p in pieces]), np.concatenate([p.normals for p in pieces]),
-                    np.concatenate([p.colors for p in pieces]), np.concatenate([p.emissive for p in pieces]))
-    offsets = np.cumsum([0] + [len(p.positions) for p in pieces[:-1]])
-    return Mesh(np.concatenate([p.positions for p in pieces]), np.concatenate([p.normals for p in pieces]),
-                np.concatenate([p.colors for p in pieces]), np.concatenate([p.emissive for p in pieces]),
-                np.concatenate([p.indices + o for p, o in zip(pieces, offsets)]))
-
-
 def _props_catalog(catalog: str) -> dict:
     return {m.stem: m for m in importlib.import_module(BIOMES[catalog][0]).catalog()}
 
@@ -142,7 +132,7 @@ def export_prop(catalog: str, stems: list[str], model_id: str, step: float | Non
         else:
             mesh = _mesh_prop(prop, box, max(2.4 / fineness, extent / (40.0 * fineness)), smooth)
         pieces.append(scaled(mesh, CREATURE_METRES))
-    return ModelExport(model_id, {"idle": [_merge(pieces)]}, kind="prop")
+    return ModelExport(model_id, {"idle": [merged(pieces)]}, kind="prop")
 
 
 @dataclass
@@ -204,6 +194,7 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
         idle = export.animations[next(iter(export.animations))][0].positions
         entry.update({
             "poses": sum(len(v) for v in manifest["animations"].values()),
+            "meshes": manifest["meshes"],
             "max_triangles": manifest["max_triangles"],
             "height_m": round(float(idle[:, 1].max() - idle[:, 1].min()), 2) if len(idle) else 0.0,
             "bytes": path.stat().st_size,

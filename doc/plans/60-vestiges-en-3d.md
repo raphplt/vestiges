@@ -389,7 +389,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 |---|---|---|---|
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
-| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | à faire | moyen |
+| C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | C3a livré (§18), C3b et C3c à faire | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | à faire | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
@@ -428,3 +428,70 @@ Ce que montrent les planches, pour les lots suivants :
 - **Les pièces minces des grands décors cassent** : les branches de l'arbre mort, la flèche de la grue du port et l'antenne radio sortent en morceaux, et la poubelle grillagée est trouée. Leur pas suit la taille du décor. C3 leur donne un pas plancher par pièce.
 - **18 décors sont plats par nature** : flaques, rails, marelle, flèches au sol, salines, pavés, nénuphars, cale. Cinq sortent sans aucun triangle. Ils deviennent des décalques au sol (C5), pas des maillages ; la planche les écarte.
 - **Les couleurs sont crues** : le maillage ne porte que la couleur de base de chaque matériau, alors que le sprite la nuançait en quatre tons. Le vert des buissons, notamment, est vif. Ce réglage appartient au style (60.0), pas à l'export.
+
+## 18. C3, le poids et la finesse — découpage proposé (16 novembre)
+
+**Ce que dit la mesure** (bibliothèque de C1, 312 modèles) :
+- un triangle coûte 102 octets par pose : trois sommets propres, chacun avec position, normale et couleur en flottants ;
+- les 33 modèles animés pèsent 213 Mo pour 629 poses, et les 279 décors 62 Mo ;
+- le budget dépasse ce qu'il faut à la vue : épouvantail 16 700 triangles, Grand Cerf 15 800, gloriette 12 600, maisons 10 300 à 10 600 ;
+- le pas d'un décor suit sa taille (`extent / 40`) : 5,8 unités pour une maison de 8,4 m. Une pièce plus mince que deux pas (branche, flèche de grue, antenne, grillage) passe entre les points de la grille ;
+- le Godot installé (4.7.2) ne connaît ni `KHR_mesh_quantization`, ni meshopt, ni Draco. Seul le glTF de base est sûr.
+
+**Tranché par défaut par l'agent, réversible (§241) :**
+- **Pas de quantification des positions** : elle demande une extension que l'import de Godot ne déclare pas. Le gain vient du partage des sommets et de types plus petits du glTF de base.
+- **Les niveaux de détail ne s'exportent pas** : l'import de Godot les génère seul (C4). On les mesure là-bas, à l'import.
+- **Pas de décimation par effondrement d'arêtes** : elle demanderait une bibliothèque de plus et adoucirait les facettes. Un modèle trop lourd reprend un pas plus grossier, cherché jusqu'à tenir son budget. Le low poly reste uniforme.
+- **Le maillage par pose reste** : le squelette glTF demande de savoir quelle pièce suit quel os, ce que les créatures n'exposent pas. Il reste transversal, plus tard.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **C3a, le format compact** | Sommets partagés en low poly aussi ; un sommet ne se double qu'à la frontière de deux matériaux. Couleur sur 8 bits, indices sur 16 bits quand le maillage le permet. Plus de normale écrite : la facette se calcule dans le shader (dérivées de la position), avec un `ShaderMaterial` qui remplace le `StandardMaterial3D` de `ReliefLowPoly`, en ombrage normal ou toon (F4). Les poses identiques d'une animation ne s'écrivent qu'une fois. | Poids de la bibliothèque avant/après ; planche d'un même catalogue avant/après, à l'identique ; bac à sable en low poly, F4 compris | moyen |
+| **C3b, les pièces minces** | Une pièce plus mince que deux pas se maille à part, à un pas tiré de son épaisseur (plancher 1,2 unité), puis rejoint le reste du décor. Son épaisseur se mesure sur sa boîte échantillonnée, sans rien changer aux modèles SDF. | Planches de l'arbre mort, de la grue du port, de l'antenne radio et de la poubelle grillagée, avant/après ; triangles ajoutés notés dans l'index | moyen |
+| **C3c, les budgets** | Un budget de triangles par catégorie, dans un fichier de réglages de l'export : personnage 3 000, créature 4 000, grand gardien 8 000, décor 2 500, bâtiment 6 000 (à ajuster sur les planches). Un modèle au-dessus reprend un pas plus grossier, par dichotomie, après C3b pour ne pas défaire les pièces minces. L'index note le budget, le pas retenu et les dépassements. | Index : aucun dépassement non signalé ; planches des plus lourds (épouvantail, Grand Cerf, gloriette, maisons) | faible |
+
+**Ordre** : C3a d'abord, le plus gros gain pour le moindre risque, puis C3b, puis C3c, qui s'appuie sur les deux. Chaque sous-lot relance l'export complet (`--jobs 4` à 6 selon la charge) et se juge sur les planches.
+
+**Cible** : la bibliothèque passe de 275 Mo à moins de 40, sans perte visible sur les planches, et les quatre décors cassés sortent entiers.
+
+### C3a livré
+
+Le format compact. `tools/sprites/lowpoly.py` écrit moins d'octets par triangle ; les triangles restent identiques sur les 312 modèles.
+- **Sommets partagés** en low poly : un sommet par couple sommet de grille × matériau, doublé seulement à la frontière de deux matériaux.
+- **Plus de `NORMAL` écrite** en low poly. Le mid poly garde ses normales.
+- **`COLOR_0` en octets normalisés** (VEC4, alpha opaque, alignement 4 octets du glTF), aussi en mid poly.
+- **Indices sur 16 bits** si le maillage a 65 535 sommets ou moins, sinon 32 (aussi en mid poly).
+- **Poses identiques réutilisées** : une pose égale à une précédente réutilise son maillage (empreinte blake2b). Le manifeste gagne `flat_normals` et `meshes` ; l'index note `meshes` par modèle.
+- **Décors plats sans triangle** : ils gardent leur nœud, sans surface, comme avant. glTF de base seulement.
+- **`tools/export_lowpoly.py`** : la fusion des pièces passe par `merged` de `lowpoly.py`.
+- **Côté Godot** : `tools/tests/lowpoly_flat.gdshader` et `lowpoly_flat_toon.gdshader`, corps commun `lowpoly_flat.gdshaderinc`.
+  - La normale de facette vient de `cross(dFdx(VERTEX), dFdy(VERTEX))`, retournée vers la caméra. `ALBEDO = COLOR.rgb`, `ROUGHNESS` 1 : même rendu que l'ancien `StandardMaterial3D`.
+  - Le toon (F4) change de shader, le mode d'ombrage ne se réglant pas par paramètre.
+  - `ReliefLowPoly.SurfaceMaterial(emissive, flatNormals)` choisit Glow, Flat ou Plain d'après le manifeste. `ModelSheet` utilise les mêmes matériaux.
+- **Galerie de capture du bac à sable** : un cas `style_taille_low_contours_toon` ajouté (le low poly en toon n'y était pas).
+
+**Deux pièges trouvés**
+- Sans `NORMAL`, Godot n'en génère aucune au chargement (sonde : kiosque 7 347 sommets, aucune normale ; avant, 37 932 sommets avec normales). L'ombrage par faces n'en a pas besoin, mais le décalage des ombres lit la normale de sommet : le toit du kiosque s'est strié d'acné. Correctif : `ReliefLowPoly.AddSmoothNormals` reconstruit au chargement une normale lissée pondérée par l'aire (§241).
+- Godot tient les faces avant en sens horaire (l'import glTF retourne l'ordre des indices). Le premier essai prenait le produit vectoriel dans le mauvais sens : normales vers l'intérieur, acné pire. Corrigé, planche identique à l'avant.
+
+**Mesures** : export complet `--all --jobs 2` (le garde-fou mémoire refusait 6 ouvriers, 13 Gio libres), 137 s.
+
+| | Avant | Après |
+|---|---|---|
+| Personnages (14) | 112,1 Mo | 16,5 Mo |
+| Créatures (14) | 100,4 Mo | 14,2 Mo |
+| Faune (5) | 0,8 Mo | 0,1 Mo |
+| Décors (279) | 62,0 Mo | 10,0 Mo |
+| **Total** | **275 Mo** | **40,8 Mo** |
+
+- Exemples : Grand Cerf 34,0 → 4,7 Mo, épouvantail 28,8 → 4,0, facteur 8,85 → 1,34, gloriette 1,37 → 0,19.
+- Poses dédoublées : 9, toutes dans la faune ; aucune chez les personnages et créatures.
+- Modèles versionnés du bac à sable (`assets/models`) : les quatre modèles de personnages et créatures 18,2 → 2,8 Mo, les décors 1,9 → 0,3 Mo.
+- Mémoire vive : 5 fois moins de sommets par maillage chargé (kiosque 37 932 → 7 347).
+- La cible de §18 (moins de 40 Mo) est presque tenue (40,8 Mo) ; C3c finira.
+
+**Vérifications** : `dotnet build` 0 avertissement ; `tools/smoke_test.sh` vert, aucun `.import` modifié ; planches avant/après d'un sous-ensemble de 13 modèles (facteur, éveillée, Grand Cerf, épouvantail, rampant, rôdeur, maison, kiosque, arbre moyen, réverbère, lanterne des marais, feu de camp, rocher), identiques à l'œil ; capture du bac à sable (`tools/relief_sandbox.sh -- --capture`, 14 s) en low poly normal et toon, et en mid poly : propres, sans erreur.
+
+**Pas de banc** : le changement ne touche que le bac à sable et l'outillage, pas la run. Le coût en jeu se mesurera à l'import (C4).
+
+**Reste** : le réverbère et la lanterne des marais étaient déjà cassés avant (mât trop mince) ; c'est C3b. Puis C3c, les budgets.

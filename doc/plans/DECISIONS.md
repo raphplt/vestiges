@@ -2965,3 +2965,15 @@ Raphaël : « En fait, je ne ferai pas de falaises qu'on peut grimper en sautant
   - **La bibliothèque n'est pas versionnée** : `build/models/`, ignorée de git et de Godot. Plusieurs centaines de Mo de .glb régénérables n'ont rien à faire dans le dépôt ; seuls les modèles que lit le bac à sable restent dans `assets/models/`.
   - **Les variantes orientées sont réduites à la première**, et le tronc et la canopée d'un arbre fondus en un modèle : la caméra tourne, le jeu tourne le modèle. Les variantes écartées sont notées dans l'index, pour les reprendre si l'une diffère vraiment.
   - **Les décors plats** (flaques, rails, marelle, flèches au sol, salines) sortent presque sans volume : ils deviendront des décalques au sol, avec les textures du lot C5, pas des maillages.
+
+## 241. Le poids et la finesse des modèles : découpage du lot C3 — 16 novembre 2026
+
+Raphaël : reprendre la conversion par le lot C3 (poids et finesse), découpage d'abord.
+
+**Tranché par défaut par l'agent, réversible** (plan 60 §18) :
+- **Trois sous-lots, dans cet ordre** : le format compact (C3a), les pièces minces (C3b), les budgets de triangles (C3c).
+- **Glb de base seulement** : le Godot installé ne déclare pas `KHR_mesh_quantization`. On gagne par le partage des sommets, des couleurs sur 8 bits, des indices sur 16 bits, et la normale de facette calculée dans le shader.
+- **Pas de niveaux de détail à l'export** : l'import de Godot les génère (C4).
+- **Pas de décimation par effondrement d'arêtes** : un modèle trop lourd reprend un pas plus grossier, ce qui garde le low poly uniforme.
+- **Le maillage par pose reste** ; le squelette glTF reste plus tard.
+- **Les normales de sommet ne sont pas écrites dans le fichier, elles sont reconstruites au chargement** (lissées), pour le seul décalage des ombres. Les écrire coûterait environ 75 % de plus sur les sommets.

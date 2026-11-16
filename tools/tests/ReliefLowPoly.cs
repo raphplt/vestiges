@@ -37,8 +37,12 @@ public static class ReliefLowPoly
         }
     }
 
+    private const string FlatShader = "res://tools/tests/lowpoly_flat.gdshader";
+    private const string FlatToonShader = "res://tools/tests/lowpoly_flat_toon.gdshader";
+
     private static StandardMaterial3D _plain;
     private static StandardMaterial3D _glow;
+    private static ShaderMaterial _flat;
 
     /// <summary>
     /// Couleur par sommet ; l'ombrage suit les normales du maillage (de face en low poly, lissées en mid poly). Les
@@ -52,6 +56,58 @@ public static class ReliefLowPoly
         VertexColorUseAsAlbedo = true,
         ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
     };
+
+    /// <summary>
+    /// Low poly au format compact (plan 60 §18) : pas de normale dans le .glb, l'ombrage par faces se calcule dans le
+    /// shader. Même rendu que <see cref="Plain"/> sur des faces non lissées.
+    /// </summary>
+    private static ShaderMaterial Flat => _flat ??= new ShaderMaterial { Shader = GD.Load<Shader>(FlatShader) };
+
+    /// <summary>Le matériau d'une surface : émissive, à faces calculées (low poly compact) ou à normales du maillage.</summary>
+    public static Material SurfaceMaterial(bool emissive, bool flatNormals) => emissive ? Glow : flatNormals ? Flat : Plain;
+
+    /// <summary>Le manifeste dit si les normales sont absentes du .glb ; un ancien export les écrivait toujours.</summary>
+    public static bool FlatNormals(Godot.Collections.Dictionary manifest) =>
+        manifest.TryGetValue("flat_normals", out Variant flat) && flat.AsBool();
+
+    /// <summary>
+    /// Le format compact n'écrit pas de normale, et Godot n'en génère pas au chargement. L'ombrage par faces n'en a pas
+    /// besoin (il vient du shader), mais le décalage des ombres lit la normale du sommet : sans elle, les grands pans
+    /// se strient d'acné. On la reconstruit ici, lissée sur les faces voisines, sans rien ajouter au fichier.
+    /// </summary>
+    public static void AddSmoothNormals(MeshInstance3D instance)
+    {
+        if (instance.Mesh is not ArrayMesh source || source.GetSurfaceCount() == 0
+            || (source.SurfaceGetFormat(0) & Mesh.ArrayFormat.FormatNormal) != 0)
+            return;
+        ArrayMesh rebuilt = new() { ResourceName = source.ResourceName };
+        for (int s = 0; s < source.GetSurfaceCount(); s++)
+        {
+            Godot.Collections.Array arrays = source.SurfaceGetArrays(s);
+            Vector3[] vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+            int[] indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
+            Vector3[] normals = new Vector3[vertices.Length];
+            for (int i = 0; i + 2 < indices.Length; i += 3)
+            {
+                Vector3 a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
+                // Pondérée par l'aire. Godot tient les faces avant en sens horaire (l'import glTF a retourné l'ordre) :
+                // ce produit-ci sort de la surface. Tournée vers l'intérieur, le décalage d'ombre l'enfoncerait (acné).
+                Vector3 face = (c - a).Cross(b - a);
+                normals[indices[i]] += face;
+                normals[indices[i + 1]] += face;
+                normals[indices[i + 2]] += face;
+            }
+            for (int i = 0; i < normals.Length; i++)
+                normals[i] = normals[i].LengthSquared() > 0f ? normals[i].Normalized() : Vector3.Up;
+            arrays[(int)Mesh.ArrayType.Normal] = normals;
+            rebuilt.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+            rebuilt.SurfaceSetMaterial(s, source.SurfaceGetMaterial(s));
+        }
+        instance.Mesh = rebuilt;
+    }
+
+    /// <summary>Le style toon (F4) : le mode d'ombrage d'un shader ne se règle pas par paramètre, on change de shader.</summary>
+    public static void SetToon(bool toon) => Flat.Shader = GD.Load<Shader>(toon ? FlatToonShader : FlatShader);
 
     /// <summary>Le modèle existe-t-il (le mid poly n'est pas versionné et se génère à la demande) ?</summary>
     public static bool Exists(string path) => FileAccess.FileExists($"res://assets/models/{path}.json");
@@ -67,6 +123,7 @@ public static class ReliefLowPoly
         using FileAccess file = FileAccess.Open($"{root}.json", FileAccess.ModeFlags.Read);
         Godot.Collections.Dictionary manifest = Json.ParseString(file.GetAsText()).AsGodotDictionary();
         model.Fps = (float)manifest["fps"].AsDouble();
+        bool flatNormals = FlatNormals(manifest);
 
         GltfDocument document = new();
         GltfState state = new();
@@ -77,11 +134,12 @@ public static class ReliefLowPoly
         Dictionary<string, Mesh> byName = new();
         foreach (Node child in scene.FindChildren("*", "MeshInstance3D", true, false))
         {
+            AddSmoothNormals((MeshInstance3D)child);
             Mesh mesh = ((MeshInstance3D)child).Mesh;
             for (int s = 0; s < mesh.GetSurfaceCount(); s++)
             {
                 bool emissive = mesh.SurfaceGetMaterial(s)?.ResourceName.Contains("emissive") ?? false;
-                mesh.SurfaceSetMaterial(s, emissive ? Glow : Plain);
+                mesh.SurfaceSetMaterial(s, SurfaceMaterial(emissive, flatNormals));
             }
             byName[child.Name] = mesh;
         }

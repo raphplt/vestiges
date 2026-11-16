@@ -1,5 +1,9 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — des modèles 3D près de sept fois plus légers ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
+- La bibliothèque de modèles passe de 275 à 41 Mo, sans changement visible sur les planches : sommets partagés, couleurs et indices plus petits, facettes calculées au shader. Les triangles ne bougent pas.
+- Suite : C3b (les pièces minces : arbre mort, grue, antenne, grillage, réverbère), puis C3c (les budgets de triangles).
+
 **16 novembre — toutes les falaises hautes, l'export de masse des assets ([plan 60 §17](60-vestiges-en-3d.md), §240) :**
 - Dans le bac à sable, plus aucune falaise ne se saute : toutes font 3 à 5 étages, chacune avec sa rampe. À jouer : la chute coûte 20 à 50 PV.
 - La conversion commence (lot C1) : `python3 tools/export_lowpoly.py --all` tire en deux minutes 312 modèles 3D de tout ce qui a une source SDF. La bibliothèque est dans `build/models/`, non versionnée.
