@@ -1,22 +1,24 @@
 {
-	"_comment": "Bac à sable de la verticalité (plan 59). Arène : une ligne par rang y, un caractère par cellule x ; '.' vide, '0' à '9' puis 'a' (10) à 'g' (16) hauteur en quarts d'étage (4 = gradin, 8 = butte et haut palier, g = tour, les autres = marches ; le bond monte d'un étage, 4 quarts, pas de deux). Unités : une cellule = 1 ; un étage = level_height. Projection de la vue 2D : 64 × 32 px par cellule, comme la grille du jeu. Toutes les vitesses en cellules par seconde.",
-	"level_height": 0.7,
+	"_comment": "Bac à sable de la verticalité (plan 59). Arène : une ligne par rang y, un caractère par cellule x ; '.' vide, '0' à '9' puis 'a' (10) à 'g' (16) hauteur en quarts d'étage (4 = gradin, 8 = butte et haut palier, g = tour, les autres = marches ; le bond monte d'un étage, 4 quarts, pas de deux). Unités : une cellule = 1 ; un étage = level_height. Projection de la vue 2D : 64 × 32 px par cellule, comme la grille du jeu. Toutes les vitesses en cellules par seconde. level_height : 0,5 cellule (1,3 m, un peu moins que le corps du facteur, 1,58 m) depuis §236, pour qu'un saut qui monte d'un étage reste à hauteur d'homme ; step : la plus haute marche franchie sans sauter, un quart d'étage.",
+	"level_height": 0.5,
 	"spawn": [
 		20.5,
 		18.5
 	],
 	"player": {
-		"speed": 4.6,
+		"_comment": "Rythme 3D (plan 60, §236) : la vitesse vient du personnage (characters.json, px/s ÷ 45 px par cellule) multipliée par pace, car des corps à l'échelle trahissent la vitesse du jeu 2D (12 m/s) ; acceleration_seconds et braking_seconds : le temps pour prendre et perdre cette vitesse. Saut commun (Espace) : jump_height (cellules, un étage vaut level_height) atteint à mi-chemin de jump_seconds sur le plat ; il garde l'élan du sol, sans poussée ; air_control : l'accélération en l'air (cellules/s²). La capacité propre au personnage (Maj ou clic droit) vient de data/movement/mobility.json.",
+		"pace": 0.67,
+		"acceleration_seconds": 0.12,
+		"braking_seconds": 0.09,
 		"radius": 0.28,
-		"step": 0.26,
+		"step": 0.19,
 		"hp": 100,
 		"hurt_invulnerable_seconds": 0.7,
-		"bond_vertical": 6.0,
-		"bond_horizontal": 8.5,
-		"bond_cooldown": 0.45,
-		"bond_invulnerable_seconds": 0.25,
-		"air_accel": 10.0,
-		"gravity": 22.0,
+		"jump_height": 0.62,
+		"jump_seconds": 0.7,
+		"jump_cooldown": 0.2,
+		"jump_invulnerable_seconds": 0.0,
+		"air_control": 6.0,
 		"safe_drop_levels": 1.2,
 		"drop_damage_per_level": 12,
 		"stomp_min_drop_levels": 0.6,
@@ -39,9 +41,9 @@
 		"spawn_max": 14.0,
 		"radius": 0.3,
 		"separation": 2.2,
-		"climb_speed": 0.55,
+		"climb_speed": 0.4,
 		"contact_reach": 0.55,
-		"contact_height": 0.45,
+		"contact_height": 0.32,
 		"contact_damage": 8,
 		"push_decay": 6.0,
 		"fall_damage_per_level": 18,
@@ -50,19 +52,19 @@
 	"creatures": [
 		{
 			"id": "rampant",
-			"speed": 1.9,
+			"speed": 1.3,
 			"hp": 22,
 			"weight": 3
 		},
 		{
 			"id": "rodeur",
-			"speed": 3.0,
+			"speed": 2.0,
 			"hp": 14,
 			"weight": 2
 		},
 		{
 			"id": "charognard",
-			"speed": 2.4,
+			"speed": 1.6,
 			"hp": 34,
 			"weight": 1
 		}
@@ -133,21 +135,23 @@
 		"............................................"
 	],
 	"camera_chase": {
-		"_comment": "Caméra libre (plan 60, §234), la vue de départ : la souris la tourne autour du joueur, de gauche à droite et de haut en bas entre deux inclinaisons (degrés au-dessus de l'horizon), la molette la rapproche. Elle se rapproche seule quand le relief s'interpose (ground_clearance : marge au-dessus du sol, en cellules).",
+		"_comment": "Caméra libre (plan 60, §234), la vue de départ : la souris la tourne autour du joueur, de gauche à droite et de haut en bas entre deux inclinaisons (degrés au-dessus de l'horizon), à distance fixe (§236 : le joueur ne règle pas le recul). Elle se rapproche seule quand le relief s'interpose (ground_clearance : marge au-dessus du sol, en cellules).",
 		"pitch_degrees": 24,
 		"min_pitch_degrees": 4,
 		"max_pitch_degrees": 72,
 		"distance": 7.5,
-		"min_distance": 3.5,
-		"max_distance": 14.0,
 		"ground_clearance": 0.35,
 		"fov": 62,
 		"height": 0.9,
 		"mouse_degrees_per_pixel": 0.22
 	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : textured, facets, smooth ou pixel_art ; textured lit les textures de tools/generate_relief_textures.py). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. Couleurs en sRGB ; jitters : écart de teinte (fraction), de hauteur des coins du sol et de bosse des falaises (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : textured, facets, smooth ou pixel_art ; textured lit les textures de tools/generate_relief_textures.py). grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe, et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
 		"metres_per_cell": 2.65,
+		"grass": {
+			"per_cell": 12,
+			"height": 0.17
+		},
 		"colors": {
 			"ground": "53613a",
 			"terrace": "6f7d3e",

@@ -235,3 +235,57 @@ Le style de départ se règle dans `data/sandbox/relief.json` (`lowpoly.start`).
 - le détail des corps : low poly, mid poly, ou des corps texturés comme le sol ;
 - les contours du joueur et des créatures ;
 - les quelques points isolés des contours sur le sol en perspective.
+
+## 12. 60.0d suite — le mouvement, la caméra fixe, le sol plus simple et l'herbe (16 novembre)
+
+Retours de Raphaël en jouant (§236), dans son ordre de priorité.
+
+**Le mouvement.** Raphaël le trouvait « trop rapide », « saut de puce », avec un saut qui « va beaucoup trop loin, beaucoup trop haut » et des sauts en diagonale « abusés ». La cause : la vitesse et le bond venaient du jeu 2D, où des sprites de 30 px courent à 12 m/s sans que cela se voie. Des corps à l'échelle le trahissent. Ce qui change :
+- **Rythme** : la vitesse vient du personnage (`characters.json`, px/s ÷ 45 px par cellule), multipliée par `pace` (0,67). Le facteur passe de 12,2 à 8,4 m/s.
+- **Inertie** : la vitesse se prend en 0,12 s et se perd en 0,09 s, au lieu d'arriver d'un coup.
+- **Le saut** (Espace) est commun à tous. Il garde l'élan de la course, sans poussée : c'était le dash du jeu 2D devenu bond qui propulsait à 8,5 cellules par seconde, dans toutes les directions et dès l'arrêt. Il se règle par sa hauteur et sa durée.
+- **Des étages plus bas** : un étage valait 0,7 cellule, soit 1,86 m, plus que le facteur (1,58 m). Le saut qui le franchit était donc forcément plus haut que le corps. L'étage passe à 0,5 cellule (1,33 m), et la plus haute marche franchie sans sauter à 0,19 cellule, un quart d'étage. Les créatures suivent le même rythme (×0,67).
+- **La capacité de chaque personnage** (Maj ou clic droit) vient de son profil de mobilité du jeu (`data/movement/mobility.json`) :
+  - dash : traqueur, vagabond, forgeuse ;
+  - glissade sur patins, qu'on oriente en route : facteur ;
+  - déphasage : éveillée ;
+  - saut flottant, qui quitte le sol et pèse moins tant qu'il dure : scaphandrière.
+- **`--character <id>`** choisit le personnage. Ses modèles sont exportés au premier lancement et ne sont pas versionnés : 9 Mo en low poly.
+- La marche du modèle suit la vitesse au sol, pour que les pieds ne glissent pas.
+
+Relevé du contrôle headless (`--check-edges`), avant → après :
+
+| | avant | après |
+|---|---|---|
+| Vitesse du facteur | 12,2 m/s | 8,4 m/s |
+| Sommet du saut | 2,2 m (1,4 corps) | 1,64 m (1 corps), 1,24 étage |
+| Temps en l'air | 0,55 s | 0,70 s |
+| Gravité | 6 g | 2,7 g |
+| Saut en course | 12 m | 5,9 m |
+
+Par personnage :
+
+| Personnage | Vitesse | Capacité |
+|---|---|---|
+| Traqueur | 9,4 m/s | dash de 3,4 m |
+| Vagabond | 7,8 m/s | dash de 2,8 m |
+| Forgeuse | 7,1 m/s | dash de 2,5 m |
+| Facteur | 8,4 m/s | glissade de 5,1 m |
+| Éveillée | 8,0 m/s | déphasage de 2,9 m |
+| Scaphandrière | 7,5 m/s | saut flottant de 4,5 m |
+
+Les rebords ne collent toujours pas (113 sur 113). Les escaliers mènent à la tour, et le saut seul n'y monte pas. Deux seuils du contrôle ont été ramenés à la vitesse du personnage, et l'inertie n'y compte plus comme un collage.
+
+**La caméra libre est à distance fixe** : « il ne faut pas qu'on puisse régler la profondeur ». La molette est retirée.
+
+**Le sol, plus simple et en relief** : « un peu trop détaillé ; c'était peut-être mieux qu'il soit un peu plus low poly ». Raphaël a aussi remarqué que dans Megabonk, les textures sont très pauvres, mais que le jeu rend bien grâce au détail posé en volume, comme l'herbe.
+- **Textures deux fois moins fines** : 16 px par cellule au lieu de 32, moins de motifs semés, moins de grain.
+- **Des touffes d'herbe en relief** (`tools/tests/ReliefGrass.cs`) : 16 000 touffes de sept brins sur les cellules d'herbe, à l'écart des rebords. Elles sont teintées comme le sol, un peu plus claires.
+  - Un seul `MultiMesh` les dessine toutes.
+  - Elles passent après les opaques sans écrire la profondeur. Sinon, les contours, qui lisent la profondeur, les noircissaient entièrement (constaté sur capture).
+  - Réglages dans `lowpoly.grass` : 12 par cellule, 0,17 cellule de haut.
+
+**Ce qui reste** :
+- l'avis de Raphaël sur le mouvement en main et sur ce sol ;
+- le détail des corps ;
+- les contours du joueur et des créatures.

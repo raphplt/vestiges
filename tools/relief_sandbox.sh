@@ -8,7 +8,9 @@
 # --tiles garde des tuiles simples, sans run.
 # Styles en jeu (low poly) : F1 sol (facettes, lisse, pixel art), F2 corps (low, mid poly), F3 contours, F4 ombrage
 # toon ; départ réglé dans data/sandbox/relief.json (lowpoly.start).
-# Options après -- : --view chase|2d, --enemies N (35 par défaut), --seed S, --sprites.
+# Options après -- : --view chase|2d, --character <id> (facteur par défaut ; les autres sont exportés au premier
+# lancement), --enemies N (35 par défaut), --seed S, --sprites.
+# Espace : saut commun ; Maj ou clic droit : la capacité du personnage (dash, glissade, déphasage, saut flottant).
 # Captures (bot qui fait le tour de l'arène, images des deux vues, puis fermeture) : --capture <dossier> [--seconds S].
 # Réglages et arène : data/sandbox/relief.json.
 # Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
@@ -25,6 +27,14 @@ engine_args=()
 user_args=()
 while [[ $# -gt 0 && "$1" != -- ]]; do engine_args+=("$1"); shift; done
 if [[ $# -gt 0 ]]; then shift; user_args=("$@"); fi
+# Un autre personnage que le facteur : ses modèles sont exportés au premier lancement, non versionnés.
+for ((i = 0; i < ${#user_args[@]}; i++)); do
+    if [[ "${user_args[$i]}" == --character && -n "${user_args[$((i + 1))]-}" ]]; then
+        character="${user_args[$((i + 1))]}"
+        [[ -f assets/models/characters/$character.json ]] || python3 tools/export_lowpoly.py --character "$character"
+        [[ -f assets/models/mid/characters/$character.json ]] || python3 tools/export_lowpoly.py --character "$character" --detail mid
+    fi
+done
 if [[ " ${user_args[*]-} " != *" --land-order "* && " ${user_args[*]-} " != *" --tiles "* ]]; then
     user_args+=(--land-order forest_reclaimed)
 fi

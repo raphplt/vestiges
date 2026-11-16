@@ -34,6 +34,11 @@ public sealed class ReliefSim
     private int[] _obstacleList;
     private float _fireTimer;
     private bool _bondQueued;
+    private bool _skillQueued;
+    private Vector2 _skillDir;
+    // Saut flottant (scaphandrière) : sa poussée, en part du saut commun, et sa gravité tant qu'il dure.
+    private const float FloatJumpLift = 0.8f;
+    private const float FloatGravity = 0.45f;
 
     // Joueur.
     public Vector3 PlayerPos;
@@ -44,6 +49,8 @@ public sealed class ReliefSim
     public float PlayerInvulnerable;
     public float PlayerHurtFlash;
     public bool PlayerAirborneFromBond;
+    public float SkillTime;
+    public float SkillCooldown;
     private float _playerVz;
     private float _takeoffZ;
     private float _bondCooldown;
@@ -80,7 +87,7 @@ public sealed class ReliefSim
     public bool VoidFallThisTick;
 
     // Compteurs affichés.
-    public int Bonds, Stomps, Deaths, VoidFalls;
+    public int Bonds, Skills, Stomps, Deaths, VoidFalls;
     public int Kills, KillsByFall, KillsByVoid, KillsByStomp;
     public float Elapsed;
 
@@ -175,11 +182,16 @@ public sealed class ReliefSim
     /// <summary>Le bond est demandé : il part au prochain pas, s'il est au sol et prêt.</summary>
     public void QueueBond() => _bondQueued = true;
 
+    /// <summary>La capacité du personnage est demandée : elle part au prochain pas, s'il est au sol et qu'elle est prête.</summary>
+    public void QueueSkill() => _skillQueued = true;
+
     /// <summary>Place le joueur au sol à cet endroit (captures).</summary>
     public void Teleport(Vector2 at)
     {
         PlayerPos = new Vector3(at.X, at.Y, _arena.HighestUnder(at.X, at.Y, _config.PlayerRadius));
         PlayerGrounded = true;
+        PlayerVelocity = Vector2.Zero;
+        SkillTime = 0f;
         _playerVz = 0f;
         _lastSafe = at;
     }
@@ -207,26 +219,37 @@ public sealed class ReliefSim
         PlayerInvulnerable = Mathf.Max(0f, PlayerInvulnerable - dt);
         PlayerHurtFlash = Mathf.Max(0f, PlayerHurtFlash - dt);
         _bondCooldown = Mathf.Max(0f, _bondCooldown - dt);
+        SkillCooldown = Mathf.Max(0f, SkillCooldown - dt);
         if (wish.LengthSquared() > 0.01f)
             PlayerFacing = wish.Normalized();
 
         bool bond = _bondQueued;
         _bondQueued = false;
+        bool skill = _skillQueued;
+        _skillQueued = false;
+        if (skill && SkillCooldown <= 0f && PlayerGrounded)
+            StartSkill(wish);
+        if (SkillTime > 0f)
+            SteerSkill(dt, wish);
+
         if (PlayerGrounded)
         {
-            if (bond && _bondCooldown <= 0f)
+            if (bond && _bondCooldown <= 0f && SkillTime <= 0f)
             {
-                PlayerGrounded = false;
-                PlayerAirborneFromBond = true;
-                _playerVz = c.BondVertical;
-                _takeoffZ = PlayerPos.Z;
-                PlayerVelocity = wish * c.BondHorizontal;
-                PlayerInvulnerable = Mathf.Max(PlayerInvulnerable, c.BondInvulnerable);
-                _bondCooldown = c.BondCooldown;
+                // Le saut garde l'élan du sol, sans poussée : la portée vient de la course, pas du saut.
+                TakeOff(c.JumpVelocity);
+                PlayerInvulnerable = Mathf.Max(PlayerInvulnerable, c.JumpInvulnerable);
+                _bondCooldown = c.JumpCooldown;
                 Bonds++;
                 return;
             }
-            PlayerVelocity = wish * c.PlayerSpeed;
+            if (SkillTime <= 0f)
+            {
+                // Inertie : la vitesse se prend et se perd en une fraction de seconde, au lieu de sauter d'un coup.
+                Vector2 target = wish * c.PlayerSpeed;
+                float seconds = target.LengthSquared() > 0.0001f ? c.AccelerationSeconds : c.BrakingSeconds;
+                PlayerVelocity = PlayerVelocity.MoveToward(target, c.PlayerSpeed / seconds * dt);
+            }
             Vector2 at = new(PlayerPos.X, PlayerPos.Y);
             at = MoveBlocked(at, PlayerVelocity * dt, PlayerPos.Z + c.Step, c.PlayerRadius);
             at = PushOutOfObstacles(at, c.PlayerRadius);
@@ -249,8 +272,11 @@ public sealed class ReliefSim
             return;
         }
 
-        PlayerVelocity = PlayerVelocity.MoveToward(wish * c.PlayerSpeed, c.AirAccel * dt);
-        _playerVz -= c.Gravity * dt;
+        if (SkillTime <= 0f)
+            PlayerVelocity = PlayerVelocity.MoveToward(wish * c.PlayerSpeed, c.AirControl * dt);
+        // Le saut flottant pèse moins tant qu'il dure.
+        float gravity = SkillTime > 0f && c.Mobility.VisualHeightPixels > 0f ? c.Gravity * FloatGravity : c.Gravity;
+        _playerVz -= gravity * dt;
         Vector2 air = MoveBlocked(new Vector2(PlayerPos.X, PlayerPos.Y), PlayerVelocity * dt, PlayerPos.Z, c.PlayerRadius);
         float z = PlayerPos.Z + _playerVz * dt;
         float floor = _arena.HighestUnder(air.X, air.Y, c.PlayerRadius);
@@ -262,6 +288,45 @@ public sealed class ReliefSim
         }
         if (z < VoidFloor)
             FallIntoVoid();
+    }
+
+    private void TakeOff(float verticalSpeed)
+    {
+        PlayerGrounded = false;
+        PlayerAirborneFromBond = true;
+        _playerVz = verticalSpeed;
+        _takeoffZ = PlayerPos.Z;
+    }
+
+    /// <summary>
+    /// La capacité du personnage, d'après son profil du jeu : une poussée dans la direction voulue (dash, déphasage), une
+    /// glissade qu'on oriente en route, ou un saut flottant qui quitte le sol.
+    /// </summary>
+    private void StartSkill(Vector2 wish)
+    {
+        Vestiges.Infrastructure.MobilityConfig m = _config.Mobility;
+        _skillDir = wish.LengthSquared() > 0.01f ? wish.Normalized() : PlayerFacing.Normalized();
+        SkillTime = m.DurationSeconds;
+        SkillCooldown = m.CooldownSeconds;
+        PlayerInvulnerable = Mathf.Max(PlayerInvulnerable, m.InvulnerabilitySeconds);
+        Skills++;
+        if (m.VisualHeightPixels > 0f)
+            TakeOff(_config.JumpVelocity * FloatJumpLift);
+    }
+
+    private void SteerSkill(float dt, Vector2 wish)
+    {
+        Vestiges.Infrastructure.MobilityConfig m = _config.Mobility;
+        SkillTime = Mathf.Max(0f, SkillTime - dt);
+        if (m.TurnRateDegrees > 0f && wish.LengthSquared() > 0.01f)
+        {
+            float turn = Mathf.DegToRad(m.TurnRateDegrees) * dt;
+            float delta = Mathf.Clamp(_skillDir.AngleTo(wish), -turn, turn);
+            _skillDir = _skillDir.Rotated(delta);
+        }
+        PlayerVelocity = _skillDir * _config.PlayerSpeed * m.SpeedMultiplier;
+        if (_skillDir.LengthSquared() > 0.01f)
+            PlayerFacing = _skillDir;
     }
 
     private void Land(float floor)

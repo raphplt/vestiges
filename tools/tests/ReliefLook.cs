@@ -21,6 +21,7 @@ public sealed class ReliefLook
     private readonly List<BaseMaterial3D> _shaded = new();
     private readonly List<(MeshInstance3D Body, ReliefLowPoly.Model[] Models)> _props = new();
     private readonly SubViewport _viewport;
+    private readonly MultiMeshInstance3D _grass;
 
     public Ground CurrentGround;
     public bool Mid;
@@ -65,6 +66,9 @@ public sealed class ReliefLook
             ? ReliefTexturedGround.Build(arena)
             : ReliefLowPoly.BuildTerrain(arena, style, false);
         _shaded.AddRange(ReliefTexturedGround.Materials);
+        _grass = ReliefGrass.Build(arena, style, 61);
+        world.AddChild(_grass);
+        _shaded.Add(ReliefGrass.Material);
         if (!ReliefTexturedGround.Available())
             GD.PushWarning("[ReliefLook] Textures du relief absentes : python3 tools/generate_relief_textures.py");
         _grounds[(int)Ground.Facets] = ReliefLowPoly.BuildTerrain(arena, style, true);
@@ -151,6 +155,7 @@ public sealed class ReliefLook
         Mid &= MidAvailable;
         for (int g = 0; g < _grounds.Length; g++)
             _grounds[g].Visible = g == (int)CurrentGround;
+        _grass.Visible = CurrentGround == Ground.Textured;
         foreach ((MeshInstance3D body, ReliefLowPoly.Model[] models) in _props)
             body.Mesh = models[Detail].Animation("idle")[0];
         _outline.Visible = Outlines;

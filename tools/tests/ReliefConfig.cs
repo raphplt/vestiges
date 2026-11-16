@@ -43,6 +43,8 @@ public sealed class ReliefConfig
         public bool StartMid, StartOutlines, StartToon;
         public Color OutlineColor;
         public float OutlineSensitivity, OutlineOrthoSensitivity;
+        // Touffes d'herbe en relief du sol texturé : combien par cellule d'herbe, et leur hauteur moyenne (cellules).
+        public float GrassPerCell, GrassHeight;
         public LowPolyScatter[] Scatter;
         public LowPolyLandmark[] Landmarks;
     }
@@ -53,7 +55,12 @@ public sealed class ReliefConfig
     public string Character;
 
     public float PlayerSpeed, PlayerRadius, Step, PlayerHp, HurtInvulnerable;
-    public float BondVertical, BondHorizontal, BondCooldown, BondInvulnerable, AirAccel, Gravity;
+    // Rythme 3D : les vitesses du jeu (px/s, 45 px par cellule) ramenées à des corps à l'échelle (plan 60, §236).
+    public float Pace, AccelerationSeconds, BrakingSeconds;
+    // Saut commun : hauteur (cellules) et durée en l'air sur le plat, d'où sa vitesse de départ et la gravité.
+    public float JumpVelocity, JumpCooldown, JumpInvulnerable, AirControl, Gravity;
+    // La capacité de déplacement propre au personnage (data/movement/mobility.json, son profil dans characters.json).
+    public Vestiges.Infrastructure.MobilityConfig Mobility;
     public float SafeDropLevels, DropDamagePerLevel, StompMinDropLevels, StompRadius, StompPush, StompDamage, VoidDamage;
 
     public float WeaponInterval, WeaponRange, WeaponDamage, WeaponSpeed, WeaponHitRadius, WeaponPush;
@@ -66,7 +73,7 @@ public sealed class ReliefConfig
 
     public string[] GroundTiles, StepTiles, TerraceTiles, ButteTiles;
 
-    public float ChasePitch, ChaseMinPitch, ChaseMaxPitch, ChaseDistance, ChaseMinDistance, ChaseMaxDistance;
+    public float ChasePitch, ChaseMinPitch, ChaseMaxPitch, ChaseDistance;
     public float ChaseFov, ChaseHeight, ChaseMouseDegrees, ChaseClearance;
 
     public static ReliefConfig Load(string path)
@@ -87,17 +94,16 @@ public sealed class ReliefConfig
             Spawn = new Vector2((float)spawn[0].AsDouble(), (float)spawn[1].AsDouble()),
             Arena = root["arena"].AsStringArray(),
             Character = root["character"].AsString(),
-            PlayerSpeed = F(player, "speed"),
+            Pace = F(player, "pace"),
+            AccelerationSeconds = F(player, "acceleration_seconds"),
+            BrakingSeconds = F(player, "braking_seconds"),
             PlayerRadius = F(player, "radius"),
             Step = F(player, "step"),
             PlayerHp = F(player, "hp"),
             HurtInvulnerable = F(player, "hurt_invulnerable_seconds"),
-            BondVertical = F(player, "bond_vertical"),
-            BondHorizontal = F(player, "bond_horizontal"),
-            BondCooldown = F(player, "bond_cooldown"),
-            BondInvulnerable = F(player, "bond_invulnerable_seconds"),
-            AirAccel = F(player, "air_accel"),
-            Gravity = F(player, "gravity"),
+            JumpCooldown = F(player, "jump_cooldown"),
+            JumpInvulnerable = F(player, "jump_invulnerable_seconds"),
+            AirControl = F(player, "air_control"),
             SafeDropLevels = F(player, "safe_drop_levels"),
             DropDamagePerLevel = F(player, "drop_damage_per_level"),
             StompMinDropLevels = F(player, "stomp_min_drop_levels"),
@@ -131,8 +137,6 @@ public sealed class ReliefConfig
             ChaseMinPitch = F(chase, "min_pitch_degrees"),
             ChaseMaxPitch = F(chase, "max_pitch_degrees"),
             ChaseDistance = F(chase, "distance"),
-            ChaseMinDistance = F(chase, "min_distance"),
-            ChaseMaxDistance = F(chase, "max_distance"),
             ChaseClearance = F(chase, "ground_clearance"),
             ChaseFov = F(chase, "fov"),
             ChaseHeight = F(chase, "height"),
@@ -150,8 +154,39 @@ public sealed class ReliefConfig
                 Weight = (int)F(creature, "weight"),
             };
         }
+        // Sommet h atteint à mi-durée T : v = 4h / T, g = 8h / T².
+        float jumpHeight = F(player, "jump_height");
+        float jumpSeconds = F(player, "jump_seconds");
+        config.JumpVelocity = 4f * jumpHeight / jumpSeconds;
+        config.Gravity = 8f * jumpHeight / (jumpSeconds * jumpSeconds);
+        config.SetCharacter(config.Character);
         config.LowPoly = LoadLowPoly(root["lowpoly"].AsGodotDictionary());
         return config;
+    }
+
+    private const string CharactersPath = "res://data/characters/characters.json";
+    // Un pas de la grille iso du jeu : la diagonale d'une cellule fait 64 px, son côté 45.
+    private const float GamePixelsPerCell = 45.254834f;
+
+    /// <summary>
+    /// Le personnage joué : sa vitesse du jeu ramenée au rythme 3D, et sa capacité de déplacement (dash commun si son
+    /// entrée n'en nomme pas).
+    /// </summary>
+    public void SetCharacter(string id)
+    {
+        using FileAccess file = FileAccess.Open(CharactersPath, FileAccess.ModeFlags.Read);
+        Array characters = Json.ParseString(file.GetAsText()).AsGodotArray();
+        foreach (Variant entry in characters)
+        {
+            Dictionary character = entry.AsGodotDictionary();
+            if (character["id"].AsString() != id)
+                continue;
+            Character = id;
+            PlayerSpeed = F(character["base_stats"].AsGodotDictionary(), "speed") / GamePixelsPerCell * Pace;
+            Mobility = Vestiges.Infrastructure.MobilityConfig.Load(character.ContainsKey("mobility") ? character["mobility"].AsString() : null);
+            return;
+        }
+        throw new System.InvalidOperationException($"Personnage inconnu : {id}");
     }
 
     private static LowPolyStyle LoadLowPoly(Dictionary lowPoly)
@@ -171,6 +206,8 @@ public sealed class ReliefConfig
             OutlineSensitivity = F(outline, "sensitivity"),
             OutlineOrthoSensitivity = F(outline, "ortho_sensitivity"),
             MetresPerCell = F(lowPoly, "metres_per_cell"),
+            GrassPerCell = F(lowPoly["grass"].AsGodotDictionary(), "per_cell"),
+            GrassHeight = F(lowPoly["grass"].AsGodotDictionary(), "height"),
             Ground = new Color(colors["ground"].AsString()),
             Terrace = new Color(colors["terrace"].AsString()),
             Butte = new Color(colors["butte"].AsString()),

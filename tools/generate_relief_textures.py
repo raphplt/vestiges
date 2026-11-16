@@ -2,8 +2,8 @@
 Textures pixel art du relief 3D (plan 60, §235) : le sol texturé du bac à sable de la verticalité, à la façon de
 Minecraft et de Megabonk, des pixels francs (filtre au plus proche) plaqués sur la géométrie.
 
-Chaque texture se répète sans couture et couvre 4 × 4 cellules (32 px par cellule, la densité des tuiles 64 × 32 du
-jeu) : bruit périodique ramené à quatre tons, puis les motifs des sols du jeu (touffes, feuilles, cailloux, fissures,
+Chaque texture se répète sans couture et couvre 4 × 4 cellules, à 16 px par cellule (§236 : à 32, la densité des tuiles
+du jeu, le sol était trop détaillé ; le détail vient plutôt des touffes d'herbe en relief posées dessus) : bruit périodique ramené à quatre tons, puis les motifs des sols du jeu (touffes, feuilles, cailloux, fissures,
 tools/sprites/ground_motifs.py) semés en plaques et repliés sur les bords. Les tons partent des couleurs du relief low
 poly (data/sandbox/relief.json, bloc lowpoly.colors), en rampe à ombres froides et lumières chaudes (charte §4).
 
@@ -12,7 +12,7 @@ roche en blocs. Franges : le bord d'herbe qui déborde sur le haut des falaises,
 bloc d'herbe de Minecraft), une par herbe.
 
 Usage : python3 tools/generate_relief_textures.py [--sheet planche.png]
-Sortie : assets/models/textures/relief_<nom>.png
+Sortie : assets/models/textures/relief_<nom>.png (64 px, 16 px par cellule)
 """
 from __future__ import annotations
 
@@ -28,12 +28,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
 from sprites.ground import Stipple  # noqa: E402
-from sprites.ground_motifs import cracks, grass, litter, moss, stones  # noqa: E402
+from sprites.ground_motifs import cracks, grass, litter, stones  # noqa: E402
 from sprites.palette import _shift, hex_to_rgb  # noqa: E402
 
-SIZE = 128
 CELLS = 4
-LIP_HEIGHT = 16
+PX_PER_CELL = 16
+SIZE = CELLS * PX_PER_CELL
+# La frange pend sur une demi-cellule.
+LIP_HEIGHT = PX_PER_CELL // 2
 OUT = ROOT / "assets" / "models" / "textures"
 
 Rgb = tuple[int, int, int]
@@ -117,7 +119,7 @@ def speckled(rng: np.random.Generator, background: np.ndarray, amount: float) ->
 
 
 def top_texture(base: str, feature_px: float, shares: tuple[float, ...], stipples: tuple[Stipple, ...], seed: int,
-                spread: float = 1.0, grain: float = 0.45) -> np.ndarray:
+                spread: float = 1.0, grain: float = 0.3) -> np.ndarray:
     rng = np.random.default_rng(seed)
     background = field(rng, feature_px)
     image = quantize(speckled(rng, background, grain), ramp(base, spread), shares)
@@ -128,12 +130,12 @@ def top_texture(base: str, feature_px: float, shares: tuple[float, ...], stipple
 def strata_texture(base: str, dark: str, stipples: tuple[Stipple, ...], seed: int) -> np.ndarray:
     """Flanc de terre : strates ondulées qui alternent deux matières tous les demi-étages, cailloux et racines."""
     rng = np.random.default_rng(seed)
-    grain = field(rng, 10.0, (3.0, 0.5))
-    wobble = field(rng, 28.0, (2.0, 1.0))
+    grain = field(rng, 5.0, (3.0, 0.5))
+    wobble = field(rng, 14.0, (2.0, 1.0))
     ys = np.mgrid[0:SIZE, 0:SIZE][0].astype(float)
     # Six strates sur la hauteur : la texture couvre quatre cellules, soit environ six étages de 0,7 cellule.
     band = np.sin((ys / SIZE + (wobble - 0.5) * 0.06) * 2 * np.pi * 6)
-    speck = speckled(rng, grain, 0.5)
+    speck = speckled(rng, grain, 0.35)
     image = np.where((band > -0.25)[..., None], quantize(speck, ramp(base), (0.12, 0.4, 0.36, 0.12)),
                      quantize(speck, ramp(dark), (0.2, 0.42, 0.3, 0.08)))
     # Liseré sombre sous chaque strate claire : l'arête lit l'épaisseur.
@@ -146,23 +148,22 @@ def strata_texture(base: str, dark: str, stipples: tuple[Stipple, ...], seed: in
 def blocks_texture(base: str, seed: int) -> np.ndarray:
     """Flanc de roche : blocs en appareil irrégulier, joints sombres, arête haute éclairée, quelques fissures."""
     rng = np.random.default_rng(seed)
-    grain = field(rng, 9.0)
+    grain = field(rng, 5.0)
     tones = ramp(base, 1.1)
-    image = quantize(speckled(rng, grain, 0.4), tones, (0.12, 0.45, 0.33, 0.10))
+    image = quantize(speckled(rng, grain, 0.3), tones, (0.12, 0.45, 0.33, 0.10))
     joint = np.array(hex_to_rgb(_shift_hex(tones[0], 0.7)), dtype=np.uint8)
     light = np.array(hex_to_rgb(tones[3]), dtype=np.uint8)
-    course = 16
+    course = PX_PER_CELL // 2
     for row in range(SIZE // course):
         y0 = row * course
         image[y0, :] = joint
         image[(y0 + 1) % SIZE, :] = light
-        x = int(rng.integers(0, 24))
-        while x < SIZE + 24:
+        x = int(rng.integers(0, 12))
+        while x < SIZE + 12:
             image[y0:y0 + course, x % SIZE] = joint
-            if (x + 1) % SIZE < SIZE:
-                image[(y0 + 2):(y0 + course), (x + 1) % SIZE] = light
-            x += int(rng.integers(18, 40))
-    sow(image, grain, cracks(tones[0], 1.4, 0.7), rng)
+            image[(y0 + 2):(y0 + course), (x + 1) % SIZE] = light
+            x += int(rng.integers(9, 20))
+    sow(image, grain, cracks(tones[0], 0.8, 0.7), rng)
     return image
 
 
@@ -175,11 +176,11 @@ def lip_texture(base: str, seed: int) -> np.ndarray:
     rng = np.random.default_rng(seed)
     tones = ramp(base)
     image = np.zeros((LIP_HEIGHT, SIZE, 4), dtype=np.uint8)
-    hang = periodic_noise(rng, (16, 1))[0]
+    hang = periodic_noise(rng, (8, 1))[0]
     for x in range(SIZE):
-        length = 3 + int(hang[x] * 5)
+        length = 2 + int(hang[x] * 3)
         if rng.random() < 0.12:
-            length += int(rng.integers(2, 6))
+            length += int(rng.integers(1, 3))
         length = min(length, LIP_HEIGHT - 1)
         for y in range(length + 1):
             tone = tones[3] if y == 0 else tones[2] if y < length - 1 else tones[1]
@@ -196,22 +197,20 @@ def build(colors: dict[str, str]) -> dict[str, np.ndarray]:
     grass_shade = ramp(colors["ground"], 1.4)
     grass_field = ramp(colors["terrace"], 1.4)
     leaf = ("#2a2014", "#5a4528", "#7c6036", "#9a7a44")
-    mossy = ramp("4c7d3a", 1.2)
     stone_warm = ramp(colors["butte"], 1.5)
     stone_soil = ramp("8a7a64", 1.5)
     root = ("#2a1e16", "#3e2c1e", "#4e3a26", "#5e4630")
     return {
-        "sol": top_texture(colors["ground"], 26.0, (0.14, 0.40, 0.34, 0.12),
-                           grass(grass_shade, 1.6, 0.4) + litter(leaf, 0.6) + moss(mossy, 0.6, 0.7), 6001),
-        "terrasse": top_texture(colors["terrace"], 30.0, (0.12, 0.38, 0.36, 0.14),
-                                grass(grass_field, 1.8, 0.35) + stones(stone_soil, 0.3, 0.3), 6002),
-        "butte": top_texture(colors["butte"], 20.0, (0.14, 0.42, 0.32, 0.12),
-                             stones(stone_warm, 1.4, 0.7) + cracks(ramp(colors["butte"])[0], 1.6, 0.6)
-                             + moss(mossy, 0.5, 0.75), 6003, 1.2),
-        "marches": top_texture(colors["steps"], 18.0, (0.14, 0.4, 0.34, 0.12),
-                               stones(stone_soil, 1.2, 0.6) + litter(leaf, 0.5), 6004, 1.1),
+        "sol": top_texture(colors["ground"], 13.0, (0.14, 0.40, 0.34, 0.12),
+                           grass(grass_shade, 0.6, 0.4) + litter(leaf, 0.3), 6001),
+        "terrasse": top_texture(colors["terrace"], 15.0, (0.12, 0.38, 0.36, 0.14),
+                                grass(grass_field, 0.6, 0.35), 6002),
+        "butte": top_texture(colors["butte"], 10.0, (0.14, 0.42, 0.32, 0.12),
+                             stones(stone_warm, 0.8, 0.7) + cracks(ramp(colors["butte"])[0], 0.8, 0.6), 6003, 1.2),
+        "marches": top_texture(colors["steps"], 9.0, (0.14, 0.4, 0.34, 0.12),
+                               stones(stone_soil, 0.6, 0.6), 6004, 1.1),
         "flanc_terre": strata_texture(colors["cliff"], colors["cliff_dark"],
-                                      stones(stone_soil, 1.0, 1.0) + litter(root, 0.4, 1.0), 6005),
+                                      stones(stone_soil, 0.6, 1.0) + litter(root, 0.2, 1.0), 6005),
         "flanc_roche": blocks_texture(colors["butte"], 6006),
         "frange_sol": lip_texture(colors["ground"], 6007),
         "frange_terrasse": lip_texture(colors["terrace"], 6008),
@@ -219,12 +218,12 @@ def build(colors: dict[str, str]) -> dict[str, np.ndarray]:
 
 
 def sheet(textures: dict[str, np.ndarray], path: Path) -> None:
-    """Planche : chaque texture pavée 2 × 2 (les raccords se voient), agrandie trois fois."""
+    """Planche : chaque texture pavée 2 × 2 (les raccords se voient), agrandie six fois."""
     tiles = []
     for name, image in textures.items():
         rgb = image[..., :3] if image.shape[-1] == 4 else image
         tiled = np.tile(rgb, (2, 2, 1))
-        tiles.append(Image.fromarray(tiled).resize((tiled.shape[1] * 3, tiled.shape[0] * 3), Image.NEAREST))
+        tiles.append(Image.fromarray(tiled).resize((tiled.shape[1] * 6, tiled.shape[0] * 6), Image.NEAREST))
     width = sum(t.width for t in tiles) + 8 * len(tiles)
     height = max(t.height for t in tiles)
     out = Image.new("RGB", (width, height), (11, 8, 18))

@@ -1,5 +1,14 @@
 # VESTIGES — Dossier de plans à valider
 
+**16 novembre — le mouvement repris, l'herbe en relief ([plan 60 §12](60-vestiges-en-3d.md), §236) :**
+- **Mouvement** : le facteur court à 8,4 m/s au lieu de 12, avec un peu d'inertie.
+- **Saut** (Espace) : commun à tous, à hauteur d'homme (1,64 m), il garde l'élan sans pousser (5,9 m en course au lieu de 12). Les étages descendent à 1,33 m pour rester franchissables d'un saut.
+- **Capacité** : chaque personnage a la sienne, tirée du jeu (Maj ou clic droit). Le facteur a sa glissade sur patins ; on change de personnage avec `--character <id>`.
+- **Caméra libre** : distance fixe.
+- **Sol** : textures deux fois plus grossières, et des touffes d'herbe en relief à la Megabonk.
+
+À jouer : le mouvement d'abord.
+
 **16 novembre — la caméra libre et le sol texturé ([plan 60 §11](60-vestiges-en-3d.md), §235) :** dans `tools/relief_sandbox.sh`, la caméra libre est la vue de départ. La souris l'incline aussi de haut en bas (de 4° à 72°), la molette règle le recul, et la caméra ne traverse plus les falaises. La 3D de haut et la pixelisation sont retirées. Le sol suit Minecraft et Megabonk : des textures pixel art (herbe, terre battue, roche, strates) lues au plus proche, avec une frange d'herbe qui pend au haut des falaises. À toi de juger ce sol, et son accord avec les corps (F2).
 
 **15 novembre — tes choix de style ([plan 60 §10](60-vestiges-en-3d.md), §234) :** les contours restent ; la pixelisation et la vue 3D de haut partent ; la caméra libre en poursuite te plaît davantage que l'isométrique, mais il lui manque le contrôle vertical. À la reprise : la caméra libre avec contrôle vertical, puis les contours du joueur et des créatures. Le sol lisse manque de texture : on regardera comment Megabonk et Minecraft font le leur. Le détail des corps reste ouvert.

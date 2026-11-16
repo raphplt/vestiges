@@ -2877,3 +2877,21 @@ Suite de §234. Raphaël : « le sol lisse je n'aime pas, ça manque de texture 
   - C'est le style de départ ; les trois autres sols restent sous F1 pour comparer.
 - **Les textures sont générées par script** (`tools/generate_relief_textures.py`), comme les sprites, pour rester retouchables et reproductibles. Le relief les lit sans passer par l'import de Godot, pour calculer lui-même leurs mipmaps.
 - **À juger par Raphaël** : le sol texturé, puis l'accord entre ce sol et les corps lisses (low ou mid poly, ou corps texturés à leur tour).
+
+## 236. Le mouvement trop rapide, la caméra à distance fixe, un sol plus simple avec de l'herbe en relief — 16 novembre 2026
+
+Raphaël, en jouant le bac à sable après §235 :
+- Sol : « il est peut-être un peu trop détaillé ; c'était peut-être mieux qu'il soit un peu plus low poly ». Et, de Megabonk : « les textures du sol sont hyper moches, même celles du reste du jeu, mais ça compense parce qu'il y a plein de détails, par exemple au sol il y a des herbes : du relief rajouté ».
+- Caméra libre : « il ne faut pas qu'on puisse régler la profondeur en tant que joueur ; elle doit être fixe ».
+- Mouvement, son retour principal : « trop rapide », « saut de puce » ; le saut en direction « va beaucoup trop loin, beaucoup trop haut » ; « on peut hyper facilement faire des sauts en diagonale hyper abusés ».
+- « Chaque personnage a sa propre mobilité, ses propres habiletés de déplacement. »
+- Ordre de travail : d'abord les mouvements, puis à nouveau les textures.
+
+**Tranché par défaut par l'agent, réversible :**
+- **Le rythme 3D** : les vitesses du jeu 2D sont ramenées par un facteur `pace` de 0,67, car des corps à l'échelle trahissent ses 12 m/s. Les créatures suivent le même facteur. La vitesse prend une inertie d'environ un dixième de seconde.
+- **Un saut commun à tous** (Espace), à hauteur d'homme (1,64 m, 0,7 s en l'air), qui garde l'élan de la course sans pousser. La portée vient de la course, plus du saut.
+- **Les étages passent à 1,33 m** (0,5 cellule au lieu de 0,7). Un saut qui franchit un étage doit dépasser l'étage ; avec un étage plus haut que le facteur, il était forcément plus haut que le corps.
+- **Chaque personnage garde sa capacité du jeu** (Maj ou clic droit), tirée de son profil de mobilité : dash, glissade sur patins, déphasage, saut flottant. Le saut reste commun parce que la verticalité en a besoin pour tous.
+- **La caméra libre est à distance fixe.** Plus de molette.
+- **Le sol** : textures à 16 px par cellule, avec moins de motifs. Des touffes d'herbe en relief sur les cellules d'herbe, invisibles des contours.
+- **Mesuré en mètres** par le contrôle headless (plan 60 §12) : c'est la règle pour comparer les réglages de mouvement sans image.

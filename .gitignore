@@ -47,3 +47,6 @@ build/
 
 # Modèles mid poly du bac à sable (plan 60) : régénérés par python3 tools/export_lowpoly.py --detail mid
 assets/models/mid/
+# Les autres personnages du bac à sable de la verticalité sont exportés à la demande (plan 60, §236).
+assets/models/characters/*
+!assets/models/characters/facteur.*

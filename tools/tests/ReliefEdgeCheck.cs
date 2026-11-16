@@ -50,11 +50,14 @@ public static class ReliefEdgeCheck
                     Vector2 below = top + dir * 2.5f;
                     sim.Teleport(below);
                     Walk(sim, -dir, 0.8f);
+                    // S'arrêter avant de repartir : l'inertie ne compte pas pour un collage.
+                    Walk(sim, Vector2.Zero, 0.3f);
                     Vector2 hug = new(sim.PlayerPos.X, sim.PlayerPos.Y);
                     Walk(sim, dir, 0.3f);
                     float away = Progress(sim, hug, dir);
 
-                    if (down < 1.6f || away < 0.8f)
+                    // Seuils en part de la course libre à la vitesse du personnage : collé, il n'en fait presque rien.
+                    if (down < 0.4f * config.PlayerSpeed * 0.8f || away < 0.4f * config.PlayerSpeed * 0.3f)
                         stuck.Add($"({x},{y})→({d.X},{d.Y}) {high / arena.LevelHeight:0.##}→{low / arena.LevelHeight:0.##} étage : descente {down:0.00}, départ du pied {away:0.00}");
                 }
             }
@@ -62,7 +65,29 @@ public static class ReliefEdgeCheck
         GD.Print($"[ReliefEdgeCheck] RESULT rebords={tested} colles={stuck.Count}");
         for (int i = 0; i < Mathf.Min(stuck.Count, 12); i++)
             GD.Print($"[ReliefEdgeCheck]   {stuck[i]}");
+        ReportMovement(config, arena);
         return stuck.Count + CheckHighGround(config, arena);
+    }
+
+    /// <summary>
+    /// Le mouvement de chaque personnage en mètres, à l'échelle des modèles : vitesse, saut (sommet, temps en l'air, portée
+    /// en course) et portée de sa capacité, pour juger le rythme sans image.
+    /// </summary>
+    private static void ReportMovement(ReliefConfig config, ReliefArena arena)
+    {
+        string played = config.Character;
+        float m = config.LowPoly.MetresPerCell;
+        float apex = config.JumpVelocity * config.JumpVelocity / (2f * config.Gravity);
+        float air = 2f * config.JumpVelocity / config.Gravity;
+        GD.Print($"[ReliefEdgeCheck] Saut : sommet {apex * m:0.00} m ({apex / arena.LevelHeight:0.00} étage d'un étage de {arena.LevelHeight * m:0.00} m), {air:0.00} s en l'air, gravité {config.Gravity * m / 9.81f:0.0} g");
+        foreach (string id in new[] { "traqueur", "vagabond", "forgeuse", "facteur", "eveillee", "scaphandriere" })
+        {
+            config.SetCharacter(id);
+            Vestiges.Infrastructure.MobilityConfig mobility = config.Mobility;
+            float speed = config.PlayerSpeed * m;
+            GD.Print($"[ReliefEdgeCheck] {id} : {speed:0.0} m/s, saut en course {speed * air:0.0} m, {mobility.Name} {speed * mobility.SpeedMultiplier * mobility.DurationSeconds:0.0} m en {mobility.DurationSeconds:0.00} s, toutes les {mobility.CooldownSeconds:0.0} s");
+        }
+        config.SetCharacter(played);
     }
 
     /// <summary>

@@ -20,7 +20,7 @@ namespace Vestiges.Tests;
 /// Avec <c>--sprites</c>, le rendu du plan 59 : sprites, et sol et décors d'un vrai biome (<see cref="ReliefBake"/>),
 /// la run générée sur la terre de <c>--land-order</c>, photographiée, puis libérée ; <c>--tiles</c> garde alors les
 /// tuiles simples, sans run.
-/// Arguments après -- : --view chase|2d, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
+/// Arguments après -- : --view chase|2d, --character &lt;id&gt;, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
 /// tour de l'arène, garde des images des deux vues, puis ferme).
 /// </summary>
 public partial class ReliefSandbox : Node
@@ -29,7 +29,8 @@ public partial class ReliefSandbox : Node
     private static readonly Vector2I RenderSize = new(960, 540);
     // Le low poly n'a pas de pixels à respecter : il se rend à la taille de la fenêtre, lissé.
     private static readonly Vector2I LowPolyRenderSize = new(1920, 1080);
-    private const float PlayerWalkRate = 2f;
+    // Cadence de marche : la marche du modèle se joue au rythme des pas sur le sol, pour que les pieds ne glissent pas.
+    private const float WalkCyclesPerCell = 0.43f;
     private const float TurnRate = 14f;
     // Un losange de 64 px couvre la diagonale d'une cellule : 64 / √2 px par unité en orthographique.
     private const float PixelsPerUnit = 45.254834f;
@@ -82,7 +83,6 @@ public partial class ReliefSandbox : Node
     private View _view;
     private float _yawDegrees = 45f;
     private float _pitchDegrees;
-    private float _distance;
     // Recul réel de la caméra libre : sa distance, raccourcie quand le relief s'interpose.
     private float _reach;
     private bool _stretchDirty;
@@ -98,6 +98,7 @@ public partial class ReliefSandbox : Node
     private const float LayerNudge = 0.03f;
     private float _hudTimer;
     private float _animClock;
+    private float _walkPhase;
 
     // Captures.
     private string _captureDir;
@@ -134,6 +135,9 @@ public partial class ReliefSandbox : Node
     {
         string[] args = OS.GetCmdlineUserArgs();
         _config = ReliefConfig.Load(ConfigPath);
+        string character = Argument(args, "--character", null);
+        if (character != null)
+            _config.SetCharacter(character);
         _arena = new ReliefArena(_config.Arena, _config.LevelHeight);
         _crowdTarget = int.Parse(Argument(args, "--enemies", _config.CrowdCount.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         ulong seed = ulong.Parse(Argument(args, "--seed", "59"), CultureInfo.InvariantCulture);
@@ -147,8 +151,7 @@ public partial class ReliefSandbox : Node
         _captureDir = Argument(args, "--capture", null);
         _captureSeconds = float.Parse(Argument(args, "--seconds", "14"), CultureInfo.InvariantCulture);
         _pitchDegrees = _config.ChasePitch;
-        _distance = _config.ChaseDistance;
-        _reach = _distance;
+        _reach = _config.ChaseDistance;
 
         RegisterActions();
         _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
@@ -192,8 +195,8 @@ public partial class ReliefSandbox : Node
         AddKeyAction("relief_style_models", Key.F2);
         AddKeyAction("relief_style_outlines", Key.F3);
         AddKeyAction("relief_style_toon", Key.F4);
-        AddWheelAction("relief_zoom_in", MouseButton.WheelUp);
-        AddWheelAction("relief_zoom_out", MouseButton.WheelDown);
+        AddKeyAction("relief_skill", Key.Shift);
+        AddMouseAction("relief_skill", MouseButton.Right);
     }
 
     private static void AddKeyAction(string action, Key key)
@@ -204,13 +207,8 @@ public partial class ReliefSandbox : Node
         InputMap.ActionAddEvent(action, new InputEventKey { PhysicalKeycode = key });
     }
 
-    private static void AddWheelAction(string action, MouseButton button)
-    {
-        if (InputMap.HasAction(action))
-            return;
-        InputMap.AddAction(action);
+    private static void AddMouseAction(string action, MouseButton button) =>
         InputMap.ActionAddEvent(action, new InputEventMouseButton { ButtonIndex = button });
-    }
 
     private void LoadMaterials()
     {
@@ -545,6 +543,8 @@ public partial class ReliefSandbox : Node
         Vector2 wish = _captureDir != null ? BotWish(dt) : ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
         if (_captureDir == null && Input.IsActionJustPressed("mobility"))
             _sim.QueueBond();
+        if (_captureDir == null && Input.IsActionJustPressed("relief_skill"))
+            _sim.QueueSkill();
         _sim.Step(dt, wish, _crowdTarget);
         UpdateCamera(dt);
         if (_lowPoly)
@@ -566,10 +566,6 @@ public partial class ReliefSandbox : Node
         {
             float turn = Input.GetAxis("relief_rotate_left", "relief_rotate_right");
             _yawDegrees += turn * RotateDegreesPerSecond * dt;
-            if (Input.IsActionJustPressed("relief_zoom_in"))
-                _distance = Mathf.Max(_config.ChaseMinDistance, _distance * 0.88f);
-            if (Input.IsActionJustPressed("relief_zoom_out"))
-                _distance = Mathf.Min(_config.ChaseMaxDistance, _distance / 0.88f);
         }
         if (Input.IsActionJustPressed("relief_crowd_more"))
             _crowdTarget = Mathf.Min(_sim.Capacity, _crowdTarget + 10);
@@ -643,7 +639,7 @@ public partial class ReliefSandbox : Node
         if (Is3D)
         {
             // Rapprochée vite quand le relief s'interpose, éloignée en douceur quand il s'efface.
-            float clear = ClearDistance(target, back, _distance);
+            float clear = ClearDistance(target, back, _config.ChaseDistance);
             _reach = clear < _reach ? Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-25f * dt)) : Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-4f * dt));
             _camera.Position = target + back * _reach;
             _camera.LookAt(target, Vector3.Up);
@@ -770,9 +766,11 @@ public partial class ReliefSandbox : Node
     {
         float turn = 1f - Mathf.Exp(-TurnRate * dt);
         bool moving = _sim.PlayerVelocity.LengthSquared() > 0.05f;
+        _walkPhase += dt * _sim.PlayerVelocity.Length() * WalkCyclesPerCell;
         Mesh pose = _sim.PlayerAirborneFromBond
             ? _look.PlayerModel.FrameAt("dash", 1f - Mathf.Clamp(_sim.PlayerPos.Z - PlayerGround(), 0f, 1f))
-            : moving ? _look.PlayerModel.Frame("walk", _animClock * PlayerWalkRate) : _look.PlayerModel.Frame("idle", _animClock);
+            : _sim.SkillTime > 0f ? _look.PlayerModel.FrameAt("dash", 0.5f)
+            : moving ? _look.PlayerModel.Frame("walk", _walkPhase) : _look.PlayerModel.Frame("idle", _animClock);
         SetPose(_playerBody, pose);
         _playerYaw = Mathf.LerpAngle(_playerYaw, Mathf.Atan2(_sim.PlayerFacing.X, _sim.PlayerFacing.Y), turn);
         _playerBody.Position = ToWorld(_sim.PlayerPos);
@@ -873,14 +871,15 @@ public partial class ReliefSandbox : Node
                 climbing++;
         }
         string view = Is3D
-            ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · molette : recul · Échap libère la souris)"
+            ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · Échap libère la souris)"
             : "RELIEF 2D  (Tab : caméra libre)";
         _hud.Text = $"Vue : {view}" + (_lowPoly ? "" : $" · sol : {_biome}") + "\n"
             + (_lowPoly ? _look.Describe() + "\n" : "")
-            + $"Espace : bond · R : retour au départ · +/- : foule ({_crowdTarget})\n"
+            + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.SkillCooldown > 0f ? $"{_sim.SkillCooldown:0.0} s" : "prête")})"
+            + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
             + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
-            + $"Bonds {_sim.Bonds} · retombées {_sim.Stomps} · chutes dans le vide {_sim.VoidFalls}\n"
+            + $"Sauts {_sim.Bonds} · {_config.Mobility.Name} {_sim.Skills} · retombées {_sim.Stomps} · chutes dans le vide {_sim.VoidFalls}\n"
             + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s";
     }
 
