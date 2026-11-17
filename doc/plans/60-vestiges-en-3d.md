@@ -390,7 +390,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
-| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | à faire | moyen |
+| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | C4a livré (§19), C4b et C4c à faire | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
 Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
@@ -581,3 +581,73 @@ Les budgets de triangles. Un fichier de réglages, `tools/sprites/lowpoly_budget
 - Les défauts de C3b restent : câble de la grue, pointe du mât, épaississements.
 
 **Suite** : C2 (emprises et collisions dans le manifeste) ou C4 (chaîne d'import Godot, niveaux de détail), au choix de Raphaël.
+
+## 19. C4, l'import dans Godot — découpage proposé (17 novembre)
+
+Raphaël : continuer par C4. Aujourd'hui, la bibliothèque (`build/models/`, 312 modèles) ne sert qu'aux planches. Le bac à sable lit trois décors de `assets/models/` en analysant le .glb à l'exécution (`ReliefLowPoly.LoadModel`). C'est sans import Godot, donc sans niveaux de détail, et les normales lissées sont recalculées à chaque lancement.
+
+**Ce que C4 doit livrer** : des modèles prêts pour le moteur, avec leurs niveaux de détail, groupés par terre, et un bac à sable qu'on traverse au milieu des vrais décors d'une terre. On pourra y juger le style et mesurer le coût.
+
+**Défauts de l'agent, réversibles** :
+- **Un convertisseur, pas l'importeur de l'éditeur.** Une scène headless lit l'index et les .glb, ajoute les normales lissées et génère les niveaux de détail (`ImporterMesh.GenerateLods`). Elle écrit un `.res` binaire par modèle, à côté du .glb, plus son entrée dans l'index. Ouvrir la bibliothèque à l'importeur produirait 312 `.import` non versionnés et un long réimport à chaque export. Le convertisseur se relance avec l'export, de la même façon.
+- **Pas de `MeshLibrary`.** Elle sert le `GridMap`, un maillage par case, sans poses. Les décors seront posés en instances groupées (`MultiMeshInstance3D`, un par modèle), comme l'herbe du bac à sable. L'index par terre suffit comme catalogue.
+- **Les niveaux de détail sont ceux de Godot** (§241). Ils simplifient par effondrement d'arêtes, ce qui n'est acceptable que de loin. Si le rendu Compatibility ne les applique pas, le repli est un second export au pas ×2 de notre pipeline, montré au-delà d'une distance (`visibility_range`), ce qui garde le low poly uniforme.
+- **Les personnages et créatures restent maillés pose par pose.** Le squelette glTF reste transversal et plus tard (§241).
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **C4a, le convertisseur et les niveaux de détail** | `tools/convert_models.sh` (scène headless) : pour chaque modèle de l'index, poses comprises, un `.res` avec normales lissées et niveaux de détail ; l'index note les triangles de chaque niveau. D'abord une mesure : les niveaux de détail s'appliquent-ils en Compatibility (primitives dessinées par image, `RenderingServer.GetRenderingInfo`, un décor proche puis lointain) ? Sinon, le repli par `visibility_range`. `LoadModel` lit le `.res` quand il existe. | Primitives dessinées proche/loin ; durée de conversion ; durée de chargement `.res` contre `.glb` ; planche d'un même catalogue à l'identique | moyen |
+| **C4b, le budget sur les planches** | La planche de la bibliothèque écrit sous chaque modèle ses triangles, et marque d'une couleur ceux qui dépassent leur budget (C3c). | Planches des catalogues les plus lourds (barrière, Indicible, bâtiments) | faible |
+| **C4c, une terre dans le bac à sable** | `tools/relief_sandbox.sh -- --biome <catalogue>` sème les décors de ce catalogue, tirés de la bibliothèque convertie. Il écarte les décors plats (décalques, C5) et pondère les décors par la densité de la terre en 2D (`data/biomes`), avec une instance groupée par modèle. Les emprises restent les boîtes des modèles, en attendant C2. | Captures de la forêt, de la ville et de la carrière ; banc FPS (machine calme) et primitives, niveaux de détail allumés puis éteints | moyen |
+
+**Ordre** : C4a d'abord, car tout le reste lit ses `.res`. C4b est petit et indépendant. C4c est ce que Raphaël pourra jouer.
+
+**Risques** :
+- Les niveaux de détail en Compatibility, d'où la mesure en tête de C4a.
+- Le poids des `.res` : sans quantification, ils pèseront plus que les .glb compacts. On le mesure, et la bibliothèque n'est pas versionnée.
+- Le coût d'une terre pleine de décors en Compatibility, mesuré en C4c, avant le monde (60.4).
+
+### C4a livré — 17 novembre
+
+Le convertisseur et les niveaux de détail.
+
+**Fait**
+- `tools/convert_models.sh [dossier] [--force]` (scène `tools/tests/ModelConvert`, headless ; `build/models` par défaut). Pour chaque .glb accompagné de son manifeste, un `.scn` à côté : PackedScene compressée, poses en enfants. Les normales lissées sont ajoutées (`ReliefLowPoly.WithSmoothNormals`, extraite de `AddSmoothNormals`). Les niveaux de détail viennent de `ImporterMesh.GenerateLods`, angle de fusion 60° comme l'importeur.
+- Seuls les .glb plus récents que leur .scn repassent.
+- Rapport `lods.json` à la racine : triangles de chaque niveau du plus gros maillage, poids, durée. Fichier séparé de l'index de l'export, pour qu'un seul outil écrive chaque fichier. Un modèle à jour garde son entrée précédente.
+- `ReliefLowPoly.LoadScene` charge le `.scn` s'il est à jour, sinon le .glb à l'exécution. `LoadModel` (bac à sable) et la planche de la bibliothèque (`ModelSheet`) l'utilisent.
+- `tools/relief_sandbox.sh` convertit `assets/models` avant de lancer (incrémental). Les `.scn` et `lods.json` de `assets/models` sont ignorés de git. Ligne de commande ajoutée à `AGENTS.md`.
+- `--probe <modèle>` (fenêtré) : primitives dessinées par image selon la distance (4, 12, 30, 60, 120 m), à trois seuils d'erreur tolérée (`Viewport.MeshLodThreshold` 1, 4, 8 px) et au plus fin (`LodBias` poussé).
+
+**Mesures**
+- Conversion de la bibliothèque : 312 modèles, 0 échec, 4,4 s (9 s avec le lancement de Godot). 55,8 Mo de .scn contre 47,9 Mo de .glb. `assets/models` : 16 modèles (mid compris) en 1,8 s.
+- 3 à 8 niveaux générés selon le modèle. Arbre moyen 10 014 → 5 006 → 2 500 → 1 250 → 574 triangles. Maison 10 682 → 5 340 → 2 670 → 1 560. Facteur 3 204 → 1 602 → 800 → 400 → 294.
+- **Les niveaux de détail s'appliquent en Compatibility** (opengl3, gl_compatibility). Le repli par `visibility_range` est inutile. Primitives dessinées, fenêtre 1280×720 :
+
+| Modèle | Seuil 1 px | Seuil 4 px | Seuil 8 px |
+|---|---|---|---|
+| Arbre moyen | 10 014 jusqu'à 30 m, 5 006 à 60 et 120 m | 5 006 à 30 m, 2 500 à 60 m | 5 006 dès 12 m, 2 500 à 30 m |
+| Maison | mêmes paliers (10 682, 5 340, 2 670) | idem | idem |
+| Rôdeur (une pose) | 2 440 jusqu'à 30 m, 1 222 à 60 m, 612 à 120 m | 1 222 à 12 m, 612 à 30 m, 308 à 60 m | 612 dès 12 m |
+
+- Au seuil par défaut (1 px), Godot ne simplifie que tard. Le seuil se réglera à l'œil en C4c.
+- Chargement des 312 modèles (GDScript headless, deux passes) : `.scn` 0,16 à 0,17 s, .glb 0,42 à 0,43 s, sans même le calcul des normales que le jeu ajoute au .glb.
+
+**Vérifications**
+- Planches de 8 modèles (arbre, maison, kiosque, Grand Cerf, rôdeur, facteur, grille, grue) lues depuis les .glb puis depuis les .scn : 0 pixel différent sur 3 planches, 8 à 36 sur 3 autres, environ 1 000 sur la grille (nuance d'ombrage de deux barreaux, regardée en zoom : invisible).
+- `dotnet build` : 0 avertissement. Smoke test vert.
+- Bac à sable capturé (`relief_sandbox.sh -- --capture`), décors chargés depuis les .scn convertis au lancement : rendu identique à C3b, images regardées.
+- Pas de banc de FPS : le coût en jeu se mesurera en C4c.
+
+**Écarts au découpage**
+1. Format `.scn` au lieu de `.res` : une PackedScene garde les poses en enfants.
+2. Les triangles de chaque niveau vont dans `lods.json`, pas dans l'index de l'export.
+3. `ModelSheet` lit aussi les `.scn`, en plus de `LoadModel`.
+4. Le `.cs.uid` de `ModelConvert.cs` n'est créé ni par l'import headless ni par l'éditeur headless (les scripts récents du bac à sable n'en ont pas). Il a été généré par `ResourceUID.create_id()` au format de Godot.
+
+**Points ouverts**
+- Le seuil d'erreur des niveaux de détail, à régler en C4c.
+- Le poids des .scn (+16 % sur les .glb), sans conséquence tant que la bibliothèque n'est pas versionnée.
+- Les 48 décors en dépassement de budget (C3c) : les niveaux de détail les allègent de loin, l'effet se verra en C4c.
+
+**Suite** : C4b (triangles et budget écrits sur les planches), puis C4c (une terre dans le bac à sable).

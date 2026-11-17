@@ -2993,3 +2993,22 @@ Raphaël : reprendre la conversion par le lot C3 (poids et finesse), découpage 
 - **Résultat** : 2 modèles grossis (épouvantail ×1,03, brute du vide ×1,15), 48 décors au-dessus de leur budget et signalés, bibliothèque 48,3 → 47,9 Mo. La cible de moins de 40 Mo n'est pas tenue ; le levier est le squelette glTF, toujours laissé à plus tard.
 - **Suite au choix de Raphaël** : C2 ou C4.
 
+
+## 242. L'import des modèles dans Godot : découpage du lot C4 — 17 novembre 2026
+
+Raphaël : continuer par C4 (l'import dans Godot), plutôt que par C2.
+
+**Tranché par défaut par l'agent, réversible** (plan 60 §19) :
+- **Trois sous-lots, dans cet ordre** : le convertisseur et les niveaux de détail (C4a), le budget sur les planches (C4b), une terre dans le bac à sable (C4c).
+- **Un convertisseur headless plutôt que l'importeur de l'éditeur** : un `.res` par modèle, avec normales lissées et niveaux de détail, sans 312 `.import` non versionnés ni long réimport à chaque export.
+- **Pas de `MeshLibrary`** : faite pour le `GridMap`, sans poses. Les décors seront posés en instances groupées, et l'index par terre sert de catalogue.
+- **Les niveaux de détail de Godot d'abord, mesurés en Compatibility** ; repli : un second export au pas ×2, montré au-delà d'une distance.
+
+**C4a livré, tranché par défaut par l'agent, réversible** (plan 60 §19, « C4a livré ») :
+- **`.scn` plutôt que `.res`** : une PackedScene compressée garde les poses en enfants. Écrit à côté du .glb ; seuls les .glb plus récents repassent.
+- **Les triangles de chaque niveau vont dans `lods.json`**, pas dans l'index de l'export : un seul outil écrit chaque fichier.
+- **Le repli par `visibility_range` est abandonné** : les niveaux de détail de Godot s'appliquent en Compatibility (mesuré, primitives dessinées par image selon la distance et le seuil d'erreur). Le second export au pas ×2 n'est pas nécessaire.
+- **Les `.scn` et `lods.json` de `assets/models` sont ignorés de git** ; `tools/relief_sandbox.sh` les reconvertit au lancement, de façon incrémentale.
+- **Le seuil d'erreur des niveaux de détail reste au défaut (1 px)** ; il se réglera à l'œil en C4c.
+- Mesures : 312 modèles convertis en 4,4 s, 0 échec ; chargement 0,16 s en `.scn` contre 0,42 s en .glb ; 55,8 Mo de .scn contre 47,9 Mo de .glb. Planches identiques ou à quelques pixels près.
+

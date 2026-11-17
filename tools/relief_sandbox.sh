@@ -38,5 +38,9 @@ done
 if [[ " ${user_args[*]-} " != *" --land-order "* && " ${user_args[*]-} " != *" --tiles "* ]]; then
     user_args+=(--land-order forest_reclaimed)
 fi
+# Les modèles convertis pour le moteur (plan 60 §19) : normales et niveaux de détail, non versionnés. Seuls les .glb
+# plus récents que leur .scn repassent ; en cas d'échec, les .glb sont lus tels quels.
+"${GODOT_BIN:-godot-mono}" --headless --path . res://tools/tests/ModelConvert.tscn -- --root "$(pwd)/assets/models" \
+    >/dev/null 2>&1 || echo "[relief_sandbox] conversion des modèles en échec : les .glb sont lus tels quels"
 exec "${GODOT_BIN:-godot-mono}" --path . --windowed $(godot_screen_args) --resolution 1920x1080 \
     ${engine_args[@]+"${engine_args[@]}"} res://tools/tests/ReliefSandbox.tscn -- ${user_args[@]+"${user_args[@]}"}

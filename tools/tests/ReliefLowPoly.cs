@@ -83,27 +83,50 @@ public static class ReliefLowPoly
         ArrayMesh rebuilt = new() { ResourceName = source.ResourceName };
         for (int s = 0; s < source.GetSurfaceCount(); s++)
         {
-            Godot.Collections.Array arrays = source.SurfaceGetArrays(s);
-            Vector3[] vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
-            int[] indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
-            Vector3[] normals = new Vector3[vertices.Length];
-            for (int i = 0; i + 2 < indices.Length; i += 3)
-            {
-                Vector3 a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
-                // Pondérée par l'aire. Godot tient les faces avant en sens horaire (l'import glTF a retourné l'ordre) :
-                // ce produit-ci sort de la surface. Tournée vers l'intérieur, le décalage d'ombre l'enfoncerait (acné).
-                Vector3 face = (c - a).Cross(b - a);
-                normals[indices[i]] += face;
-                normals[indices[i + 1]] += face;
-                normals[indices[i + 2]] += face;
-            }
-            for (int i = 0; i < normals.Length; i++)
-                normals[i] = normals[i].LengthSquared() > 0f ? normals[i].Normalized() : Vector3.Up;
-            arrays[(int)Mesh.ArrayType.Normal] = normals;
-            rebuilt.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+            rebuilt.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, WithSmoothNormals(source.SurfaceGetArrays(s)));
             rebuilt.SurfaceSetMaterial(s, source.SurfaceGetMaterial(s));
         }
         instance.Mesh = rebuilt;
+    }
+
+    /// <summary>Les tableaux d'une surface, avec la normale de chaque sommet lissée sur ses faces (voir <see cref="AddSmoothNormals"/>).</summary>
+    public static Godot.Collections.Array WithSmoothNormals(Godot.Collections.Array arrays)
+    {
+        Vector3[] vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        int[] indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
+        Vector3[] normals = new Vector3[vertices.Length];
+        for (int i = 0; i + 2 < indices.Length; i += 3)
+        {
+            Vector3 a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
+            // Pondérée par l'aire. Godot tient les faces avant en sens horaire (l'import glTF a retourné l'ordre) :
+            // ce produit-ci sort de la surface. Tournée vers l'intérieur, le décalage d'ombre l'enfoncerait (acné).
+            Vector3 face = (c - a).Cross(b - a);
+            normals[indices[i]] += face;
+            normals[indices[i + 1]] += face;
+            normals[indices[i + 2]] += face;
+        }
+        for (int i = 0; i < normals.Length; i++)
+            normals[i] = normals[i].LengthSquared() > 0f ? normals[i].Normalized() : Vector3.Up;
+        arrays[(int)Mesh.ArrayType.Normal] = normals;
+        return arrays;
+    }
+
+    /// <summary>
+    /// La scène d'un modèle, poses en enfants : le modèle converti (<c>&lt;root&gt;.scn</c>, normales et niveaux de
+    /// détail, <c>tools/convert_models.sh</c>, plan 60 §19) s'il est plus récent que son .glb, sinon le .glb lu à
+    /// l'exécution. <paramref name="root"/> est le chemin sans extension, sous <c>res://</c> ou absolu.
+    /// </summary>
+    public static Node3D LoadScene(string root)
+    {
+        string glb = $"{root}.glb", converted = $"{root}.scn";
+        if (FileAccess.FileExists(converted) && FileAccess.GetModifiedTime(converted) >= FileAccess.GetModifiedTime(glb))
+            return ResourceLoader.Load<PackedScene>(converted).Instantiate<Node3D>();
+        GltfDocument document = new();
+        GltfState state = new();
+        Error error = document.AppendFromFile(ProjectSettings.GlobalizePath(glb), state);
+        if (error != Error.Ok)
+            throw new System.IO.IOException($"{glb} : {error}");
+        return (Node3D)document.GenerateScene(state);
     }
 
     /// <summary>Le style toon (F4) : le mode d'ombrage d'un shader ne se règle pas par paramètre, on change de shader.</summary>
@@ -113,8 +136,8 @@ public static class ReliefLowPoly
     public static bool Exists(string path) => FileAccess.FileExists($"res://assets/models/{path}.json");
 
     /// <summary>
-    /// Charge <c>res://assets/models/&lt;path&gt;.glb</c> et son manifeste ; les poses deviennent des maillages à poser.
-    /// Le .glb est lu à l'exécution, sans passer par l'import de Godot : le mid poly, non versionné, n'a pas de .import.
+    /// Charge <c>res://assets/models/&lt;path&gt;</c> (voir <see cref="LoadScene"/>) et son manifeste ; les poses
+    /// deviennent des maillages à poser. Hors de l'import de Godot : le mid poly, non versionné, n'a pas de .import.
     /// </summary>
     public static Model LoadModel(string path)
     {
@@ -125,12 +148,7 @@ public static class ReliefLowPoly
         model.Fps = (float)manifest["fps"].AsDouble();
         bool flatNormals = FlatNormals(manifest);
 
-        GltfDocument document = new();
-        GltfState state = new();
-        Error error = document.AppendFromFile(ProjectSettings.GlobalizePath($"{root}.glb"), state);
-        if (error != Error.Ok)
-            throw new System.IO.IOException($"{root}.glb : {error}");
-        Node scene = document.GenerateScene(state);
+        Node scene = LoadScene(root);
         Dictionary<string, Mesh> byName = new();
         foreach (Node child in scene.FindChildren("*", "MeshInstance3D", true, false))
         {

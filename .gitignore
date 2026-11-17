@@ -50,3 +50,7 @@ assets/models/mid/
 # Les autres personnages du bac à sable de la verticalité sont exportés à la demande (plan 60, §236).
 assets/models/characters/*
 !assets/models/characters/facteur.*
+
+# Modèles low poly convertis pour le moteur (plan 60 §19), régénérés par tools/convert_models.sh et relief_sandbox.sh
+assets/models/**/*.scn
+assets/models/lods.json

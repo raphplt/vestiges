@@ -298,11 +298,7 @@ public partial class ModelSheet : Node3D
     {
         if (!FileAccess.FileExists($"{pathWithoutExtension}.glb"))
             return (null, null);
-        GltfDocument document = new();
-        GltfState state = new();
-        if (document.AppendFromFile($"{pathWithoutExtension}.glb", state) != Error.Ok)
-            return (null, null);
-        Node3D model = (Node3D)document.GenerateScene(state);
+        Node3D model = ReliefLowPoly.LoadScene(pathWithoutExtension);
         (Dictionary<string, string[]> animations, bool flatNormals) = ReadManifest($"{pathWithoutExtension}.json");
         ApplyVertexColorMaterial(model, flatNormals);
         string first = animations.TryGetValue("idle", out string[] idle) ? idle[0] : animations.Values.GetEnumerator() is var e && e.MoveNext() ? e.Current[0] : null;
