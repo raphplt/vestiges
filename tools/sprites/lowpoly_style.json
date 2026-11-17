@@ -1,0 +1,27 @@
+{
+	"_comment": "Rendu des couleurs des modèles low poly, par sorte de modèle (plan 60 §20, lot C6). plain : aplats, l'usure peinte en bruit (mousse, rouille, crasse, fibres, fissures) et les détails plus fins qu'un pixel ne colorent plus les faces ; smoothing : passes où chaque face prend le matériau le plus présent autour d'elle ; saturation et value : palette terne (1 garde la couleur du sprite) ; grime et grime_amount : mélange vers une teinte de crasse commune (sRGB). Les lueurs (matériaux émissifs) gardent leur couleur.",
+	"prop": {
+		"plain": true,
+		"smoothing": 2,
+		"saturation": 0.62,
+		"value": 0.86,
+		"grime": "5a5246",
+		"grime_amount": 0.12
+	},
+	"creature": {
+		"plain": false,
+		"smoothing": 0,
+		"saturation": 0.7,
+		"value": 0.9,
+		"grime": "5a5246",
+		"grime_amount": 0.1
+	},
+	"character": {
+		"plain": false,
+		"smoothing": 0,
+		"saturation": 0.85,
+		"value": 0.95,
+		"grime": "5a5246",
+		"grime_amount": 0.05
+	}
+}

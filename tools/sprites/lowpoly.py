@@ -51,15 +51,67 @@ class Mesh:
         return len(self.indices)
 
 
-def material_colors(materials: Sequence[Material]) -> tuple[np.ndarray, np.ndarray]:
+@dataclass(frozen=True)
+class ColorStyle:
+    """
+    Le rendu des couleurs d'une sorte de modèle (plan 60 §20, lot C6) : aplats (l'usure peinte en bruit ne colore plus
+    les faces), passes de lissage des matériaux, et palette terne (saturation, valeur, mélange vers une teinte de
+    crasse commune). Les valeurs neutres gardent les couleurs des sprites telles quelles.
+    """
+    plain: bool = False
+    smoothing: int = 0
+    saturation: float = 1.0
+    value: float = 1.0
+    grime: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    grime_amount: float = 0.0
+
+
+NEUTRAL = ColorStyle()
+
+
+def material_colors(materials: Sequence[Material], style: ColorStyle = NEUTRAL) -> tuple[np.ndarray, np.ndarray]:
     """
     Couleur de face de chaque matériau (son ton de base, troisième de la rampe) et son caractère émissif. Écrite en sRGB
     et non en linéaire comme le veut glTF : Godot en GL Compatibility relit COLOR_0 comme du sRGB, quel que soit le
-    drapeau du matériau (mesuré : une couleur linéaire s'affiche deux fois assombrie).
+    drapeau du matériau (mesuré : une couleur linéaire s'affiche deux fois assombrie). La palette du style ternit les
+    couleurs, pas les lueurs.
     """
     colors = np.array([np.array(m.ramp[2][:3], dtype=np.float64) / 255.0 for m in materials])
     emissive = np.array([m.emissive for m in materials], dtype=bool)
+    grey = colors @ np.array([0.299, 0.587, 0.114])
+    dull = grey[:, None] + (colors - grey[:, None]) * style.saturation
+    dull = dull * style.value
+    dull = dull + (np.array(style.grime) - dull) * style.grime_amount
+    colors = np.where(emissive[:, None], colors, np.clip(dull, 0.0, 1.0))
     return colors, emissive
+
+
+def colouring_parts(parts: Sequence[Part], style: ColorStyle) -> Sequence[Part]:
+    """
+    Les pièces qui colorent les faces : en aplats, ni l'usure peinte en bruit (mousse, rouille, crasse, fibres,
+    fissures), ni les détails plus fins qu'un pixel (`relief=False`). La face prend alors la couleur de la pièce qu'ils
+    recouvrent.
+    """
+    if not style.plain:
+        return parts
+    kept = [p for p in parts if p.relief and not getattr(p.distance, "weathering", False)]
+    return kept or parts
+
+
+def _smooth_materials(tris: np.ndarray, mat: np.ndarray, vertex_count: int, material_count: int, emissive: np.ndarray,
+                      passes: int) -> np.ndarray:
+    """
+    Chaque face prend le matériau le plus présent autour d'elle (faces qui partagent un de ses sommets) : les taches
+    d'une ou deux faces se fondent dans leur voisinage. Les faces émissives (yeux, lueurs) restent et ne débordent pas.
+    """
+    fixed = emissive[mat]
+    for _ in range(passes):
+        counts = np.zeros((vertex_count, material_count))
+        for corner in range(3):
+            np.add.at(counts, (tris[:, corner], mat), np.where(fixed, 0.0, 1.0))
+        around = counts[tris[:, 0]] + counts[tris[:, 1]] + counts[tris[:, 2]]
+        mat = np.where(fixed, mat, np.argmax(around, axis=1))
+    return mat
 
 
 def find_bounds(parts: Sequence[Part], box_min, box_max, step: float) -> tuple[np.ndarray, np.ndarray] | None:
@@ -285,16 +337,17 @@ def _empty_mesh() -> Mesh:
     return Mesh(np.zeros((0, 3)), None, np.zeros((0, 3)), np.zeros(0, dtype=bool), np.zeros((0, 3), dtype=np.int64))
 
 
-def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
+def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float,
+               style: ColorStyle = NEUTRAL) -> Mesh:
     """
     Maille l'union des volumes dans la boîte, au pas `step` (unités du modèle), pour un ombrage par faces. Chaque face
     prend le matériau juste sous elle ; un sommet sert à toutes ses faces d'un même matériau.
     """
-    return _flat_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step)
+    return _flat_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step, style=style)
 
 
 def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: np.ndarray, quads: np.ndarray, step: float,
-               inset: float = 0.0) -> Mesh:
+               inset: float = 0.0, style: ColorStyle = NEUTRAL) -> Mesh:
     if not len(quads):
         return _empty_mesh()
     tris = _split_quads(vertices, quads)
@@ -306,9 +359,11 @@ def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: n
 
     # Les faces sortent de la grille déjà tournées vers l'extérieur (`_nets`) : le matériau se prend juste sous elles.
     centroid = corners.mean(axis=1)
-    _, mat, _ = _evaluate_with_part(parts, centroid - normal * (step * 0.3 + inset))
-    colors, emissive = material_colors(materials)
+    _, mat, _ = _evaluate_with_part(colouring_parts(parts, style), centroid - normal * (step * 0.3 + inset))
+    colors, emissive = material_colors(materials, style)
     mat = np.where(mat < 0, 0, mat)
+    if style.smoothing:
+        mat = _smooth_materials(tris, mat, len(vertices), len(materials), emissive, style.smoothing)
 
     # Un sommet par couple (sommet de la grille, matériau) : la couleur reste franche d'une face à l'autre.
     keys = tris * len(materials) + mat[:, None]
@@ -317,16 +372,17 @@ def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: n
                 remap.reshape(-1, 3))
 
 
-def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float) -> Mesh:
+def mesh_parts_smooth(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float,
+                      style: ColorStyle = NEUTRAL) -> Mesh:
     """
     Même surface, sommets partagés et ombrage lissé (« mid poly ») : la normale d'un sommet est le gradient du volume,
     sa couleur celle du matériau juste sous lui. Un triangle est émissif si l'un de ses sommets l'est.
     """
-    return _smooth_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step)
+    return _smooth_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step, style=style)
 
 
 def _smooth_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: np.ndarray, quads: np.ndarray, step: float,
-                 inset: float = 0.0) -> Mesh:
+                 inset: float = 0.0, style: ColorStyle = NEUTRAL) -> Mesh:
     if not len(quads):
         return _empty_mesh()
     tris = _split_quads(vertices, quads)
@@ -343,27 +399,27 @@ def _smooth_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices:
         minus, _ = _evaluate(parts, vertices - offset)
         gradient[:, axis] = plus - minus
     normals = gradient / np.maximum(np.linalg.norm(gradient, axis=1), 1e-9)[:, None]
-    _, mat, _ = _evaluate_with_part(parts, vertices - normals * (step * 0.3 + inset))
-    colors, emissive = material_colors(materials)
+    _, mat, _ = _evaluate_with_part(colouring_parts(parts, style), vertices - normals * (step * 0.3 + inset))
+    colors, emissive = material_colors(materials, style)
     mat = np.where(mat < 0, 0, mat)
     tri_emissive = emissive[mat][tris].any(axis=1)
     return Mesh(vertices, normals, colors[mat], tri_emissive, tris)
 
 
 def mesh_parts_adaptive(parts: Sequence[Part], materials: Sequence[Material], bounds_min, bounds_max, step: float,
-                        fine_step: float, smooth: bool) -> tuple[Mesh, int]:
+                        fine_step: float, smooth: bool, style: ColorStyle = NEUTRAL) -> tuple[Mesh, int]:
     """
     Comme `mesh_parts` (ou `mesh_parts_smooth`), affiné au pas `fine_step` là où les pièces minces passent entre les
     points de la grille (voir `adaptive_nets`). Renvoie le maillage et le nombre de triangles de l'affinage.
     """
     mesher = _smooth_mesh if smooth else _flat_mesh
     coarse, detail, fine = adaptive_nets(parts, bounds_min, bounds_max, step, fine_step)
-    mesh = mesher(parts, materials, *coarse, step)
+    mesh = mesher(parts, materials, *coarse, step, style=style)
     if detail is None:
         return mesh, 0
     # La surface fine est épaissie : le matériau se lit d'autant plus profond, dans la pièce et non sur la mousse peinte
     # qui l'enveloppe.
-    patch = mesher(parts, materials, *detail, fine, inset=THIN_INFLATE * fine)
+    patch = mesher(parts, materials, *detail, fine, inset=THIN_INFLATE * fine, style=style)
     if not patch.triangles:
         return mesh, 0
     return (merged([mesh, patch]) if mesh.triangles else patch), patch.triangles

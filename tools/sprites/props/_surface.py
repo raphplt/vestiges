@@ -65,6 +65,7 @@ def noise_mask(period: float, seed: int, coverage: float, stretch: Sequence[floa
         # Le bruit lissé reste dans [0,2 ; 0,8] la plupart du temps : on recentre le seuil sur cette plage.
         return (value_noise(local, period, seed, stretch) - (0.2 + 0.6 * threshold)) * period
 
+    mask.weathering = True
     return mask
 
 
@@ -90,17 +91,25 @@ def painted(shape: Distance, mask: Distance, depth: float = PAINT_DEPTH) -> Dist
             d[near] = np.maximum(d[near], mask(p[near]))
         return d
 
+    # Une usure en bruit (mousse, rouille, crasse) : le low poly la laisse de côté pour colorer en aplats (plan 60 §20).
+    field.weathering = getattr(mask, "weathering", False)
     return field
 
 
 def both(*masks: Distance) -> Distance:
     """Intersection de masques : peint là où tous sont négatifs."""
-    return lambda p: np.max(np.stack([m(p) for m in masks]), axis=0)
+    return _combined(lambda p: np.max(np.stack([m(p) for m in masks]), axis=0), masks)
 
 
 def either(*masks: Distance) -> Distance:
     """Union de masques : peint là où l'un d'eux est négatif."""
-    return lambda p: np.min(np.stack([m(p) for m in masks]), axis=0)
+    return _combined(lambda p: np.min(np.stack([m(p) for m in masks]), axis=0), masks)
+
+
+def _combined(mask: Distance, masks: Sequence[Distance]) -> Distance:
+    """Un masque fait d'autres garde leur marque d'usure en bruit."""
+    mask.weathering = any(getattr(m, "weathering", False) for m in masks)
+    return mask
 
 
 def waterline(shape: Distance, level: float, reach: float = 0.16 * M, seed: int | None = None,
@@ -156,4 +165,5 @@ def cracks(period: float, seed: int, width: float, reach: float = 0.5) -> Distan
         keep = (value_noise(p, period * 2.5, seed + 1) - (1.0 - reach * 0.6)) * -period
         return np.maximum(lines, keep)
 
+    mask.weathering = True
     return mask

@@ -3024,3 +3024,14 @@ Raphaël : continuer par C4 (l'import dans Godot), plutôt que par C2.
 **Retours de Raphaël sur C4c** (17 novembre) : des trous dans tous les modèles ; les arbres doivent passer en transparence quand ils cachent la vue ; les couleurs font « IA slop », crade mais pas comme ça.
 - **Tranché par défaut par l'agent, réversible** : l'orientation des faces se lit dans la grille, et non plus d'après le gradient, qui retournait 1,4 % à 5,4 % des faces. Les décors low poly s'effacent en trame dans un cylindre de la caméra au joueur (rayon 1,1 cellule), et restent pleins dans les ombres.
 - **En attente de Raphaël** : la direction du rendu des couleurs des modèles 3D.
+
+## 243. Le rendu des couleurs des modèles 3D : aplats et palette terne — 17 novembre 2026
+
+Raphaël : « Aplats + palette terne », après avoir jugé les couleurs « IA slop » (crade, mais pas comme ça).
+
+**Tranché par défaut par l'agent, réversible** (plan 60 §20) :
+- **L'usure peinte en bruit ne colore plus les faces des décors** (mousse, rouille, crasse, fibres, fissures), ni les détails plus fins qu'un pixel. Les motifs nets (bandes, joints, ardoises) et l'usure sculptée restent. Les sprites 2D ne changent pas.
+- **Deux passes de lissage** des matériaux des faces fondent les taches restantes, les lueurs exceptées.
+- **Palette terne à l'export, par sorte de modèle** (`tools/sprites/lowpoly_style.json`). Décors : saturation 0,62, valeur 0,86, 12 % vers la crasse `5a5246`. Créatures et personnages : moins ternis, et sans aplats.
+- **Perte acceptée** : les marquages fins des panneaux.
+

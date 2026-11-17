@@ -56,8 +56,8 @@ sys.path.insert(0, str(ROOT))
 from tools.generate_fauna import model as fauna_model  # noqa: E402
 from tools.generate_props import BIOMES  # noqa: E402
 from tools.sprites import models  # noqa: E402
-from tools.sprites.lowpoly import (Mesh, ModelExport, find_bounds, merged, mesh_parts, mesh_parts_adaptive,  # noqa: E402
-                                   mesh_parts_smooth, scaled, write_glb)  # noqa: E402
+from tools.sprites.lowpoly import (ColorStyle, Mesh, ModelExport, find_bounds, merged, mesh_parts,  # noqa: E402
+                                   mesh_parts_adaptive, mesh_parts_smooth, scaled, write_glb)  # noqa: E402
 from tools.sprites.props._kit import M  # noqa: E402
 from tools.sprites.render import MODEL_SCALE, PITCH  # noqa: E402
 
@@ -65,6 +65,8 @@ OUT = ROOT / "assets" / "models"
 LIBRARY = ROOT / "build" / "models"
 SPRITES = ROOT / "tools" / "sprites"
 BUDGETS = SPRITES / "lowpoly_budgets.json"
+# Rendu des couleurs par sorte de modèle (plan 60 §20) : aplats, lissage, palette terne.
+STYLES = SPRITES / "lowpoly_style.json"
 # Itérations de la dichotomie du pas, une fois le budget encadré : un huitième de l'écart suffit.
 BISECTIONS = 3
 # Un modèle se ramène au mètre par son échelle de rendu : les personnages, modélisés plus grands et rendus plus petits,
@@ -101,18 +103,27 @@ def _bounds(parts, box, step):
     return bounds
 
 
-def _mesh_pose(parts, materials, box, step, smooth: bool) -> Mesh:
+def _mesh_pose(parts, materials, box, step, smooth: bool, style: ColorStyle) -> Mesh:
     bounds = _bounds(parts, box, step)
     mesher = mesh_parts_smooth if smooth else mesh_parts
-    return mesher(parts, materials, bounds[0], bounds[1], step)
+    return mesher(parts, materials, bounds[0], bounds[1], step, style)
 
 
-def export_animated(model: models.SpriteModel, kind: str, step: float, smooth: bool) -> ModelExport:
+def load_style(kind: str) -> ColorStyle:
+    """Le rendu des couleurs d'une sorte de modèle, lu dans `lowpoly_style.json`."""
+    entry = json.loads(STYLES.read_text())[kind]
+    grime = entry["grime"]
+    return ColorStyle(plain=entry["plain"], smoothing=entry["smoothing"], saturation=entry["saturation"],
+                      value=entry["value"], grime=tuple(int(grime[i:i + 2], 16) / 255.0 for i in (0, 2, 4)),
+                      grime_amount=entry["grime_amount"])
+
+
+def export_animated(model: models.SpriteModel, kind: str, step: float, smooth: bool, style: ColorStyle) -> ModelExport:
     box = model.bounds if model.bounds is not None else _frame_box(model.frame_size, model.scale)
     metres = _metres(model)
     animations = {}
     for name, poses in model.animations.items():
-        animations[name] = [scaled(_mesh_pose(model.parts(pose), model.materials, box, step, smooth), metres)
+        animations[name] = [scaled(_mesh_pose(model.parts(pose), model.materials, box, step, smooth, style), metres)
                             for pose in poses]
     return ModelExport(model.model_id, animations, kind=kind)
 
@@ -121,7 +132,8 @@ def _props_catalog(catalog: str) -> dict:
     return {m.stem: m for m in importlib.import_module(BIOMES[catalog][0]).catalog()}
 
 
-def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float, fine_base: float) -> tuple[Mesh, int]:
+def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float, fine_base: float,
+               style: ColorStyle) -> tuple[Mesh, int]:
     """
     Le pas d'un décor suit la taille de son cadre, et ses pièces minces (fût, flèche, branche, grillage) passent entre
     les points de la grille : la grille s'affine localement autour d'elles (plan 60 §18, lot C3b), à la moitié du pas
@@ -140,7 +152,8 @@ def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float, fine_
     while True:
         mesh_bounds = _bounds(parts, box, prop_step)
         fine_step = max(FINE_FLOOR / fineness, min(prop_step, fine_base) / 2.0)
-        mesh, detail = mesh_parts_adaptive(parts, prop.materials, mesh_bounds[0], mesh_bounds[1], prop_step, fine_step, smooth)
+        mesh, detail = mesh_parts_adaptive(parts, prop.materials, mesh_bounds[0], mesh_bounds[1], prop_step, fine_step, smooth,
+                                           style)
         height = float(np.ptp(mesh.positions[:, 1])) if len(mesh.positions) else 0.0
         if height >= 0.6 * expected or prop_step <= 1.2:
             return mesh, detail
@@ -148,7 +161,7 @@ def _mesh_prop(prop, box, prop_step: float, smooth: bool, fineness: float, fine_
 
 
 def export_prop(catalog: str, stems: list[str], model_id: str, step: float | None, smooth: bool, fineness: float,
-                coarsening: float = 1.0) -> ModelExport:
+                style: ColorStyle, coarsening: float = 1.0) -> ModelExport:
     props = _props_catalog(catalog)
     pieces = []
     detail = 0
@@ -157,10 +170,10 @@ def export_prop(catalog: str, stems: list[str], model_id: str, step: float | Non
         box = prop.bounds if prop.bounds is not None else _frame_box(prop.canvas, MODEL_SCALE)
         extent = float(np.max(np.asarray(box[1]) - np.asarray(box[0])))
         if step is not None:
-            mesh = _mesh_pose(prop.parts(), prop.materials, box, step, smooth)
+            mesh = _mesh_pose(prop.parts(), prop.materials, box, step, smooth, style)
         else:
             prop_step = max(2.4 / fineness, extent / (40.0 * fineness))
-            mesh, added = _mesh_prop(prop, box, prop_step * coarsening, smooth, fineness, prop_step)
+            mesh, added = _mesh_prop(prop, box, prop_step * coarsening, smooth, fineness, prop_step, style)
             detail += added
         pieces.append(scaled(mesh, CREATURE_METRES))
     return ModelExport(model_id, {"idle": [merged(pieces)]}, kind="prop", detail_triangles=detail)
@@ -269,10 +282,12 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
             model = (models.character(job.model_id) if job.catalog == "characters"
                      else models.creature(job.model_id) if job.catalog == "creatures" else fauna_model(job.model_id))
             base = (1.6 if kind == "character" else 2.0) / fineness
-            build = lambda c: export_animated(model, kind, (step or base) * c, smooth)  # noqa: E731
+            style = load_style(kind)
+            build = lambda c: export_animated(model, kind, (step or base) * c, smooth, style)  # noqa: E731
         else:
             kind = "prop"
-            build = lambda c: export_prop(job.catalog, job.sources, job.model_id, step, smooth, fineness, c)  # noqa: E731
+            style = load_style(kind)
+            build = lambda c: export_prop(job.catalog, job.sources, job.model_id, step, smooth, fineness, style, c)  # noqa: E731
         if step is None:
             export, budget = fit_budget(build, kind, json.loads(BUDGETS.read_text()), fineness ** 2)
             entry.update(budget)

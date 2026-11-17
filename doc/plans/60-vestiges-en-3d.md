@@ -392,6 +392,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | livré (§19) : C4a, C4b et C4c | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
+| C6 | Rendu des couleurs : aplats et palette terne (§20) | C6a livré (§20) | moyen |
 
 Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
 
@@ -721,3 +722,40 @@ Raphaël a joué la forêt. « Toutes les textures sans exception sont buggées 
 - Les décors en mid poly (les trois du réglage par défaut) n'ont pas cet effacement. La bibliothèque n'a pas de mid poly.
 
 **Les couleurs : en attente de Raphaël.** Un essai de lissage, où chaque face prend le matériau le plus présent autour d'elle, efface les petites taches : mousse en confettis, éclats du panneau. Il ne touche ni aux grandes plaques de lierre, ni aux verts vifs. Planches comparatives sur la forêt et la carrière, à 0, 2 et 5 passes. L'essai n'est pas gardé dans le code. La direction du rendu des couleurs revient à Raphaël.
+
+## 20. C6, le rendu des couleurs : aplats et palette terne — découpage (17 novembre)
+
+Raphaël : « Aplats + palette terne ». Le crade viendra des formes cassées, de l'usure sculptée et de la lumière, pas des taches.
+
+**Cause** : la couleur de chaque face vient du matériau du sprite 2D juste sous elle. L'usure peinte des sprites (mousse, rouille, crasse, fibres d'écorce, crépi) est faite pour quatre tons de pixel art. En 3D, elle retombe en confettis de faces sur des volumes lisses. Les couleurs de base des sprites sont aussi plus vives que la lumière du moteur ne le supporte.
+
+**Défauts de l'agent, réversibles** :
+- **Aplats** : les détails peints en bruit (masques `noise_mask`, et toutes les pièces `relief=False`) ne colorent plus les faces. Chaque face prend la couleur de la pièce qu'ils recouvrent. Les motifs nets (bandes, rayures, joints, ardoises) restent. Les pièces sculptées (lierre en feuilles, polypores, gravats) restent aussi : c'est de l'usure en volume. Pour l'instant les décors seuls : les créatures et personnages n'ont pas de détail peint de ce genre.
+- **Lissage** : deux passes où chaque face prend le matériau le plus présent autour d'elle, pour fondre les taches restantes. Les faces émissives restent telles quelles.
+- **Palette terne** à l'export, par sorte de modèle : saturation et valeur réduites, et un léger mélange vers une teinte de crasse commune. Les couleurs émissives n'y passent pas. Réglages dans `tools/sprites/lowpoly_style.json`. La palette vaut ainsi en low et en mid poly, sur les planches comme en jeu.
+- **Les sprites 2D ne changent pas** : le marquage des détails peints ne touche pas leur rendu.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **C6a, aplats et palette** | Marquage des détails peints en bruit, lecture des couleurs sans eux, lissage, palette par sorte de modèle ; réexport de la bibliothèque et de `assets/models` | Planches avant/après de la forêt, de la carrière, de la ville et des créatures ; capture du bac à sable en forêt ; sprites 2D régénérés identiques | moyen |
+
+### C6a livré — 17 novembre
+
+**Fait**
+- `tools/sprites/props/_surface.py` : les masques en bruit (`noise_mask`, `cracks`) sont marqués comme usure (`weathering`), et `painted`, `both` et `either` transmettent la marque. Les sprites 2D ne changent pas : la forêt et la ville régénérées sont identiques à l'octet près.
+- `tools/sprites/lowpoly.py` : `ColorStyle` (aplats, lissage, palette) et `colouring_parts`. En aplats, une face prend sa couleur sans les pièces d'usure ni les pièces `relief=False`. Puis viennent les passes de lissage, sauf pour les faces émissives, et la palette terne dans `material_colors` (désaturation, valeur, mélange vers la crasse), sauf pour les lueurs. Le mid poly reçoit les aplats et la palette, pas le lissage.
+- `tools/sprites/lowpoly_style.json` : décors en aplats, 2 passes, saturation 0,62, valeur 0,86, crasse `5a5246` à 12 %. Créatures sans aplats, saturation 0,7, valeur 0,9, crasse à 10 %. Personnages : saturation 0,85, valeur 0,95, crasse à 5 %.
+- Bibliothèque réexportée : 312 modèles, 0 échec, 451 s, 46,2 Mo, contre 47,5 Mo (moins de frontières de matériaux, donc moins de sommets doublés). `assets/models` réexporté en low et mid poly.
+
+**Vérifications**
+- Planches avant/après de la forêt, de la carrière, de la ville, des créatures et des personnages, regardées.
+  - Maisons englouties sans camouflage de lierre peint, voitures sans mousse en confettis, rochers sans taches, arbres et buissons moins criards. Le lierre et la végétation sculptés restent.
+  - Perte acceptée : le panneau de danger de la carrière perd sa bande rouge et son texte, peints en détail fin.
+  - Les créatures changent peu : leurs taches sont des pièces sculptées, pas de l'usure peinte.
+- Bac à sable en forêt (`--biome forest_reclaimed --capture`), vue libre et vue 2D regardées : les décors sont calmes et tiennent avec le sol.
+- Mesure du tour du bot : 544 k triangles par image, 1 072 i/s.
+
+**Points ouverts**
+- Le sol texturé est maintenant plus vif que les décors : sa palette suivra si Raphaël le juge.
+- Les marquages lisibles (panneaux, bandes de sécurité) pourraient revenir en motifs nets, s'ils manquent en jeu.
+
