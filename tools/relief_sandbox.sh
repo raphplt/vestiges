@@ -12,6 +12,9 @@
 # lancement), --enemies N (35 par défaut), --seed S, --sprites.
 # Espace : saut commun ; Maj ou clic droit : la capacité du personnage (dash, glissade, déphasage, saut flottant).
 # Captures (bot qui fait le tour de l'arène, images des deux vues, puis fermeture) : --capture <dossier> [--seconds S].
+# --biome <terre> (forest_reclaimed, urban_ruins, collapsed_quarry, wild_fields, swamp) : les décors de la terre
+# (data/props), modèles de la bibliothèque build/models ; --lod-threshold <px> : erreur tolérée des niveaux de détail
+# (0 : toujours le plus fin). La capture mesure alors images par seconde et triangles du tour du bot.
 # Réglages et arène : data/sandbox/relief.json.
 # Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
 set -euo pipefail
@@ -42,5 +45,11 @@ fi
 # plus récents que leur .scn repassent ; en cas d'échec, les .glb sont lus tels quels.
 "${GODOT_BIN:-godot-mono}" --headless --path . res://tools/tests/ModelConvert.tscn -- --root "$(pwd)/assets/models" \
     >/dev/null 2>&1 || echo "[relief_sandbox] conversion des modèles en échec : les .glb sont lus tels quels"
+# --biome <terre> : les décors de la terre viennent de la bibliothèque de l'export de masse (plan 60 §19, C4c).
+if [[ " ${user_args[*]-} " == *" --biome "* ]]; then
+    [[ -f build/models/index.json ]] || { echo "[relief_sandbox] bibliothèque absente : python3 tools/export_lowpoly.py --all --jobs 2"; exit 1; }
+    "${GODOT_BIN:-godot-mono}" --headless --path . res://tools/tests/ModelConvert.tscn -- --root "$(pwd)/build/models" \
+        >/dev/null 2>&1 || echo "[relief_sandbox] conversion de la bibliothèque en échec : les .glb sont lus tels quels"
+fi
 exec "${GODOT_BIN:-godot-mono}" --path . --windowed $(godot_screen_args) --resolution 1920x1080 \
     ${engine_args[@]+"${engine_args[@]}"} res://tools/tests/ReliefSandbox.tscn -- ${user_args[@]+"${user_args[@]}"}

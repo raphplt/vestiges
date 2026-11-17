@@ -51,6 +51,8 @@ public sealed class ReliefConfig
         public float GrassPerCell, GrassHeight;
         public LowPolyScatter[] Scatter;
         public LowPolyLandmark[] Landmarks;
+        // Erreur tolérée des niveaux de détail, en pixels (Viewport.MeshLodThreshold, plan 60 §19) ; 0 : toujours le plus fin.
+        public float LodThreshold;
     }
 
     public float LevelHeight;
@@ -228,6 +230,7 @@ public sealed class ReliefConfig
             Ground = new Color(colors["ground"].AsString()),
             Terrace = new Color(colors["terrace"].AsString()),
             CarvedRelief = F(lowPoly, "carved_relief"),
+            LodThreshold = F(lowPoly, "lod_threshold"),
             Scatter = new LowPolyScatter[scatter.Count],
             Landmarks = new LowPolyLandmark[landmarks.Count],
         };

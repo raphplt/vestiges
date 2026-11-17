@@ -3014,3 +3014,9 @@ Raphaël : continuer par C4 (l'import dans Godot), plutôt que par C2.
 
 **C4b livré, tranché par défaut par l'agent, réversible** (plan 60 §19, « C4b livré ») :
 - **Triangles et budget sous chaque nom, en rouge au-delà du budget**, avec le facteur de grossissement s'il y en a un. Une étiquette sur deux est décalée plus bas pour éviter les chevauchements.
+
+**C4c livré, tranché par défaut par l'agent, réversible** (plan 60 §19, « C4c livré ») :
+- **`--biome <terre>`** sème dans le bac à sable les décors de `data/props/<terre>.json`, tirés de la bibliothèque convertie. Densité et poids globaux seulement, sans zones rythmées. Emprise bloquante : la boîte réduite à 60 %, jusqu'à C2.
+- **Un nœud par décor plutôt qu'une instance groupée par modèle** : niveaux de détail et élimination hors champ se règlent par nœud.
+- **Erreur tolérée des niveaux de détail : 4 px** (`lod_threshold`). En forêt, −45 % de triangles dessinés et environ +5 % d'images par seconde, pour des décors identiques à l'œil.
+- **La synchronisation verticale est coupée pendant les captures** du bac à sable, qui mesurent les images par seconde.

@@ -390,7 +390,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
-| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | C4a et C4b livrés (§19), C4c à faire | moyen |
+| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | livré (§19) : C4a, C4b et C4c | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
 Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
@@ -667,3 +667,43 @@ Le budget sur les planches de la bibliothèque.
 - `dotnet build` : 0 avertissement. Outil de planche seul, pas de smoke test.
 
 **Suite** : C4c, une terre dans le bac à sable.
+
+### C4c livré — 17 novembre
+
+Une terre dans le bac à sable.
+
+**Fait**
+- `tools/relief_sandbox.sh -- --biome <terre>` (forest_reclaimed, urban_ruins, collapsed_quarry, wild_fields, swamp). La table de semis du jeu en 2D (`data/props/<terre>.json` : densité par cellule, poids, décors bloquants) est appliquée aux modèles de la bibliothèque (`build/models`). Le script convertit d'abord la bibliothèque, de façon incrémentale. Nouvelle classe `ReliefBiomeProps`.
+- Les modèles sont retrouvés par leur nom, leur sprite source ou leur variante écartée. Un décor plat (sans triangle) est écarté, et 0 décor manque dans les cinq terres.
+- Les décors bloquants tournent d'un quart de tour, les autres librement. L'emprise d'un décor bloquant est sa boîte réduite à 60 %, en attendant C2. Les repères posés à la main (la maison) ne sont pas posés quand une terre est choisie.
+- Erreur tolérée des niveaux de détail : `lod_threshold` dans `data/sandbox/relief.json` (4 px), `--lod-threshold` en jeu, 0 pour toujours le plus fin. Le HUD affiche le nombre de décors, les triangles dessinés et le seuil.
+- En capture, la synchronisation verticale est coupée, et le tour du bot (hors des deux premières secondes) est mesuré : images par seconde, p99, triangles par image.
+
+**Mesures** (forêt, 122 décors, rendu 3840×2160, charge 1 à 3, vsync coupée)
+
+| Seuil | Triangles par image | i/s | p99 |
+|---|---|---|---|
+| 0 (le plus fin) | 1 120 k | 1 027 (deux passes) | 1,3 ms |
+| 1 px (défaut de Godot) | 986 k | 1 030 | 1,4 ms |
+| 4 px (retenu) | 618 k | 1 077 à 1 099 | 1,1 à 1,3 ms |
+| 8 px | 465 k | 1 091 | 1,7 ms |
+
+- À 4 px, les triangles dessinés baissent de 45 % et les images par seconde gagnent environ 5 %. Le rendu n'est pas limité par les triangles à cette échelle. Les décors sont identiques à l'œil entre 0 et 4 px.
+- Ville : 29 décors, 211 à 265 k triangles. Carrière : 137 décors, 328 à 426 k triangles.
+- Une première série était plafonnée à 140 i/s par la synchronisation de l'écran (144 Hz) : elle a été écartée, d'où la vsync coupée en capture.
+
+**Vérifications**
+- Captures de la forêt, de la ville et de la carrière regardées. Les décors sont posés debout sur le relief, les ombres sont portées, et les contours sont tenus.
+- `dotnet build` : 0 avertissement.
+
+**Écarts au découpage**
+1. **Un `MeshInstance3D` par décor, pas un `MultiMeshInstance3D` par modèle.** Godot choisit le niveau de détail et écarte hors champ par instance de nœud. Une instance groupée sur toute l'arène se règlerait sur son point le plus proche, et garderait donc le plus fin partout. À 120 décors, le coût des nœuds est négligeable. Les instances groupées reviendront avec le monde (60.4), découpées par secteur.
+2. **Les zones rythmées des terres (clairières, fourrés) ne sont pas appliquées**, seulement la densité et les poids globaux.
+3. **La ville est clairsemée** (densité 0,06) : ses immeubles sont posés par `UrbanBuildingPlacer`, pas par la table de semis. Le sol reste l'herbe de l'arène dans toutes les terres.
+
+**Points ouverts**
+- Les immeubles de la ville, les fermes des champs et les sites de la carrière : avec le monde (60.4).
+- Les emprises justes : C2.
+- Les décors plats en décalques : C5.
+
+**Suite** : C2 (emprises et collisions) ou C5 (décalques), au choix de Raphaël.

@@ -42,7 +42,7 @@ public sealed class ReliefLook
     public ReliefLowPoly.Model[][] Creatures { get; } = new ReliefLowPoly.Model[2][];
 
     public ReliefLook(ReliefConfig config, ReliefArena arena, ReliefSim sim, Node3D world, Camera3D camera,
-        SubViewport viewport, IReadOnlyList<Vector2> keepClear)
+        SubViewport viewport, IReadOnlyList<Vector2> keepClear, ReliefBiomeProps biome)
     {
         ReliefConfig.LowPolyStyle style = config.LowPoly;
         _viewport = viewport;
@@ -75,7 +75,7 @@ public sealed class ReliefLook
         _shaded.Add(ReliefGrass.Material);
         _shaded.Add(ReliefLowPoly.Plain);
 
-        PlaceProps(arena, style, sim, world, keepClear, config.Spawn);
+        PlaceProps(arena, style, sim, world, keepClear, config.Spawn, biome);
 
         // Quadrilatère plein écran, devant la caméra : son shader place lui-même ses sommets aux coins de l'image.
         _outlineMaterial = new ShaderMaterial { Shader = GD.Load<Shader>(OutlineShader), RenderPriority = (int)Material.RenderPriorityMax };
@@ -100,13 +100,13 @@ public sealed class ReliefLook
     }
 
     private void PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style, ReliefSim sim, Node3D world, IReadOnlyList<Vector2> keepClear,
-        Vector2 spawn)
+        Vector2 spawn, ReliefBiomeProps biome)
     {
         Node3D container = new() { Name = "Props" };
         world.AddChild(container);
         Vector3 scale = Vector3.One / style.MetresPerCell;
         Dictionary<string, ReliefLowPoly.Model> mids = new();
-        foreach (ReliefLowPoly.Placement placement in ReliefLowPoly.PlaceProps(arena, style, sim, keepClear, spawn, 59))
+        foreach (ReliefLowPoly.Placement placement in ReliefLowPoly.PlaceProps(arena, style, sim, keepClear, spawn, 59, biome))
         {
             if (!mids.TryGetValue(placement.Path, out ReliefLowPoly.Model mid))
             {
@@ -125,6 +125,8 @@ public sealed class ReliefLook
         }
         GD.Print($"[ReliefLook] {_props.Count} décors");
     }
+
+    public int PropCount => _props.Count;
 
     private int Detail => Mid ? 1 : 0;
 

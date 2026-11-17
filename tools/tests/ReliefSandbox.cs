@@ -20,7 +20,7 @@ namespace Vestiges.Tests;
 /// Avec <c>--sprites</c>, le rendu du plan 59 : sprites, et sol et décors d'un vrai biome (<see cref="ReliefBake"/>),
 /// la run générée sur la terre de <c>--land-order</c>, photographiée, puis libérée ; <c>--tiles</c> garde alors les
 /// tuiles simples, sans run.
-/// Arguments après -- : --view chase|2d, --character &lt;id&gt;, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
+/// Arguments après -- : --biome &lt;terre&gt; (décors de data/props tirés de build/models, plan 60 §19), --lod-threshold px, --view chase|2d, --character &lt;id&gt;, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
 /// tour de l'arène, garde des images des deux vues, puis ferme).
 /// </summary>
 public partial class ReliefSandbox : Node
@@ -87,6 +87,11 @@ public partial class ReliefSandbox : Node
     private Vector3 _cameraTarget;
     private int _crowdTarget;
     private ReliefBake _bake;
+    private ReliefBiomeProps _biomeProps;
+    // Mesure du tour du bot en capture (plan 60 §19, C4c) : durées d'image et primitives dessinées.
+    private readonly System.Collections.Generic.List<float> _frameMs = new();
+    private double _primitiveSum;
+    private ulong _lastFrameUsec;
     private string _biome = "tuiles simples";
     private Color _tint = Colors.White;
     private bool _ready;
@@ -153,6 +158,9 @@ public partial class ReliefSandbox : Node
         _sim = new ReliefSim(_config, _arena, Mathf.Max(_crowdTarget, 1) + 120, seed);
         _view = Argument(args, "--view", "chase") == "2d" ? View.Relief2D : View.Chase3D;
         _captureDir = Argument(args, "--capture", null);
+        // La capture mesure les images par seconde : sans synchronisation verticale, sinon l'écran les plafonne.
+        if (_captureDir != null)
+            DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);
         _captureSeconds = float.Parse(Argument(args, "--seconds", "14"), CultureInfo.InvariantCulture);
         _pitchDegrees = _config.ChasePitch;
         _reach = _config.ChaseDistance;
@@ -162,6 +170,14 @@ public partial class ReliefSandbox : Node
             LoadMaterials();
         else
             LoadSprites();
+        string biome = Argument(args, "--biome", null);
+        if (_lowPoly && biome != null)
+        {
+            _biomeProps = new ReliefBiomeProps(biome, ProjectSettings.GlobalizePath("res://build/models"));
+            _biome = biome;
+        }
+        _config.LowPoly.LodThreshold = float.Parse(Argument(args, "--lod-threshold",
+            _config.LowPoly.LodThreshold.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         if (!_lowPoly && System.Array.IndexOf(args, "--tiles") < 0)
         {
             _biome = Argument(args, "--land-order", "forest_reclaimed");
@@ -172,7 +188,7 @@ public partial class ReliefSandbox : Node
         ApplyView();
         _cameraTarget = PlayerAnchor();
         _ready = true;
-        GD.Print($"[ReliefSandbox] Arène {_arena.Width}×{_arena.Depth}, sol {_biome}, {_props.Count} décors, foule {_crowdTarget}, vue {_view}");
+        GD.Print($"[ReliefSandbox] Arène {_arena.Width}×{_arena.Depth}, sol {_biome}, {(_lowPoly ? _look.PropCount : _props.Count)} décors, foule {_crowdTarget}, vue {_view}");
     }
 
     private static string Argument(string[] args, string name, string fallback)
@@ -283,6 +299,7 @@ public partial class ReliefSandbox : Node
             OwnWorld3D = true,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
             Msaa3D = _lowPoly ? Viewport.Msaa.Msaa4X : Viewport.Msaa.Disabled,
+            MeshLodThreshold = _config.LowPoly.LodThreshold,
             CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
         };
         AddChild(_viewport);
@@ -329,7 +346,7 @@ public partial class ReliefSandbox : Node
         world.AddChild(_camera);
         if (_lowPoly)
         {
-            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour);
+            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour, _biomeProps);
             GetWindow().SizeChanged += FitRender;
         }
 
@@ -887,14 +904,16 @@ public partial class ReliefSandbox : Node
         string view = Is3D
             ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · Échap libère la souris)"
             : "RELIEF 2D  (Tab : caméra libre)";
-        _hud.Text = $"Vue : {view}" + (_lowPoly ? "" : $" · sol : {_biome}") + "\n"
+        _hud.Text = $"Vue : {view}" + (_lowPoly && _biomeProps == null ? "" : $" · terre : {_biome}") + "\n"
             + (_lowPoly ? _look.Describe() + "\n" : "")
             + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.SkillCooldown > 0f ? $"{_sim.SkillCooldown:0.0} s" : "prête")})"
             + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
             + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
             + $"Sauts {_sim.Bonds} · {_config.Mobility.Name} {_sim.Skills} · retombées {_sim.Stomps} · chutes dans le vide {_sim.VoidFalls}\n"
-            + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s";
+            + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s"
+            + (_lowPoly ? $" · {_look.PropCount} décors · {Primitives() / 1000:0} k triangles · niveaux de détail : "
+                + (_viewport.MeshLodThreshold > 0f ? $"{_viewport.MeshLodThreshold:0.#} px" : "non") : "");
     }
 
     /// <summary>Le bot des captures fait le tour de l'arène et bondit quand il bute ou qu'une marche est trop haute.</summary>
@@ -928,9 +947,34 @@ public partial class ReliefSandbox : Node
         return dir;
     }
 
+    private static long Primitives() =>
+        (long)RenderingServer.GetRenderingInfo(RenderingServer.RenderingInfo.TotalPrimitivesInFrame);
+
+    /// <summary>Le tour du bot, hors des deux premières secondes (chargement des shaders) : images par seconde et triangles.</summary>
+    private void ReportMeasure()
+    {
+        if (_frameMs.Count == 0)
+            return;
+        _frameMs.Sort();
+        float total = 0f;
+        foreach (float ms in _frameMs)
+            total += ms;
+        float p99 = _frameMs[Mathf.Min(_frameMs.Count - 1, (int)(_frameMs.Count * 0.99f))];
+        GD.Print($"[ReliefSandbox] mesure : terre {_biome}, {(_lowPoly ? _look.PropCount : _props.Count)} décors, "
+            + $"seuil {_viewport.MeshLodThreshold:0.#} px, {_frameMs.Count} images, {1000f * _frameMs.Count / total:0.0} i/s, "
+            + $"p99 {p99:0.0} ms, {_primitiveSum / _frameMs.Count / 1000:0} k triangles par image");
+    }
+
     private void StepCapture(float dt)
     {
         _captureTimer += dt;
+        ulong now = Time.GetTicksUsec();
+        if (_captureStep == 0 && _captureTimer > 2f && _lastFrameUsec > 0)
+        {
+            _frameMs.Add((now - _lastFrameUsec) / 1000f);
+            _primitiveSum += Primitives();
+        }
+        _lastFrameUsec = now;
         float airHeight = _sim.PlayerPos.Z - PlayerGround();
         if (!_airCaptured && _captureTimer > 3f && _sim.PlayerAirborneFromBond && airHeight > 0.45f)
         {
@@ -940,6 +984,7 @@ public partial class ReliefSandbox : Node
         switch (_captureStep)
         {
             case 0 when _captureTimer >= _captureSeconds:
+                ReportMeasure();
                 SetView(View.Chase3D);
                 Advance();
                 break;

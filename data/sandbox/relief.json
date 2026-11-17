@@ -146,7 +146,7 @@
 		"mouse_degrees_per_pixel": 0.22
 	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. colors : teintes de l'herbe du sol et des terrasses, que les touffes reprennent (sRGB). Le sol est texturé (tools/generate_relief_textures.py), seul gardé (§238) ; carved_relief : saillie des facettes de ses falaises taillées (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : carved, falaises taillées, ou straight, falaises droites). body_scale : agrandissement du joueur et des créatures, décors à part (§237 : des corps qui comptent à l'écran, comme Megabonk), emprises et portées de contact comprises. grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe au cœur d'un bouquet (§237 : en bouquets épars, plaques nues entre eux), et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. colors : teintes de l'herbe du sol et des terrasses, que les touffes reprennent (sRGB). Le sol est texturé (tools/generate_relief_textures.py), seul gardé (§238) ; carved_relief : saillie des facettes de ses falaises taillées (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : carved, falaises taillées, ou straight, falaises droites). body_scale : agrandissement du joueur et des créatures, décors à part (§237 : des corps qui comptent à l'écran, comme Megabonk), emprises et portées de contact comprises. grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe au cœur d'un bouquet (§237 : en bouquets épars, plaques nues entre eux), et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique). lod_threshold : l'erreur tolérée des niveaux de détail des modèles convertis (pixels, Viewport.MeshLodThreshold ; 1 par défaut dans Godot, 0 garde toujours le plus fin), --lod-threshold en jeu ; --biome <terre> sème les décors de data/props/<terre>.json tirés de build/models (plan 60 §19, C4c).",
 		"metres_per_cell": 2.65,
 		"body_scale": 1.35,
 		"grass": {
@@ -158,6 +158,7 @@
 			"terrace": "6f7d3e"
 		},
 		"carved_relief": 0.14,
+		"lod_threshold": 4.0,
 		"scatter": [
 			{
 				"model": "props/prop_tree_medium",

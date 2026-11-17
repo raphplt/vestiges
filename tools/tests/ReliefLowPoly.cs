@@ -139,9 +139,11 @@ public static class ReliefLowPoly
     /// Charge <c>res://assets/models/&lt;path&gt;</c> (voir <see cref="LoadScene"/>) et son manifeste ; les poses
     /// deviennent des maillages à poser. Hors de l'import de Godot : le mid poly, non versionné, n'a pas de .import.
     /// </summary>
-    public static Model LoadModel(string path)
+    public static Model LoadModel(string path) => LoadModelAt($"res://assets/models/{path}");
+
+    /// <summary>Le modèle de chemin <paramref name="root"/> (sans extension, sous <c>res://</c> ou absolu), poses habillées.</summary>
+    public static Model LoadModelAt(string root)
     {
-        string root = $"res://assets/models/{path}";
         Model model = new();
         using FileAccess file = FileAccess.Open($"{root}.json", FileAccess.ModeFlags.Read);
         Godot.Collections.Dictionary manifest = Json.ParseString(file.GetAsText()).AsGodotDictionary();
@@ -215,20 +217,27 @@ public static class ReliefLowPoly
 
     /// <summary>
     /// Décors semés par graine sur les cellules plates, à l'écart du chemin <paramref name="keepClear"/> et du départ, plus
-    /// les repères posés à la main. Chaque emprise devient un obstacle de la simulation.
+    /// les repères posés à la main. Chaque emprise devient un obstacle de la simulation. Avec <paramref name="biome"/>,
+    /// les décors de cette terre remplacent le semis du réglage (plan 60 §19, lot C4c).
     /// </summary>
     public static List<Placement> PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style, ReliefSim sim,
-        IReadOnlyList<Vector2> keepClear, Vector2 spawn, ulong seed)
+        IReadOnlyList<Vector2> keepClear, Vector2 spawn, ulong seed, ReliefBiomeProps biome = null)
     {
         List<Placement> placed = new();
         float cellsPerMetre = 1f / style.MetresPerCell;
-        foreach (ReliefConfig.LowPolyLandmark landmark in style.Landmarks)
+        foreach (ReliefConfig.LowPolyLandmark landmark in biome == null ? style.Landmarks : System.Array.Empty<ReliefConfig.LowPolyLandmark>())
         {
             Model model = LoadModel(landmark.Model);
             placed.Add(new Placement(model, landmark.Model, landmark.At, landmark.YawDegrees));
             AddFootprint(sim, model.Bounds, landmark.At, landmark.YawDegrees, cellsPerMetre);
         }
 
+        if (biome != null)
+        {
+            biome.Scatter(arena, sim, placed, keepClear, spawn, cellsPerMetre, seed);
+            sim.FinishObstacles();
+            return placed;
+        }
         RandomNumberGenerator rng = new() { Seed = seed };
         foreach (ReliefConfig.LowPolyScatter scatter in style.Scatter)
         {
@@ -253,7 +262,7 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Emprise rectangulaire d'un repère, en chapelet de cercles le long de son grand côté (yaw multiple de 90°).</summary>
-    private static void AddFootprint(ReliefSim sim, Aabb bounds, Vector2 at, float yawDegrees, float cellsPerMetre)
+    internal static void AddFootprint(ReliefSim sim, Aabb bounds, Vector2 at, float yawDegrees, float cellsPerMetre)
     {
         bool turned = Mathf.Abs(Mathf.Sin(Mathf.DegToRad(yawDegrees))) > 0.5f;
         float sizeX = (turned ? bounds.Size.Z : bounds.Size.X) * cellsPerMetre;
@@ -269,7 +278,7 @@ public static class ReliefLowPoly
         }
     }
 
-    private static bool IsFlatInterior(ReliefArena arena, int x, int y)
+    internal static bool IsFlatInterior(ReliefArena arena, int x, int y)
     {
         float h = arena.CellHeight(x, y);
         if (ReliefArena.IsVoid(h) || Mathf.Abs(h / arena.LevelHeight - Mathf.Round(h / arena.LevelHeight)) > 0.01f)
@@ -278,7 +287,7 @@ public static class ReliefLowPoly
             && arena.CellHeight(x, y + 1) == h && arena.CellHeight(x, y - 1) == h;
     }
 
-    private static float DistanceToPath(Vector2 at, IReadOnlyList<Vector2> path)
+    internal static float DistanceToPath(Vector2 at, IReadOnlyList<Vector2> path)
     {
         float best = float.MaxValue;
         for (int i = 0; i < path.Count; i++)
@@ -293,7 +302,7 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Un décor ne se pose pas dans l'emprise d'un autre (la moitié de leurs largeurs cumulées).</summary>
-    private static bool Crowded(List<Placement> placed, Vector2 at, float cellsPerMetre)
+    internal static bool Crowded(List<Placement> placed, Vector2 at, float cellsPerMetre)
     {
         foreach (Placement other in placed)
         {

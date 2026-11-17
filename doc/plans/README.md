@@ -5,7 +5,8 @@
 - Les niveaux de détail s'appliquent en Compatibility : arbre moyen 10 014 triangles de près, 5 006 à 60 m, 2 500 à 30 m avec un seuil de 4 px. Le seuil se réglera en C4c.
 - Le bac à sable lit les `.scn` et les reconvertit au lancement. Les `.scn` ne sont pas versionnés (55,8 Mo contre 47,9 Mo de .glb).
 - Les planches de la bibliothèque écrivent triangles et budget sous chaque modèle, en rouge au-delà (C4b) : 48 hors budget.
-- Suite : C4c (une terre dans le bac à sable).
+- `tools/relief_sandbox.sh -- --biome <terre>` sème les décors d'une terre (`data/props`), tirés de la bibliothèque (C4c). Forêt : 122 décors ; niveaux de détail à 4 px : 618 k triangles contre 1 120 k, environ +5 % d'images par seconde.
+- Suite : C2 (emprises) ou C5 (décalques), au choix de Raphaël.
 
 **16 novembre — les budgets de triangles des modèles 3D ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
 - Un fichier de réglages fixe un budget par sorte de modèle (personnage 5 000, créature 4 000, grand gardien 16 000, décor 2 500 à 10 000 selon la taille). L'index de la bibliothèque note les dépassements.
