@@ -46,7 +46,7 @@ public sealed class ReliefBiomeProps
             string model = entry["path"].AsString().GetBaseName();
             float weight = (float)prop["weight"].AsDouble();
             if (!loaded.TryGetValue(model, out ReliefLowPoly.Model mesh))
-                loaded[model] = mesh = ReliefLowPoly.LoadModelAt($"{libraryRoot}/{model}");
+                loaded[model] = mesh = ReliefLowPoly.LoadModelAt($"{libraryRoot}/{model}", true);
             _entries.Add((mesh, model, weight, prop["blocking"].AsBool()));
             _totalWeight += weight;
         }

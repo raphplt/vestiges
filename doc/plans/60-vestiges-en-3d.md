@@ -707,3 +707,17 @@ Une terre dans le bac à sable.
 - Les décors plats en décalques : C5.
 
 **Suite** : C2 (emprises et collisions) ou C5 (décalques), au choix de Raphaël.
+
+### Retours de Raphaël sur C4c — 17 novembre
+
+Raphaël a joué la forêt. « Toutes les textures sans exception sont buggées », avec des trous béants. Les arbres ne passent pas en transparence quand ils cachent la vue. Les couleurs font « IA slop » : crade, mais pas comme ça.
+
+**Les trous : des faces retournées.** L'orientation des faces était devinée d'après le gradient du volume au centre de chaque face (§241, C3b). Elle se trompait sur 1,4 % à 5,4 % des faces : rocher moussu 3,0 %, buisson 1,4 %, tronc du grand chêne 5,1 %, jeune arbre 5,4 %, panneau 3,5 %. Une face retournée est éliminée à l'affichage : on voit au travers du modèle, d'où des trous et des taches noires partout. La couleur de ces faces était aussi lue du mauvais côté de la surface.
+- Correction : l'orientation se lit exactement dans la grille (`_nets`). Une face sépare un point dedans d'un point dehors, et elle regarde vers le dehors. La méthode par le gradient est retirée.
+- Bibliothèque réexportée : 312 modèles, 0 échec, 452 s, 47,5 Mo. `assets/models` réexporté en low et mid poly. Planches et bac à sable regardés : plus aucun trou.
+
+**Les décors qui cachent le joueur s'effacent.** Les décors low poly ont leur propre matériau (`ReliefLowPoly.SetSeeThrough`). Leurs fragments pris dans un cylindre de la caméra au joueur s'effacent en trame, de 80 % sur l'axe, adoucis sur le dernier tiers du rayon. Le rayon est `see_through_radius` dans `data/sandbox/relief.json` (1,1 cellule, 2,9 m). À la passe d'ombre, le décor reste plein et son ombre ne se troue pas. La capture ajoute la prise « occlusion », le joueur derrière un grand chêne, avec et sans effacement : le chêne s'efface, le joueur et la horde se voient.
+- Différence avec le jeu en 2D : l'effacement touche la part du décor dans l'axe, pas tout le décor. Il ne demande ni index spatial ni état par décor, et coûte le même prix quel que soit le nombre de décors.
+- Les décors en mid poly (les trois du réglage par défaut) n'ont pas cet effacement. La bibliothèque n'a pas de mid poly.
+
+**Les couleurs : en attente de Raphaël.** Un essai de lissage, où chaque face prend le matériau le plus présent autour d'elle, efface les petites taches : mousse en confettis, éclats du panneau. Il ne touche ni aux grandes plaques de lierre, ni aux verts vifs. Planches comparatives sur la forêt et la carrière, à 0, 2 et 5 passes. L'essai n'est pas gardé dans le code. La direction du rendu des couleurs revient à Raphaël.

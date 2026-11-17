@@ -92,6 +92,9 @@ public partial class ReliefSandbox : Node
     private readonly System.Collections.Generic.List<float> _frameMs = new();
     private double _primitiveSum;
     private ulong _lastFrameUsec;
+    // Prise « décor devant le joueur » de la capture : le bot s'arrête, l'effacement se coupe pour la comparaison.
+    private bool _botFrozen;
+    private bool _seeThroughOff;
     private string _biome = "tuiles simples";
     private Color _tint = Colors.White;
     private bool _ready;
@@ -571,7 +574,7 @@ public partial class ReliefSandbox : Node
         float dt = Mathf.Min((float)delta, 1f / 20f);
         _animClock += dt;
         HandleInput(dt);
-        Vector2 wish = _captureDir != null ? BotWish(dt) : ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
+        Vector2 wish = _captureDir != null ? _botFrozen ? Vector2.Zero : BotWish(dt) : ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
         if (_captureDir == null && Input.IsActionJustPressed("mobility"))
             _sim.QueueBond();
         if (_captureDir == null && Input.IsActionJustPressed("relief_skill"))
@@ -579,7 +582,11 @@ public partial class ReliefSandbox : Node
         _sim.Step(dt, wish, _crowdTarget);
         UpdateCamera(dt);
         if (_lowPoly)
+        {
+            ReliefLowPoly.SetSeeThrough(_camera.GlobalPosition, ToWorld(_sim.PlayerPos) + Vector3.Up * 0.5f,
+                _seeThroughOff ? 0f : _config.LowPoly.SeeThroughRadius);
             UpdateBodies(dt);
+        }
         else
             UpdateSprites();
         UpdateProjectiles();
@@ -1035,13 +1042,33 @@ public partial class ReliefSandbox : Node
                     Finish();
                     break;
                 }
+                // Un grand décor entre la caméra et le joueur : effacé en trame, puis plein pour comparer.
+                Vector2? tall = _look.TallPropNear(_config.Spawn, 3f);
+                if (tall != null)
+                {
+                    SetView(View.Chase3D);
+                    _botFrozen = true;
+                    float yaw = Mathf.DegToRad(_yawDegrees);
+                    _sim.Teleport(tall.Value - new Vector2(Mathf.Sin(yaw), Mathf.Cos(yaw)) * 1.8f);
+                }
+                Advance();
+                break;
+            case 9 when _captureTimer >= 1.2f:
+                Save("occlusion");
+                _seeThroughOff = true;
+                Advance();
+                break;
+            case 10 when _captureTimer >= 0.3f:
+                Save("occlusion_sans");
+                _seeThroughOff = false;
+                _botFrozen = false;
                 _sim.Teleport(_config.Spawn);
                 _waypoint = 0;
                 ShowGalleryStyle(0);
                 Advance();
                 break;
             // Galerie des styles (60.0d) : la même scène sous chaque combinaison.
-            case 9 when _captureTimer >= 0.8f:
+            case 11 when _captureTimer >= 0.8f:
                 Save(Gallery[_galleryIndex].Name);
                 _galleryIndex++;
                 if (_galleryIndex >= Gallery.Length)

@@ -133,6 +133,10 @@ def _nets(d: np.ndarray, lo: np.ndarray, step: float, keep: np.ndarray | None = 
         sl_a[axis] = slice(0, -1)
         sl_b[axis] = slice(1, None)
         crossing = inside[tuple(sl_a)] != inside[tuple(sl_b)]
+        # L'anneau (u, v) ci-dessous tourne autour de +axe pour x et z, de −axe pour y. La face regarde vers le côté
+        # dehors de l'arête : son orientation se lit ici, exactement, sans deviner d'après le volume.
+        around = 1 if axis != 1 else -1
+        lower_inside = inside[tuple(sl_a)]
         for p in np.argwhere(crossing):
             if p[u] == 0 or p[v] == 0 or p[u] >= shape[u] - 1 or p[v] >= shape[v] - 1:
                 continue
@@ -143,7 +147,8 @@ def _nets(d: np.ndarray, lo: np.ndarray, step: float, keep: np.ndarray | None = 
                 c[v] += dv
                 ring.append(index[tuple(c)])
             if min(ring) >= 0:
-                quads.append(ring)
+                outward = 1 if lower_inside[tuple(p)] else -1
+                quads.append(ring if outward == around else ring[::-1])
     return vertices, np.array(quads, dtype=np.int64).reshape(-1, 4)
 
 
@@ -288,23 +293,6 @@ def mesh_parts(parts: Sequence[Part], materials: Sequence[Material], bounds_min,
     return _flat_mesh(parts, materials, *_surface_nets(parts, bounds_min, bounds_max, step), step)
 
 
-def _facing_inward(parts: Sequence[Part], points: np.ndarray, normal: np.ndarray, step: float) -> np.ndarray:
-    """
-    La face regarde-t-elle vers l'intérieur ? On suit le gradient du volume pris tout près d'elle : comparer la distance
-    à un demi-pas de part et d'autre se trompe sur une pièce plus mince qu'un pas, dont les deux côtés sont dehors, et
-    la face retournée disparaît à l'affichage.
-    """
-    h = step * 0.05
-    gradient = np.zeros_like(points)
-    for axis in range(3):
-        offset = np.zeros(3)
-        offset[axis] = h
-        plus, _ = _evaluate(parts, points + offset)
-        minus, _ = _evaluate(parts, points - offset)
-        gradient[:, axis] = plus - minus
-    return np.einsum("ij,ij->i", normal, gradient) < 0.0
-
-
 def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: np.ndarray, quads: np.ndarray, step: float,
                inset: float = 0.0) -> Mesh:
     if not len(quads):
@@ -316,11 +304,8 @@ def _flat_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices: n
     keep = length > 1e-9
     tris, corners, normal = tris[keep], corners[keep], normal[keep] / length[keep, None]
 
-    # Oriente chaque face vers l'extérieur, puis prend le matériau juste sous elle.
+    # Les faces sortent de la grille déjà tournées vers l'extérieur (`_nets`) : le matériau se prend juste sous elles.
     centroid = corners.mean(axis=1)
-    flip = _facing_inward(parts, centroid, normal, step)
-    tris[flip] = tris[flip][:, ::-1]
-    normal[flip] = -normal[flip]
     _, mat, _ = _evaluate_with_part(parts, centroid - normal * (step * 0.3 + inset))
     colors, emissive = material_colors(materials)
     mat = np.where(mat < 0, 0, mat)
@@ -347,12 +332,7 @@ def _smooth_mesh(parts: Sequence[Part], materials: Sequence[Material], vertices:
     tris = _split_quads(vertices, quads)
     corners = vertices[tris]
     normal = np.cross(corners[:, 1] - corners[:, 0], corners[:, 2] - corners[:, 0])
-    keep = np.linalg.norm(normal, axis=1) > 1e-9
-    tris, corners, normal = tris[keep], corners[keep], normal[keep]
-    normal /= np.linalg.norm(normal, axis=1)[:, None]
-    centroid = corners.mean(axis=1)
-    flip = _facing_inward(parts, centroid, normal, step)
-    tris[flip] = tris[flip][:, ::-1]
+    tris = tris[np.linalg.norm(normal, axis=1) > 1e-9]
 
     h = step * 0.25
     gradient = np.zeros_like(vertices)

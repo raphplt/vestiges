@@ -110,7 +110,7 @@ public sealed class ReliefLook
         {
             if (!mids.TryGetValue(placement.Path, out ReliefLowPoly.Model mid))
             {
-                mid = ReliefLowPoly.Exists($"mid/{placement.Path}") ? ReliefLowPoly.LoadModel($"mid/{placement.Path}") : placement.Model;
+                mid = ReliefLowPoly.Exists($"mid/{placement.Path}") ? ReliefLowPoly.LoadModel($"mid/{placement.Path}", true) : placement.Model;
                 mids[placement.Path] = mid;
             }
             MeshInstance3D body = new()
@@ -127,6 +127,19 @@ public sealed class ReliefLook
     }
 
     public int PropCount => _props.Count;
+
+    /// <summary>Le pied du décor d'au moins <paramref name="minHeight"/> mètres le plus proche de <paramref name="at"/>.</summary>
+    public Vector2? TallPropNear(Vector2 at, float minHeight)
+    {
+        Vector2? best = null;
+        foreach ((MeshInstance3D body, ReliefLowPoly.Model[] models) in _props)
+        {
+            Vector2 foot = new(body.Position.X, body.Position.Z);
+            if (models[0].Bounds.Size.Y >= minHeight && (best == null || foot.DistanceTo(at) < best.Value.DistanceTo(at)))
+                best = foot;
+        }
+        return best;
+    }
 
     private int Detail => Mid ? 1 : 0;
 

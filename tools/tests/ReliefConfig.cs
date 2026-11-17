@@ -53,6 +53,8 @@ public sealed class ReliefConfig
         public LowPolyLandmark[] Landmarks;
         // Erreur tolérée des niveaux de détail, en pixels (Viewport.MeshLodThreshold, plan 60 §19) ; 0 : toujours le plus fin.
         public float LodThreshold;
+        // Rayon (cellules) du cylindre de la caméra au joueur où les décors s'effacent en trame.
+        public float SeeThroughRadius;
     }
 
     public float LevelHeight;
@@ -231,6 +233,7 @@ public sealed class ReliefConfig
             Terrace = new Color(colors["terrace"].AsString()),
             CarvedRelief = F(lowPoly, "carved_relief"),
             LodThreshold = F(lowPoly, "lod_threshold"),
+            SeeThroughRadius = F(lowPoly, "see_through_radius"),
             Scatter = new LowPolyScatter[scatter.Count],
             Landmarks = new LowPolyLandmark[landmarks.Count],
         };

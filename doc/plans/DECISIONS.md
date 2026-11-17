@@ -3020,3 +3020,7 @@ Raphaël : continuer par C4 (l'import dans Godot), plutôt que par C2.
 - **Un nœud par décor plutôt qu'une instance groupée par modèle** : niveaux de détail et élimination hors champ se règlent par nœud.
 - **Erreur tolérée des niveaux de détail : 4 px** (`lod_threshold`). En forêt, −45 % de triangles dessinés et environ +5 % d'images par seconde, pour des décors identiques à l'œil.
 - **La synchronisation verticale est coupée pendant les captures** du bac à sable, qui mesurent les images par seconde.
+
+**Retours de Raphaël sur C4c** (17 novembre) : des trous dans tous les modèles ; les arbres doivent passer en transparence quand ils cachent la vue ; les couleurs font « IA slop », crade mais pas comme ça.
+- **Tranché par défaut par l'agent, réversible** : l'orientation des faces se lit dans la grille, et non plus d'après le gradient, qui retournait 1,4 % à 5,4 % des faces. Les décors low poly s'effacent en trame dans un cylindre de la caméra au joueur (rayon 1,1 cellule), et restent pleins dans les ombres.
+- **En attente de Raphaël** : la direction du rendu des couleurs des modèles 3D.

@@ -43,6 +43,7 @@ public static class ReliefLowPoly
     private static StandardMaterial3D _plain;
     private static StandardMaterial3D _glow;
     private static ShaderMaterial _flat;
+    private static ShaderMaterial _flatDecor;
 
     /// <summary>
     /// Couleur par sommet ; l'ombrage suit les normales du maillage (de face en low poly, lissées en mid poly). Les
@@ -63,8 +64,33 @@ public static class ReliefLowPoly
     /// </summary>
     private static ShaderMaterial Flat => _flat ??= new ShaderMaterial { Shader = GD.Load<Shader>(FlatShader) };
 
+    /// <summary>
+    /// Le même rendu pour les décors, qui s'effacent en trame là où ils cachent le joueur (voir
+    /// <see cref="SetSeeThrough"/>). Les corps n'en ont pas besoin.
+    /// </summary>
+    private static ShaderMaterial FlatDecor => _flatDecor ??= NewFlatDecor();
+
+    private static ShaderMaterial NewFlatDecor()
+    {
+        ShaderMaterial material = new() { Shader = GD.Load<Shader>(FlatShader) };
+        material.SetShaderParameter("see_through", true);
+        return material;
+    }
+
     /// <summary>Le matériau d'une surface : émissive, à faces calculées (low poly compact) ou à normales du maillage.</summary>
-    public static Material SurfaceMaterial(bool emissive, bool flatNormals) => emissive ? Glow : flatNormals ? Flat : Plain;
+    public static Material SurfaceMaterial(bool emissive, bool flatNormals, bool decor = false) =>
+        emissive ? Glow : flatNormals ? decor ? FlatDecor : Flat : Plain;
+
+    /// <summary>
+    /// Le joueur vu de la caméra : un décor low poly dans le cylindre qui les relie (<paramref name="radius"/>, unités du
+    /// monde) s'efface en trame, comme les décors hauts du jeu en 2D (PropOcclusion). À appeler après la caméra.
+    /// </summary>
+    public static void SetSeeThrough(Vector3 camera, Vector3 target, float radius)
+    {
+        FlatDecor.SetShaderParameter("view_camera", camera);
+        FlatDecor.SetShaderParameter("view_target", target);
+        FlatDecor.SetShaderParameter("see_radius", radius);
+    }
 
     /// <summary>Le manifeste dit si les normales sont absentes du .glb ; un ancien export les écrivait toujours.</summary>
     public static bool FlatNormals(Godot.Collections.Dictionary manifest) =>
@@ -130,7 +156,12 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Le style toon (F4) : le mode d'ombrage d'un shader ne se règle pas par paramètre, on change de shader.</summary>
-    public static void SetToon(bool toon) => Flat.Shader = GD.Load<Shader>(toon ? FlatToonShader : FlatShader);
+    public static void SetToon(bool toon)
+    {
+        Shader shader = GD.Load<Shader>(toon ? FlatToonShader : FlatShader);
+        Flat.Shader = shader;
+        FlatDecor.Shader = shader;
+    }
 
     /// <summary>Le modèle existe-t-il (le mid poly n'est pas versionné et se génère à la demande) ?</summary>
     public static bool Exists(string path) => FileAccess.FileExists($"res://assets/models/{path}.json");
@@ -139,10 +170,10 @@ public static class ReliefLowPoly
     /// Charge <c>res://assets/models/&lt;path&gt;</c> (voir <see cref="LoadScene"/>) et son manifeste ; les poses
     /// deviennent des maillages à poser. Hors de l'import de Godot : le mid poly, non versionné, n'a pas de .import.
     /// </summary>
-    public static Model LoadModel(string path) => LoadModelAt($"res://assets/models/{path}");
+    public static Model LoadModel(string path, bool decor = false) => LoadModelAt($"res://assets/models/{path}", decor);
 
     /// <summary>Le modèle de chemin <paramref name="root"/> (sans extension, sous <c>res://</c> ou absolu), poses habillées.</summary>
-    public static Model LoadModelAt(string root)
+    public static Model LoadModelAt(string root, bool decor = false)
     {
         Model model = new();
         using FileAccess file = FileAccess.Open($"{root}.json", FileAccess.ModeFlags.Read);
@@ -159,7 +190,7 @@ public static class ReliefLowPoly
             for (int s = 0; s < mesh.GetSurfaceCount(); s++)
             {
                 bool emissive = mesh.SurfaceGetMaterial(s)?.ResourceName.Contains("emissive") ?? false;
-                mesh.SurfaceSetMaterial(s, SurfaceMaterial(emissive, flatNormals));
+                mesh.SurfaceSetMaterial(s, SurfaceMaterial(emissive, flatNormals, decor));
             }
             byName[child.Name] = mesh;
         }
@@ -227,7 +258,7 @@ public static class ReliefLowPoly
         float cellsPerMetre = 1f / style.MetresPerCell;
         foreach (ReliefConfig.LowPolyLandmark landmark in biome == null ? style.Landmarks : System.Array.Empty<ReliefConfig.LowPolyLandmark>())
         {
-            Model model = LoadModel(landmark.Model);
+            Model model = LoadModel(landmark.Model, true);
             placed.Add(new Placement(model, landmark.Model, landmark.At, landmark.YawDegrees));
             AddFootprint(sim, model.Bounds, landmark.At, landmark.YawDegrees, cellsPerMetre);
         }
@@ -241,7 +272,7 @@ public static class ReliefLowPoly
         RandomNumberGenerator rng = new() { Seed = seed };
         foreach (ReliefConfig.LowPolyScatter scatter in style.Scatter)
         {
-            Model model = LoadModel(scatter.Model);
+            Model model = LoadModel(scatter.Model, true);
             for (int y = 0; y < arena.Depth; y++)
             {
                 for (int x = 0; x < arena.Width; x++)
