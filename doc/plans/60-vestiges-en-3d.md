@@ -390,7 +390,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
-| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | C4a livré (§19), C4b et C4c à faire | moyen |
+| C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | C4a et C4b livrés (§19), C4c à faire | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
 
 Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
@@ -651,3 +651,19 @@ Le convertisseur et les niveaux de détail.
 - Les 48 décors en dépassement de budget (C3c) : les niveaux de détail les allègent de loin, l'effet se verra en C4c.
 
 **Suite** : C4b (triangles et budget écrits sur les planches), puis C4c (une terre dans le bac à sable).
+
+### C4b livré — 17 novembre
+
+Le budget sur les planches de la bibliothèque.
+
+**Fait**
+- `ModelSheet --library` (`tools/model_sheet.sh <dossier> --library build/models`) écrit sous chaque nom la ligne « triangles / budget », lue dans l'index de l'export. Un modèle grossi pour tenir son budget porte son facteur (« x1,03 »).
+- Un modèle hors budget est écrit en rouge (`ff6b5c`). La console compte les modèles hors budget.
+- Les étiquettes sont un peu plus grandes, et une sur deux est décalée plus bas : les noms des petits modèles voisins (mains de l'Indicible, maillons de barrière) ne se chevauchent plus.
+
+**Vérifications**
+- 37 planches, 48 modèles hors budget : le même compte que l'index (C3c).
+- Planches regardées : barrière (5 en rouge sur 9), Indicible (les trois yeux en rouge, les mains dans le budget), bâtiments de ville (les deux ruines en rouge), créatures (épouvantail « 15 672 / 16 000 x1,03 »), forêt.
+- `dotnet build` : 0 avertissement. Outil de planche seul, pas de smoke test.
+
+**Suite** : C4c, une terre dans le bac à sable.

@@ -11,11 +11,15 @@ namespace Vestiges.Tests;
 /// Les couleurs viennent des sommets ; le matériau est posé ici, comme le feront les styles du bac à sable.
 /// Avec <c>--library &lt;dossier&gt;</c> (plan 60 §17, lot C1) : la bibliothèque de l'export de masse, lue sans import
 /// d'après son index.json, en planches d'alignement par catalogue, dix modèles par planche du plus petit au plus grand,
-/// chacun nommé, le facteur à gauche pour l'échelle.
+/// chacun nommé, le facteur à gauche pour l'échelle. Sous le nom, les triangles de la pose la plus lourde et le budget
+/// de l'export (plan 60 §19, lot C4b) ; un modèle qui dépasse son budget est écrit en rouge, un modèle grossi pour y
+/// tenir porte son facteur.
 /// </summary>
 public partial class ModelSheet : Node3D
 {
     private const string ModelRoot = "res://assets/models";
+    private static readonly Color LabelColor = new("e8e4dc");
+    private static readonly Color OverBudgetColor = new("ff6b5c");
     private static readonly float[] Yaws = { 0f, 45f, 90f, 180f };
 
     private readonly List<(string Path, Node3D Model, Dictionary<string, string[]> Animations)> _models = new();
@@ -199,18 +203,19 @@ public partial class ModelSheet : Node3D
     /// <summary>Tous les modèles côte à côte, à leur vraie taille, de trois quarts comme la caméra du jeu.</summary>
     private System.Threading.Tasks.Task ShootLineup()
     {
-        List<(Node3D, string, string)> row = new();
+        List<(Node3D, string, string, Color)> row = new();
         foreach ((_, Node3D model, Dictionary<string, string[]> animations) in _models)
-            row.Add((model, animations["idle"][0], null));
+            row.Add((model, animations["idle"][0], null, LabelColor));
         return ShootRow(row, "alignement");
     }
 
-    private async System.Threading.Tasks.Task ShootRow(List<(Node3D Model, string Frame, string Label)> row, string name)
+    private async System.Threading.Tasks.Task ShootRow(List<(Node3D Model, string Frame, string Label, Color Tint)> row,
+        string name)
     {
         float x = 0f;
         float tallest = 0f;
         List<Node3D> copies = new();
-        foreach ((Node3D model, string frame, string label) in row)
+        foreach ((Node3D model, string frame, string label, Color tint) in row)
         {
             float width = Width(model, frame);
             Node3D copy = (Node3D)model.Duplicate();
@@ -219,15 +224,20 @@ public partial class ModelSheet : Node3D
             copy.RotationDegrees = new Vector3(0f, 30f, 0f);
             if (label != null)
             {
+                // Une étiquette sur deux plus bas : les noms de petits modèles voisins ne se chevauchent plus.
+                bool lower = copies.Count % 2 == 1;
                 copy.AddChild(new Label3D
                 {
                     Text = label,
                     Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
                     FixedSize = true,
-                    PixelSize = 0.0009f,
+                    PixelSize = 0.0013f,
                     FontSize = 22,
+                    Modulate = tint,
                     NoDepthTest = true,
-                    Position = new Vector3(0f, -0.25f, 0f),
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Position = new Vector3(0f, -0.1f, 0f),
+                    Offset = new Vector2(0f, lower ? -52f : 0f),
                 });
             }
             _stage.AddChild(copy);
@@ -251,7 +261,7 @@ public partial class ModelSheet : Node3D
     {
         using FileAccess file = FileAccess.Open($"{root}/index.json", FileAccess.ModeFlags.Read);
         Godot.Collections.Array entries = Json.ParseString(file.GetAsText()).AsGodotDictionary()["models"].AsGodotArray();
-        Dictionary<string, List<(string Path, float Height)>> folders = new();
+        Dictionary<string, List<(string Path, float Height, Godot.Collections.Dictionary Entry)>> folders = new();
         foreach (Variant value in entries)
         {
             Godot.Collections.Dictionary entry = value.AsGodotDictionary();
@@ -260,21 +270,22 @@ public partial class ModelSheet : Node3D
                 continue;
             string path = entry["path"].AsString();
             string folder = path.GetBaseDir();
-            if (!folders.TryGetValue(folder, out List<(string, float)> list))
-                folders[folder] = list = new List<(string, float)>();
-            list.Add((path, (float)entry["height_m"].AsDouble()));
+            if (!folders.TryGetValue(folder, out List<(string, float, Godot.Collections.Dictionary)> list))
+                folders[folder] = list = new List<(string, float, Godot.Collections.Dictionary)>();
+            list.Add((path, (float)entry["height_m"].AsDouble(), entry));
         }
         (Node3D Model, string Frame) reference = LoadRuntime($"{root}/characters/facteur");
         const int perPage = 10;
         int pages = 0;
-        foreach ((string folder, List<(string Path, float Height)> list) in folders)
+        int overBudget = 0;
+        foreach ((string folder, List<(string Path, float Height, Godot.Collections.Dictionary Entry)> list) in folders)
         {
             list.Sort((a, b) => a.Height.CompareTo(b.Height));
             for (int start = 0; start < list.Count; start += perPage)
             {
-                List<(Node3D, string, string)> row = new();
+                List<(Node3D, string, string, Color)> row = new();
                 if (reference.Model != null)
-                    row.Add((reference.Model, reference.Frame, "facteur"));
+                    row.Add((reference.Model, reference.Frame, "facteur", LabelColor));
                 List<Node3D> loaded = new();
                 for (int i = start; i < Mathf.Min(start + perPage, list.Count); i++)
                 {
@@ -282,7 +293,12 @@ public partial class ModelSheet : Node3D
                     if (model == null)
                         continue;
                     loaded.Add(model);
-                    row.Add((model, frame, list[i].Path.GetFile().GetBaseName().TrimPrefix("prop_")));
+                    Godot.Collections.Dictionary entry = list[i].Entry;
+                    bool over = entry.TryGetValue("over_budget", out Variant flag) && flag.AsBool();
+                    if (over)
+                        overBudget++;
+                    string name = list[i].Path.GetFile().GetBaseName().TrimPrefix("prop_");
+                    row.Add((model, frame, $"{name}\n{BudgetLine(entry)}", over ? OverBudgetColor : LabelColor));
                 }
                 await ShootRow(row, $"{folder.Replace('/', '_')}_{start / perPage + 1:00}");
                 foreach (Node3D model in loaded)
@@ -291,7 +307,19 @@ public partial class ModelSheet : Node3D
             }
         }
         reference.Model?.Free();
-        GD.Print($"[ModelSheet] {pages} planches de la bibliothèque : {_captureDir}");
+        GD.Print($"[ModelSheet] {pages} planches de la bibliothèque, {overBudget} modèles hors budget : {_captureDir}");
+    }
+
+    /// <summary>« 15 010 / 6 000 », suivi du facteur (x1,15) de grossissement quand l'export a grossi le modèle pour tenir.</summary>
+    private static string BudgetLine(Godot.Collections.Dictionary entry)
+    {
+        NumberFormatInfo spaced = new() { NumberGroupSeparator = "\u202f", NumberDecimalSeparator = "," };
+        string line = entry["max_triangles"].AsInt32().ToString("N0", spaced);
+        if (entry.TryGetValue("budget", out Variant budget))
+            line += $" / {budget.AsInt32().ToString("N0", spaced)}";
+        if (entry.TryGetValue("coarsening", out Variant coarsening) && coarsening.AsDouble() > 1.0)
+            line += $" x{coarsening.AsDouble().ToString("0.00", spaced)}";
+        return line;
     }
 
     private static (Node3D Model, string Frame) LoadRuntime(string pathWithoutExtension)

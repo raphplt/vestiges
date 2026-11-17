@@ -4,7 +4,8 @@
 - `tools/convert_models.sh` écrit un `.scn` par modèle (poses, normales lissées, niveaux de détail de Godot) : 312 modèles en 4,4 s. Chargement 0,16 s contre 0,42 s pour le .glb. Planches identiques à l'œil.
 - Les niveaux de détail s'appliquent en Compatibility : arbre moyen 10 014 triangles de près, 5 006 à 60 m, 2 500 à 30 m avec un seuil de 4 px. Le seuil se réglera en C4c.
 - Le bac à sable lit les `.scn` et les reconvertit au lancement. Les `.scn` ne sont pas versionnés (55,8 Mo contre 47,9 Mo de .glb).
-- Suite : C4b (triangles et budget sur les planches), puis C4c (une terre dans le bac à sable).
+- Les planches de la bibliothèque écrivent triangles et budget sous chaque modèle, en rouge au-delà (C4b) : 48 hors budget.
+- Suite : C4c (une terre dans le bac à sable).
 
 **16 novembre — les budgets de triangles des modèles 3D ([plan 60 §18](60-vestiges-en-3d.md), §241) :**
 - Un fichier de réglages fixe un budget par sorte de modèle (personnage 5 000, créature 4 000, grand gardien 16 000, décor 2 500 à 10 000 selon la taille). L'index de la bibliothèque note les dépassements.

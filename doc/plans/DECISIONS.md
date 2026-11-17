@@ -3012,3 +3012,5 @@ Raphaël : continuer par C4 (l'import dans Godot), plutôt que par C2.
 - **Le seuil d'erreur des niveaux de détail reste au défaut (1 px)** ; il se réglera à l'œil en C4c.
 - Mesures : 312 modèles convertis en 4,4 s, 0 échec ; chargement 0,16 s en `.scn` contre 0,42 s en .glb ; 55,8 Mo de .scn contre 47,9 Mo de .glb. Planches identiques ou à quelques pixels près.
 
+**C4b livré, tranché par défaut par l'agent, réversible** (plan 60 §19, « C4b livré ») :
+- **Triangles et budget sous chaque nom, en rouge au-delà du budget**, avec le facteur de grossissement s'il y en a un. Une étiquette sur deux est décalée plus bas pour éviter les chevauchements.
