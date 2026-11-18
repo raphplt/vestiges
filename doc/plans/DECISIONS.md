@@ -3073,3 +3073,12 @@ Raphaël, après avoir joué C2a, C5 et 60.0e : « les collisions c'est top, le 
 Raphaël : « pour le sol tu me recommande quoi ? moi je dirai plutot terne imo ». Agent du même avis ([plan 60 §25](60-vestiges-en-3d.md)). Remplace la réserve du §245.
 - **Les textures du sol et du relief passent en palette terne**, un peu plus que les décors (saturation 0,6, valeur 0,84, 14 % de crasse), réglée dans le bloc `ground` de `lowpoly_style.json`.
 - **Tranché par défaut, réversible** : les touffes d'herbe prennent la teinte du sol sous elles au lieu d'une couleur fixe.
+
+## 249. Les effets de Forward+ dans le bac à sable 3D — 18 novembre 2026
+
+Raphaël : « Oui, vas-y », pour voir dans le bac à sable ce que Forward+ apporte ([plan 60 §26](60-vestiges-en-3d.md), lot 60.0f).
+
+**Tranché par défaut par l'agent, réversible** :
+- **Trois effets, chacun sur sa touche** : ombres de contact (F5), brume volumétrique (F6), lumières (F7 : une par projectile, une par lueur de décor, et le halo).
+- **Tous allumés au lancement.** Ensemble, ils coûtent 0,95 ms par image en 4K (787 à 450 i/s).
+- **Les lueurs viennent des surfaces émissives des modèles**, sans réglage par décor.

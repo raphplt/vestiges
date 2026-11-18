@@ -145,8 +145,40 @@
 		"height": 1.05,
 		"mouse_degrees_per_pixel": 0.22
 	},
+	"atmosphere": {
+		"_comment": "Effets de Forward+ (plan 60 §26, lot 60.0f), basculés en jeu : F5 ombres de contact (SSAO), F6 brume volumétrique, F7 lumières (une par projectile, une par lueur des décors, et le halo). Absents en Compatibility. Distances en cellules (2,65 m). start : l'état au lancement. fog : densité par cellule, en caméra libre seulement, à la place du brouillard de profondeur, teintes sRGB, length : portée de la brume devant la caméra. lights : énergie et portée des lumières, max_glows : lueurs de décor allumées au plus, dans l'ordre de pose, bloom : intensité du halo, bloom_threshold : luminance d'où il part.",
+		"start": {
+			"ssao": true,
+			"fog": true,
+			"lights": true
+		},
+		"ssao": {
+			"radius": 1.0,
+			"intensity": 4.0,
+			"power": 1.6,
+			"detail": 0.5
+		},
+		"fog": {
+			"density": 0.02,
+			"albedo": "675f7a",
+			"emission": "000000",
+			"anisotropy": 0.35,
+			"length": 48,
+			"ambient_inject": 0.4
+		},
+		"lights": {
+			"projectile_color": "ffc46e",
+			"projectile_energy": 2.2,
+			"projectile_range": 2.4,
+			"glow_energy": 1.2,
+			"glow_range": 2.2,
+			"max_glows": 48,
+			"bloom": 0.7,
+			"bloom_threshold": 0.9
+		}
+	},
 	"lowpoly": {
-		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. colors : teintes de l'herbe du sol et des terrasses, que les touffes reprennent (sRGB). Le sol est texturé (tools/generate_relief_textures.py), seul gardé (§238) ; carved_relief : saillie des facettes de ses falaises taillées (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : carved, falaises taillées, ou straight, falaises droites). body_scale : agrandissement du joueur et des créatures, décors à part (§237 : des corps qui comptent à l'écran, comme Megabonk), emprises et portées de contact comprises. grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe au cœur d'un bouquet (§237 : en bouquets épars, plaques nues entre eux), et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique). lod_threshold : l'erreur tolérée des niveaux de détail des modèles convertis (pixels, Viewport.MeshLodThreshold ; 1 par défaut dans Godot, 0 garde toujours le plus fin), --lod-threshold en jeu ; see_through_radius : rayon (cellules) du cylindre de la caméra au joueur où les décors low poly s'effacent en trame ; --biome <terre> sème les décors de data/props/<terre>.json tirés de build/models (plan 60 §19, C4c).",
+		"_comment": "Rendu low poly (plan 60, lots 60.0b et 60.0d), par défaut ; --sprites rend l'ancien. Modèles de assets/models (tools/export_lowpoly.py ; le mid poly, --detail mid, dans assets/models/mid, non versionné). metres_per_cell : l'échelle des sprites (1 m = 17 px, une cellule = 45 px de côté), à trancher en fin de 60.0. colors : teintes de base des textures du sol et des terrasses (tools/generate_relief_textures.py, sRGB) ; les touffes d'herbe prennent la teinte moyenne de la texture sous elles (§25). Le sol est texturé (tools/generate_relief_textures.py), seul gardé (§238) ; carved_relief : saillie des facettes de ses falaises taillées (cellules). start : le style au lancement, que F1 à F4 basculent en jeu (ground : carved, falaises taillées, ou straight, falaises droites). body_scale : agrandissement du joueur et des créatures, décors à part (§237 : des corps qui comptent à l'écran, comme Megabonk), emprises et portées de contact comprises. grass : touffes d'herbe en relief du sol texturé, par cellule d'herbe au cœur d'un bouquet (§237 : en bouquets épars, plaques nues entre eux), et leur hauteur moyenne (cellules). outline : seuils des contours (relatif à 1/z en perspective, en cellules en orthographique). lod_threshold : l'erreur tolérée des niveaux de détail des modèles convertis (pixels, Viewport.MeshLodThreshold ; 1 par défaut dans Godot, 0 garde toujours le plus fin), --lod-threshold en jeu ; see_through_radius : rayon (cellules) du cylindre de la caméra au joueur où les décors low poly s'effacent en trame ; --biome <terre> sème les décors de data/props/<terre>.json tirés de build/models (plan 60 §19, C4c).",
 		"metres_per_cell": 2.65,
 		"body_scale": 1.35,
 		"grass": {

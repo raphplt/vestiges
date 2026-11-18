@@ -69,6 +69,7 @@ public partial class ReliefSandbox : Node
     // Rendu low poly (plan 60, lot 60.0b).
     private bool _lowPoly;
     private ReliefLook _look;
+    private ReliefAtmosphere _atmosphere;
     private MeshInstance3D _playerBody;
     private MeshInstance3D[] _creatureBodies;
     private float _playerYaw;
@@ -181,6 +182,14 @@ public partial class ReliefSandbox : Node
             _biomeProps = new ReliefBiomeProps(biome, ProjectSettings.GlobalizePath("res://build/models"));
             _biome = biome;
         }
+        // --effects ssao,fog,lights (ou none) : les effets de Forward+ allumés au lancement, à la place du réglage.
+        string effects = Argument(args, "--effects", null);
+        if (effects != null)
+        {
+            _config.Atmosphere.StartSsao = effects.Contains("ssao");
+            _config.Atmosphere.StartFog = effects.Contains("fog");
+            _config.Atmosphere.StartLights = effects.Contains("lights");
+        }
         _config.LowPoly.LodThreshold = float.Parse(Argument(args, "--lod-threshold",
             _config.LowPoly.LodThreshold.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         if (!_lowPoly && System.Array.IndexOf(args, "--tiles") < 0)
@@ -219,6 +228,9 @@ public partial class ReliefSandbox : Node
         AddKeyAction("relief_style_models", Key.F2);
         AddKeyAction("relief_style_outlines", Key.F3);
         AddKeyAction("relief_style_toon", Key.F4);
+        AddKeyAction("relief_effect_ssao", Key.F5);
+        AddKeyAction("relief_effect_fog", Key.F6);
+        AddKeyAction("relief_effect_lights", Key.F7);
         AddKeyAction("relief_skill", Key.Shift);
         AddMouseAction("relief_skill", MouseButton.Right);
     }
@@ -352,6 +364,7 @@ public partial class ReliefSandbox : Node
         if (_lowPoly)
         {
             _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour, _biomeProps);
+            _atmosphere = new ReliefAtmosphere(_config.Atmosphere, world, _sim.ProjectilePos.Length, _look.Glows);
             GetWindow().SizeChanged += FitRender;
         }
 
@@ -545,7 +558,10 @@ public partial class ReliefSandbox : Node
         if (!Is3D)
             _yawDegrees = 45f;
         if (_lowPoly)
+        {
             _look.Apply();
+            _atmosphere.Apply(env, Is3D);
+        }
         else
             ApplyStretch();
     }
@@ -592,6 +608,7 @@ public partial class ReliefSandbox : Node
         else
             UpdateSprites();
         UpdateProjectiles();
+        _atmosphere?.Update(_sim, ToWorld);
         UpdateFeedback(dt);
         UpdateHud(dt);
         if (_captureDir != null)
@@ -617,7 +634,7 @@ public partial class ReliefSandbox : Node
             HandleStyleInput();
     }
 
-    /// <summary>F1 à F4 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
+    /// <summary>F1 à F7 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
     private void HandleStyleInput()
     {
         bool changed = true;
@@ -629,11 +646,18 @@ public partial class ReliefSandbox : Node
             _look.Outlines = !_look.Outlines;
         else if (Input.IsActionJustPressed("relief_style_toon"))
             _look.Toon = !_look.Toon;
+        else if (Input.IsActionJustPressed("relief_effect_ssao"))
+            _atmosphere.Ssao = !_atmosphere.Ssao;
+        else if (Input.IsActionJustPressed("relief_effect_fog"))
+            _atmosphere.Fog = !_atmosphere.Fog;
+        else if (Input.IsActionJustPressed("relief_effect_lights"))
+            _atmosphere.Lights = !_atmosphere.Lights;
         else
             changed = false;
         if (changed)
         {
             _look.Apply();
+            _atmosphere.Apply(_environment.Environment, Is3D);
             _hudTimer = 0f;
         }
     }
@@ -914,7 +938,7 @@ public partial class ReliefSandbox : Node
             ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · Échap libère la souris)"
             : "RELIEF 2D  (Tab : caméra libre)";
         _hud.Text = $"Vue : {view}" + (_lowPoly && _biomeProps == null ? "" : $" · terre : {_biome}") + "\n"
-            + (_lowPoly ? _look.Describe() + "\n" : "")
+            + (_lowPoly ? _look.Describe() + "\n" + _atmosphere.Describe() + "\n" : "")
             + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.SkillCooldown > 0f ? $"{_sim.SkillCooldown:0.0} s" : "prête")})"
             + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
@@ -1075,10 +1099,31 @@ public partial class ReliefSandbox : Node
                 _galleryIndex++;
                 if (_galleryIndex >= Gallery.Length)
                 {
-                    Finish();
+                    if (!_atmosphere.Supported)
+                    {
+                        Finish();
+                        break;
+                    }
+                    ShowGalleryStyle(0);
+                    ShowAtmosphere(0);
+                    // La même scène sous chaque effet : le bot s'arrête, la horde et les tirs continuent.
+                    _botFrozen = true;
+                    Advance();
                     break;
                 }
                 ShowGalleryStyle(_galleryIndex);
+                _captureTimer = 0f;
+                break;
+            // Les effets de Forward+ (60.0f), un à un puis ensemble, sur la même scène.
+            case 12 when _captureTimer >= 0.8f:
+                Save(AtmosphereGallery[_atmosphereIndex].Name);
+                _atmosphereIndex++;
+                if (_atmosphereIndex >= AtmosphereGallery.Length)
+                {
+                    Finish();
+                    break;
+                }
+                ShowAtmosphere(_atmosphereIndex);
                 _captureTimer = 0f;
                 break;
         }
@@ -1102,6 +1147,23 @@ public partial class ReliefSandbox : Node
     };
 
     private int _galleryIndex;
+
+    private static readonly (string Name, bool Ssao, bool Fog, bool Lights)[] AtmosphereGallery =
+    {
+        ("forward_sans_effets", false, false, false),
+        ("forward_ombres_contact", true, false, false),
+        ("forward_brume", false, true, false),
+        ("forward_lumieres", false, false, true),
+        ("forward_tout", true, true, true),
+    };
+
+    private int _atmosphereIndex;
+
+    private void ShowAtmosphere(int index)
+    {
+        (_, _atmosphere.Ssao, _atmosphere.Fog, _atmosphere.Lights) = AtmosphereGallery[index];
+        _atmosphere.Apply(_environment.Environment, Is3D);
+    }
 
     private void ShowGalleryStyle(int index)
     {

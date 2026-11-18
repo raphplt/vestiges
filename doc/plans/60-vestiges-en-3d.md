@@ -894,3 +894,44 @@ Raphaël, sur la palette du sol : « moi je dirai plutot terne ». Le sol restai
 **Vérifié** : planche des 22 matières regardée (tons distincts, motifs lisibles). Bac à sable capturé en forêt et au marais sous Forward+ : sol, décors et herbe dans la même gamme. En forêt, les touffes sur la terre brune se lisent en herbe sèche.
 
 **Point ouvert** : l'herbe reste sombre sous l'éclairage de son matériau ; à reprendre avec la lumière (Forward+).
+
+## 26. 60.0f, ce que Forward+ apporte — 18 novembre
+
+Raphaël a choisi Forward+ pour la 3D (§24, DECISIONS §247), et a dit « Oui, vas-y » pour en voir les effets dans le bac à sable.
+
+**Découpage**
+- 60.0f1 : ombres de contact (SSAO) et brume volumétrique, réglées dans `data/sandbox/relief.json` (bloc `atmosphere`).
+- 60.0f2 : lumières, une par projectile en vol et une par lueur de décor (surface émissive du modèle : lanternes, champignons, cristaux), plus un halo (glow).
+- 60.0f3 : bascule de chaque effet en jeu (F5, F6, F7), prises de capture comparables, coût mesuré effet par effet.
+
+### 60.0f livré — 18 novembre
+
+**Fait**
+- `tools/tests/ReliefAtmosphere.cs` porte les trois effets. Sous Compatibility, il ne fait rien et l'affichage le dit.
+- Les lueurs se lisent dans les modèles : centre et teinte moyenne de chaque surface émissive de la pose de repos (`ReliefLowPoly.Model.Glows`). 48 au plus sont allumées. Au marais : 14 lueurs de décor.
+- 64 lumières de projectile, sans ombre, qui suivent les tirs.
+- `--effects none` ou `ssao,fog,lights` choisit les effets du lancement. La capture ajoute cinq prises (`forward_sans_effets`, `_ombres_contact`, `_brume`, `_lumieres`, `_tout`), bot arrêté.
+- Réglages retouchés après une première revue des images : ombres de contact plus fortes (rayon 1, intensité 4), brume plus sombre (`675f7a`, densité 0,02 par cellule), lueurs moins fortes (énergie 1,2, portée 2,2).
+
+**Mesures** (tour du bot, forêt, 111 décors, 120 créatures, 3840 × 2160, Forward+, charge 1,6 à 2,5)
+
+| Effets | i/s | Temps par image | p99 |
+|---|---|---|---|
+| aucun | 795, 786, 780 (moyenne 787) | 1,27 ms | 1,8 à 1,9 ms |
+| ombres de contact | 619 | 1,62 ms (+0,35) | 2,3 ms |
+| brume | 747 | 1,34 ms (+0,07) | 1,9 ms |
+| lumières et halo | 564 | 1,77 ms (+0,50) | 2,3 ms |
+| les trois | 452, 449 (moyenne 450) | 2,22 ms (+0,95) | 2,9 ms |
+
+- Les trois ensemble coûtent près d'une milliseconde par image en 4K. On reste à 450 i/s sur cette machine, très au-dessus de 60.
+- Les lumières coûtent le plus, sans doute par le halo plein écran plus que par les lumières elles-mêmes. Pas séparé.
+- La brume ne coûte presque rien.
+- Après la relecture du code, la brume ne vaut plus qu'en caméra libre et y remplace le brouillard de profondeur ; les mesures ci-dessus les avaient tous deux. Seules les 48 premières lueurs posées s'allument, pas les plus proches du joueur.
+
+**Vérifié** : captures du marais regardées. Sans effet, la scène est plate. Avec les trois, la brume voile le ciel en mauve sombre, les lueurs vertes des champignons éclairent le sol, les troncs et un mur voisin, et les ombres de contact ancrent la horde. Aucun artefact. Smoke test vert.
+
+**Non vérifié**
+- Le bruit temporel des ombres de contact et de la brume (images fixes seulement).
+- Le coût sur une carte modeste, et sur Mac.
+
+**Pour le choix de Raphaël** : quels effets garder, et à quelle force. Tous sont allumés au lancement du bac à sable.

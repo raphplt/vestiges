@@ -39,8 +39,6 @@ public sealed class ReliefConfig
         public float MetresPerCell;
         // Agrandissement du joueur et des créatures, décors à part (§237) : des corps qui comptent à l'écran, comme Megabonk.
         public float BodyScale;
-        // Teintes de l'herbe du sol et des terrasses, que les touffes reprennent.
-        public Color Ground, Terrace;
         // Saillie des facettes des falaises taillées (cellules, §238).
         public float CarvedRelief;
         public string StartGround;
@@ -57,6 +55,20 @@ public sealed class ReliefConfig
         public float SeeThroughRadius;
     }
 
+    /// <summary>Effets propres à Forward+ (plan 60 §26, lot 60.0f) : ombres de contact, brume volumétrique, lumières.</summary>
+    public sealed class AtmosphereStyle
+    {
+        public bool StartSsao, StartFog, StartLights;
+        public float SsaoRadius, SsaoIntensity, SsaoPower, SsaoDetail;
+        public float FogDensity, FogAnisotropy, FogLength, FogAmbientInject;
+        public Color FogAlbedo, FogEmission;
+        public Color ProjectileColor;
+        public float ProjectileEnergy, ProjectileRange;
+        public float GlowEnergy, GlowRange, Bloom, BloomThreshold;
+        public int MaxGlows;
+    }
+
+    public AtmosphereStyle Atmosphere;
     public float LevelHeight;
     public Vector2 Spawn;
     public string[] Arena;
@@ -169,6 +181,7 @@ public sealed class ReliefConfig
         config.Gravity = 8f * jumpHeight / (jumpSeconds * jumpSeconds);
         config.SetCharacter(config.Character);
         config.LowPoly = LoadLowPoly(root["lowpoly"].AsGodotDictionary());
+        config.Atmosphere = LoadAtmosphere(root["atmosphere"].AsGodotDictionary());
         return config;
     }
 
@@ -209,9 +222,40 @@ public sealed class ReliefConfig
         throw new System.InvalidOperationException($"Personnage inconnu : {id}");
     }
 
+    private static AtmosphereStyle LoadAtmosphere(Dictionary atmosphere)
+    {
+        Dictionary start = atmosphere["start"].AsGodotDictionary();
+        Dictionary ssao = atmosphere["ssao"].AsGodotDictionary();
+        Dictionary fog = atmosphere["fog"].AsGodotDictionary();
+        Dictionary lights = atmosphere["lights"].AsGodotDictionary();
+        return new AtmosphereStyle
+        {
+            StartSsao = start["ssao"].AsBool(),
+            StartFog = start["fog"].AsBool(),
+            StartLights = start["lights"].AsBool(),
+            SsaoRadius = F(ssao, "radius"),
+            SsaoIntensity = F(ssao, "intensity"),
+            SsaoPower = F(ssao, "power"),
+            SsaoDetail = F(ssao, "detail"),
+            FogDensity = F(fog, "density"),
+            FogAnisotropy = F(fog, "anisotropy"),
+            FogLength = F(fog, "length"),
+            FogAmbientInject = F(fog, "ambient_inject"),
+            FogAlbedo = new Color(fog["albedo"].AsString()),
+            FogEmission = new Color(fog["emission"].AsString()),
+            ProjectileColor = new Color(lights["projectile_color"].AsString()),
+            ProjectileEnergy = F(lights, "projectile_energy"),
+            ProjectileRange = F(lights, "projectile_range"),
+            GlowEnergy = F(lights, "glow_energy"),
+            GlowRange = F(lights, "glow_range"),
+            MaxGlows = (int)F(lights, "max_glows"),
+            Bloom = F(lights, "bloom"),
+            BloomThreshold = F(lights, "bloom_threshold"),
+        };
+    }
+
     private static LowPolyStyle LoadLowPoly(Dictionary lowPoly)
     {
-        Dictionary colors = lowPoly["colors"].AsGodotDictionary();
         Array scatter = lowPoly["scatter"].AsGodotArray();
         Array landmarks = lowPoly["landmarks"].AsGodotArray();
         Dictionary start = lowPoly["start"].AsGodotDictionary();
@@ -229,8 +273,6 @@ public sealed class ReliefConfig
             BodyScale = F(lowPoly, "body_scale"),
             GrassPerCell = F(lowPoly["grass"].AsGodotDictionary(), "per_cell"),
             GrassHeight = F(lowPoly["grass"].AsGodotDictionary(), "height"),
-            Ground = new Color(colors["ground"].AsString()),
-            Terrace = new Color(colors["terrace"].AsString()),
             CarvedRelief = F(lowPoly, "carved_relief"),
             LodThreshold = F(lowPoly, "lod_threshold"),
             SeeThroughRadius = F(lowPoly, "see_through_radius"),

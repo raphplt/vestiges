@@ -17,6 +17,8 @@
 # (0 : toujours le plus fin). La capture mesure alors images par seconde et triangles du tour du bot.
 # Moteur de rendu : Forward+ par défaut (plan 60, §247), le jeu 2D restant en Compatibility ; options du moteur avant
 # --, ex. --rendering-method gl_compatibility pour comparer.
+# F5 à F7 (Forward+ seulement, plan 60 §26) : ombres de contact, brume volumétrique, lumières ; --effects none ou
+# ssao,fog,lights : ceux allumés au lancement.
 # Réglages et arène : data/sandbox/relief.json.
 # Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
 set -euo pipefail

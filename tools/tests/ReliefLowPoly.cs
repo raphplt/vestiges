@@ -21,6 +21,8 @@ public static class ReliefLowPoly
         public Aabb Bounds;
         /// <summary>Emprise du manifeste (bloc <c>ground</c>, plan 60 §21), absente d'un modèle exporté avant C2.</summary>
         public GroundBox? Ground;
+        /// <summary>Les lueurs de la pose de repos (surfaces émissives) : centre, dans le repère du modèle, et teinte moyenne.</summary>
+        public readonly List<(Vector3 Centre, Color Color)> Glows = new();
 
         public Mesh[] Animation(string name) =>
             Animations.TryGetValue(name, out Mesh[] frames) ? frames : Animations["idle"];
@@ -215,6 +217,7 @@ public static class ReliefLowPoly
             model.Animations[key.AsString()] = frames;
         }
         model.Bounds = model.Animation("idle")[0].GetAabb();
+        FindGlows(model);
         if (manifest.TryGetValue("ground", out Variant groundValue))
         {
             Godot.Collections.Dictionary ground = groundValue.AsGodotDictionary();
@@ -226,6 +229,30 @@ public static class ReliefLowPoly
             }
         }
         return model;
+    }
+
+    private static void FindGlows(Model model)
+    {
+        Mesh idle = model.Animation("idle")[0];
+        for (int s = 0; s < idle.GetSurfaceCount(); s++)
+        {
+            if (idle.SurfaceGetMaterial(s) != Glow)
+                continue;
+            Godot.Collections.Array arrays = idle.SurfaceGetArrays(s);
+            Vector3[] vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+            Color[] colors = arrays[(int)Mesh.ArrayType.Color].AsColorArray();
+            if (vertices.Length == 0)
+                continue;
+            Vector3 centre = Vector3.Zero;
+            foreach (Vector3 vertex in vertices)
+                centre += vertex;
+            Color color = new(0f, 0f, 0f);
+            foreach (Color c in colors)
+                color += c;
+            // Sans couleur de sommet, la lueur prend du blanc plutôt que du noir, qui n'éclairerait rien.
+            Color tint = colors.Length == 0 ? Colors.White : new Color(color.R / colors.Length, color.G / colors.Length, color.B / colors.Length);
+            model.Glows.Add((centre / vertices.Length, tint));
+        }
     }
 
     /// <summary>Hachage stable d'un point de la grille, dans [0, 1[ : la même graine donne le même relief.</summary>

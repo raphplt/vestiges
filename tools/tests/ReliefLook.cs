@@ -124,11 +124,16 @@ public sealed class ReliefLook
             };
             container.AddChild(body);
             _props.Add((body, new[] { placement.Model, mid }));
+            foreach ((Vector3 centre, Color color) in placement.Model.Glows)
+                Glows.Add((body.Transform * centre, color));
         }
         GD.Print($"[ReliefLook] {_props.Count} décors");
     }
 
     public int PropCount => _props.Count;
+
+    /// <summary>Les lueurs des décors posés (lanternes, champignons, cristaux), en coordonnées du monde.</summary>
+    public List<(Vector3 At, Color Color)> Glows { get; } = new();
 
     /// <summary>Le pied du décor d'au moins <paramref name="minHeight"/> mètres le plus proche de <paramref name="at"/>.</summary>
     public Vector2? TallPropNear(Vector2 at, float minHeight)
