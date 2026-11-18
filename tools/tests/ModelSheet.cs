@@ -20,6 +20,7 @@ public partial class ModelSheet : Node3D
     private const string ModelRoot = "res://assets/models";
     private static readonly Color LabelColor = new("e8e4dc");
     private static readonly Color OverBudgetColor = new("ff6b5c");
+    private const string GroundOverlayName = "GroundOverlay";
     private static readonly float[] Yaws = { 0f, 45f, 90f, 180f };
 
     private readonly List<(string Path, Node3D Model, Dictionary<string, string[]> Animations)> _models = new();
@@ -154,7 +155,7 @@ public partial class ModelSheet : Node3D
     private static void ShowFrame(Node3D model, string frame)
     {
         foreach (Node child in model.FindChildren("*", "MeshInstance3D", true, false))
-            ((Node3D)child).Visible = child.Name == frame;
+            ((Node3D)child).Visible = child.Name == frame || child.Name == GroundOverlayName;
     }
 
     /// <summary>Quatre vues à la même hauteur d'image : face, trois quarts, profil, dos.</summary>
@@ -294,6 +295,8 @@ public partial class ModelSheet : Node3D
                         continue;
                     loaded.Add(model);
                     Godot.Collections.Dictionary entry = list[i].Entry;
+                    if (entry.TryGetValue("ground", out Variant ground))
+                        model.AddChild(GroundOverlay(ground.AsGodotDictionary()));
                     bool over = entry.TryGetValue("over_budget", out Variant flag) && flag.AsBool();
                     if (over)
                         overBudget++;
@@ -308,6 +311,61 @@ public partial class ModelSheet : Node3D
         }
         reference.Model?.Free();
         GD.Print($"[ModelSheet] {pages} planches de la bibliothèque, {overBudget} modèles hors budget : {_captureDir}");
+    }
+
+    /// <summary>
+    /// L'emprise d'un décor (plan 60 §21) tracée au sol, vue à travers lui : enveloppe en jaune, boîte de collision en
+    /// rouge si le décor bloque, en gris sinon.
+    /// </summary>
+    private static MeshInstance3D GroundOverlay(Godot.Collections.Dictionary ground)
+    {
+        ImmediateMesh mesh = new();
+        StandardMaterial3D material = new()
+        {
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            VertexColorUseAsAlbedo = true,
+            NoDepthTest = true,
+        };
+        if (ground.TryGetValue("footprint", out Variant footprint))
+        {
+            List<Vector3> loop = new();
+            foreach (Variant point in footprint.AsGodotArray())
+            {
+                Godot.Collections.Array xz = point.AsGodotArray();
+                loop.Add(new Vector3((float)xz[0].AsDouble(), 0.02f, (float)xz[1].AsDouble()));
+            }
+            AddLoop(mesh, loop, new Color("f2d14b"), material);
+        }
+        if (ground.TryGetValue("collision", out Variant collision))
+        {
+            Godot.Collections.Dictionary box = collision.AsGodotDictionary();
+            Godot.Collections.Array centre = box["centre"].AsGodotArray();
+            Godot.Collections.Array half = box["half_size"].AsGodotArray();
+            float angle = Mathf.DegToRad((float)box["angle_deg"].AsDouble());
+            Vector2 c = new((float)centre[0].AsDouble(), (float)centre[1].AsDouble());
+            Vector2 u = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (float)half[0].AsDouble();
+            Vector2 v = new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle)) * (float)half[1].AsDouble();
+            List<Vector3> loop = new();
+            foreach (Vector2 corner in new[] { c - u - v, c + u - v, c + u + v, c - u + v })
+                loop.Add(new Vector3(corner.X, 0.03f, corner.Y));
+            AddLoop(mesh, loop, ground["blocking"].AsBool() ? OverBudgetColor : new Color("9a968e"), material);
+        }
+        return new MeshInstance3D { Name = GroundOverlayName, Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off };
+    }
+
+    private static void AddLoop(ImmediateMesh mesh, List<Vector3> loop, Color color, Material material)
+    {
+        if (loop.Count < 2)
+            return;
+        mesh.SurfaceBegin(Mesh.PrimitiveType.LineStrip, material);
+        foreach (Vector3 point in loop)
+        {
+            mesh.SurfaceSetColor(color);
+            mesh.SurfaceAddVertex(point);
+        }
+        mesh.SurfaceSetColor(color);
+        mesh.SurfaceAddVertex(loop[0]);
+        mesh.SurfaceEnd();
     }
 
     /// <summary>« 15 010 / 6 000 », suivi du facteur (x1,15) de grossissement quand l'export a grossi le modèle pour tenir.</summary>

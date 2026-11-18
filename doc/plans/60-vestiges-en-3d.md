@@ -388,7 +388,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | Lot | Outil | État | Effort |
 |---|---|---|---|
 | **C1** | Export de masse dirigé par les catalogues, bibliothèque et index, planches par catalogue | **livré** (ci-dessous) | moyen |
-| C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | à faire | faible |
+| C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | C2a livré (§21) | faible |
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | livré (§19) : C4a, C4b et C4c | moyen |
 | C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
@@ -759,3 +759,37 @@ Raphaël : « Aplats + palette terne ». Le crade viendra des formes cassées, d
 - Le sol texturé est maintenant plus vif que les décors : sa palette suivra si Raphaël le juge.
 - Les marquages lisibles (panneaux, bandes de sécurité) pourraient revenir en motifs nets, s'ils manquent en jeu.
 
+
+## 21. C2, emprises et collisions des modèles — découpage (18 novembre)
+
+Aujourd'hui, le bac à sable bloque avec la boîte entière du modèle réduite à 60 % : la canopée d'un arbre ou le toit d'un abri comptent comme s'ils touchaient le sol, et un arbre fin bloque un disque de deux mètres.
+
+**Défauts de l'agent, réversibles** :
+- **L'emprise se lit dans le maillage exporté**, pas dans les `footprint` des `PropModel`, que peu de décors déclarent. Coupe des sommets à moins de `min(0,5 m, 35 % de la hauteur)` du bas du modèle, enveloppe convexe en mètres, ramenée à 8 sommets au plus. Un arbre garde son tronc, un mur sa longueur, une maison ses murs.
+- **Boîte de collision** : le rectangle orienté le plus serré autour de l'emprise (centre, demi-côtés, angle), sur toute la hauteur du modèle. **Point d'ancrage** : le centre de l'emprise, relatif à l'origine du modèle.
+- **Bloquant ou non** d'après les règles du jeu (`data/world/world_gen.json`, `props`) : hauteur d'écran au moins `min_blocking_height` et nom hors `trample_prefixes`. Un décor sous `ground_decal_max_height` est noté `decal` (C5). Les pixels se ramènent aux mètres par l'échelle des sprites (1 m ≈ 17 px, hauteur vue sous 30°).
+- Le tout va dans le manifeste `.json` de chaque modèle (bloc `ground`) et dans l'index. Le bac à sable bloque avec la boîte de collision ; la table de la terre (`blocking` de `data/props`) garde le dernier mot, comme en 2D.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **C2a, emprises au manifeste** | Calcul à l'export, bloc `ground` du manifeste et de l'index ; lecture dans le bac à sable | Emprises dessinées sur les planches de la forêt et de la ville ; tour du bot et capture du bac à sable en forêt | faible |
+
+### C2a livré — 18 novembre
+
+**Fait**
+- `tools/sprites/lowpoly_ground.py` : emprise (coupe basse, enveloppe convexe, 8 sommets), boîte de collision orientée d'aire minimale, ancrage, et règle du jeu. La hauteur d'écran est l'étendue des sommets vus sous 30° (1 m ≈ 17 px), contour de 2 px compris, comme `VisibleHeight` en 2D.
+- `tools/export_lowpoly.py` écrit le bloc `ground` dans le manifeste de chaque décor et dans l'index : `footprint`, `anchor`, `collision` (centre, demi-côtés, angle, hauteur), `blocking`, `trampled`, `decal`, `screen_height_px`.
+- Bac à sable : `ReliefLowPoly.AddCollision` bloque avec la boîte tournée du décor, en chaîne de cercles le long du grand côté ; un modèle sans bloc `ground` garde l'ancienne boîte. `ReliefBiomeProps` : bloquant si la table le veut et si le manifeste le juge assez haut ; rotation libre pour tous.
+- Planches de la bibliothèque : emprise en jaune et boîte en rouge (bloquant) ou gris, tracées au sol.
+- Bibliothèque réexportée : 312 modèles, 0 échec, 439 s. `assets/models` en low et mid poly.
+
+**Vérifications**
+- 279 décors avec emprise : 238 bloquants, 12 piétinés, 9 décalques.
+- Règle de blocage comparée à la hauteur des sprites 2D sur les 96 décors qui en ont un au même nom : même verdict pour 90. Les 6 autres sont à 1 à 2 px du seuil de 18 px, plus la salière, plate en 3D. Écart médian de hauteur −2,2 px.
+- Demi-côtés des arbres : 0,3 à 0,5 m pour les arbres moyens, 0,8 m pour les grands, contre un disque de deux mètres avant.
+- Planches de la forêt et de la ville regardées : troncs seuls, murs des maisons, longueur des clôtures et du portail. Les abris bloquent sous leur toit.
+- Bac à sable en forêt, une capture : 111 décors, tour du bot complet jusqu'au 5e étage, 993 i/s, 497 k triangles par image.
+
+**Points ouverts**
+- Les décors creux (abris, préaux) pourraient bloquer par leurs seuls poteaux, si on veut passer dessous.
+- Le jeu en 3D lira ces emprises à la place du manifeste 2D quand le monde passera en 3D (60.4).

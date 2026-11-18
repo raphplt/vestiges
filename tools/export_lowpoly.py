@@ -58,6 +58,7 @@ from tools.generate_props import BIOMES  # noqa: E402
 from tools.sprites import models  # noqa: E402
 from tools.sprites.lowpoly import (ColorStyle, Mesh, ModelExport, find_bounds, merged, mesh_parts,  # noqa: E402
                                    mesh_parts_adaptive, mesh_parts_smooth, scaled, write_glb)  # noqa: E402
+from tools.sprites.lowpoly_ground import ground  # noqa: E402
 from tools.sprites.props._kit import M  # noqa: E402
 from tools.sprites.render import MODEL_SCALE, PITCH  # noqa: E402
 
@@ -67,6 +68,8 @@ SPRITES = ROOT / "tools" / "sprites"
 BUDGETS = SPRITES / "lowpoly_budgets.json"
 # Rendu des couleurs par sorte de modèle (plan 60 §20) : aplats, lissage, palette terne.
 STYLES = SPRITES / "lowpoly_style.json"
+# Règles des décors du jeu en 2D (bloquant, piétiné, décalque), reprises pour les emprises des modèles (plan 60 §21).
+WORLD_GEN = ROOT / "data" / "world" / "world_gen.json"
 # Itérations de la dichotomie du pas, une fois le budget encadré : un huitième de l'écart suffit.
 BISECTIONS = 3
 # Un modèle se ramène au mètre par son échelle de rendu : les personnages, modélisés plus grands et rendus plus petits,
@@ -296,6 +299,8 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
         path = out / job.folder / f"{job.model_id}.glb"
         manifest = write_glb(export, path)
         idle = export.animations[next(iter(export.animations))][0].positions
+        if kind == "prop":
+            entry["ground"] = _write_ground(path, idle, job.sources[0])
         entry.update({
             "poses": sum(len(v) for v in manifest["animations"].values()),
             "meshes": manifest["meshes"],
@@ -309,6 +314,17 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
         entry["trace"] = traceback.format_exc(limit=3)
     entry["seconds"] = round(time.time() - start, 1)
     return entry
+
+
+def _write_ground(path: Path, positions: np.ndarray, source: str) -> dict:
+    """Ajoute au manifeste du décor son emprise, sa boîte de collision et la règle de blocage du jeu ; les renvoie."""
+    rules = json.loads(WORLD_GEN.read_text())["props"]
+    block = ground(positions, source.removesuffix("_base"), rules, M * MODEL_SCALE, PITCH)
+    manifest_path = path.with_suffix(".json")
+    manifest = json.loads(manifest_path.read_text())
+    manifest["ground"] = block
+    manifest_path.write_text(json.dumps(manifest, indent="\t", ensure_ascii=False) + "\n")
+    return block
 
 
 def _print_entry(entry: dict) -> None:

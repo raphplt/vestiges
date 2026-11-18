@@ -19,6 +19,8 @@ public static class ReliefLowPoly
         public readonly Dictionary<string, Mesh[]> Animations = new();
         public float Fps = 8f;
         public Aabb Bounds;
+        /// <summary>Emprise du manifeste (bloc <c>ground</c>, plan 60 §21), absente d'un modèle exporté avant C2.</summary>
+        public GroundBox? Ground;
 
         public Mesh[] Animation(string name) =>
             Animations.TryGetValue(name, out Mesh[] frames) ? frames : Animations["idle"];
@@ -36,6 +38,12 @@ public static class ReliefLowPoly
             return frames[Mathf.Clamp((int)(progress * frames.Length), 0, frames.Length - 1)];
         }
     }
+
+    /// <summary>
+    /// La boîte de collision d'un décor, en mètres dans le repère du modèle : centre (x, z), demi-côtés (grand côté en X
+    /// local), angle du grand côté depuis l'axe X, et la règle de blocage du jeu en 2D.
+    /// </summary>
+    public readonly record struct GroundBox(Vector2 Centre, Vector2 HalfSize, float AngleDegrees, bool Blocking);
 
     private const string FlatShader = "res://tools/tests/lowpoly_flat.gdshader";
     private const string FlatToonShader = "res://tools/tests/lowpoly_flat_toon.gdshader";
@@ -205,6 +213,16 @@ public static class ReliefLowPoly
             model.Animations[key.AsString()] = frames;
         }
         model.Bounds = model.Animation("idle")[0].GetAabb();
+        if (manifest.TryGetValue("ground", out Variant groundValue))
+        {
+            Godot.Collections.Dictionary ground = groundValue.AsGodotDictionary();
+            if (ground.TryGetValue("collision", out Variant boxValue))
+            {
+                Godot.Collections.Dictionary box = boxValue.AsGodotDictionary();
+                model.Ground = new GroundBox(ReadVector2(box["centre"]), ReadVector2(box["half_size"]),
+                    (float)box["angle_deg"].AsDouble(), ground["blocking"].AsBool());
+            }
+        }
         return model;
     }
 
@@ -260,7 +278,7 @@ public static class ReliefLowPoly
         {
             Model model = LoadModel(landmark.Model, true);
             placed.Add(new Placement(model, landmark.Model, landmark.At, landmark.YawDegrees));
-            AddFootprint(sim, model.Bounds, landmark.At, landmark.YawDegrees, cellsPerMetre);
+            AddCollision(sim, model, landmark.At, landmark.YawDegrees, cellsPerMetre);
         }
 
         if (biome != null)
@@ -293,6 +311,39 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Emprise rectangulaire d'un repère, en chapelet de cercles le long de son grand côté (yaw multiple de 90°).</summary>
+    private static Vector2 ReadVector2(Variant value)
+    {
+        Godot.Collections.Array pair = value.AsGodotArray();
+        return new Vector2((float)pair[0].AsDouble(), (float)pair[1].AsDouble());
+    }
+
+    /// <summary>
+    /// Bloque l'emprise d'un décor posé : sa boîte de collision du manifeste, tournée avec lui, en chaîne de cercles le
+    /// long du grand côté ; à défaut (modèle d'avant C2), la boîte du modèle entier.
+    /// </summary>
+    internal static void AddCollision(ReliefSim sim, Model model, Vector2 at, float yawDegrees, float cellsPerMetre)
+    {
+        if (model.Ground is not GroundBox box)
+        {
+            AddFootprint(sim, model.Bounds, at, yawDegrees, cellsPerMetre);
+            return;
+        }
+        // Un nœud tourné de θ autour de Y envoie (x, z) sur (x cos θ + z sin θ, −x sin θ + z cos θ).
+        float yaw = Mathf.DegToRad(yawDegrees);
+        Vector2 Turn(Vector2 v) => new(v.X * Mathf.Cos(yaw) + v.Y * Mathf.Sin(yaw), -v.X * Mathf.Sin(yaw) + v.Y * Mathf.Cos(yaw));
+        float angle = Mathf.DegToRad(box.AngleDegrees);
+        Vector2 axis = Turn(new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)));
+        Vector2 centre = at + Turn(box.Centre) * cellsPerMetre;
+        float radius = box.HalfSize.Y * cellsPerMetre;
+        float halfLength = box.HalfSize.X * cellsPerMetre;
+        int count = Mathf.Max(1, Mathf.CeilToInt(2f * halfLength / Mathf.Max(radius, 0.05f)));
+        for (int i = 0; i < count; i++)
+        {
+            float offset = count == 1 ? 0f : Mathf.Lerp(-halfLength + radius, halfLength - radius, i / (float)(count - 1));
+            sim.AddObstacle(centre + axis * offset, radius);
+        }
+    }
+
     internal static void AddFootprint(ReliefSim sim, Aabb bounds, Vector2 at, float yawDegrees, float cellsPerMetre)
     {
         bool turned = Mathf.Abs(Mathf.Sin(Mathf.DegToRad(yawDegrees))) > 0.5f;

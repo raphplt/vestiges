@@ -3035,3 +3035,11 @@ Raphaël : « Aplats + palette terne », après avoir jugé les couleurs « IA s
 - **Palette terne à l'export, par sorte de modèle** (`tools/sprites/lowpoly_style.json`). Décors : saturation 0,62, valeur 0,86, 12 % vers la crasse `5a5246`. Créatures et personnages : moins ternis, et sans aplats.
 - **Perte acceptée** : les marquages fins des panneaux.
 
+
+## 244. Les emprises des modèles 3D se lisent dans leur maillage — 18 novembre 2026
+
+Décision par défaut de l'agent (§190), réversible par Raphaël, après « allez go continue a fond sur le dev » : le lot C2 du plan 60 passe avant C5 ([plan 60 §21](60-vestiges-en-3d.md)).
+- **Emprise** : enveloppe convexe des sommets à moins de 0,5 m (35 % de la hauteur au plus) du bas du modèle, 8 sommets au plus. Un arbre bloque par son tronc, plus par sa canopée.
+- **Boîte de collision** : rectangle orienté le plus serré autour de l'emprise, sur toute la hauteur. Les décors bloquants tournent donc librement, plus par quart de tour.
+- **Blocage** : la règle des décors 2D (`world_gen.json`, `props`), la hauteur d'écran calculée depuis le maillage. La table de la terre garde le dernier mot.
+- **Accepté** : un abri ou un préau bloque sous son toit (enveloppe de ses poteaux), comme en 2D.

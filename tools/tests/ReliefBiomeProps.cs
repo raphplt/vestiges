@@ -9,13 +9,11 @@ namespace Vestiges.Tests;
 /// bibliothèque de l'export de masse (<c>build/models</c>, convertie par <c>tools/convert_models.sh</c>). Un décor
 /// plat, sorti sans triangle de l'export (flaque, marelle), est écarté : il deviendra un décalque (C5). Les zones
 /// rythmées de la terre (clairières, fourrés) et les décors posés par d'autres systèmes (immeubles, fermes) n'y sont
-/// pas. L'emprise d'un décor bloquant est sa boîte réduite, en attendant les emprises du lot C2.
+/// pas. Un décor bloque comme en 2D : décor voulu bloquant par la table et assez haut selon le manifeste du modèle (lot C2),
+/// avec sa boîte de collision au sol.
 /// </summary>
 public sealed class ReliefBiomeProps
 {
-    // La part de la boîte d'un modèle qui bloque : une canopée ou un toit débordent de ce qui touche le sol.
-    private const float FootprintShare = 0.6f;
-
     private readonly List<(ReliefLowPoly.Model Model, string Path, float Weight, bool Blocking)> _entries = new();
     private readonly float _density;
     private float _totalWeight;
@@ -47,7 +45,8 @@ public sealed class ReliefBiomeProps
             float weight = (float)prop["weight"].AsDouble();
             if (!loaded.TryGetValue(model, out ReliefLowPoly.Model mesh))
                 loaded[model] = mesh = ReliefLowPoly.LoadModelAt($"{libraryRoot}/{model}", true);
-            _entries.Add((mesh, model, weight, prop["blocking"].AsBool()));
+            bool blocking = prop["blocking"].AsBool() && (mesh.Ground?.Blocking ?? true);
+            _entries.Add((mesh, model, weight, blocking));
             _totalWeight += weight;
         }
         if (_entries.Count == 0)
@@ -57,7 +56,7 @@ public sealed class ReliefBiomeProps
 
     /// <summary>
     /// Sème les décors sur les cellules plates, comme le jeu en 2D : une chance <c>density</c> par cellule, puis un décor
-    /// tiré selon les poids. Un décor bloquant tourne d'un quart de tour (son emprise reste alignée), les autres librement.
+    /// tiré selon les poids, tourné librement (la boîte de collision tourne avec lui).
     /// </summary>
     public void Scatter(ReliefArena arena, ReliefSim sim, List<ReliefLowPoly.Placement> placed, IReadOnlyList<Vector2> keepClear,
         Vector2 spawn, float cellsPerMetre, ulong seed)
@@ -71,16 +70,13 @@ public sealed class ReliefBiomeProps
                     continue;
                 (ReliefLowPoly.Model model, string path, _, bool blocking) = Pick(rng.Randf() * _totalWeight);
                 Vector2 at = new(x + rng.RandfRange(0.25f, 0.75f), y + rng.RandfRange(0.25f, 0.75f));
-                float yaw = blocking ? 90f * rng.RandiRange(0, 3) : rng.RandfRange(0f, 360f);
+                float yaw = rng.RandfRange(0f, 360f);
                 if (!ReliefLowPoly.IsFlatInterior(arena, x, y) || at.DistanceTo(spawn) < 2.5f
                     || ReliefLowPoly.DistanceToPath(at, keepClear) < 1.4f || ReliefLowPoly.Crowded(placed, at, cellsPerMetre))
                     continue;
                 placed.Add(new ReliefLowPoly.Placement(model, path, at, yaw));
                 if (blocking)
-                {
-                    Aabb footprint = new(model.Bounds.Position, model.Bounds.Size * FootprintShare);
-                    ReliefLowPoly.AddFootprint(sim, footprint, at, yaw, cellsPerMetre);
-                }
+                    ReliefLowPoly.AddCollision(sim, model, at, yaw, cellsPerMetre);
             }
         }
     }
