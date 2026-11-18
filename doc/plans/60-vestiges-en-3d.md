@@ -92,7 +92,7 @@ Le bac à sable de la verticalité (`tools/relief_sandbox.sh`) sert de base : sa
 | **60.0b L'arène low poly** | Sol et falaises de l'arène en maillage low poly, ombrage par faces, les modèles à la place des sprites ; le relief et la horde du bac à sable | Captures ; contrôle des rebords toujours vert | Moyen |
 | **60.0c Les caméras** | Caméra qui tourne (Q/E et souris), sous trois réglages à comparer : isométrique haute (orthographique ou faible perspective), 3D de haut rapprochée, poursuite. Réglages dans le JSON du bac à sable | Captures de chaque caméra, au milieu de la horde et au pied d'un mur | Moyen |
 | **60.0d Les styles** | Deux ou trois styles basculés d'une touche : low poly crade (textures basse résolution, tramage, brouillard), aplats nets, mid poly éclairé | Planche caméra × style | Moyen |
-| **60.0e Le moteur de rendu** | Le même banc en Compatibility et en Forward+ : 120 créatures animées, projectiles, décors | Banc A/B machine calme, images par seconde et temps d'image | Faible |
+| **60.0e Le moteur de rendu** | Le même banc en Compatibility et en Forward+ : 120 créatures animées, projectiles, décors. **Livré (§23)** : Forward+ environ −7 % | Banc A/B machine calme, images par seconde et temps d'image | Faible |
 | **Séance de Raphaël** | Il joue chaque caméra et chaque style | Choix de la caméra, du style et du moteur, consignés | Ton temps |
 
 Ce que 60.0 doit trancher, à la fin :
@@ -827,3 +827,37 @@ Le bac à sable n'a qu'un sol, celui de la forêt d'essai, quelle que soit la te
 **Points ouverts**
 - Le sol des champs est vif à côté des décors en palette terne (point ouvert de C6a) : sa palette suivra si Raphaël le juge.
 - La forêt a maintenant un sol bas en terre brune : c'est le poids du terrain forestier de la terre (60 %).
+
+## 23. 60.0e, le moteur de rendu : Compatibility contre Forward+ — découpage (18 novembre)
+
+Le quatrième choix de fin de 60.0 (§7) n'a encore aucune mesure. Le bac à sable se lance tel quel sous l'un ou l'autre moteur (`tools/relief_sandbox.sh --rendering-method forward_plus -- …`).
+
+**Défauts de l'agent, réversibles** :
+- **Banc** : le tour du bot du bac à sable, en forêt (`--biome forest_reclaimed`), 120 créatures (`--enemies 120`), 3840 × 2160, synchronisation de l'écran coupée. Quatre passes alternées (Compatibility, Forward+, Compatibility, Forward+), machine calme, même graine. Images par seconde, p99 du temps d'image, triangles.
+- **Images** : les mêmes vues regardées sous les deux moteurs (couleurs de sommet, ombres, contours, effacement des décors en trame).
+- Rien ne bascule : le projet reste en Compatibility. Le choix revient à Raphaël, avec la caméra, le style et l'échelle.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **60.0e, le banc des deux moteurs** | Mesure et comparaison d'images ; correctifs seulement si un moteur ne rend pas le bac à sable | Quatre passes, chiffres et images | faible |
+
+### 60.0e livré — 18 novembre
+
+**Fait**
+- Forward+ rend le bac à sable sans erreur ni avertissement (Vulkan 1.4, Radeon RX 6950 XT), contours d'écran et effacement des décors en trame compris.
+- Ses couleurs de sommet sortaient délavées : il relit en linéaire les couleurs écrites en sRGB pour le Compatibility (§8). Le shader des modèles (`lowpoly_flat.gdshaderinc`) les ramène en linéaire sous Forward+ seulement (`CURRENT_RENDERER`). Les matériaux standard à couleur de sommet (relief, herbe, planches) prennent le drapeau sRGB, sans effet en Compatibility. Le rendu Compatibility ne change pas.
+
+**Mesures** (tour du bot, forêt, 111 décors, 120 créatures, 3840 × 2160, synchronisation coupée, charge 1,4 à 3,4, passes alternées)
+
+| Moteur | i/s | p99 | Triangles par image |
+|---|---|---|---|
+| Compatibility | 865, 896, 895 (moyenne 885) | 1,7 à 1,8 ms | 625 à 631 k |
+| Forward+ | 836, 810, 820 (moyenne 822) | 1,7 ms | 649 à 654 k |
+
+- Forward+ coûte environ 7 % d'images par seconde sur ce banc, sans pire temps d'image plus haut. Il dessine 4 % de triangles de plus : ses niveaux de détail ne retombent pas tout à fait aux mêmes distances.
+- Images regardées côte à côte (poursuite, relief 2D, effacement derrière un arbre) : mêmes formes, mêmes ombres, mêmes contours. Après correction des couleurs, Forward+ rend un rien plus sombre et moins contrasté.
+
+**Pour le choix de Raphaël**
+- Sur cette machine, les deux moteurs tiennent plus de 800 i/s en 4K : le coût ne départage pas.
+- Forward+ ouvrirait ce que le Compatibility n'a pas : décalques, lumières nombreuses, brouillard volumétrique, SSAO. En retour : Vulkan ou Metal exigés, et un rendu à vérifier sur Mac (plan 53).
+- Non mesuré : un Mac, une carte modeste.

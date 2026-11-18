@@ -55,14 +55,16 @@ public static class ReliefLowPoly
 
     /// <summary>
     /// Couleur par sommet ; l'ombrage suit les normales du maillage (de face en low poly, lissées en mid poly). Les
-    /// couleurs du .glb sont écrites en sRGB (plan 60 §8) : le matériau les prend telles quelles. Partagé par tous les
+    /// couleurs du .glb sont écrites en sRGB (plan 60 §8) : Compatibility les prend telles quelles, Forward+ les ramène en
+    /// linéaire par le drapeau sRGB, sans effet en Compatibility (§23). Partagé par tous les
     /// modèles : l'ombrage toon se bascule ici, une fois.
     /// </summary>
-    public static StandardMaterial3D Plain => _plain ??= new StandardMaterial3D { VertexColorUseAsAlbedo = true, Roughness = 1f };
+    public static StandardMaterial3D Plain => _plain ??= new StandardMaterial3D { VertexColorUseAsAlbedo = true, VertexColorIsSrgb = true, Roughness = 1f };
 
     private static StandardMaterial3D Glow => _glow ??= new StandardMaterial3D
     {
         VertexColorUseAsAlbedo = true,
+        VertexColorIsSrgb = true,
         ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
     };
 

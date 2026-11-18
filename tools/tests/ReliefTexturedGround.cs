@@ -197,6 +197,7 @@ public static class ReliefTexturedGround
         {
             AlbedoTexture = ImageTexture.CreateFromImage(image),
             VertexColorUseAsAlbedo = true,
+            VertexColorIsSrgb = true,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.NearestWithMipmapsAnisotropic,
             Roughness = 1f,
         };

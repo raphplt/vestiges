@@ -3,6 +3,7 @@
 **18 novembre — les décors 3D bloquent par ce qui touche le sol ([plan 60 §21](60-vestiges-en-3d.md), §244) :**
 - Chaque modèle de décor porte dans son manifeste son emprise au sol, sa boîte de collision et la règle de blocage du jeu (lot C2a). Un arbre bloque par son tronc.
 - Même verdict de blocage que les sprites 2D pour 90 décors sur 96. Le bac à sable bloque avec ces boîtes ; les décors tournent librement.
+- Moteur de rendu (60.0e, [§23](60-vestiges-en-3d.md), §246) : Forward+ rend le bac à sable, environ 7 % plus lent que Compatibility (822 contre 885 i/s en 4K, 120 créatures, même p99). Couleurs justes sous les deux moteurs. Le projet reste en Compatibility ; le choix revient à Raphaël.
 - Les 22 matières du sol 2D sont rendues en textures du relief, et `--biome` habille le sol et les plateaux de la terre choisie ([§22](60-vestiges-en-3d.md), §245, C5a). Les décors plats (flaques, nénuphars) se posent en décalques (C5b).
 
 **17 novembre — les modèles 3D se convertissent et se simplifient de loin ([plan 60 §19](60-vestiges-en-3d.md), §242) :**

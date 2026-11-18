@@ -3051,3 +3051,9 @@ Décisions par défaut de l'agent (§190), réversibles par Raphaël, lot C5 du 
 - **Une terre habille le relief** : le sol bas prend la matière de son terrain le plus pesant, les plateaux herbus la suivante.
 - **Un décor plat est un décalque** : son sprite 2D déplié à plat sur le sol. Le Compatibility n'a pas de nœud `Decal`.
 - **La palette du sol ne change pas** pour l'instant, bien qu'il soit plus vif que les décors.
+
+## 246. Le moteur de rendu reste Compatibility en attendant le choix de Raphaël — 18 novembre 2026
+
+Décision par défaut de l'agent (§190), réversible, lot 60.0e du plan 60 ([§23](60-vestiges-en-3d.md)), mené pendant que Raphaël répond sur la palette du sol (« continue a dev »).
+- **Rien ne bascule** : le projet reste en GL Compatibility. Forward+ est mesuré à environ −7 % d'images par seconde sur le banc du bac à sable, au même p99. Le choix du moteur reste à Raphaël, avec la caméra, le style et l'échelle.
+- **Les couleurs des modèles valent pour les deux moteurs** : le shader les ramène en linéaire sous Forward+, et le Compatibility ne change pas.

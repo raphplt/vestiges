@@ -19,6 +19,7 @@ public static class ReliefGrass
     public static StandardMaterial3D Material { get; } = new()
     {
         VertexColorUseAsAlbedo = true,
+        VertexColorIsSrgb = true,
         Roughness = 1f,
         CullMode = BaseMaterial3D.CullModeEnum.Disabled,
         Transparency = BaseMaterial3D.TransparencyEnum.Alpha,

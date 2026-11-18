@@ -18,7 +18,13 @@ void fragment() {
 	// Le sens du produit dépend de la convention d'axes de l'image : on tourne la face vers la caméra.
 	vec3 face = normalize(cross(dFdx(VERTEX), dFdy(VERTEX)));
 	NORMAL = dot(face, VERTEX) > 0.0 ? -face : face;
+	// Les couleurs du .glb sont écrites en sRGB (plan 60 §8), que le Compatibility rend telles quelles ; Forward+ calcule
+	// en linéaire et doit les y ramener (plan 60 §23).
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 	ALBEDO = COLOR.rgb;
+#else
+	ALBEDO = mix(pow((COLOR.rgb + 0.055) / 1.055, vec3(2.4)), COLOR.rgb / 12.92, lessThan(COLOR.rgb, vec3(0.04045)));
+#endif
 	ROUGHNESS = 1.0;
 	if (see_through && distance(CAMERA_POSITION_WORLD, view_camera) < 0.05) {
 		vec3 world = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;

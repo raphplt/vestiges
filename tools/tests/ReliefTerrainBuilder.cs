@@ -165,6 +165,7 @@ public static class ReliefTerrainBuilder
             TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
             TextureRepeat = repeat,
             VertexColorUseAsAlbedo = true,
+            VertexColorIsSrgb = true,
             ShadingMode = shaded ? BaseMaterial3D.ShadingModeEnum.PerPixel : BaseMaterial3D.ShadingModeEnum.Unshaded,
             CullMode = BaseMaterial3D.CullModeEnum.Back,
             Roughness = 1f,

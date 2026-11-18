@@ -324,6 +324,7 @@ public partial class ModelSheet : Node3D
         {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
             VertexColorUseAsAlbedo = true,
+            VertexColorIsSrgb = true,
             NoDepthTest = true,
         };
         if (ground.TryGetValue("footprint", out Variant footprint))
