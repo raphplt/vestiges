@@ -32,6 +32,8 @@ public static class ReliefGrass
         List<Transform3D> transforms = new();
         List<Color> colors = new();
         int perCell = Mathf.RoundToInt(style.GrassPerCell);
+        Color groundTone = ReliefTexturedGround.Tone(false);
+        Color terraceTone = ReliefTexturedGround.Tone(true);
         for (int y = 0; y < arena.Depth; y++)
         {
             for (int x = 0; x < arena.Width; x++)
@@ -39,7 +41,7 @@ public static class ReliefGrass
                 float h = arena.CellHeight(x, y);
                 if (arena.IsRamp(x, y) || !IsGrass(arena, h))
                     continue;
-                Color tone = h / arena.LevelHeight < 0.5f ? style.Ground : style.Terrace;
+                Color tone = h / arena.LevelHeight < 0.5f ? groundTone : terraceTone;
                 for (int k = 0; k < perCell; k++)
                 {
                     Vector2 at = new(x + rng.Randf(), y + rng.Randf());
@@ -52,8 +54,8 @@ public static class ReliefGrass
                     float size = rng.RandfRange(style.GrassHeight * 0.6f, style.GrassHeight * 1.3f);
                     Basis basis = new Basis(Vector3.Up, rng.Randf() * Mathf.Tau).Scaled(new Vector3(size, size, size));
                     transforms.Add(new Transform3D(basis, new Vector3(at.X, h, at.Y)));
-                    // Même plaques que la teinte du sol texturé, un peu plus claires : l'herbe se détache du sol.
-                    float k2 = 0.95f + 0.25f * ReliefLowPoly.Noise(at.X, at.Y, 2.6f, 31) + rng.RandfRange(-0.06f, 0.06f);
+                    // La teinte du sol texturé sous la touffe, en plaques, un peu plus claire : l'herbe se détache du sol.
+                    float k2 = 1.2f + 0.25f * ReliefLowPoly.Noise(at.X, at.Y, 2.6f, 31) + rng.RandfRange(-0.06f, 0.06f);
                     colors.Add(new Color(tone.R * k2, tone.G * k2, tone.B * k2));
                 }
             }

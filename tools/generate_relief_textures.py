@@ -14,6 +14,9 @@ bloc d'herbe de Minecraft), une par herbe.
 Les 22 matières du sol 2D (tools/generate_ground.py, plan 60 §22) se rendent de la même façon, avec leurs propres tons,
 parts, motifs et dallages : une texture et une frange par matière, que le bac à sable choisit selon la terre semée.
 
+Toutes passent par la palette terne du sol (bloc `ground` de tools/sprites/lowpoly_style.json, plan 60 §25), comme
+les modèles par la leur : le sol ne détonne plus, plus vif que les décors posés dessus.
+
 Usage : python3 tools/generate_relief_textures.py [--sheet planche.png] [--materials-sheet planche.png]
 Sortie : assets/models/textures/relief_<nom>.png et ground/<matière>.png, ground/frange_<matière>.png (64 px, 16 px
 par cellule)
@@ -34,6 +37,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from generate_ground import MATERIALS  # noqa: E402
 from sprites.ground import GroundMaterial, Stipple  # noqa: E402
 from sprites.ground_motifs import cracks, grass, litter, stones  # noqa: E402
+from sprites.lowpoly import ColorStyle, dulled  # noqa: E402
 from sprites.palette import _shift, hex_to_rgb  # noqa: E402
 
 CELLS = 4
@@ -48,7 +52,23 @@ TILE_TO_TEXTURE = PX_PER_CELL / 32.0
 # Couleurs des textures fixes : le réglage ne garde depuis §238 que celles de l'herbe, les autres sont celles d'alors.
 FIXED_COLORS = {"butte": "8a826c", "steps": "7d6a4c", "cliff": "6e5d4c", "cliff_dark": "564739"}
 
+STYLE = ROOT / "tools" / "sprites" / "lowpoly_style.json"
+
 Rgb = tuple[int, int, int]
+
+
+def ground_style() -> ColorStyle:
+    """La palette terne du sol (bloc `ground` de lowpoly_style.json, plan 60 §25), la même formule que les modèles."""
+    entry = json.loads(STYLE.read_text(encoding="utf-8"))["ground"]
+    return ColorStyle(saturation=entry["saturation"], value=entry["value"],
+                      grime=tuple(c / 255.0 for c in hex_to_rgb(entry["grime"])), grime_amount=entry["grime_amount"])
+
+
+def dull_image(image: np.ndarray, style: ColorStyle) -> np.ndarray:
+    """Ternit les pixels d'une texture, alpha gardé : chaque ton reste distinct, la rampe garde son ordre."""
+    out = image.copy()
+    out[..., :3] = np.round(dulled(image[..., :3] / 255.0, style) * 255.0).astype(np.uint8)
+    return out
 
 
 def to_hex(rgb: Rgb) -> str:
@@ -307,7 +327,8 @@ def main() -> None:
     parser.add_argument("--materials-sheet", type=Path, help="planche des 22 matières du sol, pavées 2 × 2")
     args = parser.parse_args()
     config = json.loads((ROOT / "data" / "sandbox" / "relief.json").read_text(encoding="utf-8"))
-    textures = build(FIXED_COLORS | config["lowpoly"]["colors"])
+    style = ground_style()
+    textures = {name: dull_image(image, style) for name, image in build(FIXED_COLORS | config["lowpoly"]["colors"]).items()}
     OUT.mkdir(parents=True, exist_ok=True)
     for name, image in textures.items():
         mode = "RGBA" if image.shape[-1] == 4 else "RGB"
@@ -316,7 +337,7 @@ def main() -> None:
     if args.sheet:
         sheet(textures, args.sheet)
         print(f"planche : {args.sheet}")
-    materials = build_materials()
+    materials = {name: dull_image(image, style) for name, image in build_materials().items()}
     GROUND_OUT.mkdir(parents=True, exist_ok=True)
     for name, image in materials.items():
         mode = "RGBA" if image.shape[-1] == 4 else "RGB"

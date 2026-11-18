@@ -3067,3 +3067,9 @@ Raphaël, après avoir joué C2a, C5 et 60.0e : « les collisions c'est top, le 
 **Tranché par défaut par l'agent, réversible** :
 - **Le bac à sable lance Forward+ par défaut. Le jeu 2D reste en Compatibility** jusqu'à l'entrée de la 3D dans la vraie run.
 - **Les bords ouverts des surfaces grossière et fine se referment** chacun par un éventail. Coût : +4 % de triangles dans le marais.
+
+## 248. Le sol des terres en palette terne — 18 novembre 2026
+
+Raphaël : « pour le sol tu me recommande quoi ? moi je dirai plutot terne imo ». Agent du même avis ([plan 60 §25](60-vestiges-en-3d.md)). Remplace la réserve du §245.
+- **Les textures du sol et du relief passent en palette terne**, un peu plus que les décors (saturation 0,6, valeur 0,84, 14 % de crasse), réglée dans le bloc `ground` de `lowpoly_style.json`.
+- **Tranché par défaut, réversible** : les touffes d'herbe prennent la teinte du sol sous elles au lieu d'une couleur fixe.

@@ -16,6 +16,15 @@
 		"grime": "5a5246",
 		"grime_amount": 0.1
 	},
+	"ground": {
+		"_comment": "Textures du sol et du relief (tools/generate_relief_textures.py, plan 60 §25) : seuls saturation, value et grime comptent.",
+		"plain": false,
+		"smoothing": 0,
+		"saturation": 0.6,
+		"value": 0.84,
+		"grime": "5a5246",
+		"grime_amount": 0.14
+	},
 	"character": {
 		"plain": false,
 		"smoothing": 0,

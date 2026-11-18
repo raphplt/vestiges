@@ -176,6 +176,30 @@ public static class ReliefTexturedGround
         return new MeshInstance3D { Name = carvedRelief > 0f ? "CarvedTerrain" : "TexturedTerrain", Mesh = mesh };
     }
 
+    /// <summary>
+    /// Teinte moyenne du dessus du sol bas ou des plateaux herbus de la terre semée (sRGB) : les touffes d'herbe la
+    /// reprennent, ternie comme la texture (plan 60 §25), au lieu d'une couleur fixe qui détonnait d'une terre à l'autre.
+    /// </summary>
+    public static Color Tone(bool terrace)
+    {
+        string name = TextureNames[(int)(terrace ? Layer.Terrace : Layer.Ground)];
+        string file = name.Contains('/') ? name : $"relief_{name}";
+        Image image = Image.LoadFromFile(ProjectSettings.GlobalizePath($"{TextureDir}/{file}.png"));
+        float r = 0f, g = 0f, b = 0f;
+        for (int y = 0; y < image.GetHeight(); y++)
+        {
+            for (int x = 0; x < image.GetWidth(); x++)
+            {
+                Color pixel = image.GetPixel(x, y);
+                r += pixel.R;
+                g += pixel.G;
+                b += pixel.B;
+            }
+        }
+        float count = image.GetWidth() * image.GetHeight();
+        return new Color(r / count, g / count, b / count);
+    }
+
     private static List<BaseMaterial3D> LoadMaterials()
     {
         List<BaseMaterial3D> materials = new();

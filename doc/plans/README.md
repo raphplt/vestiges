@@ -3,6 +3,7 @@
 **18 novembre (soir) — Forward+ pour la 3D, plus de trous dans les modèles ([plan 60 §24](60-vestiges-en-3d.md), §247) :**
 - Raphaël valide les collisions par emprise et le marais, et choisit Forward+ pour la 3D. Le bac à sable le lance par défaut ; le jeu 2D reste en Compatibility.
 - Les fentes entre surfaces grossière et fine des pièces minces se referment : 4 743 arêtes ouvertes dans le marais avant, 0 dans toute la bibliothèque après, pour 4 % de triangles en plus.
+- Le sol des terres passe en palette terne, comme les décors, et l'herbe prend la teinte du sol sous elle ([§25](60-vestiges-en-3d.md), §248).
 
 **18 novembre — les décors 3D bloquent par ce qui touche le sol ([plan 60 §21](60-vestiges-en-3d.md), §244) :**
 - Chaque modèle de décor porte dans son manifeste son emprise au sol, sa boîte de collision et la règle de blocage du jeu (lot C2a). Un arbre bloque par son tronc.

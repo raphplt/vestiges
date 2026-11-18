@@ -78,12 +78,16 @@ def material_colors(materials: Sequence[Material], style: ColorStyle = NEUTRAL) 
     """
     colors = np.array([np.array(m.ramp[2][:3], dtype=np.float64) / 255.0 for m in materials])
     emissive = np.array([m.emissive for m in materials], dtype=bool)
+    return np.where(emissive[:, None], colors, dulled(colors, style)), emissive
+
+
+def dulled(colors: np.ndarray, style: ColorStyle) -> np.ndarray:
+    """La palette terne d'un style : couleurs sRGB entre 0 et 1, dernier axe RGB. Sert aux modèles et aux sols."""
     grey = colors @ np.array([0.299, 0.587, 0.114])
-    dull = grey[:, None] + (colors - grey[:, None]) * style.saturation
+    dull = grey[..., None] + (colors - grey[..., None]) * style.saturation
     dull = dull * style.value
     dull = dull + (np.array(style.grime) - dull) * style.grime_amount
-    colors = np.where(emissive[:, None], colors, np.clip(dull, 0.0, 1.0))
-    return colors, emissive
+    return np.clip(dull, 0.0, 1.0)
 
 
 def colouring_parts(parts: Sequence[Part], style: ColorStyle) -> Sequence[Part]:

@@ -882,3 +882,15 @@ Raphaël a joué le bac à sable : « les collisions c'est top, le marais aussi 
 ### Le bac à sable passe en Forward+ — 18 novembre
 
 `tools/relief_sandbox.sh` lance Forward+ par défaut ; `--rendering-method gl_compatibility` avant `--` revient au Compatibility. Le jeu 2D (`project.godot`) reste en Compatibility jusqu'à ce que la 3D entre dans la vraie run : ses shaders, son préchauffage et ses bancs y sont réglés, et il ne gagnerait rien à changer. Les planches des modèles restent en Compatibility.
+
+## 25. Le sol en palette terne — 18 novembre
+
+Raphaël, sur la palette du sol : « moi je dirai plutot terne ». Le sol restait vif à côté des décors ternis (§20).
+
+**Fait**
+- `tools/generate_relief_textures.py` passe toutes ses textures (les 8 du relief et les 44 des matières) par la palette terne d'un bloc `ground` de `tools/sprites/lowpoly_style.json` : saturation 0,6, valeur 0,84, 14 % vers la crasse `5a5246`. Un peu plus terne que les décors (0,62, 0,86, 12 %) : le sol recule, les décors se détachent. La formule est commune aux modèles (`dulled`, `tools/sprites/lowpoly.py`) ; les modèles ressortent identiques.
+- Les touffes d'herbe prenaient une couleur fixe (`lowpoly.colors` de `data/sandbox/relief.json`), jaune olive sur le sol bleu-vert du marais. Elles prennent désormais la teinte moyenne de la texture sous elles (`ReliefTexturedGround.Tone`), éclaircie de 20 à 45 %.
+
+**Vérifié** : planche des 22 matières regardée (tons distincts, motifs lisibles). Bac à sable capturé en forêt et au marais sous Forward+ : sol, décors et herbe dans la même gamme. En forêt, les touffes sur la terre brune se lisent en herbe sèche.
+
+**Point ouvert** : l'herbe reste sombre sous l'éclairage de son matériau ; à reprendre avec la lumière (Forward+).
