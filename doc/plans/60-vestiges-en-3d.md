@@ -821,7 +821,8 @@ Le bac à sable n'a qu'un sol, celui de la forêt d'essai, quelle que soit la te
 - Planche des 22 matières regardée : raccords sans couture, dalles du trottoir, du carrelage et de la place, blé en rangs, cristaux, eau.
 - Bac à sable, une capture des champs et une de la forêt, regardées : sols et plateaux de chaque terre, flaques à plat dans les champs.
 - Smoke test vert ; `dotnet build` sans warning.
-- Mesure du tour du bot : champs 702 i/s, 353 k triangles ; forêt 679 i/s, 497 k triangles, contre 993 i/s à C2 avec les mêmes triangles. L'écart n'est pas expliqué : seules les textures du sol ont changé, de même taille. À reprendre machine calme, en A/B.
+- Mesure du tour du bot : champs 702 i/s, 353 k triangles ; forêt 679 i/s, 497 k triangles, contre 993 i/s à C2 avec les mêmes triangles.
+- Repris en A/B machine calme (charge 0,5 au départ), le même soir, en alternant sol de la terre et ancien sol d'essai, mêmes décors : 1 079 et 1 089 i/s contre 1 091 et 1 087 i/s. Le sol de la terre ne coûte rien ; la baisse venait de l'état de la machine.
 
 **Points ouverts**
 - Le sol des champs est vif à côté des décors en palette terne (point ouvert de C6a) : sa palette suivra si Raphaël le juge.
