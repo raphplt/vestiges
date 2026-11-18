@@ -7,7 +7,7 @@ namespace Vestiges.Tests;
 /// Les décors d'une terre pour le bac à sable low poly (plan 60 §19, lot C4c) : la table de semis du jeu en 2D
 /// (<c>data/props/&lt;terre&gt;.json</c> : densité par cellule, poids, décors bloquants) appliquée aux modèles de la
 /// bibliothèque de l'export de masse (<c>build/models</c>, convertie par <c>tools/convert_models.sh</c>). Un décor
-/// plat, sorti sans triangle de l'export (flaque, marelle), est écarté : il deviendra un décalque (C5). Les zones
+/// plat (flaque, marelle) se pose en décalque, son sprite 2D à plat sur le sol (lot C5b). Les zones
 /// rythmées de la terre (clairières, fourrés) et les décors posés par d'autres systèmes (immeubles, fermes) n'y sont
 /// pas. Un décor bloque comme en 2D : décor voulu bloquant par la table et assez haut selon le manifeste du modèle (lot C2),
 /// avec sa boîte de collision au sol.
@@ -20,6 +20,7 @@ public sealed class ReliefBiomeProps
 
     public string Biome { get; }
     public int Skipped { get; private set; }
+    public int Decals { get; private set; }
 
     public ReliefBiomeProps(string biome, string libraryRoot)
     {
@@ -36,13 +37,28 @@ public sealed class ReliefBiomeProps
             string id = prop["id"].AsString();
             string sprite = prop.TryGetValue("sprite_base", out Variant path) ? path.AsString().GetFile().GetBaseName().TrimSuffix("_base") : id;
             Godot.Collections.Dictionary entry = Find(library, $"prop_{id}", id, sprite);
-            if (entry == null || entry.ContainsKey("error") || entry["max_triangles"].AsInt32() == 0)
+            if (entry == null || entry.ContainsKey("error"))
             {
                 Skipped++;
                 continue;
             }
-            string model = entry["path"].AsString().GetBaseName();
             float weight = (float)prop["weight"].AsDouble();
+            if (IsFlat(entry))
+            {
+                if (path.VariantType == Variant.Type.Nil)
+                {
+                    Skipped++;
+                    continue;
+                }
+                string spritePath = path.AsString().StartsWith("res://") ? path.AsString() : $"res://{path.AsString()}";
+                if (!loaded.TryGetValue(spritePath, out ReliefLowPoly.Model decal))
+                    loaded[spritePath] = decal = ReliefLowPoly.DecalModel(spritePath);
+                _entries.Add((decal, $"decal/{id}", weight, false));
+                _totalWeight += weight;
+                Decals++;
+                continue;
+            }
+            string model = entry["path"].AsString().GetBaseName();
             if (!loaded.TryGetValue(model, out ReliefLowPoly.Model mesh))
                 loaded[model] = mesh = ReliefLowPoly.LoadModelAt($"{libraryRoot}/{model}", true);
             bool blocking = prop["blocking"].AsBool() && (mesh.Ground?.Blocking ?? true);
@@ -51,7 +67,7 @@ public sealed class ReliefBiomeProps
         }
         if (_entries.Count == 0)
             throw new System.InvalidOperationException($"Aucun modèle de {biome} dans {libraryRoot} : python3 tools/export_lowpoly.py --all");
-        GD.Print($"[ReliefBiomeProps] {biome} : {_entries.Count} modèles, {Skipped} écartés (plats ou absents), densité {_density}");
+        GD.Print($"[ReliefBiomeProps] {biome} : {_entries.Count - Decals} modèles, {Decals} décalques, {Skipped} absents, densité {_density}");
     }
 
     /// <summary>
@@ -79,6 +95,17 @@ public sealed class ReliefBiomeProps
                     ReliefLowPoly.AddCollision(sim, model, at, yaw, cellsPerMetre);
             }
         }
+    }
+
+    /// <summary>
+    /// Un décor plat devient un décalque : sorti sans triangle de l'export, ou trop bas pour se lire en volume selon la
+    /// règle des décors du jeu (<c>decal</c> du manifeste, lot C2).
+    /// </summary>
+    private static bool IsFlat(Godot.Collections.Dictionary entry)
+    {
+        if (entry["max_triangles"].AsInt32() == 0)
+            return true;
+        return entry.TryGetValue("ground", out Variant ground) && ground.AsGodotDictionary()["decal"].AsBool();
     }
 
     private (ReliefLowPoly.Model, string, float, bool) Pick(float roll)

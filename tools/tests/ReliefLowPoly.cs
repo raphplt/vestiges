@@ -311,6 +311,46 @@ public static class ReliefLowPoly
     }
 
     /// <summary>Emprise rectangulaire d'un repère, en chapelet de cercles le long de son grand côté (yaw multiple de 90°).</summary>
+    // Un mètre au sol dans les sprites des décors : 27,5 unités du modèle à l'échelle de rendu 0,62.
+    private const float SpritePixelsPerMetre = 27.5f * 0.62f;
+    // Les sprites voient le sol sous 30° : sa profondeur y est écrasée de moitié.
+    private const float SpriteGroundSquash = 0.5f;
+    // Le décalque se tient au-dessus du sol, sans s'y mêler à la profondeur.
+    private const float DecalLift = 0.015f;
+
+    /// <summary>
+    /// Un décor plat en décalque (plan 60 §22) : son sprite 2D, déplié du regard à 30°, posé à plat sur un quadrilatère au
+    /// sol. Le Compatibility n'a pas de nœud <c>Decal</c>. Pixels francs et découpe alpha, comme le sol texturé.
+    /// </summary>
+    public static Model DecalModel(string spritePath)
+    {
+        Image image = Image.LoadFromFile(ProjectSettings.GlobalizePath(spritePath));
+        Rect2I used = image.GetUsedRect();
+        if (used.Size.X > 0 && used.Size.Y > 0)
+            image = image.GetRegion(used);
+        image.GenerateMipmaps();
+        PlaneMesh plane = new()
+        {
+            Size = new Vector2(image.GetWidth() / SpritePixelsPerMetre, image.GetHeight() / SpritePixelsPerMetre / SpriteGroundSquash),
+            CenterOffset = new Vector3(0f, DecalLift, 0f),
+            Material = new StandardMaterial3D
+            {
+                AlbedoTexture = ImageTexture.CreateFromImage(image),
+                Transparency = BaseMaterial3D.TransparencyEnum.AlphaScissor,
+                AlphaScissorThreshold = 0.5f,
+                TextureFilter = BaseMaterial3D.TextureFilterEnum.NearestWithMipmapsAnisotropic,
+                Roughness = 1f,
+            },
+        };
+        Model model = new();
+        model.Animations["idle"] = new Mesh[] { plane };
+        model.Bounds = plane.GetAabb();
+        return model;
+    }
+
+    /// <summary>Un décalque se reconnaît à son épaisseur nulle : il ne projette pas d'ombre.</summary>
+    public static bool IsDecal(Model model) => model.Bounds.Size.Y < DecalLift * 2f;
+
     private static Vector2 ReadVector2(Variant value)
     {
         Godot.Collections.Array pair = value.AsGodotArray();

@@ -391,7 +391,7 @@ Raphaël (§240) : plus de falaise qu'on grimpe en sautant, toutes de 3 à 5 ét
 | C2 | Emprises et collisions dans le manifeste de chaque modèle : emprise au sol, boîte de collision, point d'ancrage, décor bloquant ou non (seuils de `world_gen.json`) | C2a livré (§21) | faible |
 | C3 | Poids et finesse : sommets partagés et quantifiés, décimation des grands décors, niveaux de détail ; un pas plancher pour les pièces minces des grands décors | livré (§18) : C3a, C3b et C3c | moyen |
 | C4 | Chaîne d'import Godot : scènes ou `MeshLibrary` par biome tirées des manifestes, budget de triangles vérifié sur les planches | livré (§19) : C4a, C4b et C4c | moyen |
-| C5 | Textures de sol des 22 matières, et décalques pour les décors plats | à faire | moyen |
+| C5 | Textures de sol des 22 matières, et décalques pour les décors plats | C5a et C5b livrés (§22) | moyen |
 | C6 | Rendu des couleurs : aplats et palette terne (§20) | C6a livré (§20) | moyen |
 
 Ces lots n'attendent pas l'arrêt du style : l'export se relance en deux minutes quand un modèle ou un réglage change.
@@ -793,3 +793,36 @@ Aujourd'hui, le bac à sable bloque avec la boîte entière du modèle réduite 
 **Points ouverts**
 - Les décors creux (abris, préaux) pourraient bloquer par leurs seuls poteaux, si on veut passer dessous.
 - Le jeu en 3D lira ces emprises à la place du manifeste 2D quand le monde passera en 3D (60.4).
+
+## 22. C5, les sols des terres et les décors plats — découpage (18 novembre)
+
+Le bac à sable n'a qu'un sol, celui de la forêt d'essai, quelle que soit la terre semée ; les décors plats (flaques, marelle, rails, salines) en sont absents.
+
+**Défauts de l'agent, réversibles** :
+- **Les 22 matières du sol 2D** (`tools/generate_ground.py`, `MATERIALS`) se rendent en textures carrées sans couture par le générateur du relief : mêmes tons, mêmes parts, mêmes motifs semés, dallages et joints usés, à 16 px par cellule (formes deux fois plus petites qu'en tuiles de 32 px). Une frange d'herbe par matière. Sortie dans `assets/models/textures/ground/`. Les matières restent définies à un seul endroit : le générateur du relief importe `MATERIALS`.
+- **Une terre choisit ses sols** d'après `data/biomes/<terre>.json` : le sol bas prend la matière du terrain le plus pesant (`terrain_weights`, sans eau ni béton), les plateaux de 1 à 3 étages la suivante. Les marches, la roche des hauts plateaux et les flancs ne changent pas.
+- **Décors plats en décalques** : le sprite 2D du décor, déplié du regard à 30° (hauteur × 2), posé à plat sur le sol, au plus proche et en découpe alpha. Le Compatibility n'a pas de nœud `Decal` ; un quadrilatère au sol suffit sur un sol plat.
+- La palette du sol ne change pas (point ouvert de C6a), en attendant l'avis de Raphaël.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **C5a, sols des 22 matières** | Textures et franges par matière ; `--biome` du bac à sable choisit le sol et les plateaux de la terre | Planche des 22 matières pavées 2 × 2 (raccords) ; capture du bac à sable en forêt et dans une autre terre | moyen |
+| **C5b, décalques des décors plats** | Les décors plats de la table de la terre semés en quadrilatères au sol | Capture d'une terre qui en a (ville, marais) | faible |
+
+### C5a et C5b livrés — 18 novembre
+
+**Fait**
+- `tools/generate_relief_textures.py` rend les 22 matières de `generate_ground.py` (importées, définies à un seul endroit) en textures de 64 px sans couture, 16 px par cellule, et une frange par matière : 44 PNG dans `assets/models/textures/ground/`. Rendu : fond à quatre tons aux parts du jeu, formes réduites de moitié, dalles et joints usés, motifs semés et motifs centraux. `--materials-sheet` : planche des 22 matières pavées 2 × 2.
+- Le générateur était cassé depuis §238 : le réglage n'avait plus les couleurs de la roche, des marches et des flancs. Elles reviennent en défauts dans le générateur ; les 8 textures du relief ressortent identiques à l'octet.
+- `ReliefTexturedGround.UseLand` : avec `--biome`, le sol bas prend la matière du terrain le plus pesant de la terre, les plateaux herbus la suivante, franges comprises. Marches, hauts plateaux et flancs ne changent pas. Forêt : `foret_terre` et `foret_sol` ; champs : `champs_sol` et `champs_bosquet` ; ville : `ruines_sol` et `foret_sol` ; carrière : `carriere_cristal` et `carriere_roche` ; marais : `marecages_sol` seul.
+- Décalques (C5b) : un décor plat de la table de la terre (sans triangle, ou `decal` au manifeste de C2) se pose en quadrilatère au sol, son sprite 2D déplié du regard à 30°, découpe alpha, sans ombre. Seuls les champs (deux flaques) et le marais (nénuphars) en ont dans leur table ; marelle, rails et flèches viennent d'autres placeurs, pas encore dans le bac à sable.
+
+**Vérifications**
+- Planche des 22 matières regardée : raccords sans couture, dalles du trottoir, du carrelage et de la place, blé en rangs, cristaux, eau.
+- Bac à sable, une capture des champs et une de la forêt, regardées : sols et plateaux de chaque terre, flaques à plat dans les champs.
+- Smoke test vert ; `dotnet build` sans warning.
+- Mesure du tour du bot : champs 702 i/s, 353 k triangles ; forêt 679 i/s, 497 k triangles, contre 993 i/s à C2 avec les mêmes triangles. L'écart n'est pas expliqué : seules les textures du sol ont changé, de même taille. À reprendre machine calme, en A/B.
+
+**Points ouverts**
+- Le sol des champs est vif à côté des décors en palette terne (point ouvert de C6a) : sa palette suivra si Raphaël le juge.
+- La forêt a maintenant un sol bas en terre brune : c'est le poids du terrain forestier de la terre (60 %).

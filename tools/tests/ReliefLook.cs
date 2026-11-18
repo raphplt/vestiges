@@ -119,6 +119,8 @@ public sealed class ReliefLook
                 Position = new Vector3(placement.At.X, arena.GroundAt(placement.At.X, placement.At.Y), placement.At.Y),
                 RotationDegrees = new Vector3(0f, placement.YawDegrees, 0f),
                 Scale = scale,
+                CastShadow = ReliefLowPoly.IsDecal(placement.Model)
+                    ? GeometryInstance3D.ShadowCastingSetting.Off : GeometryInstance3D.ShadowCastingSetting.On,
             };
             container.AddChild(body);
             _props.Add((body, new[] { placement.Model, mid }));

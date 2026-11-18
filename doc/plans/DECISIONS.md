@@ -3043,3 +3043,11 @@ Décision par défaut de l'agent (§190), réversible par Raphaël, après « al
 - **Boîte de collision** : rectangle orienté le plus serré autour de l'emprise, sur toute la hauteur. Les décors bloquants tournent donc librement, plus par quart de tour.
 - **Blocage** : la règle des décors 2D (`world_gen.json`, `props`), la hauteur d'écran calculée depuis le maillage. La table de la terre garde le dernier mot.
 - **Accepté** : un abri ou un préau bloque sous son toit (enveloppe de ses poteaux), comme en 2D.
+
+## 245. Les sols des terres et les décors plats dans le bac à sable 3D — 18 novembre 2026
+
+Décisions par défaut de l'agent (§190), réversibles par Raphaël, lot C5 du plan 60 ([§22](60-vestiges-en-3d.md)).
+- **Les 22 matières du sol 2D deviennent des textures du relief**, mêmes tons et mêmes motifs, à 16 px par cellule. Elles restent définies dans `tools/generate_ground.py` seulement.
+- **Une terre habille le relief** : le sol bas prend la matière de son terrain le plus pesant, les plateaux herbus la suivante.
+- **Un décor plat est un décalque** : son sprite 2D déplié à plat sur le sol. Le Compatibility n'a pas de nœud `Decal`.
+- **La palette du sol ne change pas** pour l'instant, bien qu'il soit plus vif que les décors.

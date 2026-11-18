@@ -11,8 +11,12 @@ Dessus : sol (herbe sombre), terrasse (herbe claire), butte (roche), marches (te
 roche en blocs. Franges : le bord d'herbe qui déborde sur le haut des falaises, transparent dessous (comme le côté d'un
 bloc d'herbe de Minecraft), une par herbe.
 
-Usage : python3 tools/generate_relief_textures.py [--sheet planche.png]
-Sortie : assets/models/textures/relief_<nom>.png (64 px, 16 px par cellule)
+Les 22 matières du sol 2D (tools/generate_ground.py, plan 60 §22) se rendent de la même façon, avec leurs propres tons,
+parts, motifs et dallages : une texture et une frange par matière, que le bac à sable choisit selon la terre semée.
+
+Usage : python3 tools/generate_relief_textures.py [--sheet planche.png] [--materials-sheet planche.png]
+Sortie : assets/models/textures/relief_<nom>.png et ground/<matière>.png, ground/frange_<matière>.png (64 px, 16 px
+par cellule)
 """
 from __future__ import annotations
 
@@ -27,7 +31,8 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
-from sprites.ground import Stipple  # noqa: E402
+from generate_ground import MATERIALS  # noqa: E402
+from sprites.ground import GroundMaterial, Stipple  # noqa: E402
 from sprites.ground_motifs import cracks, grass, litter, stones  # noqa: E402
 from sprites.palette import _shift, hex_to_rgb  # noqa: E402
 
@@ -37,6 +42,11 @@ SIZE = CELLS * PX_PER_CELL
 # La frange pend sur une demi-cellule.
 LIP_HEIGHT = PX_PER_CELL // 2
 OUT = ROOT / "assets" / "models" / "textures"
+GROUND_OUT = OUT / "ground"
+# Les tuiles du jeu ont 32 px au sol par cellule, ces textures 16 : leurs formes et leurs dalles se réduisent d'autant.
+TILE_TO_TEXTURE = PX_PER_CELL / 32.0
+# Couleurs des textures fixes : le réglage ne garde depuis §238 que celles de l'herbe, les autres sont celles d'alors.
+FIXED_COLORS = {"butte": "8a826c", "steps": "7d6a4c", "cliff": "6e5d4c", "cliff_dark": "564739"}
 
 Rgb = tuple[int, int, int]
 
@@ -193,6 +203,46 @@ def lip_texture(base: str, seed: int) -> np.ndarray:
     return image
 
 
+def material_texture(material: GroundMaterial) -> np.ndarray:
+    """
+    Une matière du sol 2D en texture carrée : son fond en quatre tons et ses parts, ses dalles et leurs joints usés,
+    puis ses motifs semés et ses motifs centraux, repliés sur les bords.
+    """
+    rng = np.random.default_rng(material.seed)
+    background = field(rng, material.feature_px * TILE_TO_TEXTURE, material.stretch)
+    image = quantize(speckled(rng, background, 0.25), material.tones, material.shares)
+    if material.slab_px > 0:
+        side = max(2, round(material.slab_px * TILE_TO_TEXTURE))
+        ys, xs = np.mgrid[0:SIZE, 0:SIZE]
+        shifted = xs + ((ys // side) % 2) * (side // 2) if material.running_bond else xs
+        joints = (shifted % side == 0) | (ys % side == 0)
+        wear = periodic_noise(rng, (max(1, round(SIZE / (side * 0.75))),) * 2)
+        image[joints & (wear > material.joint_wear)] = hex_to_rgb(material.joint)
+    sow(image, background, material.stipples, rng)
+    if material.details and material.details_per_tile > 0:
+        weights = np.array([d.weight for d in material.details])
+        for _ in range(rng.poisson(material.details_per_tile * CELLS * CELLS)):
+            detail = material.details[int(rng.choice(len(weights), p=weights / weights.sum()))]
+            sow_once(image, detail.pattern, detail.colors, int(rng.integers(SIZE)), int(rng.integers(SIZE)))
+    return image
+
+
+def sow_once(image: np.ndarray, pattern: tuple[str, ...], colors: tuple[str, ...], ax: int, ay: int) -> None:
+    for row, line in enumerate(pattern):
+        for col, char in enumerate(line):
+            if char != ".":
+                image[(ay - (len(pattern) - 1) + row) % SIZE, (ax + col) % SIZE] = hex_to_rgb(colors[int(char)])
+
+
+def build_materials() -> dict[str, np.ndarray]:
+    """Les 22 matières et leurs franges, nommées comme dans le jeu (`foret_sol`, `frange_foret_sol`)."""
+    textures: dict[str, np.ndarray] = {}
+    for name, (_, material) in MATERIALS.items():
+        textures[name] = material_texture(material)
+        textures[f"frange_{name}"] = lip_texture(material.tones[2].lstrip("#"), material.seed + 1)
+    return textures
+
+
 def build(colors: dict[str, str]) -> dict[str, np.ndarray]:
     grass_shade = ramp(colors["ground"], 1.4)
     grass_field = ramp(colors["terrace"], 1.4)
@@ -234,12 +284,30 @@ def sheet(textures: dict[str, np.ndarray], path: Path) -> None:
     out.save(path)
 
 
+def grid_sheet(textures: dict[str, np.ndarray], path: Path, columns: int = 6) -> None:
+    """Planche en grille : chaque matière pavée 2 × 2 et agrandie trois fois, son nom dessous."""
+    from PIL import ImageDraw
+    scale, pad, label = 3, 10, 14
+    cell = SIZE * 2 * scale
+    rows = (len(textures) + columns - 1) // columns
+    out = Image.new("RGB", (columns * (cell + pad) + pad, rows * (cell + pad + label) + pad), (11, 8, 18))
+    draw = ImageDraw.Draw(out)
+    for i, (name, image) in enumerate(textures.items()):
+        x = pad + (i % columns) * (cell + pad)
+        y = pad + (i // columns) * (cell + pad + label)
+        tiled = np.tile(image[..., :3], (2, 2, 1))
+        out.paste(Image.fromarray(tiled).resize((cell, cell), Image.NEAREST), (x, y))
+        draw.text((x, y + cell + 1), name, fill=(232, 228, 220))
+    out.save(path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--sheet", type=Path, help="planche de contrôle des raccords")
+    parser.add_argument("--materials-sheet", type=Path, help="planche des 22 matières du sol, pavées 2 × 2")
     args = parser.parse_args()
     config = json.loads((ROOT / "data" / "sandbox" / "relief.json").read_text(encoding="utf-8"))
-    textures = build(config["lowpoly"]["colors"])
+    textures = build(FIXED_COLORS | config["lowpoly"]["colors"])
     OUT.mkdir(parents=True, exist_ok=True)
     for name, image in textures.items():
         mode = "RGBA" if image.shape[-1] == 4 else "RGB"
@@ -248,6 +316,15 @@ def main() -> None:
     if args.sheet:
         sheet(textures, args.sheet)
         print(f"planche : {args.sheet}")
+    materials = build_materials()
+    GROUND_OUT.mkdir(parents=True, exist_ok=True)
+    for name, image in materials.items():
+        mode = "RGBA" if image.shape[-1] == 4 else "RGB"
+        Image.fromarray(image, mode).save(GROUND_OUT / f"{name}.png")
+    print(f"{GROUND_OUT.relative_to(ROOT)}/ : {len(materials)} textures ({len(MATERIALS)} matières et leurs franges)")
+    if args.materials_sheet:
+        grid_sheet({k: v for k, v in materials.items() if not k.startswith("frange_")}, args.materials_sheet)
+        print(f"planche des matières : {args.materials_sheet}")
 
 
 if __name__ == "__main__":

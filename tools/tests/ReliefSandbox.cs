@@ -169,11 +169,13 @@ public partial class ReliefSandbox : Node
         _reach = _config.ChaseDistance;
 
         RegisterActions();
+        string biome = Argument(args, "--biome", null);
+        if (_lowPoly && biome != null)
+            ReliefTexturedGround.UseLand(biome);
         if (_lowPoly)
             LoadMaterials();
         else
             LoadSprites();
-        string biome = Argument(args, "--biome", null);
         if (_lowPoly && biome != null)
         {
             _biomeProps = new ReliefBiomeProps(biome, ProjectSettings.GlobalizePath("res://build/models"));

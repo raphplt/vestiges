@@ -30,6 +30,7 @@ public static class ReliefTexturedGround
 
     private enum Layer { Ground, Terrace, Butte, Steps, EarthSide, RockSide, LipGround, LipTerrace }
 
+    // Les dessus du sol et des plateaux herbus, et leurs franges, changent avec la terre semée (UseLand, plan 60 §22).
     private static readonly string[] TextureNames =
     {
         "sol", "terrasse", "butte", "marches", "flanc_terre", "flanc_roche", "frange_sol", "frange_terrasse",
@@ -77,6 +78,54 @@ public static class ReliefTexturedGround
     }
 
     private static List<BaseMaterial3D> _materials;
+
+    /// <summary>
+    /// Habille le relief des sols d'une terre (plan 60 §22), avant le premier accès aux matériaux : le sol bas prend la
+    /// matière du terrain le plus pesant de <c>data/biomes/&lt;terre&gt;.json</c>, les plateaux herbus la suivante, sans
+    /// l'eau ni les tuiles qui ne sont pas une matière (fondations, routes). Textures de
+    /// <c>tools/generate_relief_textures.py</c>, dans <c>assets/models/textures/ground</c>.
+    /// </summary>
+    public static void UseLand(string biome)
+    {
+        using FileAccess file = FileAccess.Open($"res://data/biomes/{biome}.json", FileAccess.ModeFlags.Read);
+        if (file == null)
+        {
+            GD.PushWarning($"[ReliefTexturedGround] Terre sans fiche : data/biomes/{biome}.json ; sol d'essai gardé");
+            return;
+        }
+        Godot.Collections.Dictionary land = Json.ParseString(file.GetAsText()).AsGodotDictionary();
+        Godot.Collections.Dictionary sources = land["tile_sources"].AsGodotDictionary();
+        List<(string Material, float Weight)> tops = new();
+        foreach ((Variant terrain, Variant weight) in land["terrain_weights"].AsGodotDictionary())
+        {
+            if (terrain.AsString() == "water" || !sources.TryGetValue(terrain, out Variant tiles))
+                continue;
+            string material = MaterialOf(tiles.AsGodotArray()[0].AsString());
+            if (material != null && FileAccess.FileExists($"{TextureDir}/ground/{material}.png") && !tops.Exists(t => t.Material == material))
+                tops.Add((material, (float)weight.AsDouble()));
+        }
+        if (tops.Count == 0)
+            return;
+        tops.Sort((a, b) => b.Weight.CompareTo(a.Weight));
+        string ground = tops[0].Material;
+        string terrace = tops.Count > 1 ? tops[1].Material : ground;
+        TextureNames[(int)Layer.Ground] = $"ground/{ground}";
+        TextureNames[(int)Layer.Terrace] = $"ground/{terrace}";
+        TextureNames[(int)Layer.LipGround] = $"ground/frange_{ground}";
+        TextureNames[(int)Layer.LipTerrace] = $"ground/frange_{terrace}";
+        _materials = null;
+        GD.Print($"[ReliefTexturedGround] {biome} : sol {ground}, plateaux {terrace}");
+    }
+
+    /// <summary>« foret/tile_foret_sol_w00 » → « foret_sol » ; null pour une tuile qui n'est pas une matière de Wang.</summary>
+    private static string MaterialOf(string tile)
+    {
+        string name = tile.GetFile();
+        int wang = name.LastIndexOf("_w", System.StringComparison.Ordinal);
+        if (!name.StartsWith("tile_", System.StringComparison.Ordinal) || wang < 0 || !int.TryParse(name[(wang + 2)..], out _))
+            return null;
+        return name[5..wang];
+    }
 
     /// <summary>Les matériaux du relief, partagés par les deux variantes, que le style toon règle comme les autres.</summary>
     public static IReadOnlyList<BaseMaterial3D> Materials => _materials ??= LoadMaterials();
@@ -141,7 +190,8 @@ public static class ReliefTexturedGround
     /// </summary>
     private static StandardMaterial3D NewMaterial(string name, bool lip)
     {
-        Image image = Image.LoadFromFile(ProjectSettings.GlobalizePath($"{TextureDir}/relief_{name}.png"));
+        string file = name.Contains('/') ? name : $"relief_{name}";
+        Image image = Image.LoadFromFile(ProjectSettings.GlobalizePath($"{TextureDir}/{file}.png"));
         image.GenerateMipmaps();
         StandardMaterial3D material = new()
         {

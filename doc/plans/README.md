@@ -3,6 +3,7 @@
 **18 novembre — les décors 3D bloquent par ce qui touche le sol ([plan 60 §21](60-vestiges-en-3d.md), §244) :**
 - Chaque modèle de décor porte dans son manifeste son emprise au sol, sa boîte de collision et la règle de blocage du jeu (lot C2a). Un arbre bloque par son tronc.
 - Même verdict de blocage que les sprites 2D pour 90 décors sur 96. Le bac à sable bloque avec ces boîtes ; les décors tournent librement.
+- Les 22 matières du sol 2D sont rendues en textures du relief, et `--biome` habille le sol et les plateaux de la terre choisie ([§22](60-vestiges-en-3d.md), §245, C5a). Les décors plats (flaques, nénuphars) se posent en décalques (C5b).
 
 **17 novembre — les modèles 3D se convertissent et se simplifient de loin ([plan 60 §19](60-vestiges-en-3d.md), §242) :**
 - `tools/convert_models.sh` écrit un `.scn` par modèle (poses, normales lissées, niveaux de détail de Godot) : 312 modèles en 4,4 s. Chargement 0,16 s contre 0,42 s pour le .glb. Planches identiques à l'œil.
