@@ -15,6 +15,8 @@
 # --biome <terre> (forest_reclaimed, urban_ruins, collapsed_quarry, wild_fields, swamp) : les décors de la terre
 # (data/props), modèles de la bibliothèque build/models ; --lod-threshold <px> : erreur tolérée des niveaux de détail
 # (0 : toujours le plus fin). La capture mesure alors images par seconde et triangles du tour du bot.
+# Moteur de rendu : Forward+ par défaut (plan 60, §247), le jeu 2D restant en Compatibility ; options du moteur avant
+# --, ex. --rendering-method gl_compatibility pour comparer.
 # Réglages et arène : data/sandbox/relief.json.
 # Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
 set -euo pipefail
@@ -30,6 +32,9 @@ engine_args=()
 user_args=()
 while [[ $# -gt 0 && "$1" != -- ]]; do engine_args+=("$1"); shift; done
 if [[ $# -gt 0 ]]; then shift; user_args=("$@"); fi
+if [[ " ${engine_args[*]-} " != *" --rendering-method "* ]]; then
+    engine_args+=(--rendering-method forward_plus)
+fi
 # Un autre personnage que le facteur : ses modèles sont exportés au premier lancement, non versionnés.
 for ((i = 0; i < ${#user_args[@]}; i++)); do
     if [[ "${user_args[$i]}" == --character && -n "${user_args[$((i + 1))]-}" ]]; then

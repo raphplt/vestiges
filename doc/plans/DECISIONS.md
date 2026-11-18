@@ -3057,3 +3057,13 @@ Décisions par défaut de l'agent (§190), réversibles par Raphaël, lot C5 du 
 Décision par défaut de l'agent (§190), réversible, lot 60.0e du plan 60 ([§23](60-vestiges-en-3d.md)), mené pendant que Raphaël répond sur la palette du sol (« continue a dev »).
 - **Rien ne bascule** : le projet reste en GL Compatibility. Forward+ est mesuré à environ −7 % d'images par seconde sur le banc du bac à sable, au même p99. Le choix du moteur reste à Raphaël, avec la caméra, le style et l'échelle.
 - **Les couleurs des modèles valent pour les deux moteurs** : le shader les ramène en linéaire sous Forward+, et le Compatibility ne change pas.
+
+## 247. Forward+ pour la 3D, les trous des pièces minces fermés — 18 novembre 2026
+
+Raphaël, après avoir joué C2a, C5 et 60.0e : « les collisions c'est top, le marais aussi (a part les textures qui ont toujours des trous béants parfois) », puis « ok moi ca me va de passer à forward+ » ([plan 60 §24](60-vestiges-en-3d.md)).
+- **Le moteur de la 3D est Forward+**, choisi par Raphaël. Remplace le §246.
+- **Collisions par emprise (§244) et marais (§245) validés** par Raphaël.
+
+**Tranché par défaut par l'agent, réversible** :
+- **Le bac à sable lance Forward+ par défaut. Le jeu 2D reste en Compatibility** jusqu'à l'entrée de la 3D dans la vraie run.
+- **Les bords ouverts des surfaces grossière et fine se referment** chacun par un éventail. Coût : +4 % de triangles dans le marais.

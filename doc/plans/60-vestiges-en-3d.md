@@ -861,3 +861,24 @@ Le quatrième choix de fin de 60.0 (§7) n'a encore aucune mesure. Le bac à sab
 - Sur cette machine, les deux moteurs tiennent plus de 800 i/s en 4K : le coût ne départage pas.
 - Forward+ ouvrirait ce que le Compatibility n'a pas : décalques, lumières nombreuses, brouillard volumétrique, SSAO. En retour : Vulkan ou Metal exigés, et un rendu à vérifier sur Mac (plan 53).
 - Non mesuré : un Mac, une carte modeste.
+
+## 24. Retours de Raphaël sur C2a, C5 et 60.0e — 18 novembre
+
+Raphaël a joué le bac à sable : « les collisions c'est top, le marais aussi (a part les textures qui ont toujours des trous béants parfois) ». Sur le moteur : « ok moi ca me va de passer à forward+ ».
+
+### Les trous des pièces minces fermés — 18 novembre
+
+**La cause.** Un décor à pièces minces se maille en deux surfaces (§18, C3b) : la grossière, privée des cellules saisies par la pièce mince, et la fine, limitée à son voisinage. Chacune est coupée par un masque. Leurs bords se suivent sans se toucher, et entre eux on voit au travers du modèle. Le marais est fait presque tout entier de pièces minces (roseaux, racines, planches, filets, cordages) : 47 modèles sur 57 avaient des bords ouverts, 4 743 arêtes en tout. Un modèle sans affinage n'en a aucune.
+
+**Le correctif** (`_cap_holes`, `tools/sprites/lowpoly.py`). Chaque bord ouvert des deux surfaces se referme par un éventail autour de son centre, avant la coupe en triangles. Les deux surfaces, fermées, se recouvrent au lieu de laisser une fente. Un bord se lit comme une arête parcourue plus souvent dans un sens que dans l'autre, pour tenir aussi les nappes qui se touchent. Les boucles qui repassent par un même sommet se détachent une à une.
+
+**Mesures**
+- Marais : 4 743 arêtes ouvertes avant, 0 après. Triangles : +4,0 % (119 936 à 124 734).
+- Bibliothèque réexportée : 312 modèles, 0 échec, 450 s, 46,5 Mo, 0 arête ouverte. `assets/models` réexporté en low et mid poly.
+- Bac à sable du marais capturé sous Forward+ : racines, lanternes, roseaux et arbres morts pleins.
+
+**Point ouvert** : un éventail sur un bord tordu peut laisser une petite facette visible là où la pièce mince rejoint le corps. Rien de tel vu sur les captures.
+
+### Le bac à sable passe en Forward+ — 18 novembre
+
+`tools/relief_sandbox.sh` lance Forward+ par défaut ; `--rendering-method gl_compatibility` avant `--` revient au Compatibility. Le jeu 2D (`project.godot`) reste en Compatibility jusqu'à ce que la 3D entre dans la vraie run : ses shaders, son préchauffage et ses bancs y sont réglés, et il ne gagnerait rien à changer. Les planches des modèles restent en Compatibility.

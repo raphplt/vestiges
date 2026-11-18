@@ -2,7 +2,7 @@
 	"model": "prop_rock_mossy",
 	"kind": "prop",
 	"fps": 8.0,
-	"max_triangles": 572,
+	"max_triangles": 624,
 	"flat_normals": true,
 	"meshes": 1,
 	"animations": {

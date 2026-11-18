@@ -324,6 +324,64 @@ def adaptive_nets(parts: Sequence[Part], bounds_min, bounds_max, step: float, fi
     return _nets(d, lo, step, keep=~grabbed), detail, fine
 
 
+def _cap_holes(vertices: np.ndarray, quads: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Ferme chaque bord ouvert d'une surface par un éventail autour de son centre. Les surfaces grossière et fine d'un
+    modèle affiné (`adaptive_nets`) sont coupées chacune par un masque : leurs bords se suivent sans se toucher, et
+    entre eux on voit au travers du modèle. Fermées l'une et l'autre, elles se recouvrent au lieu de laisser une fente.
+    Une face d'éventail est un quadrilatère au dernier sommet doublé, que la coupe en triangles réduit à un triangle.
+    """
+    if not len(quads):
+        return vertices, quads
+    edges = np.stack([quads, np.roll(quads, -1, axis=1)], axis=2).reshape(-1, 2)
+    edges = edges[edges[:, 0] != edges[:, 1]]
+    # Un bord est une arête parcourue plus souvent dans un sens que dans l'autre : deux nappes qui se touchent (surface
+    # non variété) partagent une arête dans le même sens, et chacune garde son bord.
+    forward: dict[tuple[int, int], int] = {}
+    for a, b in edges:
+        key = (int(a), int(b))
+        forward[key] = forward.get(key, 0) + 1
+    following: dict[int, list[int]] = {}
+    for (a, b), count in forward.items():
+        for _ in range(count - forward.get((b, a), 0)):
+            following.setdefault(a, []).append(b)
+    if not following:
+        return vertices, quads
+    centres = []
+    caps = []
+    base = len(vertices)
+    def cap(loop: list[int]) -> None:
+        if len(loop) < 3:
+            return
+        centre = base + len(centres)
+        centres.append(vertices[loop].mean(axis=0))
+        # Le bord a → b appartient à une face ; la face qui le referme le parcourt de b vers a.
+        for a, b in zip(loop, loop[1:] + loop[:1]):
+            caps.append([b, a, centre, centre])
+
+    # Deux bords peuvent passer par un même sommet : le chemin y revient avant son départ. Chaque retour sur un sommet
+    # déjà parcouru détache une boucle fermée, et le chemin reprend de là.
+    for start in list(following):
+        while following.get(start):
+            path = [start]
+            seen = {start: 0}
+            current = start
+            while following.get(current):
+                current = following[current].pop()
+                if current in seen:
+                    at = seen[current]
+                    cap(path[at:])
+                    for vertex in path[at + 1:]:
+                        del seen[vertex]
+                    path = path[:at + 1]
+                else:
+                    seen[current] = len(path)
+                    path.append(current)
+    if not caps:
+        return vertices, quads
+    return np.concatenate([vertices, np.asarray(centres)]), np.concatenate([quads, np.asarray(caps, dtype=np.int64)])
+
+
 def _split_quads(vertices: np.ndarray, quads: np.ndarray) -> np.ndarray:
     """Coupe chaque quadrilatère selon sa diagonale la plus courte : triangles en indices de sommets."""
     a, b, c, e = (vertices[quads[:, i]] for i in range(4))
@@ -414,9 +472,10 @@ def mesh_parts_adaptive(parts: Sequence[Part], materials: Sequence[Material], bo
     """
     mesher = _smooth_mesh if smooth else _flat_mesh
     coarse, detail, fine = adaptive_nets(parts, bounds_min, bounds_max, step, fine_step)
-    mesh = mesher(parts, materials, *coarse, step, style=style)
     if detail is None:
-        return mesh, 0
+        return mesher(parts, materials, *coarse, step, style=style), 0
+    coarse, detail = _cap_holes(*coarse), _cap_holes(*detail)
+    mesh = mesher(parts, materials, *coarse, step, style=style)
     # La surface fine est épaissie : le matériau se lit d'autant plus profond, dans la pièce et non sur la mousse peinte
     # qui l'enveloppe.
     patch = mesher(parts, materials, *detail, fine, inset=THIN_INFLATE * fine, style=style)
