@@ -13,8 +13,8 @@
 # --biome <terre> (forest_reclaimed, urban_ruins, collapsed_quarry, wild_fields, swamp) : les décors de la terre
 # (data/props), modèles de la bibliothèque build/models ; --lod-threshold <px> : erreur tolérée des niveaux de détail
 # (0 : toujours le plus fin). La capture mesure alors images par seconde et triangles du tour du bot.
-# Moteur de rendu : Forward+ par défaut (plan 60, §247), le jeu 2D restant en Compatibility ; options du moteur avant
-# --, ex. --rendering-method gl_compatibility pour comparer.
+# Moteur de rendu : Forward+, comme le jeu (plan 60, §247 et §254) ; options du moteur avant --, ex.
+# --rendering-method gl_compatibility pour comparer.
 # F5 à F7 (Forward+ seulement, plan 60 §26) : ombres de contact, brume volumétrique, lumières ; --effects none ou
 # ssao,fog,lights : ceux allumés au lancement.
 # Réglages : rendu, terre d'essai et caméra dans data/world3d/, joueur dans data/movement/player_3d.json, horde d'essai

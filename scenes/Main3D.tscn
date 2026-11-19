@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/World3D/Run3D.cs" id="1"]
+[ext_resource type="Script" path="res://scripts/UI/PauseMenu.cs" id="2"]
+
+[node name="Main3D" type="Node"]
+script = ExtResource("1")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+script = ExtResource("2")

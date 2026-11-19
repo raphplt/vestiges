@@ -1,6 +1,9 @@
 keys,fr,en
 UI_MENU_BACK,Retour,Back
 UI_MOBILITY,Mobilité,Mobility
+UI_JUMP,Saut,Jump
+RUN3D_HP,PV,HP
+RUN3D_READY,prête,ready
 UI_SETTINGS,PARAMÈTRES,SETTINGS
 UI_CLOSE,"[Échap] ou [X] Fermer","[Esc] or [X] Close"
 UI_GENERAL,Général,General

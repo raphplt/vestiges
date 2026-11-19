@@ -11,6 +11,9 @@ namespace Vestiges.Core;
 /// </summary>
 public partial class GameManager : Node
 {
+    /// <summary>La scène de la run, lancée par le Hub et par « Recommencer » : la run 3D (plan 60 §29, DECISIONS §254).</summary>
+    public const string RunScenePath = "res://scenes/Main3D.tscn";
+
     public enum GameState
     {
         Hub,

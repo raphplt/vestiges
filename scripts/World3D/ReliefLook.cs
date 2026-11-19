@@ -42,12 +42,12 @@ public sealed class ReliefLook
     public ReliefLowPoly.Model[][] Creatures { get; } = new ReliefLowPoly.Model[2][];
 
     public ReliefLook(ReliefConfig config, ReliefArena arena, Node3D world, Camera3D camera,
-        SubViewport viewport, IReadOnlyList<Vector2> keepClear, ReliefBiomeProps biome)
+        SubViewport viewport, IReadOnlyList<Vector2> keepClear, ReliefBiomeProps biome, string playerModel = null)
     {
         ReliefConfig.LowPolyStyle style = config.LowPoly;
         _viewport = viewport;
 
-        string character = $"characters/{config.Character}";
+        string character = $"characters/{playerModel ?? config.Character}";
         MidAvailable = ReliefLowPoly.Exists($"mid/{character}");
         foreach (ReliefConfig.Creature creature in config.Creatures)
             MidAvailable &= ReliefLowPoly.Exists($"mid/creatures/{creature.Id}");

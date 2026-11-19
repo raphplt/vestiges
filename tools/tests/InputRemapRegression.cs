@@ -49,7 +49,7 @@ public partial class InputRemapRegression : Node
     {
         CheckDefaults("move_up", Key.W, Key.Up, JoyButton.DpadUp);
         InputRemapManager.Instance.RemapKey("interact", Key.F);
-        Check(Keys("interact") == "F" && JoyButtons("interact") == "A", $"interaction remappée sur F, bouton A gardé ({Keys("interact")})");
+        Check(Keys("interact") == "F" && JoyButtons("interact") == "Y", $"interaction remappée sur F, bouton Y gardé ({Keys("interact")})");
         CheckDefaults("move_up", Key.W, Key.Up, JoyButton.DpadUp);
         using ConfigFile saved = new();
         Check(saved.Load(SettingsPath) == Error.Ok && saved.HasSectionKey("interact", "key")

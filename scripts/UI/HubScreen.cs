@@ -549,7 +549,7 @@ public partial class HubScreen : Control
 		_voidTransition.Play(() =>
 		{
 			gm.ChangeState(GameManager.GameState.Run);
-			GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
+			GetTree().ChangeSceneToFile(GameManager.RunScenePath);
 		});
 	}
 

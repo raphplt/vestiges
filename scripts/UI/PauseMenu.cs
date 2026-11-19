@@ -175,7 +175,7 @@ public partial class PauseMenu : CanvasLayer
 		gameManager.RunSeed = 0;
 		gameManager.ChangeState(GameManager.GameState.Hub);
 		gameManager.ChangeState(GameManager.GameState.Run);
-		GetTree().ChangeSceneToFile("res://scenes/Main.tscn");
+		GetTree().ChangeSceneToFile(GameManager.RunScenePath);
 	}
 
 	private void QuitGame()

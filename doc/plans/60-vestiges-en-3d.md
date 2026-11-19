@@ -1071,3 +1071,36 @@ Le bac à sable compte en cellules : une unité Godot vaut une cellule, et un é
 - **Le facteur unique** des réglages 2D vers la 3D est `ReliefConfig.CellsPerPixel`, soit 91 px du jeu 2D par cellule ; la vitesse des personnages en passe. `MetresPerCellAtBody` (3,58 m) sert à lire les mesures.
 - **Le contrôle des rebords teste le moteur du jeu**, plus une copie : 0 rebord collé sur 86, rampes jusqu'à la tour à 5 étages, mêmes vitesses, mêmes sauts et mêmes capacités qu'avant pour les six personnages. Il imprime maintenant les unités.
 - **Capture du bac à sable** : caméra libre au pied d'une falaise et vue relief 2D identiques à 60.1a, avec 496 images par seconde au tour du bot en 4K.
+
+### 60.1c livré — 19 novembre
+
+- **Le Hub lance la run 3D** : `scenes/Main3D.tscn` (`Run3D`). « Recommencer », dans la pause, aussi. `GameManager.RunScenePath` nomme la scène de la run. La run 2D n'est plus lancée.
+- **La run 3D** :
+  - la terre d'essai, avec les sols et les décors de la forêt (132 décors, tirés de `build/models`), ou le semis du réglage si la bibliothèque manque ;
+  - le personnage choisi au Hub, avec sa vitesse et sa capacité ; son modèle s'il est exporté, sinon le facteur, avec un avertissement ;
+  - la caméra libre, la souris capturée en jeu et rendue à la pause ;
+  - les PV et la recharge de la capacité en haut à gauche, en attendant le HUD (60.3) ;
+  - la mort, par les chutes ou le vide, ramène au Hub ;
+  - le menu de pause du jeu, réutilisé tel quel : ses panneaux d'équipement et de statistiques restent vides sans joueur 2D.
+- **Forward+ pour tout le projet** (`project.godot`), Hub compris.
+- **Entrées** :
+  - `jump` : Espace, bouton A ;
+  - `mobility` : Maj, clic droit, bouton X ;
+  - `interact` passe sur le bouton Y pour libérer A ;
+  - `camera_left/right/up/down` : le stick droit tourne et incline la caméra.
+  Le saut est remappable comme les autres actions.
+- **Captures** : `tools/tests/Run3DCapture.tscn` lance la run comme le Hub, fait marcher, sauter, user de la capacité, tourner la caméra et ouvrir la pause, une image à chaque étape.
+- **Vérifié** :
+  - `dotnet build` : 0 avertissement ;
+  - smoke test vert sous Forward+ ;
+  - `tools/test_input_remap.sh` vert : 0 échec, le bouton d'interaction attendu passe de A à Y ;
+  - capture de la run 3D du facteur : marche, saut, glissade (recharge affichée), caméra tournée, pause, souris capturée puis rendue ;
+  - capture de la run 3D du traqueur : son modèle exporté, son dash ;
+  - capture du Hub sous Forward+ : même rendu qu'avant.
+- **Relecture** (`godot-reviewer`) : rien de bloquant. Une image lente se découpe en pas de 1/60 s au plus, pour ne pas traverser une emprise d'un coup. Les noms d'action sont mis en cache.
+- **Points ouverts** :
+  - la mort ramène au Hub sans fin de run ni sauvegarde, jusqu'à 60.3 ;
+  - un profil qui avait remappé `mobility` sur Espace aura cette touche en double avec le saut ; rien n'est migré.
+- **Non vérifié** :
+  - la manette, faute d'en avoir une branchée ;
+  - Raphaël n'a pas encore joué.

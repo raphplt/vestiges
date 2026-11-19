@@ -3,7 +3,9 @@
 Roguelite d'exploration-combat nomade en vue isométrique 2D, dans un monde post-apocalyptique en train d'être oublié.
 Le joueur avance toujours ; derrière lui, l'**Effacement** dévore la réalité. La question n'est pas « combien de nuits » mais « jusqu'où ».
 
-Moteur Godot 4.7, C# (.NET 10), renderer GL Compatibility.
+Moteur Godot 4.7, C# (.NET 10), renderer Forward+.
+
+> Passage en 3D en cours (plan 60, DECISIONS §254) : le Hub lance la run 3D (`scenes/Main3D.tscn`, `scripts/World3D/`). La run 2D (`scenes/Main.tscn`) reste dans le dépôt, gelée : ni testée ni corrigée, elle part système par système à mesure du portage. Les outils de run ci-dessous (captures, mesures, régressions) visent encore la run 2D.
 
 > Pivot V2 (mars 2026) : jour/nuit, Foyer in-run, craft, construction et ressources matérielles ont été **supprimés**.
 > Ne pas les réintroduire, ne pas s'appuyer sur les sections du GDD/Architecture/Roadmap V1 qui les décrivent.
@@ -37,7 +39,8 @@ Consulter la Stratégie V2 avant de proposer une feature ou un changement archit
 | Textures pixel art du relief 3D (plan 60) | `python3 tools/generate_relief_textures.py [--sheet planche.png] [--materials-sheet planche.png]` ; dessus, flancs et franges d'herbe, 16 px par cellule, sortie dans `assets/models/textures/` ; les 22 matières du sol 2D et leurs franges dans `ground/`, choisies par `--biome` du bac à sable |
 | Modèles low poly tirés des sprites (plan 60) | `python3 tools/export_lowpoly.py [--character <id>] [--creature <id>] [--prop biome:stem[+stem]] [--step N] [--detail low\|mid]` ; sans argument, le jeu d'essai de 60.0a ; `--detail mid` : lissé, deux fois plus fin, dans `assets/models/mid/` (non versionné) ; sortie `.glb` + manifeste dans `assets/models/` ; couleurs (aplats, palette terne) par sorte de modèle dans `tools/sprites/lowpoly_style.json`, budgets dans `lowpoly_budgets.json` ; planche Godot (vues, animations, alignement) : `tools/model_sheet.sh <dossier>` ; export de masse (plan 60 §17) : `--all --jobs 6` (ou `--catalog <c>`, `--list`, `--missing`), bibliothèque non versionnée dans `build/models/` avec son `index.json`, planches par catalogue : `tools/model_sheet.sh <dossier> --library build/models` |
 | Modèles low poly convertis pour le moteur (plan 60 §19) | `tools/convert_models.sh [dossier] [--force]` (bibliothèque `build/models` par défaut ; `assets/models` est converti par `relief_sandbox.sh`) : un `.scn` par `.glb`, normales lissées et niveaux de détail, non versionné ; rapport `lods.json` ; `--probe <modèle>` : primitives dessinées selon la distance |
-| Captures en vraie run (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-cartography`, `--capture-character --character <id>`, `--capture-props [--hide-collisions]`, `--capture-bestiary`, `--capture-chests`, `--capture-memorial`, `--capture-rift`, `--capture-statuses`, `--capture-player-hit` ; `--nomad` fait garder un cap au bot |
+| Captures de la run 3D (lancée comme depuis le Hub : marche, saut, capacité, caméra tournée, pause) | `godot-mono --path . --windowed --resolution 1920x1080 res://tools/tests/Run3DCapture.tscn -- --capture <dossier> [--character <id>]` |
+| Captures en vraie run 2D (1080p, bot invincible) | `tools/capture_run.sh <dossier> [secondes] [intervalle] [résolution] [seed]` ; modes via `CAPTURE_EXTRA_ARGS` : `--event <id>`, `--capture-map`, `--capture-cartography`, `--capture-character --character <id>`, `--capture-props [--hide-collisions]`, `--capture-bestiary`, `--capture-chests`, `--capture-memorial`, `--capture-rift`, `--capture-statuses`, `--capture-player-hit` ; `--nomad` fait garder un cap au bot |
 | Enregistrement audible d'une run (images + mixage du moteur, Movie Maker), trace d'écoute et rapport | `tools/record_run_audio.sh <dossier> [secondes] [seed] [personnage]` ; plus lent que le temps réel ; fichiers hors dépôt ; écouter `run.mp4`, `rapport.md` ne fait que repérer ; `RECORD_EXTRA_ARGS=--audio-stems` puis `tools/audio_stems.py <dossier>` : pistes musique, ambiance, effets et pas synchrones, page d'isolement |
 | Mesure de densité sans rendu (ennemis, niveaux, coffres vus), temps de jeu accéléré | `tools/measure_run.sh <dossier> [secondes] ["seeds"]` ; `MEASURE_EXTRA_ARGS="--nomad"` (ou `"--peril 5"`), `MEASURE_JOBS=2` ; un avant/après se mesure des deux côtés avec ce même outil |
 | Captures de l'accueil (Hub) | `tools/capture_hub.sh <dossier> [actions]` : capture après chaque action d'input rejouée (ex. `ui_right,ui_down,ui_accept`) ; profil dev par défaut, `HUB_DEV=" "` pour un profil neuf ; fenêtre réelle, ne pas cliquer ni taper dedans pendant la capture |
@@ -58,8 +61,8 @@ Avant de déclarer une tâche terminée : `dotnet build` sans warning, et `tools
 | Moteur | Godot 4.7.2 (.NET), SDK `Godot.NET.Sdk/4.7.2` |
 | Langage | C# 14 / .NET 10 (LTS) |
 | Physique | Jolt Physics |
-| Renderer | GL Compatibility (OpenGL) |
-| Vue | Isométrique 2D |
+| Renderer | Forward+ (plan 60 §24) |
+| Vue | 3D, caméra libre en perspective (plan 60 §28) ; la run 2D isométrique, gelée, en attendant son retrait |
 | Données | JSON dans `data/`, parsé via `Godot.Json` et mappé à la main par les loaders de `scripts/Infrastructure/` ; sauvegardes méta/historique en `System.Text.Json` |
 | Plateforme | Steamworks.NET (DLL native non versionnée, Steam désactivé si absente) |
 
@@ -70,7 +73,7 @@ Monter la version de Godot = changer **ensemble** le SDK dans `Vestiges.csproj`,
 ```
 vestiges/
 ├── doc/                     # Design et technique (voir ordre d'autorité) ; doc/plans/ = lots en cours et DECISIONS.md
-├── scenes/                  # Scenes par feature (Hub.tscn = main scene, Main.tscn = run)
+├── scenes/                  # Scenes par feature (Hub.tscn = main scene, Main3D.tscn = run 3D, Main.tscn = run 2D gelée)
 ├── scripts/                 # C# par système (namespace Vestiges.<Dossier>)
 │   ├── Core/                # Player, GameManager, EventBus, GroupCache
 │   ├── Combat/              # Ennemis, armes, projectiles, VFX, CombatPools, sprite loaders
@@ -128,7 +131,7 @@ Object Pooling (projectiles, créatures, particules) · State Machine (phases de
 
 Pools existants : `Spawn/EnemyPool` (créatures), `Combat/CombatPools` (projectiles ennemis, chiffres de dégâts, flashs ; `NodePool<T>` générique). Un effet fréquent passe par un pool, jamais `Instantiate` + `QueueFree` à chaque coup.
 
-### Rendu de la scène de run
+### Rendu de la scène de run 2D (gelée)
 
 - `Main` est triée en Y ; les conteneurs d'entités (`PropContainer`, `EnemyContainer`, `PoiContainer`, `CombatPools`) aussi, pour que leurs enfants se trient avec le joueur.
 - Couches par `z_index` : fond du vide −100, sol −10, routes −9, overlay d'Effacement −5, décalques au sol et ombres −1, entités 0, brouillard 10, plaques d'ennemis 20, chiffres de dégâts 30, canopées 100.
