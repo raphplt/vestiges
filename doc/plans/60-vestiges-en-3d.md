@@ -935,3 +935,38 @@ Raphaël a choisi Forward+ pour la 3D (§24, DECISIONS §247), et a dit « Oui, 
 - Le coût sur une carte modeste, et sur Mac.
 
 **Pour le choix de Raphaël** : quels effets garder, et à quelle force. Tous sont allumés au lancement du bac à sable.
+
+## 27. Le facteur refait de zéro — 19 novembre
+
+Raphaël, après avoir joué le bac à sable : « le sprite du personnage [...] il est atroce. il faut le refaire de 0 et lui donner un vrai caractère ». Le modèle d'avant était un bonhomme en capsules, droit, sans nez, aux yeux en trous, dont les lettres trop minces s'émiettaient en confettis.
+
+**Découpage**
+- P1 : le facteur resculpté dans le SDF (`tools/sprites/characters/facteur.py`), jugé en 3D, planches et bac à sable.
+- P2, après l'accord de Raphaël : ses sprites 2D régénérés depuis le même modèle (cadre à revoir), capturés en vraie run.
+
+### P1 livré — 19 novembre
+
+**Le personnage** : Aimé Ribot, un vieil homme sec et têtu, voûté par des années de tournée.
+- Silhouette longue penchée en avant, cou tendu, genoux pliés de patineur.
+- Tête : long nez au bout rond, moustache de morse qui tombe sous le menton, sourcils broussailleux blancs, yeux enfoncés, oreilles décollées, casquette des postes trop grande portée de travers.
+- Capote d'uniforme jusqu'aux genoux, ouverte devant et fendue derrière, col relevé, pièce rapportée dans le dos, ceinture, deux rangées de boutons de laiton.
+- Une longue écharpe rouille flotte derrière lui. Vu de dos, comme la caméra le voit, c'est elle qui dit l'élan.
+- Sacoche énorme et bombée, lettres en éventail, une liasse ficelée de rouge, une lettre toujours tenue à la main droite.
+- Patins bricolés : planche épaisse et deux grosses roues.
+- Allure : penché (0,32), un peu de poids, longue glissade.
+
+**Écarts au sprite 2D**
+- Les lettres envolées sont retirées. Détachées du corps, elles se lisaient en débris en 3D.
+- Toute pièce fine a au moins l'épaisseur d'un pas de maillage.
+
+**Réglages communs aux personnages**
+- Pas de maillage de 1,6 à 1,2 unité, budget de 5 000 à 9 000 triangles. Le héros est le modèle vu de plus près. Le facteur sort à 7 304 triangles au plus (2,9 Mo, 27 poses, 1,62 m).
+- Aplats (`plain`) pour les personnages comme pour les décors. Sans lissage des matériaux, qui effacerait les yeux.
+- Les autres personnages prennent ces réglages à leur prochain export.
+
+**Vérifié**
+- Planches regardées (quatre vues agrandies et cycle de marche) : nez, moustache, sourcils et yeux se lisent ; la capote bat et l'écharpe file à la marche.
+- Bac à sable capturé en forêt sous Forward+ : rendu normal, aucune erreur.
+- Le mid poly est régénéré (non versionné).
+
+**Non fait** : les sprites 2D du facteur ne sont pas régénérés (P2). `generate_character.py facteur` les changerait.

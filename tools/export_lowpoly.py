@@ -18,7 +18,7 @@ un catalogue de décors, le tronc et la canopée d'un arbre (`_base`, `_canopy`)
 orientées (`_x`/`_y`, `_h`/`_v`, `_e`/`_w`/`_n`/`_s`, et la forme sans suffixe) on ne garde que la première : la caméra tourne, le jeu tourne le modèle. Le
 fichier index.json de la bibliothèque dit, modèle par modèle, ses sources, ses variantes écartées, son poids et sa durée.
 
-Pas par défaut en low poly : 1,6 unité pour un personnage (le visage reste lisible), 2,0 pour une créature, un
+Pas par défaut en low poly : 1,2 unité pour un personnage (nez, moustache et sourcils restent lisibles, plan 60 §27), 2,0 pour une créature, un
 quarantième de la taille pour un décor, affiné jusqu'à 1,2 pour un décor long et mince (clôture, grillage) que la grille
 traverserait ; en mid poly, deux fois plus fin. Un processus tué en route (mémoire) n'arrête pas l'export : ce qu'il
 restait à faire repasse un par un.
@@ -284,7 +284,7 @@ def run_job(job: Job, out: Path, step: float | None, smooth: bool, fineness: flo
             kind = "character" if job.catalog == "characters" else "creature"
             model = (models.character(job.model_id) if job.catalog == "characters"
                      else models.creature(job.model_id) if job.catalog == "creatures" else fauna_model(job.model_id))
-            base = (1.6 if kind == "character" else 2.0) / fineness
+            base = (1.2 if kind == "character" else 2.0) / fineness
             style = load_style(kind)
             build = lambda c: export_animated(model, kind, (step or base) * c, smooth, style)  # noqa: E731
         else:

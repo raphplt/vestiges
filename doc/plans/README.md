@@ -1,5 +1,9 @@
 # VESTIGES — Dossier de plans à valider
 
+**19 novembre — le facteur refait de zéro ([plan 60 §27](60-vestiges-en-3d.md), §250) :**
+- Raphaël trouvait le personnage « atroce ». Aimé Ribot est resculpté en vieil homme voûté et têtu : long nez, moustache de morse, capote fendue, écharpe qui flotte, sacoche énorme, patins à grosses roues.
+- Les personnages passent au pas de 1,2 unité (9 000 triangles au plus) et en aplats. Les sprites 2D attendent l'accord de Raphaël.
+
 **18 novembre (soir) — Forward+ pour la 3D, plus de trous dans les modèles ([plan 60 §24](60-vestiges-en-3d.md), §247) :**
 - Raphaël valide les collisions par emprise et le marais, et choisit Forward+ pour la 3D. Le bac à sable le lance par défaut ; le jeu 2D reste en Compatibility.
 - Les fentes entre surfaces grossière et fine des pièces minces se referment : 4 743 arêtes ouvertes dans le marais avant, 0 dans toute la bibliothèque après, pour 4 % de triangles en plus.

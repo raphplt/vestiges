@@ -3082,3 +3082,14 @@ Raphaël : « Oui, vas-y », pour voir dans le bac à sable ce que Forward+ appo
 - **Trois effets, chacun sur sa touche** : ombres de contact (F5), brume volumétrique (F6), lumières (F7 : une par projectile, une par lueur de décor, et le halo).
 - **Tous allumés au lancement.** Ensemble, ils coûtent 0,95 ms par image en 4K (787 à 450 i/s).
 - **Les lueurs viennent des surfaces émissives des modèles**, sans réglage par décor.
+
+## 250. Le facteur refait de zéro, un vieil homme voûté qui ne s'arrête pas — 19 novembre 2026
+
+Raphaël : « c'est cool les effets ouaip », puis, sur le personnage : « il est atroce. il faut le refaire de 0 et lui donner un vrai caractère » ([plan 60 §27](60-vestiges-en-3d.md)).
+
+**Tranché par défaut par l'agent, réversible** :
+- **Le caractère** : un vieil homme sec et têtu, voûté, au long nez et à la moustache de morse, en capote fendue, avec une longue écharpe qui flotte derrière lui. La sacoche énorme, la casquette, les patins et les lettres restent (plan 32).
+- **Les lettres envolées sont retirées** du modèle : en 3D, elles se lisaient en débris.
+- **Personnages plus fins et en aplats** : pas de 1,2 unité, budget de 9 000 triangles.
+- **Sprites 2D inchangés** jusqu'à l'accord de Raphaël sur le modèle 3D.
+- **Les effets de Forward+ (§249) sont validés** par Raphaël.

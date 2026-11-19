@@ -26,7 +26,7 @@
 		"grime_amount": 0.14
 	},
 	"character": {
-		"plain": false,
+		"plain": true,
 		"smoothing": 0,
 		"saturation": 0.85,
 		"value": 0.95,
