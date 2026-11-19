@@ -1062,3 +1062,12 @@ Le bac à sable compte en cellules : une unité Godot vaut une cellule, et un é
 | **60.1c La run part en 3D** | Forward+ pour tout le projet. `scenes/Main3D.tscn` : la terre d'essai et ses décors, le personnage choisi au Hub, ses PV, la mort qui ramène au Hub. Le Hub et « Recommencer » lancent `Main3D`. Souris capturée en run, libérée en pause (Échap). Nouvelle action `jump` (Espace) ; `mobility` passe sur Maj et le clic droit ; à la manette, le stick droit tourne la caméra | Smoke test ; capture de `Main3D` lancée comme depuis le Hub ; Raphaël joue | Moyen |
 
 À la fin de 60.1, on lance le jeu, on choisit son personnage et on marche, saute et use de sa capacité sur la terre d'essai, sous la caméra libre. 60.2 y amène la horde.
+
+### 60.1b livré — 19 novembre
+
+- **`PlayerMotor3D`** (`scripts/World3D/`) : le mouvement du joueur, tiré de la simulation du bac à sable, sans nœud ni rendu. Il gère la marche avec inertie, le saut, la capacité du personnage, les chutes et leurs dégâts, la retombée et le vide. La simulation du bac à sable ne garde que la horde : elle lit la retombée du moteur pour frapper la foule et remet les PV à zéro à la mort.
+- **`PlayerBody3D`** : le modèle animé, tourné vers sa course, avec le clignotement d'invulnérabilité, le rouge de la blessure et l'ombre (`ReliefShadow`, partagée avec la horde).
+- **`RunCamera3D`** : la caméra libre, avec le recul qui évite le relief et les entrées lues dans son repère. La vue relief 2D du bac à sable garde son propre cadrage orthographique.
+- **Le facteur unique** des réglages 2D vers la 3D est `ReliefConfig.CellsPerPixel`, soit 91 px du jeu 2D par cellule ; la vitesse des personnages en passe. `MetresPerCellAtBody` (3,58 m) sert à lire les mesures.
+- **Le contrôle des rebords teste le moteur du jeu**, plus une copie : 0 rebord collé sur 86, rampes jusqu'à la tour à 5 étages, mêmes vitesses, mêmes sauts et mêmes capacités qu'avant pour les six personnages. Il imprime maintenant les unités.
+- **Capture du bac à sable** : caméra libre au pied d'une falaise et vue relief 2D identiques à 60.1a, avec 496 images par seconde au tour du bot en 4K.

@@ -6,7 +6,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Simulation 2,5D du bac à sable de la verticalité (plan 59), commune aux deux vues : sol carré (x, y), hauteur z.
-/// Le joueur marche, bondit d'un étage, tombe ; la horde fonce sur lui, grimpe lentement les falaises, saute en bas,
+/// Le joueur est celui de la run 3D (<see cref="PlayerMotor3D"/>) ; la horde fonce sur lui, grimpe lentement les falaises, saute en bas,
 /// tombe des gradins quand on la pousse. Le contact ne touche qu'à hauteur égale ; les tirs ignorent les étages.
 /// Aucune allocation par image : tableaux de taille fixe et grille de voisinage chaînée.
 /// </summary>
@@ -22,7 +22,6 @@ public sealed class ReliefSim
     private const float DyingSeconds = 0.45f;
     private const float FlashSeconds = 0.12f;
     private const float VoidFloor = -5f;
-    private const float RespawnInvulnerable = 1.2f;
 
     private readonly ReliefConfig _config;
     private readonly ReliefArena _arena;
@@ -30,30 +29,9 @@ public sealed class ReliefSim
     private readonly int[] _bucketHead;
     private readonly int[] _bucketNext;
     private readonly int _weightTotal;
-    // Emprises au sol des vrais décors : (x, y, rayon), indexées par cellule.
     private float _fireTimer;
-    private bool _bondQueued;
-    private bool _skillQueued;
-    private Vector2 _skillDir;
-    // Saut flottant (scaphandrière) : sa poussée, en part du saut commun, et sa gravité tant qu'il dure.
-    private const float FloatJumpLift = 0.8f;
-    private const float FloatGravity = 0.45f;
 
-    // Joueur.
-    public Vector3 PlayerPos;
-    public Vector2 PlayerFacing = new(1f, 1f);
-    public Vector2 PlayerVelocity;
-    public bool PlayerGrounded = true;
-    public float PlayerHp;
-    public float PlayerInvulnerable;
-    public float PlayerHurtFlash;
-    public bool PlayerAirborneFromBond;
-    public float SkillTime;
-    public float SkillCooldown;
-    private float _playerVz;
-    private float _takeoffZ;
-    private float _bondCooldown;
-    private Vector2 _lastSafe;
+    public readonly PlayerMotor3D Player;
 
     // Horde.
     public readonly Vector3[] EnemyPos;
@@ -79,14 +57,9 @@ public sealed class ReliefSim
     private readonly float[] _projectileLife = new float[MaxProjectiles];
 
     // Événements de l'image, lus par la vue (retours visuels).
-    public int StompsThisTick;
-    public Vector3 LastStompAt;
-    public int LandingsThisTick;
-    public bool HurtThisTick;
-    public bool VoidFallThisTick;
 
     // Compteurs affichés.
-    public int Bonds, Skills, Stomps, Deaths, VoidFalls;
+    public int Deaths;
     public int Kills, KillsByFall, KillsByVoid, KillsByStomp;
     public float Elapsed;
 
@@ -117,38 +90,16 @@ public sealed class ReliefSim
         _bucketNext = new int[capacity];
         foreach (ReliefConfig.Creature creature in config.Creatures)
             _weightTotal += creature.Weight;
-        PlayerHp = config.PlayerHp;
-        PlayerPos = new Vector3(config.Spawn.X, config.Spawn.Y, arena.GroundAt(config.Spawn.X, config.Spawn.Y));
-        _lastSafe = config.Spawn;
+        Player = new PlayerMotor3D(config, arena);
     }
-
-    /// <summary>Le bond est demandé : il part au prochain pas, s'il est au sol et prêt.</summary>
-    public void QueueBond() => _bondQueued = true;
-
-    /// <summary>La capacité du personnage est demandée : elle part au prochain pas, s'il est au sol et qu'elle est prête.</summary>
-    public void QueueSkill() => _skillQueued = true;
-
-    /// <summary>Place le joueur au sol à cet endroit (captures).</summary>
-    public void Teleport(Vector2 at)
-    {
-        PlayerPos = new Vector3(at.X, at.Y, _arena.HighestUnder(at.X, at.Y, _config.PlayerRadius));
-        PlayerGrounded = true;
-        PlayerVelocity = Vector2.Zero;
-        SkillTime = 0f;
-        _playerVz = 0f;
-        _lastSafe = at;
-    }
-
-    public float PlayerLevel => PlayerPos.Z / _arena.LevelHeight;
 
     public void Step(float dt, Vector2 wish, int crowdTarget)
     {
         Elapsed += dt;
-        StompsThisTick = 0;
-        LandingsThisTick = 0;
-        HurtThisTick = false;
-        VoidFallThisTick = false;
-        StepPlayer(dt, wish);
+        Player.Step(dt, wish);
+        if (Player.StompedThisStep)
+            Stomp();
+        ReviveIfDead();
         Spawn(crowdTarget);
         RebuildBuckets();
         StepCrowd(dt);
@@ -156,203 +107,41 @@ public sealed class ReliefSim
         StepProjectiles(dt);
     }
 
-    private void StepPlayer(float dt, Vector2 wish)
-    {
-        ReliefConfig c = _config;
-        PlayerInvulnerable = Mathf.Max(0f, PlayerInvulnerable - dt);
-        PlayerHurtFlash = Mathf.Max(0f, PlayerHurtFlash - dt);
-        _bondCooldown = Mathf.Max(0f, _bondCooldown - dt);
-        SkillCooldown = Mathf.Max(0f, SkillCooldown - dt);
-        if (wish.LengthSquared() > 0.01f)
-            PlayerFacing = wish.Normalized();
-
-        bool bond = _bondQueued;
-        _bondQueued = false;
-        bool skill = _skillQueued;
-        _skillQueued = false;
-        if (skill && SkillCooldown <= 0f && PlayerGrounded)
-            StartSkill(wish);
-        if (SkillTime > 0f)
-            SteerSkill(dt, wish);
-
-        if (PlayerGrounded)
-        {
-            if (bond && _bondCooldown <= 0f && SkillTime <= 0f)
-            {
-                // Le saut garde l'élan du sol, sans poussée : la portée vient de la course, pas du saut.
-                TakeOff(c.JumpVelocity);
-                PlayerInvulnerable = Mathf.Max(PlayerInvulnerable, c.JumpInvulnerable);
-                _bondCooldown = c.JumpCooldown;
-                Bonds++;
-                return;
-            }
-            if (SkillTime <= 0f)
-            {
-                // Inertie : la vitesse se prend et se perd en une fraction de seconde, au lieu de sauter d'un coup.
-                Vector2 target = wish * c.PlayerSpeed;
-                float seconds = target.LengthSquared() > 0.0001f ? c.AccelerationSeconds : c.BrakingSeconds;
-                PlayerVelocity = PlayerVelocity.MoveToward(target, c.PlayerSpeed / seconds * dt);
-            }
-            Vector2 at = new(PlayerPos.X, PlayerPos.Y);
-            at = MoveBlocked(at, PlayerVelocity * dt, PlayerPos.Z + c.Step, c.PlayerRadius);
-            at = _arena.Obstacles.PushOut(at, c.PlayerRadius);
-            // Le joueur tient sur le plus haut sol sous son corps : il ne tombe d'un rebord qu'une fois sorti tout entier,
-            // sinon il retomberait à cheval sur la paroi et y resterait collé.
-            float ground = _arena.HighestUnder(at.X, at.Y, c.PlayerRadius);
-            PlayerPos = new Vector3(at.X, at.Y, PlayerPos.Z);
-            if (ground >= PlayerPos.Z - c.Step)
-            {
-                PlayerPos.Z = ground;
-                _lastSafe = at;
-            }
-            else
-            {
-                PlayerGrounded = false;
-                PlayerAirborneFromBond = false;
-                _playerVz = 0f;
-                _takeoffZ = PlayerPos.Z;
-            }
-            return;
-        }
-
-        if (SkillTime <= 0f)
-            PlayerVelocity = PlayerVelocity.MoveToward(wish * c.PlayerSpeed, c.AirControl * dt);
-        // Le saut flottant pèse moins tant qu'il dure.
-        float gravity = SkillTime > 0f && c.Mobility.VisualHeightPixels > 0f ? c.Gravity * FloatGravity : c.Gravity;
-        _playerVz -= gravity * dt;
-        Vector2 air = MoveBlocked(new Vector2(PlayerPos.X, PlayerPos.Y), PlayerVelocity * dt, PlayerPos.Z, c.PlayerRadius);
-        float z = PlayerPos.Z + _playerVz * dt;
-        float floor = _arena.HighestUnder(air.X, air.Y, c.PlayerRadius);
-        PlayerPos = new Vector3(air.X, air.Y, z);
-        if (z <= floor)
-        {
-            Land(floor);
-            return;
-        }
-        if (z < VoidFloor)
-            FallIntoVoid();
-    }
-
-    private void TakeOff(float verticalSpeed)
-    {
-        PlayerGrounded = false;
-        PlayerAirborneFromBond = true;
-        _playerVz = verticalSpeed;
-        _takeoffZ = PlayerPos.Z;
-    }
-
-    /// <summary>
-    /// La capacité du personnage, d'après son profil du jeu : une poussée dans la direction voulue (dash, déphasage), une
-    /// glissade qu'on oriente en route, ou un saut flottant qui quitte le sol.
-    /// </summary>
-    private void StartSkill(Vector2 wish)
-    {
-        Vestiges.Infrastructure.MobilityConfig m = _config.Mobility;
-        _skillDir = wish.LengthSquared() > 0.01f ? wish.Normalized() : PlayerFacing.Normalized();
-        SkillTime = m.DurationSeconds;
-        SkillCooldown = m.CooldownSeconds;
-        PlayerInvulnerable = Mathf.Max(PlayerInvulnerable, m.InvulnerabilitySeconds);
-        Skills++;
-        if (m.VisualHeightPixels > 0f)
-            TakeOff(_config.JumpVelocity * FloatJumpLift);
-    }
-
-    private void SteerSkill(float dt, Vector2 wish)
-    {
-        Vestiges.Infrastructure.MobilityConfig m = _config.Mobility;
-        SkillTime = Mathf.Max(0f, SkillTime - dt);
-        if (m.TurnRateDegrees > 0f && wish.LengthSquared() > 0.01f)
-        {
-            float turn = Mathf.DegToRad(m.TurnRateDegrees) * dt;
-            float delta = Mathf.Clamp(_skillDir.AngleTo(wish), -turn, turn);
-            _skillDir = _skillDir.Rotated(delta);
-        }
-        PlayerVelocity = _skillDir * _config.PlayerSpeed * m.SpeedMultiplier;
-        if (_skillDir.LengthSquared() > 0.01f)
-            PlayerFacing = _skillDir;
-    }
-
-    private void Land(float floor)
-    {
-        ReliefConfig c = _config;
-        float dropLevels = (_takeoffZ - floor) / _arena.LevelHeight;
-        PlayerPos.Z = floor;
-        PlayerGrounded = true;
-        _playerVz = 0f;
-        LandingsThisTick++;
-        if (dropLevels > c.SafeDropLevels && PlayerInvulnerable <= 0f)
-            HurtPlayer(Mathf.Round((dropLevels - c.SafeDropLevels + 0.5f) * c.DropDamagePerLevel));
-        if (dropLevels >= c.StompMinDropLevels)
-            Stomp();
-        PlayerAirborneFromBond = false;
-    }
-
-    private void FallIntoVoid()
-    {
-        VoidFalls++;
-        VoidFallThisTick = true;
-        Teleport(_lastSafe);
-        PlayerInvulnerable = 0f;
-        HurtPlayer(_config.VoidDamage);
-        PlayerInvulnerable = RespawnInvulnerable;
-    }
-
     /// <summary>Retombée de haut : onde qui blesse et repousse la foule au même niveau, qui peut la jeter du bord.</summary>
     private void Stomp()
     {
         ReliefConfig c = _config;
-        Stomps++;
-        StompsThisTick++;
-        LastStompAt = PlayerPos;
+        Vector3 at = Player.LastStompAt;
         float radiusSq = c.StompRadius * c.StompRadius;
         for (int i = 0; i < Capacity; i++)
         {
-            if (State[i] != EnemyState.Alive || Mathf.Abs(EnemyPos[i].Z - PlayerPos.Z) > 0.6f)
+            if (State[i] != EnemyState.Alive || Mathf.Abs(EnemyPos[i].Z - at.Z) > 0.6f)
                 continue;
-            Vector2 away = new(EnemyPos[i].X - PlayerPos.X, EnemyPos[i].Y - PlayerPos.Y);
+            Vector2 away = new(EnemyPos[i].X - at.X, EnemyPos[i].Y - at.Y);
             float distSq = away.LengthSquared();
             if (distSq > radiusSq)
                 continue;
-            Vector2 dir = distSq > 0.0001f ? away / Mathf.Sqrt(distSq) : PlayerFacing;
+            Vector2 dir = distSq > 0.0001f ? away / Mathf.Sqrt(distSq) : Player.Facing;
             _push[i] += dir * c.StompPush * (1f - Mathf.Sqrt(distSq) / c.StompRadius * 0.5f);
             DamageEnemy(i, c.StompDamage, Cause.Stomp);
         }
     }
 
-    private void HurtPlayer(float damage)
+    private void ReviveIfDead()
     {
-        PlayerHp -= damage;
-        PlayerHurtFlash = 0.25f;
-        HurtThisTick = true;
-        if (PlayerHp > 0f)
+        if (!Player.Dead)
             return;
         Deaths++;
-        PlayerHp = _config.PlayerHp;
+        Player.Revive();
         // Le bac à sable ne finit pas : la foule proche est repoussée et la partie continue.
         for (int i = 0; i < Capacity; i++)
         {
             if (State[i] != EnemyState.Alive)
                 continue;
-            Vector2 away = new(EnemyPos[i].X - PlayerPos.X, EnemyPos[i].Y - PlayerPos.Y);
+            Vector2 away = new(EnemyPos[i].X - Player.Position.X, EnemyPos[i].Y - Player.Position.Y);
             if (away.LengthSquared() < 16f)
                 _push[i] += away.Normalized() * 6f;
         }
-    }
-
-    /// <summary>
-    /// Déplacement d'un disque, axe par axe, qui bute contre tout sol plus haut que <paramref name="maxHeight"/>. Le vide
-    /// ne bloque pas : on y tombe.
-    /// </summary>
-    private Vector2 MoveBlocked(Vector2 from, Vector2 delta, float maxHeight, float radius)
-    {
-        Vector2 at = from;
-        Vector2 alongX = new(at.X + delta.X, at.Y);
-        if (_arena.HighestUnder(alongX.X, alongX.Y, radius) <= maxHeight)
-            at = alongX;
-        Vector2 alongY = new(at.X, at.Y + delta.Y);
-        if (_arena.HighestUnder(alongY.X, alongY.Y, radius) <= maxHeight)
-            at = alongY;
-        return at;
     }
 
     private void Spawn(int target)
@@ -372,8 +161,8 @@ public sealed class ReliefSim
             {
                 float angle = _rng.Randf() * Mathf.Tau;
                 float distance = _rng.RandfRange(_config.SpawnMin, _config.SpawnMax);
-                float x = PlayerPos.X + Mathf.Cos(angle) * distance;
-                float y = PlayerPos.Y + Mathf.Sin(angle) * distance;
+                float x = Player.Position.X + Mathf.Cos(angle) * distance;
+                float y = Player.Position.Y + Mathf.Sin(angle) * distance;
                 float ground = _arena.GroundAt(x, y);
                 if (ReliefArena.IsVoid(ground))
                     continue;
@@ -479,7 +268,7 @@ public sealed class ReliefSim
             EnemyTimer[i] += dt;
             Vector3 pos = EnemyPos[i];
             ReliefConfig.Creature creature = c.Creatures[EnemyType[i]];
-            Vector2 toPlayer = new(PlayerPos.X - pos.X, PlayerPos.Y - pos.Y);
+            Vector2 toPlayer = new(Player.Position.X - pos.X, Player.Position.Y - pos.Y);
             float dist = toPlayer.Length();
             Vector2 desire = dist > 0.05f ? toPlayer / dist * creature.Speed : Vector2.Zero;
             Vector2 velocity = desire + SeparationOf(i) * c.Separation * creature.Speed + _push[i];
@@ -592,13 +381,14 @@ public sealed class ReliefSim
     private void ContactPlayer(int i)
     {
         ReliefConfig c = _config;
-        if (PlayerInvulnerable > 0f || Mathf.Abs(EnemyPos[i].Z - PlayerPos.Z) > c.ContactHeight)
+        if (Player.Invulnerable > 0f || Mathf.Abs(EnemyPos[i].Z - Player.Position.Z) > c.ContactHeight)
             return;
-        Vector2 d = new(EnemyPos[i].X - PlayerPos.X, EnemyPos[i].Y - PlayerPos.Y);
+        Vector2 d = new(EnemyPos[i].X - Player.Position.X, EnemyPos[i].Y - Player.Position.Y);
         if (d.LengthSquared() > c.ContactReach * c.ContactReach)
             return;
-        PlayerInvulnerable = c.HurtInvulnerable;
-        HurtPlayer(c.ContactDamage);
+        Player.Hurt(c.ContactDamage);
+        Player.Invulnerable = c.HurtInvulnerable;
+        ReviveIfDead();
     }
 
     private void StepWeapon(float dt)
@@ -612,7 +402,7 @@ public sealed class ReliefSim
         {
             if (State[i] != EnemyState.Alive)
                 continue;
-            float d = (EnemyPos[i] - PlayerPos).LengthSquared();
+            float d = (EnemyPos[i] - Player.Position).LengthSquared();
             if (d < best)
             {
                 best = d;
@@ -625,7 +415,7 @@ public sealed class ReliefSim
         int slot = System.Array.IndexOf(ProjectileActive, false);
         if (slot < 0)
             return;
-        Vector3 from = PlayerPos + new Vector3(0f, 0f, ChestHeight + 0.1f);
+        Vector3 from = Player.Position + new Vector3(0f, 0f, ChestHeight + 0.1f);
         Vector3 to = EnemyPos[target] + new Vector3(0f, 0f, ChestHeight);
         Vector3 dir = (to - from).Normalized();
         ProjectileActive[slot] = true;

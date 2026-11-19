@@ -30,7 +30,6 @@ public partial class ReliefSandbox : Node
     // Hauteur de l'image de la vue relief 2D, pour la taille de sa caméra orthographique : les tuiles 64 × 32 du jeu.
     private const float OrthoPixels = 540f;
     // Cadence de marche : la marche du modèle se joue au rythme des pas sur le sol, pour que les pieds ne glissent pas.
-    private const float WalkCyclesPerCell = 0.43f;
     private const float TurnRate = 14f;
     // Un losange de 64 px couvre la diagonale d'une cellule : 64 / √2 px par unité en orthographique.
     private const float PixelsPerUnit = 45.254834f;
@@ -48,7 +47,6 @@ public partial class ReliefSandbox : Node
     private DirectionalLight3D _sun;
     private WorldEnvironment _environment;
     private Label _hud;
-    private Sprite3D _playerShadow;
     private Sprite3D[] _enemyShadows;
     private Sprite3D[] _projectiles;
     private Sprite3D _stompRing;
@@ -56,9 +54,9 @@ public partial class ReliefSandbox : Node
 
     private ReliefLook _look;
     private ReliefAtmosphere _atmosphere;
-    private MeshInstance3D _playerBody;
+    private PlayerBody3D _playerView;
+    private RunCamera3D _chase;
     private MeshInstance3D[] _creatureBodies;
-    private float _playerYaw;
     private float[] _creatureYaw;
     private StandardMaterial3D _flashMaterial;
     private StandardMaterial3D _hurtMaterial;
@@ -66,11 +64,8 @@ public partial class ReliefSandbox : Node
     private enum View { Chase3D, Relief2D }
 
     private View _view;
-    private float _yawDegrees = 45f;
-    private float _pitchDegrees;
     // Recul réel de la caméra libre : sa distance, raccourcie quand le relief s'interpose.
-    private float _reach;
-    private Vector3 _cameraTarget;
+    private Vector3 _orthoTarget;
     private int _crowdTarget;
     private ReliefBiomeProps _biomeProps;
     // Mesure du tour du bot en capture (plan 60 §19, C4c) : durées d'image et primitives dessinées.
@@ -85,7 +80,6 @@ public partial class ReliefSandbox : Node
     // Couches hautes des décors (feuillages) : leur pied et leur décalage vers la caméra, refait quand elle bouge.
     private float _hudTimer;
     private float _animClock;
-    private float _walkPhase;
 
     // Captures.
     private string _captureDir;
@@ -148,8 +142,6 @@ public partial class ReliefSandbox : Node
         if (_captureDir != null)
             DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);
         _captureSeconds = float.Parse(Argument(args, "--seconds", "14"), CultureInfo.InvariantCulture);
-        _pitchDegrees = _config.ChasePitch;
-        _reach = _config.ChaseDistance;
 
         RegisterActions();
         string biome = Argument(args, "--biome", null);
@@ -173,7 +165,8 @@ public partial class ReliefSandbox : Node
             _config.LowPoly.LodThreshold.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         BuildScene();
         ApplyView();
-        _cameraTarget = PlayerAnchor();
+        _chase.Snap(_sim.Player.WorldPosition);
+        _orthoTarget = OrthoAnchor();
         _ready = true;
         GD.Print($"[ReliefSandbox] Arène {_arena.Width}×{_arena.Depth}, sol {_biome}, {_look.PropCount} décors, foule {_crowdTarget}, vue {_view}");
     }
@@ -275,14 +268,12 @@ public partial class ReliefSandbox : Node
         _atmosphere = new ReliefAtmosphere(_config.Atmosphere, world, _sim.ProjectilePos.Length, _look.Glows);
         GetWindow().SizeChanged += FitRender;
 
-        Texture2D shadow = ShadowTexture();
-        _playerShadow = NewShadow(world, shadow, "PlayerShadow");
+        _chase = new RunCamera3D(_camera, _config, _arena);
+        _playerView = new PlayerBody3D(world, _config, _arena, _flashMaterial, _hurtMaterial);
         _enemyShadows = new Sprite3D[_sim.Capacity];
         for (int i = 0; i < _sim.Capacity; i++)
-            _enemyShadows[i] = NewShadow(world, shadow, $"CreatureShadow{i}");
+            _enemyShadows[i] = ReliefShadow.Create(world, $"CreatureShadow{i}");
         Vector3 scale = Vector3.One * _config.LowPoly.BodyScale / _config.LowPoly.MetresPerCell;
-        _playerBody = new MeshInstance3D { Name = "Player", Scale = scale };
-        world.AddChild(_playerBody);
         _creatureBodies = new MeshInstance3D[_sim.Capacity];
         _creatureYaw = new float[_sim.Capacity];
         for (int i = 0; i < _sim.Capacity; i++)
@@ -337,28 +328,8 @@ public partial class ReliefSandbox : Node
         return sprite;
     }
 
-    private static Sprite3D NewShadow(Node3D parent, Texture2D texture, string name)
-    {
-        Sprite3D shadow = new()
-        {
-            Name = name,
-            Texture = texture,
-            PixelSize = 1f / 26f,
-            Shaded = false,
-            TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-            AlphaCut = SpriteBase3D.AlphaCutMode.Disabled,
-            RotationDegrees = new Vector3(-90f, 0f, 0f),
-            Modulate = new Color(1f, 1f, 1f, 0.55f),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        };
-        parent.AddChild(shadow);
-        return shadow;
-    }
-
     /// <summary>Bascule entre le relief 2D (orthographique, sans lumière) et la 3D (perspective, lumière, brume).</summary>
     private bool Is3D => _view == View.Chase3D;
-
-    private float PitchDegrees => Is3D ? _pitchDegrees : IsoPitchDegrees;
 
     private void SetView(View view)
     {
@@ -385,7 +356,7 @@ public partial class ReliefSandbox : Node
         _camera.Size = OrthoPixels / PixelsPerUnit;
         _camera.Fov = _config.ChaseFov;
         if (!Is3D)
-            _yawDegrees = 45f;
+            _chase.YawDegrees = 45f;
         _look.Apply();
         _atmosphere.Apply(env, Is3D);
     }
@@ -403,14 +374,14 @@ public partial class ReliefSandbox : Node
         float dt = Mathf.Min((float)delta, 1f / 20f);
         _animClock += dt;
         HandleInput(dt);
-        Vector2 wish = _captureDir != null ? _botFrozen ? Vector2.Zero : BotWish(dt) : ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
+        Vector2 wish = _captureDir != null ? _botFrozen ? Vector2.Zero : BotWish(dt) : _chase.ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
         if (_captureDir == null && Input.IsActionJustPressed("mobility"))
-            _sim.QueueBond();
+            _sim.Player.QueueJump();
         if (_captureDir == null && Input.IsActionJustPressed("relief_skill"))
-            _sim.QueueSkill();
+            _sim.Player.QueueSkill();
         _sim.Step(dt, wish, _crowdTarget);
         UpdateCamera(dt);
-        ReliefLowPoly.SetSeeThrough(_camera.GlobalPosition, ToWorld(_sim.PlayerPos) + Vector3.Up * 0.5f,
+        ReliefLowPoly.SetSeeThrough(_camera.GlobalPosition, ToWorld(_sim.Player.Position) + Vector3.Up * 0.5f,
             _seeThroughOff ? 0f : _config.LowPoly.SeeThroughRadius);
         UpdateBodies(dt);
         UpdateProjectiles();
@@ -428,14 +399,14 @@ public partial class ReliefSandbox : Node
         if (Is3D)
         {
             float turn = Input.GetAxis("relief_rotate_left", "relief_rotate_right");
-            _yawDegrees += turn * RotateDegreesPerSecond * dt;
+            _chase.YawDegrees += turn * RotateDegreesPerSecond * dt;
         }
         if (Input.IsActionJustPressed("relief_crowd_more"))
             _crowdTarget = Mathf.Min(_sim.Capacity, _crowdTarget + 10);
         if (Input.IsActionJustPressed("relief_crowd_less"))
             _crowdTarget = Mathf.Max(0, _crowdTarget - 10);
         if (Input.IsActionJustPressed("relief_respawn"))
-            _sim.Teleport(_config.Spawn);
+            _sim.Player.Teleport(_config.Spawn);
         HandleStyleInput();
     }
 
@@ -475,44 +446,28 @@ public partial class ReliefSandbox : Node
     {
         if (Is3D && @event is InputEventMouseMotion motion && Input.MouseMode == Input.MouseModeEnum.Captured)
         {
-            _yawDegrees -= motion.Relative.X * _config.ChaseMouseDegrees;
-            _pitchDegrees = Mathf.Clamp(_pitchDegrees + motion.Relative.Y * _config.ChaseMouseDegrees, _config.ChaseMinPitch, _config.ChaseMaxPitch);
+            _chase.Turn(motion.Relative);
         }
         if (@event.IsActionPressed("ui_cancel"))
             Input.MouseMode = Input.MouseModeEnum.Visible;
     }
 
-    /// <summary>Entrée à l'écran vers le sol : la droite et le bas de l'écran projetés sur le plan, selon la caméra.</summary>
-    private Vector2 ScreenToGround(Vector2 input)
-    {
-        float yaw = Mathf.DegToRad(_yawDegrees);
-        // La caméra regarde depuis (sin yaw, cos yaw) vers le centre : le bas de l'écran pointe vers elle.
-        Vector2 down = new(Mathf.Sin(yaw), Mathf.Cos(yaw));
-        Vector2 right = new(down.Y, -down.X);
-        Vector2 wish = right * input.X + down * input.Y;
-        return wish.LengthSquared() > 1f ? wish.Normalized() : wish;
-    }
-
-    private Vector3 PlayerAnchor() => ToWorld(_sim.PlayerPos) + new Vector3(0f, Is3D ? _config.ChaseHeight : 0.4f, 0f);
-
     private static Vector3 ToWorld(Vector3 sim) => new(sim.X, sim.Z, sim.Y);
+
+    private Vector3 OrthoAnchor() => _sim.Player.WorldPosition + new Vector3(0f, 0.4f, 0f);
 
     private void UpdateCamera(float dt)
     {
-        _cameraTarget = _cameraTarget.Lerp(PlayerAnchor(), 1f - Mathf.Exp(-9f * dt));
-        float yaw = Mathf.DegToRad(_yawDegrees);
-        float pitch = Mathf.DegToRad(PitchDegrees);
-        Vector3 back = new(Mathf.Sin(yaw) * Mathf.Cos(pitch), Mathf.Sin(pitch), Mathf.Cos(yaw) * Mathf.Cos(pitch));
-        Vector3 target = _cameraTarget;
         if (Is3D)
         {
-            // Rapprochée vite quand le relief s'interpose, éloignée en douceur quand il s'efface.
-            float clear = ClearDistance(target, back, _config.ChaseDistance);
-            _reach = clear < _reach ? Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-25f * dt)) : Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-4f * dt));
-            _camera.Position = target + back * _reach;
-            _camera.LookAt(target, Vector3.Up);
+            _chase.Follow(dt, _sim.Player.WorldPosition);
             return;
         }
+        _orthoTarget = _orthoTarget.Lerp(OrthoAnchor(), 1f - Mathf.Exp(-9f * dt));
+        float yaw = Mathf.DegToRad(_chase.YawDegrees);
+        float pitch = Mathf.DegToRad(IsoPitchDegrees);
+        Vector3 back = new(Mathf.Sin(yaw) * Mathf.Cos(pitch), Mathf.Sin(pitch), Mathf.Cos(yaw) * Mathf.Cos(pitch));
+        Vector3 target = _orthoTarget;
         _camera.Position = target + back * OrthoDistance;
         _camera.LookAt(target, Vector3.Up);
         // Orthographique : la caméra se cale sur la grille des pixels, sans quoi les tuiles scintillent.
@@ -522,26 +477,6 @@ public partial class ReliefSandbox : Node
         float snappedRight = Mathf.Round(right * PixelsPerUnit) / PixelsPerUnit;
         float snappedUp = Mathf.Round(up * PixelsPerUnit) / PixelsPerUnit;
         _camera.Position += basis.X * (snappedRight - right) + basis.Y * (snappedUp - up);
-    }
-
-    /// <summary>
-    /// Recul de la caméra libre sans traverser le relief : le premier point du rayon, du joueur vers la caméra, qui passe
-    /// sous le sol (plus une marge) arrête la caméra juste avant lui.
-    /// </summary>
-    private float ClearDistance(Vector3 target, Vector3 back, float distance)
-    {
-        const float sampleStep = 0.2f;
-        const float minimum = 0.8f;
-        int samples = Mathf.CeilToInt(distance / sampleStep);
-        for (int s = 1; s <= samples; s++)
-        {
-            float d = distance * s / samples;
-            Vector3 at = target + back * d;
-            float ground = _arena.GroundAt(at.X, at.Z);
-            if (!ReliefArena.IsVoid(ground) && ground + _config.ChaseClearance > at.Y)
-                return Mathf.Max(minimum, distance * (s - 1) / samples);
-        }
-        return distance;
     }
 
     private void UpdateProjectiles()
@@ -561,19 +496,7 @@ public partial class ReliefSandbox : Node
     private void UpdateBodies(float dt)
     {
         float turn = 1f - Mathf.Exp(-TurnRate * dt);
-        bool moving = _sim.PlayerVelocity.LengthSquared() > 0.05f;
-        _walkPhase += dt * _sim.PlayerVelocity.Length() * WalkCyclesPerCell;
-        Mesh pose = _sim.PlayerAirborneFromBond
-            ? _look.PlayerModel.FrameAt("dash", 1f - Mathf.Clamp(_sim.PlayerPos.Z - PlayerGround(), 0f, 1f))
-            : _sim.SkillTime > 0f ? _look.PlayerModel.FrameAt("dash", 0.5f)
-            : moving ? _look.PlayerModel.Frame("walk", _walkPhase) : _look.PlayerModel.Frame("idle", _animClock);
-        SetPose(_playerBody, pose);
-        _playerYaw = Mathf.LerpAngle(_playerYaw, Mathf.Atan2(_sim.PlayerFacing.X, _sim.PlayerFacing.Y), turn);
-        _playerBody.Position = ToWorld(_sim.PlayerPos);
-        _playerBody.Rotation = new Vector3(0f, _playerYaw, 0f);
-        bool blink = _sim.PlayerInvulnerable > 0f && !_sim.PlayerAirborneFromBond && (int)(_animClock * 16f) % 2 == 0;
-        _playerBody.MaterialOverride = _sim.PlayerHurtFlash > 0f ? _hurtMaterial : blink ? _flashMaterial : null;
-        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * _config.LowPoly.BodyScale, _config.PlayerRadius);
+        _playerView.Update(dt, _sim.Player, _look.PlayerModel);
 
         for (int i = 0; i < _sim.Capacity; i++)
         {
@@ -597,7 +520,7 @@ public partial class ReliefSandbox : Node
             body.Position = ToWorld(_sim.EnemyPos[i]);
             body.Rotation = new Vector3(0f, _creatureYaw[i], 0f);
             body.MaterialOverride = _sim.EnemyFlash[i] > 0f ? _flashMaterial : null;
-            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * _config.LowPoly.BodyScale);
+            ReliefShadow.Place(shadow, _arena, _sim.EnemyPos[i], 0.9f * _config.LowPoly.BodyScale);
         }
     }
 
@@ -607,29 +530,12 @@ public partial class ReliefSandbox : Node
             body.Mesh = pose;
     }
 
-    /// <summary>Ombre posée sur le sol réel sous l'entité : en l'air, elle reste en bas, et dit la hauteur du saut.</summary>
-    private void PlaceShadow(Sprite3D shadow, Vector3 at, float size, float footRadius = 0f)
-    {
-        // Le joueur tient sur le plus haut sol sous son corps (ReliefSim) : son ombre aussi, au bord d'un rebord.
-        float ground = footRadius > 0f ? _arena.HighestUnder(at.X, at.Y, footRadius) : _arena.GroundAt(at.X, at.Y);
-        if (ReliefArena.IsVoid(ground))
-        {
-            shadow.Visible = false;
-            return;
-        }
-        float height = Mathf.Max(0f, at.Z - ground);
-        shadow.Visible = true;
-        shadow.Position = new Vector3(at.X, ground + 0.012f, at.Y);
-        float scale = size * Mathf.Clamp(1f - height * 0.35f, 0.45f, 1f);
-        shadow.Scale = new Vector3(scale, scale, scale);
-    }
-
     private void UpdateFeedback(float dt)
     {
-        if (_sim.StompsThisTick > 0)
+        if (_sim.Player.StompedThisStep)
         {
             _stompRingTime = 0f;
-            _stompRing.Position = ToWorld(_sim.LastStompAt) + new Vector3(0f, 0.02f, 0f);
+            _stompRing.Position = ToWorld(_sim.Player.LastStompAt) + new Vector3(0f, 0.02f, 0f);
         }
         if (_stompRingTime < 0f)
         {
@@ -667,15 +573,15 @@ public partial class ReliefSandbox : Node
                 climbing++;
         }
         string view = Is3D
-            ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · Échap libère la souris)"
+            ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_chase.PitchDegrees:0}°) · Échap libère la souris)"
             : "RELIEF 2D  (Tab : caméra libre)";
         _hud.Text = $"Vue : {view}" + (_biomeProps == null ? "" : $" · terre : {_biome}") + "\n"
             + _look.Describe() + "\n" + _atmosphere.Describe() + "\n"
-            + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.SkillCooldown > 0f ? $"{_sim.SkillCooldown:0.0} s" : "prête")})"
+            + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.Player.SkillCooldown > 0f ? $"{_sim.Player.SkillCooldown:0.0} s" : "prête")})"
             + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
-            + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
+            + $"PV {Mathf.CeilToInt(_sim.Player.Hp)} · étage {_sim.Player.Level:0.0} · morts {_sim.Deaths}\n"
             + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
-            + $"Sauts {_sim.Bonds} · {_config.Mobility.Name} {_sim.Skills} · retombées {_sim.Stomps} · chutes dans le vide {_sim.VoidFalls}\n"
+            + $"Sauts {_sim.Player.Jumps} · {_config.Mobility.Name} {_sim.Player.Skills} · retombées {_sim.Player.Stomps} · chutes dans le vide {_sim.Player.VoidFalls}\n"
             + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s"
             + $" · {_look.PropCount} décors · {Primitives() / 1000:0} k triangles · niveaux de détail : "
             + (_viewport.MeshLodThreshold > 0f ? $"{_viewport.MeshLodThreshold:0.#} px" : "non");
@@ -684,7 +590,7 @@ public partial class ReliefSandbox : Node
     /// <summary>Le bot des captures fait le tour de l'arène et bondit quand il bute ou qu'une marche est trop haute.</summary>
     private Vector2 BotWish(float dt)
     {
-        Vector2 at = new(_sim.PlayerPos.X, _sim.PlayerPos.Y);
+        Vector2 at = new(_sim.Player.Position.X, _sim.Player.Position.Y);
         Vector2 goal = BotTour[_waypoint];
         if (at.DistanceTo(goal) < 0.7f)
         {
@@ -694,8 +600,8 @@ public partial class ReliefSandbox : Node
         _botStuckTimer += dt;
         if (_botStuckTimer > 0.35f)
         {
-            if (at.DistanceTo(_botLastPos) < 0.25f && _sim.PlayerGrounded)
-                _sim.QueueBond();
+            if (at.DistanceTo(_botLastPos) < 0.25f && _sim.Player.Grounded)
+                _sim.Player.QueueJump();
             _botLastPos = at;
             _botStuckTimer = 0f;
         }
@@ -704,11 +610,11 @@ public partial class ReliefSandbox : Node
         {
             // Caméra derrière le bot : le « bas » de l'écran est l'opposé de sa marche.
             float behind = Mathf.RadToDeg(Mathf.Atan2(-dir.X, -dir.Y));
-            _yawDegrees = Mathf.RadToDeg(Mathf.LerpAngle(Mathf.DegToRad(_yawDegrees), Mathf.DegToRad(behind), 1f - Mathf.Exp(-4f * dt)));
+            _chase.YawDegrees = Mathf.RadToDeg(Mathf.LerpAngle(Mathf.DegToRad(_chase.YawDegrees), Mathf.DegToRad(behind), 1f - Mathf.Exp(-4f * dt)));
         }
         Vector2 ahead = at + dir * 0.9f;
-        if (_sim.PlayerGrounded && _arena.GroundAt(ahead.X, ahead.Y) > _sim.PlayerPos.Z + _config.Step)
-            _sim.QueueBond();
+        if (_sim.Player.Grounded && _arena.GroundAt(ahead.X, ahead.Y) > _sim.Player.Position.Z + _config.Step)
+            _sim.Player.QueueJump();
         return dir;
     }
 
@@ -740,8 +646,8 @@ public partial class ReliefSandbox : Node
             _primitiveSum += Primitives();
         }
         _lastFrameUsec = now;
-        float airHeight = _sim.PlayerPos.Z - PlayerGround();
-        if (!_airCaptured && _captureTimer > 3f && _sim.PlayerAirborneFromBond && airHeight > 0.45f)
+        float airHeight = _sim.Player.Position.Z - _sim.Player.GroundUnder;
+        if (!_airCaptured && _captureTimer > 3f && _sim.Player.AirborneFromJump && airHeight > 0.45f)
         {
             _airCaptured = true;
             Save("air");
@@ -773,7 +679,7 @@ public partial class ReliefSandbox : Node
                 Save("2d");
                 SetView(View.Chase3D);
                 // Au pied de la rampe du plateau sud-ouest, quatre étages, que le bot monte.
-                _sim.Teleport(new Vector2(21.8f, 31.9f));
+                _sim.Player.Teleport(new Vector2(21.8f, 31.9f));
                 _waypoint = System.Array.IndexOf(BotTour, new Vector2(8f, 32f));
                 Advance();
                 break;
@@ -784,7 +690,7 @@ public partial class ReliefSandbox : Node
                 break;
             case 6 when _captureTimer >= 0.6f:
                 Save("2d_edge");
-                _sim.Teleport(new Vector2(5.5f, 4.5f));
+                _sim.Player.Teleport(new Vector2(5.5f, 4.5f));
                 _waypoint = System.Array.IndexOf(BotTour, new Vector2(20.5f, 13.5f));
                 Advance();
                 break;
@@ -801,8 +707,8 @@ public partial class ReliefSandbox : Node
                 {
                     SetView(View.Chase3D);
                     _botFrozen = true;
-                    float yaw = Mathf.DegToRad(_yawDegrees);
-                    _sim.Teleport(tall.Value - new Vector2(Mathf.Sin(yaw), Mathf.Cos(yaw)) * 1.8f);
+                    float yaw = Mathf.DegToRad(_chase.YawDegrees);
+                    _sim.Player.Teleport(tall.Value - new Vector2(Mathf.Sin(yaw), Mathf.Cos(yaw)) * 1.8f);
                 }
                 Advance();
                 break;
@@ -815,7 +721,7 @@ public partial class ReliefSandbox : Node
                 Save("occlusion_sans");
                 _seeThroughOff = false;
                 _botFrozen = false;
-                _sim.Teleport(_config.Spawn);
+                _sim.Player.Teleport(_config.Spawn);
                 _waypoint = 0;
                 ShowGalleryStyle(0);
                 Advance();
@@ -856,7 +762,7 @@ public partial class ReliefSandbox : Node
         }
     }
 
-    private void SetPitch(float degrees) => _pitchDegrees = degrees;
+    private void SetPitch(float degrees) => _chase.SetPitch(degrees);
 
     private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Toon)[] Gallery =
     {
@@ -900,7 +806,7 @@ public partial class ReliefSandbox : Node
 
     private void Finish()
     {
-        GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Bonds} stomps={_sim.Stomps} deaths={_sim.Deaths} void_falls={_sim.VoidFalls}");
+        GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Player.Jumps} stomps={_sim.Player.Stomps} deaths={_sim.Deaths} void_falls={_sim.Player.VoidFalls}");
         GetTree().Quit();
     }
 
@@ -918,8 +824,6 @@ public partial class ReliefSandbox : Node
         _look.FitOutlines(size.Y);
     }
 
-    private float PlayerGround() => _arena.HighestUnder(_sim.PlayerPos.X, _sim.PlayerPos.Y, _config.PlayerRadius);
-
     private void Advance()
     {
         _captureStep++;
@@ -931,22 +835,7 @@ public partial class ReliefSandbox : Node
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ReliefSandbox] Capture : {path} (étage {_sim.PlayerLevel:0.0}, éliminations {_sim.Kills})");
-    }
-
-    private static ImageTexture ShadowTexture()
-    {
-        const int size = 16;
-        Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float d = new Vector2(x - size / 2f + 0.5f, y - size / 2f + 0.5f).Length() / (size / 2f);
-                image.SetPixel(x, y, d < 1f ? new Color(0.02f, 0.01f, 0.05f, d < 0.7f ? 1f : 0.6f) : Colors.Transparent);
-            }
-        }
-        return ImageTexture.CreateFromImage(image);
+        GD.Print($"[ReliefSandbox] Capture : {path} (étage {_sim.Player.Level:0.0}, éliminations {_sim.Kills})");
     }
 
     private static ImageTexture BoltTexture()

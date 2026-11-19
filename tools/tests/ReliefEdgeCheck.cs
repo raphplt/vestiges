@@ -7,7 +7,7 @@ namespace Vestiges.Tests;
 
 /// <summary>
 /// Contrôle des rebords du bac à sable de la verticalité (plan 59) : sur chaque marche et chaque falaise de l'arène, le
-/// joueur seul descend en marchant puis continue tout droit, et revient buter contre la paroi avant de repartir. Il ne
+/// moteur du joueur de la run 3D (<see cref="PlayerMotor3D"/>) descend en marchant puis continue tout droit, et revient buter contre la paroi avant de repartir. Il ne
 /// doit jamais rester collé. Lancé par <c>--check-edges</c>, sans rendu ni biome.
 /// </summary>
 public static class ReliefEdgeCheck
@@ -45,7 +45,7 @@ public static class ReliefEdgeCheck
                     Vector2 top = new(x + 0.5f, y + 0.5f);
 
                     // Descendre : partir du centre du haut et marcher 0,8 s vers le bas.
-                    ReliefSim sim = new(config, arena, 1, 1);
+                    PlayerMotor3D sim = new(config, arena);
                     sim.Teleport(top);
                     Walk(sim, dir, 0.8f);
                     float down = Progress(sim, top, dir);
@@ -55,7 +55,7 @@ public static class ReliefEdgeCheck
                     Walk(sim, -dir, 0.8f);
                     // S'arrêter avant de repartir : l'inertie ne compte pas pour un collage.
                     Walk(sim, Vector2.Zero, 0.3f);
-                    Vector2 hug = new(sim.PlayerPos.X, sim.PlayerPos.Y);
+                    Vector2 hug = new(sim.Position.X, sim.Position.Y);
                     Walk(sim, dir, 0.3f);
                     float away = Progress(sim, hug, dir);
 
@@ -80,9 +80,10 @@ public static class ReliefEdgeCheck
     {
         string played = config.Character;
         // Mètres mesurés au corps : un monde agrandi (§28) a des cellules et des étages plus grands, pas des corps plus petits.
-        float m = config.LowPoly.MetresPerCell * config.WorldScale;
+        float m = config.MetresPerCellAtBody;
         float apex = config.JumpVelocity * config.JumpVelocity / (2f * config.Gravity);
         float air = 2f * config.JumpVelocity / config.Gravity;
+        GD.Print($"[ReliefEdgeCheck] Unités : une cellule fait {m:0.00} m au corps, {1f / config.CellsPerPixel:0} px du jeu 2D");
         GD.Print($"[ReliefEdgeCheck] Saut : sommet {apex * m:0.00} m ({apex / arena.LevelHeight:0.00} étage d'un étage de {arena.LevelHeight * m:0.00} m), {air:0.00} s en l'air, gravité {config.Gravity * m / 9.81f:0.0} g");
         foreach (string id in new[] { "traqueur", "vagabond", "forgeuse", "facteur", "eveillee", "scaphandriere" })
         {
@@ -100,15 +101,15 @@ public static class ReliefEdgeCheck
     private static int CheckHighGround(ReliefConfig config, ReliefArena arena)
     {
         int failures = 0;
-        ReliefSim sim = new(config, arena, 1, 1);
+        PlayerMotor3D sim = new(config, arena);
         sim.Teleport(new Vector2(24f, 10.9f));
         Vector2 tower = new(7f, 6.5f);
         foreach (Vector2 goal in new Vector2[] { new(15f, 10.9f), new(7f, 12.4f), tower })
         {
-            for (float t = 0f; t < 4f && new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y).DistanceTo(goal) > 0.2f; t += Dt)
-                sim.Step(Dt, (goal - new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y)).Normalized(), 0);
+            for (float t = 0f; t < 4f && new Vector2(sim.Position.X, sim.Position.Y).DistanceTo(goal) > 0.2f; t += Dt)
+                sim.Step(Dt, (goal - new Vector2(sim.Position.X, sim.Position.Y)).Normalized());
         }
-        float stairsLevel = sim.PlayerLevel;
+        float stairsLevel = sim.Level;
         if (stairsLevel < arena.GroundAt(tower.X, tower.Y) / arena.LevelHeight - 0.01f)
             failures++;
 
@@ -125,12 +126,12 @@ public static class ReliefEdgeCheck
         string bondReport = "";
         foreach ((Vector2 from, Vector2 dir, string name) in bonds)
         {
-            sim = new ReliefSim(config, arena, 1, 1);
+            sim = new PlayerMotor3D(config, arena);
             sim.Teleport(from);
-            float start = sim.PlayerLevel;
-            sim.QueueBond();
+            float start = sim.Level;
+            sim.QueueJump();
             Walk(sim, dir, 1.2f);
-            float gained = sim.PlayerLevel - start;
+            float gained = sim.Level - start;
             bondReport += $" {name}=+{gained:0.00}";
             if (gained > 0.01f)
                 failures++;
@@ -142,12 +143,12 @@ public static class ReliefEdgeCheck
     private static bool SameRow(ReliefArena arena, int x, int y, Vector2I side, float height) =>
         arena.CellHeight(x + side.X, y + side.Y) == height && arena.CellHeight(x - side.X, y - side.Y) == height;
 
-    private static void Walk(ReliefSim sim, Vector2 dir, float seconds)
+    private static void Walk(PlayerMotor3D sim, Vector2 dir, float seconds)
     {
         for (float t = 0f; t < seconds; t += Dt)
-            sim.Step(Dt, dir, 0);
+            sim.Step(Dt, dir);
     }
 
-    private static float Progress(ReliefSim sim, Vector2 from, Vector2 dir) =>
-        (new Vector2(sim.PlayerPos.X, sim.PlayerPos.Y) - from).Dot(dir);
+    private static float Progress(PlayerMotor3D sim, Vector2 from, Vector2 dir) =>
+        (new Vector2(sim.Position.X, sim.Position.Y) - from).Dot(dir);
 }

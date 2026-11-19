@@ -259,6 +259,17 @@ public sealed class ReliefConfig
     private const float GamePixelsPerCell = 45.254834f;
 
     /// <summary>
+    /// Le facteur unique des réglages du jeu 2D vers la 3D (plan 60 §29) : une longueur en pixels du jeu, ou une vitesse en
+    /// px/s, devient des cellules (par seconde). Il suit le rythme joué depuis le §236 : 45,25 px par cellule 2D, ramenés
+    /// par <see cref="Pace"/>, qui porte aussi l'agrandissement du monde (<see cref="ScaleWorld"/>) ; 91 px par cellule
+    /// à ×1,35.
+    /// </summary>
+    public float CellsPerPixel => Pace / GamePixelsPerCell;
+
+    /// <summary>Une cellule en mètres mesurés au corps (§253) : 3,58 m à ×1,35. Pour lire et rapporter, jamais pour simuler.</summary>
+    public float MetresPerCellAtBody => LowPoly.MetresPerCell * WorldScale;
+
+    /// <summary>
     /// Le personnage joué : sa vitesse du jeu ramenée au rythme 3D, et sa capacité de déplacement (dash commun si son
     /// entrée n'en nomme pas).
     /// </summary>
@@ -272,7 +283,7 @@ public sealed class ReliefConfig
             if (character["id"].AsString() != id)
                 continue;
             Character = id;
-            PlayerSpeed = F(character["base_stats"].AsGodotDictionary(), "speed") / GamePixelsPerCell * Pace;
+            PlayerSpeed = F(character["base_stats"].AsGodotDictionary(), "speed") * CellsPerPixel;
             Mobility = Vestiges.Infrastructure.MobilityConfig.Load(character.ContainsKey("mobility") ? character["mobility"].AsString() : null);
             return;
         }
