@@ -3112,3 +3112,13 @@ Raphaël, sur les quatre choix de fin de 60.0 ([plan 60 §28](60-vestiges-en-3d.
 - **L'essai d'échelle** agrandit le monde ×1,35 autour des corps (`--world-scale`). Les corps gardent leur taille à l'écran, et leurs vitesses, leur saut et leurs portées restent les mêmes en mètres du corps.
 - **L'échelle jouée reste celle par défaut** jusqu'au verdict de Raphaël.
 
+## 253. Le monde à ×1,35 autour des corps ; 60.0 clos — 19 novembre 2026
+
+Raphaël : « le x1.35 je suis plutot pour le laisser », puis « est ce que apres ca on va enfin sortir du sandbox et commencer à dev le jeu ? » ([plan 60 §28](60-vestiges-en-3d.md)).
+- **L'échelle de la 3D** : le monde (décors, cellules, étages) est agrandi ×1,35 autour des corps. Une cellule vaut 3,58 m, un étage 1,79 m, et le facteur 2,2 m.
+- **60.0 est clos** : caméra, style, moteur et échelle sont tranchés.
+
+**Tranché par défaut par l'agent, réversible** :
+- **Le bac à sable lance ×1,35 par défaut.** `--world-scale 1` rend l'échelle d'avant.
+- **La suite est 60.1**, dans le jeu et hors du bac à sable.
+

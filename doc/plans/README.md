@@ -3,6 +3,7 @@
 **19 novembre (suite) — la fin de 60.0 ([plan 60 §28](60-vestiges-en-3d.md), §252) :**
 - Raphaël tranche : caméra libre seule, corps en mid poly, contours sans toon. Le moteur (Forward+) et les effets l'étaient déjà.
 - L'échelle s'essaie : `--world-scale 1.35` agrandit décors, cellules et étages autour des corps, qui ne changent pas à l'écran.
+- Raphaël retient ×1,35 (§253) : **60.0 est clos**, la suite (60.1) sort du bac à sable.
 
 **19 novembre — le facteur refait de zéro ([plan 60 §27](60-vestiges-en-3d.md), §250) :**
 - Raphaël trouvait le personnage « atroce ». Aimé Ribot est resculpté en vieil homme voûté et têtu : long nez, moustache de morse, capote fendue, écharpe qui flotte, sacoche énorme, patins à grosses roues.

@@ -1031,3 +1031,9 @@ tools/relief_sandbox.sh -- --biome forest_reclaimed --world-scale 1.35
 
 Comparer sans l'option.
 
+### L'échelle retenue — 19 novembre
+
+Raphaël : « le x1.35 je suis plutot pour le laisser ». `world_scale` passe à 1,35 par défaut : une cellule vaut 3,58 m et un étage 1,79 m, mesurés au corps.
+
+**60.0 est clos.** Les quatre choix du §7 sont tranchés. 60.1 sort du bac à sable : la scène `Main3D` dans le jeu, puis le joueur, la caméra et les réglages en mètres. Son découpage est à proposer avant d'y coder.
+
