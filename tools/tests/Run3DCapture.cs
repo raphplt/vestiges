@@ -4,15 +4,20 @@ using Vestiges.Core;
 namespace Vestiges.Tests;
 
 /// <summary>
-/// Captures de la run 3D (plan 60, 60.1c), lancée comme depuis le Hub : le personnage de <c>--character</c> marche, saute,
-/// use de sa capacité, puis la caméra tourne et plonge, une image à chaque étape ; la pause en dernier. Arguments après
-/// -- : --capture &lt;dossier&gt; [--character &lt;id&gt;]. Les entrées passent par les actions du jeu, comme au clavier.
+/// Captures de la run 3D (plan 60, 60.1c et 60.2a), lancée comme depuis le Hub : le personnage de <c>--character</c>
+/// marche, saute, use de sa capacité, puis la caméra tourne et plonge, une image à chaque étape ; la pause ; enfin la
+/// horde arrivée sur le joueur, qui ne meurt pas, après <c>--horde-seconds</c>, avec les images par seconde de cette
+/// attente. Arguments après -- : --capture &lt;dossier&gt; [--character &lt;id&gt;] [--crowd N] [--horde-seconds S].
+/// Les entrées passent par les actions du jeu, comme au clavier.
 /// </summary>
 public partial class Run3DCapture : Node
 {
     private string _dir;
     private float _time;
     private int _step;
+    private float _hordeSeconds;
+    private int _frames;
+    private Vestiges.World3D.Run3D _run;
 
     public override void _Ready()
     {
@@ -23,7 +28,11 @@ public partial class Run3DCapture : Node
         gameManager.SelectedCharacterId = Argument(args, "--character", "facteur");
         gameManager.ChangeState(GameManager.GameState.Run);
         DisplayServer.WindowSetVsyncMode(DisplayServer.VSyncMode.Disabled);
-        AddChild(GD.Load<PackedScene>(GameManager.RunScenePath).Instantiate());
+        _hordeSeconds = float.Parse(Argument(args, "--horde-seconds", "20"), System.Globalization.CultureInfo.InvariantCulture);
+        _run = GD.Load<PackedScene>(GameManager.RunScenePath).Instantiate<Vestiges.World3D.Run3D>();
+        _run.Undying = true;
+        _run.CrowdTarget = int.Parse(Argument(args, "--crowd", "-1"), System.Globalization.CultureInfo.InvariantCulture);
+        AddChild(_run);
     }
 
     public override void _Process(double delta)
@@ -69,6 +78,16 @@ public partial class Run3DCapture : Node
                 break;
             case 7 when _time > 0.6f:
                 Save("pause");
+                Input.ParseInputEvent(new InputEventAction { Action = "ui_cancel", Pressed = true });
+                Next();
+                break;
+            case 8:
+                _frames++;
+                if (_time < _hordeSeconds)
+                    break;
+                Save("horde");
+                GD.Print($"[Run3DCapture] Horde : {_run.Crowd.Present} créatures, {_run.Crowd.Kills} éliminations, {_run.Crowd.ContactHits} coups au contact, "
+                    + $"{_frames / _time:0} images par seconde sur {_time:0} s");
                 GD.Print($"[Run3DCapture] Fini : souris {Input.MouseMode}");
                 GetTree().Quit();
                 Next();

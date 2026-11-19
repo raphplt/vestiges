@@ -9,14 +9,6 @@ namespace Vestiges.World3D;
 /// </summary>
 public sealed class ReliefConfig
 {
-    public sealed class Creature
-    {
-        public string Id;
-        public float Speed;
-        public float Hp;
-        public int Weight;
-    }
-
     /// <summary>Décor semé : une chance par cellule plate, et son emprise d'obstacle (cellules).</summary>
     public sealed class LowPolyScatter
     {
@@ -92,9 +84,14 @@ public sealed class ReliefConfig
     public float WeaponInterval, WeaponRange, WeaponDamage, WeaponSpeed, WeaponHitRadius, WeaponPush;
 
     public int CrowdCount;
+    // Taille de la horde dans la run : au départ, en plus chaque minute, au plus (data/world3d/crowd.json).
+    public int RunCrowdStart, RunCrowdMax;
+    public float RunCrowdPerMinute;
+    // Le joueur revenu du vide ou relevé trouve la horde écartée de ce rayon, de cette poussée.
+    public float RespawnClearRadius, RespawnClearPush;
     public float SpawnMin, SpawnMax, CrowdRadius, Separation, ClimbSpeed, ContactReach, ContactHeight, ContactDamage;
     public float PushDecay, CrowdFallDamagePerLevel, CrowdSafeDropLevels;
-    public Creature[] Creatures;
+    public Crowd3D.Species[] Creatures;
     public LowPolyStyle LowPoly;
 
     public float ChasePitch, ChaseMinPitch, ChaseMaxPitch, ChaseDistance;
@@ -104,6 +101,7 @@ public sealed class ReliefConfig
     public const string TestLandPath = "res://data/world3d/test_land.json";
     public const string CameraPath = "res://data/world3d/camera.json";
     public const string PlayerPath = "res://data/movement/player_3d.json";
+    public const string CrowdPath = "res://data/world3d/crowd.json";
 
     private static Dictionary Read(string path)
     {
@@ -122,6 +120,7 @@ public sealed class ReliefConfig
         Dictionary land = Read(TestLandPath);
         Dictionary chase = Read(CameraPath);
         Dictionary player = Read(PlayerPath);
+        Dictionary crowd = Read(CrowdPath);
         Dictionary sandbox = sandboxPath != null ? Read(sandboxPath) : null;
         Array spawn = land["spawn"].AsGodotArray();
 
@@ -157,8 +156,9 @@ public sealed class ReliefConfig
             ChaseFov = F(chase, "fov"),
             ChaseHeight = F(chase, "height"),
             ChaseMouseDegrees = F(chase, "mouse_degrees_per_pixel"),
-            Creatures = System.Array.Empty<Creature>(),
+            Creatures = System.Array.Empty<Crowd3D.Species>(),
         };
+        config.LoadCrowd(crowd);
         if (sandbox != null)
             config.LoadSandbox(sandbox);
         // Sommet h atteint à mi-durée T : v = 4h / T, g = 8h / T².
@@ -170,6 +170,27 @@ public sealed class ReliefConfig
         config.LowPoly = LoadLowPoly(render, land);
         config.Atmosphere = LoadAtmosphere(render["atmosphere"].AsGodotDictionary());
         return config;
+    }
+
+    /// <summary>Les règles de la horde, communes au jeu et au bac à sable, et sa taille dans la run.</summary>
+    private void LoadCrowd(Dictionary crowd)
+    {
+        Dictionary run = crowd["run"].AsGodotDictionary();
+        SpawnMin = F(crowd, "spawn_min");
+        SpawnMax = F(crowd, "spawn_max");
+        CrowdRadius = F(crowd, "radius");
+        Separation = F(crowd, "separation");
+        ClimbSpeed = F(crowd, "climb_speed");
+        ContactReach = F(crowd, "contact_reach");
+        ContactHeight = F(crowd, "contact_height");
+        PushDecay = F(crowd, "push_decay");
+        CrowdFallDamagePerLevel = F(crowd, "fall_damage_per_level");
+        CrowdSafeDropLevels = F(crowd, "safe_drop_levels");
+        RespawnClearRadius = F(crowd, "respawn_clear_radius");
+        RespawnClearPush = F(crowd, "respawn_clear_push");
+        RunCrowdStart = (int)F(run, "start");
+        RunCrowdPerMinute = F(run, "per_minute");
+        RunCrowdMax = (int)F(run, "max");
     }
 
     /// <summary>La horde d'essai et l'arme du bac à sable.</summary>
@@ -185,27 +206,18 @@ public sealed class ReliefConfig
         WeaponHitRadius = F(weapon, "hit_radius");
         WeaponPush = F(weapon, "push");
         CrowdCount = (int)F(crowd, "count");
-        SpawnMin = F(crowd, "spawn_min");
-        SpawnMax = F(crowd, "spawn_max");
-        CrowdRadius = F(crowd, "radius");
-        Separation = F(crowd, "separation");
-        ClimbSpeed = F(crowd, "climb_speed");
-        ContactReach = F(crowd, "contact_reach");
-        ContactHeight = F(crowd, "contact_height");
         ContactDamage = F(crowd, "contact_damage");
-        PushDecay = F(crowd, "push_decay");
-        CrowdFallDamagePerLevel = F(crowd, "fall_damage_per_level");
-        CrowdSafeDropLevels = F(crowd, "safe_drop_levels");
-        Creatures = new Creature[creatures.Count];
+        Creatures = new Crowd3D.Species[creatures.Count];
         for (int i = 0; i < creatures.Count; i++)
         {
             Dictionary creature = creatures[i].AsGodotDictionary();
-            Creatures[i] = new Creature
+            Creatures[i] = new Crowd3D.Species
             {
                 Id = creature["id"].AsString(),
                 Speed = F(creature, "speed"),
                 Hp = F(creature, "hp"),
-                Weight = (int)F(creature, "weight"),
+                ContactDamage = ContactDamage,
+                Weight = F(creature, "weight"),
             };
         }
     }
@@ -235,7 +247,7 @@ public sealed class ReliefConfig
         LowPoly.BodyScale *= body;
         Pace *= body;
         SetCharacter(Character);
-        foreach (Creature creature in Creatures)
+        foreach (Crowd3D.Species creature in Creatures)
             creature.Speed *= body;
         ClimbSpeed *= body;
         JumpVelocity *= body;

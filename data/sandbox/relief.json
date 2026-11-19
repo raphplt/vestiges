@@ -1,5 +1,5 @@
 {
-	"_comment": "Bac à sable de la verticalité (plans 59 et 60) : ce qui lui reste propre, la horde d'essai et son arme. Le rendu, la terre d'essai, la caméra et le joueur sont ceux de la run 3D (data/world3d/, data/movement/player_3d.json, plan 60 §29). Toutes les vitesses en cellules par seconde, avant world_scale. weapon : un tir automatique vers la créature la plus proche. crowd : count créatures au départ (+/- en jeu), apparues entre spawn_min et spawn_max du joueur ; elles grimpent les falaises à climb_speed, touchent à contact_reach et contact_height près, tombent quand on les pousse. creatures : les corps tirés au poids.",
+	"_comment": "Bac à sable de la verticalité (plans 59 et 60) : ce qui lui reste propre, la horde d'essai et son arme. Le rendu, la terre d'essai, la caméra, le joueur et les règles de la horde sont ceux de la run 3D (data/world3d/, data/movement/player_3d.json, plan 60 §29 et §30). Toutes les vitesses en cellules par seconde, avant world_scale. weapon : un tir automatique vers la créature la plus proche. crowd : count créatures au départ (+/- en jeu), qui frappent de contact_damage au contact. creatures : les corps tirés au poids, plus vifs que ceux des fiches de data/enemies.",
 	"character": "facteur",
 	"weapon": {
 		"interval": 0.32,
@@ -11,17 +11,7 @@
 	},
 	"crowd": {
 		"count": 35,
-		"spawn_min": 9.0,
-		"spawn_max": 14.0,
-		"radius": 0.3,
-		"separation": 2.2,
-		"climb_speed": 0.4,
-		"contact_reach": 0.55,
-		"contact_height": 0.32,
-		"contact_damage": 8,
-		"push_decay": 6.0,
-		"fall_damage_per_level": 18,
-		"safe_drop_levels": 0.9
+		"contact_damage": 8
 	},
 	"creatures": [
 		{

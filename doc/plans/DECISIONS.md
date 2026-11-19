@@ -3133,3 +3133,13 @@ Raphaël, sur « une scène de run en 3D à côté de la run 2D, qui reste jouab
 - **L'unité du monde 3D est la cellule**, celle du bac à sable ; le mètre au corps sert à lire (une cellule fait 3,58 m).
 - **Les réglages en pixels passent en cellules par un seul facteur**, 91 px par cellule, au portage de leur système.
 - **Forward+ pour tout le projet.**
+
+## 255. La horde 3D : une foule sans nœuds, les fiches du jeu — 19 novembre 2026
+
+Raphaël, sur le découpage de 60.2 : « oui puis avance dessus en autonomie » ([plan 60 §30](60-vestiges-en-3d.md)).
+
+**Tranché par défaut par l'agent, réversible** :
+- **La horde 3D part de la foule du bac à sable** (`Crowd3D`), pas de `Enemy.cs` : ni nœud ni rappel par créature, donc pas de `TickRoster`.
+- **Les fiches de `data/enemies` font foi**, converties par `CellsPerPixel` : les vitesses gardent leurs rapports de la 2D, plus lentes que la horde d'essai du bac à sable.
+- **La horde de la run** : 20 créatures au départ, 6 de plus par minute, 120 au plus (`data/world3d/crowd.json`). Les créatures viennent de la terre, avec `spawn_from_minute`.
+- **Statuts avec les armes (60.3), élites et affixes en 60.2d, gardiens avec leurs repaires (60.5).**

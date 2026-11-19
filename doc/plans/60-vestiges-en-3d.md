@@ -1104,3 +1104,47 @@ Le bac à sable compte en cellules : une unité Godot vaut une cellule, et un é
 - **Non vérifié** :
   - la manette, faute d'en avoir une branchée ;
   - Raphaël n'a pas encore joué.
+
+## 30. 60.2, les créatures — découpage (19 novembre)
+
+La horde du bac à sable (`ReliefSim`) est déjà une foule sans nœuds : des tableaux de taille fixe, une grille de voisinage chaînée, l'escalade lente, la chute quand on la pousse, le contact à hauteur égale. La créature 2D (`Enemy.cs`, 2 100 lignes, un `Node2D` par créature) ne se porte pas telle quelle : tout y est en `Vector2` et en pixels, et elle dépend de `Player` 2D. **La horde 3D part de la foule du bac à sable**, et ce qui fait chaque créature (fiche, capacités, variantes) se rebranche dessus, système par système.
+
+Défauts de l'agent, réversibles :
+- **Pas de nœud ni de rappel par créature.** La foule se déroule en une boucle, appelée par `Run3D`. Le `TickRoster` du plan 29 n'a donc rien à faire ici. Les corps sont des `MeshInstance3D` sans script, posés une fois par image.
+- **Les fiches de `data/enemies` font foi** : vitesse, PV, dégâts au contact et poids d'apparition, convertis par `CellsPerPixel` (§29). Les vitesses gardent ainsi leurs rapports de la 2D : un rampant va à 0,22 fois la vitesse du facteur, une ombre à 0,5. La horde d'essai du bac à sable, plus vive, garde ses réglages propres.
+- **Les créatures viennent de la terre** : la liste `exploration_enemy_pool` de la terre d'essai, avec `spawn_from_minute` et `spawn_weight` comme en 2D.
+- **Statuts et variantes après le combat.** Brûlure, saignement, poison, ralentissement et gel viennent des armes ; ils arrivent avec elles en 60.3. Les élites et affixes suivent en 60.2d. Les gardiens vont avec leurs repaires en 60.5.
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **60.2a La horde arrive** | `Crowd3D` : la foule tirée de `ReliefSim`, partagée par le jeu et le bac à sable. Les sortes de créatures lues dans les fiches et la terre ; seulement les créatures de mêlée, les tireuses arrivent en 60.2b. Leurs modèles sont pris dans la bibliothèque `build/models`, avec un repli. `CrowdBodies3D` : corps, ombres, poses de marche, d'attaque et de mort, flash. Dans la run : la horde grossit avec le temps (`data/world3d/crowd.json`), touche au contact, meurt sous la retombée et dans le vide | Bac à sable inchangé (même horde, mêmes éliminations au bot) ; capture de la run avec sa horde ; banc de 120 créatures dans la run | Moyen |
+| **60.2b Les tireuses et la poursuite** | Perception et laisse (`EnemyTracking`), errance hors de vue. Les créatures à distance gardent leur distance et tirent : projectiles ennemis en pool, qui ignorent les étages (§3). L'attaque au contact annoncée par sa pose | Capture ; régression de la poursuite en 3D (scène de banc headless) | Moyen |
+| **60.2c Les capacités** | Bond, charge, enfouissement, cri, crachat en cloche, présage, tir visé, rebranchés sur la foule (`IEnemyAbility` sans `Player` 2D), avec leurs annonces au sol en 3D | Suite des capacités portée en 3D, scénario par scénario | Élevé |
+| **60.2d Élites et affixes** | Variantes de `_variants.json` (élite, champion, aberration), affixes, leurs marques visibles | Capture ; régression des variantes | Moyen |
+
+À la fin de 60.2, la horde de la terre d'essai poursuit le joueur, grimpe, tombe, tire et use de ses capacités. On ne la tue encore que par la retombée et le vide : les armes arrivent en 60.3.
+
+### 60.2a livré — 19 novembre
+
+- **`Crowd3D`** (`scripts/World3D/`) : la foule tirée de `ReliefSim`, sans nœud ni allocation par pas. Apparition autour du joueur, poursuite, séparation par grille chaînée, escalade lente, vide longé, chute quand on la pousse, coup au contact à hauteur égale, retombée qui frappe. Nouveau : une créature ne naît pas à plus de quatre étages du joueur, et chaque sorte n'apparaît qu'à partir de sa minute.
+- **`CrowdSpecies`** : les sortes de créatures de la terre d'essai (`exploration_enemy_pool` de `forest_reclaimed`). Les fiches sont converties par `CellsPerPixel` et pèsent au tirage comme en 2D. Seules les créatures de mêlée et de rang normal dont le modèle est exporté viennent : charognard, ombre, rodeur (dès 1,5 min) et tréant (dès 4 min). Le présage, qui tire, attend 60.2b.
+- **`CrowdBodies3D`** : un corps sans script et une ombre par place. Poses de marche au pas de la course, d'attaque après un coup, de mort ; flash au coup. Les modèles viennent de `build/models` ; le mid poly est pris créature par créature s'il existe.
+- **Règles de la horde** dans `data/world3d/crowd.json`, communes au jeu et au bac à sable. `data/sandbox/relief.json` ne garde que la taille de sa horde, son coup au contact et ses créatures d'essai.
+- **Dans la run** : la horde grossit de 20 à 120 créatures, 6 de plus par minute. Le compte des éliminations s'affiche sous les PV. Une chute dans le vide écarte la horde du point où l'on revient.
+- **Bac à sable** : même horde, branchée sur `Crowd3D` et `CrowdBodies3D`. Le tirage des sortes a changé : la suite exacte des créatures n'est pas celle d'avant.
+- **Captures** : `Run3DCapture` attend la horde, 20 s par défaut (`--horde-seconds`), sur un joueur qui ne meurt pas. `--crowd N` impose la taille de la horde.
+- **Vérifié** :
+  - build sans avertissement ; smoke test vert ;
+  - `--check-edges` : 0 rebord collé sur 86, rampes jusqu'à 5 étages ;
+  - capture de la run (vagabond) : la horde arrive en 20 s, 22 créatures. Au facteur : 35 coups au contact en 25 s ;
+  - banc dense dans la run : **120 créatures à 393 images par seconde** sur 40 s, rendu 3840×2160, charge 1,7 sur 16 cœurs. La horde grimpe la falaise, les sortes se mêlent ;
+  - bac à sable au bot : 33 éliminations en 43 s, 458 images par seconde. Faute de relevé antérieur, l'avant/après n'est pas chiffré.
+- **Relecture** (`godot-reviewer`) : rien de bloquant. Corrigé :
+  - l'apparition et la grille de voisinage ne se font qu'une fois par image, plus à chaque pas ;
+  - une créature poussée en l'air se blesse en tombant ;
+  - le recul de la horde autour du joueur revenu du vide passe dans `crowd.json`, et vaut aussi pour le joueur qui ne meurt pas des captures.
+  Après coup : 120 créatures à 394 images par seconde. Laissé : une créature qui grimpe ne frappe pas, puisqu'elle n'est pas au niveau du joueur.
+- **Points ouverts** :
+  - sans `build/models` (non versionné), la run part sans horde, avec un avertissement par créature ;
+  - la horde se serre en disque plein autour du joueur immobile, faute d'arme pour l'éclaircir (60.3) ;
+  - pas de passage à l'échelle des PV et des dégâts avec le temps (`spawn_flow.json`) : il viendra avec le combat.

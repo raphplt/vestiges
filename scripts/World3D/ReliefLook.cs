@@ -49,18 +49,18 @@ public sealed class ReliefLook
 
         string character = $"characters/{playerModel ?? config.Character}";
         MidAvailable = ReliefLowPoly.Exists($"mid/{character}");
-        foreach (ReliefConfig.Creature creature in config.Creatures)
-            MidAvailable &= ReliefLowPoly.Exists($"mid/creatures/{creature.Id}");
         Player[0] = ReliefLowPoly.LoadModel(character);
         Player[1] = MidAvailable ? ReliefLowPoly.LoadModel($"mid/{character}") : Player[0];
-        for (int detail = 0; detail < 2; detail++)
+        // Une créature sans mid poly (non versionné, exporté à la demande) garde son low poly en mid.
+        Creatures[0] = new ReliefLowPoly.Model[config.Creatures.Length];
+        Creatures[1] = new ReliefLowPoly.Model[config.Creatures.Length];
+        for (int t = 0; t < config.Creatures.Length; t++)
         {
-            Creatures[detail] = new ReliefLowPoly.Model[config.Creatures.Length];
-            for (int t = 0; t < config.Creatures.Length; t++)
-            {
-                string path = $"creatures/{config.Creatures[t].Id}";
-                Creatures[detail][t] = detail == 1 && MidAvailable ? ReliefLowPoly.LoadModel($"mid/{path}") : ReliefLowPoly.LoadModel(path);
-            }
+            Crowd3D.Species creature = config.Creatures[t];
+            // Le modèle porte le nom du dossier de sprites, pas toujours l'id de la fiche (fading_spitter : cracheur).
+            string path = $"creatures/{(creature.ModelRoot != null ? creature.ModelRoot.GetFile() : creature.Id)}";
+            Creatures[0][t] = creature.ModelRoot != null ? ReliefLowPoly.LoadModelAt(creature.ModelRoot) : ReliefLowPoly.LoadModel(path);
+            Creatures[1][t] = ReliefLowPoly.Exists($"mid/{path}") ? ReliefLowPoly.LoadModel($"mid/{path}") : Creatures[0][t];
         }
         if (!MidAvailable)
             GD.PushWarning("[ReliefLook] Mid poly absent : python3 tools/export_lowpoly.py --detail mid");
@@ -152,7 +152,8 @@ public sealed class ReliefLook
 
     public ReliefLowPoly.Model PlayerModel => Player[Detail];
 
-    public ReliefLowPoly.Model CreatureModel(int type) => Creatures[Detail][type];
+    /// <summary>Les modèles des créatures, par sorte, au niveau de détail courant.</summary>
+    public ReliefLowPoly.Model[] CreatureModels => Creatures[Detail];
 
     /// <summary>Règle l'épaisseur des contours sur la hauteur de l'image rendue.</summary>
     public void FitOutlines(int renderHeight) =>

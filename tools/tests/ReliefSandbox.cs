@@ -29,8 +29,6 @@ public partial class ReliefSandbox : Node
     private const string ConfigPath = "res://data/sandbox/relief.json";
     // Hauteur de l'image de la vue relief 2D, pour la taille de sa caméra orthographique : les tuiles 64 × 32 du jeu.
     private const float OrthoPixels = 540f;
-    // Cadence de marche : la marche du modèle se joue au rythme des pas sur le sol, pour que les pieds ne glissent pas.
-    private const float TurnRate = 14f;
     // Un losange de 64 px couvre la diagonale d'une cellule : 64 / √2 px par unité en orthographique.
     private const float PixelsPerUnit = 45.254834f;
     private const float IsoPitchDegrees = 30f;
@@ -47,7 +45,6 @@ public partial class ReliefSandbox : Node
     private DirectionalLight3D _sun;
     private WorldEnvironment _environment;
     private Label _hud;
-    private Sprite3D[] _enemyShadows;
     private Sprite3D[] _projectiles;
     private Sprite3D _stompRing;
     private float _stompRingTime = -1f;
@@ -56,8 +53,7 @@ public partial class ReliefSandbox : Node
     private ReliefAtmosphere _atmosphere;
     private PlayerBody3D _playerView;
     private RunCamera3D _chase;
-    private MeshInstance3D[] _creatureBodies;
-    private float[] _creatureYaw;
+    private CrowdBodies3D _crowdBodies;
     private StandardMaterial3D _flashMaterial;
     private StandardMaterial3D _hurtMaterial;
 
@@ -79,7 +75,6 @@ public partial class ReliefSandbox : Node
     private bool _ready;
     // Couches hautes des décors (feuillages) : leur pied et leur décalage vers la caméra, refait quand elle bouge.
     private float _hudTimer;
-    private float _animClock;
 
     // Captures.
     private string _captureDir;
@@ -270,17 +265,7 @@ public partial class ReliefSandbox : Node
 
         _chase = new RunCamera3D(_camera, _config, _arena);
         _playerView = new PlayerBody3D(world, _config, _arena, _flashMaterial, _hurtMaterial);
-        _enemyShadows = new Sprite3D[_sim.Capacity];
-        for (int i = 0; i < _sim.Capacity; i++)
-            _enemyShadows[i] = ReliefShadow.Create(world, $"CreatureShadow{i}");
-        Vector3 scale = Vector3.One * _config.LowPoly.BodyScale / _config.LowPoly.MetresPerCell;
-        _creatureBodies = new MeshInstance3D[_sim.Capacity];
-        _creatureYaw = new float[_sim.Capacity];
-        for (int i = 0; i < _sim.Capacity; i++)
-        {
-            _creatureBodies[i] = new MeshInstance3D { Name = $"Creature{i}", Scale = scale, Visible = false };
-            world.AddChild(_creatureBodies[i]);
-        }
+        _crowdBodies = new CrowdBodies3D(world, _config, _arena, _sim.Crowd.Capacity, _flashMaterial);
         Texture2D bolt = BoltTexture();
         _projectiles = new Sprite3D[_sim.ProjectilePos.Length];
         for (int p = 0; p < _projectiles.Length; p++)
@@ -372,7 +357,6 @@ public partial class ReliefSandbox : Node
         if (!_ready)
             return;
         float dt = Mathf.Min((float)delta, 1f / 20f);
-        _animClock += dt;
         HandleInput(dt);
         Vector2 wish = _captureDir != null ? _botFrozen ? Vector2.Zero : BotWish(dt) : _chase.ScreenToGround(Input.GetVector("move_left", "move_right", "move_up", "move_down"));
         if (_captureDir == null && Input.IsActionJustPressed("mobility"))
@@ -402,7 +386,7 @@ public partial class ReliefSandbox : Node
             _chase.YawDegrees += turn * RotateDegreesPerSecond * dt;
         }
         if (Input.IsActionJustPressed("relief_crowd_more"))
-            _crowdTarget = Mathf.Min(_sim.Capacity, _crowdTarget + 10);
+            _crowdTarget = Mathf.Min(_sim.Crowd.Capacity, _crowdTarget + 10);
         if (Input.IsActionJustPressed("relief_crowd_less"))
             _crowdTarget = Mathf.Max(0, _crowdTarget - 10);
         if (Input.IsActionJustPressed("relief_respawn"))
@@ -495,39 +479,9 @@ public partial class ReliefSandbox : Node
     /// </summary>
     private void UpdateBodies(float dt)
     {
-        float turn = 1f - Mathf.Exp(-TurnRate * dt);
         _playerView.Update(dt, _sim.Player, _look.PlayerModel);
 
-        for (int i = 0; i < _sim.Capacity; i++)
-        {
-            MeshInstance3D body = _creatureBodies[i];
-            Sprite3D shadow = _enemyShadows[i];
-            ReliefSim.EnemyState state = _sim.State[i];
-            if (state == ReliefSim.EnemyState.Inactive || _sim.EnemyPos[i].Z < -2.5f)
-            {
-                body.Visible = false;
-                shadow.Visible = false;
-                continue;
-            }
-            ReliefLowPoly.Model model = _look.CreatureModel(_sim.EnemyType[i]);
-            SetPose(body, state == ReliefSim.EnemyState.Dying
-                ? model.FrameAt("death", 1f - _sim.EnemyTimer[i] / ReliefSim.DyingDuration)
-                : model.Frame("walk", _animClock + i * 0.13f));
-            Vector2 facing = _sim.EnemyFacing[i];
-            if (state != ReliefSim.EnemyState.Dying && facing.LengthSquared() > 0.0001f)
-                _creatureYaw[i] = Mathf.LerpAngle(_creatureYaw[i], Mathf.Atan2(facing.X, facing.Y), turn);
-            body.Visible = true;
-            body.Position = ToWorld(_sim.EnemyPos[i]);
-            body.Rotation = new Vector3(0f, _creatureYaw[i], 0f);
-            body.MaterialOverride = _sim.EnemyFlash[i] > 0f ? _flashMaterial : null;
-            ReliefShadow.Place(shadow, _arena, _sim.EnemyPos[i], 0.9f * _config.LowPoly.BodyScale);
-        }
-    }
-
-    private static void SetPose(MeshInstance3D body, Mesh pose)
-    {
-        if (body.Mesh != pose)
-            body.Mesh = pose;
+        _crowdBodies.Update(dt, _sim.Crowd, _look.CreatureModels);
     }
 
     private void UpdateFeedback(float dt)
@@ -564,12 +518,12 @@ public partial class ReliefSandbox : Node
         _hudTimer = 0.25f;
         int alive = 0;
         int climbing = 0;
-        for (int i = 0; i < _sim.Capacity; i++)
+        for (int i = 0; i < _sim.Crowd.Capacity; i++)
         {
-            if (_sim.State[i] != ReliefSim.EnemyState.Alive)
+            if (_sim.Crowd.State[i] != Crowd3D.Life.Alive)
                 continue;
             alive++;
-            if (_sim.EnemyClimbing[i])
+            if (_sim.Crowd.Climbing[i])
                 climbing++;
         }
         string view = Is3D
@@ -580,7 +534,7 @@ public partial class ReliefSandbox : Node
             + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.Player.SkillCooldown > 0f ? $"{_sim.Player.SkillCooldown:0.0} s" : "prête")})"
             + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.Player.Hp)} · étage {_sim.Player.Level:0.0} · morts {_sim.Deaths}\n"
-            + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
+            + $"Éliminations {_sim.Crowd.Kills} (retombée {_sim.Crowd.KillsByStomp}, chute {_sim.Crowd.KillsByFall}, vide {_sim.Crowd.KillsByVoid})\n"
             + $"Sauts {_sim.Player.Jumps} · {_config.Mobility.Name} {_sim.Player.Skills} · retombées {_sim.Player.Stomps} · chutes dans le vide {_sim.Player.VoidFalls}\n"
             + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s"
             + $" · {_look.PropCount} décors · {Primitives() / 1000:0} k triangles · niveaux de détail : "
@@ -806,7 +760,7 @@ public partial class ReliefSandbox : Node
 
     private void Finish()
     {
-        GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Kills} stomp={_sim.KillsByStomp} fall={_sim.KillsByFall} void={_sim.KillsByVoid} bonds={_sim.Player.Jumps} stomps={_sim.Player.Stomps} deaths={_sim.Deaths} void_falls={_sim.Player.VoidFalls}");
+        GD.Print($"[ReliefSandbox] RESULT seconds={_sim.Elapsed:0.0} kills={_sim.Crowd.Kills} stomp={_sim.Crowd.KillsByStomp} fall={_sim.Crowd.KillsByFall} void={_sim.Crowd.KillsByVoid} bonds={_sim.Player.Jumps} stomps={_sim.Player.Stomps} deaths={_sim.Deaths} void_falls={_sim.Player.VoidFalls}");
         GetTree().Quit();
     }
 
@@ -835,7 +789,7 @@ public partial class ReliefSandbox : Node
         DirAccess.MakeDirRecursiveAbsolute(_captureDir);
         string path = $"{_captureDir}/{name}.png";
         GetViewport().GetTexture().GetImage().SavePng(path);
-        GD.Print($"[ReliefSandbox] Capture : {path} (étage {_sim.Player.Level:0.0}, éliminations {_sim.Kills})");
+        GD.Print($"[ReliefSandbox] Capture : {path} (étage {_sim.Player.Level:0.0}, éliminations {_sim.Crowd.Kills})");
     }
 
     private static ImageTexture BoltTexture()

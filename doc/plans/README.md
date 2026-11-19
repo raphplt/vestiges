@@ -4,7 +4,8 @@
 - Pas de run 2D à côté de la 3D : elle reste dans le dépôt, gelée. « Partir » lance `scenes/Main3D.tscn`.
 - La pile 3D du bac à sable passe dans `scripts/World3D/`. Le jeu et le bac à sable partagent le joueur, son corps et la caméra libre.
 - La run 3D : la terre d'essai et ses décors de forêt, le personnage choisi au Hub, le saut (Espace, A), la capacité (Maj, X), la mort qui ramène au Hub. Forward+ pour tout le jeu.
-- Suite : 60.2, les créatures.
+- 60.2a (§30, §255) : la horde de la terre arrive dans la run 3D, à partir des fiches de `data/enemies`. Elle grossit de 20 à 120 créatures, grimpe, tombe et frappe au contact. Banc : 120 créatures à 393 images par seconde.
+- Suite : 60.2b, les tireuses et la poursuite.
 
 **19 novembre (suite) — la fin de 60.0 ([plan 60 §28](60-vestiges-en-3d.md), §252) :**
 - Raphaël tranche : caméra libre seule, corps en mid poly, contours sans toon. Le moteur (Forward+) et les effets l'étaient déjà.

@@ -1,0 +1,20 @@
+{
+	"_comment": "La horde de la run 3D (plan 60, 60.2a, §30), commune au jeu et au bac à sable, en cellules et en secondes, avant world_scale (render.json). Les créatures apparaissent entre spawn_min et spawn_max du joueur, jamais dans le vide ni à plus de quatre étages de lui. radius : emprise au sol ; separation : force qui écarte les voisines au même niveau ; climb_speed : la montée d'une falaise, sur place ; contact_reach et contact_height : la portée du coup au contact, à plat et en hauteur (le contact ne touche qu'à hauteur égale) ; push_decay : l'amortissement d'une poussée ; une créature poussée d'un gradin se blesse au-delà de safe_drop_levels étages, de fall_damage_per_level par étage. respawn_clear_radius et respawn_clear_push : la horde écartée du joueur revenu du vide ou relevé. run : la taille de la horde dans la run, start au départ, per_minute de plus chaque minute, max au plus (aussi la place réservée). Vitesse, PV, coup au contact et poids d'apparition viennent des fiches de data/enemies, convertis par CellsPerPixel (§29).",
+	"spawn_min": 9.0,
+	"spawn_max": 14.0,
+	"radius": 0.3,
+	"separation": 2.2,
+	"climb_speed": 0.4,
+	"contact_reach": 0.55,
+	"contact_height": 0.32,
+	"push_decay": 6.0,
+	"fall_damage_per_level": 18,
+	"safe_drop_levels": 0.9,
+	"respawn_clear_radius": 4.0,
+	"respawn_clear_push": 6.0,
+	"run": {
+		"start": 20,
+		"per_minute": 6,
+		"max": 120
+	}
+}
