@@ -38,7 +38,7 @@ public sealed class ReliefSim
     {
         _config = config;
         Player = new PlayerMotor3D(config, arena);
-        Crowd = new Crowd3D(config, arena, config.Creatures, capacity, seed);
+        Crowd = new Crowd3D(config, arena, config.Creatures, Crowd3D.Tracking.Always, capacity, seed);
     }
 
     public void Step(float dt, Vector2 wish, int crowdTarget)

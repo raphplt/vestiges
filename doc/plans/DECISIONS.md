@@ -3143,3 +3143,13 @@ Raphaël, sur le découpage de 60.2 : « oui puis avance dessus en autonomie » 
 - **Les fiches de `data/enemies` font foi**, converties par `CellsPerPixel` : les vitesses gardent leurs rapports de la 2D, plus lentes que la horde d'essai du bac à sable.
 - **La horde de la run** : 20 créatures au départ, 6 de plus par minute, 120 au plus (`data/world3d/crowd.json`). Les créatures viennent de la terre, avec `spawn_from_minute`.
 - **Statuts avec les armes (60.3), élites et affixes en 60.2d, gardiens avec leurs repaires (60.5).**
+
+## 256. Les tireuses de la horde 3D — 19 novembre 2026
+
+Suite de 60.2 en autonomie (« Oui, 60.2b », [plan 60 §30](60-vestiges-en-3d.md)).
+
+**Tranché par défaut par l'agent, réversible** :
+- **Le pistage est celui du jeu 2D** (`data/scaling/enemy_tracking.json`), converti en cellules : repérage à 4,9 cellules, perte de trace au-delà de 8,8 cellules pendant 4 s, puis errance au tiers de la vitesse. Une créature perdue au-delà de 13,3 cellules (18 avant l'échelle du monde) se retire, et sa place revient au flux.
+- **Une tireuse dont une capacité remplace le tir** (présage, tir visé) tire un projectile ordinaire en attendant 60.2c.
+- **Les tirs des créatures n'éclairent pas** : une lumière par tir surexposait la scène dès qu'ils se comptaient par dizaines. Une boule émissive suffit.
+- **Une seule invulnérabilité après un coup**, au contact ou par un tir, comme en 3D jusqu'ici. Au cœur de la horde, le joueur est presque toujours invulnérable, et les tirs passent. À revoir au combat (60.3) : en 2D, chaque créature a son propre temps entre deux coups.

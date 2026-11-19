@@ -29,6 +29,8 @@ public partial class Run3D : Node
     public int CrowdTarget = -1;
     /// <summary>La mort rend ses PV au joueur au lieu de ramener au Hub (captures, banc dense).</summary>
     public bool Undying;
+    /// <summary>Temps de run au départ, en secondes (captures : voir les sortes qui viennent plus tard).</summary>
+    public float StartSeconds;
 
     private ReliefConfig _config;
     private ReliefArena _arena;
@@ -45,8 +47,8 @@ public partial class Run3D : Node
     private bool _wasPaused = true;
     private bool _leaving;
     private float _statusTimer;
-    private readonly Vector3[] _noProjectiles = System.Array.Empty<Vector3>();
-    private readonly bool[] _noActive = System.Array.Empty<bool>();
+    // Le délégué de conversion, créé une fois : une méthode passée telle quelle en alloue un à chaque image.
+    private readonly System.Func<Vector3, Vector3> _toWorld = ToWorld;
 
     public override void _Ready()
     {
@@ -63,7 +65,9 @@ public partial class Run3D : Node
         _motor = new PlayerMotor3D(_config, _arena);
         // Les fiches se convertissent avec le rythme déjà ramené à l'échelle du monde.
         _config.Creatures = CrowdSpecies.FromLand(_config.Land, _config.CellsPerPixel, LibraryRoot);
-        _crowd = new Crowd3D(_config, _arena, _config.Creatures, Mathf.Max(_config.RunCrowdMax, CrowdTarget), (ulong)GD.Randi());
+        _crowd = new Crowd3D(_config, _arena, _config.Creatures, CrowdSpecies.TrackingOf(_config.CellsPerPixel),
+            Mathf.Max(_config.RunCrowdMax, CrowdTarget), (ulong)GD.Randi());
+        _elapsed = StartSeconds;
         BuildWorld(character);
         BuildStatus();
         GD.Print($"[Run3D] Terre d'essai {_arena.Width}×{_arena.Depth}, terre {_config.Land}, {_look.PropCount} décors, {character}, "
@@ -134,6 +138,7 @@ public partial class Run3D : Node
         world.AddChild(camera);
 
         _look = new ReliefLook(_config, _arena, world, camera, _viewport, new List<Vector2>(), props, model);
+        // Les tirs des créatures n'éclairent pas : une lumière par tir surexpose la scène dès qu'ils sont nombreux.
         _atmosphere = new ReliefAtmosphere(_config.Atmosphere, world, 0, _look.Glows);
         _look.Apply();
         _atmosphere.Apply(environment.Environment, true);
@@ -210,7 +215,7 @@ public partial class Run3D : Node
         ReliefLowPoly.SetSeeThrough(_camera.Camera.GlobalPosition, _motor.WorldPosition + Vector3.Up * 0.5f, _config.LowPoly.SeeThroughRadius);
         _body.Update(dt, _motor, _look.PlayerModel);
         _crowdBodies.Update(dt, _crowd, _look.CreatureModels);
-        _atmosphere.Update(_noProjectiles, _noActive, ToWorld);
+        _atmosphere.Update(_crowd.ShotPos, _crowd.ShotActive, _toWorld);
         UpdateStatus(dt);
         if (_motor.Dead && Undying)
         {

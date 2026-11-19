@@ -1148,3 +1148,32 @@ Défauts de l'agent, réversibles :
   - sans `build/models` (non versionné), la run part sans horde, avec un avertissement par créature ;
   - la horde se serre en disque plein autour du joueur immobile, faute d'arme pour l'éclaircir (60.3) ;
   - pas de passage à l'échelle des PV et des dégâts avec le temps (`spawn_flow.json`) : il viendra avec le combat.
+
+### 60.2b livré — 19 novembre
+
+- **Pistage** (`Crowd3D.Track`), celui du jeu 2D (`EnemyTracking`) converti en cellules :
+  - une créature venue du flux suit le joueur tant qu'elle ne l'a pas approché ;
+  - repérée puis distancée 4 s au-delà de la laisse, elle perd la trace et erre ;
+  - perdue au-delà de 13,3 cellules (`despawn_distance`, 18 avant l'échelle du monde), elle se retire, et sa place revient au flux.
+  `perception` et `leash` des fiches s'appliquent.
+- **Tireuses** : elles s'arrêtent à `attack_range`, se tournent vers le joueur et tirent toutes les `ranged_cooldown` secondes, pas en grimpant ni en l'air. Leurs projectiles vont à 185 px/s du jeu 2D, convertis, et volent la portée de tir plus `projectile_reach_margin`. Ils ignorent les étages et touchent à plat ; un joueur invulnérable les laisse passer. 96 tirs en vol au plus.
+- **Sortes** : les tireuses de rang normal entrent dans la horde. Dans la forêt, c'est le présage, dès la minute 3. Il tire un projectile ordinaire en attendant son présage (60.2c).
+- **Corps** : pose de repos à l'arrêt, pose d'attaque au tir. Les tirs sont des boules émissives, sans lumière.
+- **`Crowd3D.SpawnAt`** : une naissance posée, pour la régression, puis pour les renforts du cri (60.2c).
+- **Régression** `tools/test_crowd3d.sh` (`Crowd3DRegression`, sans rendu) : 10 vérifications.
+  - une créature jamais repérée suit le joueur ;
+  - repérée puis distancée, elle perd la trace, erre au tiers de sa vitesse, puis se retire ;
+  - la tireuse s'arrête à portée au pied d'une falaise et touche le joueur un étage plus haut (3 tirs sur 4) ;
+  - un joueur invulnérable laisse passer les tirs ;
+  - prise à portée en pleine escalade, la tireuse finit sa montée.
+- **Captures** : `Run3DCapture --minutes M` démarre la run plus tard. À 4 minutes, les cinq sortes sont là : charognard, ombre, rodeur, tréant, présage. Les présages tirent depuis le palier du haut, et des créatures grimpent la falaise.
+- **Vérifié** :
+  - build sans avertissement ; smoke test vert ; `test_crowd3d` 10/10 ;
+  - banc à 4 minutes : **120 créatures et 185 tirs en 40 s, à 391 images par seconde** (rendu 3840×2160, charge 2 sur 16 cœurs).
+- **Relecture** (`godot-reviewer`) : rien de bloquant. Corrigé :
+  - le cap de l'escalade est gardé : une tireuse prise à portée en route ne restait plus au bord ;
+  - le tir à la reprise de trace ;
+  - le seuil de la pose de repos, en cellules par seconde.
+- **Points ouverts** :
+  - au cœur de la horde, le joueur est presque toujours invulnérable et les tirs passent (0 sur 185 au banc) ; le rythme des coups se reprendra avec le combat (60.3, §256) ;
+  - les tirs sont des boules, pas encore les projectiles dessinés du jeu 2D (60.6).

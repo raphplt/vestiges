@@ -7,7 +7,7 @@ namespace Vestiges.Tests;
 /// Captures de la run 3D (plan 60, 60.1c et 60.2a), lancée comme depuis le Hub : le personnage de <c>--character</c>
 /// marche, saute, use de sa capacité, puis la caméra tourne et plonge, une image à chaque étape ; la pause ; enfin la
 /// horde arrivée sur le joueur, qui ne meurt pas, après <c>--horde-seconds</c>, avec les images par seconde de cette
-/// attente. Arguments après -- : --capture &lt;dossier&gt; [--character &lt;id&gt;] [--crowd N] [--horde-seconds S].
+/// attente. Arguments après -- : --capture &lt;dossier&gt; [--character &lt;id&gt;] [--crowd N] [--horde-seconds S] [--minutes M] (temps de run au départ).
 /// Les entrées passent par les actions du jeu, comme au clavier.
 /// </summary>
 public partial class Run3DCapture : Node
@@ -31,6 +31,7 @@ public partial class Run3DCapture : Node
         _hordeSeconds = float.Parse(Argument(args, "--horde-seconds", "20"), System.Globalization.CultureInfo.InvariantCulture);
         _run = GD.Load<PackedScene>(GameManager.RunScenePath).Instantiate<Vestiges.World3D.Run3D>();
         _run.Undying = true;
+        _run.StartSeconds = 60f * float.Parse(Argument(args, "--minutes", "0"), System.Globalization.CultureInfo.InvariantCulture);
         _run.CrowdTarget = int.Parse(Argument(args, "--crowd", "-1"), System.Globalization.CultureInfo.InvariantCulture);
         AddChild(_run);
     }
@@ -87,6 +88,7 @@ public partial class Run3DCapture : Node
                     break;
                 Save("horde");
                 GD.Print($"[Run3DCapture] Horde : {_run.Crowd.Present} créatures, {_run.Crowd.Kills} éliminations, {_run.Crowd.ContactHits} coups au contact, "
+                    + $"{_run.Crowd.Shots} tirs dont {_run.Crowd.ShotHits} au but, {_run.Crowd.Retreats} retraits, "
                     + $"{_frames / _time:0} images par seconde sur {_time:0} s");
                 GD.Print($"[Run3DCapture] Fini : souris {Input.MouseMode}");
                 GetTree().Quit();

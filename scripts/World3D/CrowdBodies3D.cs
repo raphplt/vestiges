@@ -4,8 +4,9 @@ namespace Vestiges.World3D;
 
 /// <summary>
 /// Les corps de la horde à l'écran (plan 60, 60.2a) : un <see cref="MeshInstance3D"/> sans script et une ombre par place
-/// de la horde, posés une fois par image. La pose suit l'état : marche (au pas de sa course), attaque après un coup,
-/// mort ; le corps se tourne vers sa course et blanchit au coup.
+/// de la horde, posés une fois par image. La pose suit l'état : marche (au pas de sa course), repos à l'arrêt, attaque
+/// après un coup ou un tir, mort ; le corps se tourne vers sa course et blanchit au coup. Les tirs des créatures à distance
+/// sont de petites boules lumineuses.
 /// </summary>
 public sealed class CrowdBodies3D
 {
@@ -13,6 +14,8 @@ public sealed class CrowdBodies3D
     // Pas de marche par cellule parcourue, comme le joueur : les pieds ne glissent pas.
     private const float WalkCyclesPerCell = 0.43f;
     private const float ShadowSize = 0.9f;
+    // Sous cette vitesse (cellules par seconde), la créature est à l'arrêt et se met au repos.
+    private const float StillCellsPerSecond = 0.05f;
     // Sous cette hauteur, la créature est tombée dans le vide : on ne la montre plus.
     private const float HiddenBelow = -2.5f;
 
@@ -24,6 +27,8 @@ public sealed class CrowdBodies3D
     private readonly float[] _yaw;
     private readonly float[] _walkPhase;
     private readonly Vector3[] _last;
+    private readonly MeshInstance3D[] _shots;
+    private float _clock;
 
     public CrowdBodies3D(Node3D world, ReliefConfig config, ReliefArena arena, int capacity, StandardMaterial3D flash)
     {
@@ -46,11 +51,40 @@ public sealed class CrowdBodies3D
             // Décalage de phase propre à chaque place : la horde ne marche pas au pas.
             _walkPhase[i] = i * 0.37f;
         }
+        SphereMesh ball = new()
+        {
+            Radius = config.ShotRadius,
+            Height = config.ShotRadius * 2f,
+            RadialSegments = 8,
+            Rings = 4,
+            Material = new StandardMaterial3D
+            {
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                AlbedoColor = config.ShotColor,
+                EmissionEnabled = true,
+                Emission = config.ShotColor,
+            },
+        };
+        _shots = new MeshInstance3D[Crowd3D.MaxShots];
+        for (int p = 0; p < _shots.Length; p++)
+        {
+            _shots[p] = new MeshInstance3D { Name = $"Shot{p}", Mesh = ball, Visible = false, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off };
+            group.AddChild(_shots[p]);
+        }
     }
 
     public void Update(float dt, Crowd3D crowd, ReliefLowPoly.Model[] models)
     {
+        _clock += dt;
         float turn = 1f - Mathf.Exp(-TurnRate * dt);
+        for (int p = 0; p < _shots.Length; p++)
+        {
+            bool on = crowd.ShotActive[p];
+            if (_shots[p].Visible != on)
+                _shots[p].Visible = on;
+            if (on)
+                _shots[p].Position = new Vector3(crowd.ShotPos[p].X, crowd.ShotPos[p].Z, crowd.ShotPos[p].Y);
+        }
         for (int i = 0; i < _bodies.Length; i++)
         {
             MeshInstance3D body = _bodies[i];
@@ -70,9 +104,11 @@ public sealed class CrowdBodies3D
             _last[i] = at;
             // Une créature qui grimpe sur place agite encore ses pattes.
             _walkPhase[i] += crowd.Climbing[i] ? dt : moved.Length() * WalkCyclesPerCell;
+            bool still = !crowd.Climbing[i] && moved.Length() < dt * StillCellsPerSecond;
             Mesh pose = state == Crowd3D.Life.Dying
                 ? model.FrameAt("death", 1f - crowd.Timer[i] / Crowd3D.DyingSeconds)
                 : crowd.Strike[i] > 0f ? model.FrameAt("attack", 1f - crowd.Strike[i] / Crowd3D.StrikeSeconds)
+                : still ? model.Frame("idle", _clock + i * 0.37f)
                 : model.Frame("walk", _walkPhase[i]);
             if (body.Mesh != pose)
                 body.Mesh = pose;

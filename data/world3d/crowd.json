@@ -1,5 +1,5 @@
 {
-	"_comment": "La horde de la run 3D (plan 60, 60.2a, §30), commune au jeu et au bac à sable, en cellules et en secondes, avant world_scale (render.json). Les créatures apparaissent entre spawn_min et spawn_max du joueur, jamais dans le vide ni à plus de quatre étages de lui. radius : emprise au sol ; separation : force qui écarte les voisines au même niveau ; climb_speed : la montée d'une falaise, sur place ; contact_reach et contact_height : la portée du coup au contact, à plat et en hauteur (le contact ne touche qu'à hauteur égale) ; push_decay : l'amortissement d'une poussée ; une créature poussée d'un gradin se blesse au-delà de safe_drop_levels étages, de fall_damage_per_level par étage. respawn_clear_radius et respawn_clear_push : la horde écartée du joueur revenu du vide ou relevé. run : la taille de la horde dans la run, start au départ, per_minute de plus chaque minute, max au plus (aussi la place réservée). Vitesse, PV, coup au contact et poids d'apparition viennent des fiches de data/enemies, convertis par CellsPerPixel (§29).",
+	"_comment": "La horde de la run 3D (plan 60, 60.2a, §30), commune au jeu et au bac à sable, en cellules et en secondes, avant world_scale (render.json). Les créatures apparaissent entre spawn_min et spawn_max du joueur, jamais dans le vide ni à plus de quatre étages de lui. radius : emprise au sol ; separation : force qui écarte les voisines au même niveau ; climb_speed : la montée d'une falaise, sur place ; contact_reach et contact_height : la portée du coup au contact, à plat et en hauteur (le contact ne touche qu'à hauteur égale) ; push_decay : l'amortissement d'une poussée ; une créature poussée d'un gradin se blesse au-delà de safe_drop_levels étages, de fall_damage_per_level par étage. respawn_clear_radius et respawn_clear_push : la horde écartée du joueur revenu du vide ou relevé. despawn_distance : une créature qui a perdu la trace du joueur (data/scaling/enemy_tracking.json, converti par CellsPerPixel) se retire au-delà. Tirs des créatures à distance (60.2b) : shot_speed (185 px/s du jeu 2D), shot_radius, shot_height au-dessus des pieds, shot_color leur teinte, émissive (ils n'éclairent pas la scène) ; ils ignorent les étages et touchent à plat. run : la taille de la horde dans la run, start au départ, per_minute de plus chaque minute, max au plus (aussi la place réservée). Vitesse, PV, coup au contact et poids d'apparition viennent des fiches de data/enemies, convertis par CellsPerPixel (§29).",
 	"spawn_min": 9.0,
 	"spawn_max": 14.0,
 	"radius": 0.3,
@@ -12,6 +12,11 @@
 	"safe_drop_levels": 0.9,
 	"respawn_clear_radius": 4.0,
 	"respawn_clear_push": 6.0,
+	"despawn_distance": 18.0,
+	"shot_speed": 2.74,
+	"shot_radius": 0.08,
+	"shot_height": 0.35,
+	"shot_color": "c6f27a",
 	"run": {
 		"start": 20,
 		"per_minute": 6,

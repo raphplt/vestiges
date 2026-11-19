@@ -89,6 +89,9 @@ public sealed class ReliefConfig
     public float RunCrowdPerMinute;
     // Le joueur revenu du vide ou relevé trouve la horde écartée de ce rayon, de cette poussée.
     public float RespawnClearRadius, RespawnClearPush;
+    // Retrait d'une créature perdue au loin, et les tirs des créatures à distance (60.2b).
+    public float DespawnDistance, ShotSpeed, ShotRadius, ShotHeight;
+    public Color ShotColor;
     public float SpawnMin, SpawnMax, CrowdRadius, Separation, ClimbSpeed, ContactReach, ContactHeight, ContactDamage;
     public float PushDecay, CrowdFallDamagePerLevel, CrowdSafeDropLevels;
     public Crowd3D.Species[] Creatures;
@@ -188,6 +191,11 @@ public sealed class ReliefConfig
         CrowdSafeDropLevels = F(crowd, "safe_drop_levels");
         RespawnClearRadius = F(crowd, "respawn_clear_radius");
         RespawnClearPush = F(crowd, "respawn_clear_push");
+        DespawnDistance = F(crowd, "despawn_distance");
+        ShotSpeed = F(crowd, "shot_speed");
+        ShotRadius = F(crowd, "shot_radius");
+        ShotHeight = F(crowd, "shot_height");
+        ShotColor = new Color(crowd["shot_color"].AsString());
         RunCrowdStart = (int)F(run, "start");
         RunCrowdPerMinute = F(run, "per_minute");
         RunCrowdMax = (int)F(run, "max");
@@ -260,6 +268,10 @@ public sealed class ReliefConfig
         StompPush *= body;
         SpawnMin *= body;
         SpawnMax *= body;
+        DespawnDistance *= body;
+        ShotSpeed *= body;
+        ShotRadius *= body;
+        ShotHeight *= body;
         ChaseDistance *= body;
         ChaseHeight *= body;
         ChaseClearance *= body;
