@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Les décors d'une terre pour le bac à sable low poly (plan 60 §19, lot C4c) : la table de semis du jeu en 2D
@@ -74,7 +74,7 @@ public sealed class ReliefBiomeProps
     /// Sème les décors sur les cellules plates, comme le jeu en 2D : une chance <c>density</c> par cellule, puis un décor
     /// tiré selon les poids, tourné librement (la boîte de collision tourne avec lui).
     /// </summary>
-    public void Scatter(ReliefArena arena, ReliefSim sim, List<ReliefLowPoly.Placement> placed, IReadOnlyList<Vector2> keepClear,
+    public void Scatter(ReliefArena arena, List<ReliefLowPoly.Placement> placed, IReadOnlyList<Vector2> keepClear,
         Vector2 spawn, float cellsPerMetre, ulong seed)
     {
         RandomNumberGenerator rng = new() { Seed = seed };
@@ -92,7 +92,7 @@ public sealed class ReliefBiomeProps
                     continue;
                 placed.Add(new ReliefLowPoly.Placement(model, path, at, yaw));
                 if (blocking)
-                    ReliefLowPoly.AddCollision(sim, model, at, yaw, cellsPerMetre);
+                    ReliefLowPoly.AddCollision(arena.Obstacles, model, at, yaw, cellsPerMetre);
             }
         }
     }

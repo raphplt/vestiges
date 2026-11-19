@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using Godot;
 
+using Vestiges.World3D;
+
 namespace Vestiges.Tests;
 
 /// <summary>

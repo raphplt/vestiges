@@ -4,8 +4,8 @@ Minecraft et de Megabonk, des pixels francs (filtre au plus proche) plaqués sur
 
 Chaque texture se répète sans couture et couvre 4 × 4 cellules, à 16 px par cellule (§236 : à 32, la densité des tuiles
 du jeu, le sol était trop détaillé ; le détail vient plutôt des touffes d'herbe en relief posées dessus) : bruit périodique ramené à quatre tons, puis les motifs des sols du jeu (touffes, feuilles, cailloux, fissures,
-tools/sprites/ground_motifs.py) semés en plaques et repliés sur les bords. Les tons partent des couleurs du relief low
-poly (data/sandbox/relief.json, bloc lowpoly.colors), en rampe à ombres froides et lumières chaudes (charte §4).
+tools/sprites/ground_motifs.py) semés en plaques et repliés sur les bords. Les tons, définis ici par surface, vont en
+rampe à ombres froides et lumières chaudes (charte §4).
 
 Dessus : sol (herbe sombre), terrasse (herbe claire), butte (roche), marches (terre battue). Flancs : terre en strates,
 roche en blocs. Franges : le bord d'herbe qui déborde sur le haut des falaises, transparent dessous (comme le côté d'un

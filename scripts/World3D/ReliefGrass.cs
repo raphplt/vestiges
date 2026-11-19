@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Touffes d'herbe en relief sur le sol texturé (plan 60, §236) : ce que fait Megabonk, des textures très simples et du

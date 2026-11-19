@@ -1,9 +1,9 @@
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
-/// Carte de hauteurs de l'arène du bac à sable de la verticalité (plan 59) : une hauteur par cellule, en unités du monde,
+/// Carte de hauteurs du relief 3D (plans 59 et 60), l'arène de la terre d'essai : une hauteur par cellule, en unités du monde,
 /// ou le vide. Le sol (x, y) est un plan carré : la cellule (cx, cy) couvre [cx, cx+1[ × [cy, cy+1[.
 /// Les cases de montée (§239) sont des rampes : leur sol monte en pente douce d'une cellule voisine à l'autre. Une rampe
 /// de plusieurs cases se lit comme une seule pente, de la case pleine d'où elle part à celle où elle arrive.
@@ -27,6 +27,9 @@ public sealed class ReliefArena
     public int Depth { get; }
     public float LevelHeight { get; }
 
+    /// <summary>Emprises des décors qui bloquent, posées avec eux.</summary>
+    public ReliefObstacles Obstacles { get; }
+
     public ReliefArena(string[] rows, float levelHeight)
     {
         LevelHeight = levelHeight;
@@ -36,6 +39,7 @@ public sealed class ReliefArena
         _ramp = new byte[Width * Depth];
         _rampLow = new float[Width * Depth];
         _rampRise = new float[Width * Depth];
+        Obstacles = new ReliefObstacles(Width, Depth);
         for (int y = 0; y < Depth; y++)
         {
             for (int x = 0; x < Width; x++)

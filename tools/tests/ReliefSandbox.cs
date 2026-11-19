@@ -1,6 +1,8 @@
 using System.Globalization;
 using Godot;
 
+using Vestiges.World3D;
+
 namespace Vestiges.Tests;
 
 /// <summary>
@@ -15,18 +17,18 @@ namespace Vestiges.Tests;
 /// C'est l'image qu'aurait le jeu actuel avec des étages.</item>
 /// </list>
 /// La vue 3D de haut, à caméra fixe, a été retirée (DECISIONS §234).
-/// Par défaut, tout est en low poly (plan 60, lot 60.0b, <see cref="ReliefLowPoly"/>) : relief en facettes, modèles et
-/// décors exportés du pipeline des sprites ; la vue « relief 2D » y devient une isométrique orthographique éclairée.
-/// Avec <c>--sprites</c>, le rendu du plan 59 : sprites, et sol et décors d'un vrai biome (<see cref="ReliefBake"/>),
-/// la run générée sur la terre de <c>--land-order</c>, photographiée, puis libérée ; <c>--tiles</c> garde alors les
-/// tuiles simples, sans run.
-/// Arguments après -- : --biome &lt;terre&gt; (décors de data/props tirés de build/models, plan 60 §19), --lod-threshold px, --view chase|2d, --character &lt;id&gt;, --enemies N, --seed S, --sprites, --land-order &lt;biome&gt;, --tiles, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
+/// Tout est en low poly (plan 60, lot 60.0b), la pile 3D de la run (<c>Vestiges.World3D</c>, plan 60 §29) : relief en
+/// facettes, modèles et décors exportés du pipeline des sprites ; la vue « relief 2D » y est une isométrique
+/// orthographique éclairée. Les sprites du plan 59 sont partis avec la run 2D (§254).
+/// Arguments après -- : --biome &lt;terre&gt; (décors de data/props tirés de build/models, plan 60 §19), --lod-threshold px, --view chase|2d, --character &lt;id&gt;, --enemies N, --seed S, --world-scale w, --effects liste, --check-edges (contrôle des rebords, sans rendu) ; captures : --capture &lt;dossier&gt; --seconds S (un bot fait le
 /// tour de l'arène, garde des images des deux vues, puis ferme).
 /// </summary>
 public partial class ReliefSandbox : Node
 {
+    // La horde d'essai et l'arme ; le reste vient des réglages de la run 3D (data/world3d, plan 60 §29).
     private const string ConfigPath = "res://data/sandbox/relief.json";
-    private static readonly Vector2I RenderSize = new(960, 540);
+    // Hauteur de l'image de la vue relief 2D, pour la taille de sa caméra orthographique : les tuiles 64 × 32 du jeu.
+    private const float OrthoPixels = 540f;
     // Cadence de marche : la marche du modèle se joue au rythme des pas sur le sol, pour que les pieds ne glissent pas.
     private const float WalkCyclesPerCell = 0.43f;
     private const float TurnRate = 14f;
@@ -34,11 +36,8 @@ public partial class ReliefSandbox : Node
     private const float PixelsPerUnit = 45.254834f;
     private const float IsoPitchDegrees = 30f;
     private const float OrthoDistance = 40f;
-    private const float SpriteNudge = 0.18f;
-    private const float AnimFps = 9f;
     private const float RotateDegreesPerSecond = 110f;
     private const float StompRingSeconds = 0.32f;
-    private static readonly string[] Directions = { "E", "SE", "S", "SW", "W", "NW", "N", "NE" };
     private static readonly Color VoidColor = new("0b0812");
 
     private ReliefConfig _config;
@@ -48,26 +47,13 @@ public partial class ReliefSandbox : Node
     private Camera3D _camera;
     private DirectionalLight3D _sun;
     private WorldEnvironment _environment;
-    private MeshInstance3D _flatTerrain;
-    private MeshInstance3D _litTerrain;
     private Label _hud;
-    private Sprite3D _player;
     private Sprite3D _playerShadow;
-    private Sprite3D[] _enemies;
     private Sprite3D[] _enemyShadows;
     private Sprite3D[] _projectiles;
     private Sprite3D _stompRing;
     private float _stompRingTime = -1f;
 
-    private Texture2D[,][] _playerWalk;
-    private Texture2D[,][] _playerBond;
-    private Texture2D[][,][] _creatureWalk;
-    private Texture2D[][,][] _creatureDeath;
-    private float _playerFoot;
-    private float[] _creatureFoot;
-
-    // Rendu low poly (plan 60, lot 60.0b).
-    private bool _lowPoly;
     private ReliefLook _look;
     private ReliefAtmosphere _atmosphere;
     private MeshInstance3D _playerBody;
@@ -84,10 +70,8 @@ public partial class ReliefSandbox : Node
     private float _pitchDegrees;
     // Recul réel de la caméra libre : sa distance, raccourcie quand le relief s'interpose.
     private float _reach;
-    private bool _stretchDirty;
     private Vector3 _cameraTarget;
     private int _crowdTarget;
-    private ReliefBake _bake;
     private ReliefBiomeProps _biomeProps;
     // Mesure du tour du bot en capture (plan 60 §19, C4c) : durées d'image et primitives dessinées.
     private readonly System.Collections.Generic.List<float> _frameMs = new();
@@ -96,13 +80,9 @@ public partial class ReliefSandbox : Node
     // Prise « décor devant le joueur » de la capture : le bot s'arrête, l'effacement se coupe pour la comparaison.
     private bool _botFrozen;
     private bool _seeThroughOff;
-    private string _biome = "tuiles simples";
-    private Color _tint = Colors.White;
+    private string _biome = "semis du réglage";
     private bool _ready;
-    private readonly System.Collections.Generic.List<(Sprite3D Sprite, Vector2 Scale)> _props = new();
     // Couches hautes des décors (feuillages) : leur pied et leur décalage vers la caméra, refait quand elle bouge.
-    private readonly System.Collections.Generic.List<(Sprite3D Sprite, Vector3 Foot, int Layer)> _layered = new();
-    private const float LayerNudge = 0.03f;
     private float _hudTimer;
     private float _animClock;
     private float _walkPhase;
@@ -128,11 +108,11 @@ public partial class ReliefSandbox : Node
         new(21.8f, 31.9f), new(8f, 32f), new(21.8f, 31.9f), new(20.5f, 18.5f),
     };
 
-    public override async void _Ready()
+    public override void _Ready()
     {
         try
         {
-            await Setup();
+            Setup();
         }
         catch (System.Exception exception)
         {
@@ -141,7 +121,7 @@ public partial class ReliefSandbox : Node
         }
     }
 
-    private async System.Threading.Tasks.Task Setup()
+    private void Setup()
     {
         string[] args = OS.GetCmdlineUserArgs();
         _config = ReliefConfig.Load(ConfigPath);
@@ -151,15 +131,11 @@ public partial class ReliefSandbox : Node
         _arena = new ReliefArena(_config.Arena, _config.LevelHeight);
         _crowdTarget = int.Parse(Argument(args, "--enemies", _config.CrowdCount.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
         ulong seed = ulong.Parse(Argument(args, "--seed", "59"), CultureInfo.InvariantCulture);
-        _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
-        if (_lowPoly)
-        {
-            float worldScale = float.Parse(Argument(args, "--world-scale",
-                _config.LowPoly.WorldScale.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
-            if (worldScale != 1f)
-                _config.ScaleWorld(worldScale);
-            _config.ScaleBodies(_config.LowPoly.BodyScale);
-        }
+        float worldScale = float.Parse(Argument(args, "--world-scale",
+            _config.LowPoly.WorldScale.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
+        if (worldScale != 1f)
+            _config.ScaleWorld(worldScale);
+        _config.ScaleBodies(_config.LowPoly.BodyScale);
         if (System.Array.IndexOf(args, "--check-edges") >= 0)
         {
             GetTree().Quit(ReliefEdgeCheck.Run(_config, _arena) == 0 ? 0 : 1);
@@ -177,13 +153,10 @@ public partial class ReliefSandbox : Node
 
         RegisterActions();
         string biome = Argument(args, "--biome", null);
-        if (_lowPoly && biome != null)
+        if (biome != null)
             ReliefTexturedGround.UseLand(biome);
-        if (_lowPoly)
-            LoadMaterials();
-        else
-            LoadSprites();
-        if (_lowPoly && biome != null)
+        LoadMaterials();
+        if (biome != null)
         {
             _biomeProps = new ReliefBiomeProps(biome, ProjectSettings.GlobalizePath("res://build/models"));
             _biome = biome;
@@ -198,17 +171,11 @@ public partial class ReliefSandbox : Node
         }
         _config.LowPoly.LodThreshold = float.Parse(Argument(args, "--lod-threshold",
             _config.LowPoly.LodThreshold.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
-        if (!_lowPoly && System.Array.IndexOf(args, "--tiles") < 0)
-        {
-            _biome = Argument(args, "--land-order", "forest_reclaimed");
-            _bake = await ReliefBake.Capture(this, _arena.Width, _arena.Depth, seed, _config.Character);
-            _tint = _bake.CanvasTint;
-        }
         BuildScene();
         ApplyView();
         _cameraTarget = PlayerAnchor();
         _ready = true;
-        GD.Print($"[ReliefSandbox] Arène {_arena.Width}×{_arena.Depth}, sol {_biome}, {(_lowPoly ? _look.PropCount : _props.Count)} décors, foule {_crowdTarget}, vue {_view}");
+        GD.Print($"[ReliefSandbox] Arène {_arena.Width}×{_arena.Depth}, sol {_biome}, {_look.PropCount} décors, foule {_crowdTarget}, vue {_view}");
     }
 
     private static string Argument(string[] args, string name, string fallback)
@@ -258,59 +225,6 @@ public partial class ReliefSandbox : Node
         _hurtMaterial = new StandardMaterial3D { ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded, AlbedoColor = new Color(0.95f, 0.25f, 0.2f) };
     }
 
-    private void LoadSprites()
-    {
-        string id = _config.Character;
-        _playerWalk = LoadFrames($"res://assets/characters/{id}/char_{id}", "walk");
-        _playerBond = LoadFrames($"res://assets/characters/{id}/char_{id}", "dash");
-        _playerFoot = FootOf(_playerWalk[1, 0][0]);
-        int count = _config.Creatures.Length;
-        _creatureWalk = new Texture2D[count][,][];
-        _creatureDeath = new Texture2D[count][,][];
-        _creatureFoot = new float[count];
-        for (int t = 0; t < count; t++)
-        {
-            string creature = _config.Creatures[t].Id;
-            _creatureWalk[t] = LoadFrames($"res://assets/enemies/{creature}/enemy_{creature}", "walk");
-            _creatureDeath[t] = LoadFrames($"res://assets/enemies/{creature}/enemy_{creature}", "death");
-            _creatureFoot[t] = FootOf(_creatureWalk[t][1, 0][0]);
-        }
-    }
-
-    /// <summary>Images [direction, 0][image] d'une animation à huit directions et quatre images.</summary>
-    private static Texture2D[,][] LoadFrames(string prefix, string anim)
-    {
-        Texture2D[,][] frames = new Texture2D[Directions.Length, 1][];
-        for (int d = 0; d < Directions.Length; d++)
-        {
-            frames[d, 0] = new Texture2D[4];
-            for (int f = 0; f < 4; f++)
-                frames[d, 0][f] = GD.Load<Texture2D>($"{prefix}_{Directions[d]}_{anim}_0{f + 1}.png");
-        }
-        return frames;
-    }
-
-    /// <summary>Décalage vertical (px) qui pose la dernière rangée opaque de l'image sur le point du sol.</summary>
-    private static float FootOf(Texture2D texture)
-    {
-        Image image = texture.GetImage();
-        if (image.IsCompressed())
-            image.Decompress();
-        int bottom = image.GetHeight() - 1;
-        for (int y = image.GetHeight() - 1; y >= 0; y--)
-        {
-            bool opaque = false;
-            for (int x = 0; x < image.GetWidth() && !opaque; x++)
-                opaque = image.GetPixel(x, y).A > 0.5f;
-            if (opaque)
-            {
-                bottom = y;
-                break;
-            }
-        }
-        return bottom + 1f - image.GetHeight() / 2f;
-    }
-
     private void BuildScene()
     {
         _viewport = new SubViewport
@@ -318,10 +232,10 @@ public partial class ReliefSandbox : Node
             Name = "World",
             // Le low poly n'a pas de pixels à respecter : il se rend à la définition réelle de la fenêtre (§238), pour
             // qu'un écran 4K ne montre pas une image 1080p agrandie, aux contours en escalier.
-            Size = _lowPoly ? WindowPixels() : RenderSize,
+            Size = WindowPixels(),
             OwnWorld3D = true,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
-            Msaa3D = _lowPoly ? Viewport.Msaa.Msaa4X : Viewport.Msaa.Disabled,
+            Msaa3D = Viewport.Msaa.Msaa4X,
             MeshLodThreshold = _config.LowPoly.LodThreshold,
             CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
         };
@@ -332,7 +246,7 @@ public partial class ReliefSandbox : Node
         {
             Name = "Picture",
             Texture = _viewport.GetTexture(),
-            TextureFilter = _lowPoly ? CanvasItem.TextureFilterEnum.Linear : CanvasItem.TextureFilterEnum.Nearest,
+            TextureFilter = CanvasItem.TextureFilterEnum.Linear,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.Scale,
         };
@@ -341,16 +255,6 @@ public partial class ReliefSandbox : Node
 
         Node3D world = new() { Name = "Arena" };
         _viewport.AddChild(world);
-        if (!_lowPoly)
-        {
-            _flatTerrain = ReliefTerrainBuilder.Build(_arena, _config, false, _bake);
-            _litTerrain = ReliefTerrainBuilder.Build(_arena, _config, true, _bake);
-            world.AddChild(_flatTerrain);
-            world.AddChild(_litTerrain);
-            if (_bake != null)
-                PlaceUprights(world);
-        }
-
         _sun = new DirectionalLight3D
         {
             Name = "Sun",
@@ -359,45 +263,32 @@ public partial class ReliefSandbox : Node
             LightColor = new Color("fff1dc"),
             ShadowEnabled = true,
             // La caméra orthographique se tient à 40 unités : ses ombres doivent porter au-delà.
-            DirectionalShadowMaxDistance = _lowPoly ? 70f : 40f,
+            DirectionalShadowMaxDistance = 70f,
         };
         world.AddChild(_sun);
         _environment = new WorldEnvironment { Name = "Environment", Environment = new Godot.Environment() };
         world.AddChild(_environment);
         // Proche plan reculé : la profondeur garde sa précision au loin, où les contours la lisent.
-        _camera = new Camera3D { Name = "Camera", Current = true, Near = _lowPoly ? 0.4f : 0.1f, Far = 200f };
+        _camera = new Camera3D { Name = "Camera", Current = true, Near = 0.4f, Far = 200f };
         world.AddChild(_camera);
-        if (_lowPoly)
-        {
-            _look = new ReliefLook(_config, _arena, _sim, world, _camera, _viewport, BotTour, _biomeProps);
-            _atmosphere = new ReliefAtmosphere(_config.Atmosphere, world, _sim.ProjectilePos.Length, _look.Glows);
-            GetWindow().SizeChanged += FitRender;
-        }
+        _look = new ReliefLook(_config, _arena, world, _camera, _viewport, BotTour, _biomeProps);
+        _atmosphere = new ReliefAtmosphere(_config.Atmosphere, world, _sim.ProjectilePos.Length, _look.Glows);
+        GetWindow().SizeChanged += FitRender;
 
         Texture2D shadow = ShadowTexture();
         _playerShadow = NewShadow(world, shadow, "PlayerShadow");
         _enemyShadows = new Sprite3D[_sim.Capacity];
         for (int i = 0; i < _sim.Capacity; i++)
             _enemyShadows[i] = NewShadow(world, shadow, $"CreatureShadow{i}");
-        if (_lowPoly)
+        Vector3 scale = Vector3.One * _config.LowPoly.BodyScale / _config.LowPoly.MetresPerCell;
+        _playerBody = new MeshInstance3D { Name = "Player", Scale = scale };
+        world.AddChild(_playerBody);
+        _creatureBodies = new MeshInstance3D[_sim.Capacity];
+        _creatureYaw = new float[_sim.Capacity];
+        for (int i = 0; i < _sim.Capacity; i++)
         {
-            Vector3 scale = Vector3.One * _config.LowPoly.BodyScale / _config.LowPoly.MetresPerCell;
-            _playerBody = new MeshInstance3D { Name = "Player", Scale = scale };
-            world.AddChild(_playerBody);
-            _creatureBodies = new MeshInstance3D[_sim.Capacity];
-            _creatureYaw = new float[_sim.Capacity];
-            for (int i = 0; i < _sim.Capacity; i++)
-            {
-                _creatureBodies[i] = new MeshInstance3D { Name = $"Creature{i}", Scale = scale, Visible = false };
-                world.AddChild(_creatureBodies[i]);
-            }
-        }
-        else
-        {
-            _player = NewSprite(world, "Player");
-            _enemies = new Sprite3D[_sim.Capacity];
-            for (int i = 0; i < _sim.Capacity; i++)
-                _enemies[i] = NewSprite(world, $"Creature{i}");
+            _creatureBodies[i] = new MeshInstance3D { Name = $"Creature{i}", Scale = scale, Visible = false };
+            world.AddChild(_creatureBodies[i]);
         }
         Texture2D bolt = BoltTexture();
         _projectiles = new Sprite3D[_sim.ProjectilePos.Length];
@@ -428,69 +319,6 @@ public partial class ReliefSandbox : Node
         _hud.AddThemeColorOverride("font_outline_color", Colors.Black);
         _hud.AddThemeConstantOverride("outline_size", 6);
         hudLayer.AddChild(_hud);
-    }
-
-    /// <summary>
-    /// Les vrais décors du biome, debout à leur point au sol, sur le relief. Ceux qui tombent sur une marche, un bord de
-    /// falaise ou le vide sont écartés ; ceux qui bloquent en jeu deviennent des obstacles de la simulation.
-    /// </summary>
-    private void PlaceUprights(Node3D world)
-    {
-        Node3D container = new() { Name = "Props" };
-        world.AddChild(container);
-        foreach (ReliefBake.Upright upright in _bake.Uprights)
-        {
-            Vector2 at = PixelToGround(upright.Base);
-            if (!IsFlatInterior(at))
-                continue;
-            float ground = _arena.GroundAt(at.X, at.Y);
-            Vector2 scale = new(Mathf.Max(0.01f, Mathf.Abs(upright.Scale.X)), Mathf.Max(0.01f, Mathf.Abs(upright.Scale.Y)));
-            Sprite3D sprite = new()
-            {
-                Texture = upright.Texture,
-                PixelSize = 1f / PixelsPerUnit,
-                Shaded = false,
-                DoubleSided = true,
-                TextureFilter = BaseMaterial3D.TextureFilterEnum.Nearest,
-                AlphaCut = SpriteBase3D.AlphaCutMode.Discard,
-                Billboard = BaseMaterial3D.BillboardModeEnum.FixedY,
-                FlipH = upright.FlipH,
-                RegionEnabled = upright.RegionEnabled,
-                RegionRect = upright.Region,
-                Offset = new Vector2(upright.CenterFromBase.X / scale.X, -upright.CenterFromBase.Y / scale.Y),
-                Modulate = upright.Modulate * _tint,
-                Position = new Vector3(at.X, ground, at.Y),
-                // Les ombres des décors sont déjà dans le sol photographié.
-                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-            };
-            container.AddChild(sprite);
-            _props.Add((sprite, scale));
-            if (upright.Layer > 0)
-                _layered.Add((sprite, sprite.Position, upright.Layer));
-            if (upright.GroundRadius > 0f)
-                _sim.AddObstacle(at, upright.GroundRadius / PixelsPerUnit);
-        }
-        _sim.FinishObstacles();
-    }
-
-    /// <summary>Point du monde du jeu (px) vers le sol de l'arène : l'inverse de la projection 64 × 32.</summary>
-    private Vector2 PixelToGround(Vector2 pixel)
-    {
-        float a = (pixel.X - _bake.Origin.X) / 32f;
-        float b = (pixel.Y - _bake.Origin.Y) / 16f;
-        return new Vector2((a + b) / 2f, (b - a) / 2f);
-    }
-
-    /// <summary>Cellule d'un étage plein, entourée de cellules à la même hauteur : ni marche, ni bord, ni vide.</summary>
-    private bool IsFlatInterior(Vector2 at)
-    {
-        int x = Mathf.FloorToInt(at.X);
-        int y = Mathf.FloorToInt(at.Y);
-        float h = _arena.CellHeight(x, y);
-        if (ReliefArena.IsVoid(h) || Mathf.Abs(h / _arena.LevelHeight - Mathf.Round(h / _arena.LevelHeight)) > 0.01f)
-            return false;
-        return _arena.CellHeight(x + 1, y) == h && _arena.CellHeight(x - 1, y) == h
-            && _arena.CellHeight(x, y + 1) == h && _arena.CellHeight(x, y - 1) == h;
     }
 
     private static Sprite3D NewSprite(Node3D parent, string name)
@@ -540,13 +368,8 @@ public partial class ReliefSandbox : Node
 
     private void ApplyView()
     {
-        // En low poly, les reliefs de ReliefLook servent aux deux vues, toujours éclairés.
-        if (!_lowPoly)
-        {
-            _flatTerrain.Visible = !Is3D;
-            _litTerrain.Visible = Is3D;
-        }
-        _sun.Visible = Is3D || _lowPoly;
+        // Les reliefs de ReliefLook servent aux deux vues, toujours éclairés.
+        _sun.Visible = true;
         if (_captureDir == null)
             Input.MouseMode = Is3D ? Input.MouseModeEnum.Captured : Input.MouseModeEnum.Visible;
         Godot.Environment env = _environment.Environment;
@@ -559,30 +382,12 @@ public partial class ReliefSandbox : Node
         env.FogLightColor = VoidColor.Lerp(new Color("3a2f55"), 0.5f);
         env.FogDensity = 0.012f;
         _camera.Projection = Is3D ? Camera3D.ProjectionType.Perspective : Camera3D.ProjectionType.Orthogonal;
-        _camera.Size = RenderSize.Y / PixelsPerUnit;
+        _camera.Size = OrthoPixels / PixelsPerUnit;
         _camera.Fov = _config.ChaseFov;
         if (!Is3D)
             _yawDegrees = 45f;
-        if (_lowPoly)
-        {
-            _look.Apply();
-            _atmosphere.Apply(env, Is3D);
-        }
-        else
-            ApplyStretch();
-    }
-
-    /// <summary>Les sprites restent debout ; on compense l'écrasement vertical de la caméra pour garder des pixels carrés.</summary>
-    private void ApplyStretch()
-    {
-        _stretchDirty = false;
-        float pitch = Mathf.DegToRad(PitchDegrees);
-        Vector3 stretch = new(1f, 1f / Mathf.Cos(pitch), 1f);
-        _player.Scale = stretch;
-        foreach (Sprite3D enemy in _enemies)
-            enemy.Scale = stretch;
-        foreach ((Sprite3D sprite, Vector2 scale) in _props)
-            sprite.Scale = new Vector3(scale.X, scale.Y * stretch.Y, 1f);
+        _look.Apply();
+        _atmosphere.Apply(env, Is3D);
     }
 
     public override void _ExitTree()
@@ -605,16 +410,11 @@ public partial class ReliefSandbox : Node
             _sim.QueueSkill();
         _sim.Step(dt, wish, _crowdTarget);
         UpdateCamera(dt);
-        if (_lowPoly)
-        {
-            ReliefLowPoly.SetSeeThrough(_camera.GlobalPosition, ToWorld(_sim.PlayerPos) + Vector3.Up * 0.5f,
-                _seeThroughOff ? 0f : _config.LowPoly.SeeThroughRadius);
-            UpdateBodies(dt);
-        }
-        else
-            UpdateSprites();
+        ReliefLowPoly.SetSeeThrough(_camera.GlobalPosition, ToWorld(_sim.PlayerPos) + Vector3.Up * 0.5f,
+            _seeThroughOff ? 0f : _config.LowPoly.SeeThroughRadius);
+        UpdateBodies(dt);
         UpdateProjectiles();
-        _atmosphere?.Update(_sim, ToWorld);
+        _atmosphere.Update(_sim.ProjectilePos, _sim.ProjectileActive, ToWorld);
         UpdateFeedback(dt);
         UpdateHud(dt);
         if (_captureDir != null)
@@ -636,8 +436,7 @@ public partial class ReliefSandbox : Node
             _crowdTarget = Mathf.Max(0, _crowdTarget - 10);
         if (Input.IsActionJustPressed("relief_respawn"))
             _sim.Teleport(_config.Spawn);
-        if (_lowPoly)
-            HandleStyleInput();
+        HandleStyleInput();
     }
 
     /// <summary>F1 à F7 : chaque effet du style se bascule seul, pour comparer les combinaisons.</summary>
@@ -678,7 +477,6 @@ public partial class ReliefSandbox : Node
         {
             _yawDegrees -= motion.Relative.X * _config.ChaseMouseDegrees;
             _pitchDegrees = Mathf.Clamp(_pitchDegrees + motion.Relative.Y * _config.ChaseMouseDegrees, _config.ChaseMinPitch, _config.ChaseMaxPitch);
-            _stretchDirty = true;
         }
         if (@event.IsActionPressed("ui_cancel"))
             Input.MouseMode = Input.MouseModeEnum.Visible;
@@ -713,8 +511,6 @@ public partial class ReliefSandbox : Node
             _reach = clear < _reach ? Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-25f * dt)) : Mathf.Lerp(_reach, clear, 1f - Mathf.Exp(-4f * dt));
             _camera.Position = target + back * _reach;
             _camera.LookAt(target, Vector3.Up);
-            if (_stretchDirty && !_lowPoly)
-                ApplyStretch();
             return;
         }
         _camera.Position = target + back * OrthoDistance;
@@ -748,76 +544,6 @@ public partial class ReliefSandbox : Node
         return distance;
     }
 
-    /// <summary>Direction d'écran (0 = E, 2 = S, 6 = N) d'une vitesse au sol, vue par la caméra actuelle.</summary>
-    private int DirectionOf(Vector2 ground)
-    {
-        Basis basis = _camera.GlobalBasis;
-        Vector3 v = new(ground.X, 0f, ground.Y);
-        // L'axe Z de la caméra pointe vers elle : sa part au sol est le « bas » de l'écran.
-        Vector3 down = basis.Z with { Y = 0f };
-        float sx = v.Dot(basis.X);
-        float sy = v.Dot(down.Normalized());
-        int index = Mathf.RoundToInt(Mathf.Atan2(sy, sx) / (Mathf.Pi / 4f));
-        return ((index % 8) + 8) % 8;
-    }
-
-    /// <summary>
-    /// Petit pas vers la caméra, le long du rayon de vue : en orthographique, l'image ne bouge pas d'un pixel, mais le sprite
-    /// ne s'enfonce plus dans le mur contre lequel il se tient.
-    /// </summary>
-    private Vector3 Nudge() => (_camera.GlobalPosition - _cameraTarget).Normalized() * SpriteNudge;
-
-    private void UpdateSprites()
-    {
-        Vector3 nudge = Nudge();
-        Vector3 toCamera = nudge / SpriteNudge;
-        foreach ((Sprite3D sprite, Vector3 foot, int layer) in _layered)
-            sprite.Position = foot + toCamera * (LayerNudge * layer);
-        int frame = (int)(_animClock * AnimFps) % 4;
-
-        bool moving = _sim.PlayerVelocity.LengthSquared() > 0.05f;
-        int dir = DirectionOf(_sim.PlayerFacing);
-        Texture2D[,][] anim = _sim.PlayerAirborneFromBond ? _playerBond : _playerWalk;
-        int playerFrame = _sim.PlayerAirborneFromBond ? Mathf.Min(3, (int)((1f - Mathf.Clamp(_sim.PlayerPos.Z - PlayerGround(), 0f, 1f)) * 3f)) : moving ? frame : 0;
-        _player.Texture = anim[dir, 0][playerFrame];
-        _player.Offset = new Vector2(0f, _playerFoot);
-        _player.Position = ToWorld(_sim.PlayerPos) + nudge;
-        bool blink = _sim.PlayerInvulnerable > 0f && !_sim.PlayerAirborneFromBond && (int)(_animClock * 16f) % 2 == 0;
-        _player.Modulate = _sim.PlayerHurtFlash > 0f ? new Color(1.6f, 0.5f, 0.45f) : blink ? new Color(1f, 1f, 1f, 1f) * 1.4f : _tint;
-        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * BodyScale, _config.PlayerRadius);
-
-        for (int i = 0; i < _sim.Capacity; i++)
-        {
-            Sprite3D sprite = _enemies[i];
-            Sprite3D shadow = _enemyShadows[i];
-            ReliefSim.EnemyState state = _sim.State[i];
-            if (state == ReliefSim.EnemyState.Inactive || _sim.EnemyPos[i].Z < -2.5f)
-            {
-                sprite.Visible = false;
-                shadow.Visible = false;
-                continue;
-            }
-            int type = _sim.EnemyType[i];
-            int d = DirectionOf(_sim.EnemyFacing[i]);
-            Texture2D texture;
-            if (state == ReliefSim.EnemyState.Dying)
-            {
-                float t = 1f - _sim.EnemyTimer[i] / ReliefSim.DyingDuration;
-                texture = _creatureDeath[type][d, 0][Mathf.Clamp((int)(t * 4f), 0, 3)];
-            }
-            else
-            {
-                texture = _creatureWalk[type][d, 0][(frame + i) % 4];
-            }
-            sprite.Visible = true;
-            sprite.Texture = texture;
-            sprite.Offset = new Vector2(0f, _creatureFoot[type]);
-            sprite.Position = ToWorld(_sim.EnemyPos[i]) + nudge;
-            sprite.Modulate = _sim.EnemyFlash[i] > 0f ? new Color(2.2f, 2.2f, 2.2f) : _sim.EnemyClimbing[i] ? new Color(0.85f, 0.8f, 0.95f) * _tint : _tint;
-            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * BodyScale);
-        }
-    }
-
     private void UpdateProjectiles()
     {
         for (int p = 0; p < _projectiles.Length; p++)
@@ -847,7 +573,7 @@ public partial class ReliefSandbox : Node
         _playerBody.Rotation = new Vector3(0f, _playerYaw, 0f);
         bool blink = _sim.PlayerInvulnerable > 0f && !_sim.PlayerAirborneFromBond && (int)(_animClock * 16f) % 2 == 0;
         _playerBody.MaterialOverride = _sim.PlayerHurtFlash > 0f ? _hurtMaterial : blink ? _flashMaterial : null;
-        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * BodyScale, _config.PlayerRadius);
+        PlaceShadow(_playerShadow, _sim.PlayerPos, 1.1f * _config.LowPoly.BodyScale, _config.PlayerRadius);
 
         for (int i = 0; i < _sim.Capacity; i++)
         {
@@ -871,7 +597,7 @@ public partial class ReliefSandbox : Node
             body.Position = ToWorld(_sim.EnemyPos[i]);
             body.Rotation = new Vector3(0f, _creatureYaw[i], 0f);
             body.MaterialOverride = _sim.EnemyFlash[i] > 0f ? _flashMaterial : null;
-            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * BodyScale);
+            PlaceShadow(shadow, _sim.EnemyPos[i], 0.9f * _config.LowPoly.BodyScale);
         }
     }
 
@@ -943,16 +669,16 @@ public partial class ReliefSandbox : Node
         string view = Is3D
             ? $"CAMÉRA LIBRE  (Tab : relief 2D · souris : tourner et incliner ({_pitchDegrees:0}°) · Échap libère la souris)"
             : "RELIEF 2D  (Tab : caméra libre)";
-        _hud.Text = $"Vue : {view}" + (_lowPoly && _biomeProps == null ? "" : $" · terre : {_biome}") + "\n"
-            + (_lowPoly ? _look.Describe() + "\n" + _atmosphere.Describe() + "\n" : "")
+        _hud.Text = $"Vue : {view}" + (_biomeProps == null ? "" : $" · terre : {_biome}") + "\n"
+            + _look.Describe() + "\n" + _atmosphere.Describe() + "\n"
             + $"{_config.Character} · Espace : saut · Maj ou clic droit : {_config.Mobility.Name} ({(_sim.SkillCooldown > 0f ? $"{_sim.SkillCooldown:0.0} s" : "prête")})"
             + $" · R : retour au départ · +/- : foule ({_crowdTarget})\n"
             + $"PV {Mathf.CeilToInt(_sim.PlayerHp)} · étage {_sim.PlayerLevel:0.0} · morts {_sim.Deaths}\n"
             + $"Éliminations {_sim.Kills} (retombée {_sim.KillsByStomp}, chute {_sim.KillsByFall}, vide {_sim.KillsByVoid})\n"
             + $"Sauts {_sim.Bonds} · {_config.Mobility.Name} {_sim.Skills} · retombées {_sim.Stomps} · chutes dans le vide {_sim.VoidFalls}\n"
             + $"Horde {alive}, dont {climbing} qui grimpent · {Engine.GetFramesPerSecond():0} i/s"
-            + (_lowPoly ? $" · {_look.PropCount} décors · {Primitives() / 1000:0} k triangles · niveaux de détail : "
-                + (_viewport.MeshLodThreshold > 0f ? $"{_viewport.MeshLodThreshold:0.#} px" : "non") : "");
+            + $" · {_look.PropCount} décors · {Primitives() / 1000:0} k triangles · niveaux de détail : "
+            + (_viewport.MeshLodThreshold > 0f ? $"{_viewport.MeshLodThreshold:0.#} px" : "non");
     }
 
     /// <summary>Le bot des captures fait le tour de l'arène et bondit quand il bute ou qu'une marche est trop haute.</summary>
@@ -999,7 +725,7 @@ public partial class ReliefSandbox : Node
         foreach (float ms in _frameMs)
             total += ms;
         float p99 = _frameMs[Mathf.Min(_frameMs.Count - 1, (int)(_frameMs.Count * 0.99f))];
-        GD.Print($"[ReliefSandbox] mesure : terre {_biome}, {(_lowPoly ? _look.PropCount : _props.Count)} décors, "
+        GD.Print($"[ReliefSandbox] mesure : terre {_biome}, {_look.PropCount} décors, "
             + $"seuil {_viewport.MeshLodThreshold:0.#} px, {_frameMs.Count} images, {1000f * _frameMs.Count / total:0.0} i/s, "
             + $"p99 {p99:0.0} ms, {_primitiveSum / _frameMs.Count / 1000:0} k triangles par image");
     }
@@ -1069,11 +795,6 @@ public partial class ReliefSandbox : Node
                 break;
             case 8 when _captureTimer >= 0.5f:
                 Save("chase_high");
-                if (!_lowPoly)
-                {
-                    Finish();
-                    break;
-                }
                 // Un grand décor entre la caméra et le joueur : effacé en trame, puis plein pour comparer.
                 Vector2? tall = _look.TallPropNear(_config.Spawn, 3f);
                 if (tall != null)
@@ -1135,11 +856,7 @@ public partial class ReliefSandbox : Node
         }
     }
 
-    private void SetPitch(float degrees)
-    {
-        _pitchDegrees = degrees;
-        _stretchDirty = true;
-    }
+    private void SetPitch(float degrees) => _pitchDegrees = degrees;
 
     private static readonly (string Name, View View, ReliefLook.Ground Ground, bool Mid, bool Outlines, bool Toon)[] Gallery =
     {
@@ -1200,8 +917,6 @@ public partial class ReliefSandbox : Node
         _viewport.Size = size;
         _look.FitOutlines(size.Y);
     }
-
-    private float BodyScale => _lowPoly ? _config.LowPoly.BodyScale : 1f;
 
     private float PlayerGround() => _arena.HighestUnder(_sim.PlayerPos.X, _sim.PlayerPos.Y, _config.PlayerRadius);
 

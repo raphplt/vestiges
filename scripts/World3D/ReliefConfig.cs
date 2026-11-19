@@ -1,7 +1,7 @@
 using Godot;
 using Godot.Collections;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Réglages du bac à sable de la verticalité (plan 59), lus dans <c>data/sandbox/relief.json</c>. Unités : une cellule
@@ -77,6 +77,8 @@ public sealed class ReliefConfig
     public Vector2 Spawn;
     public string[] Arena;
     public string Character;
+    // La terre dont viennent les décors et les sols de la terre d'essai (data/props, data/biomes) ; vide : le semis du réglage.
+    public string Land;
 
     public float PlayerSpeed, PlayerRadius, Step, PlayerHp, HurtInvulnerable;
     // Rythme 3D : les vitesses du jeu (px/s, 45 px par cellule) ramenées à des corps à l'échelle (plan 60, §236).
@@ -95,29 +97,41 @@ public sealed class ReliefConfig
     public Creature[] Creatures;
     public LowPolyStyle LowPoly;
 
-    public string[] GroundTiles, StepTiles, TerraceTiles, ButteTiles;
-
     public float ChasePitch, ChaseMinPitch, ChaseMaxPitch, ChaseDistance;
     public float ChaseFov, ChaseHeight, ChaseMouseDegrees, ChaseClearance;
 
-    public static ReliefConfig Load(string path)
+    public const string RenderPath = "res://data/world3d/render.json";
+    public const string TestLandPath = "res://data/world3d/test_land.json";
+    public const string CameraPath = "res://data/world3d/camera.json";
+    public const string PlayerPath = "res://data/movement/player_3d.json";
+
+    private static Dictionary Read(string path)
     {
-        using FileAccess file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
-        Dictionary root = Json.ParseString(file.GetAsText()).AsGodotDictionary();
-        Dictionary player = root["player"].AsGodotDictionary();
-        Dictionary weapon = root["weapon"].AsGodotDictionary();
-        Dictionary crowd = root["crowd"].AsGodotDictionary();
-        Dictionary tiles = root["tiles"].AsGodotDictionary();
-        Dictionary chase = root["camera_chase"].AsGodotDictionary();
-        Array spawn = root["spawn"].AsGodotArray();
-        Array creatures = root["creatures"].AsGodotArray();
+        using FileAccess file = FileAccess.Open(path, FileAccess.ModeFlags.Read)
+            ?? throw new System.IO.FileNotFoundException(path);
+        return Json.ParseString(file.GetAsText()).AsGodotDictionary();
+    }
+
+    /// <summary>
+    /// Les réglages de la 3D (rendu, terre d'essai, caméra, joueur, plan 60 §29) ; avec <paramref name="sandboxPath"/>, la
+    /// horde d'essai et l'arme du bac à sable en plus.
+    /// </summary>
+    public static ReliefConfig Load(string sandboxPath = null)
+    {
+        Dictionary render = Read(RenderPath);
+        Dictionary land = Read(TestLandPath);
+        Dictionary chase = Read(CameraPath);
+        Dictionary player = Read(PlayerPath);
+        Dictionary sandbox = sandboxPath != null ? Read(sandboxPath) : null;
+        Array spawn = land["spawn"].AsGodotArray();
 
         ReliefConfig config = new()
         {
-            LevelHeight = F(root, "level_height"),
+            LevelHeight = F(land, "level_height"),
             Spawn = new Vector2((float)spawn[0].AsDouble(), (float)spawn[1].AsDouble()),
-            Arena = root["arena"].AsStringArray(),
-            Character = root["character"].AsString(),
+            Arena = land["arena"].AsStringArray(),
+            Land = land["land"].AsString(),
+            Character = sandbox != null ? sandbox["character"].AsString() : "facteur",
             Pace = F(player, "pace"),
             AccelerationSeconds = F(player, "acceleration_seconds"),
             BrakingSeconds = F(player, "braking_seconds"),
@@ -135,28 +149,6 @@ public sealed class ReliefConfig
             StompPush = F(player, "stomp_push"),
             StompDamage = F(player, "stomp_damage"),
             VoidDamage = F(player, "void_damage"),
-            WeaponInterval = F(weapon, "interval"),
-            WeaponRange = F(weapon, "range"),
-            WeaponDamage = F(weapon, "damage"),
-            WeaponSpeed = F(weapon, "speed"),
-            WeaponHitRadius = F(weapon, "hit_radius"),
-            WeaponPush = F(weapon, "push"),
-            CrowdCount = (int)F(crowd, "count"),
-            SpawnMin = F(crowd, "spawn_min"),
-            SpawnMax = F(crowd, "spawn_max"),
-            CrowdRadius = F(crowd, "radius"),
-            Separation = F(crowd, "separation"),
-            ClimbSpeed = F(crowd, "climb_speed"),
-            ContactReach = F(crowd, "contact_reach"),
-            ContactHeight = F(crowd, "contact_height"),
-            ContactDamage = F(crowd, "contact_damage"),
-            PushDecay = F(crowd, "push_decay"),
-            CrowdFallDamagePerLevel = F(crowd, "fall_damage_per_level"),
-            CrowdSafeDropLevels = F(crowd, "safe_drop_levels"),
-            GroundTiles = tiles["ground"].AsStringArray(),
-            StepTiles = tiles["steps"].AsStringArray(),
-            TerraceTiles = tiles["terrace"].AsStringArray(),
-            ButteTiles = tiles["butte"].AsStringArray(),
             ChasePitch = F(chase, "pitch_degrees"),
             ChaseMinPitch = F(chase, "min_pitch_degrees"),
             ChaseMaxPitch = F(chase, "max_pitch_degrees"),
@@ -165,12 +157,50 @@ public sealed class ReliefConfig
             ChaseFov = F(chase, "fov"),
             ChaseHeight = F(chase, "height"),
             ChaseMouseDegrees = F(chase, "mouse_degrees_per_pixel"),
-            Creatures = new Creature[creatures.Count],
+            Creatures = System.Array.Empty<Creature>(),
         };
+        if (sandbox != null)
+            config.LoadSandbox(sandbox);
+        // Sommet h atteint à mi-durée T : v = 4h / T, g = 8h / T².
+        float jumpHeight = F(player, "jump_height");
+        float jumpSeconds = F(player, "jump_seconds");
+        config.JumpVelocity = 4f * jumpHeight / jumpSeconds;
+        config.Gravity = 8f * jumpHeight / (jumpSeconds * jumpSeconds);
+        config.SetCharacter(config.Character);
+        config.LowPoly = LoadLowPoly(render, land);
+        config.Atmosphere = LoadAtmosphere(render["atmosphere"].AsGodotDictionary());
+        return config;
+    }
+
+    /// <summary>La horde d'essai et l'arme du bac à sable.</summary>
+    private void LoadSandbox(Dictionary sandbox)
+    {
+        Dictionary weapon = sandbox["weapon"].AsGodotDictionary();
+        Dictionary crowd = sandbox["crowd"].AsGodotDictionary();
+        Array creatures = sandbox["creatures"].AsGodotArray();
+        WeaponInterval = F(weapon, "interval");
+        WeaponRange = F(weapon, "range");
+        WeaponDamage = F(weapon, "damage");
+        WeaponSpeed = F(weapon, "speed");
+        WeaponHitRadius = F(weapon, "hit_radius");
+        WeaponPush = F(weapon, "push");
+        CrowdCount = (int)F(crowd, "count");
+        SpawnMin = F(crowd, "spawn_min");
+        SpawnMax = F(crowd, "spawn_max");
+        CrowdRadius = F(crowd, "radius");
+        Separation = F(crowd, "separation");
+        ClimbSpeed = F(crowd, "climb_speed");
+        ContactReach = F(crowd, "contact_reach");
+        ContactHeight = F(crowd, "contact_height");
+        ContactDamage = F(crowd, "contact_damage");
+        PushDecay = F(crowd, "push_decay");
+        CrowdFallDamagePerLevel = F(crowd, "fall_damage_per_level");
+        CrowdSafeDropLevels = F(crowd, "safe_drop_levels");
+        Creatures = new Creature[creatures.Count];
         for (int i = 0; i < creatures.Count; i++)
         {
             Dictionary creature = creatures[i].AsGodotDictionary();
-            config.Creatures[i] = new Creature
+            Creatures[i] = new Creature
             {
                 Id = creature["id"].AsString(),
                 Speed = F(creature, "speed"),
@@ -178,15 +208,6 @@ public sealed class ReliefConfig
                 Weight = (int)F(creature, "weight"),
             };
         }
-        // Sommet h atteint à mi-durée T : v = 4h / T, g = 8h / T².
-        float jumpHeight = F(player, "jump_height");
-        float jumpSeconds = F(player, "jump_seconds");
-        config.JumpVelocity = 4f * jumpHeight / jumpSeconds;
-        config.Gravity = 8f * jumpHeight / (jumpSeconds * jumpSeconds);
-        config.SetCharacter(config.Character);
-        config.LowPoly = LoadLowPoly(root["lowpoly"].AsGodotDictionary());
-        config.Atmosphere = LoadAtmosphere(root["atmosphere"].AsGodotDictionary());
-        return config;
     }
 
     /// <summary>
@@ -290,10 +311,10 @@ public sealed class ReliefConfig
         };
     }
 
-    private static LowPolyStyle LoadLowPoly(Dictionary lowPoly)
+    private static LowPolyStyle LoadLowPoly(Dictionary lowPoly, Dictionary land)
     {
-        Array scatter = lowPoly["scatter"].AsGodotArray();
-        Array landmarks = lowPoly["landmarks"].AsGodotArray();
+        Array scatter = land["scatter"].AsGodotArray();
+        Array landmarks = land["landmarks"].AsGodotArray();
         Dictionary start = lowPoly["start"].AsGodotDictionary();
         Dictionary outline = lowPoly["outline"].AsGodotDictionary();
         LowPolyStyle style = new()

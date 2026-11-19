@@ -2,4 +2,4 @@
 shader_type spatial;
 render_mode diffuse_toon, specular_disabled;
 
-#include "res://tools/tests/lowpoly_flat.gdshaderinc"
+#include "res://assets/shaders/world3d/lowpoly_flat.gdshaderinc"

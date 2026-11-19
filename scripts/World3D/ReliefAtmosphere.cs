@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Ce que Forward+ ouvre au bac à sable du relief (plan 60 §26, lot 60.0f), chaque effet basculé seul : ombres de contact
@@ -107,16 +107,16 @@ public sealed class ReliefAtmosphere
     }
 
     /// <summary>Les lumières suivent les projectiles en vol ; positions déjà en coordonnées du monde.</summary>
-    public void Update(ReliefSim sim, System.Func<Vector3, Vector3> toWorld)
+    public void Update(Vector3[] projectiles, bool[] active, System.Func<Vector3, Vector3> toWorld)
     {
         if (!Supported || !Lights)
             return;
         for (int p = 0; p < _projectileLights.Length; p++)
         {
-            bool active = sim.ProjectileActive[p];
-            _projectileLights[p].Visible = active;
-            if (active)
-                _projectileLights[p].Position = toWorld(sim.ProjectilePos[p]);
+            bool on = p < active.Length && active[p];
+            _projectileLights[p].Visible = on;
+            if (on)
+                _projectileLights[p].Position = toWorld(projectiles[p]);
         }
     }
 

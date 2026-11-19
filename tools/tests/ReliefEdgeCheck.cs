@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Godot;
 
+using Vestiges.World3D;
+
 namespace Vestiges.Tests;
 
 /// <summary>

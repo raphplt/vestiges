@@ -1,0 +1,77 @@
+{
+	"_comment": "Terre d'essai de la run 3D (plan 60 §29), en attendant que le relief naisse de la génération (60.4) : l'arène du bac à sable de la verticalité. arena : une ligne par rang y, un caractère par cellule x ; '.' vide, '0' à '9' puis 'a' (10) à 'k' (20) hauteur en quarts d'étage (4 = un étage ; c = trois étages, g = quatre, k = cinq : aucune falaise ne se saute, on monte par les rampes, §240) ; '>', '<', 'v', '^' : case de montée, une rampe qui monte vers l'est, l'ouest, le sud ou le nord, de la case pleine qui la précède à celle qui la suit (plusieurs cases de suite font une seule pente). level_height : un étage en cellules (1,79 m au corps). spawn : le départ (cellules). land : la terre dont viennent les décors (data/props, tirés de build/models) et les sols ; vide : le semis de scatter et les repères de landmarks, modèles de assets/models. scatter : une chance par cellule plate et l'emprise d'obstacle (cellules) ; landmarks : un décor posé à la main, son pied (cellules) et son orientation.",
+	"level_height": 0.5,
+	"spawn": [
+		20.5,
+		18.5
+	],
+	"land": "forest_reclaimed",
+	"scatter": [
+		{
+			"model": "props/prop_tree_medium",
+			"density": 0.035,
+			"radius": 0.22
+		},
+		{
+			"model": "props/prop_rock_mossy",
+			"density": 0.025,
+			"radius": 0.25
+		}
+	],
+	"landmarks": [
+		{
+			"model": "props/prop_bld_house_w3_a",
+			"at": [
+				8.0,
+				38.5
+			],
+			"yaw_degrees": 0
+		}
+	],
+	"arena": [
+		"............................................",
+		"............................................",
+		"..0000000000000000000000000000000000000000..",
+		"..0cccccccccccccc0000000000000000000000000..",
+		"..0ckkkkkcccccccc000000000cccccccccccccc00..",
+		"..0ckkkkkcccccccc000000000ccccckkkkkkkcc00..",
+		"..0ckkkkkcccccccc000000000ccccckkkkkkkcc00..",
+		"..0ckkkkkcccccccc000000000ccccckkkkkkkcc00..",
+		"..0ckkkkkcccccccc000000000ccccckkkkkkkcc00..",
+		"..0ccc^^ccccccccc000000000ccccccc^^ccccc00..",
+		"..0ccc^^ccccccccc<<<<<<000ccccccc^^ccccc00..",
+		"..0ccc^^ccccccccc<<<<<<000ccccccc^^ccccc00..",
+		"..0cccccccccccccc000000000cccccccccccccc00..",
+		"..000000000000000000000000cccccccccccccc00..",
+		"..00000000000000000000000000^^000000000000..",
+		"..00000000000000000000000000^^000000000000..",
+		"..00000000......000000000000^^000000000000..",
+		"..00000000......000000000000^^000000000000..",
+		"..00000000......000000000000^^000000000000..",
+		"..00000000......000000000000^^000000000000..",
+		"..00000000000000000000000c0000000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"..0000000000000000c000000000000gggggggg000..",
+		"..00000000000000000000000000000gggggggg000..",
+		"..00000000000000000000000000000gggggggg000..",
+		"..000000000000000000000>>>>>>>>gggggggg000..",
+		"..000000000000000000c00>>>>>>>>gggggggg000..",
+		"..00ggggggggg000000000000000000gggggggg000..",
+		"..00ggggggggg000000000000000000gggggggg000..",
+		"..00ggggggggg000000000000000000gggggggg000..",
+		"..00ggggggggg000000000000000000gggggggg000..",
+		"..00ggggggggg<<<<<<<<000vv0000000000000000..",
+		"..00ggggggggg<<<<<<<<000vv0000000000000000..",
+		"..00ggggggggg00000000000vv0000000000000000..",
+		"..00ggggggggg00000000000vv0000000000000000..",
+		"..00ggggggggg00000000000vv0000000000000000..",
+		"..00ggggggggg00000000000vv0000000000000000..",
+		"..00ggggggggg00000000cccccccc0000000000000..",
+		"..0000000000000000000cccccccc0000000000000..",
+		"..0000000000000000000cccccccc0000000000000..",
+		"..0000000000000000000cccccccc0000000000000..",
+		"..0000000000000000000000000000000000000000..",
+		"............................................",
+		"............................................"
+	]
+}

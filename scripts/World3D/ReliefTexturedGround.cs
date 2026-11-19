@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Le relief texturé du bac à sable (plan 60, §235), seul sol gardé (§238) : la géométrie de l'arène couverte de

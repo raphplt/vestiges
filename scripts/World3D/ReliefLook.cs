@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Les styles du bac à sable de la verticalité (plan 60, lot 60.0d), basculés en jeu, chacun indépendamment : le sol
@@ -17,7 +17,7 @@ public sealed class ReliefLook
     private static readonly string[] GroundNames = { "texturé, falaises taillées", "texturé, falaises droites" };
     // Épaisseur des contours (px) pour une image de 1080 lignes : elle suit la définition, pour garder la même largeur à l'écran.
     private const float OutlineThickness1080 = 2f;
-    private const string OutlineShader = "res://tools/tests/relief_outline.gdshader";
+    private const string OutlineShader = "res://assets/shaders/world3d/relief_outline.gdshader";
 
     private readonly MeshInstance3D[] _grounds = new MeshInstance3D[2];
     private readonly ShaderMaterial _outlineMaterial;
@@ -41,7 +41,7 @@ public sealed class ReliefLook
     /// <summary>Les créatures par type, en low [0] et mid [1] poly.</summary>
     public ReliefLowPoly.Model[][] Creatures { get; } = new ReliefLowPoly.Model[2][];
 
-    public ReliefLook(ReliefConfig config, ReliefArena arena, ReliefSim sim, Node3D world, Camera3D camera,
+    public ReliefLook(ReliefConfig config, ReliefArena arena, Node3D world, Camera3D camera,
         SubViewport viewport, IReadOnlyList<Vector2> keepClear, ReliefBiomeProps biome)
     {
         ReliefConfig.LowPolyStyle style = config.LowPoly;
@@ -75,7 +75,7 @@ public sealed class ReliefLook
         _shaded.Add(ReliefGrass.Material);
         _shaded.Add(ReliefLowPoly.Plain);
 
-        PlaceProps(arena, style, sim, world, keepClear, config.Spawn, biome);
+        PlaceProps(arena, style, world, keepClear, config.Spawn, biome);
 
         // Quadrilatère plein écran, devant la caméra : son shader place lui-même ses sommets aux coins de l'image.
         _outlineMaterial = new ShaderMaterial { Shader = GD.Load<Shader>(OutlineShader), RenderPriority = (int)Material.RenderPriorityMax };
@@ -99,14 +99,14 @@ public sealed class ReliefLook
         Toon = style.StartToon;
     }
 
-    private void PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style, ReliefSim sim, Node3D world, IReadOnlyList<Vector2> keepClear,
+    private void PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style, Node3D world, IReadOnlyList<Vector2> keepClear,
         Vector2 spawn, ReliefBiomeProps biome)
     {
         Node3D container = new() { Name = "Props" };
         world.AddChild(container);
         Vector3 scale = Vector3.One / style.MetresPerCell;
         Dictionary<string, ReliefLowPoly.Model> mids = new();
-        foreach (ReliefLowPoly.Placement placement in ReliefLowPoly.PlaceProps(arena, style, sim, keepClear, spawn, 59, biome))
+        foreach (ReliefLowPoly.Placement placement in ReliefLowPoly.PlaceProps(arena, style, keepClear, spawn, 59, biome))
         {
             if (!mids.TryGetValue(placement.Path, out ReliefLowPoly.Model mid))
             {

@@ -1,0 +1,22 @@
+{
+	"_comment": "Joueur de la run 3D (plan 60, §236 et §29), en cellules et en secondes ; un étage vaut level_height de la terre. La vitesse vient du personnage (characters.json, px/s ÷ 45 px par cellule) multipliée par pace, car des corps à l'échelle trahissent la vitesse du jeu 2D (12 m/s) ; acceleration_seconds et braking_seconds : le temps pour prendre et perdre cette vitesse. Saut commun (Espace) : jump_height atteint à mi-chemin de jump_seconds sur le plat ; il garde l'élan du sol, sans poussée ; air_control : l'accélération en l'air (cellules/s²). radius : emprise au sol ; step : la plus haute marche franchie sans sauter. Chutes : sans dégâts jusqu'à safe_drop_levels étages, puis drop_damage_per_level par étage ; dès stomp_min_drop_levels, la retombée frappe et repousse la horde au même niveau (stomp_radius, stomp_push, stomp_damage). void_damage : une chute dans le vide, qui ramène au dernier sol sûr. La capacité propre au personnage (Maj ou clic droit) vient de data/movement/mobility.json. Les longueurs et vitesses s'entendent avant world_scale (render.json), qui les ramène au corps.",
+	"pace": 0.67,
+	"acceleration_seconds": 0.12,
+	"braking_seconds": 0.09,
+	"radius": 0.28,
+	"step": 0.19,
+	"hp": 100,
+	"hurt_invulnerable_seconds": 0.7,
+	"jump_height": 0.62,
+	"jump_seconds": 0.7,
+	"jump_cooldown": 0.2,
+	"jump_invulnerable_seconds": 0.0,
+	"air_control": 6.0,
+	"safe_drop_levels": 1.2,
+	"drop_damage_per_level": 12,
+	"stomp_min_drop_levels": 0.6,
+	"stomp_radius": 1.9,
+	"stomp_push": 7.0,
+	"stomp_damage": 14,
+	"void_damage": 20
+}

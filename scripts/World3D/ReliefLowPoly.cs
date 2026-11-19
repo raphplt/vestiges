@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace Vestiges.Tests;
+namespace Vestiges.World3D;
 
 /// <summary>
 /// Rendu low poly du bac à sable de la verticalité (plan 60, lots 60.0b et 60.0d) : les modèles exportés par
@@ -47,8 +47,8 @@ public static class ReliefLowPoly
     /// </summary>
     public readonly record struct GroundBox(Vector2 Centre, Vector2 HalfSize, float AngleDegrees, bool Blocking);
 
-    private const string FlatShader = "res://tools/tests/lowpoly_flat.gdshader";
-    private const string FlatToonShader = "res://tools/tests/lowpoly_flat_toon.gdshader";
+    private const string FlatShader = "res://assets/shaders/world3d/lowpoly_flat.gdshader";
+    private const string FlatToonShader = "res://assets/shaders/world3d/lowpoly_flat_toon.gdshader";
 
     private static StandardMaterial3D _plain;
     private static StandardMaterial3D _glow;
@@ -298,7 +298,7 @@ public static class ReliefLowPoly
     /// les repères posés à la main. Chaque emprise devient un obstacle de la simulation. Avec <paramref name="biome"/>,
     /// les décors de cette terre remplacent le semis du réglage (plan 60 §19, lot C4c).
     /// </summary>
-    public static List<Placement> PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style, ReliefSim sim,
+    public static List<Placement> PlaceProps(ReliefArena arena, ReliefConfig.LowPolyStyle style,
         IReadOnlyList<Vector2> keepClear, Vector2 spawn, ulong seed, ReliefBiomeProps biome = null)
     {
         List<Placement> placed = new();
@@ -307,13 +307,13 @@ public static class ReliefLowPoly
         {
             Model model = LoadModel(landmark.Model, true);
             placed.Add(new Placement(model, landmark.Model, landmark.At, landmark.YawDegrees));
-            AddCollision(sim, model, landmark.At, landmark.YawDegrees, cellsPerMetre);
+            AddCollision(arena.Obstacles, model, landmark.At, landmark.YawDegrees, cellsPerMetre);
         }
 
         if (biome != null)
         {
-            biome.Scatter(arena, sim, placed, keepClear, spawn, cellsPerMetre, seed);
-            sim.FinishObstacles();
+            biome.Scatter(arena, placed, keepClear, spawn, cellsPerMetre, seed);
+            arena.Obstacles.Finish();
             return placed;
         }
         RandomNumberGenerator rng = new() { Seed = seed };
@@ -331,11 +331,11 @@ public static class ReliefLowPoly
                         || Crowded(placed, at, cellsPerMetre))
                         continue;
                     placed.Add(new Placement(model, scatter.Model, at, rng.RandfRange(0f, 360f)));
-                    sim.AddObstacle(at, scatter.Radius);
+                    arena.Obstacles.Add(at, scatter.Radius);
                 }
             }
         }
-        sim.FinishObstacles();
+        arena.Obstacles.Finish();
         return placed;
     }
 
@@ -390,11 +390,11 @@ public static class ReliefLowPoly
     /// Bloque l'emprise d'un décor posé : sa boîte de collision du manifeste, tournée avec lui, en chaîne de cercles le
     /// long du grand côté ; à défaut (modèle d'avant C2), la boîte du modèle entier.
     /// </summary>
-    internal static void AddCollision(ReliefSim sim, Model model, Vector2 at, float yawDegrees, float cellsPerMetre)
+    internal static void AddCollision(ReliefObstacles obstacles, Model model, Vector2 at, float yawDegrees, float cellsPerMetre)
     {
         if (model.Ground is not GroundBox box)
         {
-            AddFootprint(sim, model.Bounds, at, yawDegrees, cellsPerMetre);
+            AddFootprint(obstacles, model.Bounds, at, yawDegrees, cellsPerMetre);
             return;
         }
         // Un nœud tourné de θ autour de Y envoie (x, z) sur (x cos θ + z sin θ, −x sin θ + z cos θ).
@@ -409,11 +409,11 @@ public static class ReliefLowPoly
         for (int i = 0; i < count; i++)
         {
             float offset = count == 1 ? 0f : Mathf.Lerp(-halfLength + radius, halfLength - radius, i / (float)(count - 1));
-            sim.AddObstacle(centre + axis * offset, radius);
+            obstacles.Add(centre + axis * offset, radius);
         }
     }
 
-    internal static void AddFootprint(ReliefSim sim, Aabb bounds, Vector2 at, float yawDegrees, float cellsPerMetre)
+    internal static void AddFootprint(ReliefObstacles obstacles, Aabb bounds, Vector2 at, float yawDegrees, float cellsPerMetre)
     {
         bool turned = Mathf.Abs(Mathf.Sin(Mathf.DegToRad(yawDegrees))) > 0.5f;
         float sizeX = (turned ? bounds.Size.Z : bounds.Size.X) * cellsPerMetre;
@@ -425,7 +425,7 @@ public static class ReliefLowPoly
         for (int i = 0; i < count; i++)
         {
             float offset = count == 1 ? 0f : Mathf.Lerp(-length * 0.5f + radius, length * 0.5f - radius, i / (float)(count - 1));
-            sim.AddObstacle(at + (alongX ? new Vector2(offset, 0f) : new Vector2(0f, offset)), radius);
+            obstacles.Add(at + (alongX ? new Vector2(offset, 0f) : new Vector2(0f, offset)), radius);
         }
     }
 

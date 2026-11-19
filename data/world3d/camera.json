@@ -1,0 +1,11 @@
+{
+	"_comment": "Caméra libre de la run 3D (plan 60, §234 et §28) : la souris la tourne autour du joueur, de gauche à droite et de haut en bas entre deux inclinaisons (degrés au-dessus de l'horizon), à distance fixe (§236 : le joueur ne règle pas le recul) ; pitch_degrees : l'inclinaison de départ. Elle se rapproche seule quand le relief s'interpose (ground_clearance : marge au-dessus du sol). distance, height (point visé au-dessus des pieds) et ground_clearance en cellules ; fov en degrés.",
+	"pitch_degrees": 16,
+	"min_pitch_degrees": 4,
+	"max_pitch_degrees": 72,
+	"distance": 4.0,
+	"ground_clearance": 0.35,
+	"fov": 62,
+	"height": 1.05,
+	"mouse_degrees_per_pixel": 0.22
+}

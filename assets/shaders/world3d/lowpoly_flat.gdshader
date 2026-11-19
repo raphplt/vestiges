@@ -3,4 +3,4 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
-#include "res://tools/tests/lowpoly_flat.gdshaderinc"
+#include "res://assets/shaders/world3d/lowpoly_flat.gdshaderinc"

@@ -1037,3 +1037,28 @@ Raphaël : « le x1.35 je suis plutot pour le laisser ». `world_scale` passe à
 
 **60.0 est clos.** Les quatre choix du §7 sont tranchés. 60.1 sort du bac à sable : la scène `Main3D` dans le jeu, puis le joueur, la caméra et les réglages en mètres. Son découpage est à proposer avant d'y coder.
 
+
+## 29. 60.1, les fondations — découpage (19 novembre)
+
+Raphaël, sur la run 2D gardée à côté de la 3D : « non. on est encore en phase de dev donc on va pas s'embeter avec ca » (§254). Le §3 change donc :
+- **Le Hub lance la run 3D dès 60.1a.** Il n'y a pas de scène 2D à garder jouable ni de régressions 2D à tenir vertes.
+- **Le code 2D reste dans le dépôt, gelé.** Il compile, mais personne ne le teste ni ne le corrige. Chaque système 2D part dès que son portage 3D existe, plus en un seul lot à la fin (60.8).
+- **Le jeu se joue moins entre 60.1 et 60.3.** En 60.1, on marche sur la terre d'essai ; la horde arrive en 60.2 et le combat en 60.3.
+
+### L'unité du monde
+
+Le bac à sable compte en cellules : une unité Godot vaut une cellule, et un étage une demi-cellule. Ses constructeurs (relief, sol texturé, herbe, décors, caméra, effets), réglés et vus sur des dizaines de captures, sont écrits dans cette unité. **La run 3D la garde.** Le mètre ne sert qu'à lire et à parler, au corps (§253) : une cellule fait 3,58 m, un étage 1,79 m, le facteur 2,2 m. La grille de la génération (60.4) est la même grille de cellules.
+
+**Les réglages en pixels se convertissent par un seul facteur**, `Units.CellsPerPixel`, tiré du rythme déjà joué : une vitesse du jeu 2D (px/s) ÷ 45,25 px par cellule × `pace` 0,67 ÷ 1,35 (l'échelle du monde). Cela donne 91 px par cellule. Les portées, rayons et vitesses gardent ainsi entre eux les rapports de la 2D.
+- Chaque clé `_px` passe en cellules (`_cells`) dans `data/` au moment où son système est porté, plus en une seule passe. Un chargeur 2D encore vivant lit, en attendant, la valeur en pixels convertie.
+- **Conséquence à surveiller en 60.4** : rapporté aux portées et aux vitesses, le monde est deux fois plus grand qu'en 2D. Une cellule 2D valait 45 px de jeu, une cellule 3D en vaut 91. Les tailles de la génération se règleront en jouant.
+
+### Les sous-lots
+
+| Sous-lot | Contenu | Vérification | Effort |
+|---|---|---|---|
+| **60.1a La pile 3D dans le jeu** | La pile 3D du bac à sable (relief, sol texturé, herbe, modèles et décors d'une terre, effets, simulation) déménage dans `scripts/World3D/` (`Vestiges.World3D`). Ses réglages quittent `data/sandbox/relief.json` pour `data/world3d/` (rendu, terre d'essai, caméra) et `data/movement/player_3d.json`. Le mode sprites du bac à sable, sa cuisson d'une run 2D et son relief en tuiles partent | `--check-edges` inchangé (0 rebord collé sur 86, mêmes m/s) ; capture du bac à sable identique | Moyen |
+| **60.1b Le joueur et la caméra** | `PlayerMotor3D`, logique pure tirée de la simulation : marche et inertie, saut, capacité du personnage, chutes et leurs dégâts, piétinement, vide, emprises des décors. `PlayerBody3D` : le modèle mid poly animé, tourné vers sa course. `RunCamera3D` : la caméra libre du §28, avec le recul qui évite le relief et les décors qui s'effacent en trame. Le bac à sable s'en sert : un seul moteur, une seule caméra. Vitesse du personnage par `Units` | `--check-edges` sur le moteur partagé : rebords et relevé en m/s identiques ; capture du bac à sable | Moyen |
+| **60.1c La run part en 3D** | Forward+ pour tout le projet. `scenes/Main3D.tscn` : la terre d'essai et ses décors, le personnage choisi au Hub, ses PV, la mort qui ramène au Hub. Le Hub et « Recommencer » lancent `Main3D`. Souris capturée en run, libérée en pause (Échap). Nouvelle action `jump` (Espace) ; `mobility` passe sur Maj et le clic droit ; à la manette, le stick droit tourne la caméra | Smoke test ; capture de `Main3D` lancée comme depuis le Hub ; Raphaël joue | Moyen |
+
+À la fin de 60.1, on lance le jeu, on choisit son personnage et on marche, saute et use de sa capacité sur la terre d'essai, sous la caméra libre. 60.2 y amène la horde.

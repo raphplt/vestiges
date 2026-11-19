@@ -1,5 +1,7 @@
 using Godot;
 
+using Vestiges.World3D;
+
 namespace Vestiges.Tests;
 
 /// <summary>
@@ -29,9 +31,6 @@ public sealed class ReliefSim
     private readonly int[] _bucketNext;
     private readonly int _weightTotal;
     // Emprises au sol des vrais décors : (x, y, rayon), indexées par cellule.
-    private readonly System.Collections.Generic.List<Vector3> _obstacles = new();
-    private int[] _obstacleStart;
-    private int[] _obstacleList;
     private float _fireTimer;
     private bool _bondQueued;
     private bool _skillQueued;
@@ -123,62 +122,6 @@ public sealed class ReliefSim
         _lastSafe = config.Spawn;
     }
 
-    /// <summary>Ajoute l'emprise au sol d'un décor (avant <see cref="FinishObstacles"/>).</summary>
-    public void AddObstacle(Vector2 at, float radius) => _obstacles.Add(new Vector3(at.X, at.Y, radius));
-
-    /// <summary>Range les emprises par cellule touchée, marge d'un corps comprise.</summary>
-    public void FinishObstacles()
-    {
-        int cells = _arena.Width * _arena.Depth;
-        System.Collections.Generic.List<int>[] perCell = new System.Collections.Generic.List<int>[cells];
-        for (int o = 0; o < _obstacles.Count; o++)
-        {
-            Vector3 ob = _obstacles[o];
-            float reach = ob.Z + 0.5f;
-            for (int y = Mathf.FloorToInt(ob.Y - reach); y <= Mathf.FloorToInt(ob.Y + reach); y++)
-            {
-                for (int x = Mathf.FloorToInt(ob.X - reach); x <= Mathf.FloorToInt(ob.X + reach); x++)
-                {
-                    if (x < 0 || y < 0 || x >= _arena.Width || y >= _arena.Depth)
-                        continue;
-                    (perCell[y * _arena.Width + x] ??= new()).Add(o);
-                }
-            }
-        }
-        _obstacleStart = new int[cells + 1];
-        System.Collections.Generic.List<int> flat = new();
-        for (int c = 0; c < cells; c++)
-        {
-            _obstacleStart[c] = flat.Count;
-            if (perCell[c] != null)
-                flat.AddRange(perCell[c]);
-        }
-        _obstacleStart[cells] = flat.Count;
-        _obstacleList = flat.ToArray();
-    }
-
-    /// <summary>Sort un corps des emprises de décors de sa cellule, en glissant le long de leur bord.</summary>
-    private Vector2 PushOutOfObstacles(Vector2 at, float radius)
-    {
-        if (_obstacleStart == null)
-            return at;
-        int cell = BucketOf(at.X, at.Y);
-        if (cell < 0)
-            return at;
-        for (int k = _obstacleStart[cell]; k < _obstacleStart[cell + 1]; k++)
-        {
-            Vector3 ob = _obstacles[_obstacleList[k]];
-            Vector2 d = new(at.X - ob.X, at.Y - ob.Y);
-            float min = ob.Z + radius;
-            float lenSq = d.LengthSquared();
-            if (lenSq >= min * min)
-                continue;
-            float len = Mathf.Sqrt(lenSq);
-            at = new Vector2(ob.X, ob.Y) + (len > 0.0001f ? d / len : new Vector2(1f, 0f)) * min;
-        }
-        return at;
-    }
-
     /// <summary>Le bond est demandé : il part au prochain pas, s'il est au sol et prêt.</summary>
     public void QueueBond() => _bondQueued = true;
 
@@ -252,7 +195,7 @@ public sealed class ReliefSim
             }
             Vector2 at = new(PlayerPos.X, PlayerPos.Y);
             at = MoveBlocked(at, PlayerVelocity * dt, PlayerPos.Z + c.Step, c.PlayerRadius);
-            at = PushOutOfObstacles(at, c.PlayerRadius);
+            at = _arena.Obstacles.PushOut(at, c.PlayerRadius);
             // Le joueur tient sur le plus haut sol sous son corps : il ne tombe d'un rebord qu'une fois sorti tout entier,
             // sinon il retomberait à cheval sur la paroi et y resterait collé.
             float ground = _arena.HighestUnder(at.X, at.Y, c.PlayerRadius);
@@ -573,7 +516,7 @@ public sealed class ReliefSim
                 continue;
             }
 
-            Vector2 next = PushOutOfObstacles(new Vector2(pos.X + velocity.X * dt, pos.Y + velocity.Y * dt), c.CrowdRadius);
+            Vector2 next = _arena.Obstacles.PushOut(new Vector2(pos.X + velocity.X * dt, pos.Y + velocity.Y * dt), c.CrowdRadius);
             float ground = _arena.GroundAt(next.X, next.Y);
             if (ReliefArena.IsVoid(ground) && !pushed)
             {

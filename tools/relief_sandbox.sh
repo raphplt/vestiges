@@ -2,14 +2,12 @@
 # Bac à sable de la verticalité (plan 59), à jouer à la main : arène en étages, horde, bond sur Espace, et deux vues de la
 # même simulation qu'on bascule avec Tab : caméra libre (par défaut ; souris pour tourner et incliner, molette pour le recul)
 # et relief 2D isométrique.
-# Rendu low poly par défaut (plan 60, lot 60.0b) : relief en facettes, modèles de assets/models, décors semés.
-# --sprites : le rendu du plan 59, sprites, sol et décors d'un vrai biome générés puis photographiés au lancement
-# (forêt par défaut) : --land-order <biome> (forest_reclaimed, wild_fields, collapsed_quarry, swamp, urban_ruins) ;
-# --tiles garde des tuiles simples, sans run.
-# Styles en jeu (low poly) : F1 sol (facettes, lisse, pixel art), F2 corps (low, mid poly), F3 contours, F4 ombrage
-# toon ; départ réglé dans data/sandbox/relief.json (lowpoly.start).
+# Rendu low poly (plan 60, lot 60.0b), la pile 3D de la run (scripts/World3D, plan 60 §29) : relief en facettes,
+# modèles de assets/models, décors semés. Les sprites du plan 59 sont partis avec la run 2D (§254).
+# Styles en jeu : F1 sol (falaises taillées ou droites), F2 corps (low, mid poly), F3 contours, F4 ombrage toon ;
+# départ réglé dans data/world3d/render.json (start).
 # Options après -- : --view chase|2d, --character <id> (facteur par défaut ; les autres sont exportés au premier
-# lancement), --enemies N (35 par défaut), --seed S, --sprites.
+# lancement), --enemies N (35 par défaut), --seed S, --world-scale w.
 # Espace : saut commun ; Maj ou clic droit : la capacité du personnage (dash, glissade, déphasage, saut flottant).
 # Captures (bot qui fait le tour de l'arène, images des deux vues, puis fermeture) : --capture <dossier> [--seconds S].
 # --biome <terre> (forest_reclaimed, urban_ruins, collapsed_quarry, wild_fields, swamp) : les décors de la terre
@@ -19,7 +17,8 @@
 # --, ex. --rendering-method gl_compatibility pour comparer.
 # F5 à F7 (Forward+ seulement, plan 60 §26) : ombres de contact, brume volumétrique, lumières ; --effects none ou
 # ssao,fog,lights : ceux allumés au lancement.
-# Réglages et arène : data/sandbox/relief.json.
+# Réglages : rendu, terre d'essai et caméra dans data/world3d/, joueur dans data/movement/player_3d.json, horde d'essai
+# et arme dans data/sandbox/relief.json.
 # Exemple : tools/relief_sandbox.sh -- --view 2d --enemies 80
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -45,9 +44,6 @@ for ((i = 0; i < ${#user_args[@]}; i++)); do
         [[ -f assets/models/mid/characters/$character.json ]] || python3 tools/export_lowpoly.py --character "$character" --detail mid
     fi
 done
-if [[ " ${user_args[*]-} " != *" --land-order "* && " ${user_args[*]-} " != *" --tiles "* ]]; then
-    user_args+=(--land-order forest_reclaimed)
-fi
 # Les modèles convertis pour le moteur (plan 60 §19) : normales et niveaux de détail, non versionnés. Seuls les .glb
 # plus récents que leur .scn repassent ; en cas d'échec, les .glb sont lus tels quels.
 "${GODOT_BIN:-godot-mono}" --headless --path . res://tools/tests/ModelConvert.tscn -- --root "$(pwd)/assets/models" \

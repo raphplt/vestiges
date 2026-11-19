@@ -3122,3 +3122,14 @@ Raphaël : « le x1.35 je suis plutot pour le laisser », puis « est ce que apr
 - **Le bac à sable lance ×1,35 par défaut.** `--world-scale 1` rend l'échelle d'avant.
 - **La suite est 60.1**, dans le jeu et hors du bac à sable.
 
+
+## 254. Pas de run 2D à côté de la 3D — 19 novembre 2026
+
+Raphaël, sur « une scène de run en 3D à côté de la run 2D, qui reste jouable tant que la 3D ne l'égale pas » : « non. on est encore en phase de dev donc on va pas s'embeter avec ca je vois pas l'ntéret », puis « je te laisse avancer en grosse autonomie dessus » ([plan 60 §29](60-vestiges-en-3d.md)).
+- **Le Hub lance la run 3D dès 60.1a.** La run 2D n'est plus gardée jouable ni testée.
+
+**Tranché par défaut par l'agent, réversible** :
+- **Le code 2D reste, gelé**, et part système par système dès que son portage 3D existe.
+- **L'unité du monde 3D est la cellule**, celle du bac à sable ; le mètre au corps sert à lire (une cellule fait 3,58 m).
+- **Les réglages en pixels passent en cellules par un seul facteur**, 91 px par cellule, au portage de leur système.
+- **Forward+ pour tout le projet.**
