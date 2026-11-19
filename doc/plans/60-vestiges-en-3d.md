@@ -987,3 +987,47 @@ Raphaël, sur le nouveau modèle : « Il me va ».
 - Smoke test vert.
 
 **Point ouvert** : le portrait du Hub est tiré des mêmes sprites, mais il n'a pas été regardé.
+
+## 28. La fin de 60.0 : caméra, style et échelle — 19 novembre
+
+Raphaël a tranché les quatre choix du §7 :
+1. **La caméra** : la caméra libre seule, en perspective et à distance fixe (recul de 4 cellules, inclinaison de 16° au départ, réglable de 4 à 72° à la souris, champ de 62°). La vue relief 2D quitte la cible : elle reste un outil du bac à sable, pas une option du joueur.
+2. **Le style** :
+   - corps en mid poly ;
+   - contours noirs, sans ombrage toon ;
+   - sol texturé (§238) ;
+   - aplats en palette terne (§243, §248) ;
+   - les trois effets de Forward+ (§249, §250).
+3. **Le moteur** : Forward+ (§247).
+4. **L'échelle** : à essayer, « tester d'augmenter les décors et les cellules ».
+
+### L'essai de l'échelle
+
+Depuis le §237, les corps sont agrandis ×1,35 et les décors non. Le facteur mesure 2,2 m dans un monde où une cellule fait 2,65 m et un étage 1,33 m. Le jeu est donc à l'échelle des corps, plus petit qu'eux.
+
+**`--world-scale <w>`** (`lowpoly.world_scale` dans `data/sandbox/relief.json`, 1 par défaut) agrandit le monde autour des corps :
+- la carte, les étages et les décors gardent leur taille en cellules ;
+- tout ce qui se mesure au corps rapetisse de 1/w : taille et emprises, vitesses du joueur et des créatures, escalade, saut, portée et vitesse des tirs, poussées, rayon du piétinement, distance d'apparition de la horde, recul, visée et marge de la caméra, rayon où les décors s'effacent ;
+- à l'écran, les corps ne changent pas ; les décors, les cellules et les étages grandissent ×w autour d'eux ;
+- le relevé de `--check-edges` compte les mètres au corps.
+
+| | ×1 (joué) | ×1,35 (essai) |
+|---|---|---|
+| Une cellule | 2,65 m | 3,58 m |
+| Un étage | 1,33 m | 1,79 m |
+| Falaises de 3 à 5 étages | 4,0 à 6,6 m | 5,4 à 9,0 m |
+| Saut (1,64 m) | 1,24 étage | 0,92 étage |
+| Vitesses, saut, capacités | inchangés | inchangés |
+| Rebords qui collent | 0 sur 86 | 0 sur 86 |
+| Rampes jusqu'à la tour | 5 étages | 5 étages |
+
+Le saut ne franchit plus un étage entier : aucune falaise n'était sautable (§240), cela ne change rien au relief.
+
+À jouer :
+
+```bash
+tools/relief_sandbox.sh -- --biome forest_reclaimed --world-scale 1.35
+```
+
+Comparer sans l'option.
+

@@ -3099,3 +3099,16 @@ Raphaël : « c'est cool les effets ouaip », puis, sur le personnage : « il es
 Raphaël, sur le modèle 3D du §250 : « Il me va » ([plan 60 §27](60-vestiges-en-3d.md), P2).
 - **Le facteur resculpté est gardé**. Ses sprites 2D sont tirés du même modèle et remplacent les anciens.
 - **Tranché par défaut par l'agent, réversible** : le cadre passe à 42×48 pour que les roues et la mort ne soient plus coupées, et l'ancrage des pieds suit (16).
+
+## 252. La fin de 60.0 : caméra libre, mid poly, contours sans toon ; l'échelle à essayer — 19 novembre 2026
+
+Raphaël, sur les quatre choix de fin de 60.0 ([plan 60 §28](60-vestiges-en-3d.md)) :
+- **Caméra** : la caméra libre seule, en perspective, à distance fixe. La vue relief 2D n'est pas une option du joueur.
+- **Corps** : en mid poly.
+- **Ombrage** : contours noirs, sans toon.
+- **Échelle** : « tester d'augmenter les décors et les cellules ».
+
+**Tranché par défaut par l'agent, réversible** :
+- **L'essai d'échelle** agrandit le monde ×1,35 autour des corps (`--world-scale`). Les corps gardent leur taille à l'écran, et leurs vitesses, leur saut et leurs portées restent les mêmes en mètres du corps.
+- **L'échelle jouée reste celle par défaut** jusqu'au verdict de Raphaël.
+

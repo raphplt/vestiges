@@ -77,7 +77,8 @@ public static class ReliefEdgeCheck
     private static void ReportMovement(ReliefConfig config, ReliefArena arena)
     {
         string played = config.Character;
-        float m = config.LowPoly.MetresPerCell;
+        // Mètres mesurés au corps : un monde agrandi (§28) a des cellules et des étages plus grands, pas des corps plus petits.
+        float m = config.LowPoly.MetresPerCell * config.WorldScale;
         float apex = config.JumpVelocity * config.JumpVelocity / (2f * config.Gravity);
         float air = 2f * config.JumpVelocity / config.Gravity;
         GD.Print($"[ReliefEdgeCheck] Saut : sommet {apex * m:0.00} m ({apex / arena.LevelHeight:0.00} étage d'un étage de {arena.LevelHeight * m:0.00} m), {air:0.00} s en l'air, gravité {config.Gravity * m / 9.81f:0.0} g");

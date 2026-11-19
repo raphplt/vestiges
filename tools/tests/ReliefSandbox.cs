@@ -153,7 +153,13 @@ public partial class ReliefSandbox : Node
         ulong seed = ulong.Parse(Argument(args, "--seed", "59"), CultureInfo.InvariantCulture);
         _lowPoly = System.Array.IndexOf(args, "--sprites") < 0;
         if (_lowPoly)
+        {
+            float worldScale = float.Parse(Argument(args, "--world-scale",
+                _config.LowPoly.WorldScale.ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
+            if (worldScale != 1f)
+                _config.ScaleWorld(worldScale);
             _config.ScaleBodies(_config.LowPoly.BodyScale);
+        }
         if (System.Array.IndexOf(args, "--check-edges") >= 0)
         {
             GetTree().Quit(ReliefEdgeCheck.Run(_config, _arena) == 0 ? 0 : 1);

@@ -39,6 +39,8 @@ public sealed class ReliefConfig
         public float MetresPerCell;
         // Agrandissement du joueur et des créatures, décors à part (§237) : des corps qui comptent à l'écran, comme Megabonk.
         public float BodyScale;
+        // Agrandissement du monde autour des corps, décors, cellules et étages (plan 60 §28) ; --world-scale en jeu.
+        public float WorldScale;
         // Saillie des facettes des falaises taillées (cellules, §238).
         public float CarvedRelief;
         public string StartGround;
@@ -69,6 +71,8 @@ public sealed class ReliefConfig
     }
 
     public AtmosphereStyle Atmosphere;
+    // Agrandissement du monde autour des corps (§28) ; 1 : l'échelle jouée depuis le §237.
+    public float WorldScale = 1f;
     public float LevelHeight;
     public Vector2 Spawn;
     public string[] Arena;
@@ -197,6 +201,38 @@ public sealed class ReliefConfig
         ContactHeight *= scale;
     }
 
+    /// <summary>
+    /// Agrandit le monde autour des corps (plan 60 §28) : la carte, les étages et les décors gardent leur taille en
+    /// cellules, et tout ce qui se mesure au corps rapetisse d'autant (taille, vitesses, saut, portées, caméra). À l'écran,
+    /// les corps ne changent pas ; les décors, les cellules et les étages grandissent autour d'eux. À appeler avant
+    /// <see cref="ScaleBodies"/>.
+    /// </summary>
+    public void ScaleWorld(float scale)
+    {
+        WorldScale = scale;
+        float body = 1f / scale;
+        LowPoly.BodyScale *= body;
+        Pace *= body;
+        SetCharacter(Character);
+        foreach (Creature creature in Creatures)
+            creature.Speed *= body;
+        ClimbSpeed *= body;
+        JumpVelocity *= body;
+        Gravity *= body;
+        WeaponRange *= body;
+        WeaponSpeed *= body;
+        WeaponHitRadius *= body;
+        WeaponPush *= body;
+        StompRadius *= body;
+        StompPush *= body;
+        SpawnMin *= body;
+        SpawnMax *= body;
+        ChaseDistance *= body;
+        ChaseHeight *= body;
+        ChaseClearance *= body;
+        LowPoly.SeeThroughRadius *= body;
+    }
+
     private const string CharactersPath = "res://data/characters/characters.json";
     // Un pas de la grille iso du jeu : la diagonale d'une cellule fait 64 px, son côté 45.
     private const float GamePixelsPerCell = 45.254834f;
@@ -271,6 +307,7 @@ public sealed class ReliefConfig
             OutlineOrthoSensitivity = F(outline, "ortho_sensitivity"),
             MetresPerCell = F(lowPoly, "metres_per_cell"),
             BodyScale = F(lowPoly, "body_scale"),
+            WorldScale = F(lowPoly, "world_scale"),
             GrassPerCell = F(lowPoly["grass"].AsGodotDictionary(), "per_cell"),
             GrassHeight = F(lowPoly["grass"].AsGodotDictionary(), "height"),
             CarvedRelief = F(lowPoly, "carved_relief"),
