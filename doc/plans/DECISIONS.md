@@ -3093,3 +3093,9 @@ Raphaël : « c'est cool les effets ouaip », puis, sur le personnage : « il es
 - **Personnages plus fins et en aplats** : pas de 1,2 unité, budget de 9 000 triangles.
 - **Sprites 2D inchangés** jusqu'à l'accord de Raphaël sur le modèle 3D.
 - **Les effets de Forward+ (§249) sont validés** par Raphaël.
+
+## 251. Le nouveau facteur gardé, ses sprites 2D régénérés — 19 novembre 2026
+
+Raphaël, sur le modèle 3D du §250 : « Il me va » ([plan 60 §27](60-vestiges-en-3d.md), P2).
+- **Le facteur resculpté est gardé**. Ses sprites 2D sont tirés du même modèle et remplacent les anciens.
+- **Tranché par défaut par l'agent, réversible** : le cadre passe à 42×48 pour que les roues et la mort ne soient plus coupées, et l'ancrage des pieds suit (16).

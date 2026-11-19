@@ -2,7 +2,7 @@
 	"model": "facteur",
 	"kind": "character",
 	"fps": 8.0,
-	"max_triangles": 7304,
+	"max_triangles": 7292,
 	"flat_normals": true,
 	"meshes": 27,
 	"animations": {

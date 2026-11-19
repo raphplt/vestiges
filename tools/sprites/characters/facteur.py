@@ -24,7 +24,8 @@ from ..rig import Proportions, Skeleton
 from ..sdf import capsule, cylinder, ellipsoid, rotation_x, rotation_y, rotation_z, rounded_box, smax, sphere, tapered_box
 
 CHARACTER_ID = "facteur"
-FRAME_SIZE = (42, 44)
+# Haut de 48 : les grosses roues et le corps couché de la mort descendent de 6 px sous le pivot.
+FRAME_SIZE = (42, 48)
 FRAME_PIVOT = (21.0, 40.0)
 # Sec et long : épaules étroites, long cou tendu, grandes mains ; les patins le surélèvent (cheville haute).
 DIMENSIONS = Proportions(ankle=5.4, shin=8.8, thigh=9.0, spine=11.6, neck=2.4, head_radius=6.4, shoulder_half=5.6,

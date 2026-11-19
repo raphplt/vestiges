@@ -970,3 +970,20 @@ Raphaël, après avoir joué le bac à sable : « le sprite du personnage [...] 
 - Le mid poly est régénéré (non versionné).
 
 **Non fait** : les sprites 2D du facteur ne sont pas régénérés (P2). `generate_character.py facteur` les changerait.
+
+### P2 livré — 19 novembre
+
+Raphaël, sur le nouveau modèle : « Il me va ».
+
+**Fait**
+- Les 216 sprites 2D du facteur (8 directions, 5 actions) sont régénérés depuis le même `facteur.py`. Les noms de fichiers et le nombre d'images ne changent pas, les `.import` sont gardés.
+- **Cadre de 42×44 à 42×48**, pivot inchangé (21, 40). Dans l'ancien cadre, 42 images sur 216 touchaient le bas : les grosses roues à la marche vers le sud, et le corps couché de la mort, qui descend jusqu'à 6 px sous le pivot. Emprise mesurée autour du pivot : de −17 à +17 px en largeur, de −29 à +6 px en hauteur. Plus aucune image au bord.
+- **`sprite_feet_offset` de 18 à 16** dans `data/characters/characters.json` (pivot moins la demi-hauteur du cadre, comme la scaphandrière).
+- Le modèle 3D est réexporté, parce que le cadre borne la recherche du volume : 7 292 triangles au plus (contre 7 304), 27 poses, 1,62 m.
+
+**Vérifié**
+- La planche des huit directions est regardée : la silhouette voûtée, l'écharpe rouille, la moustache et la sacoche se lisent, et la mort entre en entier dans le cadre.
+- Capture en vraie run (`--capture-character --character facteur`, graine 1002) : la marche, le dash, l'atterrissage, l'impact et la mort se jouent. Les pieds sont posés au-dessus des barres de vie, comme avant. Aucune erreur au journal.
+- Smoke test vert.
+
+**Point ouvert** : le portrait du Hub est tiré des mêmes sprites, mais il n'a pas été regardé.

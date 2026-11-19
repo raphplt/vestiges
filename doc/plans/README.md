@@ -2,7 +2,8 @@
 
 **19 novembre — le facteur refait de zéro ([plan 60 §27](60-vestiges-en-3d.md), §250) :**
 - Raphaël trouvait le personnage « atroce ». Aimé Ribot est resculpté en vieil homme voûté et têtu : long nez, moustache de morse, capote fendue, écharpe qui flotte, sacoche énorme, patins à grosses roues.
-- Les personnages passent au pas de 1,2 unité (9 000 triangles au plus) et en aplats. Les sprites 2D attendent l'accord de Raphaël.
+- Les personnages passent au pas de 1,2 unité (9 000 triangles au plus) et en aplats.
+- Raphaël le garde (« Il me va », §251) : ses sprites 2D en sont régénérés, dans un cadre de 42×48 où les roues et la mort ne sont plus coupées.
 
 **18 novembre (soir) — Forward+ pour la 3D, plus de trous dans les modèles ([plan 60 §24](60-vestiges-en-3d.md), §247) :**
 - Raphaël valide les collisions par emprise et le marais, et choisit Forward+ pour la 3D. Le bac à sable le lance par défaut ; le jeu 2D reste en Compatibility.
